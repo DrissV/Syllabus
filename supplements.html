@@ -263,7 +263,105 @@
                     <p>Comme vous pouvez le voir, le dépôt a bien été cloné puisque les fichiers du répertoire projet-git-2 sont déjà bien tous sous suivi de version et sont stockés en base.</p>
                     <h2 id="fichiers_projet_actualiser">Ajouter ou modifier des fichiers dans un projet et actualiser notre dépôt Git :</h2>
                     <p>À ce niveau, nous avons donc d'un côté notre projet contenant un ensemble de ficheirs et de ressources sur lesquelles on travaille ainsi qu'un dépôt Git qui sert à gérer les différentes versions de notre projet.</p>
-                    <p>En continuant à travailler sur notre projet, nous allons être amenés à ajouter, modifier, voire supprimer des fichiers.</p>
+                    <p>En continuant à travailler sur notre projet, nous allons être amenés à ajouter, modifier, voire supprimer des fichiers. On va indiquer tous ces changements à Git pour qu'il conserve un historique des versions auquel on pourra ensuite accéder pour revenir à un état précédent du projet (dans le cas où une modification entraîne un bogue par exemple ou n'amène pas le résultat souhaité).</p>
+                    <p>À chaque fois qu'on souhaite enregistrer une modification de fichier ou un ajout de fichier dans le dépôt Git, on va devoir utiliser les commandes <span class="html">git add</span> et <span class="html">git commit</span> comme on a pu le faire précédemment.</p>
+                    <p>J'attire ici votre attention sur un point important : le commit (la validation / l'enregistrement en base de données) d'un fichier se basera sur l'état de ce fichier au moment du <span class="html">git add</span>.</p>
+                    <p>Cela signifie que si vous effectuez une commande <span class="html">git add</span> sur un fichier, puis vous modifiez à nouveau le fichier, puis vous effectez un <span class="html">git commit</span>, c'est le fichier dans son état au moment du dernier <span class="html">git add</span> qui sera validé et les dernières modifications ne seront donc pas enregistrées dans le dépôt Git.</p>
+                    <p>Si vous souhaitez enregistrer toujours la dernière version d'un fichier, pensez donc bien toujours à effectuer un <span class="html">git add</span> juste avant un <span class="html">git commit</span>. Pour mettre en un coup les fichier modifiés et déjà sous souvi dans la zone d'index puis pour les valider, vous pouvez également utiliser <span class="html">git commit</span> avec une option <span class="html">-a</span> comme ceci : <span class="html">git commit -a</span>. Cela vous dispense d'avoir à taper <span class="html">git add</span>.</p>
+                    <h2 id="supprimer_fichier_projet">Supprimer un fichier d'un projet et/ou l'exclure du suivi de version Git :</h2>
+                    <p>Concernant la suppression de fichisers, il existe plusieurs situations possibles en fonction de ce que vous souhaitez réellement faire : voulez-vous simplement exclure un fichier du suivi de version mais le conserver dans votre projet ou également le supprimer du projet ?</p>
+                    <p>Avant tout, notez que simplement supprimer un fichier de votre dossier avec une commande Bash <span class="em">rm</span> par exemple ne suffira pas pour que Git oublie ce fichier : il apparaîtra dans chaque <span class="html">git status</span> dans une section "changes not stages for commit" (modifications qui ne seront pas validées).</p>
+                    <p>On peut s'en assurer en faisant le test. Pour cela, commençons par ajouter un nouveau fichier dans notre répertoire "projet-git". On peut faire cela avec une commande Bash <span class="html">touch</span>.</p>
+                    <img src="images/ajout-fichier-touch.png" alt="ajout fichier touch">
+                    <img src="images/touch-git-status.png" alt="touch git status">
+                    <p>Comme le fichier vient tout juste d'être ajouté, on va devoir l'indexer pour qu'il soit sous suivi puis le valider.</p>
+                    <img src="images/git-add-comit-nouveau-fichier.png" alt="git add comit nouveau fichier">
+                    <p>Ici, j'utilise la commande <span class="html">git commit</span> avec une option <span class="html">-m</span> qui me permet de renseigner directement le message lié à mon commit plutôt que de devoir le faire dans VIM.</p>
+                    <p>Le fichier est désormais sous suivi et la dernière version est enregistrée en base. Essayons maintenant de l'effacer avec une commande <span class="em">rm</span> par exemple et tapons un nouveau <span class="html">git status</span> :</p>
+                    <img src="images/rm-bash-git-status.png" alt="rm bash git status">
+                    <p>Comme vous pouvez le voir, Git continue de suivre le fichier et la suppression simple du fichier ne sera pas validée comme changement par Git.</p>
+                    <p>Pour supprimer un fichier et l'exclure du suivi de version, nous allons utiliser la commande <span class="html">git rm</span> (et non pas simplement une commande Bash <span class="em">rm</span>).</p>
+                    <img src="images/reajout-fichier-touch-git-status.png" alt="reajout fichier touch git status">
+                    <img src="images/git-rm.png" alt="git rm">
+                    <img src="images/git-rm-commit.png" alt="git rm commit">
+                    <p>Pour simplement exlure un fichier du suivi Git mais le conserver dans le projet, on va utiliser la même commande <span class="html">git rm</span> mais avec cette fois-ci une option <span class="html">--cached</span>.</p>
+                    <img src="images/ajout-fichier-touch-2.png" alt="ajout fichier touch 2">
+                    <img src="images/git-rm-cached-abandon-suivi.png" alt="git rm cached abandon suivi">
+                    <img src="images/git-rm-cached-status.png" alt="git rm cached status">
+                    <img src="images/git-rm-cached-commit.png" alt="git rm cached commit">
+                    <p>Ici, le fichier a bien été exclu du suivi Git mais existe toujours dans notre projet. On va ensuite pouvoir modifier ce fichier (lui ajouter du texte par exemple) comme n'importe quel fichier et Git ne se préoccupera pas des modifications.</p>
+                    <img src="images/verification-commande-git-rm-cached.png" alt="vérification git rm cached">
+                    <h2 id="retirer_fichier_zone_index_git">Retirer un fichier de la zone d'index de Git:</h2>
+                    <p>Le contenu de la zone d'index est ce qui sera proposé lors du prochain commit. Imaginons qu'on ait ajouté un fichier à la zone d'index par erreur. Pour retirer un fichier de l'index, on peut utiliser <span class="html">git reset HEAD nom-du-fichier</span>.</p>
+                    <p>À la différence de <span class="html">git rm</span>, le fichier continuera d'être suivi par Git. Seulement, le fichier dans sa version actuelle va être retiré de l'index et ne fera donc pas partie du prochain commit.</p>
+                    <p>Regardez plutôt l'exemple ci-dessous :</p>
+                    <img src="images/git-reset-retrait-zone-index.png" alt="git reset retrait zone index">
+                    <p>Ici, on ajoute le fichier fichier2.txt à l'index et on le passe donc sous suivi de version. On valide cela avec <span class="html">git commit</span> puis on modifie le contenu de notre fichier et on ajoute la dernière version de notre fichier à la zone d'index pour qu'il fasse partie du prochain commit. Finalement, on change d'idée et on veut retirer cette version de la zone d'index. On fait cela avec <span class="html">git reset HEAD fichier2.txt</span>.</p>
+                    <h2 id="empecher_indexation_fichiers_git">Empêcher l'indexation de certains fichiers dans Git :</h2>
+                    <p>Lorsqu'on dispose d'un projetet qu'on souhaite utiliser Git pour effectuer un suivi de version, il est courant qu'on souhaite exclure certains fichiers du suivi de version comme certains fichiers générés automatiquement, des fichiers de configuration, des fichiers sensibles, etc.</p>
+                    <p>On peut informer Git des fichiers qu'on ne souhaite pas indexer en créant un fichier <span class="html">.gitignore</span> et en ajoutant les différents  fichiers qu'on souhaite ignorer. Notez qu'on peut égalemnt mentionner des schémas de noms pour exclure tous les fichiers correspondant à ce schéma et qu'on peut même exclure le contenu entier d'un répertoire en écrivant le chemin du répertoire suivi d'un slash.</p>
+                    <h2 id="renommer_fichier_git">Renommer un fichier dans Git :</h2>
+                    <p>On peut également renommer un fichier de notre projet depuis Git en utilisant cette fois-ci une commande <span class="html">git mv ancien-nm-fichier nouveau-nom-fichier</span>.</p>
+                    <p>On peut par exemple renommer notre fichier "README.txt" en "LISEZMOI.txt" de la manière suivante:</p>
+                    <img src="images/git-mv-renommage-fichier.png" alt="git mv renommage fichier">
+                    <p>Le fichier a bien été renommé dans notre répertoire et le changement est prêt à être validé dans le prochain commit.</p>
+                    <h2 id="consulter_historique_modifications_git">Consulter l'historique des modifications Git :</h2>
+                    <p>La manière la plus simple de consuter l'historique des modifications Git est d'utiliser la commande <span class="html">git log</span>. Cette commande affiche la liste des commits réalisés du plus récent au plus ancien. Par défaut, chaque commit est affiché avec sa somme de contrôle SHA-1, le nom et l'e-mail de l'auteur, la date et le message du commit.</p>
+                    <img src="images/git-log.png" alt="git log">
+                    <p>La commande <span class="html">git log</span> supporte également de nombreuses options. Certaines vont pouvoir être très utiles comme par exemple les options <span class="html">-p</span>, <span class="html">--pretty</span>, <span class="html">--since</span> ou <span class="html">--author</span>.</p>
+                    <p>Utiliser <span class="html">git log -p</span> permet d'afficher explicitement les différences introduites entre chaque validation.</p>
+                    <img src="images/git-log-option-p.png" alt="git log option p">
+                    <p>L'option <span class="html">--pretty</span> permet, avec sa valeur <span class="html">oneline</span>, d'afficher chaque commit sur une seule ligne ce qui peut faciliter la lecture dans le cas où de nombreux commits ont été réalisés.</p>
+                    <img src="images/git-log-pretty.png" alt="git log pretty">
+                    <p>L'option <span class="html">--since</span> permet de n'afficher que les modifications depuis une certaine date (on peut lui fournir différents formats de date comme <span class="em">2.weeks</span> ou <span class="em">2019-10-10</span> par exemple).</p>
+                    <p>L'option <span class="html">--author</span> permet de n'afficher que les commits d'un auteur en particulier.</p>
+                    <h2 id="ecraser_remplacer_commit">Écraser et remplacer un commit :</h2>
+                    <p>Parfois, on voudra annuler une validation (un commit), notamment lorsque la validation a été faite en oubliant des fichiers ou sur les mauvaises versions de fichiers.</p>
+                    <p>La façon la plus simple d'écraser un commit est d'utiliser la commande <span class="html">git commit</span> avec l'option <span class="html">--amend</span>. Cela va pousser un nouveau commit qui va remplacer le précédent en l'écrasant.</p>
+                    <p>Par exemple, dans notre projet, on peut imaginer qu'on souhaite commit les changements  effectués précédemment sur le fichier README.txt qu'on souhaite également réintégrer le fichier fichier2.txt dans l'index.</p>
+                    <p>Pour cela, on effectue un <span class="html">git commit</span> :</p>
+                    <img src="images/git-commit-amend-exemple.png" alt="git commit amend exemple">
+                    <p>Ici, on s'aperçoit après coup qu'on a oublié de réintégrer le fichier fichier2.txt. On peut utiliser une commande <span class="html">git add</span> puis <span class="html">git commit --amend</span> pour remplacer le commit précédent :</p>
+                    <img src="images/git-commit-amend-commande.png" alt="git commit amend commande">
+                    <p>Note : l'éditeur par défaut va s'ouvrir pour vous permettre de modifier le message du commit si vous le souhaitez.</p>
+                    <h2 id="annuler_modifications_fichier">Annuler des modifications apportées à un fichier :</h2>
+                    <p>L'un des principaux intérêts d'utiliser un logiciel de gestion de vision est de pouvoir "roll back", c'est-à-dire de pouvoir revenir à un état antérieur enregistré d'un projet.</p>
+                    <p>Après un commit, on va continuer à travailler sur nos fichiers et à les modifier. Parfois, certaines modifications ne vont pas apporter les comportements espérés et on voudra revenir à l'état du fichier du dernier instantané Git (c'est-à-dire au dernier état enregistré). On va pouvoir faire cela avec la commande générale <span class="html">git checkout -- nom-du-fichier</span> ou la nouvelle commande spécialisée <span class="html">git restore</span>.</p>
+                    <p>Imaginons qu'on modifie le texte de notre fichier LISEZMOI.txt avec une commande <span class="html">echo</span> et <span class="html">&gt;&gt;</span>.</p>
+                    <img src="images/git-restore-exemple.png" alt="git restore exemple">
+                    <p>On se rend ensuite compte que ce texte ne convient pas et on souhaite revenir à l'état du fichier tel qu'il a été enregistré pour la dernière fois dans Git.Pour cela, on utilise simplement <span class="html">git restore LISEZMOI.txt</span>.</p>
+                    <img src="images/git-restore-commande.png" alt="git restore commande">
+                    <h2 id="branche">Qu'est-ce qu'une branche ?</h2>
+                    <p>Créer une branche, c'est en quelque sorte comme créer une "copie" de votre projet pour développer et tester de nouveles fonctionnalités sans impacter le projet de base.</p>
+                    <p>Dans la plupart des système de contrôle de version, justement, une copie physique de la totalité du répertoire de travail est effectuée, ce qui rend la création de branches contraignante et en fait une opération lourde.</p>
+                    <p>Git a une approche totalement différente des branches qui rend la création de nouveles branches et la fusion de branche très facile à réaliser. Une branche, dans Git, est simplement un pointeur vers un commit (une branche n'est qu'un simple fichier contenant les 40 caractères de l'empreinte SHA-1 du commit sur lequel elle pointe).</p>
+                    <p>Pour rappel, lorsqu'on effectue un commit, Git stocke en fait un objet <span class="html">commit</span> qui contient les nom et prénom de l'auteur du commit, le message renseigné lors de la création du commit ainsi qu'un pointeur vers l'instantané du contenu indexé et des pointeurs vers le ou les commits précédant directement le commit courant.</p>
+                    <p>Un pointeur est un objet qui contient l'adresse d'une donnée stockée quelque part. On peut utiliser le pointeur pour accéder à la donnée en question.</p>
+                    <p>La branche par défaut dans Git s'appelle <span class="html">master</span>. Cette branche <span class="html">master</span> va se déplacer automatiquement à chaque nouveau commit pour pointer sur le dernier commit effectué tant qu'on reste sur cette branche.</p>
+                    <p>Notez que la branche <span class="html">master</span> n'est pas une branche spéciale pour Git : ele est traitée de la même façon que les autres branches. L'idée est que lorsqu'on tape une commande <span class="html">git init</span>, une branche est automatiquement créée et que le nom donné à cette branche par Git par défaut est "master". On pourrait très bien la renommer ensuite mais ça ne présente généralement aucun intérêt.</p>
+                    <p>En résumé, une branche est un pointeur vers un commit en particulier. Un commit est un objet qui contient un pointeur vers l'instantané du contenu indexé ainsi que des pointeurs vers le ou les commits le précédant directement.</p>
+                    <p>Ainsi, créer une nouvelle branche dans Git crée simplement un nouveau pointeur plutôt que de recopier l'intégralité du répertoire de travail.</p>
+                    <h2 id="creer_nouvelle_branche">Créer une nouvelle branche :</h2>
+                    <p>Pour créer une nouvelle branche, on utilise la commande <span class="html">git branch nom-de-la-branche</span>. Cette syntaxe va créer un nouveau pointeur vers le dernier commit effectué (le commit courant). À ce stade, vous allez donc avoir deux branches (deux pointeurs) vers le dernier commit : la branche master et la branche tout juste créée.</p>
+                    <img src="images/git-branch.png" alt="git branch">
+                    <img src="images/git-branch-ilustration.jpg" alt="git branch illustration">
+                    <p>Pour déterminer quel pointeur vous utilisez, c'est-à-dire sur quelle branche vous vous trouvez, Git utilise un autre pointeur spécial appelé <span class="html">HEAD</span>. <span class="html">HEAD</span> pointe sur la branche master par défaut. Notez que la commande <span class="html">git branch</span> permet de créer une nouvelle branche mais ne déplace pas <span class="html">HEAD</span>.</p>
+                    <p>Nous allons donc devoir déplacer explicitement <span class="html">HEAD</span> pour indiquer à Git qu'on souhaite basculer sur une autre branche. On utilise pour cela la commande <span class="html">git checkout</span> suivi du nom de la branche sur laquelle on souhaite basculer.</p>
+                    <img src="images/git-checkout.png" alt="git checkout">
+                    <img src="images/git-checkout-illustration.jpg" alt="git checkout illustration">
+                    <p>Note : ON peut également utiliser <span class="html">git checkout -b</span> pour créer une branche et basculer immédiatement dessus. Cela est l'équivalent d'utiliser <span class="html">git branch</span> puis <span class="html">git checkout</span>.</p>
+                    <p><span class="html">HEAD</span> pointe maintenant vers notre branche <span class="html">test</span>. Si on effectue un nouveau commit, la branche <span class="html">test</span> va avancer automatiquement tandis que <span class="html">master</span> va toujours pointer sur le commit précédent. C'est en effet la branche sur laquelle on se situe lors d'un commit qui va pointer sur ce commit.</p>
+                    <img src="images/git-head-branche.png" alt="git HEAD branche">
+                    <img src="images/git-head-branche-illustration.jpg" alt="git HEAD branche illustration">
+                    <h2 id="basculer_branches">Basculer entre les branches :</h2>
+                    <p>On peut revenir sur notre branche <span class="html">master</span> en tapant à nouveau une commande <span class="html">git checkout master</span>. Cela replace le pointeur <span class="html">HEAD</span> sur la branche <span class="html">master</span> et restaure le répertoire de travail dans l'état de l'instantané pointé par le commit sur lequel pointe <span class="html">master</span>.</p>
+                    <img src="images/git-checkout-master.png" alt="git checkout master">
+                    <img src="images/git-checkout-master-illustration.jpg" alt="git checkout master illustration">
+                    <p>Si on modifie alors le répertoire de travail et qu'on effectue un nouveau commit, les deux branches <span class="html">master</span> et <span class="html">test</span> vont diverger. On va donc avoir deux branches pointant vers des instantanés qui ont enregistré le projet dans deux états différents.</p>
+                    <img src="images/git-branche-diverge.png" alt="git branche diverge">
+                    <img src="images/git-branches-diverge-illustration.jpg" alt="git branche diverge illustration">
+                    <h2 id="fusion_rebasage_git">Fusion et rebasage avec Git :</h2>
+                    <p>Précédemment, on a vu comment créer différentes branches pour un projet.</p>
                 </article>
                 <article id="intro_vscode">
                     <h2>Introduction de VSCode (Visual Studio Code) :</h2>
