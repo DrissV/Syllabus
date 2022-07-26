@@ -299,6 +299,91 @@ footer {
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Pour plus d'informations, veuillez cliquer sur ce <a href="https://developer.mozilla.org/fr/docs/Web/CSS/CSS_Grid_Layout/Basic_Concepts_of_Grid_Layout" target="_blank">lien</a>.</p>
                     </div>
+                    <p>En résumé, l'avantage d'utiliser des grilles CSS et des media queries pour faire la mise en page plutôt que d'utiliser un framework de type Bootstrap est multiple. Non seulement cela est plus green puisqu'il n'est pas nécessaire de charger le framework, mais cela permet de mieux séparer le font et la forme. Finie la litanie de classes associées à nos balises qui pollue le code HTML (exemple : <span class="html">&lt;div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 col-xxl-1&gt;</span>). La mise en forme avec les grilles est intégralement gérée dans des fichiers CSS.</p>
+                    <p>Exemple de fichier HTML :</p>
+<pre class="taille60"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+    &lt;head&gt;
+        &lt;title&gt;Page de test avec une disposition utilisant une grille&lt;/title&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;meta name="viewport" content="width=device-width"&gt;
+        &lt;link href="grid.css" rel="stylesheet"&gt;
+        &lt;meta name="description" content="Comment créer une page responsive sans utiliser de framework CSS"&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;header&gt;
+            partie en-tête...
+        &lt;/header&gt;
+        &lt;main&gt;
+            &lt;article&gt;
+                &lt;h1&gt;Comment créer une page responsive sans utiliser de framework CSS&lt;/h1&gt;
+                &lt;p&gt;
+                    Avec la propriété CSS Grid et des média queries !
+                &lt;/p&gt;
+                &lt;p&gt;Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ipsum quis sed voluptas maxime voluptatibus illo deserunt temporibus pariatur accusantium commodi quidem similique rem natus nostrum odit officiis blanditiis reprehenderit, fugiat, sequi placeat error harum amet eligendi voluptate! Quasi nisi facilis praesentium est ex consectetur placeat corrupti quas voluptatem, quis id.&lt;/p&gt;
+                &lt;p&gt;Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eveniet est facilis harum nisi quo architecto doloremque, voluptate qui dolor porro, autem ab reprehenderit ducimus neque sint nobis ipsam recusandae odit, sequi nihil expedita. Eligendi itaque amet odio quisquam similique obcaecati!&lt;/p&gt;
+                &lt;p&gt;Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero corporis voluptates atque, quos dignissimos dicta quod vitae! Enim at pariatur quae expedita sed hic perferendis mollitia autem, voluptates, sint dolorem?&lt;/p&gt;
+            &lt;/article&gt;
+        &lt;/main&gt;
+        &lt;aside&gt;
+            partie complément...
+        &lt;/aside&gt;
+        &lt;footer&gt;
+            partie pied de page...
+        &lt;/footer&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>Le fichier CSS associé :</p>
+<pre class="taille60"><code>body {
+    background-color: #e06ed1;
+    display: grid;
+    margin: 0;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+        "entete"
+        "contenu"
+        "complements"
+        "piedPage";
+    grid-template-rows: 100px 1fr 100px 100px;
+}
+@media (min-width: 576px) {
+    body {
+        grid-gap: 10px;
+        grid-template-columns: 1fr 250px;
+    }
+}
+@media (min-width: 768px) {
+    body {
+        grid-template-columns: 742px 250px;
+        justify-content: center;
+    }
+}
+header, main, aside, footer {
+    padding: 10px;
+}
+header {
+    grid-area: entete;
+    background-color: #bfe966;
+}
+main {
+    grid-area: contenu;
+    overflow-y: auto;
+    background-color: lavander;
+}
+aside {
+    grid-area: complements;
+    background-color: mediumturquoise;
+}
+footer {
+    grid-area: piedPage;
+    background-color: #ebb2b2;
+}</code></pre>
+                    <p>Dans cet exemple, le fichier HTML ne conient aucun élément placé spécifiquement pour effectuer la mise en page. C'est uniquement dans le fichier CSS que la mise en page est effectuée.</p>
+                    <p>Remarque : les couleurs de fond des différentes zones n'ont été ajoutées que pour les rendre plus visibles !</p>
+                    <p>Les quatre grandes parties de la page (<span class="html">&lt;header&gt;</span>, <span class="html">&lt;main&gt;</span>, <span class="html">&lt;aside&gt;</span> et <span class="html">&lt;footer&gt;</span>) ont été définies comme des zones pour la grille (<span class="html">entete</span>, <span class="html">contenu</span>, <span class="html">complements</span> et <span class="html">piedPage</span>). Par défaut, pour les écrans de petite taille, ces quatre zones sont disposées les unes au-dessous des autres grâce à la propriété <span class="html">grid-template-areas</span>.</p>
+                    <p>Lorsque l'écran est un peu plus grand (plus que 576 pixels de large), cette propriété est redéfinie pour obtenir sur une première ligne l'en-tête, sur une seconde ligne le contenu principal, sur le côté le complément, et le pied de page sur une dernière ligne. Afin d'avoir toujours ces éléments-là visibles et d'éviter un ascenseur vertical sur l'ensemble de la page, la propriété <span class="html">height</span> a été définie à <span class="html">100 vh</span>, c'est-à-dire toute la hauteur de l'écran, et le débordement éventuel de la partie principale a été géré avec la propriété <span class="html">overflow-y</span> à <span class="html">auto</span>.</p>
+                    <p>Pour les écrans encore un peu plus grands (768 pixels de large au minimum), des gouttières sont ajoutées entre les zones et la partie complément est élargie.</p>
+                    <p>Enfin, sur la version pour les grands écrans (largeur minimale de 992 pixels), la largeur des deux colonnes est figée pour que les lignes ne soient pas trop longues et des marges sont positionnées sur les côtés.</p>
                 </article>
             <!-- fin de section -->
             </section>
