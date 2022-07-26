@@ -405,6 +405,77 @@ choix 3 : <span class="em">&lt;input</span> type="<span class="em">radio</span>"
                     <h2>La mise en page d'un formulaire :</h2>
                     <p>Étant donné que les formulaires ont une allure tabulaire, on utlise souvent les <span class="html">table</span> pour mettre en forme plus facilement ces formulaires. Mais ceci amène souvent plus de lourdeur dans le fichier HTML puisque des balises sont ajoutées. Ceci est la seule exception notoire où on utilise un composant HTML (table) pour effectuer de la mise en forme.</p>
                 </article>
+                <article id="captchas">
+                    <h2>Les captchas :</h2>
+                    <p>Les captchas sont généralement imposés par les administrateurs système afin d'éviter l'utilisation des formulaires par des robots. Les captchas sont bien évidemment un obstacle pour les robots, mais également pour certains utilisateurs : non-voyants ou mal-voyants, dyslexiques... Il est donc nécessaire de prévoir une alternative non graphique, comme l'envoi d'un code par SMS ou par e-mail.</p>
+                    <p>Une autre possibilité est d'utiliser l'API ReCAPTCHA de Google qui est accessible pour les personnes en situation de handicap. Grâce à son algorithme tenu secret, Google est capable en général de distinguer un humain d'un robot à la simple coche de la case <span class="em">Je ne suis pas un robot</span>. Dans ce cas, il n'y a aucun problème d'accessibilité. Si Google a un doute, il propose une mire d'images sur lesquelles  il faut détecter un objet, mais également une alternative audio.</p>
+                    <p>Pour mettre en place ReCAPTCHA, il est nécessaire de posséder un compte Google. Il est nécessaire que le site soit en HTTPS.</p>
+                    <p>Une fois connecté, allez à l'adresse : <a href="https://www.google.com/recaptcha/admin/create" target="_blank">https://www.google.com/recaptcha/admin/create</a>.</p>
+                    <p>Compléter le formulaire. Pour le <span class="em">Type de ReCAPTCHA</span>, choisissez <span class="em">ReCAPTCHA version 2</span>, puis <span class="em">Case à cocher "Je ne suis pas un robot"</span>. Pour les <span class="em">Domaines</span>, vous pouvez en ajouter plusieurs. Par exemple, en plus du nom de domaine de votre site, libre à vous d'ajouter localhost. Ainsi, vous pourrez tester le bon fonctionnement dans votre environnement de développement.</p>
+                    <p>Remarque : il existe différentes versions de <span class="em">ReCAPTCHA</span> : la v3 permet d'obtenir un score de probabilité d'humain; alors que la v2 est un test (oui/non). Pour la v2, il existe en plus de la case à cocher une version invisible et une version pour les applications Android.</p>
+                    <p>Vous obtenez deux clés, l'une publique à intégrer dans le code HTML du formulaire et l'autre privée pour la vérification côté serveur.</p>
+                    <p>Dans le formulaire HTML, il est nécessaire d'ajouter d'une part une ligne pour afficher le captcha et d'autre part un script pour le faire fonctionner.</p>
+                    <ul>
+                        <li>
+                            <p>Line d'ajout du captcha (dans laquelle vous devez modifier la valeur de l'attribut <span class="em">data-sitekey</span> avec votre clé publique) :</p>
+                            <p class="html">&lt;div class="g-recaptcha" data-sitekey="valeur de la clé publique"&gt;&lt;/div&gt;</p>
+                        </li>
+                        <li>
+                            <p>Ligne pour le script :</p>
+                            <p class="html">&lt;script src="https//www.google.com/recaptcha/api.js" async defer&gt;&lt;/script&gt;</p>
+                        </li>
+                    </ul>
+                    <p>Pour la validation du captcha côté serveur, Google propose plusieurs possibilités. La prelière est de se contenter de vérifier la présence parmi les données envoyées d'une clé avec pour nom <span class="em">g-recaptcha-response</span>. Celle-ci est assez facilement contournable puisqqu'il est aisé de modifier le formulaire pour envoyer une valeur associée à ce nom. La deuxième est de vérifier cette valeur en faisantappel à l'API ReCaptcha. Enfin, une troisième possibilité est de s'appuyer sur l'appel à une méthode callback.</p>
+                    <p>Pour mettre en place la deuxième méthode, il faut envoyer une requête à l'adresse <a href="https://www.google.com/recaptcha/api/siteverify" target="_blank">https://www.google.com/recaptcha/api/siteverify</a> avec un premier paramètre nommé <span class="em">secret</span> avant pour valeur votre clé privée etun second paramètre nommé <span class="em">response</span> avec pour valeur celle de <span class="em">g-recaptcha-response</span>). La documentation de Google indique que la réponse en JSON est de la forme :</p>
+<pre class="taille60"><code>{
+    "success": true|false,
+    "callenge_ts": timestamp,
+    "hostname": string,
+    "error-codes": [...] // si nécessaire
+}</code></pre>
+                    <p>Il suffit de vérifier la valeur de <span class="em">success</span> pour s'assurer de la validation du captcha.</p>
+                    <p>Exemple :</p>
+<pre class="taille60"><code>&lt;?php
+    if (filter_input(INPUT_POST, 'btnSoumission', FILTER_SANITIZE_STRING)) {
+        $captcha = filter_input(INPUT_POST, 'g-recaptcha-response', FILTER_SANITIZE_STRING);
+        if ($captcha) {
+            $cleSecrete = 'valeur de la clef privée';
+            $responseJson = file_get_contents('https://wwww.google.com/recaptcha/api/siteverify?secret=' . $cleSecrete . '&response=' . $captcha);
+            $response = json_decode($responseJson);
+            if (!$response-&gt;success) {
+                $message = 'Vousn\'avez pas validé le captcha';
+            }
+        } else {
+            $message = 'Captcha manquant';
+        }
+
+        // vérification des données envoyées
+
+        if (!isset($message)) {
+            //traitement du formulaire
+            header('location: confirmation.php');
+            die();
+        }
+    }
+?&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+    &lt;head&gt;
+        &lt;title&gt;&lt;?= isset($erreur) ? 'Erreur sur le formulaire' : 'Connexion'; ?&gt;&lt;/title&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;?= isset($message) ? '&lt;div role="alert"&gt;' . $message . '&lt;/div&gt;' : ''; ?&gt;
+        &lt;form method="POST"&gt;
+            &lt;!-- champs du formulaire --&gt;
+            &lt;div class="g-recaptcha" data-sitekey="valeur de la clef publique"&gt;&lt;/div&gt;
+            &lt;input type="submit" class="btn btn-primary" name="btnSoumission" value="Envoyer"&gt;
+        &lt;/form&gt;
+        &lt;script src="https://www.google.com/recaptcha/api.js" async defer&gt;&lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </article>
             <!-- fin de section -->
             </section>
             <footer>
