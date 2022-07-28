@@ -105,7 +105,7 @@
         Bonjour le monde ! &lt;br&gt;
     &lt;/body&gt;
 &lt;/html&gt;</code></pre>
-                    <p>Notez qu'il est aussi possible d'écrire un fichier PHP qui ne contient que du code PHP, sans HTML autour. Dans ces cas-là, il faut quand même ouvrir la balise <span class="html">&lt;php</span>, mais on peut omettre la balise fermante <span class="html">?&gt;</span>.</p>
+                    <p>Notez qu'il est aussi possible d'écrire un fichier PHP qui ne contient que du code PHP, sans HTML autour. Dans ces cas-là, il faut quand même ouvrir la balise <span class="html">&lt;?php</span>, mais on peut omettre la balise fermante <span class="html">?&gt;</span>.</p>
                     <h3 id="elements_syntaxe_php">Éléments de syntaxe PHP :</h3>
                     <p>La syntaxe de PHP est inspirée de langages tels que C, C++ et Java; vous pourrez sans doute la prendre en main sans trop de difficulté. Nous verrons ici les particularités du langage les plus utiles, mais nous vous encourageons comme toujours de consulter la documentation du langage pour plus d'informations : <a href="https://www.php.net/docs.php" target="_blank">https://www.php.net/docs.php</a>.</p>
                     <p>Notons pour commencer qu'à l'instar de Java, toute instruction en PHP se termine par un point-virgule.</p>
@@ -186,6 +186,7 @@
                         <li><span class="html">PHP_VERSION</span> : chaîne de caractères donnant la version de PHP utilisée.</li>
                         <li><span class="html">PHP_OS</span> : nom du système d'exploitation.</li>
                     </ul>
+                    <p>Pour rappel, le langage PHP est case sensitive. Pour déboguer, la fonction <span class="html">var_dump</span> affiche les informations détaillées d'une variable.</p>
                     <h4 id="operateurs_php">Opérateurs :</h4>
                     <p>Les opérateurs de PHP sont, pour la plupart, similaires à ceux que vous aurez rencontrés dans d'autreslangages comme Java. On notera par exemple :</p>
                     <ul>
@@ -516,11 +517,17 @@
                 <article id="mvc">
                     <h2>Architecture MVC pour une application Web :</h2>
                     <p>Nous allons voir comment appliquer les principes de l'architecture <span class="html">MVC (Modèle - Vue - Contrôleur)</span> au développement d'une application Web.</p>
+                    <p>Pourquoi doit-on architecturer le site ?</p>
+                    <ul>
+                        <li>Pour ne pas avoir tout le code PHP, HTML et CSS dans un seul fichier.</li>
+                        <li>Pour ne pas avoir de redondance (par exemple : un menu écrit une seule fois ou encore un accès sécurisé écrit une seule fois).</li>
+                        <li>Pour ne pas avoir de dépendance (par exemple : un changement de style ou de base de données).</li>
+                    </ul>
                     <h3 id="intro_mvc">Rappel : Architecture MVC :</h3>
                     <p>L'<a target="_blank" href="https://fr.wikipedia.org/wiki/Mod%E8le-vue-contr%F4leur" class="em">architecture Modèle - Vue - Contrôleur</a> (MVC) est un patron d'architecture logicielle adapté aux logiciels utilisant des interfaces graphiques, y compris des applications Web. Cette architecture divise l'application en trois composants. L'architecture MVC repose sur le principe de <span class="em">responsabilité unique</span> : chaque élémént de l'application possède un rôle unique ete précis.</p>
                     <ul>
                         <li>Le <span class="html">Modèle</span> représente les données <span class="em">métier</span> de l'application, à savoir les données proppres au système que l'application modélise (par opposition aux données propres à l'implémentation).</li>
-                        <li>La <span class="html">Vue</span> contient la présentation de l'interface graphique.</li>
+                        <li>La <span class="html">Vue</span> contient la présentation de l'interface graphique. Les traitements et accès aux données de la DB sont du code NON admis dans une vue.</li>
                         <li>Le <span class="html">Contrôleur</span> implémete la logique de traitement des actions effectuées par l'utilisateur.</li>
                     </ul>
                     <div>
@@ -709,69 +716,88 @@ RewriteRule ^([a-zA-Z)*)/?([a-zA-Z]*)?/?$ index.php?action=$1&id=$2 [NC, L]</cod
                     <p>Ce dossier contient par défaut un fichier <span class="em">index.php</span> servant de <span class="em">Font Controller</span> ("contrôleur de façade") qui fera les appels au reste du code.</p>
                     <p>Un site déployé de façon professionnelle configurera donc un serveur (par exemple Apache) pour servir uniquement le répertoire <span class="em">public</span>, et ainsi s'assurer que le reste du code du site n'est pas accessible depuis l'extérieur.</p>
                     <h3 id="gestion_routes_laravel">Gestion des routes :</h3>
-                    <p>Le dossier <span class="em">routes</span> contient des scripts de Router, permettant de définir les URLs qui sont accessibles dans notre application.</p>
-                    <p>Plusieurs scripts sont définis par défaut, permettant de gérer différents types de routes. Ici, nous nous intéresserons principalement à <span class="html">web.php</span>, qui définit les routes accessibles depuis une application Web.</p>
+                    <p>Le dossier <span class="em">routes</span> contient des scripts de <a href="https://laravel.com/docs/9.x/routing" target="_blank">routing</a> de Laravel, permettant de définir les URLs qui sont accessibles dans notre application.</p>
+                    <p>Plusieurs scripts sont définis par défaut, permettant de gérer différents types de routes. Ici, nous nous intéresserons principalement à <span class="html">web.php</span>, qui définit les routes accessibles depuis une application Web, et <span class="html">api.php</span>, qui définit les routes accessibles notamment par des requêtes AJAX.</p>
                     <p>Ces routes sont définies en Laravel via la classe <span class="html">Route</span>, qui contient des méthodes statiques correspondant à chaque méthode HTTP. Par exemple, la route définie par défaut est <span class="html">Route::get('/', view('welcome'));</span>.</p>
                     <p>Cette instruction dit que quand l'URL à la racine du site est appelée avec une requête HTTP GET, appelera la vue (nous verrons plus tard comment celles-ci sont définies) <span class="em">welcome</span>.</p>
                     <p>Ajouter une route revient à appeler une des méthodes de <span class="em">Route</span> pour mettre en lien une URL et une exécution de code.</p>
+                    <p>Par exemple, pour définir une route accessible via la méthode HTTP GET, nous écrirons :</p>
+                    <p class="html">Route::get("URL", function)-&gt;name('name');</p>
+                    <p>Où <span class="em">"URL"</span> est un chemin absolu à partir du nom de domaine du site, <span class="em">function</span> est la fonction de contrôleur appelé par cette route.</p>
+                    <p>Le router offre aussi la possibilité de <span class="em">nommer</span> chaque route, qui offre une couche d'abstraction lors de l'écriture des liens au sein de l'application. En effet, au lieu d'écrire un lien vers une URL spécifique, l'URL sera générée de façon dynamique à partir du nom de la route, permettant facilment de créer des liens paramétriques, ou de déplacer des routes sans devoir modifier les liens qui pointent vers cette page. Ces liens sont construits via la méthode <span class="html">route('name')</span> ou <span class="html">route('name', $params)</span> si la route reçoit des paramètres (dont nous discuterons plus loin).</p>
+                    <p>Les routes d'API dans <span class="em">api.php</span> fonctionnent de façon analogue, à un détail prêt : leurs URL sont définies à partir du chemin racine <span class="html">/api/</span>, afin de les différencier des routes Web.</p>
                     <h3 id="gestion_controleurs_laravel">Gestion des contrôleurs :</h3>
-                    <p>Le dossier <span class="html">app/Http/Controllers</span> contient les contrôleurs de Laravel. Ces classes ont pour rôler d'aller récupérer des informations tirées du modèle, puis d'appeler la vue correspondante. Par exemple :</p>
+                    <p>Le dossier <span class="html">app/Http/Controllers</span> contient les contrôleurs de Laravel utilisé par les requête HTTP. Ces classes ont pour rôles de valider les données transmises par l'utilisateur (si approprié, ensuite d'aller récupérer et/ou modifier des informations tirées du modèle, puis d'appeler la vue correspondante. Par exemple :</p>
 <pre class="taille60"><code>&lt;?php
     namespace App\Http\Controllers;
-    use \App\Models\Post;
+    use \App\Models\User;
 
-    class BlogCtrl extends Controller {
-        public function allPosts() {
-            $billets = Post::getAllPosts();
-            return view("vueAccueil", ["billets" =&gt; $billets]);
+    class UserCtrl extends Controller {
+        public function allUsers() {
+            $allUsers = User::all();
+            return view('home', ['users' =&gt; $allUsers]);
         }
 
-        public function postDetails($id) {
-            $billets = Post::getPostDetails($id);
-            return view("vueDetails", ["billets" =&gt; $billets]);
+        public function getUser($id) {
+            $oneUser = User::find($id);
+            return view('profile', ['user' =&gt; $oneUser]);
         }
     }
 ?&gt;</code></pre>
                     <p>Ce contrôleur appelle le modèle pour récupérer tous les billets de blog existants, puis passe ces billets à une vue <span class="html">vueAccueil</span> via la méthode <span class="em">view()</span> définie par Laravel.</p>
                     <p>Pour appeler cette méthode depuis notre <span class="em">Router</span>, on utilisera la notation suivante :</p>
-                    <p class="html">Route::get('/blog', [BlogCtrl::class, 'allPosts']);</p>
+                    <p class="html">Route::get('/users', [UserCtrl::class, 'allUsers'])-&gt;name('users');</p>
                     <p>Le deuxième paramètre est ici un tableau, reprenant dans son premier élément la classe du contrôleur utilisé, puis le nom d'une méthode statique de ce contrôleur à appeler. En outre, le <span class="em">Router</span> peut passer des paramètres directement à la fonction appelée :</p>
-                    <p class="html">Route::get('/blog/{id}', [BlogCtrl::class, 'postDetails']);</p>
-                    <p>Ici {id} est noté comme un paramètre dans la route. Par exemple, si une requête est faite à l'URL <span class="em">blog/12</span>, le Router appellera la méthode <span class="em">postDetails</span> avec un paramètre nommé <span class="em">$id</span> de valeur <span class="em">12</span>.</p>
+                    <p class="html">Route::get('/users/{id}', [UserCtrl::class, 'getUser'])-&gt;name('user');</p>
+                    <p>Ici {id} est noté comme un paramètre dans la route. Par exemple, si une requête est faite à l'URL <span class="em">users/12</span>, le Router appellera la méthode <span class="em">getUser</span> avec un paramètre nommé <span class="em">$id</span> de valeur <span class="em">12</span>.</p>
                     <p>Le script <span class="em">artisan</span> fournit une commande permettant de générer facilement un nouveau contrôleur : <span class="html">php artisan make:controller</span>.</p>
-                    <h3 id="gestion_modeles_laravel">Gestion des modèles :</h3>
-                    <p>Le dossier <span class="em">app/Models</span> contient les classes de modèle de Laravel. Il s'agit de classes PHP, et il est donc possible de leur ajouter des attributs et méthodes si c'est nécessaire au fonctionnement de l'application Web. En outre, les classes de modèle contiennent une ou plusieurs méthodes <span class="em">statiques</span> permettant de récupérer un ou plusieurs objets de cette classe, typiquement tirés d'une base de données.</p>
-                    <p>Un exemple de classe de modèle, toujours tiré de myBlog, consisterait en :</p>
+                    <h4 id="controleurs_autres_pages_web">Des contrôleurs autres que pour les pages Web :</h4>
+                    <p>La classe <span class="html">Illuminate\Http\Response</span> est l'objet renvoyé à l'utilisateur par touterequête HTP envoyée au serveur (c'est notamment l'objet renvoyé par <span class="html">view()</span>). Si on souhaite envoyer autre chose qu'une vue HTML, on peut manuellement configurer cette réponse.</p>
+                    <p>Par exemple : <span class="html">return response('Hello World', 200)-&gt;header('Content-Type', 'text/plain');</span> renvoie une réponse contenant "Hello World" avec un statut 200 et un header signalant que le type est du texte brut.</p>
+                    <p>Nous utiliserons principalement cet objet lorsque l'on cherche à écrire des APIs, en particulier des méthodes répondant à des requêtes AJAX. On peut par exemple créer une réponse de type JSON, et lui passer un tableau PHP (qui sont, on s'en souvient, compatible avec l'encodage JSON) :</p>
 <pre class="taille60"><code>&lt;?php
-    namespace App\Models;
-    use \Illuminate\Support\facades\DB;
-
-    class Post {
-        public static function getAllPosts() {
-            $result = DB::select('SELECT bild_id AS id, bil_date AS date,'
-                        . ' bil_titre AS titre, bil_contenu AS contenu FROM t_billet'
-                        . ' ORDER BY bil_id DESC;');
-            return $result;
-        }
-
-        public static function getPostDetails($id) {
-            $result = DB::select('SELECT bil_id AS id, bil_date AS date,'
-                        . ' bil_titre AS titre, bil_contenu AS contenu FROM t_billet'
-                        . ' where bil_id = ' . $id);
-            return $result;
+    return response()-&gt;json([
+        'nom' =&gt; 'Nonyme',
+        'prénom' =&gt; =&gt; 'Albert',
+    ]);
+?&gt;</code></pre>
+                    <p>Notons aussi que les objets qui héritent du <span class="em">Model Eloquent</span> (ainsi que les collections d'objets) peuvent être automatiquement convertis en réponse JSON. On pourra par exemple définir au sein d'un contrôleur :</p>
+<pre class="taille60"><code>&lt;?php
+    class UserCtrl extends Controller {
+        public function getUser($id) {
+            $oneUser = User::find($id);
+            return $oneUser;
         }
     }
 ?&gt;</code></pre>
-                    <p>Le script <span class="em">artisan</span> fournit une commande permettant de générer facilement une nouvelle classe de modèle <span class="html">php artisan make:model</span>.</p>
+                    <p>L'objet User est converti en objet JSON, et seuls ses attributs tirés de la base de données sont transmis, les autres attributs (tirés de <span class="em">Model</span>) sont cachés par le processus, assurant une protection des données.</p>
+                    <h3 id="gestion_modeles_laravel">Gestion des modèles :</h3>
+                    <p>Le dossier <span class="em">app/Models</span> contient les classes de modèle de Laravel. Il s'agit de classes PHP, et il est donc possible de leur ajouter des attributs et méthodes si c'est nécessaire au fonctionnement de l'application Web.</p>
+                    <p>La classe <a href="https://laravel.com/docs/9.x/eloquent" target="_blank">Model</a>, présente dans le namespace <span class="html">Illminate\Database\Eloquent</span>, implémentant des méthodes d'interfaçage avec une base de données. Cela permet de traduire facilement une ligne d'une table de base de données en objet PHP. Des méthodes statiques sont aussi fournies pour effecter des requêtes à la base de données directementvia des appels de fonction, sans devoir écrire des requêtes SQL.</p>
+                    <p>Le script <span class="em">artisan</span> fournit une commande permettant de générer facilement une nouvelle classe de modèle <span class="html">php artisan make:model &lt;nom&gt;</span>.</p>
                     <h4 id="interactions_db_laravel">Interactions avec la base de données :</h4>
-                    <p>Le fichier <span class="html">.env</span> contenu à la racine du projet contient les <span class="em">variables d'environnement</span> du projet, y compris les informations de connexion à la base de données :</p>
+                    <p>Le fichier <span class="html">.env</span> contenu à la racine du projet contient les <span class="em">variables d'environnement</span> du projet, y compris les informations de connexion à la base de données à laquelle le serveur est lié :</p>
 <pre class="taille60"><code>DB_CONNECTION=mysql
+DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=TodoDB
+DB_DATABASE=laravel
 DB_USERNAME=root
 DB_PASSWORD=</code></pre>
-                    <p>Une fois ces variables configurées, on pourra effectuer des requêtes à la base de données via la librairie DB de Laravel :</p>
+                    <p>Ces variables incluent le moteur de base de données, le serveur sur lequel elle se trouve, le port via lequel il est possible d'y accéder, ainsi que le nom de la base de données sur le serveur et les droits d'accès (nom d'utilisateur et mot de passe). Il sera approprié de mettre ces données à jour dès la mise en place de l'application.</p>
+                    <p>Une fois la base de données configurée, les classes héritant de <span class="em">Model</span> possèdent des méthodes permettant la mise en lien automatique avec les tables de la base de données. Par défaut :</p>
+                    <ul>
+                        <li>Une classe correspond à une table ayant le même nom, au pluriel : la classe <span class="em">User</span> correspond à la table <span class="em">Users</span>.</li>
+                        <li>Sa clé primaire est la colonne <span class="em">id</span>.</li>
+                        <li>Deux colonnes <span class="em">created_at</span> et <span class="em">updated_at</span> existent dans la table pour gérer l'historique des créations et modifications d'éléments.</li>
+                    </ul>
+                    <p>Ces comportements peuvent être modifiés en redéfinissant des attributs dans la classe de modèle voulue.</p>
+                    <p>Une fois ces réglages effectués, des méthodes statiques ghéritées de <span class="em">Model</span> permettent d'effectuer des requêtes à la base de données pour récupérer ou modifier des objets.</p>
+                    <p>Par exemple : <span class="html">User::all()</span> retourne une <span class="em">Collection</span> (classe définie par Laravel itérable) reprenant tous les objets de la table <span class="em">Users</span>.</p>
+                    <p>Par contre, <span class="html">User::find(1)</span> retourne un seul <span class="em">User</span> dont la clé primaire est <span class="em">1</span>.</p>
+                    <p>Une requête plus complexe peut être écrite en chaînant différentes méthodes, comme par exemple : <span class="html">User::where('attribut', 'valeur')-&gt;orderBy('name')-&gt;take(10)-&gt;get();</span>.</p>
+                    <p>Les méthodes <span class="html">where</span>, <span class="html">orderBy</span> et <span class="html">take</span> préparent une requête avec différents filtres (similaires à ceux de SQL), et <span class="html">get</span> exécute la requête et renvoie le résultat.</p>
+                    <p>S'il est nécessaire d'exécuter une requête plus complexe, la librairie DB de Laravel offre desméthodes pour envoyer des requêtes directement au serveur. Par exemple :</p>
 <pre class="taille60"><code>&lt;?php
     use \Illuminate\Support\Facades\DB;
 
@@ -783,15 +809,19 @@ DB_PASSWORD=</code></pre>
     DB::insert("INSERT INTO todos (name, description) VALUES (?, ?);", ['acheter du lait', 'aucune description']);
 ?&gt;</code></pre>
                     <p>La méthode <span class="html">DB::select()</span> retourne par défaut des objets anonymes PHP (utilisant la classe <span class="html">stdClass</span>). Les noms de colonnes en SQL deviennent donc des attributs d'objets PHP.</p>
+                    <p>Il est cependant préférable d'utiliser les méthodes des classes de modèle si possible, puisqu'elles ajoutent une couche de sécurité et donnent automatiquement aux objets récupérés le type de la classe demandée, alors que <span class="html">DB::select</span> et ses analogues renvoient des objets anonymes, limitant leur manipulation.</p>
                     <h3 id="gestion_vues_laravel">Gestion des vues :</h3>
-                    <p>Le dossier <span class="html">ressources/views</span> contient les différentes vues de l'application. Celles-ci sont appelées facilement avec la fonction <span class="html">view</span> (accessible partout dans un projet Laravel sans besoin d'imports), comme déjà mentionné.</p>
+                    <p>Le dossier <span class="html">ressources/views</span> contient les différentes <a href="https://laravel.com/docs/9.x/views" target="_blank">vues</a> de l'application. Celles-ci sont appelées facilement avec la fonction <span class="html">view</span> (accessible partout dans un projet Laravel sans besoin d'imports), comme déjà mentionné.</p>
+                    <p>Ces vues peuvent être des fichiers HTML ou des scripts PHP utilisant Blade, un moteur de rendu utilisant PHP.</p>
                     <p>Quant aux <span class="em">feuilles de style CSS</span> et <span class="em">scripts JavaScript</span>, ainsi que tout autre fichier (comme des images) chargés directement sur les pages du site, ils seront placés dans le dossier public. Leur URL sera définie comme le chemin à partir du dossier public.</p>
                     <h4 id="generation_vues_blade_laravel">Génération de vues : Blade :</h4>
+                    <p>Les vues au format HTML sontentièrement statiques : cela peut s'avérer utile pour certaines pages d'un site Web, mais très souvent, on souhaitera ajouter des données sur la page qui changent à chaque affichage.</p>
                     <p>S'il est possible de définir une vue comme un simple fichier PHP créant une page HTML, on utilisera très souvent le <span class="em">moteur de templates</span> de Laravel : Blade. Les vues utilisant Blade doivent toutes être nommées avec un nom se terminant par <span class="em">.blade.php</span>; elles sont appelées au sein de Laravel avec la fonction <span class="html">view</span>, de la même que les vues normales. Par conséquent, <span class="em">view("vueAccueil");</span> peut à la fois faire référence au fichier <span class="em">vueAccueil.php</span> ou au fichier <span class="em">vueAccueil.blade.php</span>; attention à ne pas causer des conflits !</p>
-                    <p>La fonction <span class="em">view</span> permet aussi de passer des variables à une vue :</p>
+                    <p>La fonction <span class="em">view</span> permet aussi de passer des variables à une vue via un tableau associatif :</p>
                     <p class="html">return view('todo', ['todos' =&gt; $todos]);</p>
+                    <p>Cela créera une variable <span class="em">$todos</span> qui pourra être manipulée dans la vue.</p>
                     <p>Ces variables sont passées au sein d'un tableau associatif. Attention : ce sont les noms des clés de ce tableau qui sont ensuite employées au sein de la vue pour faire référence aux variables !</p>
-                    <p>Blade permet de transformer nos vues en se rapprochant du code HTML autant que possible, en laissant au contrôleur le soin de gérer la logique de traitement. De façon générale, un template Blade est du code HTML, avec des doubles accolades pour insérer du code PHP. Par exemple, <span class="html">{{$todos}}</span> insère le contenu de la variable <span class="html">$nom</span> (c'est-à-dire la valeur correspondant à la clé "nom" dans le tableau des variables passé à la vue). Les instructions de contrôle sont quant à elles notées avec un @.</p>
+                    <p>Blade permet de transformer nos vues en se rapprochant du code HTML autant que possible, en laissant au contrôleur le soin de gérer la logique de traitement. De façon générale, un template Blade est du code HTML, avec des doubles accolades pour insérer du code PHP. Par exemple, <span class="html">{{$todos}}</span> insère le contenu de la variable <span class="html">$nom</span> (c'est-à-dire la valeur correspondant à la clé "nom" dans le tableau des variables passé à la vue). Les instructions de contrôle de PHP sont quant à elles appelées via des annotions précédées d'un arobase @.</p>
                     <p>Par exemple :</p>
 <pre class="taille60"><code>&lt;!DOCTYPE html&gt;
 &lt;html lang="fr"&gt;
@@ -805,7 +835,7 @@ DB_PASSWORD=</code></pre>
             &lt;p&gt;Rien pour le moment ;)&lt;/p&gt;
         @else
             &lt;ul&gt;
-                @foreach ($todosas $todo)
+                @foreach ($todos as $todo)
                     &lt;li&gt;{{$todo}}&lt;/li&gt;
                 @endforeach
             &lt;/ul&gt;
@@ -813,7 +843,8 @@ DB_PASSWORD=</code></pre>
     &lt;/body&gt;
 &lt;/html&gt;</code></pre>
                     <h4 id="gabarits_blade_laravel">Gabarits et Blade :</h4>
-                    <p>En tant que moteur de rendu, Blade simplifie en outre grandement l'utilisation d'un gabarit en utilisant un système d'héritage. Notre template est une vue comme les autres, possédant des appels à l'instruction @yield au sein de sa structure :</p>
+                    <p>Blade permet aussi de spéarer une vue en plusieurs modules, afin de ne pas devoir rééccrire plusieurs fois du code HTML sur plusieurs pages.</p>
+                    <p>En tant que moteur de rendu, Blade simplifie en outre grandement l'utilisation d'un <span class="em">gabarit</span> (un fichier Blade reprenant du code HTML lacunaire) en utilisant un système d'héritage. Notre template est une vue comme les autres, possédant des appels à l'instruction @yield('nom') au sein de sa structure :</p>
 <pre class="taille60"><code>&lt;!DOCTYPE html&gt;
 &lt;html lang="fr"&gt;
     &lt;head&gt;
@@ -823,37 +854,142 @@ DB_PASSWORD=</code></pre>
     &lt;/head&gt;
     &lt;body&gt;
         &lt;div id="global"&gt;
-            &lt;header&gt;
-                &lt;h1 id="titreBlog"&gt;&lt;a href="/blog"&gt;Mon Blog&lt;/a&gt;&lt;/a&gt;
-                &lt;p&gt;Je vous souhaite la bienvenue sur ce modeste blog.&lt;/p&gt;
-            &lt;/header&gt;
             &lt;div id="contenu"&gt;
                 @yield('content')
             &lt;/div&gt; &lt;!-- #contenu --&gt;
-            &lt;footer id="piedBlog"&gt;
-                Blog réalisé avec PHP, HTML5, et CSS.
-            &lt;/footer&gt;
         &lt;/div&gt; &lt;!-- #global --&gt;
     &lt;/body&gt;
 &lt;/html&gt;</code></pre>
                     <p>Ensuite, on peut définir une ou plusieurs vues qui héritent de celle-ci avec l'instruction <span class="html">@extends</span>. Le contenu des sections marquées par un <span class="html">@yield</span> est alors renseigné via l'instruction <span class="html">@section</span> (et éventuellement <span class="html">@endsection</span>).</p>
 <pre class="taille60"><code>@extends('template')
-@section('title', 'Mon Blog')
+@section('title', 'TODO')
 @section('content')
-    @foreach ($billets as $billet)
-        &lt;article&gt;
-            &lt;header&gt;
-                &lt;h1 class="titreBillet"&gt;
-                    &lt;a href="/blog/{{$billet-&gt;id}}"&gt;{{$billet-&gt;titre}}&lt;/a&gt;
-                &lt;/h1&gt;
-                &lt;time&gt;{{$cillet-&gt;date}}&lt;/date&gt;
-            &lt;/header&gt;
-            &lt;p&gt;{{$billet-&gt;contenu}}&lt;/p&gt;
-        &lt;/article&gt;
-        &lt;hr&gt;
-    @endforeach
+    &lt;h1&gt;À faire...&lt;/h1&gt;
+    @if (count($todos) === 0)
+        &lt;p&gt;Rien pour le moment ;)&lt;/p&gt;
+    @else
+        &lt;ul&gt;
+            @foreach ($todos as $todo)
+                &lt;li&gt;{{$todo}}&lt;/li&gt;
+            @endforeach
+        &lt;/ul&gt;
+    @endif
 @endsection
 </code></pre>
+                    <h2 id="exemple_concret_laravel">Un exemple concret :</h2>
+                    <p>Nous allons monter ici la réalisation d'une application basique implémentant un blog, inspiré de "Évoluer vers une architecture MVC en PHP" de Baptiste Pesquet, par l'intermédiaire de M. Codutti et N. Richard.</p>
+                    <p>Ce blog possède la base de données suivante, nommée <span class="em">monblog</span> sur le serveur de base de données :</p>
+                    <img src="images/exemple_concret_laravel" alt="exemple concret de Laravel">
+                    <p>On souhaiterait avoir une page d'accueil affichant la liste des billets, et une page de détails d'un billet.</p>
+                    <h3>Configuration de la DB :</h3>
+                    <p>Une fois le projet créé, il faudra configurer les variables d'environnement, en particulier :</p>
+                    <p class="html">DB_DATABASE=monblog</p>
+                    <h3>Mise en place du modèle :</h3>
+                    <p>La seule classe de modèle dont nous avons besoin représente les billets de blog. Créons donc une classe :</p>
+                    <p class="html">php artisan make:model Post</p>
+                    <p>La base de données ne respecte pas les conventions de nomenclature de Laravel. Par conséquent, il faudra définir les paramètres de cette classe afin de la relier à la table voulue :</p>
+<pre class="taille60"><code>&lt;?php
+    
+    namespace App\Models;
+
+    use Illuminate\Database\Eloquent\Factories\HasFactory;
+    use Illuminate\Database\Eloquent\Model;
+
+    class Post extends Model {
+        protected $table = "t_billet";
+        proteted $primaryKey = "bil_id";
+        public $timestamps = false;
+    }
+?&gt;</code></pre>
+                    <p>Notre classe est maintenant prête à interfacer avec la base de données.</p>
+                    <h3>Préparation du garbarit de vue :</h3>
+                    <p>Pour commencer, nous allons immédiatement nous munir d'un gabarit qui gèrera la structure communes aux pages de notre blog :</p>
+<pre class="taille60"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+    &lt;head&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;title&gt;@yield('title')&lt;/title&gt;
+        &lt;link rel="stylesheet" href="styles/myblog.css"&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;header&gt;
+            &lt;h1&gt;
+                &lt;a href="{{route('post.all')}}"&gt;
+                    Bienvenue sur mon blog !
+                &lt;/a&gt;
+            &lt;/h1&gt;
+        &lt;/header&gt;
+        &lt;main&gt;
+            @yield('content')
+        &lt;/main&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>Avec le fichier <span class="em">myblog.css</span> placé dans le dossier <span class="em">public/styles</span> pour qu'il soit accessible à l'utilisateur.</p>
+                    <p>Nous pouvons maintenant créer des vues qui utilisent ce gabarit. Il est donc temps de créer ces pages une par une, avec les routes et contrôleurs associés.</p>
+                    <h3>Page d'accueil :</h3>
+                    <p>Sur la page d'accueil, nous afficherons le titre de chaque billet, ainsi que sa date de publication. Pour cela, il nous faut une route, une méthodede contrôleur, et une vue.</p>
+                    <p>Ajoutons donc à <span class="html">routes/web.php</span> : <span class="em">Route::get('/blog', [BlogCtrl::class, 'allPosts'])-&gt;name('post.all');</span></p>
+                    <p>Crérons ensuite un contrôleur <span class="em">BlogCtrl</span> via <span class="html">php artisan make:controller BlogCtrl</span>.</p>
+                    <p>Et donnons-lui la méthode <span class="em">allPosts</span> :</p>
+<pre class="taille60"><code>&lt;?php
+    namespace App\Http\Controllers;
+    use App\Models\Post;
+    use Illuminate\Http\Request;
+
+    class BlogCtrl extends Controller {
+        public function allPosts() {
+            $allPosts = Post::all();
+            return view('bloghome', ['posts' =&gt; $allPosts]);
+        }
+    }
+?&gt;</code></pre>
+                    <p>Enfin, créeons la vue <span class="em">bloghome.blade.php</span> :</p>
+<pre class="taille60"><code>@extends('template')
+@section('title', 'Mon blog')
+@section('content')
+    @if (count($posts) &gt; 0)
+        &lt;ul&gt;
+            @foreach ($posts as $post)
+                &lt;li&gt;{{$post-&gt;BIL_TITRE}} : {{$post-&gt;BIL_DATE}}&lt;/li&gt;
+            @endforeach
+        &lt;/ul&gt;
+@endsection</code></pre>
+                    <h3>Page de détails :</h3>
+                    <p>La page de détails affiche l'entièreté d'un seul billet. Puisqu'il faut que chaque billet ait son URL propre, nous devrons définir une route paramétrique :</p>
+                    <p class="html">Route::get('/blog/{id}', [BlogCtrl::class, 'postDetails'])-&gt;name('post.show');</p>
+                    <p>Puisque nous traitons des mêmes données, nous pouvons modifier notre contrôleur existant <span class="em">BlogCtrl</span>, et lui ajouter une méthode <span class="em">postDetails</span>.</p>
+<pre class="taille60"><code>&lt;?php
+
+    /*...*/
+    class BlogCtrl extends Controller {
+        /*...*/
+        public function postDetails($id) {
+            $post = Post::find($id);
+            return view('postdetails', ['post' =&gt; $post]);
+        }
+    }
+?&gt;</code></pre>
+                    <p>Enfin, la vue <span class="em">postdetails</span> :</p>
+<pre class="taille60"><code>@extends('template')
+@section('title', $post-&gt;BIL_TITRE)
+@secion('content')
+    &lt;h2&gt;{{$post-&gt;BIL_TITRE}}&lt;/h2&gt;
+    &lt;p&gt;{{$post-&gt;BIL_CONTENU}}&lt;/p&gt;
+    &lt;p class="timestamp"&gt;{{$post-&gt;BIL_DATE}}&lt;/p&gt;
+@endsection</code></pre>
+                    <p>Un lien vers la page d'accueil est déjà présent dans le gabarit. Pour naviguer vers les pages de détails, retournons dans la vue <span class="em">bloghome</span>, et ajoutons un lien sur le titre de chaque billet :</p>
+                    <p class="html">&lt;a href="{{route('post.show', ['id' =&gt; $post-&gt;BIL_ID])}}"&gt;{{$post-&gt;BIL_TITRE}}&lt;/a&gt;</p>
+                    <h2 id="plus_fonctionnalites">Plus de fonctionnalités :</h2>
+                    <p>Le blog est maintenant fonctionnel ! Il est maintenant possible de le lancer via <span class="html">php artisan serve</span>, et de consulter la liste des billets de blog et chacun de ces billets dans son entièreté.</p>
+                    <p>Nous vous laisserons compléter ce blog en guise d'exercice en utilisant le reste des données présentes dans la base de données. En particulier, il faut :</p>
+                    <ul>
+                        <li>Ajouter une classe représentant les commentaires, et créer une relation (utilisez la relation "One-to-Many") entre cette classe et notre classe <span class="em">Post</span>.</li>
+                        <li>Ajouter les commentaires d'un billet sur la page des détails de celui-ci.</li>
+                        <li>Ajouter le nombre de commentaires sur un billet à côté de son entrée sur la page d'accueil.</li>
+                        <li>Ajouter deux APIs, l'une permettant de récupérer tous les billets de blog,l'autre récupérant uniquement les détails d'un billet.</li>
+                        <li>Ajouter une API permettant de créer un nouveau billet. On ne se souciera pas ici des problèmes d'authentification.</li>
+                        <li>Ajouter une API permettant de commenter un billet.</li>
+                    </ul>
                     <h2 id="et_apres">Et après :</h2>
                     <p>Laravel n'est qu'un seul framework web MVC. Il peut sembler imposer de se familiariser avec de nombreuses notions, mais une fois la prise en main effectuée, il simplifie grandement le travail du développeur Web, car il n'est dès lors plus nécessaire que de se soucier des manipulations propres à l'application, en laissant Laravel se charger des interactions de plus bas niveau.</p>
                     <p>Laravel inclut aussi des outils de développement et de débuggage, et bien plus que les bases que nous avons abordées ici. Comme toujours, vous êtes vivement encouragé.e.s de pousser plus loin votre recherche.</p>
