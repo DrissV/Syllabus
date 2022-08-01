@@ -71,7 +71,8 @@
                     <h2>Le fonctionnement d'un formulaire :</h2>
                     <img src="../images/exempleForm.jpg" alt="exemple de formulaire" class="float_right">
                     <p>Le formulaire HTML permet de récupérer des informations que va saisir l'internaute sur une page HTML. L'internaute saisit ses informations soit en remplissant des champs texte (input, soit en sélectionnant un élément dans une liste déroulante (select) ou en sélectionnant une case à cocher (radio, checkbox). Une fois les informations saisies, l'internaute valide en cliquant sur un bouton de soumission (submit). Alors les informations sont transmises soit à une adresse e-mail (mailto) soit à un cgi (<a href="http://fr.wikipedia.org/wiki/Common_Gateway_Interface" target="_blank">Common Gateway Interface</a>), soit à une page dynamique de type php, node.js, asp, jsp...</p>
-                    <p>Toutes les informations transmises lores de la soumission du formulaire sont rassemblées dans une requête, on parle de requêtes HTTP.</p>
+                    <p>Toutes les informations transmises lors de la soumission du formulaire sont rassemblées dans une requête, on parle de requêtes HTTP.</p>
+                    <p>Il est important que l'internaute ait la possibilité de modifier ses saisies ou ses choix précédents. Il ne faut pas que des champs soient désactivés après leur complétion. Des utilisateurs avec des déficiences cognitives ou motrices peuvent saisir des données erronnées, ils doivent pouvoir les corriger.</p>
                     <p>L'exemple ci-contre montre un formulaire d'inscription sur un site.</p>
                     <h3 id="i_form">Écrire un formulaire :</h3>
                     <p>Un formulaire se définit par les balises <span class="html"><span class="em">&lt;form&gt;</span>...<span class="em">&lt;/form&gt;</span></span>.</p>
@@ -144,7 +145,7 @@ Oui, j'accepte cette proposition : <span class="em">&lt;input</span> tyype="chec
                         <li><span class="html em">size</span> qui spécifie la taille de la zone (en caractères pour les zones contenant des caractères), sinon en pixels.</li>
                         <li><span class="html em">maxlength</span> qui spécifie la taille maximale de la zone (en caractères).</li>
                         <li><span class="html em">checked</span> qui préselectionne (pour les <span class="html">radio</span> et les <span class="html">checkbox</span>) l'élément si la valeur d'attribut vaut <span class="html">checked</span>.</li>
-                        <li><span class="html em">placeholder</span> qui permet d'afficher un exemple de valeur.</li>
+                        <li><span class="html em">placeholder</span> qui permet d'afficher un exemple de valeur. Attention à ne pas utiliser l'attribut <span class="em">placeholder</span> à la place d'un label. Cela pose des problèmes d'accessibilité à plusieurs types d'internautes. La couleur par défaut du texte de l'attribut <span class="em">placeholder</span> n'est pas suffisamment contrastée, mais il est difficile de la contraster plus, car elle risque d'être confondue avec une valeur saisie. Le second problème est que le texte inscrit dans le champ via l'attribut <span class="em">placeholder</span> disparaît dès le premier caractère saisi. Ainsi, les utilisateurs ayant des troubles de l'attention peuvent ne pas savoir ce qu'ils doivent saisir. Enfin, cela ne facilite pas la relecture une fois le formulaire complété.</li>
                         <li><span class="html em">required</span> qui permet d'indiquer qu'un champ est obligatoire.</li>
                         <li><span class="html em">tabindex</span> qui permet d'indiquer un ordre de tabulation.</li>
                         <li><span class="html em">accesskey</span> qui permet de créer un raccourci clavier.</li>
@@ -194,7 +195,13 @@ choix 3 : <span class="em">&lt;input</span> type="<span class="em">checkbox</spa
                         <dt id="i_radio"><span class="html">boutons multiples (radio button)</span> :</dt>
                         <dd>
                             <p>propose un bouton d'option, la valeur est envoyée si le bouton est sélectionné.</p>
-                            <p>Si plusieurs boutons sont rassemblés sous le même nom, le choix de l'utilisateur est exclusif.</p>
+                            <p>Si plusieurs boutons sont rassemblés sous le même nom (le même attribut <span class="em">name</span>), le choix de l'utilisateur est exclusif pour faire en sorte de ne sélectionner qu'un seul d'entre eux.</p>
+                            <p>Une personne utilisant un lecteur d'écran est informée de la manière suivante :</p>
+                            <ul>
+                                <li>Oui bouton radio bouton non coché (1 sur 2)</li>
+                                <li>Non bouton radio bouton non coché (2 sur sur 2)</li>
+                            </ul>
+                            <p>Ainsi, elle sait qu'elle doit répondre soit oui soit non. En utilisant les balises <span class="html">&lt;fieldset&gt;</span> et <span class="html">&lt;legend&gt;</span> (voir plus bas), l'utilisateur avec un lecteur d'écran sait à quelle question il répond.</p>
                             <div class="taille50 affichageNav">
                                 Marquez votre choix :</br>
                                 choix 1 : <input type="radio" name="choix" value="choix1"><br>
@@ -365,6 +372,7 @@ choix 3 : <span class="em">&lt;input</span> type="<span class="em">radio</span>"
                         <dt id="i_fieldset"><span class="html">fieldset</span> :</dt>
                         <dd>
                             <p>La balise <span class="html em">fieldset</span> permet de regrouper plusieurs éléments du formulaire. Elle crée un contour autour des balises de formulaires qu'elle entoure.</p>
+                            <p>Pour que l'internaute puisse connaître la question à laquelle il doit répondre, il faut qu'elle soit liée aux cases à cocher et/ou aux boutons radio, sinon elle ne sera pas lue par le lecteur d'écran. Pour cela, il est nécessaire que les cases à cocher et/ou les boutons radio soient regroupés au sein d'une balise <span class="html">&lt;fieldset&gt;</span> et que la question soit indiquée via la balise <span class="html">&lt;legend&gt;</span>.</p>
                             <div class="taille60 affichageNav">
                                 <fieldset>
                                     <p>Nom : <input type="text" name="nom"></p>
@@ -396,10 +404,28 @@ choix 3 : <span class="em">&lt;input</span> type="<span class="em">radio</span>"
                             <fieldset>
                                 <legend>Ma légende</legend>
                             </fieldset>
+                            <p>Les balises <span class="html">&lt;fieldset&gt;</span> et <span class="html">&lt;legend&gt;</span> ne sont pas faciles à styliser avec des règles CSS. Il est possible d'utiliser l'attribut <span class="em">ARIA role="group"</span> sur une autre balise afin qu'elle joue le même rôle que <span class="html">&lt;fieldset&gt;</span>. Cette balise qui englobe les éléments à regrouper doit posséder un attribut <span class="em">role="group"</span> et qu'elle possède un attribut <span class="em">aria-labelledby</span> ayant pour valeur celle de l'attribut <span class="em">id</span> de la balise contenant la légende du groupe.</p>
+                            <p>Exemple :</p>
+<pre class="taille60"><code>&lt;div class="card" role="group" aria-labelledby="competences"&gt;
+    &lt;div class="card-header" id="competences"&gt;
+        Quels sont vos domaines de compétence ?php
+    &lt;/div&gt;
+    &lt;input type="checkbox" name="html" id="html"&gt;
+    &lt;label for="html"&gt;HTML&lt;/label&gt;
+    &lt;input type="checkbox" name="css" id="css"&gt;
+    &lt;label for="css"&gt;CSS&lt;/label&gt;
+&lt;/div&gt;</code></pre>
+                            <p>La restitutionn par NVDA sera lue de la manière suivante :</p>
+                            <ul>
+                                <li>Quels sont vos domaines de compétence (Groupe)</li>
+                                <li>HTML case à cocher non cochée</li>
+                                <li>CSS case à cocher non cochée</li>
+                            </ul>
                         </dd>
                         <dt id="i_label"><span class="html">label</span> :</dt>
+                        <p>Les internautes utilisant un lecteur d'écran sont dans une situation particulière lorsqu'ils complètent un formulaire. Les raccourcis sont temporairement désactivés pour permettre la saisie de texte dans les champs. Contrairementà leur habitude, ils se déplacent avec la touche <span class="em">[Tab]</span>. Le texte positionné à côté des champs n'est pas lu, à moins d'être associé au champ de saisie.</p>
                         <dd>
-                            <p>La balise <span class="html em">label</span> permet lorsque l'on clique sur son texte de donner le focus à un champ de formulaire.</p>
+                            <p>La méthode pour associer un libellé à un champ la plus couramment utilisée est d'associer une balise <span class="html">&lt;label&gt;</span> au champ de saisie pour que l'utilisateur sache ce qu'il doit saisir. Cette association permet d'obtenir la lecture du label lorsque l'utilisateur arrive dans le champ. La balise <span class="html em">label</span> permet lorsque l'on clique sur son texte de donner le focus à un champ de formulaire.</p>
                             <div class="taille60 affichageNav">
                                 <p><label for="prenom">Direct sur le prénom</label></p>
                                 <p>Nom : <input type="text" name="nom" id="nom"></p>
@@ -409,6 +435,17 @@ choix 3 : <span class="em">&lt;input</span> type="<span class="em">radio</span>"
 <pre class="taille60"><code>&lt;p&gt;<span class="em">&lt;label for="prenom"&gt;</span>Direct sur le prénom<span class="em">&lt;/label&gt;</span>&lt;/p&gt;
 &lt;p&gt;Nom : &lt;input type="text" name="nom" id="nom"&gt;&lt;/p&gt;
 &lt;p&gt;Prénom : &lt;input type="text" name="prenom" id="prenom&gt;&lt;/p&gt;</code></pre>
+                            <p>Lorsque l'internaute arrive sur le deuxième champ de saisie (cette balise <span class="html">&lt;input&gt;</span>).NVDA lit : "direct sur le prénom édition autocomplétion vide". L'utilisateur sait donc qu'il doit saisir son prénom.</p>
+                            <p>Il est également possible d'utiliser l'un des attributs <span class="em">aria-labelledby</span>, <span class="em">aria-label</span> ou <span class="em">title</span> pour obtenir cette lecture.</p>
+                            <p>Dans le cas de l'utilisation des attributs <span class="em">aria-label</span> ou <span class="em">title</span>, il faut faire attention que leur valeur reprenne le texte affiché afin qu'un utilisateur en commande vocale puisse accéder au champ avec le nom affiché à l'écran.</p>
+                            <p>Remarque : l'inconvénient de ces techniques par rapport à l'utilisation d'un label est que le label n'est pas cliquable. En particulier, pour les cases à cocher et les boutons radio, cela réduit la zone cliquable, ce qui est problématique pour des utilisateurs rencontrant des difficultés à cliquer dans une petite zone. Il faut donc privilégier l'utilisation d'un label.</p>
+                            <p>Si une autre information n'est pas présente dans le label, une unité par exemple, il est nécessaire de l'associer au champ, sans quoi elle ne sera pas lue. Pour cela, il est possible d'utiliser l'attribut <span class="em">aria-describedby</span>.</p>
+                            <p>Exemple :</p>
+<pre class="taille60"><code>&lt;label for="taille"&gt;Taille&lt;/label&gt;
+&lt;input id="taille" type="text" name="taille" aria-describedby="uniteTaile"&gt;
+&lt;span id="uniteTaille&gt;cm&lt;/span&gt;</code></pre>
+                            <p>Ainsi, lors de l'arrivée dans ce champ, NVDA lit : "taille édition autocomplétion cm vide".</p>
+                            <p>Remarque: le problème de cette solution, c'est que les messages d'erreur sont également associés au champ en erreur avec cet attribut.</p>
                         </dd>
                     </dl>
                 </article>

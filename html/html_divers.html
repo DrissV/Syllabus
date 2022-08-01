@@ -87,7 +87,7 @@
                     <h2 id="definition">La définition :</h2>
                     <p>La définition est, sans l'ombre d'un doute, le facteur permettant les plus gros gains d'un point de vue taile et donc sollicitation du réseau lors du chargement. Est-il nécessaire d'avoir une résolution HD (ou pire, 4K ou 8K) pour un visionnage sur un écran de smartphone ?</p>
                     <p>Voici un comparatif du poids des fichiers pour un enregistrement de 1 minutes à 30 images par seconde, sans compression :</p>
-                    <table>
+                    <table id="tableBalises">
                         <thead>
                             <tr>
                                 <th>Nom de la définition</th>
@@ -159,13 +159,79 @@
                     <p>Pour héberger vos vidéos, vous avez deux options : soit directement chez votre hébergeur avec le reste de votre site internet, soit sur une plateforme de vidéos, comme YouTube, Vimeo, Dailymotion...</p>
                     <h3 id="hebergement_serveur_web">L'hébergement sur son serveur web :</h3>
                     <p>La vidéo est hébergée chez votre prestataire au même titre que vos pages internet, vos images et le reste de vos contenus. Il suffit d'utiliser une balise <span class="html">&lt;video&gt;</span> avec la source qui pointe vers votre vidéo ou vers vos vidéos si vous utilisez différents formats.</p>
-                    <h2 id="hebergemnt_plateforme_video">L'hébergement sur une plateforme vidéo :</h2>
+                    <h2 id="hebergement_plateforme_video">L'hébergement sur une plateforme vidéo :</h2>
                     <p>Si vous possédez un compte chez une plateforme de ce type, il est assez aisé d'intégrer des vidéos sur votre site internet. Elles y sont systématiquement recompressées (mais, si vous les avez bien travaillées auparavant, cela n'a quasiment pas d'impact). Des fonctionnalités vous sont proposées, permettant de récupérer directement le code HTML à intégrer dans votre page. Il faut uniquement prendre garde à ce qu'il soit correctement accessible.</p>
+                    <p>Voici comment procéder avec Youtube :</p>
+                    <ul>
+                        <li>Allez sur YouTube, puis connectez-vous.</li>
+                        <li>Cliquez sur l'icône <i class="fa-solid fa-video" aria-hidden="true"></i> pour ajouter une vidéo, puis <span class="em">Mettre en ligne une vidéo</span>.</li>
+                        <li>Une fois la vidéo ajoutée, vous pouvez la regarder sur YouTube en cliquant sur l'icône <i class="fa-brands fa-youtube" aria-hidden="true"></i>.</li>
+                        <li>Cliquez sur le lien <span class="em">Partager</span>, puis choisissez <span class="em">Intégerer</span>.</li>
+                        <li>Copiez ensuite le code généré.</li>
+                    </ul>
                     <p>Pour rendre ce contenu pleinement accessible, il faut expliciter le titre de la balise <span class="html">&lt;iframe&gt;</span> en modifiant l'attribut <span class="em">title</span> :</p>
 <pre class="taill60"><code>&lt;iframe width="560" height="315" src="https://www.youtube.com/embed/qPbR4ucGbEY" title="lecteur vidéo de la séance d'escalade confinée" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen&gt;&lt;/iframe&gt;</code></pre>
-                    <p>Il est également nécessaire de supprmer <span class="em">frameborder="0"</span> (un attribut qui ajoute ou non une bordure selon sa valeur) et d'utiliser du code CSS à la place si nécessaire.</p>
+                    <p>Il est également nécessaire de supprimer <span class="em">frameborder="0"</span> (un attribut qui ajoute ou non une bordure selon sa valeur) et d'utiliser du code CSS à la place si nécessaire.</p>
                     <h2 id="sous-titrage">Le sous-titrage :</h2>
                     <p>Comme pour les contenus audio, si la vidéo contient une partie vocale, il est nécessaire de sous-titrer pour les personnes sourdes ou malentendantes.</p>
+                    <h3 id="sous-titrage_serveur_web">Sur son serveur web :</h3>
+                    <p>Il est possible de proposer une ou plusieurs pistes de sous-titres pour une vidéo. Cela se réalise grâce à la balise <span class="html">&lt;track&gt;</span> dans la balise <span class="html">&lt;video&gt;</span>. Il faut produire un fichier WebVTT (Web Video Text Track) contenant les sous-titres et les plages de temps durant lesquelles ils doivent s'afficher. Le fichier doit respecter la structure suivante :</p>
+<pre class="taille60"><code>WEBVTT titre
+
+début1 --&gt; fin1
+sous-titre1
+
+début2 --&gt; fin2
+sous-titre2
+
+...</code></pre>
+                    <p>Exemple :</p>
+<pre class="taille60"><code>WEBVTT La séance d'escalade confinée
+
+0:00:07.007 --&gt; 0:00:09.009
+Allez, on part à l'escalade !
+
+0:00:09.009 --&gt; 0:00:13.013
+Ouais c'est pas parce qu'on est confiné qu'on peut pas aller escalader
+
+0:00:14.221 --&gt; 0:00:16.650
+Allez c'esr bon, on arrive !</code></pre>
+                    <p>Il est possible de créer ce fichier à la main ou d'utiliser un éditeur. Il en existe un certain nombre permettant la saisie manuelle des sous-titres. La génération automatique des sous-titres ou le sous-titrage par une personne sont généralement des options payantes.</p>
+                    <p>Une fois que vous avez généré votre fichier <span class="em">.vtt</span>, il faut l'associer à votre vidéo.</p>
+                    <p>Exemple :</p>
+<pre class="taille60"><code>&lt;video controls&gt;
+    &lt;source src="sortie_escalada_confinee.mp4" type="video/mp4"&gt;
+    &lt;track kind="captions" label="sous-titres en fançais" srclang="fr" src="test.vtt" default&gt;
+&lt;/video&gt;</code></pre>
+                    <p>La balise <span class="html">&lt;track&gt;</span> peut être présente plusieurs fois pour différents sous-titrages. Mais seule une des balises <span class="html">&lt;track&gt;</span> présentes peut avoir l'attribut <span class="em">default</span>. Cet attribut permet de savoir si un sous-titrage est actif par défaut. L'internaute peut de toute façon activer les sous-titres et choisir sa langue au besoin.</p>
+                    <p>L'attribut <span class="em">kind</span> permet d'indiquer le type de piste texte comment l'utiliser. Il peut prendre les valeurs :</p>
+                    <ul>
+                        <li><span class="em">subtitles</span> : pour les sous-titres d'une vidéo en langue étrangère.</li>
+                        <li><span class="em">captions</span> : pour une retranscription du contenu audio.</li>
+                        <li><span class="em">description</span> : pour une audiodescription.</li>
+                        <li><span class="em">chapters</span> : pour les titres des chapitres</li>
+                        <li><span class="em">metadata</span> : pour une utilisation par des scripts; non restitué à l'internaute.</li>
+                    </ul>
+                    <p>L'attribut <span class="em">label</span> permet de choisir le titre de la piste de sous-titrage qui sera affichée à l'internaute.</p>
+                    <p>L'attribut <span class="em">srclang</span> permet d'indiquer la langue utilisée pour le sous-titrage de cette piste.</p>
+                    <p>Enfin, l'attribut <span class="em">src</span> permet d'indiquer le fichier <span class="em">.vtt</span> à utiliser.</p>
+                    <p>Il est possible de personnaliser un peu (seules quelques propriétés CSS sont prises en charge). Par exemple, l'apparence des sous-titres peut être définie via le pseudo-élément <span class="html">::cue</span>.</p>
+                    <p>Exemple :</p>
+<pre class="taille60"><code>::cue {
+    opacity: .7;
+}</code></pre>
+                    <h3 id="sous-titrage_plaeforme_video">Sur une plateforme vidéo :</h3>
+                    <p>YouTube sous-titre automatiquement les vidéos postées sur sa plateforme. Néanmoins, la reconnaissance automatique de la parole en français est loin d'être parfaite ! Il est donc nécessaire de repasser manuellement sur les vidéos pour les corriger.</p>
+                    <ul>
+                        <li>Pour cela, allez dans votre espace <span class="em">YouTube Studio</span>, cliquez sur la vidéo, puis sur <span class="em">Sous-titres</span>.</li>
+                        <li>Cliquez sur <span class="em">Dupliquer et modifier</span> et indiquez la langue de sous-titrage.</li>
+                        <li>Cliquez sur <span class="em">Modifier les codes temporels</span>.</li>
+                        <li>Vous pouvez ensuite modifier les sous-titres, la plage de temps d'affichage et ajouter des sous-titres si nécessaire.</li>
+                        <li>Une fois cela terminé, cliquez sur <span class="em">PUBLIER</span>.</li>
+                    </ul>
+                    <h2 id="audiodescription">L'audiodescription :</h2>
+                    <p>L'audiodescription permet aux personnes non voyantes d'obtenir les éléments de contexte visuel auxquels elles n'ont pas accès. Les grandes plateformes ne proposent pas encore d'ajouter de l'audiodescription sur les vidéos. Les lecteurs des navigateurs ne prennent toujours pas en compte l'audiodescription même si HTML permet d'utiliser une balise <span class="html">&lt;track&gt;</span> avec l'attribut <span class="em">kind="descriptions"</span>.</p>
+                    <p>Pour le moment, il est nécessaire d'avoir recours à un lecteur vidéo en JavaScript tel qu'Able Player ou video.js avec leplug-in vidojs-speak+description-track.</p>
                 </article>
                 <article id="i_main">
                     <h2>Main :</h2>
