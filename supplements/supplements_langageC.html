@@ -1284,7 +1284,90 @@ if ((adresse = strtok(NULL, ":;")) == NULL) {
                     <h4 id="fonctions_conversions_numeriques">Les fonctions de conversions numériques :</h4>
                     <p>La conversion d'une chaîne de caractères en la valeur numérique qu'elle représente peut se faire en utilisant des fonctions de conversion simple - double atof (const char *str), int atoi (const char *str), long atol (const char *str) - qui ne donnent aucune information sur le résultat, ou grâce à des fonctions qui fourniront des informations exploitables pour s'assurer que la conversion est correcte - double strtol (const char *str, char **pptr), long strtol (const char *str, char **pptr, int base), unsigned long strtoul (const char *str, char **pptr, int base). Ces fonctions nécessitent l'inclusion du fichier <span class="em">stdlib.h</span>.</p>
                     <p>Voici les fonctions de conversions simples :</p>
-                    
+                    <dl>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/atof.3.html" target="_blank">double atof (const char *str)</a> :</dt>
+                        <dd>cette fonction convertit la valeur comprise dans la chaîne str en un nombre double; la conversion se termine au premier caractère qui n'est pas interprétable.</dd>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/atoi.3.html" target="_blank">int atoi (const char *str)</a> :</dt>
+                        <dd>cette fonction convertit la valeur comprise dans la chaîne str en un nombre int; la conversion se termine au premier caractère qui n'est pas interprétable.</dd>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/atol.3p.html" target="_blank">long atol (const char *str)</a> :</dt>
+                        <dd>cette fonction convertit la valeur comprise dans la chaîne str en un nombre long; la conversion se termine au premier caractère qui n'est pas interprétable.</dd>
+                    </dl>
+                    <p>Et celles qui convertissent la chaîne avec une référence sur le caractère qui cause l'arrêt de la conversion. Dans ces fonctions, le paramètre char **pptr permet à la fonction de renvoyer l'adresse du caractère qui a causé l'arrêt de la conversion. De plus la fonction positionne la variable système errno à un code d'erreur qui indique la raison de l'arrêt de la conversion.</p>
+                    <dl>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/strtod.3.html" target="_blank">double strtod (const char *str, char **pptr)</a> :</dt>
+                        <dd>cette fonction convertit la valeur comprise dans la chaîne str en un nombre double; la conversion se termine au premier caractère qui n'est pas interprétable, dont l'adresse est renvoyée dans le paramètre pptr.</dd>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/strtol.3.html" target="_blank">long strtol (char char *str, char *pptr, int base)</a> :</dt>
+                        <dd>cette fonction convertit la valeur comprise dans la chaîne str en un nombre long int; elle convertit un nombre encodé dans une base comprise entre 2 et 36; la conversion se termine au premier caractère qui n'est pas interprétable.</dd>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/strtoul.3.html" target="_blank">int strtoul (const char *str, char **pptr, int base)</a> :</dt>
+                        <dd>cette fonction convertit la valeur comprise dans la chaîne str en un nombre unsigned long int; elle convertit un nombre encodé dans une base comprise entre 2 et 36; la conversion se termine au premier caractère qui n'est pas interprétable.</dd>
+                    </dl>
+                    <h4 id="fonctions_traitements_memoire">Les fonctions de traitements sur la mémoire :</h4>
+                    <p>Semblables aux fonctions de traitement des chaînes de caractères, elles utilisent des zones mémoires non spécifiques aux chaînes de caractères et donc se basent sur une dimension pour limiter leur action.</p>
+                    <dl>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/memchr.3.html" target="_blank">void* memchr (const void *ptr, int car, size_t n)</a> :</dt>
+                        <dd>fonction qui cherche le caractère car dans la zone mémoire d'adresse ptr sur n bytes; la fonction retourne l'adresse de la première occurrence du caractère ou NULL si le caractère n'est pas trouvé.</dd>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/memcmp.3.html" target="_blank">int memcmp (const void *ptr1, const void *ptr2, size_t n)</a> :</dt>
+                        <dd>fonction qui compare deux zones de mémoire.</dd>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/memcpy.3.html" target="_blank">char* memcpy (void *dest, const void *src, size_t n)</a> :</dt>
+                        <dd>fonction qui copie une zone mémoire dans une autre.</dd>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/memmove.3.html" target="_blank">char* memmove (void * dest, const void *src, size_t n)</a> :</dt>
+                        <dd>fonction qui copie une zone mémoire dans une autre, les zones mémoires pouvant se superposer; la fonction retourne l'adresse de la première occurrence du caractère ou NULL si le caractère n'est pas trouvé.</dd>
+                        <dt><a href="http://man7.org/linux/man-pages/man3/memset.3.html" target="_blank">void *memset (void *ptr, int car, size_t n)</a> :</dt>
+                        <dd>fonction qui place n caracères car dans la zone mémoire ptr.</dd>
+                    </dl>
+                    <h3 id="tableaux_chaines_caracteres">Tableaux dechaînes de caractères :</h3>
+                    <p>En accord avec la définition d'une chaîne de caractères, nous comprenons aisément qu'un tableau de chaîne de caractères est en fait un tableau de tableaux de caractères, peut-être un peu particulier.</p>
+                    <h4 id="tables_definies_compilation">Tables définies à la compilation :</h4>
+                    <p>Une table de chaînes de caractères peut être définie de deux manières différentes : soit comme une table de tables de caractères</p>
+<pre class="taille60"><code>char tabTab[4][4] = {"ABC", "DE", "F"};</code></pre>
+                    <img src="../images/TableDeTables.png" alt="table de tables">
+                    <p>soit comme une table de pointeurs sur un caractère</p>
+<pre class="taille60"><code>char *tabPtr[4] = {"ABC", "DE", "F"};</code></pre>
+                    <img src="../images/TableDePointeurs.png" alt="table de pointeurs">
+                    <p>Dans le second cas, la table tabPtr contient des adresses de chaînes stockées dans le Data Segment, tandis que dans le premier cas la table tabTab, contient des tableaux de caractères.</p>
+                    <h4 id="tables_dynamiques">Tables dynamiques :</h4>
+                    <p>Pour allouer une table de chaînes de caractères char **table dynamiquement, il faut d'abord allouer la table des pointeurs table=(char**)malloc((n+1)*sizeof(char*)), où n+1 permet de tenir compte du pointeur nul qui marquera la fin de la table, et ensuite pour chaque pointeur, allouer la mémoire suffisante et recopier la chaîne.</p>
+<pre class="taille60"><code>char tabTab[4][4] = {"ABC", "DE", "F"};
+char **tabDyn;
+// allocation de 4 pointeurs sur un caractère
+if ((tabDyn = (char**)malloc(4*sizeof(char*))) == NULL) {
+    perror("Malloc KO\n");
+    return 1;
+}
+// copie de la 1ère chaîne de tabTab dans tabDyn :
+
+// allocation de la mémoire pointée par tabDyn
+if ((*tabDyn = (char*)malloc((strlen(tabTab[0]+1)*sizeof(char))) == NULL) {
+    perror("Malloc KO\n");
+    return 1;
+}
+// copie de la chaîne tabTab[0] dans la 1ère chaîne de tabDyn
+strcpy(*tabDyn, *tabTab);
+....</code></pre>
+                    <img src="../images/TableDynamique.png" alt="table dynamique">
+                    <h4 id="tableau_arguments_programme">Un cas particulier : le tableau des arguments du programme :</h4>
+                    <p>Lorsque l'utilisateur veut passer des arguments au programme, il doit utiliser une structure particulière : un tableau des arguments déclaré comme paramètre de la fonction principale main. Chaque argument de l'application est une chaîne de caractères qui est reprise dans un tableau. Le premier élément de cette table, l'élément 0 du tableau, est le nom du processus. L'autre paramètre de cette fonction main, de type int, donne le nombre de chaînes dans la table, à savoir le nombre des arguments + 1. Le dernier élément de la table est un pointeur nul pour marquer la fin de la table :</p>
+                    <p>Si l'utilisateur appelle le programme suivant :</p>
+<pre class="taille60"><code>int main(int argc, char *argv[]) {
+    printf("Le nom du processus est '%s'\n", *argv);
+    if (argc == 3) {
+        printf("Le nom du premier argument est '%s'\n", *(argv+1));
+        printf("Le nom du second argument est '%s'\n", argv[2]);
+    }
+}</code></pre>
+                    <p>en introduisant dans le shell la commande suivante :</p>
+<pre class="taille60"><code>./affiche arg1 arg2</code></pre>
+                    <p>voici le résultt qui s'affichera</p>
+<pre class="taille60"><code>Le nom du processus est './affiche'
+Le nom du premier argument est 'arg1'
+Le nom du second argument est 'arg2'</code></pre>
+                    <h3 id="traitement_caracteres">Taitement des caractères :</h3>
+                    <p>Avant de terminer ce chapitre, passons rapidement en revue quelques macros de traitements d'un caractère.</p>
+                    <p>Les traitements essentiels des caractères ont été codés dans des macros, définies dans le fichier d'entête &lt;ctype.h&gt; de la librairie standard C. Ces macros permettent de caractériser un caractère (stocké dans un char ou stocké dans un int) :</p>
+                    <dl>
+                        <dt><span class="gras">isalpha(c)</span> :</dt>
+                        <dd>teste si c est une lettre.</dd>
+                    </dl>
                 </article>
             <!-- fin de section -->
             </section>
