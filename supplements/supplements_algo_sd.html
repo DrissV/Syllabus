@@ -680,7 +680,430 @@ int[] tab = new int[taille];</code></pre>
                         <li>la <span class="em">taille physique</span> du tablau : le nombre de "cases" réservées dans les déclarations de variables ou lors de la construction (le "prédimensionnement").</li>
                         <li>la <span class="em">taille logique</span> du tableau : le nombre de "cases effectivement occupées à un moment donné par des informations pertinentes (autres donc que des "crasses").</li>
                     </ul>
-                    <p></p>
+                    <p>La <span class="souligne">taille physique</span>apparaît dans les déclarations de variables ou dans l'appel au constructeur : elle ne pose pas de problème particulier, sinon qu'il faut veuiller, lors de tout adressage à un élément du tableau, à ne pas "sortir" des limites autorisées.</p>
+                    <p>Selon les langages, les compilateurs et parfois même les options de compilation, le comportement peut varier si l’on sort malencontreusement de ces limites. En Java, qui est un langage plein de garde-fous, une telle erreur provoque la levée d’une "exception" et, au pire, l'arrêt du programme avec un message d’erreur. Ailleurs, on peut avoir une situation où aucun contrôle n’est effectué et où, tout en croyant qu’on se "promène" dans le tableau, on se trouve dans une autre partie de la mémoire... (d'où des risques de catastrophes imprévisibles !)</p>
+                    <p>Quant à la <span class="em">taille logique</span>, il revient au programmeur de la gérer convenablement dans son programme. Les deux techniques les plus fréquentes à cet égard sont :</p>
+                    <ol>
+                      <li>
+                        <p>Au tableau proprement dit, on adjoint un attribut de la gérer, qui sert à dire <span class="em">jusqu'où</span> le tableau est rempli. On s'arrange dans ce cas pour que tous les éléments "utiles" du tableau soient toujours rassemblés au début de celui-ci.</p>
+                        <ul>
+                            <li>Si les indices commencent à 1, cette variable représente à la fois le <span class="em">nombre</span> d'éléments utiles (donc la taille logique) et l'<span class="em">indice</span> du dernier d'entre eux.</li>
+                            <li>S'ils commencent à 0, comme c'est le cas en Java, cette variable représente à la fois le nombre d'éléments utiles et l'indice de la première case inutilisée.</li>
+                        </ul>
+                      </li>
+                      <li>Si les N premières cases du tableau sont utilisées et pas les suivantes, on met en position N + 1 un "élément-bidons" dans toutes les cases inoccupées).</li>
+                    </ol>
+                    <p>La seconde de ces techniques présente divers inconvénients :</p>
+                    <ul>
+                        <li>Le tableau doit avoir une "case" de plus que le plus grand nombre possible d'éléments.</li>
+                        <li>Il n'existe pas toujours un "élément-bidon" qui ne peut être égal à aucune valeur "normale" des éléments du tableau.</li>
+                        <li>Le tableau contient des informations de deux natures différentes : d'une part les éléments proprement dits, et d'autre part le signal de fin.</li>
+                        <li>Certains algorithmes (recherche dichotomique par exemple) sont fort alourdis.</li>
+                    </ul>
+                    <p>Nous préconisons donc la première technique, et suggérons même de déclarer les tables sous forme de <span class="em">classes</span> contenant le tableau proprement dit et sa dimension logique. Exemple :</p>
+<pre class="taille60"><code>public class TableauDeTailleVariable {
+    int nombreElements;
+    VotreClasse[] tab;
+}</code></pre>
+                    <p>Ainsi, lorsqu'une telle table sera par exemple transmise comme paramètre à une <span class="em">méthode</span>, elle ne se présentera que sous forme d'un seul paramètre tout en véhiculant l'information complète.</p>
+                    <p>Par ailleurs en Java, on peut aussi utiliser la classe toute faite "Vector".</p>
+                    <h3 id="classement_tableaux_types_cles">Classement des tableaux selon les types de clés :</h3>
+                    <p>La "<span class="em">clé</span>" est une information connue d'un tableau et permet de trouver la bonne case.</p>
+                    <ol>
+                        <li>La clé est l'indice. Exemple : un tableau indicé de 1 à N.</li>
+                        <li>La clé et l'indice sont liés par une fonction bijective simple : c'est une variante trivale du cas précédent. Exemple : un tableau commençant à 0.</li>
+                        <li>
+                            <p>La clé est un des champs de l'objet, et la table n'est pas triée (ou du moins n'est pas triée suivant cette clé). Exemple : nous avons un tableau d'articles, chaque "case" pointe vers un objet qui contient un numéro d'article et un total, la clé étant le numéro :</p>
+                            <img src="../images/classement_tableaux_types_cles_1.png" alt="">
+                            <p>Pour conaître ou modifier le total de l'article n°175, il fau d'abord faire une <span class="souligne">recherche</span> pour localiser la case où se trouve cet article.</p>
+                        </li>
+                        <li>
+                            <p>La clé est un des champs de l'objet, et la table est <span class="em">triée</span> suivant cette clé. Exemple : chaque "case" contient un numéro d'article et un total. Les numéros d'articles se présentent cette fois en ordre croissant et constituent toujours la clé.</p>
+                            <img src="../images/classement_tableaux_types_cles_2.png" alt="">
+                            <p>De nouveau, une recherche est nécessaire avant toute intervention, mais cette recherche pourra être améliorée grâce au classement du tableau (recherche de dichotomique, par exemple).</p>
+                        </li>
+                        <li>
+                            <p>La clé est un des champs de l'objet, et la table n'est pas triée; la table contient des "trous". Ici, les "trous" sont concrétisés par une valeur null (représentée par un point sur la figure).</p>
+                            <img src="../images/classement_tableaux_types_cles_3.png" alt="">
+                        </li>
+                        <li>
+                            <p>Idem, avec table triée (sauf pour les éléments "trous" qui sont intercalés n'importe où entre les éléments triés).</p>
+                        </li>
+                    </ol>
+                    <h3 id="insertion_table_non_riee">Insertion dans une table non triée :</h3>
+                    <p>Dans les exemples, nous présenterons des algorithmes travaillant sur des tableaux d'entiers ou sur des tableaux d'objets.</p>
+                    <p>Nous allons travailler sur base des classes TableauDArticles qui contiendront le tableau et le nombre d'éléments réellement présents dans cette table. Ce nombre d'éléments est la <span class="souligne">taille logique</span> du tableau :</p>
+<pre class="taille60"><code>public class TableauDEntiers {
+    public static final int MAX_ELEM = 30;
+    int[] tab = new int[MAX_ELEM];
+    int nbEntiers = 0;
+}</code></pre>
+<pre class="taille60"><code>public class TableauDArticles {
+    public static final int MAX_ELEM = 30;
+    Article[] tab = new Article[MAX_ELEM];
+    int nbArticles = 0;
+}</code></pre>
+                    <p>Nous donnons ici un premier exemple d’algorithme, en choisissant un cas extrêmement simple. Le but de cet exemple est essentiellement de montrer comment écrire proprement ce type d’algorithme : sous forme d’une méthode où l’on indique clairement les paramètres, avec commentaires Javadoc explicatifs, et en n’oubliant pas les tests de validité.</p>
+                    <p>En cas d’impossibilité de l’insertion, la méthode renvoie cette information d’échec dans sa valeur de retour de type booléen : cette attitude est à adapter aux nécessités lorsqu’on implémente cet algorithme dans un programme réel (dans certains cas, il n’y a rien à faire en cas d’échec, dans d’autres, il suffira d’afficher un message à l’écran, dans d’autres encore, il faudra arrêter toute l’exécution du programme, etc.).</p>
+<pre class="taille60"><code>/**
+* Insère un nouvel entier dans le Tableau
+* @param elem l'entier à insérer
+* @return faux si le tableau est plein, true sinon
+*/
+public boolean inserer (int elem) {
+    if (nbEntiers == MAX_ELEM) {
+        return false;
+    }
+    tab[nbEntiers] = elem;
+    nbEntiers++;
+    return true;
+}</code></pre>
+                    <p>L’insertion décrite dans cet algorithme consiste simplement à insérer le nouvele entier après le dernier élément logique. Vu qu’en Java les tableaux commencent à l’indice 0, de façon assez commode le dernier élément logique est à l’indice nbEntiers – 1 et l’on fait donc l’insertion à l’indice nbEntiers.</p>
+                    <p>L’inconvénient de cette méthode est qu’une fois le tableau plein on ne peut plus rien faire. Voici une méthode permettant d’augmenter la taille du tableau une fois celui-ci complètement rempli :</p>
+<pre class="taille60"><code>/**
+* Insère un nouvel entier dans le Tableau
+* Si la table est pleine, on double sa taille
+* @param elem l'entier à insérer
+*/
+public boolean inserer (int elem) {
+    if (nbEntiers == tab.length) {
+        // Plus de place ? On double la taille du tableau
+        int[] tmp = new int[tab.length * 2];
+        for (int i = 0; i &lt; nbEntiers; i++) {
+            tmp[i] = tab[i];
+        }
+        tab = tmp;
+    }
+    tab[nbEntiers] = elem;
+    nbEntiers++;
+    return true;
+}</code></pre>
+                    <p>Ici lorsque l’on détecte que le tableau est plein, on crée un deuxième tableau deux fois plus grand dans lequel on vient recopier les éléments du tableau original. Ensuite l’instruction tab = tmp remplace l’ancien tableau par le nouveau. Cela est possible car en Java les tableaux sont traités comme des objets et la table tab contient une référence vers le tableau. tab = tmp change donc uniquement les références.</p>
+                    <h3 id="insertion_table_triee">Insertion dans une table triée :</h3>
+                    <p>Lors de cette insertion, nous devons conserver le caractère trié du tableau. Nous ne pouvons donc pas simplement insérer l’élément en dernière position.</p>
+                    <p>Si la case prévue pour le nouvel élément est occupée, nous allons déplacé les éléments situés entre l’indice de la case occupée et l’indice du dernier élément. Ce déplacement ne pourra pas se faire d’un seul coup. Nous devrons les déplacer un à un en commençant par le dernier :</p>
+<pre class="taille60"><code>/**
+* Insère un nouvel entier dans le tableau
+* Les entiers sont triés par ordre croissant de numéro.
+* @param elem l'entier à insérer
+* @return false si le tableau est plein, true sinon
+*/
+public boolean inserer (int elem) {
+    if (nbEntiers == MAX_ELEM) {
+        return false;
+    }
+    int i = nbEntiers - 1;
+    while (i &gt;= 0 &amp;&amp; tab[i] &gt; elem) {
+        tab[i + 1] = tab[i];
+        i = i - 1;
+    }
+    tab[i + 1] = elem;
+    nbEntiers++;
+    return true;
+}</code></pre>
+                    <p>Nous pourrions écrire un algorithme équivalent pour un tableau d’objets. La différence avec l’algorithme sur le tableau d’entiers est qu’ici nous devons explicitement aller chercher la clef des éléments avec la méthode getNumero() :</p>
+<pre class="taille60"><code>public class TableauDArticle {
+
+    public static final int MAX_ARTICLES = 30;
+    Article[] tabArticles = new Article[MAX_ARTICLES];
+    int nbArticles = 0;
+
+    /**
+    * Insère un nouvel article dans le Tableau
+    * Les articles sont triés par ordre croissant de numéro.
+    * @param a l'article à Insérer
+    * @return false si le tableau est plein, true sinon
+    */
+    public boolean inserer (Article a) {
+        if (nbArticles == MAX_ARTICLES) {
+            return false;
+        }
+        int i = nbArticles - 1;
+        while (i &gt; 0 &amp;&amp; tabArticles[i].getNumero() &gt; a.getNumero()) {
+            tabArticles[i + 1] = tabArticles[i];
+            i = i - 1;
+        }
+        tab[i + 1] = a;
+        nbArticles++;
+        return true;
+    }
+}</code></pre>
+                    <h3 id="recherche_sequentielle_table_triee">Recherche séquentielle dans une table triée :</h3>
+<pre class="taille60"><code>/**
+* Recherche si elem se trouve dans le tableau
+* et renvoie son indice si nécessaire
+* @param elem clef de l'élément cherché
+* @return -1 si elem n'est pas présent, l'indice
+* dans le tableau sinon
+*/
+public int chercherIndice (int elem) {
+    if (nbEntiers == 0) {
+        return -1;
+    }
+    int pos = 0;
+    while (pos &lt; nbEntiers - 1 &amp;&amp; tab[pos] &lt; elem) {
+        pos++;
+    }
+    if (tab[pos] == elem) {
+        return pos;
+    } else {
+        return -1;
+    }
+}</code></pre>
+                    <h3 id="recherche_dichotomique_table_triee">Recherche dichotomique dans une table triée :</h3>
+                    <h4>Version 1 :</h4>
+<pre class="taille60"><code>/**
+* Recherche si elem se trouve dans le tableau
+* et renvoie son indice si nécessaire
+* @param elem clef de l'élément cherché
+* @return -1 si elem n'est pas présent, l'indice
+* dans le tableau sinon
+*/
+public int chercherIndiceDicho (int elem) {
+    if (nbEntiers == 0) {
+        return -1;
+    }
+    int debut = 0, fin = nbEntiers - 1;
+    int milieu;
+    while (debut &lt;= fin) {
+       milieu = (debut + fin) / 2;
+       if (tab[milieu] == elem) {
+        debut = milieu + 1;
+       } else {
+        fin = milieu - 1;
+       }
+    }
+    return -1;
+}</code></pre>
+                    <h4>Version 2 :</h4>
+<pre class="taille60"><code>public int chercherIndiceDicho2 (int elem) {
+    if (nbEntiers == 0) {
+        return -1;
+    }
+    int debut = 0, fin = nbEntiers - 1;
+    int milieu = 0;
+    while (debut &lt; fin) {
+        milieu = (debut + fin) / 2;
+        if (tab[milieu] &gt;= elem) {
+            fin = milieu;
+        } else {
+            debut = milieu + 1;
+        }
+    }
+    if (tab[milieu] == elem) {
+        return fin;
+    } else {
+        return -1;
+    }
+}</code></pre>
+                    <p>Intuitivement, on pourrait être tenté de croire que rechercheDichoomique1 est plus efficace : en effet, si on tombe directement (ou en cours de traitement) sur l’élément cherché lui-même, on sort directement de la répétitive : on gagne du temps dans ce cas-là.</p>
+                    <p>Mais... y gagne-t-on en moyenne ?</p>
+                    <p>La réponse est sûrement affirmative pour un traitement humain (recherche de la bonne fiche dans un tas de fiches cartonnées bien triées), car, pour nous, il est aussi rapide (voire plus rapide !) de trouver quelle relation est correcte parmi "A &gt; B", "A = B", et "A &lt; B" que de trouver quelle relation est correcte parmi "A &gt;= B" et "A &lt;= B". Pour un ordinateur cependant, cette dernière tâche demande une seule comparaison, alors que la première en demande deux (qui se présentent comme deux "SI" imbriqués) ! Il faut donc regarder de plus près ce quel'on gagne et ce que l'on perd.</p>
+                    <p>Conclusion : si ce sont les comparaisons qui prennent le plus de temps, rechercheDichotomique2 est presque 2 fois plus rapide que rechercherDichotomique1 (en moyenne), bien que ces deux algorithmes soient tous deux en O(log n); si les comparaisons sont moins coûteuses que la simple manipulation de la répétitive (par exemple si les clés sont de simples entiers), le gain es moins flagrant mais reste net.</p>
+                </article>
+                <article>
+                    <h2 id="algorithmes_tri">Algorithmes de tri :</h2>
+                    <p>Un <span class="em">algorithme de tri interne</span> a pour but de trier le contenu d'une table unidimensionnelle dans la mémoire centrale de l'ordinateur (à l'opposé d'un tri externe, qui trie des données situées à l'extérieur de l'ordinateur, donc dans un fichier).</p>
+                    <p>Le verbe "trier" est utilisé ici dans le sens où on le rencontre dans le jargon des informaticiens; le verbe "ordonner" serait plus approprié, puisqu'il s'agit en fait de <span class="em">modifier l'ordre de rangement des éléments dans la table de façon à les placer en ordre croissant (ou décroissant d'une certaine clé</span>.</p>
+                    <p>On essaie en général que ces algorithmes n’utilisent pas d’espace supplémentaire par rapport à la table elle-même, à l’exception d’une ou deux zones servant à stocker temporairement un élément de la table. On ne travaille donc pas sur une seconde table !</p>
+                    <p>Un algorithme de tri est dit <span class="em">stable</span> si l'ordre relatif de deux éléments ayant même valeur de clé est toujours conservé, et instable dans le cas contraire. Le caractère de stabilité d'un tri est essentiel dans certaines applications, et inintéressant dans d'autres : l'informaticien saura tenir compte de ce critère dans le choix d'un algorithme !</p>
+                    <h3 id="tri_par_insertion">Le tri par insertion :</h3>
+                    <p>Cet algorithme part du fait que la sous-table constituée du seul premier élément est trivialement déjà triée (comme toute table d’un seul élément !). Ensuite, il considère successivement chacun des éléments du deuxième jusqu’au dernier, il insère chacun d’eux dans la partie de la table déjà triée, celle-ci gonflant progressivement jusqu’à recouvrir la table complète. S’il y a N éléments à trier, cet algorithme effectue donc N – 1 opérations d’insertion dans une table triée.</p>
+<pre class="taille60"><code>// Les éléments 0 ... i-1 sont triés
+for (int i = 1; i &lt; nbEntiers - 1; i++) {
+    int elem = tab[i] // élément à insérer
+    int j = i - 1;
+    while (j &gt;= 0 &amp;&amp; tab[j] &gt; elem) {
+        tab[j + 1] = tab[j];
+        j = j - 1;
+    }
+    tab[j + 1] = elem;
+}</code></pre>
+                    <p>Cet algorithme de tri est <span class="em">stable</span>.</p>
+                    <p>Sa <span class="em">complexité</span> est en O(N<sup>2</sup>), le nombre de comparaisons et le nombre de déplacements étant tous deux en moyenne approximativement égaux à N<sup>2</sup>/4.</p>
+                    <h3 id="tri_par_selection">Le tri par sélection (ou extraction) :</h3>
+                    <p>L’idée est encore plus simple : on cherche d’abord dans toute la table quel est le plus petit élément, et on vient le placer en première position en le permutant avec celui qui s’y trouve. Ensuite, on recommence pour le plus petit de ceux qui restent, et on le place en deuxième position. Et ainsi de suite jusqu’à l’avant-dernier. Le dernier est forcément déjà bien placé quand on y arrive.</p>
+<pre class="taille60"><code>// Le tableau 0 ... i - 1 est trié
+// Tous les éléments en i ... nbEntiers - 1
+// sont plus grands que tab[i - 1]
+for (int i = 0; i &lt; nbEntiers - 1; i++) {
+    // On va chercher le min dans le tableau i ... nbEntiers - 1
+    int indiceMin = i;
+    for (int j = i + 1; j &lt; nbEntiers; j++) {
+        if (tab[j] &lt; tab[indiceMin]) {
+            indiceMin = j;
+        }
+    }
+    // On échange le min avec l'élément en pos i
+    int tmp = tab[i];
+    tab[i] = tab[indiceMin];
+    tab[indiceMin] = tmp;
+}</code></pre>
+                    <p>Cet algorithme n’est pas stable, comme on peut aisément s’en assurer. En effet, lorsque l’on échange deux éléments, on perd l’ordre entre les ex-aequos.</p>
+                    <p>Sa complexité est en O(N<sup>2</sup>), mais seules les opérateurs de comparaison sont effectivement de cette complexité, tandis que le nombre de déplacements d'éléments est seulement en O(N) : cet algorithme sera donc à privilégier lorsque les éléments seront de grande taille, mais les clés petites.</p>
+                    <h3 id="tri_bulles">Le tri-bulles (Bubble-sort) :</h3>
+                    <p>Ce tri est, à juste titre, considéré comme <span class="em">le plus lent</span> des tris classiques : il est donc à éviter à tout prix, sauf dans des situations particulières (tables très petites par exemple).</p>
+                    <p>On n’y compare chaque fois que deux éléments consécutifs, et on les permute si leur ordre relatif est incorrect. En répétant cette opération un très grand nombre de fois, on finit par obtenir une table ordonnée.</p>
+<pre class="taille60"><code>// Le tableau i + 1 ... nbEntiers - 1 est trié
+for (int i = nbEntiers - 1; i &gt;= 1; i--) {
+    // inverser tous les éléments consécutifs qui ne
+    // sont pas dans le bon ordre
+    for (int j = 1; j &lt;= i; j++) {
+        if (tab[j + 1] &gt; tab[j]) {
+            int tmp = tab[j];
+            tab[j] = tab[j + 1];
+            tab[j + 1] = tmp;
+        }
+    }
+}</code></pre>
+                    <p>Cet algorithme est stable. Sa complexité est en O(N<sup>2</sup>). Au total : environ N passes, et à chacune en moyenne N/2 comparaisons et N/4 échanges, soit en tout environ N<sup>2</sup>/2 comparaisons et 3N<sup>2</sup>/4 déplacements.</p>
+                </article>
+                <article>
+                    <h2 id="tableaux_plusieurs_dimensions">Les tableaux à plusieurs dimensions :</h2>
+                    <p>Dans de nombreux langages, en particulier en Java, une table à plusieurs dimensions n’est pas un nouveau concept. En effet, elle n’est rien d’autre qu’une table à une dimension, mais dont les éléments sont eux-mêmes des tables.</p>
+                    <p>L'organisation dans la mémoire de l'ordinateur peut être deux espèces :</p>
+                    <ol type="A">
+                        <li>
+                            <p>Dans un langage où les tableaux sont accessibles directement, sans l'intermédiaire de "pointeurs", on a une organisation en mémoire selon les schémas suivants :</p>
+                            <img src="../images/tableaux_multidimensionnels_1.png" alt="">
+                            <p>En particulier, on pourrait avoir la situation où le "n'importe quoi" est à son tour un tableau :</p>
+                            <img src="../images/tableaux_multidimensionnels_2.png" alt="">
+                        </li>
+                        <li>
+                            <p>Dans des langages comme le Java, où les tableaux sont accessibles via des "pointeurs", la situation est la suivante :</p>
+                            <img src="../images/tableaux_multidimensionnels_3.png" alt="">
+                            <img src="../images/tableaux_multidimensionnels_4.png" alt="">
+                            <p>Dans les deux cas, on pourra écrire :</p>
+                            <p>Parfois, la notation condensée <span class="em">t[i, j]</span> peut <span class="em">t[i][j]</span>, ce qui donne l'illusion d'un rôle similaire pour les deux indices.</p>
+                            <p>La représentation d'un tableau bidimensionnel <span class="em">sous forme de lignes et de colonnes</span> n'est qu'une facilité de présentation pour l'oeil humain. Souvent, on convient que le premier indice est le numéro de la ligne et le second celui de la colonne, mais ce n'est qu'une pure convention, qui n'intervient en rien dans la définition du langage de programmation lui-même.</p>
+                            <img src="../images/tableaux_multidimensionnels_5.png" alt="">
+                            <p class="souligne">En Java :</p>
+                            <p>Soit la déclaration suivante :</p>
+<pre class="taille60"><code>int[][] matrice; // tableau de tableaux d'entiers</code></pre>
+                            <p>La variable <span class="em">matrice</span> est un tableau à une dimension d'éléments qui sont du type <span class="em">int[]</span>, c'est-à-dire eux-mêmes des tableaux à une dimension de nombres entiers. Supposons que cette variable soit construite par l'instruction :</p>
+<pre class="taille60"><code>matrice = new int[5][];</code></pre>
+                            <p>On a ainsi construit un tableau de 5 "cases" qui contiennent en fait 5 "pointeurs" vers des objets non encore alloués, qui seront des tableaux d'entiers.</p>
+                            <p>On peut alors allouer chaucun de ces 5 tableaux. Il y a deux cas :</p>
+                            <ol>
+                                <li>
+                                    <p>Ces 5 tableaux d'entiers ont la même taille :</p>
+<pre class="taille60"><code>for (int i = 0; i &lt; 5; i++) {
+    matrice[i] = new int[7];
+}</code></pre>
+                                    <p>On a ainsi créé au total un tableau de 5 éléments qui sont eux-mêmes des tableaux de 7 entiers. On peut voir cela comme un tableau à deux dimensions, ou encore une "matrice" 5x7. (N.B. Il s'agit ici d'une "matrice à 5 lignes et 7 colonnes", selon la convention fréquente; mais ce n'est qu'une convention de considérer que le premier indice est l'indice de ligne et le second indice celui de colonne : l'inverse est tout aussi admissible !).</p>
+                                    <p>La construction du tableau complet peut aussi se faire en un coup :</p>
+<pre class="taille60"><code>matrice = new int[5][7];</code></pre>
+                                    <p>Les éléments de la matrice seront désignés dans les instructions par <span class="em">matrice[ligne][colonne]</span> où ligne et colonne peuvent être remplacées par des expressions quelconques fournissant des nombres entiers.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Ces 5 tableaux ont des tailles différentes.</span> On ne parlera alors plus de "matrice" ou de "tableau à plusieurs dimensions" mais simplement de "tableau de tableaux".</p>
+                                    <p>Exemple :</p>
+<pre class="taille60"><code>int[][] tabTab = new int[5][];
+tabTab[0] = new int[7];
+tabTab[1] = new int[9];
+tabTab[2] = new int[2];
+tabTab[3] = new int[15];
+tabTab[4] = new int[7];</code></pre>
+                                    <p>On pourra ainsi utiliser les variables entières <span class="em">tabTab[0][4]</span> et <span class="em">tabTab[3][14]</span> mais pas <span class="em">tabTab[0][14]</span>.</p>
+                                    <p>Tout ceci peut être étendu à des dimensions plus élevées. Exemple :</p>
+<pre class="taille60"><code>float[][][] tableauTridimensionnel = new float[5][10][5];
+for (int i = 0; i &lt; 5; i++) {
+    for (int j = 0; j &lt; 10; j++) {
+        for (int k = 0; k &lt; 5; k++) {
+            tableauTridimensionnel[i][j][k] = 0.0;
+        }
+    }
+}</code></pre>
+                                    <p>Tant conceptuellement que techniquement, tout ce qui a été dit à propos des tableaux à deux dimensions (ou "matrices") peut s'étendre à un nombre arbitraire de dimensions. Seule la représentation graphique en est plus malaisée : cela est uniquement dû au caractère dimensionnel des écrans et feuilles de papier (ainsi que de notre rétine !).</p>
+                                    <p>Voici un exemple :</p>
+                                    <p>L'horaire de cours de l'Institut Paul Lambin, pour lequel on va supposer pour simplifier tous les cours débutent à une heure "ronde" (8h, 9h, 10h, ...), peut être représenté comme :</p>
+                                    <ul>
+                                        <li>Un tableau de deux éléments correspondant aux deux semestres, constitués chacun de :</li>
+                                        <li>Un tableau de 5 éléments correspondant aux 5 sections, chacun étant constitué de :</li>
+                                        <li>Un tableau de 3 éléments correspondant aux 3 années, chacun étant constitué de :</li>
+                                        <li>Un tableau de X éléments correspondant aux X séries de cette section et de cette année, chacun étant constitué de :</li>
+                                        <li>Un tableau de 5 éléments correspondant aux 5 jours de la semaine, chacun étant constitué de :</li>
+                                        <li>Un tableau de 11 éléments, correspondant aux 11 heures de la journée (de 8h à 19h), chacun étant constitué de :</li>
+                                        <li>Un nom de cours, un numéro de local, un professeur.</li>
+                                    </ul>
+                                    <p>Nous pouvons donc utiliser un tableau à 6 dimensions, ou plutôt un "tableau de tableaux de tableaux de tableaux de tableaux".</p>
+                                    <p>Par exemple :</p>
+<pre class="taille60"><code>int [] [] [] [] [] [] horaire = new int [0] [4] [0] [7] [2] [10];</code></pre>
+                                    <p>Désignera l'activité, durantle premier semestre (0), des étudiants de la série 7 de 1<sup>ère</sup> (0) informatique (4) le mercredi (jour n°2) à 17h (heure n°10).</p>
+                                    <p>Et pour imprimer tout l'horaire de cette série en 5 colonnes correspondant aux 5 jours et en 11 lignes correspondant aux 11 heures, le tout sur deux pages correspondant aux deux semestres, on peut écrire :</p>
+<pre class="taille60"><code>for (int semestre = 0; semestre &lt; 2; semestre++) {
+
+    saut_de_page;
+    imprimer("semestre numéro "+ (semestre + 1));
+
+    for (int jour = 0; jour &lt; 5; jour++) {
+        imprimer(nomDuJour[jour]); // titre colonnes
+        passer_à_la_ligne;
+
+        for (int heure = 0; heure &lt; 11; heure++) {
+            imprimer(heure + 8); // titre lignes
+            for (int jour = 0; jour &lt; 5; jour++) {
+                imprimer(horaire[semestre][4][0][7][jour][heure]);
+                passer_à_la_ligne;
+            }
+        }
+    }
+</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="resume_algo_apoo">Résumé d'Algo et d'APOO :</h2>
+<pre class="taille60">import java.util.Iterator;
+
+public class NomDeLaClasse extends ClasseParent implements Interface1, Interface2 {
+
+    // dÃ©clarer des attributs d'une classe en private
+    // remplacer typeDeMaVariable par un type primitif (int, char, float, boolean)
+    // ou par un type référence (String, Object, ...)
+    // le nom d'une variable utilise le camelCase (première lettre de chaque mot en
+    // Majuscules) et ne possède
+    // ni accents ni caractères spéciaux ('_' par exemple)
+    private typeDeMaVariable maVariable;
+    private typeDeMaVariable[] monTableau;
+    private int tailleLogique;
+    // une constante est toujours static et final et en MAJUSCULES
+    private static final typeDeMaVariable MA_CONSTANTE;
+
+    // Le constructeur de la classe est public et initialise tous les attributs de
+    // la classe lors de l'initialisation
+    // il porte le même nom que la classe et n'a pas de typeDeRetour
+    public NomDeLaClasse (typeDeMaVariable maVariable, int taillePhysique) {
+        // this permet de différencier l'attribut de la classe au paramètre
+        this.maVariable = maVariable;
+        this.monTableau = new typeDeMaVariable[taillePhysique];
+        this.tailleLogique = 0;
+    }
+    
+    // un getter est un accesseur
+    public typeDeMaVariable getMaVariable() {
+        return maVariable;
+    }
+    
+    // un setter est un modificateur
+    public void setMaVariable(typeDeMaVariable maVariable) {
+        this.maVariable = maVariable;
+    }
+    
+    public boolean ajouterElem(typeDeMaVariable elem) {
+        int taillePhysique = monTableau.length;
+        // test si le tableau est rempli
+        if (taillePhysique == tailleLogique) {
+            return false;
+        }
+        monTableau[tailleLogique] = elem;
+        tailleLogique++;
+        return true;
+    }
+    
+}<code></code></pre>
                 </article>
             <!-- fin de section -->
             </section>
