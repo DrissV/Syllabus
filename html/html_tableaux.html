@@ -51,6 +51,7 @@
                         <li><a href="#balises">Les balises spécifiques aux tables</a></li>
                         <li><a href="#deco">La décoration des tableaux</a></li>
                         <li><a href="#fusion">La mise en forme complexe</a></li>
+                        <li><a href="#impression">L'impression</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -111,12 +112,14 @@
                     <p>Les <span class="em">en-têtes</span> sont des cellules spéciales qui contiennent la description de la colonne ou de la ligne, elles se placent en début de ligne ou en début de colonne.</p>
                     <p>Les <span class="em">données</span> sont les valeurs présentes dans les cellules du tableau.</p>
                     <p>Découvrons ensemble les balises qui permetent de dessiner un tableau dans une page web.</p>
+                    <p>Remarque : les tableaux ne devraient pas être utilisés pour faire de la mise en forme puisqu'elle devrait être faite en CSS. Néanmoins, si pour d'obscures raisons vous les utilisez à cette fin, il faut désactiver leur rôle de tableau. Pour cela, il faut ajouter l'attribut <span class="html">role="presentation"</span> sur la balise <span class="em">&lt;table&gt;</span>. Dans ce cas de figure, n'utilisez pas de balises ou d'attributs propres aux tableaux de données (<span class="html">&lt;th&gt;</span>, <span class="html">&lt;caption&gt;</span>, <span class="html">&lt;thead&gt;</span>, <span class="html">&lt;tfoot&gt;</span>, <span class="html">scope</span>, <span class="html">header</span>, <span class="html">colgroup</span> et <span class="html">axis</span>). Et veillez à ce que le contenu soit compréhensible avec une lecture ligne par ligne.</p>
                 </article>
                 <article id="balises">
                     <h2>Les balises spécifiques aux tables :</h2>
+                    <p>Un tableau est un élément assez complexe à restituer avec un lecteur d'écran. Il est donc nécessaire de bien le construire pour le rendre le plus accessible possible.</p>
                     <ul>
                         <li>
-                            <p>Le tableau est déterminé par les balises <span class="html em" id="i_baliseTable">&lt;table&gt;</span>...<span class="em">&lt;/table&gt;</span>, tous les éléments constituant le tableau doivent se trouver entre ces 2 balises.</p>
+                            <p>Le tableau est déterminé par les balises <span class="html em" id="i_baliseTable">&lt;table&gt;</span>...<span class="html em">&lt;/table&gt;</span>, tous les éléments constituant le tableau doivent se trouver entre ces 2 balises.</p>
                         </li>
                         <li>
                             <p>Le tableau est donné ligne par ligne, une ligne est indiquée par les balises <span class="html em" id="i_tr">&lt;tr&gt;...&lt;/tr&gt;</span></p>
@@ -126,14 +129,43 @@
                             <p>Une cellule peut contenir n'importe quel type de données, du texte, du code HTML (par exemple : une autre table), des liens, des images,... et même rien du tout pour indiquer une cellule vide.</p>
                         </li>
                         <li>
-                            <p><span id="i_th">Les cases d'en-tête</span> sont délimitées par les balises <span class="html em">&lt;th&gt;...&lt;/th&gt;</span>. Ces en-têtes sont facultatives, elles peuvent être placées soit en début de ligne, soit en début de colonne, ou même en début de ligne et de colonne.</p>
+                            <p><span id="i_th">Les cases d'en-tête</span> sont délimitées par les balises <span class="html em">&lt;th&gt;...&lt;/th&gt;</span>. Ces en-têtes sont facultatives, elles peuvent être placées soit en début de ligne, soit en début de colonne, ou même en début de ligne et de colonne. Le deuxième élément à soigner est les en-têtes de ligne et de colonne : ils doivent être bien définis avec des balises <span class="html">&lt;th&gt;</span> accompagnées d'un attribut <span class="html">scope</span> ayant pour valeur <span class="html">col</span> pour un en-tête de colonne ou <span class="em">row</span> pour un en-tête de ligne.</p>
+                            <p class="souligne">Exemple :</p>
+<pre class="taille60"><code>&lt;table&gt;
+    &lt;caption&gt;Le poids des fichiers en fonction de leur taille et de leur format&lt;/caption&gt;
+    &lt;tr&gt;
+        &lt;td&gt;&lt;/td&gt;
+        &lt;th scope="col"&gt;1200x1600&lt;/th&gt;
+        &lt;th scope="col"&gt;600x900&lt;/th&gt;
+        &lt;th scope="col"&gt;300x400&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;th scope="row"&gt;JPEG&lt;/th&gt;
+        &lt;td&gt;872 ko&lt;/td&gt;
+        &lt;td&gt;271 ko&lt;/td&gt;
+        &lt;td&gt;88 ko&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;th scope="row"&gt;WebP&lt;/th&gt;
+        &lt;td&gt;479 ko&lt;/td&gt;
+        &lt;td&gt;158 ko&lt;/td&gt;
+        &lt;td&gt;55 ko&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;th scope="row"&gt;AVIF&lt;/th&gt;
+        &lt;td&gt;218 ko&lt;/td&gt;
+        &lt;td&gt;84 ko&lt;/td&gt;
+        &lt;td&gt;33 ko&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+                            <p>Grâce à l'attribut <span class="html">scope</span>, lorsque l'internaute utilisant un lecteur d'écran se déplace dans le tableau de cellule en cellule, l'en-tête de colonne est lu à nouveau lors du changement de colonne, l'en-tête de ligne est lu à nouveau lors du changement de ligne.</p>
                         </li>
                         <li>
-                            <p><span id="i_caption">Le titre du tableau</span> est donné par les balises <span class="html em">&lt;caption&gt;...&lt;/caption&gt;</span>.</p>
+                            <p><span id="i_caption">Le titre du tableau</span> (ou la légende) est donné par les balises <span class="html em">&lt;caption&gt;...&lt;/caption&gt;</span>.</p>
                         </li>
                         <li>
                             <p><span id="i_thead">Les balises</span> <span class="html em">&lt;thead&gt;</span>, <span class="html em">&lt;tbody&gt;</span> et <span class="html em">&lt;tfoot&gt;</span> sont de nouvelles balises qui ont pour but de structurer les données présentes dans l'élément <span class="html">table</span>. La balise <span class="html em">&lt;thead&gt;</span> est ainsi censée regrouper les informations concernant l'en-tête du tableau comme le titre et le nom des colonnes par exemple. La balise <span class="html em">&lt;tbody&gt;</span> est destinée à contenir l'ensemble des données et la balise <span class="html em">&lt;tfooter&gt;</span> des remarques ou une légende.</p>
-                            <p>Le véritable apport vient du fait que pour une table volumineuse un scroll va permettre de visualiser les données inclues dans la balise <span class="html em">&tbody&gt;</span> alors queles données présentent dans <span class="html em">thead</span> et <span class="html em">tfoot</span> resteront toujours visibles. Cependant, aucun navigateur ne supporte encore cet effet.</p>
+                            <p>Le véritable apport vient du fait que pour une table volumineuse un scroll va permettre de visualiser les données inclues dans la balise <span class="html em">&lt;tbody&gt;</span> alors queles données présentent dans <span class="html em">thead</span> et <span class="html em">tfoot</span> resteront toujours visibles. Cependant, aucun navigateur ne supporte encore cet effet.</p>
                         </li>
                     </ul>
                     <p>Nous pouvons maintenant placer ces différents éléments dans le code ci-dessous, pour obtenir le tableau donné en introduction au début de la page.</p>
@@ -340,7 +372,121 @@
                     <h2>La mise en forme plus complexe d'un tableau :</h2>
                     <p>HTML permet de <span id="i_fusion">fusionner des cellules</span> pour une organisation plus souple des données.</p>
                     <p>L'attribut <span class="html em">rowspan</span> (ou <span class="html em">colspan</span>) des balises <span class="html">&lt;td&gt;</span> ou <span class="html">&lt;th&gt;</span> permet de spécifier le nombre de lignes (ou colonnes) que l'on désire fusionner.</p>
-                    <p>Ce premier exemple montre la fusion de 2 cellules dans une même ligne :</p>
+                    <p>Les tableaux ayant des colonnes fusionnées (en utilisant les attributs <span class="html">rowspan</span> ou <span class="html">colspan</span>) sont plus complexes à rendre accessibles. La première question à se poser est celle de l'évitement. Ne serait-il ppas possible de présenter les informations séparément dans plusieurs tableaux plus simples ? Cela est préférable aussi bien pour les internautes utilisant un lecteur d'écran que pour les personnes ayant des troubles cognitifs.</p>
+                    <p>Si cela n'est pas possible, il est nécessaire d'expliquer la structure du tableau. Cela peut être fait dans une balise <span class="html">&lt;caption&gt;</span>. SI vous souhaitez que cette information ne soit présentée qu'aux personnes utilisant un lecteur d'écran, il est possible de la positionner en dehors de la zone visible. Attention à ne pas utiliser l'attribut <span class="em">hidden</span> ou l'attribut <span class="em">display</span> associé à la valeur <span class="em">none</span>, elle ne serait alors pas restituée.</p>
+<pre class="taille60"><code>.lecteurDEcran {
+    position: absolute !important;
+    top: -1000px !important;
+}</code></pre>
+                    <p>Il est ensuite nécessaire d'associer à chaque cellule les en-têtes qui la concernent afin que ceux-ci soient restitués lors du déplacement dans les cellules du tableau. Pour cela, les balises d'en-tête doivent posséder un attribut <span class="em">id</span> et les balises représentant les cellules d'un tableau doivent posséder la liste des valeurs de ces attributs <span class="em">id</span> dans un attribut <span class="em">headers</span>.</p>
+                    <p class="souligne">Syntaxe :</p>
+<pre class="taille60"><code>&lt;td headers="idEntete1 idEntete2"&gt;</code></pre>
+                    <p class="souligne">Exemple pour le tableau suivant :</p>
+                    <table class="tableBalises">
+                        <caption>
+                            Exemples de couples de couleurs avec leur contraste
+                            <span class="lecteurDEcran">Les couleurs d'écriture et de fond sont chacune présentées sur deux colonnes pour indiquer le nom de la couleur et l'autre pour indiquer son code hexadécimal. Enfin, la cinquième colonne indique le contraste entre ces deux couleurs.</span>
+                        </caption>
+                        <tr>
+                            <th id="ce" colspan="2">couleur d'écriture</th>
+                            <th id="cf" colspan="2">couleur de fond</th>
+                            <th rowspan="2" scope="col">contraste</th>
+                        </tr>
+                        <tr>
+                            <th id="cen">nom</th>
+                            <th id="cec">code</th>
+                            <th id="cfn">nom</th>
+                            <th id="cfc">code</th>
+                        </tr>
+                        <tr>
+                            <td headers="ce cen">darkslategrey</td>
+                            <td headers="ce cec">#2f4f4f</td>
+                            <td headers="cf cfn">white</td>
+                            <td headers="cf cfc">#ffffff</td>
+                            <td>8,9:1</td>
+                        </tr>
+                        <tr>
+                            <td headers="ce cen">dodgerblue</td>
+                            <td headers="ce cec">#1e90ff</td>
+                            <td headers="cf cfn">black</td>
+                            <td headers="cf cfc">#000000</td>
+                            <td>6,5:1</td>
+                        </tr>
+                        <tr>
+                            <td headers="ce cen">darkturquoise</td>
+                            <td headers="ce cec">#00ced1</td>
+                            <td headers="cf cfn">white</td>
+                            <td headers="cf cfc">#ffffff</td>
+                            <td>2:1</td>
+                        </tr>
+                    </table>
+<pre class="taille60"><code>&lt;table class="tableBalises"&gt;
+    &lt;caption&gt;
+        Exemples de couples de couleurs avec leur contraste
+        &lt;span class="lecteurDEcran"&gt;Les couleurs d'écriture et de fond sont chacune présentées sur deux colonnes pour indiquer le nom de la couleur et l'autre pour indiquer son code hexadécimal. Enfin, la cinquième colonne indique le contraste entre ces deux couleurs.&lt;/span&gt;
+    &lt;/caption&gt;
+    &lt;tr&gt;
+        &lt;th id="ce" colspan="2"&gt;couleur d'écriture&lt;/th&gt;
+        &lt;th id="cf" colspan="2"&gt;couleur de fond&lt;/th&gt;
+        &lt;th rowspan="2" scope="col"&gt;contraste&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;th id="cen"&gt;nom&lt;/th&gt;
+        &lt;th id="cec"&gt;code&lt;/th&gt;
+        &lt;th id="cfn"&gt;nom&lt;/th&gt;
+        &lt;th id="cfc"&gt;code&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td headers="ce cen"&gt;darkslategrey&lt;/td&gt;
+        &lt;td headers="ce cec"&gt;#2f4f4f&lt;/td&gt;
+        &lt;td headers="cf cfn"&gt;white&lt;/td&gt;
+        &lt;td headers="cf cfc"&gt;#ffffff&lt;/td&gt;
+        &lt;td&gt;8,9:1&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td headers="ce cen"&gt;dodgerblue&lt;/td&gt;
+        &lt;td headers="ce cec"&gt;#1e90ff&lt;/td&gt;
+        &lt;td headers="cf cfn"&gt;black&lt;/td&gt;
+        &lt;td headers="cf cfc"&gt;#000000&lt;/td&gt;
+        &lt;td&gt;6,5:1&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td headers="ce cen"&gt;darkturquoise&lt;/td&gt;
+        &lt;td headers="ce cec"&gt;#00ced1&lt;/td&gt;
+        &lt;td headers="cf cfn"&gt;white&lt;/td&gt;
+        &lt;td headers="cf cfc"&gt;#ffffff&lt;/td&gt;
+        &lt;td&gt;2:1&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+                    <p class="souligne">Avec le code CSS :</p>
+<pre class="taille60"><code>caption {
+    font-weight: bold;
+}
+table {
+    border-collapse: collapse;
+    magin: 0.3em;
+}
+th, td {
+    border: 1px solid black;
+    padding: 0.3em;
+}
+.lecteurDEcran {
+    position: absolute;
+    top: -1000px;
+}</code></pre>
+                    <p>Ainsi, un utilisateur de NVDA qui se rend sur la cellule contenant "darklategrey" entend :</p>
+                    <ul>
+                        <li>Couleur d'écriture</li>
+                        <li>Nom</li>
+                        <li>Darklategrey</li>
+                    </ul>
+                    <p>Et s'il se rend sur la cellule suivant, il entend :</p>
+                    <ul>
+                        <li>Couleur d'écriture</li>
+                        <li>Code</li>
+                        <li>#2f4f4f</li>
+                    </ul>
+                    <p>Ce second exemple montre la fusion de 2 cellules dans une même ligne :</p>
                     <table class="colspan">
                         <thead>
                             <tr>
@@ -426,6 +572,11 @@
         &lt;/tr&gt;
     &lt;/tbody&gt;
 &lt;/table&gt;</code></pre>
+                </article>
+                <article>
+                    <h2 id="impression">L'impression :</h2>
+                    <p>L'impression des petits tableaux ne pose pas de problème, mais pour les tableaux de grande taille, cela peut être plus compliqué. Les impressions risquent d'être gâchées, les sorties étant inutilisables. Il est donc important de faire attention et éventuellement de répéter les en-têtes de colonne sur chaque page grâce à la balise <span class="html">&lt;thead&gt;</span>.</p>
+                    <p>Si les données du tableau sont nombreuses et débordent sur une ou plusieurs autres pages, les en-têtes de colonne sont répétés en début de chaque  page.</p>
                 </article>
             <!-- fin de section -->
             </section>
