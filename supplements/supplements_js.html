@@ -1453,6 +1453,36 @@ if (userID != null) { // ici on a pu récupérer un utilisateur valide
                     <p>On peut mettre un id, un nom, une date de préremption, l'IP du front-end, etc... On ne met surtout pas le mot de passe de l'utilisateur du JWT !</p>
                     <p>Une chaîne JWT ne peut être créée que par le serveur (signée sur base de son secret caché). Sa signature ne peut être validée que par le serveur (toujours su base de son secret caché). Mais elle est facilement décrytable, le front-end peut en lire le contenu facilement sans même connaître le secret.</p>
                 </article>
+                <article id="informations_supplementaires">
+                    <h2>Informations supplémentaires :</h2>
+                    <ul>
+                        <li>
+                            <p><a href="http://127.0.0.1/Calc?expr=2+2">http://127.0.0.1/Calc?expr=2+2</a></p>
+                            <p>Ce que l'utilisateur met comme expression arithmétique finit par se trouver dans l'URL. Il pourrait donc en profiter pour abuser le comportement de cette URL en y mettant des caractères non prévus, par exemple <span class="html">&amp;</span>. Tout paramètre doit donc être encodé avec, par exemple, <a href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/encodeURIComponent" target="_blank">encodeURIComponent(str)</a>. La fonction <span class="html">encodeURIComponent(str)</span> permet d'encoder un composant d'un Uniform Resource Identifier (URI) en remplaçant chaque exemplaire de certains caractères par une, deux, trois ou quatre séquences d'échappement UTF-8 correspondantes (quatre séquences seront utilisées uniquement lorsque les caractères à encoder sont composés de deux caractères "surrogate").</p>
+<pre class="taille60"><code>console.log(encodeURIComponent('?x=test'));
+// expected output : "%3Fx%3Dtest"</code></pre>
+                        </li>
+                        <li>
+                            <p>En Java 8, c'est la classe <a href="https://docs.oracle.com/javase/8/docs/api/java/nio/file/Files.html" target="_blank">Files</a> qui permet de lire ou écrire un fichier avec un minimum d'effort, ou de lister le contenu d'un répertoire.</p>
+                            <p>Par exemple, pour lire le contenu du fichier "cal.json" :</p>
+<pre class="taille60"><code>String contenu = new String(Files.readAllBytes(Paths.get("calc.json")), StandardCharsets.UTF_8);</code></pre>
+                            <p>Pour avoir la liste des fichiers du répertoire "machines" :</p>
+<pre class="taille60"><code>String[] fichiers = new File("machines").list();</code></pre>
+                            <p>Pour écrire sur un fichier spécifique :</p>
+<pre class="taille60"><code>Files.write(new File("machines", nomFichier).toPath(), nouveauContenu.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);</code></pre>
+                        </li>
+                        <li>
+                            <p>Pour déconnecter l'utilisateur :</p>
+<pre class="taille60"><code>if (req.getSession() != null) {
+    req.getSession().invalidate();
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Evoyer une erreur dans la réponse :</p>
+<pre class="taille60"><code>resp.sendError(HttpServletReponse.SC_BAD_REQUEST, "Action invalide");</code></pre>
+                        </li>
+                    </ul>
+                </article>
             <!-- fin de section -->
             </section>
         </main>
