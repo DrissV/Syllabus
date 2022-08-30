@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="author" content="Choquet Olivier & Vandenheede Driss">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Conception 1ère année - IANARCH - Suppléments - e-Syllabus HTML5 et CSS3</title>
+        <!-- une icône dans la barre du navigateur -->
+        <link rel="icon" href="../images/favicon.png" type="image/png">
+        <link rel="stylesheet" href="../style.css">
+    </head>
+    <body>
+        <!-- liens d'évitement -->
+        <ul class="a11y-nav">
+            <li>
+                <a href="#container">Passer directement au contenu</a>
+            </li>
+            <li>
+                <a href="#menu">Accéder au menu secondaire de la page</a>
+            </li>
+            <li>
+                <a href="#aside">Accéder aux liens utiles</a>
+            </li>
+        </ul>
+        <!-- bannière et menu -->
+        <header role="banner">
+            <div class="logoTitle">
+                <h1>Cours d'introduction au Web</h1>
+                <h2>HTML5 et CSS3</h2>
+            </div>
+            <nav role="navigation" aria-label="Menu principal de navigation">
+                <ul>
+                    <li><a href="../index.html">Le cours</a></li>
+                    <li><a href="../internet.html">Internet</a></li>
+                    <li><a href="../html5.html">HTML5</a></li>
+                    <li><a href="../css3.html">CSS3</a></li>
+                    <li><a href="../methodologie.html">Méthodologie</a></li>
+                    <li><a href="../lexique.html">Lexique</a></li>
+                    <li><a href="../supplements.html" class="current">Suppléments</a></li>
+                </ul>
+            </nav>
+        </header>
+        <main id="container" role="main">
+            <div id="menu">
+                <nav role="navigation">
+                    <ol>
+                        <li><a href="supplements_ianarch.html">Retour au sommaire</a></li>
+                    </ol>
+                </nav>
+                <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
+                <aside id="aside">
+                    <p>Liens utiles :</p>
+                    <ul>
+                        <li><a href="http://www.w3schools.com/js/default.asp" target="_blank">Tutoriel JavaScript de W3Schools</a></li>
+                        <li><a href="http://www.w3.org/" target="_blank">W3C</a></li>
+                        <li><a href="http://fr.openclassrooms.com/informatique/cours/apprenez-a-creer-votre-site-web-avec-html5-et-css3" target="_blank">Open Classroom</a></li>
+                        <li><a href="http://www.w3.org/TR/html5/" target="_blank">Norme HTML5</a></li>
+                        <li><a href="http://www.w3schools.com/" target="_blank">W3Schools</a></li>
+                        <li><a href="http://www.alsacreations.com/" target="_blank">Alsa Création</a></li>
+                        <li><a href="https://www.youtube.com/c/LeDesignerduWeb/videos">Le Designer du web</a></li>
+                    </ul>
+                </aside>
+            </div>
+            <section id="mainSection">
+                <article id="partie2">
+                    <h2 id="partie_conception">Partie Conception 1ère année :</h2>
+                    <h3 id="introduction_conception">Introduction :</h3>
+                    <p>Nous allons maintenant aborder la seconde partie du cours. L'objectif de celle-ci est de concevoir des bases de données.</p>
+                    <p>Au départ d'un énoncé, nous allons rechercher les entités-clé et les <span class="em">modéliser</span> sous forme d'un <span class="em">schéma</span> appelé <span class="em">Diagramme de Structure de Données (DSD)</span>.</p>
+                    <p>La <span class="em">conception</span> de base de données est une démarche qui permet de réfléchir aux données afin de mémoriser finement l'information. Ceci nous permet :</p>
+                    <ul>
+                        <li>de mettre en évidence chaque entité et ses attributs, de manière à éviter la redondance,</li>
+                        <li>de définir une information unique qui permet d'identifier chaque entité,</li>
+                        <li>de préciser ce que contient chaque attribut, et d'éviter d'y placer des "choses" différentes,</li>
+                        <li>d'établir et de formaliser les relations entre les entités,</li>
+                        <li>de questionner plus précisément la base de données.</li>
+                    </ul>
+                    <p>Nous allons brièvement revoir la démarche que nous avions suivie pendant la première partie du cours pour évoluer d'une base de données contenant une seule table "albums" vers une base de données en contenant quatre : éditeurs, albums, auteurs et participations.</p>
+                    <p>Ceci nous permettra d'introduire les contraintes d'intégrité et de passer en revue les concepts de clé primaire et de clé étrangère.</p>
+                    <p>Nous verrons ensuite, dans le détail, les différents modèles de relations qui peuvent exister entre les tables et nous illusterons le problème de la prise en compte du temps dans les relations.</p>
+                    <p>Nous donnerons, dans la foulée, les consignes pour organiser lisiblement le DSD.</p>
+                    <p>Enfin, nous aborderons les tables spécialisées et les étapes de développement d'une application.</p>
+                    <p>Nous terminerons cette partie du cours en évoquant la problématique de sauvegarde des données. La conception d'une DB exigeant que l'on chasse la redondance au maximum, nous pourrions entrevoir le concept de la normalisation dont on en reparlera dans la troisième partie du cours.</p>
+                    <h3 id="rappels">Rappels</h3>
+                    <ol>
+                        <li>
+                            <h4 id="bd1_albums">bd1.albums :</h4>
+                            <p>Dans la partie 1 (SQL), nous étions partis d'un exemple pour gérer les données des albums de bandes dessinées.</p>
+                            <p>Nous avions créé une table <span class="em">albums</span> correspondant à l'entité albums; chaque album dispose d'une information unique d'identification : le numéro isbn et les attributs suivants : titre, série, sénariste, coloriste, éditeur, pays d'édition, année d'édition et prix.</p>
+<pre class="taille60"><code>CREATE TABLE bd1.albums
+(
+    isbn CHAR (13) PRIMARY KEY,
+    titre CHARACTER VARYING (50) NOT NULL,
+    serie CHARACTER VARYING (20),
+    scenariste CHARACTER VARYING (20),
+    dessinateur CHARACTER VARYING (20),
+    coloriste CHARACTER VARYING (20),
+    editeur CHARACTER VARYING (20) NOT NULL,
+    pays CHARACTER (1),
+    annee_edition INTEGER,
+    prix DOUBLE PRECISION NOT NULL,
+);</code></pre>
+                            <p>Dans notre notation DSD, cela donne :</p>
+                            <p>Les clés primaires (PRIMARY KEY) sont soulignées. On indique la mention 'PK'.</p>
+                            <p>Les champs obligatoires (NOT NULL) sont indiqués 'NN'.</p>
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">bd1.albums</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="bold">PK</td>
+                                        <td class="bold souligne">isbn</td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td>
+                                            <p>titre NN</p>
+                                            <p>serie</p>
+                                            <p>scenariste</p>
+                                            <p>dessinateur</p>
+                                            <p>coloriste</p>
+                                            <p>editeur NN</p>
+                                            <p>pays</p>
+                                            <p>annee_edition</p>
+                                            <p>prix NN</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Quelles étaient les contraintes de ce modèle ?</p>
+                            <ul>
+                                <li>Le pays d'édition dépend de l'éditeur et non de l'album.</li>
+                                <li>
+                                    <p>Le nom et le pays de l'éditeur sont répétés pour chaque album. Cette répétition peut entraîner les problèmes suivants :</p>
+                                    <ul>
+                                        <li>Risque d'erreur : le nom de l'éditeur n'est pas toujours orthographié de manière correcte, il peut être écrit de manière différente (majuscule/minuscule).</li>
+                                        <li>Il faut modifier le nom dans tous les albums, si la société change de nom,</li>
+                                        <li>Risque d'incohérence : le pays de l'éditeur peut être différent d'un album à l'autre...</li>
+                                    </ul>
+                                </li>
+                                <li>Les mêmes problèmes peuvent se produire pour le nom du scénariste, du dessinateur et du coloriste,</li>
+                                <li>Un album ne peut avoir qu'un seul scénariste, qu'un seul dessinateur, qu'un seul coloriste.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4 id="bd2_albums">bd2.albums :</h4>
+                            <p>Afin de solutionner les deux premiers problèmes (relatifs à l'éditeur), nous avons introduit une seconde entité : éditeurs. Une relation permet ensuite de joindre un éditeur à chaque album.</p>
+                            <p>L'éditeur est identifié par un numéro unique. Il a des attributs nom et pays comme dans la solution bd1.albums auxquels nous avons ajouté un attribut adresse.</p>
+                            <p>Dans la base de données, nous avions ajouté une table <span class="em">editeurs</span> à laquelle faisait référence la table <span class="em">albums</span>.</p>
+                            <p>La nouvelle DB se présentait comme suit :</p>
+                            <p>On indique la mention 'FK' à droite des clés étrangères (FOREIGN KEY).</p>
+                            <img src="../images/niveau2.PNG" alt="DSD du niveau 2">
+                            <p>Cela permet également de mémoriser des informations sur des éditeurs qui n'ont pas (encore) édités d'album.</p>
+                            <p>Le lien entre les deux tables est assuré par une clé étrangère dans <span class="em">albums</span> faisant référence à <span class="em">editeurs</span>.</p>
+                        </li>
+                        <li>
+                            <h4 id="bd3_albums">bd3.albums :</h4>
+                            <p>Ensuite, nous avons affiné le modèle pour résoudre les deux problèmes restants :</p>
+                            <ul>
+                                <li>nom des scénariste, dessinateur et coloriste répété à chaque album,</li>
+                                <li>limitation à un seul scénariste, dessinateur ou coloriste par album.</li>
+                            </ul>
+                            <p>Était-il intéressant de créer trois scénaristes, dessinateurs et coloristes ? Non, cela aurait également introduit une duplication des données. Une même personne pouvant occuper chacun des rôles pour un même album ou pour des albums différents.</p>
+                            <p>Nous avons donc introduit une entité auteurs et créé une table <span class="em">auteurs</span> dans laquelle chaque auteur sera référencé.</p>
+                            <p>Comme un auteur peut participer à plusieurs albums et qu'un album peut avoir plusieurs auteurs, nous avons introduit une table intermédiaire notée ici <span class="em">participations</span>.</p>
+                            <p>La table <span class="em">participations</span> indique quel auteur intervient dans quel album. Il y a 3 types d'intervention possible matérialisée dans le champ <span class="em">participe</span> : '<span class="em">s</span>' pour scénariste, '<span class="em">c</span> pour coloriste et '<span class="em">d</span>' pour dessinateur.</p>
+                            <p>Un tuple de <span class="em">participation</span> est identifié par le numéro de l'auteur, l'ISBN de l'album et le rôle joué par l'auteur dans cet album.</p>
+                            <p>Les 3 champs de participations ne peuvent donc jamais être <span class="em">NULL</span>.</p>
+                            <img src="../images/niveau3.PNG" alt="DSD du niveau 3">
+                            <p>Ce modèle permet donc, comme le second :</p>
+                            <ul>
+                                <li>de mémoriser des informaions propres aux éditeurs, sans devoir les répéter à chaque album édité.</li>
+                                <li>de mémoriser des informations sur des éditeurs qui n'ont pas (encore) édité d'album.</li>
+                            </ul>
+                            <p>Mais, en plus,</p>
+                            <ul>
+                                <li>de mémoriser des informations propres aux auteurs, sans devoir les répéter à chaque album édité.</li>
+                                <li>de mémoriser des informations sur des auteurs qui n'ont pas encore participé à un album.</li>
+                                <li>d'avoir plusieurs scénaristes, dessinateurs ou coloristes pour un même album.</li>
+                            </ul>
+                            <p>Exemple de contenu des tables :</p>
+                            <img src="../images/contenu_tables_niveau_3.PNG" alt="contenu des tables de niveau 3">
+                        </li>
+                    </ol>
+                    <h3 id="contraintes_integrite">Les contraintes d'intégrité :</h3>
+                    <p>Nous avons défini des clés primaires et des clés étrangères dans nos bases de données. Elles assurent la cohérence de la base de données. Nous allons voir par quels mécanismes.</p>
+                    <ol>
+                        <li>
+                            <h4 id="cle_primaire">La clé primaire :</h4>
+                            <p>Une <span class="em">clé primaire</span> doit identifier chaque tuple d'une table de façon non ambiguë. C'est un identifiant <span class="em">unique</span> et <span class="em">non nul</span>. Cette contrainte d'intégrité permet de s'assurer de <span class="em">l'<span class="souligne">unicité</span> d'un enregistrement pour une table</span>.</p>
+                            <p>Lorsqu'une entité dispose naturellement d'un identifiant unique, cet identifiant unique peut êtrechoisi comme clé primaire. Le numéro <span class="em">isbn</span> peut être la clé primaire de la table <span class="em">albums</span>.</p>
+                            <p>Lorsqu'une entité ne dispose d'aucun identifiant unique ou par choix, on choisit un numéro auto incrémenté. Un numéro séquentiel unique est la clé primaire de la table <span class="em">editeurs</span>.</p>
+                            <p>Dans la table participation, la clé primaire est une concaténation de troischamps : <span class="em">isbn</span>, <span class="em">num_auteur</span> et <span class="em">participe</span> qui permettent d'identifier de manière unique la participation d'un auteur à un album via son rôle.</p>
+                        </li>
+                        <li>
+                            <h4 id="cle_etrangere">La clé étrangère :</h4>
+                            <p>L'intégrité référentielle garantit la <span class="em">cohérence des références entre tables</span>.</p>
+                            <p>Pour chaque information d'une table A qui fait référence à une information d'une table B, l'information référencée existe dans la table B.</p>
+                            <p>Les <span class="em">contraintes d'<span class="souligne">intégrité référentielle</span></span> garantissent donc la cohérence de la base de données.</p>
+                            <p>Elles précisent les conditions dans lesquelles peuvent être ajoutés ou supprimés des enregistrements dans une table lorsqu'il existe des relations entre cette table et d'autres tables par l'intermédiaire de <span class="em">clés étrangères</span>.</p>
+                            <p>Cela signifie que :</p>
+                            <ul>
+                                <li>
+                                    <p class="em">Un 'enfant' ne peut référer un 'parent' que s'il existe.</p>
+                                    <ul>
+                                        <li>Le SGBD interdira d'ajouter un album si l'éditeur n'est pas enregistré dans la table <span class="em">editeurs</span>.</li>
+                                        <li>La contrainte interdira d'ajouter une participation si l'auteur et l'album ne sont pas préalablement inscrits dans la base de données.</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p class="em">Un 'parent' ne peut pas être supprimé s'il laisse des 'orphelins'.</p>
+                                    <ul>
+                                        <li>La contrainte interdira l'effacement d'un éditeur, tant que dans la base de données il existera au moins un album se référant à cet éditeur.</li>
+                                        <li>Elle interdira de supprimer un auteur ou un album tant qu'il existera des participations pour cet auteur ou cet album.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <p>Notons également que si la clé primaire est composée de plusieurs champs, il en sera forcément même pour les clés étrangères.</p>
+<pre class="taille60"><code>CREATE TABLE table1
+(
+    cle_partie1 CHAR (4) NOT NULL,
+    cle_partie2 CHAR (3) NOT NULL,
+    ...,
+    PRIMARY KEY (cle_partie1, cle_partie2),
+);
+
+CREATE TABLE table2
+(
+    cle_table2 INTEGER PRIMARY KEY,
+    cle_etrangere_partie1 CHAR (4) NOT NULL,
+    cle_etrangere_partie2 CHAR (3) NOT NULL,
+    ...,
+    FOREIGN KEY (cle_etrangere_partie1, cle_etrangere_partie2) REFERENCES table1 (cle_partie1, cle_partie2),
+);</code></pre>
+                        </li>
+                    </ol>
+                    <h3 id="representation_schema">La représentation d'un schéma :</h3>
+                    <ol>
+                        <li>
+                            <h4 id="conventions_dsd">Conventions :</h4>
+                            <p>Pour représenter un schéma, nous utilisons les conventions suivantes :</p>
+                            <ol>
+                                <li>Utiliser des noms de table entièrement en minuscules.</li>
+                                <li>Utiliser des noms de table au pluriel.</li>
+                                <li>Utiliser des noms de champs entièrement en minuscules.</li>
+                                <li>Utiliser "_" (underscore) pour séparer les mots.</li>
+                                <li>Ne mettre aucun caractère accentué dans les noms de table et de champ.</li>
+                                <li>Souligner la clé primaire et indiquer PK à gauche.</li>
+                                <li>Indiquer le mot-clé FK entre () à côté d'une clé étrangère.</li>
+                                <li>Indiquer NN pour les champs NOT NULL.</li>
+                                <li>Respecter le vocabulaire métier (le vocabulaire de l'énoncé).</li>
+                                <li>Vérifier la cohérence des clés étrangères (FK) et des relations.</li>
+                                <li>Mentionner le mot-clé unique lorsque cela est nécessaire.</li>
+                                <li>Mentionner les énumérés entre {}.</li>
+                            </ol>
+                            <p>Graphiquement, une table est représentée de la sorte :</p>
+                            <img src="../images/conventions_dsd_1.PNG" alt="image n°1 des conventions du DSD">
+                            <ul>
+                                <li>
+                                    <p>Lorsqu'un seul champ compose la clé primaire, il est indiqué uniquement dans l'espace réservé à cet effet.</p>
+                                    <p>Cela correspond au CREATE TABLE :</p>
+<pre class="taille60"><code>CREATE TABLE bd1.albums
+(
+    isbn CHAR (13) <span class="em">PRIMARY KEY</span>,
+    titre CHARACTER VARYING (50) NOT NULL,
+    serie CHARACTER VARYING (20),
+    ...
+);</code></pre>
+                                </li>
+                                <li>
+                                    <p>Lorsque plusieurs champs composent la clé primaire, leur concaténation est indiquée dans l'espace réservé à cet effet et chaque champ est repris avec ses propriétés dans la liste des champs.</p>
+                                    <img src="../images/conventions_dsd_2.PNG" alt="image n°2 des conventions du DSD">
+                                    <p>Cela correspond au CREATE TABLE :</p>
+<pre class="taille60"><code>CREATE TABLE table1
+(
+    cle_partie1 CHAR (4) NOT NULL,
+    cle_partie2 CHAR (3) NOT NULL,
+    ...,
+    <span class="em">PRIMARY KEY (cle_partie1, cle_partie2)</span>,
+);</code></pre>
+                                </li>
+                                <li>
+                                    <p>Lorsqu'un seul champ compose la clé étrangère, le mot-clé FK est indiqué immédiatement derrière ce champ.</p>
+                                    <img src="../images/niveau2.PNG" alt="DSD du niveau 2">
+                                    <p>Cela correspond au CREATE TABLE :</p>
+<pre class="taille60"><code>CREATE TABLE bd3.albums
+(
+    isbn CHAR (14) PRIMARY KEY,
+    titre CHARACTER VARYING (50) NOT NULL,
+    serie CHARACTER VARYING (20),
+    num_editeur INTEGER NOT NULL <span class="em">REFERENCES bd3.editeurs (num)</span>,
+    ...
+);</code></pre>
+                                </li>
+                                <li>
+                                    <p>Lorsque plusieurs champs composent la clé étrangère, chaque champ est repris avec ses propriétés dans la liste des champs et leur concaténation est ensuite indiquée avec le mot-clé FK.</p>
+                                    <img src="../images/conventions_dsd_3.PNG" alt="image n°3 des conventions de DSD">
+                                    <p>Cela correspond au CREATE TABLE :</p>
+<pre class="taille60"><code>CREATE TABLE table1
+(
+    cle_partie1 CHAR (4) NOT NULL,
+    cle_partie2 CHAR (3) NOT NULL,
+    ...,
+    PRIMARY KEY (cle_partie1, cle_partie2),
+);
+
+CREATE TABLE table2
+(
+    cle_table2 INTEGER PRIMARY KEY,
+    etr_partie1 CHAR (4) NOT NULL,
+    etr_partie2 CHAR (3) NOT NULL,
+    ...,
+    <span class="em">FOREIGN KEY (etr_partie1, etr_partie2) REFERENCES table1 (cle_partie1, cle_partie2)</span>,
+);</code></pre>
+                                </li>
+                                <li>
+                                    <p>De la même manière, lorsqu'un champ est unique, le mot-clé <span class="html">unique</span> est indiqué immédiatement après ce champ. Lorsque la concaténation de plusieurs champs est unique, chaque champ est repris avec ses propriétés dans la liste des champs et leur concaténation est ensuite indiquée avec le mot-clé <span class="em">unique</span>. Dans l'exemple ci-dessous, on remarque que le mot-clé <span class="em">unique</span> est combiné avec le mot-clé FK.</p>
+                                    <img src="../images/conventions_dsd_4.PNG" alt="image n°4 des conventions de DSD">
+                                    <p>Cela correspond au CREATE TABLE :</p>
+<pre class="taille60"><code>CREATE TABLE table1
+(
+    cle_partie1 CHAR (4) NOT NULL,
+    cle_partie2 CHAR (3) NOT NULL,
+    ...,
+    PRIMARY KEY (cle_partie1, cle_partie2),
+);
+
+CREATE TABLE table2
+(
+    cle_table2 INTEGER NOT NULL,
+    etr_partie1 CHAR (4) NOT NULL,
+    etr_partie2 CHAR (3) NULL,
+    ...,
+    FOREIGN KEY (etr_partie1, etr_partie2) REFERENCES table1 (cle_partie1, cle_partie2),
+    <span class="em">UNIQUE (etr_partie1, etr_partie2)</span>,
+);</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4 id="organisation_graphique_dsd">L'organisation graphique du DSD :</h4>
+                            <p>Certaines règles simples permettent de structurer le dessin pour qu'il devienne un support fiable à la conception.</p>
+                            <ol>
+                                <li>On placera en haut (à la périphérie) du dessin les entités les plus indépendantes et en bas (au centre) du dessin les entités les plus dépendantes. Généralement, les entités les plus dépendantes sont les plus volumineurses et les plus mouvementées. Souvent on descend vers les tables volumineuses.</li>
+                                <li>On évitera de croiser les relations. Il faut éviter les schémas spaghetti ou jeu de piste.</li>
+                                <li>Pour les schémas très importants, on peut utiliser des couleurs différentes pour mettre en valeur des tables de natures différentes ou utilisées dans différentes applications.</li>
+                                <li>On peut également créer plusieurs schémas en reprenant les tables communes.</li>
+                            </ol>
+                            <img src="../images/organisation_graphique_dsd.PNG" alt="organisation graphique du DSD">
+                        </li>
+                    </ol>
+                    <h3 id="relations">Les relations :</h3>
+                    <ol>
+                        <li>
+                            <h4 id="relation_1_a_0N">Cas classique : relation 1 à 0 : N :</h4>
+                            <p>Un client peut passer plusieurs commandes d'articles. Un client est identifié par un numéro unique de client. Ce numéro peut être fourni par le système(un champ auto incrémenté par le SGBD) par un programme ou encore par l'utilisateur. On ajoutera plusieurs champs : le nom, l'adresse, le numéro de téléphone, ...</p>
+                            <p>Une commande est identifiée par un numéro de commande (clé primaire qui peut être également un numéro séquentiel ou un champ plus complexe...). On ajoutera d'autres champs pour indiquer la date de la commande, l'état (pour le suivi), et un numéro de facture (dans l'hypothèse simpliste où à une commande correspond une seule facture).</p>
+                            <p>Il faut en outre faire le lient avec le client. Plutôt que de répéter les informations du client nécessaires à la commandes, on établira un lien avec la table <span class="em">clients</span> en mémorisant ici le numéro du client concerné. Ce champ était une clé primaire dans la table client, c'est une clef étrangère dans la table commande (FK).</p>
+                            <img src="../images/relation_1_a_0N.PNG" alt="DSD de la relation 1 à 0 : N">
+                            <p>Le symbole <span class="html">-o∊</span> montre une relation 1 : 0-N. Cette relation se lit dans les deux sens :</p>
+                            <ul>
+                                <li>un client a plusieurs commandes. Il peut ne pas en avoir, effectivement le symbole <span class="html">o</span> indique que la relation est facultative.</li>
+                                <li>une commande est associée obligatoirement à un client.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4 id="relation_1_a_1N">Cas de la relation 1 à 1 : N :</h4>
+                            <p>On pourrait dire qu'un client n'est enregistré qu'au moment où il passe une première commande d'articles. Il pourra passer plusieurscommandes d'articles.</p>
+                            <p>Le symbole <span class="html">-∊</span> montre une relation 1 : 1-N. Cette relation se lit dans les deux sens :</p>
+                            <ul>
+                                <li>Un client a au minimum une commande. Il peut avoir plusieurs commandes.</li>
+                                <li>Une commande est associée obligatoirement à un client.</li>
+                            </ul>
+                            <img src="../images/relation_1_a_1N.PNG" alt="DSD de la relation 1 à 1 : N">
+                        </li>
+                        <li>
+                            <h4 id="relation_1_a_01">Cas de la relation 1 à 0 : 1 :</h4>
+                            <p>Une commande peut référencer éventuellement une facture. Pour le moment, la facture est considérée comme un attribut de la commande. Envisagons la nécessité d'en créer une entité à part entière. Nous avons donc deux tables : <span class="em">commandes</span> et <span class="em">factures</span>.</p>
+                            <p>Une commande référence éventuellement une facture. Une facture référence toujours une commande mais on ne retirnt pas cette information.</p>
+                            <p>La relation est donc facultative. Dans la table commandes, la clé étrangère sera donc annotée <span class="em">NULL</span> et graphiquement on ajoutera un petit rond à l'extrémité de l'association.</p>
+                            <p>Le symbole <span class="html">-o</span> montre une relation 1 : 0-1. Cette relation se lit dans les deux sens :</p>
+                            <ul>
+                                <li>une commande référence éventuellement une facture.</li>
+                                <li>une facture référence toujours une commande.</li>
+                            </ul>
+                            <img src="../images/relation_1_a_01_1.PNG" alt="DSD n°1 de la relation 1 à 0 : 1">
+                            <p>Cette relation peut également être représentée par une clé étrangère du côté de la facture :</p>
+                            <img src="../images/relation_1_a_01_2.PNG" alt="DSD n°2 de la relation 1 à 0 : 1">
+                            <p>Afin de s'assurer que deux ou plusieurs commandes ne référencent pas le même numéro de facture, on peut noter une contrainte d'unicité sur le champ facture (noté ici <span class="em">unique</span>.</p>
+                            <img src="../images/relation_1_a_01_3.PNG" alt="DSD n°3 de la relation 1 à 0 : 1">
+                            <p>Et réciproquement,</p>
+                            <img src="../images/relation_1_a_01_4.PNG" alt="DSD n°4 de la relation 1 à 0 : 1">
+                        </li>
+                        <li>
+                            <h4 id="relation_1_a_1">Cas de la relation 1 à 1 :</h4>
+                            <p>Si on considère qu'à chaque commande correspondra nécessairement une facture, il faut ajuster le diagramme afin de relier les tables <span class="em">commandes</span> et <span class="em">factures</span> avec une relation 1 à 1.</p>
+                            <p>Le symbole <span class="html">-</span> montre une relation 1:1. Cette relatin se lit dans les deux sens :</p>
+                            <ul>
+                                <li>une commande référence toujours une facture.</li>
+                                <li>une facture référence toujours une commande.</li>
+                            </ul>
+                            <img src="../images/relation_1_a_1_1.PNG" alt="DSD n°1 de la relation 1 à 1">
+                            <p class="em">Pour que le SGBD puisse facilement garantir la relation 1 à 1, il est conseillé d'utiliser la même clé primaire dans les deux tables, quand c'est possible.</p>
+                            <p>On utilise dans ce cas la clé primaire de la table <span class="em">commandes</span> également comme clé primaire pour la table <span class="em">factures</span>. Dans la table <span class="em">commandes</span>, on n'indique aucun clé étrangère. Une facture ser  identifiée par un numéro de commande.</p>
+                            <img src="../images/relation_1_a_1_2.PNG" alt="DSD n°2 de la relation 1 à 1">
+                            <p>&#8594; Remarquons qu'il serait plus judicieux d'utiliser le numéro de facture qui est un élément idispensable d'une facture en bonne et due forme.</p>
+                            <img src="../images/relation_1_a_1_3.PNG" alt="DSD n°3 de la relation 1 à 1">
+                        </li>
+                        <li>
+                            <h4 id="autres_relations">Autres relations entre deux tables :</h4>
+                            <p>On peut combiner les terminaisons de relations supportées par le SGBD.</p>
+                            <p>Le symbole <span class="html">o-o</span> montre une relation 0-1 : 0-1.Cette relation se lit dans les deux sens :</p>
+                            <ul>
+                                <li>une entité a référence éventuellement une entité b.</li>
+                                <li>une entité b référence éventuellement une entité a.</li>
+                            </ul>
+                            <p>Le symbole <span class="html">o-o∊</span> montre une relation 0-1 : 0-N.</p>
+                            <p>Le symbole <span class="html">o-∊</span> montre une relation 0-1 : 1-N.</p>
+                        </li>
+                        <li>
+                            <h4 id="relation_m_a_n">Cas de la relation M à N :</h4>
+                            <p>Une commande peut porter sur plusieurs articles. Un article peut faire partie de plusieurs commandes.</p>
+                            <p>C'est une relation M à N.</p>
+                            <img src="../images/cle_primaire_concatenee.PNG" alt="">
+                            <p>Le SGBD ne peut pas implémenter cette relation directement mais le fait par le biais de deux relations 1 : N.</p>
+                            <p>Cela exige donc la création d'une nouvelle entité intermédiaire.</p>
+                            <p>Concrètement, on sera obligé de créer une table pour mémoriser le fait que dans une même commande, on rencontre plusieurs articles mais qu'un même article peut, bien entendu, être commandé plusieurs fois.</p>
+                            <img src="../images/relation_M_a_N.PNG" alt="DSD de la relation M à N">  
+                        </li>
+                    </ol>
+                    <h3 id="cle_etrangere_null">Une clé étrangère à NULL :</h3>
+                    <p>La clé étrangère peut être à NULL pendant un certain temps et définie par la suite.</p>
+                    <p>Prenons l'exemple du carnet de rendez-vous d'un cabinet médical. Ce cabinet est composé d'une dizaine de médecins qui ont une grille de rendez-vous qui s'échelonnent toutes les demi-heures. Les médecins prestent seulement certains jours ou demi-jours dans ce cabinet et parfois de façon irrégulière.</p>
+                    <p>La secrétaire encode au départ les disponibilités de chaque médecin et puis fixe les rendez-vous avec les patients sur base de celles-ci.</p>
+                    <p>Évolution de la construction du DSD :</p>
+                    <h4>Étpae 1 : le planning :</h4>
+                    <p>On prévoit les disponibilités de chaque médecin :</p>
+                    <img src="../images/planning_1.PNG" alt="DSD n°1 du planning">
+                    <p>Remarque : vu la convention que nous adoptons (nom d'une table toujours au pluriel), nous préférerons rendez-vous comme nom pour la table.</p>
+                    <h4>Étape 2 : l'introduction des patients :</h4>
+                    <p>Aussi longtemps que la plage du planning n'est pas attribuée à un patient, la clé étrangère <span class="em">num_sis</span> de la table rendez-vous reste à NULL.</p>
+                    <img src="../images/planning_2.PNG" alt="DSD n°2 du planning">
+                    <p>Lorsqu'un patient prend le rendez-vous disponsible, la clé étrangère est indiquée. Il se pourrait que certains rendez-vous ne soient jamais attribués.</p>
+                    <ol>
+                        <li>
+                            <h4 id="influence_temps_cles_etrangeres">Influence du temps sur les clés étrangères :</h4>
+                            <p>Exemple : un grossiste effectue des livraisons à ses clients tout au long du mois en fonction de leurs commandes. À la fin du mois, toutes ces livraisons sont facurées en une seule fois. La facture d'un client regroupe donc toutes les livraisons effectuées à ce client durant le mois.</p>
+                            <img src="../images/influence_temps_cle_etrangere.PNG" alt="DSD de l'influence sur les clés étrangères">
+                            <p>Cet exemple démontre bien <span class="em">l'importance de nommer les relations</span> dans certains cas. Il est une nouvelle illustration d'une clé étrangère de valeur NULL.</p>
+                            <p>Entre les entités clients, il exite deux relations différentes. Celles-ci pourraient être de cardinalité différente (voir plus loin).</p>
+                            <p>On peut noter que certains champs pourraient également servir d'identifiant unique. On peut en faire des index uniques (notés ici <span class="em">idx_unique</span>).</p>
+                            <p>Un <span class="em">index</span> est une propriété d'une colonne de la base de données permettant de l'indexer dans le but d'améliorer l'accès aux données par le SGBD. Tout comme l'index dans un livrequi permet de retrouver plus facilement l'information, l'<span class="em">index unique</span> impose l'unicité de l'indexation; il permet d'identifier chaque tupled'une table de façon non ambiguë.</p>
+                        </li>
+                    </ol>
+                    <h3 id="relations_multiples">Les relations multipkes entre tables :</h3>
+                    <ol>
+                        <li>
+                            <h4 id="relations_M_a_N">Relations M à N :</h4>
+                            <p>Une table donnée peut avoir deux relations M à N avec deux tables différentes (et beaucoup si nécessaire).</p>
+                            <p>Voici un DD qui illustre ce propos :</p>
+                            <img src="../images/relation_multiple_M_a_N.PNG" alt="relation multiple M à N">
+                            <p>La même table <span class="em">cours</span> participe à deux relations M à N différentes.</p>
+                            <ol>
+                                <li><span class="em">resultats</span> donne le résultat pour un cours et un étudiant. (remarque : il serait utile de se demander comment conserver les résultats s'il y a plusieurs sesions possibles).</li>
+                                <li><span class="em">horaires</span> décrit les heures auxquelles se donne un cours dans un local.</li>
+                            </ol>
+                            <h5>Choix des clés primaires :</h5>
+                            <ol>
+                                <li><span class="em">resultats</span> est telle que pour un cours et un étudiant on n'a qu'un seul résultat. La clé primaire est donc formée par la <span class="em">concaténation des deux clés étrangères</span>.</li>
+                                <li>En ce qui concerne <span class="em">horaires</span>, c'est différent; un même cours peut être donné dans un même local à des moments différents. La clé primaire est donc indépendante des clés étrangères.</li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h4 id="relations_1_a_N">Relations 1 à N :</h4>
+                            <h5>Gestion des classes d'une école de l'enseignement secondaire :</h5>
+                            <p>Dans l'enseignement secondaire, les élèves sont regroupés par niveaux d'étude (ou années).</p>
+                            <p>Une classe regroupe plusieurs élèves, en général entre 12 et 25.</p>
+                            <p>Le programme de cours prévoit 32 heures de cours par élève. Outre les cours obligatoires, l'élève doit choisir et s'inscrire à des cours à option. Un cours est organisé pour minimum 8 élèves.</p>
+                            <p>Un professeur donne 19 heures de cours, parfois il peut accepter de donner jusqu'à 4 heures supplémentaires, parfois il doit accepter un temps partiel.</p>
+                            <p>Un cours n'est attribué qu'à un seul professeur.</p>
+                            <p>Parmi les professeurs, on choisit un titulaire de classe. Il arrive qu'un professeur soit titulaire de 2 classes.</p>
+                            <img src="../images/relation_multiple_1_a_N.PNG" alt="DSD de la gestion des classes d'une école de l'enseignement secondaire">
+                            <p>Dans ce diagramme, plusieurs entités ont deux relations différentes entre elles : une classe a un professeur titulaire et un seul mais une classe a plusieurs professeurs qui lui donnent cours. Ces mêmes professeurs donnent cours à d'autre classes.</p>
+                        </li>
+                        <li>
+                            <h4 id="relation_1_a_N_induite">Relation 1 à N induite :</h4>
+                            <p>Si entre les entités <span class="em">clients</span> et <span class="em">commandes</span>, il y a une relation 1 à N et si entre les entités <span class="em">commandes</span> et <span class="em">lignes_commande</span>, il y a aussi une relation 1 à N, il existe alors une relation 1 à N déduite entre <span class="em">clients</span> et <span>lignes_commande</span>. Il est inutile de la dessiner.</p>
+                            <img src="../images/relation_1_a_N_induite.PNG" alt="DSD de la relation 1 à N induite">
+                        </li>
+                    </ol>
+                    <h3 id="relations_reflexives">Les relations réflexives :</h3>
+                    <ol>
+                        <li>
+                            <h4 id="relations_reflexives_hierarchiques">Relations réflexives hiérarchiques :</h4>
+                            <p>Le cas typique de ce genre de relation est la table où l'on désire mémoriser des services d'une institution organisée hiérarchiquement.</p>
+                            <p>La direction comprend, entre autres, un service juridique. Celui-ci se décompose en service juridique du personnel et service juridique commercial ainsi que le contentieux. Le service juridique contentieux gère les conflits et les procès pour la Belgique et l'étranger; deux sous services sont donc créés, etc.</p>
+                            <img src="../images/relations_reflexives_hierarchiques.PNG" alt="relations réflexives hiérarchiques">
+                            <p>Cette hiérarchie sera mémorisée comme suit :</p>
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th>Code service</th>
+                                        <th>Nom service</th>
+                                        <th>Responsable du service</th>
+                                        <th>Code service supérieur</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>0</td>
+                                        <td>Direction générale</td>
+                                        <td>Dupuis</td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Juridique</td>
+                                        <td>Janssens</td>
+                                        <td>0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>Personnel</td>
+                                        <td>Durand</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>Commercial</td>
+                                        <td>Carlot</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>Contentieux</td>
+                                        <td>Van Camp</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td>Belge</td>
+                                        <td>André</td>
+                                        <td>4</td>
+                                    </tr>
+                                    <tr>
+                                        <td>6</td>
+                                        <td>Etranger</td>
+                                        <td>Michel</td>
+                                        <td>4</td>
+                                    </tr>
+                                    <tr>
+                                        <td>7</td>
+                                        <td>UE</td>
+                                        <td>Van den Berg</td>
+                                        <td>6</td>
+                                    </tr>
+                                    <tr>
+                                        <td>8</td>
+                                        <td>Hors UE</td>
+                                        <td>Lee</td>
+                                        <td>6</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Représentation :</p>
+                            <img src="../images/relations_reflexives_hierarchiques_dsd.PNG" alt="DSD des relations réflexives hiérarchiques">
+                        </li>
+                        <li>
+                            <h4 id="relations_reseau">Relations en réseau (réflexives non hiérarchiques) :</h4>
+                            <p>C'est le cas typique de structure d'assemblage. Une pièce peut être composée de plusieurs pièces et une même pièce peut être un composant de plusieurs pièces.</p>
+                            <p>Représentation :</p>
+                            <img src="../images/relations_reseaux.PNG" alt="relations en réseau">
+                            <p>Par exemple, une foreuse est composée d'un accumulateur, d'un moteur et d'un interrupteur.</p>
+                            <p class="souligne">Pièces :</p>
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th>no_piece</th>
+                                        <th>nom</th>
+                                        <th>description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>B72</td>
+                                        <td>FACC72</td>
+                                        <td>Foreuse sur Accus 7.2 V modèle Brico</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P72</td>
+                                        <td>PACC72</td>
+                                        <td>Foreuse sur Accus 7.2 V modèle professionnel</td>
+                                    </tr>
+                                    <tr>
+                                        <td>B96</td>
+                                        <td>FACC96</td>
+                                        <td>Foreuse sur Accus 9.6 V modèle Brico</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P96</td>
+                                        <td>PACC96</td>
+                                        <td>Foreuse sur Accus 9.6 V modèle professionnel</td>
+                                    </tr>
+                                    <tr>
+                                        <td>A72</td>
+                                        <td>ACC72</td>
+                                        <td>Accus 7.2V</td>
+                                    </tr>
+                                    <tr>
+                                        <td>A96</td>
+                                        <td>ACC96</td>
+                                        <td>Accus 9.6 V</td>
+                                    </tr>
+                                    <tr>
+                                        <td>M72</td>
+                                        <td>MOT72</td>
+                                        <td>Moteur 7.2 V</td>
+                                    </tr>
+                                    <tr>
+                                        <td>M96</td>
+                                        <td>MOT96</td>
+                                        <td>Moteur 9.6 V</td>
+                                    </tr>
+                                    <tr>
+                                        <td>IP</td>
+                                        <td>INTPROF</td>
+                                        <td>Interrupteur Brico</td>
+                                    </tr>
+                                    <tr>
+                                        <td>IB</td>
+                                        <td>INTPROF</td>
+                                        <td>Interrupteur Brico</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="souligne">Composants :</p>
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th>no_piece_composee</th>
+                                        <th>no_piece_composante</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>B72</td>
+                                        <td>A72</td>
+                                    </tr>
+                                    <tr>
+                                        <td>B72</td>
+                                        <td>IB</td>
+                                    </tr>
+                                    <tr>
+                                        <td>B72</td>
+                                        <td>M72</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P72</td>
+                                        <td>A72</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P72</td>
+                                        <td>IP</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P72</td>
+                                        <td>M72</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Dans cet exemple, on constate qu'entre le modèle bricolage et professionnel, seul l'interrupteur change.</p>
+                        </li>
+                        <li>
+                            <h4 id="parrainage">Exercice proposé : le parrainage :</h4>
+                            <p>On désire mettre en place un système de parrainage des étudiants de 1ère et même de 2ème année par d'autres étudiants plus expérimentés (d'une année supérieure). Un étudiant pourrait demander des explications sur des matières plus difficiles à son parrain.</p>
+                            <p>On souhaite mémoriser qui parraine qui.</p>
+                            <p><span class="em">Première hypothèse :</span> un étudiant (parrain) pourrait parrainer plusieurs autres étudiants (ses filleuls) mais un filleul n'aurait qu'un seul parain.</p>
+                            <p><span class="em">Deuxième hypothèse :</span> un filleul pourrait avoir plusieurs parrains plus ou moins spécialisés suivant les matières en question.</p>
+                            <p>Pour chaque hypothèse, construisez une DB (DSD) et écrivez un SELECT SQL.</p>
+                            <ol>
+                                <li>Qui affiche pour chaque parrain (matricule et nom) le nombrede ses filleuls.</li>
+                                <li>Qui affiche pour chaque parrain (matricule et nom) le matricule et le nom de ses filleuls.</li>
+                            </ol>
+                            <p class="souligne">DSD de la première hypothèse :</p>
+                            <img src="../images/parrainage_1.PNG" alt="DSD de la première hypothèse du parrainage">
+                            <p class="souligne">DSD de la deuxième hypothèse :</p>
+                            <img src="../images/parrainage_2.PNG" alt="DSD de la deuxième hypothèse du parrainage">
+                        </li>
+                    </ol>
+                    <h3 id="tables_specialisees">Les tables spécialisées :</h3>
+                    <p>Partons d'une table décrivant les articles vendus par une société :</p>
+                    <img src="../images/tables_specialisees_1.PNG" alt="DSD n°1 des tables spécialisées">
+                    <p>Le champ <span class="em">type_produit</span> de la table <span class="em">produits</span> contient le char '<span class="em">S</span>' pour savon, '<span class="em">D</span>' pour détergent et '<span class="em">H</span>' pour shampoing.</p>
+                    <p>Les autres champs de cette table sont remplis selon le type de produits :</p>
+                    <ul>
+                        <li>S'il s'agit d'un savon, les champs <span class="em">couleur</span>, <span class="em">texture</span> et <span class="em">parfum</span> seront remplis,</li>
+                        <li>S'il s'agit d'un shampoing, le champ <span class="em">agent_moussant</span> sera rempli,</li>
+                        <li>Enfin, s'il s'agit d'un détergent, le champ <span class="em">agent_detergent</span> sera rempli.</li>
+                    </ul>
+                    <p>Dans le cas d'un savon par exemple, les champs <span class="em">agent_moussant</span> et <span class="em">agent_detergent</span> resteront vides (<span class="em">NULL</span>). En fait, suivant le type de produit, l'enregistrement devrait avoir une structure différente.</p>
+                    <p>Une solution plus claire est de définir 3 tables spécialisées (une par type de produits) en plus de la table générale des produits.</p>
+                    <img src="../images/tables_specialisees_2.PNG" alt="DSD n°2 des tables spécialisées">
+                    <p>Dans cet exemple, un produit est soit un savon, soit un shampoing, soit un détergent. Nous allons donc créer :</p>
+                    <ul>
+                        <li>un tuple dans la table <span class="em">produits</span> pour tous les produits (savons, shampoings et détergents) ET</li>
+                        <li>
+                            <p>un tuple dans la table correspondant au <span class="em">type_produit</span> :</p>
+                            <ul>
+                                <li>Si 'S', dans la table <span class="em">savons</span>;</li>
+                                <li>Si 'D', dans la table <span class="em">detergents</span>;</li>
+                                <li>Si 'H' dans la table <span class="em">shampoings</span>.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>La clé primaire des tables spécialisées est la même que la clé primaire de la table générale.</p>
+                    <p>Cependant, il peut arriver que des clés primaires différentes existent. C'est ce que nous allons voir dans l'exemple suivant.</p>
+                    <p>Au service central d'une université, on décide d'enregistrer toues les membres de l'université dans une seule table <span class="em">personnes</span>, spécialisée en deux tables <span class="em">etudiants</span> et <span class="em">professeurs</span>. Les professeurs sont identifiés par un numéro de matricule tandis que les étudiants sont identifiés par leur numéro d'inscription.</p>
+                    <p>Voici deux manières de représenter cette situation :</p>
+                    <p class="souligne">Solution 1 :</p>
+                    <img src="../images/tables_specialisees_3.PNG" alt="DSD n°3 des tables spécialisées">
+                    <p class="souligne">Solution 2 :</p>
+                    <img src="../images/tables_specialisees_4.PNG" alt="DSD n°4 des tables spécialisées">
+                    <p>Une personne peut être présente dans les deux tables spécialisées. Dans cette université, certains étudiants de doctorat ont déjà des charges académiques et sont donc considérés à la fois comme des étudiants et comme des professeurs.</p>
+                    <h3 id="sauvegarde_donnees">La sauvegarde des données :</h3>
+                    <p>La <span class="em">sauvegarde</span> est l'opération qui consiste à <span class="em">mettre en sécurité</span> les données contennues dans un sytème informatique. Ce terme est proche de deux notions :</p>
+                    <ul>
+                        <li><span class="em">l'enregistrement des données</span>, qui est l'opération d'écriture des données sur un item d'enregistrement durable, tel qu'un disque dur, une clé USB, des bandes magnétiques, etc. (<span class="em">back up</span>)</li>
+                        <li><span class="em">l'archivage</span>, qui consiste à enregistrer des données sur un support à des fins légales ou historiques.</li>
+                    </ul>
+                    <ol>
+                        <li>
+                            <h4 id="backup">Le back up :</h4>
+                            <p>Les copies de <span class="em">sûreté</span> sont utiles principalement à deux choses :</p>
+                            <ul>
+                                <li>La première et la plus évidente est de permettre de <span class="em">restaurer</span> un système informatique dans un état de fonctionnement à la suite d'un incident (perte d'un support de stockage tel que disque dur, bande magnétique, etc., ou de tout ou partie des données qu'il contient).</li>
+                                <li>La seconde, incluse dans la première mais certainement la plus courante, est de <span class="em">faciliter la restauration</span> d'une partie d'un système informatique (un fichier, un groupe de fichiers, un système d'exploitation, une donnée dans un fichier, etc.) à la suite d'une suppression accidentelle ou à une modification non désirée.</li>
+                            </ul>
+                            <p>La technique la plus fréquente est la copie des données sur un support indépendant du système initial (serveur distant, bandes magnétiques...).</p>
+                            <p>L'opération inverse qui consiste à réutiliser des données sauvegardées s'appelle une <span class="em">restauration</span>.</p>
+                        </li>
+                        <li>
+                            <h4 id="archivage">L'archivage :</h4>
+                            <p>L'archivage vise à <span class="em">désengorger</span> des tables de mouvements, souvent volumineuses et rapidement périmées.</p>
+                            <p>Pour des raisons légales ou pour répondre à des demandes de statistiques, les données sont conservées plus longtemps. On stocke alors les données dans une DB séparée ou dans un data warehouse (Big data; business intelligence (informatique décisionnelle)).</p>
+                        </li>
+                    </ol>
+                </article>
+            <!-- fin de section -->
+            </section>
+        </main>
+        <footer role="contentinfo">
+            <div>
+                <address>
+                    Professeurs :
+                    <a class="mail" href="mailto:olivier.choquet@vinci.be">Choquet Olivier</a>
+                    <a class="mail" href="mailto:driss.vandenheede.techinfo@gmail.com">Vandenheede Driss</a>
+                </address>
+            </div>
+            <div>
+                <p>Si vous détectez une erreur, une faute d'orthographe, n'hésitez pas à envoyer un mail aux adresses juste à côté avec le nom de la page et l'erreur détectée.</p>
+            </div>
+            <div id="version">
+                <p>Syllabus HTML</p>
+                <p>Version 5.0</p>
+            </div>
+        </footer>
+    </body>
+</html>
