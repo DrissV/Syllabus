@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="author" content="Choquet Olivier & Vandenheede Driss">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>IANARCH du livre de référence - Suppléments - e-Syllabus HTML5 et CSS3</title>
+        <!-- une icône dans la barre du navigateur -->
+        <link rel="icon" href="../images/favicon.png" type="image/png">
+        <link rel="stylesheet" href="../style.css">
+    </head>
+    <body>
+        <!-- liens d'évitement -->
+        <ul class="a11y-nav">
+            <li>
+                <a href="#container">Passer directement au contenu</a>
+            </li>
+            <li>
+                <a href="#menu">Accéder au menu secondaire de la page</a>
+            </li>
+            <li>
+                <a href="#aside">Accéder aux liens utiles</a>
+            </li>
+        </ul>
+        <!-- bannière et menu -->
+        <header role="banner">
+            <div class="logoTitle">
+                <h1>Cours d'introduction au Web</h1>
+                <h2>HTML5 et CSS3</h2>
+            </div>
+            <nav role="navigation" aria-label="Menu principal de navigation">
+                <ul>
+                    <li><a href="../index.html">Le cours</a></li>
+                    <li><a href="../internet.html">Internet</a></li>
+                    <li><a href="../html5.html">HTML5</a></li>
+                    <li><a href="../css3.html">CSS3</a></li>
+                    <li><a href="../methodologie.html">Méthodologie</a></li>
+                    <li><a href="../lexique.html">Lexique</a></li>
+                    <li><a href="../supplements.html" class="current">Suppléments</a></li>
+                </ul>
+            </nav>
+        </header>
+        <main id="container" role="main">
+            <div id="menu">
+                <nav role="navigation">
+                    <ol>
+                        <li><a href="supplements_ianarch.html">Retour au sommaire</a></li>
+                        <li><a href="#intro">Introduction</a></li>
+                        <li><a href="#conception_base_donnees">La conception de la base de données</a></li>
+                        <li><a href="#procedures_fonctions_stockees">Les procédures et les fonctions stockées</a></li>
+                        <li><a href="#optimisation_requetes">L'optimisation des requêtes</a></li>
+                    </ol>
+                </nav>
+                <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
+                <aside id="aside">
+                    <p>Liens utiles :</p>
+                    <ul>
+                        <li><a href="http://www.w3schools.com/js/default.asp" target="_blank">Tutoriel JavaScript de W3Schools</a></li>
+                        <li><a href="http://www.w3.org/" target="_blank">W3C</a></li>
+                        <li><a href="http://fr.openclassrooms.com/informatique/cours/apprenez-a-creer-votre-site-web-avec-html5-et-css3" target="_blank">Open Classroom</a></li>
+                        <li><a href="http://www.w3.org/TR/html5/" target="_blank">Norme HTML5</a></li>
+                        <li><a href="http://www.w3schools.com/" target="_blank">W3Schools</a></li>
+                        <li><a href="http://www.alsacreations.com/" target="_blank">Alsa Création</a></li>
+                        <li><a href="https://www.youtube.com/c/LeDesignerduWeb/videos">Le Designer du web</a></li>
+                    </ul>
+                </aside>
+            </div>
+            <section id="mainSection">
+                <article>
+                    <h1>Les bases de données :</h1>
+                </article>
+                <article>
+                    <h2 id="intro">Introduction :</h2>
+                    <p>Les sites internet utilisent beaucoup les bases de données pour stocker des données saisies par les utilisateurs, mais également pour extraire du contenu afin de générer des pages. Les bases de données peuvent vitr devenir un maillon faible si quelques précautions ne sont pas prises pour éviter de trop les solliciter. Cela passe bien évidemment par le cache, mais également par une bonne conception de la base de données et des appels optimisés à celle-ci.</p>
+                    <h2 id="conception_base_donnees">La conception de la base d données :</h2>
+                    <p>Pour qu'une base de données soit efficace et donc plus green IT, elle doit être bien conçue. Tout d'abord, la base de données ne doit contenir que les données qui sont strictement nécessaires. Comme nous avons déjà pris garde de créer uniquement des pages et des fonctionnalités essentielles et de ne pas demander via nos formulaires que des informations indispensables, normalement le travail est déjà bien préparé !</p>
+                    <h3 id="choix_systeme_gestion_base_donnees">Le choix du système de gestion de base de données :</h3>
+                    <p>Le choix d'un système de gestion de base de données (SGBD) est généralement dicté par des considérations plus économiques et techniques (nombre d'accès...) qu'écologiques. Le choix de l'hébergeur et sa formule impose bien souvent le SGBD. La plupart des offres proposent le système de gestion de base de données MySQL ou son <span class="em">fork</span> communautaire MariaDB. C'est pourquoi ce syllabus se concentre sur ces SGBD. Néanmoins, son contenu est pour l'essentiel transposable aux autres SGBD.</p>
+                    <h3 id="choix_moteur_stockage">Le choix du moteur de stockage :</h3>
+                    <p>MySQL a plusieurs moteurs de stockage, mais deux sortent du lot : MyISAM et InnoDB. MyISAM est le moteur historique. Il a l'avantage d'être performant, mais l'inconvénient de ne pas gérer l'intégrité des données (pas de contraintes d'intégrité, pas de clésétrangères, pas de transactions...). Au contraire, InnoDB gère bien toute l'intégrité des donées, mais au prix de performances moindres.</p>
+                    <p>Pour un site internet, la performance est généralement un critère plus important que l'intégrité des données. MyISAM semble donc une solution à privilégier pour un site web écoconçu.</p>
+                    <p>Syntaxe pour la création d'une table avec le moteur MyISAM :</p>
+<pre class="taille60"><code>CREATE TABLE nom
+(
+    ...
+) ENGINE = MYISAM;</code></pre>
+                    <p>MariaDB a également plusieurs moteurs de stockage. MyISAM est également présent. InnoDB a changé de nom pour s'appeler XtraDB. Le moteur Aria a été développé dans l'objectif de remplacer MyISAM.</p>
+                    <p>Remarque : Le nom Aria du moteur de stockage n'a rien à voir avec l'ARIA de l'accessibilité. En réalité, ce moteur se nommait Maria, commele système de bases de données. Le M a été supprimé pour éviter la confusion entre les deux.</p>
+                    <p>À nouveau, MyISAM est le plus performant pour les requêtes simples sans jointures, souvent utilisées dans les sites internet. La syntaxe de création est la même que celle avec MySQL.</p>
+                    <h3 id="types_donnees">Les types de données :</h3>
+                    <p>Il est important de choisir avec soin les types pour les attributs des tables. Vu le nobre important d'enregistrements contenus dans chaque table, cela peut entraîner des conséquences importantes sur les performances.</p>
+                    <h4 id="entiers">Les entiers :</h4>
+                    <p>En fonction de la plage de valeurs prévue pour un attribut de type numérique, il est possible de choisir le type le plus adapté.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Valeur minimale</th>
+                                <th>Valeur maximale</th>
+                                <th>Taille</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="html">TINYINT</td>
+                                <td>-128</td>
+                                <td>127</td>
+                                <td>1 octet</td>
+                            </tr>
+                            <tr>
+                                <td class="html">TINYINT UNSIGNED</td>
+                                <td>0</td>
+                                <td>256</td>
+                                <td>1 octet</td>
+                            </tr>
+                            <tr>
+                                <td class="html">SMALLINT</td>
+                                <td>-32768</td>
+                                <td>32767</td>
+                                <td>2 octets</td>
+                            </tr>
+                            <tr>
+                                <td class="html">SMALLINT UNSIGNED</td>
+                                <td>0</td>
+                                <td>65535</td>
+                                <td>2 octets</td>
+                            </tr>
+                            <tr>
+                                <td class="html">MEDIUMINT</td>
+                                <td>-8388608</td>
+                                <td>8388607</td>
+                                <td>3 octets</td>
+                            </tr>
+                            <tr>
+                                <td class="html">MEDIUMINT UNSIGNED</td>
+                                <td>0</td>
+                                <td>16777215</td>
+                                <td>3 octets</td>
+                            </tr>
+                            <tr>
+                                <td class="html">INT</td>
+                                <td>-2147483648</td>
+                                <td>214483647</td>
+                                <td>4 octets</td>
+                            </tr>
+                            <tr>
+                                <td class="html">INT UNSIGNED</td>
+                                <td>0</td>
+                                <td>4294967295</td>
+                                <td>4 octets</td>
+                            </tr>
+                            <tr>
+                                <td class="html">BIGINT</td>
+                                <td>-9223372036854775808</td>
+                                <td>9223372036854775807</td>
+                                <td>8 octets</td>
+                            </tr>
+                            <tr>
+                                <td class="html">BIGINT UNSIGNED</td>
+                                <td>0</td>
+                                <td>18446744073709551615</td>
+                                <td>8 octets</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h4 id="dates">Les dates :</h4>
+                    <p>Le type <span class="html">DATE</span> ne contient que la date, le type <span class="html">TIME</span> correspond à l'horaire et le type <span class="html">DATETIME</span> contient les deux. Il est donc judicieux d'utiliser <span class="html">DATE</span> à la place de <span class="html">DATETIME</span> si l'horaire n'a pas d'importance.</p>
+                    <h4 id="chaines_caracteres">Les chaînes de caractères :</h4>
+                    <p>Le type <span class="html">CHAR</span> représente une chaîne de caractères de taille fixe. Ainsi pour une colonne de type <span class="html">CHAR</span>, tous les enregistrements auront le même nombre de caractères pour cet attribut. Une colonne de type <span class="html">VARCHAR</span> permet de stocker des chaînes de caractères de tailles différentes d'un enregistremnt à l'autre.</p>
+                    <p>Les bases de données MySQL et MariaDB supportent l'Unicode, en particulier l'UTF-8. Cela permet de pouvoir utiliser l'ensemble des caractères existant sur la terre, mais également d'occuper un minimum de place.</p>
+                    <p class="souligne">Syntaxe :</p>
+<pre class="taille60"><code>CREATE TABLE nomTable
+(
+    ...
+) CHARACTER SET 'utf8' COLLATE 'utf8mb4_unicode_ci';</code></pre>
+                    <p>Remarque : Néanmoins, si vous ne stockez que des caractères classiques, comme du texte en français, un autre encodage est possible : l'ISO/IEC 8859-1 (ou Latin1). Il utilise toujours un seul octet.</p>
+                    <h3 id="cles_primaires">Les clés primaires :</h3>
+                    <p>Toutes les tables doivent respecter les trois premières formes normales (cfr <a href="supplements_ianarch_sql2.html#normalisation" target="_blank">chapitre sur la normalisation</a>). En d'autres termes, chaque attribut ne contient qu'une seule information et chaque attribut a une dépendance fonctionnelle vis-à-vis de la clé primaire.</p>
+                    <p>Chaque table doit évidemment posséder une clé primaire. Afin d'avoir des requêtes et des jointures efficaces, mieux vaut ne pas constituer de clés primaires composites et leur préférer un identifiant technique. La clé composite devient alors une clé secondaire.</p>
+                    <p>Les clés primaires pour être efficaces doivent être de type entier ou des chaînes de caractères de taille fixe, avec cette taille la plus petite possible.</p>
+                    <p class="souligne">Exemples :</p>
+                    <ul>
+                        <li>
+<pre class="taille60"><code>idVelo SMALLINT UNSIGNED CONSTRAINT pk_velos PRIMARY KEY...</code></pre>
+                        </li>
+                        <li>
+<pre class="taille60"><code>idPedalo INT UNSIGNED CONSTRAINT pk_pedalos PRIMARY KEY...</code></pre>
+                        </li>
+                        <li>
+<pre class="taille60"><code>idVoilier CHAR (2) CONSTRAINT pk_voiliers PRIMARY KEY...</code></pre>
+                        </li>
+                    </ul>
+                    <h3 id="jointures">Les jointures :</h3>
+                    <p>Les clés étrangères peuvent être nommées comme les clés primaires qu'elles référencent. Cela permet d'effectuer des jointures en utilisant le mot-clé <span class="html">USING</span> à la place de <span class="html">ON</span> suivi de la condition de jointure.</p>
+                    <p class="souligne">Exemple :</p>
+<pre class="taille60"><code>SELECT *
+FROM employes
+INNER JOIN services USING (codeService);</code></pre>
+                    <p>Ceci est plus conscis et évite de potentielles erreurs dans la condition de jointure.</p>
+                    <p>Afin d'accélérer les jointures, il est recommandé de créer des index sur les clés étrangères. Il ne faut pas le faire sur les clés primaires qui en possèdent déjà un.</p>
+                    <h3 id="index">Les index :</h3>
+                    <p>Les index peuvent améliorer les performances à condition qu'ils soient utilisés à bon escient et qu'ils ne soient pas trop nombreux. Un trop grand nombre d'index est pire d'un point de vue performance que pas d'index du tout ! Néanmoins, il est intéressant d'avoir des index sur les attributs constituant une clé étrangère ou utilisés régulièrement dans des restrictions (clause <span class="html">WHERE</span>) ou des tris (clause <span class="html">ORDER BY</span>).</p>
+                    <p class="souligne">Syntaxe :</p>
+<pre class="taille60"><code>CREATE INDEX nomIndex ON nomTable (nomColonnes);</code></pre>
+                    <p>L'avantagedes requêtes provenant d'un site web est qu'elles sont connues à l'avance. Ainsi, il est possible de les analyser pour déterminer les attributs nécessitant des index.</p>
+                    <h3 id="index_recherche_textuelle">Les index pour la recherche textuelle :</h3>
+                    <p>Lorsqu'un site internet met en place un moteur de recherche, il faut qu'il puisse trouver les pages qui contiennent les termes recherchés. Si les articles sont contenus dans une base de données et si lespages sont créées dynamiquement, il faut alors rechercher ces termes dans la base.</p>
+                    <p>Soit la table Articles :</p>
+<pre class="taille60"><code>CREATE TABLE articles
+(
+    idArticle INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    adresse VARCHAR (20) NOT NULL UNIQUE,
+    titre VARCHAR (20) NOT NULL,
+    contenu TEXT NOT NULL
+) ENGINE = MYISAM;</code></pre>
+                    <p>Pour rechercher les pages contenant le terme saisi, il faut alors effectuer une recherche du type :</p>
+<pre class="taille60"><code>SELECT adresse
+FROM articles
+WHERE title LIKE '%motCleRecherche%'
+OR contenu LIKE '%motCleRecherche%';</code></pre>
+                    <p>Cette requête ne peut pas être accélérée en utilisant un index classique. Heureusement, les index pour la recherche textuelle (<span class="em">full-text search</span> en anglais) permettent d'indexer l'ensemble des mots contenus dans un ensemble d'attributs. Les mots trop courts ou trop longs ne sont toutefois pas indexés. Pour des raisons d'efficacité, il est préférable d'insérer les données en premier, puis de créer l'index ensuite.</p>
+                    <p class="souligne">Syntaxe :</p>
+<pre class="taille60"><code>CREATE FULLTEXT INDEX nomIndex ON nomTable (attributs);</code></pre>
+                    <p class="souligne">Exemple :</p>
+<pre class="taille60"><code>CREATE FULLTEXT INDEX in_articles_fulltext_titrecontenu ON articles (titre, contenu);</code></pre>
+                    <p>Il est alors possible d'utiliser les fonctions <span class="html">MATCH()</span> et <span class="html">AGAINST()</span> avec la syntaxe suivante :</p>
+<pre class="taille60"><code>MATCH (attributs) AGAINST ('termesRecherches' [ IN BOOLEAN MODE ])</code></pre>
+                    <p>La requête de l'exemple précédent devient alors :</p>
+<pre class="taille60"><code>SELECT adresse
+FROM articles
+WHERE MATCH (titre, contenu)
+AGAINST ('termesRecherches');</code></pre>
+                    <p>Les avantages de cette technique sont multiples : en plus d'être performante, elle permet d'obtenirles résultats triés par pertinence, de facilement rechercher plusieurs termes et d'en exclure certains en utilisant les mots-clés <span class="html">IN BOOLEAN MODE</span>.</p>
+                    <p class="souligne">Exemple :</p>
+<pre class="taille60"><code>SELECT adresse
+FROM articles
+WHERE MATCH (titre, contenu)
+AGAINST ('+SQL -Oracle' IN BOOLEAN MODE);</code></pre>
+                    <p>Dans cet exemple, il s'agit de rechercher les articles contenant le terme SQL, mais pas le terme Oracle.</p>
+                    <h2 id="procedures_fonctions_stockees">Les procédures et les fonctions stockées :</h2>
+                    <h3 id="avantages">Les avantages :</h3>
+                    <p>Les procédures et les fonctions stockées ont de nombreux avantages d'un point de vue performance et don d'un point de vue green IT.</p>
+                    <p>Tout d'abord, elles permettent d'éviter de sursolliciter le réseau en limitant le nombre de requêtes envoyées au serveur de base de données. Par exemple, pour la création d'un compte utilisateur, imaginons une requête <span class="html">INSERT</span> qui ajoute l'utilisateur dans une table utilisateurs, puis une autre requête <span class="html">INSERT</span> qui ajoute son adresse dans une autre table. Plutôt que d'envoyer ces deux requêtes au serveur de base de données, il est possible de créer une procédure stockée <span class="em">ajouterUtilisateur ()</span> qui réalise les deux insertions. Ainsi, une seule requête est envoyée à la base de données.</p>
+                    <p>Ensuite, le deuxième avantage est que la procédure ou fonction stockée a déjà été analysée et compilée. Ces deux étapes n'ont donc pas à être réalisées lors de l'appel à la procédure ou fonction. Elle est directement exécutée. Cela permet de gagner encore plus en performance.</p>
+                    <p>Enfin, d'un point de vue sécurité, les procédures ou fonctions stockées sont également très avantageuses. Il est possible d'accorder à l'utilisateur de la base de données des droits uniques sur ces procédures ou fonctions stockées et non sur les tables. Ainsi, la surface d'attaque est moindre. De plus, en passant par ces procédures et fonctions stockées, il est possible de s'assurer de l'intégrité des données, même si le moteur de stockage ne le permet pas.</p>
+                    <h3 id="mise_en_place">La mise en place :</h3>
+                    <p>Illustrons ceci avec l'exemple de l'ajout d'un utilisateur. La première étape est la création des tables utilisateurs et adresses en utilisant PHPMyAdmin :</p>
+<pre class="taille60"><code>CREATE TABLE utilisateurs
+(
+    id_utilisateur INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR (20) NOT NULL,
+    prenom VARCHAR (20) NOT NULL,
+    email VARCHAR (40) NOT NULL UNIQUE,
+    id_adresse INT NOT NULL
+) ENGINE = MYISAM;
+
+CREATE TABLE adresses
+(
+    id_adresse INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ligne1 VARCHAR (40) NULL,
+    ligne2 VARCHAR (40) NULL,
+    code_postal MEDIUMINT (5) ZEROFILL NOT NULL,
+    ville VARCHAR (30) NOT NULL
+) ENGINE = MYISAM;</code></pre>
+                    <p>La deuxième étape est la création de la procédure stockée :</p>
+<pre class="taille60"><code>DELIMITER |
+CREATE PROCEDURE ajouterUtilisateur (IN nom VARCHAR (20), IN prenom VARCHAR (20), IN email VARCHAR (40), IN ligne1_adresse VARCHAR (40), IN ligne2_adresse VARCHAR (40), IN code_postal MEDIUMINT (5), IN ville VARCHAR (30))
+BEGIN
+    INSERT INTO adresses (ligne1, ligne2, code_postal, ville) VALUES (ligne1_adresse, ligne2_adresse, code_postal, ville);
+    INSERT INTO utilisateurs (nom, prenom, email, id_adresse) VALUES (nom, prenom, email, LAST_INSERT_ID());
+END |
+DELIMITER;</code></pre>
+                    <p>Il est possible de tester celle-ci de la manière suivante :</p>
+<pre class="taille60"><code>CALL ajouterUtilisateur('MARCHIX', 'Agathe', 'agathe.marchix@eni.fr', '2A rue Benjamin Franklin', NULL, 44800, 'Saint-Herblain');</code></pre>
+                    <p>La troisième étape est la création d'un utilisateur avec des droits uniquement sur l'exécution des procédures stockées :</p>
+<pre class="taille60"><code>CREATE USER siteweb@'%' IDENTIFIED BY 'OILQcvXhvIzQj75s';
+GRANT USAGE ON greenitaccess.* TO siteweb@'%' REQUIRE NONE WITH
+MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0
+MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
+GRANT EXECUTE ON greenitaccess.* TO siteweb@'%';</code></pre>
+                    <p>Il est possible de tester la connexion et l'appel à cette procédure stockée pour cet utilisateur avec le code PHP suivant :</p>
+<pre class="taille60"><code>&lt;?php
+    require_once 'connexion.php';
+    $query = 'CALL ajouterUtilisateur (:nom, :prenom, :email, :ligne1, :ligne2, NULL, :cp, :ville);';
+    $prep = $pdo-&gt;prepare($query);
+    $prep-&gt;bindValue(':nom', 'MIGIEU');
+    $prep-&gt;bindValue(':prenom', 'Madeleine');
+    $prep-&gt;bindValue(':email', 'madeleine.migieu@eni.fr');
+    $prep-&gt;bindValue(':ligne1', 'place de Brou');
+    $prep-&gt;bindValue(':cp', 1000);
+    $prep-&gt;bindValue(':ville', 'Bourg-en-Bresse');
+    $prep-&gt;execute();
+?&gt;</code></pre>
+                    <p>Le fichier connexion.php :</p>
+<pre class="taille60"><code>&lt;?php
+    $pdo = new PDO('mysql:host=localhost;dbname=greenitaccess', 'siteweb', 'OILQcvXhvIzQj75s', [PDO::MYSQL_ATTR_INIT_COMMAND =&gt; "SET NAMES utf8"]);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+?&gt;</code></pre>
+                    <p>Si, tout se passe bien, la connexion à la base de données est effectuée avec l'interface d'abstraction à l'accès aux données PDO. Ensuite, la requête est préparée et tous ses paramètres sont initialisés. Il est essentiel de passer par des paramètres pour éviter la faille de l'injection SQL. Enfin, la requête est exécutée et rien ne s'affiche.</p>
+                    <p>Si au contraire, un message s'affiche, c'est qu'une erreur s'est produite. C'est par exemple le cas si vous actualisez la page. La procédure stockée est à nouveau exécutée et provoque une erreur car l'adresse e-mail doit être unique. Or elle a déjà été ajoutée en base de données lors de la première exécution.</p>
+                    <p>Vous pouvez vérifier les résultats à l'aide de PHPMyAdmin et constater les insertons des nouvelles lignes.</p>
+                    <p>Pour prouver que l'utilisateur de base de données créé ne peut pas exécutér d'autres instructions que les procédures et fonctions stockées, vous pouvez essayer d'envoyer un autre type de requête.</p>
+                    <p class="souligne">Exemple :</p>
+<pre class="taille60"><code>&lt;?php
+    require_once 'connexion.php';
+    $query = 'INSERT INTO adresses (code_postal, ville) VALUES (:cp, :ville);';
+    $prep = $pdo-&gt;prepare($query);
+    $prep-&gt;bindValue(':cp', 35000);
+    $prep-&gt;bindValue(':ville', 'Rennes');
+    $prep-&gt;execute();
+?&gt;</code></pre>
+                    <p>Voici le message obtenu lors de l'exécution de ce script PHP :</p>
+                    <img src="../images/message_erreur.png" alt="message d'erreur">
+                    <p>Ce message vous indique clairement que l'utilisateur ne dispose pas des privilèges suffisants pour exécuter cette requête.</p>
+                    <h3 id="gestion_collections">La gestion des collections :</h3>
+                    <p>Lorsque nous avons à manipuler des collections de données, il est assez tentant de créer une boucle <span class="em">for</span> en PHP et d'effectuer dans cette boucle un voire plusieurs appels à la base de données pour effectuer le traitement. Il est préférable de n'effectuer qu'un seul appel pour l'ensemble de la collection.</p>
+                    <p>Imaginons une page listant des utilisateurs. Il est possible d'en sélectionner plusieurs pour les supprimer.</p>
+                    <p>Voici la page utilisateurs.php créée à cet effet :</p>
+<pre class="taille60"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+    &lt;head&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+        &lt;title&gt;Utilisateurs&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;Les utilisateurs et utilisatrices&lt;/h1&gt;
+        &lt;?php
+            session_start();
+            if (isset($_SESSION['message'])) {
+                echo '&lt;p role="alert"&gt;' . $_SESSION['message'] . '&lt;/p&gt;';
+                unset($_SESSION['message']);
+            }
+            require_once 'connexion.php';
+            $query = 'CALL listerUtilisateurs();';
+            $utilisateurs = $pdo-&gt;query($query)-&gt;fetchAll(PDO::FETCH_ASSOC);
+            if (count($utilisateurs) === 0) :
+        ?&gt;
+            &lt;p&gt;Il n'y a actuellement aucun utilisateur&lt;/p&gt;
+        &lt;?php else : ?&gt;
+            &lt;form method="POST"&gt;
+                &lt;table&gt;
+                    &lt;caption&gt;La liste des utilisateurs et des utilisatrices&lt;/caption&gt;
+                    &lt;tr&gt;
+                        &lt;th scope="col"&gt;sélection&lt;/th&gt;
+                        &lt;th scope="col"&gt;nom&lt;/th&gt;
+                        &lt;th scope="col"&gt;prénom&lt;/th&gt;
+                    &lt;/tr&gt;
+                    &lt;?php
+                        for ($i = 0; $i &lt; count($utilisateurs); $i++) {
+                            echo '&lt;tr&gt;&lt;td&gt;&lt;input type="checkbox" name="idsUtilisateurs[' . $utilisateurs[$i]['id_utilisateur'] . ']" value="' . $utilisateurs[$i]['id_utilisateur'] . '" aria-label="' . $utilisateurs[$i]['nom'] . ' ' . $utilisateurs[$i]['prenom'] . '"&gt;&lt;/td&gt;&lt;td&gt;' . $utilisateurs[$i]['nom'] . '&lt;/td&gt;&lt;td&gt;' . $utilisateurs[$i]['prenom'] . '&lt;/td&gt;&lt;/tr&gt;';
+                        }
+                    ?&gt;
+                &lt;/table&gt;
+                &lt;input type="submit" value="Supprimer les personnes sélectionnées" name="suppr" formaction="supprimerUtilisateurs.php"&gt;
+            &lt;/form&gt;
+        &lt;?php endif; ?&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>La partie sous le titre de niveau 1, permettra d'afficher les messages d'erreur ou de succès lorsqu'elle sera à nouveau affichée après une suppression.</p>
+                    <p>Ensuite, la procédure suivante est appelée :</p>
+<pre class="taille60"><code>DELIMITER |
+CREATE PROCEDURE listerUtilisateurs()
+BEGIN
+    SELECT id_utilisateur, nom, prenom FROM utilisateurs ORDER BY nom, prenom;
+END |
+DELIMITER;</code></pre>
+                    <p>En fonction des données récupérées, le tableau est créé ou un message est affiché s'il n'y a aucun utilisaateur. Toutes les cases à cocher pour sélectionner les personnes ont été pourvues d'un attribut <span class="html">aria-label</span> contenant le nom de la personne afin d'être accessibles avec une lecture d'écran. Elles ont toutes un nom constitué de <span class="em">idsUtilisateurs</span> suivi de l'identifiants des personnes cochées se retrouvent dans les paramètres <span class="em">POST</span> dans un tableau nommé <span class="em">idsUtilisateurs</span>. Le bouton de suppression possède un attribut <span class="html">formaction</span>. Ainsi, si nous ajoutions d'autres actions groupées, elles pourraient être dans le même formulaire avec les mêmes cases à cocher. Par exemple, il serait imaginable d'avoir une réinitialisation de mots de passe pour l'ensemble des personnes sélectionnées.</p>
+                    <p>Lors d'un clic sur le bouton de suppression, la page <span class="em">supprimerUtilisateurs.php</span> est appelée :</p>
+<pre class="taille60"><code>&lt;?php
+    if (filter_input(INPT_POST, 'suppr', FILTER_SANITIZE_STRING)) {
+        session_start();
+        if (!isset($_POST['idsUtilisateurs'])) {
+            $_SESSION['message'] = 'Aucun utilisateur sélectionné.';
+        } else {
+            $ids = filter_var_array($_POST['idsUtilisateurs'], FILTER_VALIDATE_INT);
+            require_once 'connexion.php';
+            $query = 'CALL supprimerUtilisateurs (:ids);';
+            $prep = $pdo-&gt;prepare($query);
+            $prep-&gt;bindValue(':ids', implode(', ', $ids));
+            if ($prep-&gt;execute()) {
+                $_SESSION['message'] = 'Suppression effectuée avec succès.';
+            } else {
+                $_SESSION['message'] = 'La suppression n\'a pas pu être effectuée.';
+            }
+        }
+    }
+    header('location: utilisateurs.php');
+?&gt;</code></pre>
+                    <p>Cette page commence par s'assurer que le formulaire a bien été soumis via le bouton de suppression. Elle teste si au moins une case à cocher a été sélectionnée. Si c'est bien le cas, tous les identifiants sont récupérés et vérifiés. Ils sont concaténés, avec une virgule en guise de caractère séparateur, et envoyés comme paramètre à la procédure suivante :</p>
+<pre class="taille60"><code>DELIMITER |
+CREATE PROCEDURE supprimerUtilisateurs (IN ids VARCHAR (100))
+BEGIN
+    DELETE FROM adresses WHERE id_adresse IN (SELECT id_adresse FROM utilisateurs WHERE FIND_IN_SET (id_utilisateur, ids) &lt;&gt; 0);
+    DELETE FROM utilisateurs WHERE FIND_IN_SET (id_utilisateur, ids) &lt;&gt; 0;
+END |
+DELIMITER;</code></pre>
+                    <p>En fonction du résultat, un message de succès ou d'échec est enregistré dans une variable de session et une redirection vers la page de consultation de la liste des utilisateurs est effectuée. Le message enregistré en session est alors affiché et retiré de la session pour ne pas réapparaître une seconde fois.</p>
+                    <h2 id="optimisation_requetes">L'optimisation des requêtes :</h2>
+                    <h3 id="nombre_colonnes">Le nombre de colonnes :</h3>
+                    <p>Par facilité, en tant que développeurs, nous avons la mauvaise habitude d'utiliser des requêtes de type <span class="html">SELECT *</span>. Cela est effectivement très pratique lors de la phase de développement de la base de données ou pour vérifier les données d'une table. Néanmoins, ce type d'instruction ne devrait pas se retrouver en production. D'une part, cela est plus coûteux que de lister l'ensemble des attributs de la table puisque le moteur de base de données doit commencer par les rechercher. D'autre part, nous n'avons généralement pas besoin de l'ensemble des attributs mais uniquement de certains. La projection effectuée en indiquant les attributs que doit retourner la requête diminue grandement les données transférées.</p>
+                    <h3 id="nombre_lignes">Le nombr de lignes :</h3>
+                    <h4 id="clause_limit">La clause LIMIT :</h4>
+                    <p>Une fois que nous avons réduit le nomnre de colonnes récupérées par la requête, l'autre moyen de baisser le volume des données transférées est de réduire le nombre de lignes retournées par la requête. Il est possible de mettre en place une pagination pour afficher, non pas tous les résultats d'une requête, mais seulement les n premiers, et d'afficher les suivants à la demande de l'utilisateur. L'expérience montre que généralement, seuls les premiers résultats sont utilisés et cela permet à la fois de moins solliciter le serveur de base de données et de produire des pages plus légères.</p>
+                    <p>Avec MySQL ou MariaDB, il est possible de réaliser cela avec la clause <span class="html">LIMIT</span>.</p>
+                    <p class="souligne">Syntaxe :</p>
+<pre class="taille60"><code>SELECT ...
+LIMIT debut, nombre;</code></pre>
+                    <p>La valeur <span class="em">nombre</span> correspond au nombre de lignes à récupérer, et <span class="em">debut</span> au nombre de lignes à sauter avant de commencer à récupérer les résultats. Par exemple, <span class="html">LIMIT 3, 2</span> récupère deux lignes après avoir sauté les trois premières, soit dans l'exemple suivant les lignes 4 et 5.</p>
+                    <h4 id="pagination_resultats_moteur_recherche">La pagination des résultats du moteur de recherche :</h4>
+                    <p>Supposons que nous souhaitons mettre en place un moteur de recherche sur notre site internet. Nous pouvons alors créer la procédure suivante utilisant <span class="html">LIMIT</span> :</p>
+<pre class="taille60"><code>DELIMITER |
+CREATE PROCEDURE rechercher (IN motsclefs VARCHAR (50), IN debut SMALLINT UNSIGNED, IN nombre TINYINT UNSIGNED)
+BEGIN
+    SELECT adresse, titre
+    FROM articles
+    WHERE MATCH (titre, contenu)
+    AGAINST (motsclefs)
+    LIMIT debut, nombre;
+END |
+DELIMITER;</code></pre>
+                    <p>Une fonction stockée est également nécessaire pour connaître le nombre de résultats :</p>
+<pre class="taille60"><code>DELIMITER |
+CREATE FUNCTION nbResultats (motsclefs VARCHAR (50)) RETURNS INT
+BEGIN
+    DECLARE nb INT;
+    SELECT COUNT (*) INTO nb
+    FROM articles
+    WHERE MATCH (titre, contenu)
+    AGAINST (motsclefs);
+    RETURN nb;
+END |
+DELIMITER;</code></pre>
+                    <p>Voici l'extrait de la page permettant de lancer la recherche :</p>
+<pre class="taille60"><code>&lt;div role="search"&gt;
+    &lt;form method="GET" action="recherche.php"&gt;
+        &lt;input type="search" name="motsClefs"&gt;
+        &lt;input type="submit" value="Rechercher"&gt;
+    &lt;/form&gt;
+&lt;/div&gt;</code></pre>
+                    <p>Remarque : Comme cela a été dit précédemment, il est souhaitable que ce formulaire de recherche soit intégré dans le template de page afin qu'il soit présent sur toutes les pages du site.</p>
+                    <p>Voici enfin la page affichant les résultats de la recherche (recherche.php) :</p>
+<pre class="taille60"><code>&lt;?php
+    const NB_PAR_PAGE = 5;
+    $motsClefs = filter_input(INPUT_GET, 'motsClefs', FILTER_SANITIZE_STRING);
+    $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?? 1;
+    $debut = ($page - 1) * NB_PAR_PAGE;
+    require_once 'connexion.php';
+    session_start();
+    if (!isset($_SESSION['recherche'][$motsClefs])) {
+        $query = 'SELECT nbResultats(:motsClefs);';
+        $prep = $pdo-&gt;prepare($query);
+        $prep-&gt;bindValue(':motsClefs', $motsClefs);
+        $prep-&gt;execute();
+        $_SESSION['recherche'][$motsClefs] = (int) $prep-&gt;fetch(PDO::FETCH_NUM)[0];
+    }
+?&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+    &lt;head&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+        &lt;title&gt;Résulats pour &lt;?= $motsClefs; ?&gt;&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;?php if ($_SESSION['recherche'][$motsClefs] === 0) : ?&gt;
+            &lt;p&gt;Désolé mais nous n'avons trouvé aucune page correspondant à votre recherche&lt;/p&gt;
+        &lt;?php else : ?&gt;
+            &lt;ul&gt;
+                &lt;?php
+                    $query = 'CALL rechercher (:motsClefs, :debut, :nb);';
+                    $prep = $pdo-&gt;prepare($query);
+                    $prep-&gt;bindValue(':motsClefs', $motsClefs);
+                    $prep-&gt;bindValue(':debut', $debut);
+                    $prep-&gt;bindValue(':nb', NB_PAR_PAGE);
+
+                    $prep-&gt;execute();
+                    $arr = $prep-&gt;fetchAll(PDO::FETCH_ASSOC);
+                    for ($i = 0; $i &lt; count($arr); $i++) {
+                        echo '&lt;li&gt;&lt;a href="' . $arr[$i]['adresse'] . '"&gt;' . $arr[$i]['titre'] . '&lt;/a&gt;&lt;/li&gt;';
+                    }
+                ?&gt;
+            &lt;/ul&gt;
+            &lt;?php
+                if ($page !== 1) {
+                    echo '&lt;a href="recherche.php?motsClefs=' . $motsClefs . '&amp;page=' . ($page - 1) . '"&gt;&amp;lt; page précédente&lt;/a&gt;';
+                }
+                if ($page !== (int) ceil ($_SESSION['recherche'][$motsClefs] / NB_PAR_PAGE)) {
+                    echo '&lt;a href="recherche.php?motsClefs=' . $motsClefs . '&amp;page=' . ($page + 1) . '"&gt;page suivante &amp;gt;&lt;/a&gt;';
+                }
+            ?&gt;
+        &lt;?php endif; ?&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>La constante <span class="em">NB_PAR_PAGE</span> permet de choisir le nombre de résultats affichés par page. Les données envoyées en <span class="em">GET</span> sont ensuite analysées. Si aucune valeur n'a été passée pour le paramètre <span class="em">page</span>, c'est qu'il faut afficher la première page de résultats. La variable <span class="em">$debut</span> est initialisée pour correspondre au nombre de lignes à ignorer avec la clause <span class="em">LIMIT</span>. Pour éviter de calculer le nombre de résultats à chaque page, celui-ci est calculé une fois pour chaque nouvelle recherche en faisant appel à la fonction stockée <span class="em">nbResultats()</span>, puis il est sauvegardé en session.</p>
+                    <p>La page web est ensuite affichée. Si aucun résultat n'a été trouvé, alors un message d'erreur est affiché, sinon la procédure stockée <span class="em">rechercher()</span> est appelée pour récupérer les résultats pour la page courante. Enfin, les liens vers les pages de résultats précédents et suivants sont affichés si celles-ci existent.</p>
+                    <h3 id="sous-requetes_correlees">Les sous-requêtes corrélées :</h3>
+                    <p>Il existe deux catégories de sous-requêtes : les sous-requêtes imbriquées et les sous-requêtes corrélées. La différence entre les deux est qu'il est possible d'exécuter seule une sous-requête imbriquée alors que ce n'est pas possible pour une sous-requête corrélée. Celle-ci dépend d'au moins un élément de la requête principale :</p>
+                    <p class="souligne">Exemple de sous-requête imbriquée :</p>
+<pre class="taille60"><code>SELECT ligne1, ligne2, code_postal, ville
+FROM adresses
+WHERE id_adresse NOT IN (SELECT DISTINCT id_adresse FROM utilisateurs);</code></pre>
+                    <p class="souligne">Exemple de sous-requête corrélée :</p>
+<pre class="taille60"><code>SELECT ligne1, ligne2, code_postal, ville
+FROM adresses a
+WHERE NOT EXISTS (SELECT * FROM utilisateurs u WHERE a.id_adresse = u.id_adresse);</code></pre>
+                    <p>Dans l'exemple de la sous-requête imbriquée, il est possible d'exécuter seule la sous-requête. Cela donne l'ensemble des identifiants des adresses qui sont associées à un utilisateur. Elle est donc exécutée une seule fois, puis la requête principale est exécutée à son tour avec les résultats de la précédente.</p>
+                    <p>Dans l'exemple de la sous-requête corrélée, il n'est pas possible d'exécuter seule la sous-requête. Celle-ci doit être exécutée pour chaque ligne de la requête principale. Elle est donc exécutée un grand nombre de fois. Vous l'aure bien compris : une requête utilisant une sous-requête corrélée est moins performante qu'une requête équivalente utilisant une sous-requête imbriquée.</p>
+                    <p>La bonne nouvelle est qu'il est toujours possible d'écrire différement une requête utilisant une sous-requête corrélée pour qu'elle n'en contienne plus. Dans les exemples ci-dessus, les deux requêtes récupèrent les mêmes résultats : les adresses qui ne correspondent à aucun utilisateur.</p>
+                    <h2 id="etude_cas_pratique">L'étude d'un cas pratique :</h2>
+                    <p>Pour le site internet associé à ce syllabus, nous avons choisi de ne pas utiliser une base de données. Les pages internet sont toutes statiques, sauf la page de contact. Cette solution est la plus économique , même s'il est possible, avec un système de cache, d'obtenir des performances similaires.</p>
+                </article>
+            <!-- fin de section -->
+            </section>
+        </main>
+        <footer role="contentinfo">
+            <div>
+                <address>
+                    Professeurs :
+                    <a class="mail" href="mailto:olivier.choquet@vinci.be">Choquet Olivier</a>
+                    <a class="mail" href="mailto:driss.vandenheede.techinfo@gmail.com">Vandenheede Driss</a>
+                </address>
+            </div>
+            <div>
+                <p>Si vous détectez une erreur, une faute d'orthographe, n'hésitez pas à envoyer un mail aux adresses juste à côté avec le nom de la page et l'erreur détectée.</p>
+            </div>
+            <div id="version">
+                <p>Syllabus HTML</p>
+                <p>Version 5.0</p>
+            </div>
+        </footer>
+    </body>
+</html>
