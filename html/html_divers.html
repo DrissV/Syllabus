@@ -51,6 +51,8 @@
                         <li><a href="#i_video">Vidéo</a></li>
                         <li><a href="#i_main">Main</a></li>
                         <li><a href="#zoom">Gestion du zoom</a></li>
+                        <li><a href="#personnalisation_pages_erreur">Personnalisation des pages d'erreur</a></li>
+                        <li><a href="#impression">Impression</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -258,6 +260,158 @@ Allez c'esr bon, on arrive !</code></pre>
                     <p>Cela est réalisé en appliquant des options comme celles-ci sur la métabalise <span class="em">viewport</span> :</p>
 <pre class="taille60"><code>&lt;meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"&gt;</code></pre>
                     <p>C'est souvent fait par mégarde, par ignorance, mais c'est parfois volontaire ! En effet, cela évite de se préoccuper de l'interface graphique - qui est censée rester cohérente - lorsque l'utilisateur change le facteur de zoom. Néanmoins, certaines personnes ont besoin de grossir le texte pour pouvoir le lire. Heureusement, de nos jours, les navigateurs ignorent ces options pour laisser le visiteur libre de choisir le facteur de zoom.</p>
+                </article>
+                <article id="personnalisation_pages_erreur">
+                    <h2>La personnalisation des pages d'erreur :</h2>
+                    <p>Il est très classique de personnaliser la page d'erreur 404 retournée quand la ressource demandée n'existe pas. Néanmoins, il est important que cette page soit la plus simple et légère possible. Le seul message à indiquer est que l'internaute demande une page qui n'existe pas ! Il en est de même pour les autres pages d'erreur. Même s'il est tentant de faire une page web dynamique pour mutualiser le code, il est préférable de faire des pages web statiques pour alléger la charge du serveur.</p>
+                    <p>Voici un exemple avec un serveur Apache :</p>
+                    <p>Fichier <span class="em">.htaccess</span> à la racine du site :</p>
+<pre class="taille60"><code>ErrorDocument 403 /erreur403.html
+ErrorDocument 404 /erreur404.html
+ErrorDocument 500 /erreur500.html</code></pre>
+                    <p>Fichier <span class="em">erreur403.html</span> à la racine du site :</p>
+<pre class="taille60"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+    &lt;head&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+        &lt;meta name="robots" content="noindex"&gt;
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+        &lt;title&gt;Accès interdit&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;Vous n'êtes pas autorisé à accéder à cette page !&lt;/h1&gt;
+        &lt;a href="/"&gt;Retour à la page d'accueil&lt;/a&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>Fichier <span class="em">erreur404.html</span> à la racine du site :</p>
+<pre class="taille60"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+    &lt;head&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+        &lt;meta name="robots" content="noindex"&gt;
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+        &lt;title&gt;Page non trouvée&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;La page demandée n'existe pas !&lt;/h1&gt;
+        &lt;a href="/"&gt;Retour à la page d'accueil&lt;/a&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>Fichier <span class="em">erreur405.html</span> à la racine du site :</p>
+<pre class="taille60"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+    &lt;head&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+        &lt;meta name="robots" content="noindex"&gt;
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+        &lt;title&gt;Problème sur le serveur&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;Notre site web a rencontré une erreur !&lt;/h1&gt;
+        &lt;a href="/"&gt;Retour à la page d'accueil&lt;/a&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </article>
+                <article id="impression">
+                    <h2>L'impression :</h2>
+                    <p>Certains visiteurs souhaitent garder une trace papier d'un site. Or le rendu prévu pour un écran n'est généralement pas adapté à l'impression papier. Souvent, cela peut produire l'impression de plusieurs pages alors que le contenu vraiment utile tient sur une seule. Il est possible de prévoir une version imprimable pour chaque page, au format PDF par exemple, mais cela demande énormément de travail supplémentaire. Une solution tout aussi efficace et bien plus simple à mettre en oeuvre est d'utiliser une feuille de style dédiée à l'impression.</p>
+                    <h3 id="feuille_style_impression">La feuille de style pour l'impression :</h3>
+                    <p>Deux stratégies s'offrent à nous : soit compléter et amender la feuille de style prévue pour l'affichage à l'écran, soit repartir de zéro. Au premier abord, la première option semble plus simple et plus adaptée si nous souhaitons avoir une cohérence graphique entre la version affichée à l'écran et celle imrpimée.</p>
+                    <p>Néanmoins, l'expérience montre qu'il est nécessaire de revenir en arrière sur beaucoup de règle CSS conçues pour l'affichage à l'écran pour les adapter à la mise en forme pour une impression. C'est pourquoi nous vous conseillons la seconde option, avec deux feuilles indépendantes :</p>
+<pre class="taille60"><code>&lt;link rel="stylesheet" type="text/css" href="ecran.css" media="screen"&gt;
+&lt;link rel="stylesheet" type="text/css" href="impression.css" media="print"&gt;</code></pre>
+                    <p>L'attribut <span class="html">media</span> des balises <span class="html">link</span> permet que la bonne feuille de style soit utilisée.</p>
+                    <p>Remarque : malheureusement, les fichiers sont chargés dans leur ensemble, quelle que soit la valeur de cet attribut.</p>
+                    <h3 id="elements_a_ne_pas_imprimer">Les éléments à ne pas imprimer :</h3>
+                    <p>Nous repartons de zéro pour le style de la page imprimée. Un certain nombre de règles sont déjà mises en place dont il n'est pas nécessaire de s'occuper : fond transparent par exemple. Il est surtout nécessaire de faire disparaître de la version imprimée des élément sans intérêt, comme le menu de navigation, l'en-ête, le pied de page...</p>
+                    <p>Les images suivant leur taille peuvent utiliser beaucoup d'espace et beaucoup d'encre. Il est possible de choisir de ne pas imprimer certaines d'entre elles. Pour cela, vous pouvez leur affecter une classe et définir que les éléments de celle-ci ne sont pas imprimés.</p>
+                    <p>Dans l'exemple suivant, le contenu des balises <span class="html">&lt;header&gt;</span> et <span class="html">&lt;footer&gt;</span> n'est pas imprimé, ni le contenu des balises ayant la classe <span class="html">noprint</span> :</p>
+<pre class="taille60"><code>header, footer, .noprint {
+    display: none;
+}</code></pre>
+                    <h3 id="polices_caracteres_economes_en_encre">Les polices de caractères économes en encre :</h3>
+                    <p>Comme cela a été indiqué précédemment, il est important de proposer une feuille de style spécifique pour l'impression. Dans cette feuille, il est possible de spécifier des règles concernant le texte.</p>
+                    <p>Pour être le plus écoresponsable possible, ce qui va être important est de limiter la consommation de papier et d'encre. Il peut alors être intéressant de choisir une police de caractères utilisant peu d'encre. Certaines polices d'écriture sont plus fines et utilisent naturellement moins d'encre, comme Century Gothic. D'autres ont été créées spécialement pour être économiques en encre tout en conservant un confort de lecture. En 2009, la police EcoFont a été la pionnière en la matière. Ses concepteurs ont eu l'idée d'ajouter les caractères avec des points. C'est en 2014 qu'une autre police économique est apparue Ryman Eco. Elle se revendique écologique, graphique et gratuite. Les lettres sont constituées par des successions de lignes à la place d'une unique ligne complète.</p>
+                    <p>Remarque : Le site internet de la police Ryman Eco a disparu récemment sans explication de la part de la société Ryman.</p>
+                    <p>La police de référence est Arial. La différence économique d'encre entre la police Ryman Eco et Arial est de 33%, celle avec Century Gothic est de 30%, celle avec EcoFont est de 28%, celle avec Garamond est de 24% et celle avec Arial est de 0%.</p>
+                    <p>Il est à noter que lorsque le texte est affiché dans une taille standard pour un paragraphe de texte, les points d'EcoFont et les lignes de Ryman Eco ne sont pas visibles. Les deux meilleurs résultats sont Ryman Eco et Century Gothic. Cette dernière est très facile à utiliser puisque c'est une police standard :</p>
+<pre class="taille60"><code>* {
+    font-family: "Century Gothic", sans-serif;
+}</code></pre>
+                    <p>Pour Rymman Eco, il est nécessaire de télécharger la police, de la déposer das un dossier de votre site internet (Fonts/RymanEco dans l'exemple ci-après) d'utiliser la règle <span class="html">@font-face</span> dans la feuille de style pour définir la police :</p>
+<pre class="taille60"><code>@font-face{
+	font-family: ryman_ecoregular;
+	src:	local("Ryman Eco"),
+	url(Fonts/RymanEco/rymaneco-regular-webfont.eot?#iefix) format("embedded-opentype"),
+	url(Fonts/RymanEco/rymaneco-regular-webfont.woff2) format("woff2"),
+	url(Fonts/RymanEco/rymaneco-regular-webfont.woff) format("woff"),
+	url(Fonts/RymanEco/rymaneco-regular-webfont.ttf) format("truetype"),
+	url(Fonts/RymanEco/rymaneco-regular-webfont.svg#ryman_ecoregular) format("svg")
+}
+
+* {
+	font-family: ryman_ecoregular;
+}</code></pre>
+                    <h3 id="couleur_impression">La couleur d'impression :</h3>
+                    <p>Une autre manière d'économiser de l'encre est de ne pas utiliser du noir, mais du gris foncé à la place. L'exemple suivant montre un échantillon de texte écrit avec une couleur qui varie entrr 100% et 60% de noir. Le code couleur utilisé est indiqué dans la dernière colonne.</p>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td class="c0">ABC abc</td>
+                                <td>100%</td>
+                                <td>#000000</td>
+                            </tr>
+                            <tr>
+                                <td class="c0d">ABC abc</td>
+                                <td>95%</td>
+                                <td>#0d0d0d</td>
+                            </tr>
+                            <tr>
+                                <td class="c19">ABC abc</td>
+                                <td>90%</td>
+                                <td>#191919</td>
+                            </tr>
+                            <tr>
+                                <td class="c26">ABC abc</td>
+                                <td>85%</td>
+                                <td>#262626</td>
+                            </tr>
+                            <tr>
+                                <td class="c3">ABC abc</td>
+                                <td>80%</td>
+                                <td>#333333</td>
+                            </tr>
+                            <tr>
+                                <td class="c40">ABC abc</td>
+                                <td>75%</td>
+                                <td>#404040</td>
+                            </tr>
+                            <tr>
+                                <td class="c4c">ABC abc</td>
+                                <td>70%</td>
+                                <td>#4c4c4c</td>
+                            </tr>
+                            <tr>
+                                <td class="c59">ABC abc</td>
+                                <td>65%</td>
+                                <td>#595959</td>
+                            </tr>
+                            <tr>
+                                <td class="c6">ABC abc</td>
+                                <td>60%</td>
+                                <td>#666666</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Jusqu'à 85%, la différence n'est quasimen pas perceptible. Pourtant utiliser cette couleur gris foncé permet d'économiser 50% d'encre par rapport à du noir ! L'avantage de cette technique par rapport à la précédente est que vous pouvez utiliser la police de votre choix. Vous pouvez ainsi choisir une police standard, facilement lisible par tous... Enfin, cela est très simple à mettre en place.</p>
+                    <p class="souligne">Exemple :</p>
+<pre class="taille60"><code>* {
+    font-family: "Century Gothic", Garamond, sans-serif;
+    color: #262626;
+}</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
