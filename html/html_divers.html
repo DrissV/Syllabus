@@ -449,7 +449,7 @@ ErrorDocument 500 /erreur500.html</code></pre>
                 &lt;span title="réduire le menu" id="fermer" ari-hidden="true"&gt;&#x2A2F;&lt;/span&gt;&lt;br&gt;
                 Menu
             &lt;/button&gt;
-            &lt;nav role="navigation" aria-label="Menu de  navigation principal"&gt;
+            &lt;nav role="navigation" aria-label="Menu de  navigation principal" id="nav"&gt;
                 &lt;ul id="menu"&gt;
                     &lt;li&gt;
                         &lt;span id="accueil" aria-hidden="true"&gt;&#x2302; &lt;/span&gt;
@@ -584,26 +584,35 @@ footer ul {
     display: inline-block;
     width: 2rem;
 }</code></pre>
-                    <p>Une media query permet d'afficher le menu avec les éléments les uns à côté des autres pour les larges écrans. Le point de rupture pour changer la disposition de l'affichage a été défini à <span class="em">32em</span> pour que l'affichage s'adapte en fonction de la taille de la police.</p>
-                    <h3 id="feuille_css_impression">La feuille de style pour l'impression :</h3>
-                    <p>Cette feuille reprend les préconisations indiquées précédemment : marges étroites, contenu essentiel uniquement et URL des liens entre parenthèses.</p>
-<pre class="taille60"><code>*, ::before, ::after {
-    box-sizing: border-box;
-    padding: 0;
-    margin: 0;
+                    <p>Une media query permet d'afficher le menu avec les éléments les uns à côté des autres pour les larges écrans. Le point de rupture pour changer la disposition de l'aNéanmoin, le bouton possède également le texte <span class="em">Menu</span>. Ainsi, les lecteurs d'écran peuvent nommer le bouton et l'utilisateur comprend son rôle. L'attribut <span class="html">aria-expanded</span> est utilisé pour indiquer l'état du menu. De cette manière, lorsque l'utilisateur arrive sur c bouton, les lecteurs d'écran indiquent : "Menu bouton réduit" ou "Menu bouton développé".</p>
+                    <p>Ensuite, l'attribut <span class="html">title</span> a étéutilisépour afficher une infobulle.</p>
+                    <p>Enfin, tous les liens de cette page sont explicites sans contexte.</p>
+                    <p>Afin de rendre opérationnel le burger menu, le code JavaScript a été ajouté :</p>
+<pre class="taille60"><code>window.onload = initialisation;
+
+let btnMenu, menu, burger, fermer;
+
+function initialisation() {
+    btnMenu = document.getElementById('btnMenu');
+    menu = document.getElementById('menu');
+    burger = document.getElementById('burger');
+    fermer = document.getElementById('fermer');
+    ouvrirFermer();
+    btnMenu.classList.remove('hidden-sm');
+    btnMenu.addEventListener('click', ouvrirFermer);
 }
 
-@page {
-    margin: .5em;
-}
-
-header, footer, .noprint {
-    display: none;
-}
-
-a[href]::after {
-    content: " (" attr(href) ")";
+function ouvrirFermer() {
+    menu.classList.toggle('hidden-sm');
+    fermer.classList.toggle('hidden-sm');
+    burger.classList.toggle('hidden-sm');
+    if (btnMenu.getAttribute('aria-expanded') === 'true') {
+        btnMenu.setAttribute('aria-expanded', 'false');
+    } else {
+        btnMenu.setAttribute('aria-expanded', 'true');
+    }
 }</code></pre>
+                    <p>La méthode <span class="em">ouvrirFermer()</span> permet de changer l'état du menu. S'il est rétracté, alors il est déployé, et inversement. Rappelez-vous : pour qu'un internaute naviguant sans JavaScript puisse quand même utiliser le site, le menu est initialement déployé. Cette méthode est donc appelée une première fois pour le réduire. L'attribut <span class="html">aria-expanded</span> est bien mis à jour afin qu'un utilisateur de lecteur d'écran soit informé de l'état du menu. La partie qui est cachée ou dévoilée avec le bouton est positionnée après ce dernier. L'internaute non voyat accède donc facilement à ce contenu en poursuivant sa navigation. Enfin, il est à noter que ce menu est parfaitement utilisable uniquemet avec le clavier.</p>
                 </article>
             <!-- fin de section -->
             </section>
