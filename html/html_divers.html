@@ -53,6 +53,7 @@
                         <li><a href="#zoom">Gestion du zoom</a></li>
                         <li><a href="#personnalisation_pages_erreur">Personnalisation des pages d'erreur</a></li>
                         <li><a href="#impression">Impression</a></li>
+                        <li><a href="#modele_de_page_design">Modèle de page et design </a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -411,6 +412,197 @@ ErrorDocument 500 /erreur500.html</code></pre>
 <pre class="taille60"><code>* {
     font-family: "Century Gothic", Garamond, sans-serif;
     color: #262626;
+}</code></pre>
+                </article>
+                <article id="modele_de_page_design">
+                    <h2>Le modèle de page et le design :</h2>
+                    <p>Créer un modèle de page revient à se poser deux questions : quelles sont les informations que nous souhaitons voir présentes sur l'ensemble des pages ? et quelle est la structure que nous souhaitons donner aux pages ?</p>
+                    <p>Il est nécessaire d'avoir, avant le contenu principal de la page, un lien vers la page d'accueil et le menu de navigation vers les pages principales. Le menu principal contiendra des liens vers les pages de contact, d'erratum et de ressources.</p>
+                    <p>Le design de la page se veut minimaliste :</p>
+                    <ul>
+                        <li>une barre de menus en dégradé noir à bleu nuit avec un menu burger</li>
+                        <li>le contenu sur fond sombre</li>
+                        <li>le pied de page avec le même dégradé</li>
+                    </ul>
+                    <p>Il est possible de réaliser cette page sans avoir recours à aucune image. Les logos utilisés peuvent être obtenus en tant que caractères. La maison est le caractère ayant pour point de code <span class="em">U+2302</span> (&#x2302;) ou <span class="em">U+1F3E0</span> (&#x1F3E0;). Pour le menu burger, c'est <span class="em">U+2630;</span> (&#x2630;) et <span class="em">U+D7</span> (x) (&#xD7;), pour le panneau Attention, c'est <span class="em">U+26A0</span> (&#x26A0;), et pour lien, c'est <span class="em">U+26D3</span> (&#x26D3;). Néanmoins, pour avoir une icône pour la maison à la fois simple et explicite, nous préférons utiliser une image.</p>
+                    <p>Voici le code pour le modèle de page :</p>
+<pre class="taille60"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+    &lt;head&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+        &lt;meta name="description" content="{{metaContent}}"&gt;
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"&gt;
+        &lt;title&gt;{{title}}&lt;/title&gt;
+        &lt;link rel="stylesheet" type="text/css" href="menu_burger.css" media="screen"&gt;
+        {{feuilles de style additionnelles}}
+        &lt;link rel="stylesheet" type="text/css" href="impression.css" media="print"&gt;
+        &lt;link rel="stylesheet" href="favicon.ico" rel="shortcut icon"&gt;        
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;header role="banner"&gt;
+            &lt;a href="index.html" title="vers la page d'accueil"&gt;
+                &lt;img src="../images/home.svg" alt="Accueil"&gt;
+            &lt;/a&gt;
+            &lt;button aria-expanded="true" class="hidden-sm hidden-big" id="btnMenu"&gt;
+                &lt;span class="hidden-sm" title="déployer le menu" id="burger" aria-hidden="true"&gt;&#x2630;&lt;/span&gt;
+                &lt;span title="réduire le menu" id="fermer" ari-hidden="true"&gt;&#x2A2F;&lt;/span&gt;&lt;br&gt;
+                Menu
+            &lt;/button&gt;
+            &lt;nav role="navigation" aria-label="Menu de  navigation principal"&gt;
+                &lt;ul id="menu"&gt;
+                    &lt;li&gt;
+                        &lt;span id="accueil" aria-hidden="true"&gt;&#x2302; &lt;/span&gt;
+                        &lt;a href="index.html"&gt;Accueil&lt;/a&gt;
+                    &lt;/li&gt;
+                    &lt;li&gt;
+                        &lt;span id="contact" aria-hidden="true"&gt;@ &lt;/span&gt;
+                        &lt;a href="contact.php"&gt;Contact&lt;/a&gt;
+                    &lt;/li&gt;
+                    &lt;li&gt;
+                        &lt;span id="erratum" aria-hidden="true"&gt;&#x26A0; &lt;/span&gt;
+                        &lt;a href="erratum.html"&gt;Erratum&lt;/a&gt;
+                    &lt;/li&gt;
+                    &lt;li&gt;
+                        &lt;span id="ressources" aria-hidden="true"&gt;&#x26D3; &lt;/span&gt;
+                        &lt;a href="ressources.html"&gt;Ressources&lt;/a&gt;
+                    &lt;/li&gt;
+                &lt;/ul&gt;
+            &lt;/nav&gt;
+        &lt;/header&gt;
+        &lt;main role="main"&gt;
+            {{content}}
+        &lt;/main&gt;
+        &lt;footer role="contentinfo"&gt;
+            &lt;ul&gt;
+                &lt;li&gt;&lt;a href="mentionsLegales.html"&gt;Mentions légales&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href="declarationAccessibilite.html"&gt;Déclaration d'accessiilité&lt;/a&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/footer&gt;
+        {{scripts}}
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <h3 id="feuille_css_ecrans">La feuille de style  pour les écrans :</h3>
+                    <p>Le choix a été fait d'afficher par défaut le menu déployé. Pour le memnt, nous n'avons pas mis en place le code JavaScript permettant d'afficher et de cacher le menu (voir un peu plus bas). Il est préférable que le site web soit utilisable même  si l'utilisateur n'a pas JavaScrpt activé sur son navigateur. Tant que le code Javascript n'est pas disponible, le bouton permettant d'afficher ou de cacher le menu n'est pas affiché puisqu'il n'est pas utilisable.</p>
+<pre class="taille60"><code>*, ::before, ::after {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    margin: 0;
+    background-color: #454544;
+    color: #FFF;
+}
+
+main {
+    padding: 1em;
+}
+
+header {
+    display: grid;
+    grid-template-columns: 15vw 1fr;
+    color: #FFF;
+    background: linear-gradient(#000, #1F0797);
+}
+
+header a {
+    color: #FFF;
+}
+
+#btnMenu {
+    justify-self: end;
+    background: transparent;
+    color: #FFF;
+    border: none;
+}
+
+#burger, #fermer {
+    font-size: 1.7em;
+    font-weight: bolder;
+}
+
+#menu {
+    list-style: none;
+}
+
+#nav {
+    grid-column: 2/3;
+}
+
+.hidden-sm {
+    display: none;
+}
+
+@media (min-width: 32em) {
+    .hidden-sm {
+        display: initial;
+    }
+
+    .hidden-big {
+        display: none;
+    }
+
+    #menu {
+        display: flex;
+        align-items: baseline;
+    }
+
+    #menu li {
+        flex: 1 1 auto;
+    }
+}
+
+footer {
+    background: linear-gradient(#1F0797, #000);
+}
+
+footer li {
+    text-align: center;
+    list-style: none;
+}
+
+footer ul {
+    padding: 0;
+}
+
+#accueil {
+    font-size: 2.3em;
+    font-weight: bolder;
+}
+
+#contact, #erratum {
+    font-size: 1.7em;
+}
+
+#ressources {
+    font-size: 1.5em;
+}
+
+#accueil, #contact, #erratum, #ressources {
+    display: inline-block;
+    width: 2rem;
+}</code></pre>
+                    <p>Une media query permet d'afficher le menu avec les éléments les uns à côté des autres pour les larges écrans. Le point de rupture pour changer la disposition de l'affichage a été défini à <span class="em">32em</span> pour que l'affichage s'adapte en fonction de la taille de la police.</p>
+                    <h3 id="feuille_css_impression">La feuille de style pour l'impression :</h3>
+                    <p>Cette feuille reprend les préconisations indiquées précédemment : marges étroites, contenu essentiel uniquement et URL des liens entre parenthèses.</p>
+<pre class="taille60"><code>*, ::before, ::after {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+@page {
+    margin: .5em;
+}
+
+header, footer, .noprint {
+    display: none;
+}
+
+a[href]::after {
+    content: " (" attr(href) ")";
 }</code></pre>
                 </article>
             <!-- fin de section -->
