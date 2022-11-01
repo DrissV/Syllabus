@@ -61,6 +61,7 @@
                         <li><a href="#dans_application_web_mvc">MVC en théorie</a></li>
                         <li><a href="#pratique_mvc_php">MVC en pratique avec PHP</a></li>
                         <li><a href="#frameworks_mvc">Frameworks MVC</a></li>
+                        <li><a href="#phpmailer_mailjet">PHPMailer et Mailjet</a></li>
                         <li><a href="#intro_laravel">Introduction à Laravel</a></li>
                         <li><a href="#espaces_nom_laravel">Namespaces de Laravel</a></li>
                         <li><a href="#gestion_routes_laravel">Routes Laravel</a></li>
@@ -693,6 +694,66 @@ RewriteRule ^([a-zA-Z)*)/?([a-zA-Z]*)?/?$ index.php?action=$1&id=$2 [NC, L]</cod
                     <p>Dans la pratique, de nombreux frameworks existent afin de créer des applications Web dotées d'une architecture MVC. Ces frameworks fournissent des librairies de classes et fonctions implémentnt déjà de nombreuses fonctionnalités de base communes à toute aplication Web (router, accès à la base de données, gestion de gabarits, ...). Ces frameworks reposent aussi chacun sur des langages de programmation différents, permettant aux développeurs de choisir les outils qui leur conviennent le mieux.</p>
                     <p>Notons par exemple <a href="https://www.google.com/search?client=safari&rls=en&q=laravel&ie=UTF-8&oe=UTF-8" target="_blank">Laravel</a> et <a href="https://symfony.com/" target="_blank">Symfony</a> (PHP), <a href="https://rubyonrails.org/" target="_blank">Ruby on Rails</a> (Ruby), <a href="https://www.djangoproject.com/" target="_blank">Django</a> (Python), <a href="https://dotnet.microsoft.com/apps/aspnet" target="_blank">ASP.NET</a> (C#.NET - Microsoft), <a href="https://github.com/balderdashy/sails" target="_blank">Sails.js</a> (Node.js, une librairie JavaScript permettant de faire tourner un serveur Web en JavaScript).</p>
                     <p>Ces frameworks sont cités à titre informatif, et cette liste n'est pas exhaustive; il s'agit ici simplement d'un survol de technologies existantes.</p>
+                    <h2 id="phpmailer_mailjet">PHPMailer et Mailjet :</h2>
+                    <p>PHPMailer est une librairie PHP bien connue dans le monde PHP pour envoyer des emails d'une façon simple et facile à partir d'un site Web PHP et qui remplace la fonction <html>mail()</html> de PHP.</p>
+                    <h3 id="installation_phpmailer">Installation :</h3>
+                    <p>Pour utiliser PHPMailer, vous pouvez télécharger la librairie sous forme de .zip en suivant le lien : <a href="https://github.com/PHPMailer/PHPMailer" target="_blank">https://github.com/PHPMailer/PHPMailer</a></p>
+                    <p>Créez un dossier "librairies" dans le répertoire "controllers" de votre site Web et collez-y PHPMailer-master dézippé :</p>
+                    <img src="../images/dezippage_phpmailer_master.PNG" alt="">
+                    <h3 id="programmation_phpmailer">Programmation :</h3>
+                    <p>Dans ce qui suit, nous allons vous montrer le code à écrire pour envoyer des emails à partir d'un serveur SMTP d'un service de mailing en ligne <a href="https://fr.mailjet.com/" target="_blank">https://fr.mailjet.com/</a>.</p>
+                    <p>Mailjet est un service en ligne d'envois et de suivis de mails et jour le rôle de serveur SMTP. Ce type de service de mailing permet de suivre plus tard des campagnes de mails.</p>
+                    <p>Ouvrez un compte gratuit sur <a href="https://fr.mailjet.com/" target="_blank">https://fr.mailjet.com/</a> avec votre adresse @student.vinci.be.</p>
+                    <p>Notez vos informations d'identidentification : La Clé API publique (nom d'utilisateur SMTP) et la Clé API secrète (mot de passe SMTP), présenté dans :</p>
+                    <img src="../images/rest_api.PNG" alt="REST API">
+                    <ol>
+                        <li>
+                            <p>Dans le contrôleur adéquat, ajoutez les <span class="em">require_once</span> suivants :</p>
+<pre class="taille60"><code>require_once(LIBRAIRIES_PATH . 'PHPMailer-master/src/PHPMailer.php');
+require_once(LIBRAIRIES_PATH . 'PHPMailer-master/src/SMTP.php);
+require_once(LIBRAIRIES_PATH . 'PHPMailer-master/src/Exception.php');</code></pre>
+                        </li>
+                        <li>
+                            <p>Dans <span class="em">ContactController.php</span>, modifiez la méthode <span class="em">run</span> à l'aide du code ci-dessous. Il faut bien sûr préciser vos informations d'identidentification à certains endroits :</p>
+<pre class="taille60"><code>// Le namespace de PHPMailer est PHPMailer\PHPMailer;
+$mail = new PHPMailer\PHPMailer\PHPMailer(true); // Passing `true` enables exceptions
+
+try {
+    // Server setings
+    $mail-&gt;SMTPDebug = 0; // Disable verbose debug output (2 pour activer)
+    $mail-&gt;isSMTP(); // Set mailer to use SMTP
+    $mail-&gt;Host = 'in-v3-mailjet.com'; // Specify main SMTP server
+    $mail-&gt;SMTPAuth = true; // Enable SMTP authentification
+    $mail-&gt;Username = 'la Clé API publique (nom d'utilisateur SMTP)'; // SMTP username
+    $mail-&gt;Password = 'la Clé API secrète (mot de passe SMTP)'; // SMTP password
+    $mail-&gt;SMTPSecure = 'tls'; // Enable TLS encryption, 'ssl' also accepted
+    $mail-&gt;Port = 587; // TCP port to connect to
+
+    // Recipients
+    $mail-&gt;setForm(' ...@student.vinci.be', 'My Mailjet Mailer');
+    $mail-&gt;addAddress(' ...@student.vinci.be', 'Votre nom'); // Add a recipient
+    $mail-&gt;addReplyTo(htmlspecialchars($_POST['email']), 'Mailer');
+    // $mail-&gt;addCC('cc@example.com');
+    // $mail-&gt;addBCC('bcc@example.com');
+
+    // Attachments
+    // $mail-&gt;addAttachment('/var/tmp/file/tar.gz'); // Add attachments
+    // $mail-&gt;addAttachment('/tmp/image.jpg', 'new.jpg'); // Optional name
+
+    // Content
+    $mail-&gt;isHTML(true); // Set email format to HTML
+    $mail->Subject = 'Mail du site des bonnes nouvelles';
+    $mail->Body = htmlspecialchars($_POST['message']);
+
+    $mail-&gt;send();
+    $notification = 'Vos informations ont été transmises avec succès.';
+} catch (Exception $e) {
+    $notification = 'Vos informations n\'ont pas été transmises. ' . 'Mailer Error : ' . $mail->ErrorInfo;
+}</code></pre>
+                            <p>Remarque : dans le code de PHPMailer, l'adresse email d'envoi (<span class="em">FROM</span>) doit être celle de votre inscription chez <a href="https://fr.mailjet.com/">https://fr.mailjet.com/</a>.</p>
+                            <p>Vous pouvez mettre l'adresse du formulaire clienten adresse <span class="em">REPLY-TO</span>.</p>
+                        </li>
+                    </ol>
                 </article>
                 <article id="laravel">
                     <h2 id="intro_laravel">Introduction à Laravel :</h2>
