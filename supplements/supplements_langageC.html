@@ -7088,6 +7088,1341 @@ int sauverEnsemble (FILE *fichier, Ensemble e) {
     return TRUE;
 }</code></pre>
                 </article>
+                <article>
+                    <h2 id="unix_seance1">Unix : Séance 1 :</h2>
+                    <h3>Exercices :</h3>
+                    <ol>
+                        <li>
+                            <h4>Exercice préliminaire sur les appels systèmes : read - write :</h4>
+                            <p>Écrivez un programme <span class="em">lire.c</span> qui :</p>
+                            <ul>
+                                <li>
+                                    <p>lit à l'entrée standard grâce à l'appel <span class="html">read</span> des chaînes d'au plus 10 caractères</p>
+                                </li>
+                                <li>
+                                    <p>affiche les lignes lues à la sortie standard grâce à l'appel système <span class="html">write</span></p>
+                                </li>
+                            </ul>
+                            <p>Testez le programme en introduisant successivement des chaînes de moins de 10 caractères. Expliquez comment est traité le passage à la ligne.</p>
+                            <p>Poursuivez le test en introduisant successivement des chaînes de 9, 10, 11 et 15 caractères. Expliquez.</p>
+                            <p>Complétez le programme afin de ne plus accepter les lignes non-conformes (c'est-à-dire de plus de 10 caractères).</p>
+<pre class="taille60"><code class="html">#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+#define TAILLE_BUFFER 11
+
+int main(int argc, char **argv) {
+    int compteur, ret, nbrEcrit;
+    char buffer[TAILLE_BUFFER];
+    
+    for (compteur = 0; compteur &lt; 10; compteur++){
+        if ((ret = read(0, buffer, TAILLE_BUFFER)) == 1) {
+            perror("Erreur lors de la lecture\n");
+            exit(3);
+        }
+
+        if (buffer[ret - 1] != '\n') {
+            perror("Petit filou\n");
+            while (buffer[ret - 1] != '\n') {
+                ret = read(0, buffer, TAILLE_BUFFER);
+            }
+            contnue;
+        }
+
+        if ((nbrEcrit = write(1, buffer, ret)) != ret) {
+            perror("Erreur lors de l'écriture\n");
+            exit(13);
+        }
+    }
+
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Écrivez un programme <span class="em">lireEtEcrire.c</span> qui :</p>
+                            <ul>
+                                <li>
+                                    <p>reçoit deux arguments sur la ligne de commande qui sont deux noms de fichiers</p>
+                                </li>
+                                <li>
+                                    <P>lit à l'entrée standard des lignes d'au plus 80 caractères</P>
+                                </li>
+                                <li>
+                                    <p>écrit les lignes qui commencent par une majuscule dans le premier fichier, celles qui commencent par une minuscule dans le second et ignore les autres.</p>
+                                </li>
+                            </ul>
+                            <p>Si le programme ne reçoit pas les deux arguments attendus, il se termine en affichant l'usage à la sortie d'erreur.</p>
+                            <p>Si un des fichiers dont le nom est passé sur la ligne de commande n'existe pas dans le répertoire courant, il est créé, sinon il est écrasé.</p>
+                            <p>Si une ligne lue comprend plus de 80 caractères, elle est ignorée et le buffer du clavier vidé.</p>
+                            <p>Si une ligne lue ne commence pas par un caractère alphabétique, la ligne est ignorée.</p>
+                            <p>Les entrées-sorties doivent être programmées grâce à des appels systèmes.</p>
+                            <p>Tous les appels systèmes doivent être testés, en cas d'erreur, un message adéquat doit être affiché et le programme arrêté (les macros ne peuvent pas être utilisées).</p>
+                            <p>Exemples d'exécution :</p>
+<pre class="taille60"><code><span class="em">&gt; lireEtEcrire Majuscule minuscule</span>
+Rien ne sert de courir ; il faut partir à point.
+Le Lièvre et la Tortue en sont un témoignage.
+Gageons, dit celle-ci, que vous n'atteindrez point
+si tôt que moi ce but. Si tôt ? Êtes-vous sage ?
+repartit l'Animal léger.
+Ma Commère, il vous faut purger
+avec quatre grains d'ellébore.
+Sage ou non, je parie encore.
+Ainsi fut fait : et de tous deux on mit près du but les enjeux.
+Savoir quoi, ce n'est pas l'affaire ; ni de quel juge l'on convint.
+Notre Lièvre n'avait que quatre pas à faire ;
+J'entends de ceux qu'il fait lorsque prêt d'être atteint il s'éloigne des Chiens, les renvoie aux calendes, et leur fait arpenter les landes.
+Ayant, dis-je, du temps de reste pour brouter,
+pour dormir, et pour écouter d'où vient le vent, il laisse la Tortue aller son train de Sénateur.
+Elle part, elle s'évertue ; elle se hâte avec lenteur.
+Lui cependant méprise une telle victoire ; tient la gageure à peu de gloire ; croit qu'il y va de son honneur de partir tard. Il broute, il se repose, il s'amuse à toute autre chose qu'à la gageure. À la fin, quand il vit que l'autre touchait presque au bout de la carrière, il partit comme un trait ; mais les élans qu'il fit furent vains : la Tortue arriva la première.
+Eh bien, lui cria-t-elle, avais-je pas raison ?
+De quoi vous sert votre vitesse ?
+Moi l'emporter ! et que serait-ce
+si vous portiez une maison ?
+<span class="em">&gt; cat Majsucule</span>
+Rien ne sert de courir ; il faut partir à point.
+Le Lièvre et la Tortue en sont un témoignage.
+Gageons, dit celle-ci, que vous n'atteindrez point
+Ma Commère, il vous faut purger
+Sage ou non, je parie encore.
+Ainsi fut fait : et de tous deux
+Savoir quoi, ce n'est pas l'affaire ;
+Notre Lièvre n'avait que quatre pas à faire ;
+J'entends de ceux qu'il fait lorsque prêt d'être atteint
+Ayant, dis-je, du temps de reste pour brouter,
+Elle part, elle s'évertue ;
+Lui cependant méprise une telle victoire ;
+Eh bien, lui cria-t-elle, avais-je pas raison ?
+De quoi vous sert votre vitesse ?
+Moi l'emporter ! et que serait-ce
+<span class="em">&gt; cat minuscule</span>
+si tôt que moi ce but. Si tôt ? Êtes-vous sage ?
+repartit l'Animal léger.
+avec quatre grains d'ellébore.
+on mit près du but les enjeux.
+ni de quel juge l'on convint.
+il s'éloigne des Chiens, les renvoie aux calendes,
+et leur fait arpenter les landes.
+pour dormir, et pour écouter
+d'où vient le vent, il laisse la Tortue
+aller son train de Sénateur.
+elle se hâte avec lenteur.
+tient la gageure à peu de gloire ;
+croit qu'il y va de son honneur
+de partir tard. Il broute, il se repose,
+il s'amuse à toute autre chose
+qu'à la gageure. À la fin, quand il vit
+que l'autre touchait presque au bout de la carrière,
+il partit comme un trait ; mais les élans qu'il fit
+furent vains : la Tortue arriva la première.
+si vous portiez une maison ? 
+<span class="em">&gt; lireEtEcrire</span>
+Usage : lireEtEcrire fichier1 fichier2</code></pre>
+
+<pre class="taille60"><code class="html">#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;ctype.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl&gt;
+
+#define TAILLE_BUFFER 81
+
+int main (int argc, char **argv) {
+    if (argc != 3) {
+        fprintf(stderr, "nomProgramme fichier1 fichier2\n");
+        exit(3);
+    }
+
+    int fichier, fichier1, fichier2, nbrLu, nbrEcrit, flags = O_CREAT|O_TRUNC|O_WRONLY;
+    char bufer[TAILLE_BUFFER];
+
+    if ((fichier1 = open(*++argv, flags, 0777)) == -1) {
+        fprintf(stderr, "Erreur d'ouverture du fichier 1\n");
+        exit(13);
+    }
+
+    if ((fichier2 = open(*++argv, flags, 0777)) == -1) {
+        fprintf(stderr, "Erreur d'ouverture du fichier 2\n");
+        exit(13);
+    }
+
+    while (nbrLu = rad(0, buffer, TAILLE_BUFFER)) {
+        if (buffer[nbrLu - 1] != '\n') {
+            /* ligne trop longue &#8594; vider buffer système et continuer &#8596; tcflush(0, TCIFLUSH) définir dans &lt;termios.h&gt; */
+            fprintf(stderr, "Ligne trop grande\n");
+            while (buffer[nbrLu - 1] != '\n') {
+                nbrLu = read(0, buffer, TAILLE_BUFFER);
+            }
+            continue;
+        }
+
+        if (!isalpha(buffer[0])) {
+            fprintf(stderr, "Ligne invalide\n");
+            exit(23);
+        }
+
+        if (isupper(buffer[0])) {
+            fichier = fichier1;
+        } else {
+            fichier = fichier2;
+        }
+
+        if ((nbrEcrit = write(fichier, buffer, nbrLu)) != nbrLu) {
+            fprintf(stderr, "Écriture KO sur le fichier 2\n");
+            exit(23);
+        }
+    }
+
+    if (close(fichier2) == -1) {
+        fprintf(stderr, "Erreur de fermeture du fichier 2\n");
+        exit(33);
+    }
+    if (close(fichier1) == -1) {
+        fprintf(stderr, "Erreur de fermeture du fichier 1\n");
+        exit(33);
+    }
+
+    return 0;
+}</code></pre>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="unix_seance2">Unix : Séance 2 :</h2>
+                    <h3>Exercices :</h3>
+                    <p>Les premiers exercices de cette séance ont pour but de vous faire comprendre l'appel système <span class="html">fork</span>. Respectez scrupuleusement les consignes qui vous sont proposées et expliquez en détails les résultats obtenus, ne passre pas une étape sans vous être assuré qu'elle est bien comprise.</p>
+                    <ol>
+                        <li>
+                            <h4>Exercice sur l'appel système fork :</h4>
+                            <ul>
+                                <li>
+                                    <p>Écrivez un programme qui définit une variable "a" de type <span class="html">int</span> et l'initialise à 5, crée un processus fils, affiche la valeur de retour de l'appel système <span class="html">fork</span>. Ensuite, il définit, dans le fils, une nouvelle variable "b" de type <span class="html">int</span>, lui affecte la valeur de "a * 2" puis afiche le contenu de a et de b; le père définit une autre variable "b" de type <span class="html">int</span>, lui affecte la valeur "a * 5" puis affiche le contenu de a et de b. Pour cet exercice, l'affichage peut se faire avec <span class="html">printf</span>.</p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+
+int main (int argc, char **argv) {
+    pid_t pid;
+    int a = 5, b;
+
+    if ((pid = fork()) == -1) {
+        fprintf(stderr, "Fork error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == 0) { // fils
+        b = a * 2;
+        printf("Le fils pid pid %d et a = %d &lt;--&gt; b = %d\n", pid, a, b);
+    } else { // père
+        b = a * 2;
+        printf("Le père pid pid %d et a = %d &lt;--&gt; b = %d\n", pid, a, b);
+    }
+
+    return 0;
+}</code></pre>                                    
+                                    <p>Qu'affiche ce grogrammme lors de son exécution ?</p>
+<pre class="taille60"><code>Le père pid xxxx et a = 5 &lt;--&gt; b = 25
+Le fils pid xxxx et a = 5 &lt;--&gt; b = 10</code></pre>
+                                </li>
+                                <li>
+                                    <p>Écrivez un programme qui affiche "trois... deux... un..." avant de créer un fils qui affiche "partez !". Les écritures doivent se faire grâce à l'appel système <span class="html">write</span>.</p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd&gt;
+
+int main (int argc, char **argv) {
+    pid_t pid;
+    char chaine[20];
+    sprintf(chaine, "Trois Deux Un ");
+
+    if (write(STDOUT_FILENO, chaine, strlen(chaine)) != strlen(chaine)) {
+        write(STDERR_FILENO, "Erreur de write", 25);
+        return -1;
+    }
+
+    if ((pid = fork()) == -1) {
+        fprintf(stderr, "Fork error");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == 0) { // fils
+        sprintf(chaine, "Partez !");
+
+        if (write(STDOUT_FILENO, chaine, strlen(chaine)) != strlen(chaine)) {
+            write(STDERR_FILENO, "Erreur de write", 25);
+            return -1;
+        }
+    }
+
+    return 0;
+}</code></pre>
+                                    <p>Qu'affiche ce programme lors de son exécution ?</p>
+<pre class="taille60"><code>Trois Deux Un Partez !</code></pre>
+                                </li>
+                                <li>
+                                    <p>Ajoutez 'n' à la fin des deux chaînes de caractères.</p>
+                                    <p>Qu'affiche ce programme modifié lors de son exécution ?</p>
+<pre class="taille60"><code>Trois Deux Un
+Partez !</code></pre>
+                                </li>
+                                <li>
+                                    <p>Refaites les étapes a, b et c en remplaçant les appels système <span class="html">write</span> par l'appel à la fonction <span class="html">printf</span>.</p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+
+int main (int argc, char **argv) {
+    pid_t pid;
+    int a = 5, b = a * 5;
+    printf("Trois Deux Un");
+    fflush(stdout);
+
+    if ((pid = fork()) == -1) {
+        fprintf(stderr, "Fork Error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == 0) { // fils
+        int b = a * 2;
+        printf("partez !"); // travaille avec buffer
+        fflush(stdout);
+    }
+
+    return 0;
+}</code></pre>
+                                    <p>Qu'affiche ce programme si les chaînes de caractères se terminent par 'n' ?</p>
+<pre class="taille60"><code>Trois Deux Un
+Partez !</code></pre>
+                                </li>
+                                <li>
+                                    <p>Y-a-t-il une différence entre les deux versions ? Si oui, justifiez-la puis neutralisez-la.</p>
+                                </li>
+                                <li>
+                                    <p>En conclusion, quelle est la différence qui vient d'être soulignée entre l'appel système <span class="html">write</span> et la fonction <span class="html">printf</span> ?</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="unix_seance3">Unix : Séance 3 :</h2>
+                    <h3>Exercices :</h3>
+                    <ol type="A">
+                        <li>
+                            <h4>Exercice sur les appels système : fork et exec :</h4>
+                            <p>L'interpréteur de commande est une application bien connue des appels système <span class="html">fork</span> et <span class="html">exec</span> : l'interpréteur fait un <span class="html">fork</span> puis un <span class="html">exec</span> de la commande désirée.</p>
+                            <p>Pour illustrer ce fonctionnement, écrivez un programme qui exécute une commande via <span class="hhtml">exec</span>. Afin de tester rapidement différentes commandes sans recompiler votre programme, utilisez un script shell contenant une commande mettant au moins une seconde à s'exécuter, par exemple : <span class="html">time find /usr/ -type f -iname "*.txt" | -iname "*~-" 2 &gt; /dev/null -exec --grep -n --color=always -I -H "python" "{}" ";" | sort &gt; results.txt</span>.</p>
+                            <p>(Modifiez éventuellement le chemin de recherche <span class="em">/usr/</span> afin d'ajuster le temps d'exécution.)</p>
+                            <p>Pour rappel, un script shell doit débuter par un <span class="em">shebang</span> indiquantoù se trouve l'interpréteur permettant de l'exécuter. Sur les systèmes Linux, on utilise tranditionnellement le bash : <span class="em">#!/bin/bash</span>. N'oubliez pas de rendre le script exécutable via <span class="html">chmod</span>. Testez votre programme.</p>
+                            <p>Faites à présent en sorte que l'exécution de la commande s'exécute en parallèle de votre processus et ne le bloque pas. Pour ce faire, votre programme doit créer un fils qui va exécuter votre script grâce à un appel système <span class="html">exec</span>.</p>
+                            <p>Afin de pouvoir voir la hiérarchie de processus ainsi créée, le père doit afficher les processus de l'utilisateur qui sont en cours d'exécution grâce à la commande : <span class="html">ps -l</span>. À l'aide de la fonction <span class="html">sleep()</span>, assurez-vous que le père exécute sa commande durant l'exécution du script.</p>
+<pre class="taille60"><code class="html">#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main (int argc, char **argv) {
+    pid_t pid;
+
+    if ((pid = fork()) == -1) {
+        fprintf(stderr, "Erreur fork\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == 0) { // fils
+        if (execlp("./script.sh", "script", NULL) == -1) {
+            fprintf(stderr, "Erreur execlp\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    sleep(1);
+
+    if (execl("/bin/ps", "ps", "-l", NULL) == -1) {
+        fprintf(stderr, "Erreur execl\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <h4>Exercice sur les appels systèmes fork et exec :</h4>
+                            <p>Écrivez un programme qui crée un fis. Le fils doit simplement, grâce à un appel système <span class="html">exec</span>, faire exécuter la commande "<span class="html">ps -l</span>" afin d'afficher les processus de l'utilisateur qui sont en cours d'exécution.</p>
+                            <p>Le père, dès la mort de son fils, doit à son tour faire exécuter la commande "<span class="html">ps</span>" afin d'afficher les processus de l'utilisateur qui sont en cours d'exécution. Il vous est demandé d'organiser votre programme de telle sorte que le "<span class="html">ps</span>" exécuté par le père affiche le processus fils comme étant un processus <span class="em">zombie</span>.</p>
+                            <p>Remarque : un processus zombie (ou <span class="html">defunct</span>) esyt un processus qui est terminé mais dont le système garde une trace tant que son père est susceptible de l'attendre (c'est-à-dire faire un appel système <span class="html">wait</span> pour lui).</p>
+                            <p>Exemple d'exécution :</p>
+                            <img src="../images/exec1.png" alt="">
+<pre class="taille60"><code class="html">#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/wait.h&gt;
+
+int main (int argc, char **argv) {
+    pid_t pid, fils;
+    
+    if ((pid = fork()) == -1) {
+        fprintf(stderr, "Erreur fork\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == -1) { // fils
+        if (execl("/bin/ps", "ps", "-l", NULL) == -1) {
+            fprintf(stderr, "Erreur execl\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    int status;
+
+    if ((fils = wait(&status)) == -1) {
+        fprintf(stderr, "Erreur wait\n");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Le processus fils n°%d s'est terminé\n", fils);
+    sleep(1);
+
+    if (execl("/bin/ps", "ps", "-l", NULL) == -1) {
+        fprintf(stderr, "Erreur execl\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return status;
+}</code></pre>
+                        </li>
+                        <li>
+                            <h4>Exercice sur l'appel système signal :</h4>
+                            <p>Quand un processus fils se termine, il envoie un signal (<span class="html">SIGCHLD</span>) à son père. Modifiez le programme écrit au point précédent pour que le processus père exécute son "<span class="html">ps</span>" à la réception du signal (<span class="html">SIGCHLD</span>). Pour ce faire, il faut que le processus père ne se termine pas avant son fils.</p>
+                            <p>Il vous est demandé d'utiliser l'appel système <span class="html">signal</span>.</p>
+                            <p>Testez ce programme. Ci-dessous un exemple d'exécution :</p>
+                            <img src="../images/exec2.png" alt="">
+                            <p>Ajoutez un <span class="html">sleep()</span> dans le programme du père avant l'armement du signal. Ensuite retestez.</p>
+                            <p>Quel problème pose l'ajout de cette instruction ? Expliquez.</p>
+<pre class="taille60"><code class="html">#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#incmide &lt;sys/wait.h&gt;
+
+void signalPere() {
+    // printf("Le processus fils n°%d s'est terminé\n", fils);
+    if (execl("/bin/ps", "ps", NULL) == -1) {
+        fprintf(stderr, "Erreur execl\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+int main (int argc, char **argv) {
+    pid_t pid, fils;
+
+    if ((pid = fork()) == -1) {
+        fprintf(stderr, "Erreur fork\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == 0) { // fils
+        sleep(1);
+        if (execl("/bin/ps", "ps", "-l", NULL) == -1) {
+            fprintf(stderr, "Erreur execl\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    /* int status;
+
+    if ((fils = wait(&status)) == -1) {
+        fprintf(stderr, "Erreur wait");
+        exit(EXIT_FAILURE);
+    }*/
+
+    signal(SIGCHLD, signalPere);
+    pause();
+}</code></pre>
+                        </li>
+                        <li>
+                            <h4>Exercice sur l'appel système sigaction :</h4>
+                            <p>Historiquement sur les systèmes UNIX, l'appel système <span class="html">signal()</span> assurait la programmation du gestionnaire de signaux (signal handler). Malheureusement cette fonction présente quelques inconvénients majeurs (problèmes de portabilité, désarmement automatique de la fonction gestionnaire de signal, risque d'interruption du gestionnaire par l'arrivée d'un autre signal, etc.). Nous lui préférerons donc l'appel système <span class="html">sigaction()</span> (défini plus récemment dans la norme POSIX) que nous allons mettre en oeuvre dans cet exercice.</p>
+                            <p>Écrivez un porgramme qui, à la réception d'un signal, affichera simplement le signal reçu (utilisez le tableau <span class="html">sys_siglist[]</span> défini dans <span class="html">signal.h</span>) avant de reprendre son traitement. Pour ce faire, limitez-vous aux 2à premiers signaux (pour voir la liste des signaux définis sur votre système, tapez la commande <span class="html">kill -l</span>). Le traitement de votre programme consistera en une boucle infinie effectuant une lecture au clavier (<span class="html">read</span>). Affichez un message avant d'exécuter un <span class="html">read</span>, ainsi qu'un message indiquant si une erreur s'est produite pendant son exécution (<span class="html">EINTR</span>).</p>
+                            <p>Testez votre programme avec différents signaux (commande </p>
+                            <span class="html">kill</span> exécutée depuis un autre terminal). Essayez notamment d'arrêter le processus avec <span class="html">Ctrl-C</span>.
+                            <p>Voici un exemple d'exécution :</p>
+                            <img src="../images/exec3.png" alt="">
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;signal.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;errno.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0)
+#define SYS2(call) (call== -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0)
+
+/* routine de traitement des signaux */
+void handler (int sig) {
+    char msg[256];
+    sprintf(msg, "\nSignal %d (%s) reçu\n", sig, sys_siglist[sig]);
+    SYS1(write(1, msg, strlen(msg)));
+}
+
+int main (int argc, char **argv) {
+    char msg[256];
+
+    /* afficher pid */
+    sprintf(msg, "I am process %d\n", getpid());
+    SYS1(write(1, msg, strlen(msg)));
+
+    /* armement des 20 premiers signaux */
+    struct sigaction act;
+    act.sa_handler = handler;
+    act.sa_flags = 0;
+    SYS1(sigemptyset(&act.sa_mask));
+
+    for (int i = 0; i &lt; 20; i++) {
+        if (signaction(i, &act, NULL) != 0) {
+            sprintf(msg, "SIgnal %d (%s) non capturé\n", i, sys_siglist[i]);
+            SYS1(write(2, msg, strlen(msg)));
+        }
+    }
+
+    /* lecture continue, pour avoir un appel système lent bloqué */
+    while (1) {
+        int i;
+        sprintf(msg, "\nappel read()\n");
+        SYS1(write(1, msg, strlen(msg)));
+
+        if (read(0, &i, sizeof(int))) {
+            sprintf(msg, "read() interrompu\n");
+            SYS1(write(1, msg; strlen(msg)));
+        }
+    }
+
+}</code></pre>
+                            <p>Code d'erreur <span class="html">EINTR</span> = "Interrupted system call" &#8594; échec de l'appel read(), interrompu par un signal.</p>
+                            <h4>Standard error codes :</h4>
+                            <p>Standard error codes in Linu or UNIX :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">1</span> : Catchall for general errors</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">2</span> : Misuse of shell builtins (accordin to Bash doc.)</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">126</span> : Command invoked cannot execute</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">127</span> : "command not found"</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">128</span> : Invalid argument to exit</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">128+n</span> : Fatal error signal "n"</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">130</span> : Script terminated by Control-C</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">255\*</span> : Exit status out of range</p>
+                                </li>
+                            </ul>
+                            <p>[<a href="http://www.tldp.org/LDP/abs/html/exitcodes.html">http://www.tldp.org/LDP/abs/html/exitcodes.html</a>]</p>
+                            <p>Print exit status of last command : <span class="html">echo 1?</span>.</p>
+                            <h4>Remarque : Définitions de macros pour vérifier les appels système :</h4>
+                            <p>Dans certains cas, quand le seul test à prévoir sur la valeur de retour d'un appel système est de la comparer à <span class="em">-1</span>, il peut être confortable d'utiliser une macro comme celle-ci : <span class="html">#define SYS((call) == -1 ? (perror(#call ": ERROR", exit(1) : 0)</span>.</p>
+                            <p>Par exemple :</p>
+<pre class="taille60"><code class="html">if (close(fd1) == -1) {
+    perror("SYSCALL ERROR : close(fd1)");
+    exit(1);
+}</code></pre>
+                            <p>Pourra s'écrire : <span class="html">SYS(close(fd1));</span>.</p>
+<pre class="taille60"><code class="html">#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0)
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0)
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0)</code></pre>
+                            <p>Le code précédent pourrait donc s'écrire :</p>
+<pre class="taille60"><code class="html">int res = close(fd1);
+SYS2(res, "close(fd1)");</code></pre>
+                            <p>Notez que l'utilisation de ces macros n'est pas compatible avec l'option ANSI du compilateur.</p>
+                            <p>À partir de cette séance d'exercices, si vous avez bien compris et assimilé l'utilisation des appels système <span class="html">read</span> et <span class="html">write</span>, vous pouvez utiliser les fonctions du langage C pour lire (<span class="html">fgets</span>) et écrire (<span class="html">fprintf</span>) dans un fichier.</p>
+                            <h4>Appel système sigaction : complément pour l'exercice "zombie" :</h4>
+                            <p>À la fin du précédent exercice C, il vous a été demandé de porter une attention particulière aux interactions entre les processus père et fils afin d'éviter que le processus père ne se retrouve dans une situation de blocage.</p>
+                            <p>Afin d'éviter le problème soulevé, modifiez votre programme en utilisant <span class="html">sigaction()</span> au lieu de <span class="html">signal()</span> pour armer le signal <span class="html">SIGCHLD</span>. Pour ce faire, postposez la réception du signal par le père tant qu'il n'est pas prêt à le traiter.</p>
+                            <p>Indications de programmation :</p>
+                            <ul>
+                                <li>
+                                    <p>Il est possible de bloquer et de débloquer l'arrivée de signaux grâce à l'appel système <span class="html">sigprocmask</span>. Cet appel système utilise un "<span class="html">sigset_t</span>" qui représente l'ensemble de signaux.</p>
+                                </li>
+                                <li>
+                                    <p>Pour initialiser un <span class="html">sigset_t</span>, utilisez l'appel système <span class="html">sigemptyset</span>.</p>
+                                </li>
+                                <li>
+                                    <p>Pour opérer une action sur un signal particulier, il faut le positionner dans le <span class="html">sigset_t</span> utilisé grâce à l'appel système <span class="html">sigaddset</span>.</p>
+                                </li>
+                                <li>
+                                    <p>Enfin, pour suspendre l'exécution d'un processus, utilisez <span class="html">sigsuspend</span> qui permet de préciser quels sont les signaux qui permettront d'interromptre l'endormissement du processus.</p>
+                                </li>
+                            </ul>
+                            <p>Pour tester les modifications apportées au programme zombie, ajoutez un <span class="html">sleep(2)</span> comme première instruction du processus père.</p>
+<pre class="taille60"><code class="html">#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;signal.h&gt;
+
+void child_signal (int sig) {
+    if (execl("/bin/ps", "YOLO\n", NULL) == -1) {
+        perror("Erreur Exec\n");
+        exit(23);
+    }
+}
+
+int main (int argc, char **argv) {
+    pid_t pidFils;
+
+    if ((pidFils = fork()) == -1) {
+        perror("Fork Failed\n");
+        exit(13);
+    }
+
+    if (pidFils == 0) {
+        printf("Processus Fils\n");
+        /* Processus Fils */
+        if (execl("/bin/ps", "Zombie\n", NULL) == -1) {
+            perror("Erreur Exec\n");
+            exit(23);
+        }
+    } else {
+        /* Procesus Père */
+        struct sigaction sa;
+        sigset_t set;
+        sa.sa_handler = child_signal;
+        /* Initialisation flags + mask */
+        sa.sa_flags = 0;
+        sigemptyset(&sa.sa_mask);
+
+        if (sigfillset(&set) == -1) {
+            perror("Error Set\n");
+            exit(43);
+        }
+
+        if (sigdelset(&set, SIGCHLD) == -1) {
+            perror("Error Set\n");
+            exit(43);
+        }
+
+        if (sigprocmask(SIG_BLOCK, &set, NULL) == -1) {
+            perror("Error Set\n");
+            exit(43);
+        }
+
+        sigaction(SIGCHLD, &sa, NULL);
+        sigsuspend(&set);
+        // sleep(2);
+        printf("Processus Père\n");
+
+        if (sigprocmask(SIG_UNBLOCK, &set, NULL) == -1) {
+            perror("Error Set\n");
+            exit(43);
+        }
+
+        pause();
+    }
+
+    return 0;
+}</code></pre>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="unix_seance4">Unix : Séance 4 :</h2>
+                    <h3>Appel système pipe :</h3>
+                    <ol>
+                        <li>
+                            <h4>Communication unidirectionnelle entre un père et son fils :</h4>
+                            <p>Écrivez un programme "<span class="em">unidir.c</span>" pour comprendre le fonctionnement de l'appel système <span class="html">pipe</span>.</p>
+                            <p>Le programme ne reçoit aucun argument sur la ligne de commande; si tel n'est pas le cas affichez un message d'erreur rappelant l'usage pour l'utilisation du programme.</p>
+                            <p>Créez un processus fils et un "tube" de communication (<span class="html">pipe</span>) entre le père et le fils. Le père lit des lignes à l'entrée standard, les affiche à la sortie standard précédée de "PERE : " et les envoie à son fils via le pipe.</p>
+                            <p>Le processus fils lit les lignes envoyées par son père et les affiche à la sortie standard précédées de "FILS : ".</p>
+                            <p>Le programme se termine quand l'utilisateur introduit un Ctrl-D à la place d'une ligne.</p>
+                            <p><img src="../images/pipe1.png" alt=""></p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;termios.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0);
+
+#define SIZE_M 80
+#define READ 0
+#define WRITE 1
+
+int main (int argc, char **argv) {
+    if (argc != 1) {
+        fprintf(stderr, "Usage : %s\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    char msg[SIZE_M + 1];
+    int p[2]; // 1 pour le WRITE et 0 pour le READ
+    int nbrLu;
+    char ligne[SIZE_M + 1];
+    SYS2(pipe(p), "pipe");
+    pid_t pid;
+    SYS2((pid = fork()), "fork error");
+
+    if (pid != 0) { // père
+        SYS2(close(p[READ]), "close READ");
+
+        while ((nbrLu = read(0, msg, SIZE_M)) != 0) {
+            if (msg[nbrLu - 1] != '\n') {
+                perror("Trop grande ligne entrée\n");
+                tcflush(0, TCIFLUSH);
+                continue;
+            }
+
+            msg[nbrLu - 1] = '\0';
+            SYS2((write(p[WRITE], msg, nbrLu)), "Erreur lors de l'écriture\n");
+            nbrLu = sprintf(ligne, "PERE : %s\n", msg);
+            SYS2((write(1, ligne, nbrLu)), "Erreur lors de l'écriture sur la sortie standard\n");
+        }
+
+        SYS2(close(p[WRITE]), "close WRITE");
+    } else { // fils
+        SYS2(close(p[WRITE]), "close WRITE");
+
+        while ((nbrLu = read(p[READ], msg, SIZE_M)) != 0) {
+            nbrLu = sprintf(ligne, "FILS : %s\n", msg);
+            SYS2(write(1, ligne, nbrLu), "Erreur lors de l'écriture\n");
+        }
+
+        SYS2(close(p[READ]), "close READ");
+    }
+
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <h4>Communication bidirectionnelle entre un père et son fils :</h4>
+                            <p>Écrivez un programme "<span class="em">bidir.c</span>" qui ne reçoit aucun argument sur la ligne de commande, qui crée un processus fils et deux pipes entre le père et le fils, l'un du père vers le fils, l'autre fils vers le père.</p>
+                            <p>Lepère lit des lignes à l'entrée standard, les envoie à son fils via le premier pipe et les affiche à la sortie standard précédée de "Envoyé à mon fils : ".</p>
+                            <p>Le processus fils lit les lignes envoyées par son père, convertit les caractères en majuscules (utiliser la fonction <span class="html">toupper()</span>) et renvoie les lignes à son père via le deuxième pipe.</p>
+                            <p>Dès que le processus père reçoit une ligne envoyée par son fils, il l'affiche à la sortie standard précédée de "Reçu de mon fils : ".</p>
+                            <p>Le programme se termine quand l'utilisateur introduit un Ctrl-D à la place d'une ligne.</p>
+                            <p><img src="../images/pipe2.png" alt=""></p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#inclue &lt;ctype.h&gt;
+#include &lt;termios.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR :  " msg "\n"), exit(code) : 0);
+
+#define TAILLE_BUFFER 80
+#define READ 0
+#define WRITE 1
+
+int main (int argc, char **argv) {
+    if (argc != 1) {
+        fprintf(stderr, "Usage : %s\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    char bufferE[TAILLE_BUFFER + 1], bufferS[TAILLE_BUFFER + 1], ligne[TAILLE_BUFFER + 1];
+    int p1[2], p2[2], nbrLu, ancienLu;
+    SYS2(pipe(p1), "pipe 1");
+    SYS2(pipe(p2), "pipe 2");
+    pid_t pid;
+    SYS2((pid = fork()), "fork error");
+
+    if (pid != 0) { // père
+        SYS2(close(p1[READ]), "close READ 1");
+        SYS2(close(p2[WRITE]), "close WRITE 2");
+
+        while ((nbrLu = read(0, bufferE, TAILLE_BUFFER)) != 0) {
+            if (bufferE[nbrLu - 1] != '\n') {
+                perror("Trop grande ligne entrée\n");
+                tcflush(0, TCIFLUSH);
+                continue;
+            }
+
+            bufferE[nbrLu - 1] = '\0';
+            SYS2((write(p1[WRITE], bufferE, nbrLu)), "Erreur lors de l'écriture\n");
+            nbrLu = sprintf(ligne, "envoyé à mon fils : %s\n", bufferE);
+            SYS2((write(1, ligne, nbrLu)), "Erreur réception\n");
+            nbrLu = sprintf(ligne, "PERE : %s\n", bufferE);
+            SYS2((write(1, ligne, nbrLu)), "Erreur lors de l'écriture sur la sortie standard\n");
+
+            if ((nbrLu = read(p2[READ], bufferE, TAILLE_BUFFER)) != 0) {
+                nbrLu = sprintf(ligne, "reçu de mon fils : %s\n", bufferE);
+                SYS2((write(1, ligne, nbrLu)), "Erreur réception\n");
+            }
+        }
+
+        SYS2(close(p1[WRITE]), "close WRITE 1");
+        SYS2(close(p2[READ]), "close READ 2");
+    } else { // fils
+        SYS2(close(p1[WRITE]), "close WRITE 1");
+        SYS2(close(p2[READ]), "close READ 2");
+
+        while ((ancienLu = read(p1[READ], bufferS, TAILLE_BUFFER)) != 0) {
+            bufferS[ancienLu - 1] = '\0';
+            char *str = bufferS;
+
+            while (*str) {
+                *str = toupper(*str);
+                str++;
+            }
+
+            nbrLu = sprintf(ligne, "FILS : %s\n", bufferS);
+            SYS2((write(1, ligne, nbrLu)), "Erreur lors de l'écriture\n");
+            SYS2((write(p[WRITE], bufferS, ancienLu)), "Erreur pipe retour WRITE\n");
+        }
+
+        SYS2(close(p1[READ]), "close père 1");
+        SYS2(close(p2[WRITE]), "close fils 2");
+    }
+
+    return 0;
+}</code></pre>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="unix_seance5">Unix : Séance 5 :</h2>
+                    <ol>
+                        <li>
+                            <h3>Appel système pipe : communication avec plusieurs fils :</h3>
+                            <p>Écrire un programme qui crée deux processus fils, puis lit au clavier des entiers non nuls et envoie les nombres négatifs à son fils de gauche et les nombres positifs à son fils droit.</p>
+                            <p>La fin de la lecture est notifiée par la réception du chiffre 0. Dans ce cas, le père attend que ses fils lui renvoient des nombres reçus, puis affiche les deux résultats.</p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/wait.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCAL ERROR : " msg "\n"), exit(code) : 0);
+
+#define TAILLE_BUFFER 80
+#define READ 0
+#define WRITE 1
+
+int main (int argc, char **argv) {
+    if (argc != 1) {
+        fprintf(stderr, "Usage : %s\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    char message[TAILLE_BUFFER + 1];
+    pid_t pid, pid2;
+    int aller_g[2]; // 1 pour le WRITE et 0 pour le READ
+    int retour[2], aller_d, nbrLu, val, sumneg, sumpos, nbrCarRet;
+    SYS2(pipe(aller_d), "pipe 2");
+    SYS2(pipe(aller_g), "pipe 1");
+    SYS2(pipe(retour), "pipe retour");
+    SYS2((pid = fork()), "fork error");
+
+    if (pid != 0) {
+        SYS2((pid2 = fork()), "fork error");
+
+        if (pid2 != 0) {
+            SYS2(close(aller_g[READ]), "close pipe 1 READ");
+            SYS2(close(aller_d[WRITE]), "close pipe 2 READ");
+            SYS2(close(retour[WRITE]), "close pipe retour WRITE");
+
+            while ((nbrLu = read(0, message, TAILLE_BUFFER)) != 0) {
+                if (message[nbrLu - 1] != '\n') {
+                    perror("Trop grande ligne d'entrée\n");
+                    while (message[nbrLu - 1] != '\n') {
+                        nbrLu = read(0, message, TAILLE_BUFFER);
+                    }
+                    continue;
+                }
+                
+                message[nbrLu - 1] = '\0';
+                val = atoi(message);
+                
+                if (val == 0) {
+                    break;
+                }
+
+                if (val &lt; 0) {
+                    SYS2((write(aller_g[WRITE], &val, sizeof(int))), "Erreur lors de l'écriture\n");
+                    printf("Envoyé à mon fils gauche : '%i'\n", val);
+                } else {
+                    SYS2((write(aller_d[WRITE], &val, sizeof(int))), "Erreur lors de l'écriture\n");
+                    printf("Envoyé à mon fils droit : '%i'\n", val);
+                }
+            }
+
+            SYS2(close(aller_d[WRITE]), "close pipe 2 WRITE");
+            SYS2((nbrCarRet = read(retour[READ], &sumpos, sizeof(int))), "erreur de lecture de sumpos\n");
+            wait(NULL);
+            ptintf("Somme reçue de mon fils droit = '%i'\n", sumpos);
+            SYS2(close(aller_g[WRITE]), "close pipe 1 WRITE");
+            SYS2((nbrCarRet = read(retour[READ], &sumneg, sizeof(int))), "erreur de lecture de sumneg\n");
+            wait(NULL);
+            printf("Somme reçue de mon fils gauche = '%i'\n", sumneg);
+            SYS2(close(retour[READ]), "fermeture pipe retour READ");
+            printf("Fin du père\n");
+        } else {
+            SYS2(close(aller_g[WRITE]), "close pipe 1 WRITE");
+            SYS2(close(aller_g[READ]), "close pipe 1 READ");
+            SYS2(close(aller_d[WRITE]), "close pipe 2 WRITE");
+            SYS2(close(retour[READ]), "close pipe retour READ");
+            int sum = 0;
+
+            whiile (read(aller_d[READ], &nbrLu, sizeof(int)) != 0) {
+                sum += nbrLu;
+            }
+
+            printf("somme fils droit = '%i'\n", sum);
+            SYS2(write(retour[WRITE], &sum, sizeof(int)), "erreur d'écriture de sum");
+            SYS2(close(aller_d[READ]), "close pipe 2 READ");
+            SYS3(close(retour[WRITE]), "close pipe retour WRITE");
+            print("FIn du fils droit\n");
+        }
+    } else {
+        SYS2(close(aller_g[WRITE]), "close pipe 1 WRITE");
+        SYS2(close(aller_d[READ]), "close pipe 2 READ");
+        SYS2(close(aller_d[WRITE]), "close pipe 2 WRITE");
+        SYS2(close(retour[READ]), "close pipe retour READ");
+        int sum = 0;
+
+        while (read(aller_g[READ], &nbrLu, sizeof(int)) != 0) {
+            sum += nbrLu;
+        }
+
+        printf("somme fils gauche = '%i'\n", sum);
+        SYS2(write(retour[WRITE], &sum, sizeof(int)), "erreur d'écriture de sum");
+        SYS2(close(aller_g[READ]), "close pipe 1 READ");
+        SYS2(close(retour[WrITE]), "close pipe retour WRITE");
+        printf("Fin du fils gauche\n");
+    }
+
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <h3>Appels systèmes pipe et dup : redirection de l'entrée standard et de la sortie standard :</h3>
+                            <p>Reprenez le programme "<span class="em">bidir.c</span>" de la séance précédente. Dans ce programmme, le fils n'utilise pas ses entrée et sortie standards.</p>
+                            <p>Modifiez ce programme pour écrire le programme "<span class="em">redir.c</span>". Dans le programme "<span class="em">redir.c</span>", il vous est demandé de rediriger l'entrée standard du fils sur la lecture du premier pipe et sa sortie standard sur l'écriture du second pipe.</p>
+                            <p>De plus, le fils doit comptabiliser le nombre de lignes reçues et transmettre cette information à son père (sous forme de chaîne), qui affichera ce résultat à la fin de l'exécution.</p>
+                            <p><img src="../images/pipe3.png" alt=""></p>
+                            <p>Exemple d'exécution :</p>
+<pre class="taille60"><code>Entrez des phrases (Ctrl-D pour terminer):
+phrase 1
+RECU de mon fils : phrase 1
+phrase 2
+RECU de mon fils : phrase 2
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+RECU de mon fils : a b c d e f g h i j k l m n o p q r s t u v w x y z
+1 2 3 4 5 6 7 8 9 0
+RECU de mon fils : 1 2 3 4 5 6 7 8 9 0
+[Ctrl-D]
+RECU de mon fils : le fils a traite 4 lignes
+Le pere se termine</code></pre>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="unix_seance6">Unix : Séance 6 :</h2>
+                    <h3>Appels système : kill - alarm - pipe - sigaction :</h3>
+                    <p>Écrivez un programme "<span class="em">tableMultiplication.c</span>" qui permet à un père de tester chez son fils la connaissance des tables de multiplication.</p>
+                    <p>Le programme reçoit comme arguments sur la ligne de commande : le temps que le fils a pour répondre à une question et la valeur maximale de la table de multiplication.</p>
+                    <p>Le programme génère des couples de nombres aléatoires compris entre 1 et la borne maximale fournie, il envoie à son fils le cal à faire, c'est-à-dire "<span class="em">A * B =</span>", attend la réponse avant d'envoyer la question suivante.</p>
+                    <p>Le père et le fils communiquent via deux pipes. Le père écrit sur le premier pipe des enregistrements qui ont la structure suivante :</p>
+<pre class="taille60"><code class="html">struct multiplication {
+    int a;
+    int b;
+} calcul;</code></pre>
+                    <p>Le fils envoie à son père le résultat que l'utilisateur a introduit au clavier en écrivant une valeur entière sur le dexième pipe.</p>
+                    <p>Pour chaque calcul que le processus père envoie à son fils, il attend la réponse, la compare avec la bonne réponse qu'il a calculée et comptabilise les bornes et les mauvaises réponses.</p>
+                    <p>Le processus fils lit les questions proposées par son père, demande une réponse à l'utilisateur et la communique à son père.</p>
+                    <p>Il est aussi demandé de vérifier que le fils ne prend pas plus de temps pour répondre que la limite imposée (fournie en argument du programme). Pour ce faire, dès que le fils lit la question, une "<span class="em">alarme</span>" est lancée. Si l'utilisateur introduit sa réponse avant que l'alarme ne se déclenche, elle est désactivée; sinon le fils doit envoyer un signal <span class="html">SIGUSR1</span> à son père pour lui signifier qu'il ne doit plus attendre la réponse à cette question mais envoyer la suivante.</p>
+                    <p>Le programme se termine quand le fils a introduit un <span class="em">Ctrl-D</span> à la place d'une réponse. Avant de rendre la main au shell, le père affiche le nombre de bonnes réponses, de mauvaises réponses et de réactions tardives.</p>
+<pre class="taille60"><code class="html">#include &lt;signal.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;time.h&gt;
+#include &lt;sys/wait.h&gt;
+#include &lt;sys/types.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0);
+
+#define TAILLE_REP 256;
+#define READ 0
+#define WRITE 1
+#define TRUE 1
+
+typedef struct multiplication {
+    int a;
+    int b;
+} multiplication;
+
+void tropLong() {
+    return;
+}
+
+int aleatoire (int max) {
+    int c = (int) ((double) rand() / (RAND_MAX) * max) + 1;
+    return c;
+}
+
+void tempsEcoule() {
+    alarm(0);
+    printf("Trop lent\n");
+    SYS1(kill(getppid(), SIGUSR1));
+    return;
+}
+
+int main (int argc, char **argv) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage : '%s delai max'\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    pid_t newpid;
+    struct sigaction act;
+    int quest[2], rep[2], delai = atoi(argv[1]), max = atoi(argv[2]);
+    multiplication calcul;
+    char reponse[TAILLE_REP], *ptr;
+    int nbrCar, repOk = 0, repKo = 0, repRetard = 0;
+    srand(time(NULL));
+    SYS1(pipe(quest));
+    SYS1(pipe(rep));
+    SYS1((newpid = fork()));
+
+    if (newpid == 0) {
+        int questionSuivante, reponseInt, retSelect;
+        char reponse[TAILLE_REP];
+        struct timeval tpsDelai;
+        fd_set ensLect;
+        SYS1(close(rep[READ]));
+        SYS1(close(quest[WRITE]));
+
+        while (nbrCar = read(quest[READ], &calcul, sizeof(multiplication))) {
+            if (nbrCar == -1) {
+                perror("read pipe quest");
+                exit(10);
+            }
+
+            questionSuivante = 0;
+            printf("%d * %d = ", calcul.a, calcul.b);
+            fflush(stdout);
+            FD_ZERO(&ensLect);
+            FD_SET(0, &ensLect);
+            tpsDelai.tv_sec = delai;
+            tpsDelai.tv_usec = 0;
+            SYS1((retSelect = select(STDOUT_FILENO, &ensLect, NULL, NULL, &tpsDelai)));
+
+            if (retSelct == 0) {
+                tempsEcoule();
+                questionSuivante = 1;
+            } else {
+                if (!fgets(reponse, TAILLE_REP, stdin)) {
+                    if (feof(stdin)) {
+                        fprintf(stderr, "\nJ'en ai marre\n");
+                        SYS1(close(rep[WRITE])); /* Effet de cascade envoie CTRL-D au père */
+                        SYS1(close(quest[READ]));
+                        exit(25);
+                    }
+
+                    if (errno == EINTR) {
+                        questionSuivante = 1;
+                        continue;
+                    }
+
+                    perror("error fgets fils");
+                    exit(14);
+                }
+            }
+
+            if (questionSuivante) {
+                continue;
+            }
+
+            reponseInt = atoi(reponse);
+
+            if (write(rep[WRITE], &reponseInt, sizeof(int)) != sizeof(int)) {
+                perror("write pipe rep");
+                exit(11);
+            }
+        }
+    } else {
+        int retard, reponse, reponseRecue;
+        SYS1(close(rep[WRITE]));
+        SYS1(close(quest[READ]));
+        act.sa_handler = tropLong;
+        act.sa_flags = 0;
+        SYS1(sigemptyset(&act.sa_mask));
+        SYS1(sigaction(SIGUSR1, &act, NULL));
+
+        while (TRUE) {
+           calcul.a = aleatoire(max);
+           calcul.b = aleatoire(max);
+           reponse = calcul.a * calcul.b;
+           retard = 0;
+           
+           if (write(quest[WRITE], &calcul, sizeof(multiplication)) != sizeof(multiplication)) {
+            perror("error write quest");
+            exit(13);
+           }
+
+           if ((nbrCar = read(rep[READ], &reponseRecue, sizeof(int))) != 0) {
+            if (nbrCar == -1) {
+                if (errno == EINTR) {
+                    repRetard++;
+                    retard = 1;
+                    continue;
+                }
+
+                perror("read pipe rep");
+                exit(11);
+            }
+           } else {
+            break;
+           }
+
+           if (reponseRecue == reponse) {
+            repOk++;
+           } else {
+            repKo++;
+           }
+        }
+
+        SYS1(close(quest[WRITE]));
+        SYS1(close(rep[READ]));
+
+        if (newpid == wait(NULL)) {
+            printf("Réponses correctes : %d\n", repOk);
+            printf("Réponses incorrectes : %d\n", repKo);
+            printf("Réponses tardives : %d\n", repRetard);
+        }
+
+        exit(EXIT_SUCCESS);
+    }
+
+    return 0;
+}</code></pre>
+                </article>
+                <article>
+                    <h2 id="unix_seance7">Unix : Séance 7 :</h2>
+                    <h3>Exercice récapitulatif :</h3>
+                    <p>Reprenez la solution de l'exercice 1 de la séance 5 et modifiez-la afin que le père et ses deux fils communiquent à l'aide d'un unique pipe. Dans ce cas, une synchronisation par signaus permettra à chaque processus de savoir quand il peut lire ou écrire sur le pipe. Pour ce faire, utilisez les signaux utilisateurs, <span class="html">SIGUSR1</span> et <span class="html">SIGUSR2</span>.</p>
+                    <ul>
+                        <li>
+                            <p>Hypothèse simplificatrice : on peut supposer dans un premier temps que les fils auront terminé leur traitement avant que l'utilisateur entre une nouvelle valeur. Dans ce cas, seul le père devvra envoyer des signaux à ses fils.</p>
+                        </li>
+                        <li>
+                            <p>Dans un second temps, faites en sorte que le programme gère le scénario où des données sont envoyées avant que les fils aient le temps de les traiter correctement. Le risque est alors que le nombre sur le pipe ne soit pas lu par le bon fils. Pour pouvoir simuler ce cas de figure, rendez les fils artificiellement lents, en ajoutant par exemple <span class="html">sleep(3)</span> dans le fils droit et <span class="html">sleep(11)</span> dans le fils gauche. Cela nous donnera suffisamment de temps pour entrer différentes valeurs au clavier avant que les fils ne les traitent.</p>
+                        </li>
+                    </ul>
+                    <p>Exemple d'exécution problématique :</p>
+                    <p><img src="../images/exo_recap.png" alt=""></p>
+                    <p>On constate que le fils gauche se réveille trop tard. Par conséquent, il ne s'arrêta jamais et le fils droit lit toutes les données du pipe (ici sous forme de chaînes de caractères), y compris celles qui ne lui étaient pas destinées.</p>
+                </article>
+                <article>
+                    <h2 id="unix_seance8">Unix : Séance 8 :</h2>
+                    <h3>Les ressources IPC : sémaphore et mémoire partagée :</h3>
+                    <h4>Objectifs :</h4>
+                    <p>La séance a pour but de familiariser l'étudiant avec les sémaphores, la mémoire partagée et les files de messages. La manipulation des sémaphores nous servira à synchroniser des processus. La mémoire partagée permettra le partage de données entre différents processus. Les files de messages sera un moyen plus pratique pour échanger des messages entre différents processus.</p>
+                    <p>Après avoir exécuté vos programmes, il est possible que certains "<span class="html">ipcs</span>" non-utilisés soient réservés sur la machine sur laquelle tournait vos programmes. Pensez à utiliser les commandes "<span class="html">ipcs</span>" et "<span class="html">ipcrm</span>" pour supprimer ces "<span class="html">ipcs</span>".</p>
+                    <h4>Généralités sur les sémaphores :</h4>
+                    <p>Les sémaphores sont des objets de communication inter processus (IPC) utilisés pour synchroniser des processus. Une variable entière '<span class="html">S</span>' est associée à chaque sémaphore et est une image du nombre de processus pouvant obtenir un accès à la ressource. Une file d'attente est également liée au sémaphore et reprend la liste des processus souhaitant un accès à la ressource.</p>
+                    <p>Deux opérations principales peuvent être effectuées sur un sémaphore :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">down</span> (aussi appelé<span class="html">proberen</span>) pour réserver, si possible, un accès à la ressource;</p>
+                        </li>
+                        <li>
+                            <p><span class="html">up</span> (aussi appelé <span class="html">verhogen</span>) pour rendre un accès à la ressource.</p>
+                        </li>
+                    </ul>
+                    <p>Le déroulement de ces opérations va être le suivant :</p>
+                    <p><img src="../images/updown.png" alt=""></p>
+                    <p>Exemple d'accès concurrent à une section critique par 2 processus, géré par une sémaphore <span class="html">S</span> :</p>
+                    <p><img src="../images/acces_concurrent.png" alt=""></p>
+                    <h4>Généralités sur la mémoire partagée :</h4>
+                    <p>La mémoire partagée est une zone de mémoire accessible par des processus distincts. Un processus doit d'abord rattacher la mémoire dans son espace d'adresses, avant de pouvoir y accéder. Cette zone de mémoire étant commune à tout le système, une modification apportée par un processus est perçue par tous les autres.</p>
+                    <p>Remarque : attention à ne pas confondre une variable en mémoire partagée avec une variable globale ! Une variable globale est accessible <span class="em">par toutes les fonctions</span> d'un processus mais est propre à <span class="em">un seul processus</span>.</p>
+                    <h4>Généralités sur les files de messages :</h4>
+                    <p>Les files de messages permettent l'échange de messages entre processus. Le fonctionnement est différent de celui des tubes car il n'est plus question d'un flux mais de messages de taille fixe. Les files sont en outre plus souples que les tubes, notamment pour la transmission sélective de messages. Nous pouvons ainsi définir plus facilement quel processus doit recevoir un message.</p>
+                    <p>Un message est une structure composée :</p>
+                    <ul>
+                        <li>
+                            <p>d'un entier long représentant le<span class="em">type de message</span> à envoyer;</p>
+                        </li>
+                        <li>
+                            <p>des <span class="em">données utiles</span> à intégrer au message.</p>
+                        </li>
+                    </ul>
+                    <p>Le type du message est choisi pour l'ensemble des processus échangeant les messages. Il permettra de hiérarchiser par priorité ou de multiplexer des messages dans une même file de messages.</p>
+                    <p>Une file de messages est définie par une structure <span class="em">msqid_ds</span> qui est allouée et initialisée lors de sa création.</p>
+                    <h5>Inclusion de librairies :</h5>
+                    <p>Sémaphores :</p>
+<pre class="taille60"><code class="html">#include &lt;sys/sem.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;</code></pre>=
+                    <p>Mémoire partagée :</p>
+<pre class="taille60"><code class="html">#include &lt;sys/shm.h&gt;
+#include &lt;sys/types/h&gt;
+#include &lt;sys/ipc.h&gt;</code></pre>
+                    <p>Files de messages :</p>
+<pre class="taille60"><code class="html">#include &lt;sys/msg.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;</code></pre>
+                    <h5>Création :</h5>
+                    <table class="tableBalises" role="presentation">
+                        <thead>
+                            <tr>
+                                <th>un groupe de sémaphores :</th>
+                                <th>une mémoire partagée :</th>
+                                <th>une file de messages :</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <p class="html">int semget (int cle, int nsems, int flg);</p>
+                                    <p><span class="em">nsems</span> indique le nombre de sémaphores à créer dans ce groupe.</p>
+                                    <p>Exemple d'utilisation :</p>
+<pre class="taille60"><code class="html">semid = semget(IPC_PRIVATE, 2, 0660);</code></pre>
+                                    <p>Cette ligne va créer un ensemble de deux sémaphores en utilisant une clé privée. Ces sémaphores ne seront pas accessibles qu'au processus et à ses descendants. L'identifiant de ce groupe de sémaphore sera retourné dans <span class="em">semid</span>.</p>
+                                </td>
+                                <td>
+                                    <p class="html">int shmget (int cle, int taille, int flg);</p>
+                                    <p><span class="em">taille</span> indique la taille en octets de la mémoire partagée.</p>
+                                    <p>Exemple d'utilisation :</p>
+<pre class="taille60"><code class="html">shmid = shmget(1234, sizeof(int), IPC_CREAT | 0660);</code></pre>
+                                    <p>Cette ligne va créer une zone de mémoire partagée de la taille de l'entier. Si un autre processus a déjà créé une mémoire partagée avec la clé <span class="e">1234</span>, la fonction <span class="html">shmget</span> ne fait que renvoyer l'identifiant de cette zone mémoire. L'identifiant de cette mémoire partagée sera retourné dans <span class="em">shmid</span>.</p>
+                                </td>
+                                <td>
+                                    <p class="html">int msgget (int cle, int flg);</p>
+                                    <p>Exemple d'utilisation :</p>
+<pre class="taille60"><code class="html">msgid = msgget(IPC_PRIVATE, 0660);</code></pre>
+                                    <p>Cette ligne va créer une file de messages. Cette file ne sera accessible qu'au processus et ses descendants. L'identifiant de cette file de message sera retourné dans <span class="em">msgid</span>.</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Ces appels renvoient l'identifiant de la ressource IPC créée ou -1 en cas d'erreur.</p>
+                    <p>Les arguments de ces appels sont :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">cle</span> est l'identifiant de la ressource IPC; les valeurs possibles pour <span class="em">cle</span> sont :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">IPC_PRIVATE</span> : la ressource créé n'est alors pas lié à un clé d'accès, et seul le processus propriétaire (le créateur de la ressource) et ses descendants ont accès à la ressource</p>
+                                </li>
+                                <li>
+                                    <p>une valeur entière spécifiant la clé de la ressource (par exemple <span class="em">1234</span>); cette clé permettra aux autres processus d'accéder à la ressource IPC créée.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p><span class="em">flg</span> est un drapeau spécifiant les droits d'accès sur la ressource IPC créée; les valeurs possibles pour <span class="em">flg</span> sont :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">IPC_CREAT</span> : indique la création d'une nouvelle ressource IPX si la clé fournie n'est pas déjà utilisée; dans le cas où la clé existe, l'appel renvoie l'identifiant de la ressource IPC existante associée à la clé</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">IPC_EXCL</span> : provoque l'échec de l'appel si la clé fournie est déjà utilisée par une autre ressource IPC du même type</p>
+                                </li>
+                                <li>
+                                    <p>un entier spécifiant les droits d'accès à la ressource IPC.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h5>Contrôle :</h5>
+                    <table class="tableBalises" role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Sémaphores :</th>
+                                <th>Mémoires partagées :</th>
+                                <th>Files de messages :</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <p class="html">int semctl (int semid, int numsem, int cmd,union semun valeur);</p>
+<pre class="taille60"><code class="html">union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;
+    struct seminfo *_buf;
+};</code></pre>
+                                    <p>Exemple d'utilisation :</p>
+<pre class="taille60"><code class="html">union semun sem_union;
+sem_union.val = 1;
+semctl(semid, 3, SETVAL, sem_union);</code></pre>
+                                    <p>Cette ligne va fixer à 1 la valeur du sémaphore numéro 3 (= 4<sup>ème</sup> sémaphore) dans l'ensemble de sémaphore <span class="em">semid</span>.</p>
+                                </td>
+                                <td>
+                                    <p class="html">int shmctl (int shmid, int cmd, struct shmid_ds *buf);</p>
+                                    <p>Exemple d'utilisation :</p>
+<pre class="taille60"><code class="html">shmctl(shmid, IPC_RMID, NULL);</code></pre>
+                                    <p>Cette ligne va supprimer la zone de mémoire partagée.</p>
+                                </td>
+                                <td>
+                                    <p class="html">int msgctl (int msgid, int cmd, struct msgid_ds *buf);</p>
+                                    <p>Exemple d'utilisation :</p>
+<pre class="taille60"><code class="html">msgctl(msgid, IPC_RMID, NULL);</code></pre>
+                                    <p>Cette ligne va supprimer la file de messages.</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Le premier paramètre passé à ces appels est chaque l'identifiant de la ressource IPC (retourné par l'appel à <span class="html">semget</span>, <span class="html">shmget</span> ou <span class="html">msgget</span>).</p>
+                    <p>Le paramètre <span class="em">cmd</span> correspond à la commande que l'on souhaite réaliser sur la ressource IPC. Les valeurs possibles pour <span class="em">cmd</span> sont :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">IPC_STAT</span> : remplit la structure pointée par <span class="em">buf</span> avec les informations de la ressource IPC;</p>
+                        </li>
+                        <li>
+                            <p><span class="html">IPC_SET</span> : permet de configurer les autorisations d'accès (le GID et l'UID du propriétaire, les permissions et la taille de la file) sur la ressource IPC à partir des informations contenue dans <span class="em">buf</span></p>
+                        </li>
+                        <li>
+                            <p><span class="html">IPC_RMID</span> : permet de supprimer la ressource IPC;</p>
+                        </li>
+                        <li>
+                            <p><span class="html">SETVAL</span> (uniquement pour les sémaphores) : initialisation du sémaphore <span class="em">numsem</span> à une valeur déterminée (passée dans <span class="em">valeur</span></p>
+                        </li>
+                        <li>
+                            <p><span class="html">GETVAL</span> (uniquement pour les sémaphores) : provoque le renvoi par la fonction <span class="html">semctl()</span> de la valeur du sémaphore.</p>
+                        </li>
+                    </ul>
+                    <table class="tableBalises" role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Opérations <span class="em">down</span> et <span class="em">up</span> sur les sémaphores :</th>
+                                <th>Utilisation de la mémoire partagée :</th>
+                                <th>Envoi et réception de messages :</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
             <!-- fin de section -->
             </section>
         </main>
