@@ -64,6 +64,14 @@
                         <li><a href="#exercices">Exercices (1-20)</a></li>
                         <li><a href="#interrogations">Interrogations</a></li>
                         <li><a href="#examens">Examens (2018-?)</a></li>
+                        <li><a href="#unix_seance1">Unix : Séance 1</a></li>
+                        <li><a href="#unix_seance2">Unix : Séance 2</a></li>
+                        <li><a href="#unix_seance3">Unix : Séance 3</a></li>
+                        <li><a href="#unix_seance4">Unix : Séance 4</a></li>
+                        <li><a href="#unix_seance5">Unix : Séance 5</a></li>
+                        <li><a href="#unix_seance6">Unix : Séance 6</a></li>
+                        <li><a href="#unix_seance7">Unix : Séance 7</a></li>
+                        <li><a href="#unix_seance8">Unix : Séance 8</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -8416,12 +8424,702 @@ semctl(semid, 3, SETVAL, sem_union);</code></pre>
                         </thead>
                         <tbody>
                             <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
+                                <td>
+                                    <p class="html">int semop (int semip, struct sembuf *semops, size_t numsemops);</p>
+<pre class="taille60"><code class="html">struct sembuf {
+    // numéro du sémaphore
+    short sem_num;
+    
+    // opérattion à réaliser
+    // (down &#8594; -1 et up &#8594; +1)
+    short sem_op;
+
+    // paramètres spéciaux
+    sort sem_flg;
+}</code></pre>
+                                    <p><span class="em">semid</span> : est l'identifiant de l'ensemble de sémaphores (valeur renvoyée par <span class="html">semget()</span>).</p>
+                                    <p><span class="em">semops</span> : est un pointeur vers un tableau de strictures de type <span class="html">struct sembuf</span>.</p>
+                                    <p><span class="em">numsemops</span> : est le nnombre d'opérations définies dans le tableau pointé par <span class="em">semops</span>.</p>
+                                    <p>Valeurs possibles pour <span class="em">sem_flg</span> :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="html">IPC_NOWAIT</span> : indique que l'opération est non bloquante. Si l'opération ne peut pas être accomplie immédiatement, <span class="em">semop</span> retourne -1 et la variable <span class="html">errno</span> (code de la dernière erreur, situé dans le header <span class="html">errno.h</span>) vaut <span class="html">EAGAIN</span>.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="html">SEM_UNDO</span> : indique que l'opération doit être annulée si le processus ayant réalisé cette opération vient à se terminer.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Exemple d'utilisation :</p>
+<pre class="taille60"><code class="html">struct sembuf sem;
+sem.sem_num = 2;
+sem.sem_op = -1;
+sem.sem_flg = 0;
+semop(semid, &sem, 1);</code></pre>
+                                    <p>Ce code réalise une opération de type <span class="html">down</span> sur le 3<sup>ème</sup> sémaphore du groupe <span class="em">semid</span>.</p>
+                                </td>
+                                <td>
+                                    <p>Pour attacher le processus à la mémoire partagée :</p>
+                                    <p class="html">void * shmat (int shmid, const void *shmaddr, int shmfig);</p>
+                                    <p>Pour détacher le processus de la mémoire partagée :</p>
+                                    <p class="html">shmdt (void *);</p>
+                                    <p><span class="em">shmid</span> est l'identificateur (entier)de la zone mémoire (valeur renvoyée par <span class="html">shmget()</span>).</p>
+                                    <p><span class="em">shmaddr</span> est l'adresse à laquelle la mémoire doit être attachée au processus courant (si cette valeur vaut <span class="html">NULL</span>, le système trouve automatiquement une adresse libre).</p>
+                                    <p><span class="em">shmflg</span> est un drapeau binaire (<span class="html">SHM_R | SHM_W</span>).</p>
+                                    <p>Exemple d'utilisation :</p>
+<pre class="taille60"><code class="html">int *writers;
+writers = (int *) shmat(shmid, NULL, SHM_R | SHM_W); // Rattachement au processus
+...
+shmdt(writers);</code></pre>
+                                </td>
+                                <td>
+                                    <p class="html">int msgsnd (int msgid, struct msgbug *msg, size_t taille, int attributs);</p>
+                                    <p class="html">int msgrcv (int msgid, strict msgbuf *buf, size_t taille, long mtype, int attributs);</p>
+                                    <p>Un message est défini par la structure suivante :</p>
+<pre class="taille60"><code class="html">struct msgbuf {
+    int mtype;
+    char titre[TAILLE_TITRE];
+    char texte[TAILLE_TITRE];
+}</code></pre>
+                                    <p>Les paramètres utilisés par ces fonctions sont les suivants :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">msgid</span> : est l'identifiant d'une file existante (renvoyé par <span class="html">msgget()</span>);</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">msg</span> : est un pointeur vers une structure contenant le type de message et son contenu;</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">taille</span> : est la longueur en octets du message (<span class="em">type non compris</span>);</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">mtype</span> : est le type de message à recevoir :</p>
+                                            <ul>
+                                                <li>
+                                                    <p><span class="em">mtype = 0</span> : indique que l'on veut recevoir le prochain message arrivant dans la file;</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="em">mtype &gt; 0</span> : indique que l'on veut recevoir le prochain message du type <span class="em">mtype</span> arrivant dans la file;</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="em">mtype &lt; 0</span> : réclame le premier message disponible ayant le plus petit type inférieur ou égal à la valeur absolue de <span class="em">mtype</span>.</p>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">attributs</span> : généralement fixe à 0 pour obtenir les options par défaut; peut être est une combinaison binaire de flags suivants :</p>
+                                            <ul>
+                                                <li>
+                                                    <p><span class="html">IPC_NOWAIT</span> rend les fonctions non-bloquantes. Si la file est pleine (<span class="html">msgsnd</span>) ou s'il n'y a pas de message de type désiré dans la file (<span class="html">msgrcv</span>), l'opération retourne -1 et la variable <span class="html">errno</span> vaut respectivement <span class="html">EAGAIN</span> ou <span class="html">ENOMSG</span>.</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="html">MSG_EXCEPT</span> : réclame un message de n'importe quel type sauf mtype.</p>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
+                    <h3>Exercices :</h3>
+                    <ol>
+                        <li>
+                            <h4>Le radar de recul (mémoire partagée) :</h4>
+                            <p>Un <a href="https://fr.wikipedia.org/wiki/Radar_de_recul" target="_blank">radar de recul</a> est un système permettant au conducteur d'estimer la distance séparant ton véhicule d'un obstacle. Nous vous demandons d'écrire :</p>
+                            <ul>
+                                <li>
+                                    <p>un programme "radar" dont le but est de simuler un radar de recul; et</p>
+                                </li>
+                                <li>
+                                    <p>un programme "dashboard" dont le but est de simuler un tableau de bord qui affiche les informations transmises par le radar de recul.</p>
+                                </li>
+                            </ul>
+                            <p>Pratiquement, votre programme radar écrira toutes les 3 secondes, pendant 1 minute, un nombre entier aléatoire dans une mémoire partagée. Votre programme dashboard affichera toutes les 5 secondes, pendant 1 minute, l'entier se trouvant dans la mémoire partaée.</p>
+                            <p>Fichier "radar.c" :</p>
+<pre class="taille60"><code class="html">#include &lt;;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+#include &lt;sys/shm.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/types.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0);
+
+#define KEY 127
+#define TIME 60
+#define SLEEP 3
+
+int main (int argc, char **argv) {
+    int mem, *entier;
+    SYS1((mem = shmget(KEY, sizeof(int), IPC_CREAT | 0660)));
+
+    if ((entier = (int *) shmat(mem, NULL, SHM_R | SHM_W)) == NULL) {
+        perror("ERROR shmat\n");
+        exit(EXIT_FAILURE);
+    }
+
+    srand(time(NULL));
+
+    for (int i = 0; i &lt; TIME / SLEEP; i++) {
+        sleep(SLEEP);
+        *entier = rand();
+        printf("%d\n", *entier);
+    }
+
+    return 0;
+}</code></pre>
+                            <p>Fichier "dashboard.c" :</p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/shm.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/types.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0);
+
+#define KEY 127
+#define TIME 60
+#define SLEEP 5
+
+int main (int argc, char **argv) {
+    int mem, *entier;
+    SYS1((mem = shmget(KEY, sizeof(int), IPC_CREAT | 0660)));
+
+    if ((entier = (int *) shmat(mem, NULL, SHM_R | SHM_W)) == NULL) {
+        perror("ERROR shmat\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i &lt; TIME / SLEEP; i++){
+        sleep(SLEEP);
+        printf("L'entier dans shm est : %d\n", *entier);
+    }
+
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <h4>Mon identité (section critique) :</h4>
+                            <p>Dans un premier temps, nous vous demandons d'écrire un programme "famille1" qui crée 2 processus fils. Chaque fils affiche 3 fois le message "je suis le fils &lt;pid&gt;", chaque affichage étant séparé par 1 seconde d'attente. Les fils pourraient, par exemple, afficher le texte ci-dessous.</p>
+<pre class="taille60"><code>je suis le fils 123
+je suis le fils 124
+je suis le fils 123
+je suis le fils 124
+je suis le fils 123
+je suis le fils 124</code></pre>
+
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/wait.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0);
+
+int main (int argc, char **argv) {
+    pid_t pid1, pid2;
+    SYS1((pid1 == fork()));
+
+    if (pid1 != 0) {
+        SYS1((pid2 = fork()));
+
+        if (pid2 == 0) {
+            for (int i = 0; i &lt; 3; i++) {
+                sleep(1);
+                printf("%s %d\n", "Je suis le fils", getpid());
+            }
+        } else {
+            wait(NULL);
+            wait(NULL);
+        }
+    } else {
+        for (int i = 0; i &lt; 3; i++) {
+            sleep(1);
+            printf("%s %d\n", "Je suis le fils", getpid());
+        }
+    }
+
+    return 0;
+}</code></pre>
+                            <p>Dans un deuxième temps, nous souhaitons empêcher l'affichage simultané des deux fils, en considérant l'accès à "stdout" comme une ressource critique. Pour ce faire, nous vous demandons d'écrire un programme "famille2" qui est une variante du programme "famille1". Lorsqu'un fils démarre son exécution, il réserve l'accès à "stdout" et réalise l'affichage de ses 3 messages. Ensuite, il "libère" l'accès à "stdout". Le deuxième fils peut alors réaliser son affichage. Par exemple, les deux fils pourraient afficher le texte ci-dessous.</p>
+<pre class="taille60"><code>je suis le fils 123
+je suis le fils 123
+je suis le fils 123
+je suis le fils 124
+je suis le fils 124
+je suis le fils 124</code></pre>
+
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.&gt;
+#include &lt;sys/sem.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0);
+
+#define DEFAULT_MODE 0660
+#define LOCK_PATH "famille2.lock"
+
+// sleep si le "compteur" atteint 0.
+void down (int semid) {
+    struct sembuf buf;
+    buf.sem_num = 0; // le numéro du sémaphore sur lequel on applique l'opération.
+    buf.sem_op = -1; // l'opération à réaliser. (retrait de 1 au "compteur").
+    buf.dem_flg = 0; // pas de flag. (sinon IPC_NOWAIT ou SEM_UNDO).
+    SYS1(semop(sem, &buf, 1)); // une seule opération à réaliser dans l'array buf.
+}
+
+// se réveille si le "compteur" passe à 1.
+void up (int semid) {
+    struct sembuf buf;
+    buf.sem_num = 0; // le numéro du sémaphore sur lequel on applique l'opération.
+    buf.sem_op = +1; // l'opération à réaliser. (ajout de 1 au "compteur").
+    buf.dem_flg = 0; // pas de flag. (sinon IPC_NOWAIT ou SEM_UNDO).
+    SYS1(semop(sem, &buf, 1)); // une seule opération à réaliser dans l'array buf.
+}
+
+int main (int argc, char **argv) {
+    pid_t pid1, pid2;
+    int sem;
+    key_t keylock
+    SYS1((keylock  = ftok(LOCK_PATH, 0))); // pourrait être hardcodé vu qu'on a qu'un programme
+    SYS1((sem = semget(keylock, 1, DEFAULT_MODE)));
+    SYS1(semctl(sem, 0, SETVAL, 1));
+    SYS1((pid = fork()));
+
+    if (pid1 != 0) {
+        SYS1((pid2 = fork()));
+
+        if (pid2 == 0) {
+            down(sem);
+            
+            for (int i = 0; i &lt; 3; i++) {
+                sleep(1);
+                print("%s %d\n", "Je suis le fils", getpid());
+            }
+
+            up(sem);
+        } else {
+            wait(NULL);
+            wait(NULL);
+        }
+    } else {
+        down(sem);
+
+        for (int i = 0; i &lt; 3; i++) {
+            sleep(1);
+            printf("%s %d\n", "Je suis le fils", getpid());
+        }
+
+        up(sem);
+    }
+
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <h4>le distributeur de tickets (mémoire partagée et section critique) :</h4>
+                            <p>Lorsqu'une personne habitant Louvain-la-Neuve se rend à la maison communale, elle reçoit un ticket portant un numéro et va s'asseoir dans la salle d'attente. Quelques instants plus tard, le numéro de son ticket s'affiche sur un grand écran. La personne se rend alors au guichet où se trouve un employé communal.</p>
+                            <p>Nous vous demandons d'écritre un programme "<span class="em">distributeur.c</span>" et un programme "<span class="em">ecran.c</span>". Votre programme "<span class="em">distributeur.c</span>" ne fait qu'une chose, il imprime sur "stdout", le numéro du prochain tickets et se termine. Votre programme "<span class="em">ecran.c</span>" ne fait également qu'une chose : simulant le fait qu'une place s'est libérée au guichet, il affiche le prochain numéro sur le grand écran puis se termine. S'il existe un prochain numéro, "<span class="em">ecran.c</span>" l'imprime sur "<span class="html">stdout</span>", sinon il affiche le message '<span class="em">Il n'Y a plus personne !</span>".</p>
+                            <p>Notez que les 2 programmes modifient la mémoire partagée de manière adéquate. Le programme "<span class="em">distributeur.c</span>" s'exécution entièrement chaque fois qu'un nouvel arrivant déclenche une deùande de tickets. De même, votre programme "<span class="em">ecran.c</span>" s'exécute entièrement chaque fois qu'une place se libère au guichet.</p>
+                            <p>Notez plusieurs programmes "<span class="em">distributeur.c</span>" et plusieurs programmes "<span class="em">ecran.c</span>" peuvent s'exécuter simultanément. Vous devez donc protéger vos accès à la mémoire partagée à l'aide de sémaphores.</p>
+                            <p>Dans le fichier "<span class="em">distributeur.c</span>" :</p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+#include &lt;sys/sem.h&gt;
+#include &lt;sys/shm.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0);
+
+#define LOCK_FILE "distributeur.c"
+#define DEFAULT_MODE 0660
+
+void up (int semid) {
+    struct sembuf sem;
+    sem.sem_num = 0;
+    sem.sem_op = +1;
+    sem.sem_flg = 0;
+}
+
+void down (int semid) {
+    struct sembuf sem;
+    sem.sem_num = 0;
+    sem.sem_op = -1;
+    sem.sem_flg = 0;
+}
+
+int main (int agrc, char **argv) {
+    key_t key_lock;
+    int shmid, *writers, semid, next_ticket;
+    srand(time(NULL));
+    SYS1((key_lock = ftok(LOCK_FILE, 0)));
+    SYS1((shmid = shmget(key_lock, 2 * sizeof(int), IPC_CREAT | DEFAULT_MODE)));
+    SYS1((writers = (int *) shmat(shmid, NULL, 0)));
+    SYS1(semctl(semid, 0, SETVAL, 1));
+
+    // writers[0] == prochain ticket
+    // writers[1] == prochain numéro
+
+    next_ticket = *writers;
+    printf("%s%d\n", "Distributeur &#8594; next numéro du ticket = ", next_ticket);
+    down(semid);
+    *writers = next_ticket + 1;
+    up(semid);
+
+    return 0;
+}</code></pre>
+                            <p>Dans le fichier "<span class="em">ecran.c</span>" :</p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/sem.h&gt;
+#include &lt;sys/shm.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0);
+
+#define LOCK_FILE "distributeur.c"
+#define DEFAULT_MODE 0660
+
+void up (int semid) {
+    struct sembuf sem;
+    sem.sem_num = 0;
+    sem.sem_op = +1;
+    sem.sem_flg = 0;
+}
+
+void down (int semid) {
+    struct sembuf sem;
+    sem.sem_num = 0;
+    sem.sem_op = -1;
+    sem.sem_flg = 0;
+}
+
+int main (int agrc, char **argv) {
+    key_t key_lock;
+    int shmid, *writers, semid, next_num, next_ticket;
+    srand(time(NULL));
+    SYS1((key_lock = ftok(LOCK_FILE, 0)));
+    SYS1((shmid = shmget(key_lock, 2 * sizeof(int), IPC_CREAT | DEFAULT_MODE)));
+    SYS1((writers = (int *) shmat(shmid, NULL, 0)));
+    SYS1(semctl(semid, 0, SETVAL, 1));
+
+    // writers[0] == prochain ticket
+    // writers[1] == prochain numéro
+    down(semid);
+    next_num = *(writers + 1);
+    next_ticket = *writers;
+
+    if (next_num &lt; next_ticket) {
+        printf("%s%d\n", "Écran &#8594; next numero = ", next_num);
+    } else {
+        printf("%s\n", "Écran &#8594; il n'y a plus personne !");
+    }
+
+    (*(writer + 1))++;
+    up(semid);
+    
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <h4>Synchronisation de processus :</h4>
+                            <p>Nous vous demandons d'écrire :</p>
+                            <ul>
+                                <li>
+                                    <p>Un prorgamme "<span class="em">client.c</span>" qui prend en paramères une chaîne de 10 caractères minuscules. Il écrit ces 10 caractères dans une mémoire partagée.</p>
+                                </li>
+                                <li>
+                                    <p>Un programme "<span class="em">serveur.c</span>" qui traduit le texte de la mémoire partagée en majuscules. Lorsque cette traduction est terminée, le programme "<span class="em">client.c</span>" affiche le texte modifié sur "<span class="html">stdin</span>".</p>
+                                </li>
+                            </ul>
+                            <p>Vos deux programmes doivent se synchroniser à l'aide de sémaphores.</p>
+                            <p>Dans le fichier "<span class="em">client.c</span>" :</p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/sem.h&gt;
+#include &lt;sys/shm.h&gt;
+#include &lt;string.h&gt;
+#include &lt;errno.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0);
+
+#define LOCK_FILE "client_server_lock"
+#fefine NB_SEM 3
+#define DEFAULT_MODE 0660
+#define SHM_SIZE sizeof(char) * 10
+
+#define MUTEX 0
+#define CLIENT 1
+#define SERVER 2
+
+void up (int semid, int num) {
+    struct sembuf sem;
+    sem.sem_num = num;
+    sem.set_op = +1;
+    sem.sem_flg = 0;
+    SYS1(semop(semid, &sem, 1));
+}
+
+void down (int semid, int num) {
+    struct sembuf sem;
+    sem.sem_num = num;
+    sem.set_op = -1;
+    sem.sem_flg = 0;
+    SYS1(semop(semid, &sem, 1));
+}
+
+int main (int argc, char **argv) {
+    key_t key_lock;
+    int semid, shmid;
+    char *data;
+    SYS1((key_lock = ftokk(LOCK_FILE, 0)));
+    SYS1((shmid = shmget(key_lock, SHM_SIZE, IPC_CREAT | DEFAULT_MODE)));
+    SYS1((data = (char *) shmat(shmid, NULL, 0)));
+
+    down(semid, SERVER);
+    down(semid, MUTEX);
+    strncpy(data, "salutsalut", SHM_SIZE);
+    up(semid, MUTEX);
+    up(semid, CLIENT);
+
+    down(semid, SERVER);
+    down(semid, MUTEX);
+    printf("%s\n", data);
+    up(semid, MUTEX);
+    up(semid, CLIENT);
+
+    return 0;
+}</code></pre>
+                            <p>Dans le fichier"<span class="em">serveur.c</span>" :</p>
+<pre class="taille60"><code class="html">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/sem.h&gt;
+#include &lt;sys/shm.h&gt;
+#include &lt;ctype.h&gt;
+
+#define SYS1(call) (call == -1 ? perror("SYSCALL ERROR"), exit(5) : 0);
+#define SYS2(call, msg) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(5) : 0);
+#define SYS3(call, msg, code) (call == -1 ? perror("SYSCALL ERROR : " msg "\n"), exit(code) : 0);
+
+#define LOCK_FILE "client_server.lock"
+#define NB_SEM 3
+#define DEFAULT_MODE 0660
+#define SHM_SIZE sizeof(char) * 10
+
+#define MUTEX 0
+#define CLIENT 1
+#define SERVER 2
+
+void up (int semid, int num) {
+    struct sembuf sem;
+    sem.sem_num = num;
+    sem.sem_op = +1;
+    sem.sem_flg = 0;
+    SYS1(semop(semid, &sem, 1));
+}
+
+void down (int semid, int num) {
+    struct sembuf sem;
+    sem.sem_num = num;
+    sem.sem_op = -1;
+    sem.sem_flg = 0;
+    SYS1(semop(semid, &sem, 1));
+}
+
+int main (int argc, char **argv) {
+    key_t key_lock;
+    int semid, shmid;
+    char *data;
+    SYS1((key_lock = ftok(LOCK_FILE, 0)));
+    SYS1((shmid = shmget(key¨_lock, SHM_SIZE, IPC_CREAT | DEFAULT_MODE)));
+    SYS1((semid = semget(key_lock, NB_SEM, IPC_CREAT | DEFAULT_MODE)));
+    SYS1((data = (char *) shmat(shmid, NULL, 0)));
+
+    // only one client, mutex not needed;
+    SYS1(semctl(semid, MUTEX, SETVAL, 1));
+    SYS1(semctl(semid, CLIENT, SETVAL, 0));
+    SYS1(semctl(semid, SERVER, SETVAL, 1));
+
+    down(semid, CLIENT);
+    down(semid, MUTEX);
+    char *s = data;
+    
+    while (*s) {
+        *s = toupper((unsigned char) *s);
+        S++;
+    }
+    
+    up(semid, MUTEX);
+    up(semid, SERVER);
+
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <h4>Modularisation :</h4>
+                            <p>Nous vous demandons d'écrire un module relatif aux sémaphores et un module relatif à la mémoire partagée. C'est deux modules qui définissent un ensemble de structures et de fonctions que vous pourrez réutiliser dans votre projet de programmation réseau.</p>
+                            <p>Pratiquement, nous vous demandons d'écrire les fichiers suivants :</p>
+                            <ul>
+                                <li>
+                                    <p>un fichier entête <span class="em">sem.h</span> et un fichier source <span class="em">sem.c</span> qui définissent et contiennent des structures et des fonctions génériques liées aux sémaphores.</p>
+                                </li>
+                                <li>
+                                    <p>un fichier entête <span class="em">shm.h</span> et un fichier source <span class="em">shm.c</span> qui définissent et contiennent des structures et des fonctions génériques liées à la mémoire partagée.</p>
+                                </li>
+                            </ul>
+                            <p>Une fois ces deux modules écrits, mettez à jour la solution d'un des exercices précédents et écrivez un fichier <span class="html">makefile</span> pour générer les exécutables.</p>
+                            <p>Dans le fichier "<span class="em">sem.h</span>" :</p>
+<pre class="taille60"><code class="html">#ifndef_SEM_H_
+#define _SEM_H_
+
+#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/sem.h&gt;
+
+#define DEFAULT_MODE 0660
+
+int sem_init (key_t key, int snum, int *vals);
+int up (int semid, int num);
+int down (int semid, int num);
+int sem_close(int semid);
+
+#endif</code></pre>
+                            <p>Dans le fichier "<span class="em">sem.c</span>" :</p>
+<pre class="taille60"><code class="html">#include "sem.h"
+
+int sem_init (key_t key, int snum, int *vals) {
+    int semid;
+
+    if ((semid = semget(key, snum, IPC_CREAT | DEFAULT_MODE)) &lt; 0) {
+        return -1;
+    }
+
+    for (int i = 0; i &lt; snum; i++) {
+        if ((semctl(semid, i, SETVAL, vals[i])) &lt; 0) {
+            return -1;
+        }
+    }
+
+    return semid;
+}
+
+int up (int semid, int num) {
+    struct sembuf sem;
+    sem.sem_num = num;
+    sem.sem_op = +1;
+    sem.sem_flg = 0;
+
+    if (semop(semid, &sem, 1) &lt; 0) {
+        return -1;
+    }
+
+    return 1;
+}
+
+int down (int semid, int num) {
+    struct sembuf sem;
+    sem.sem_num = num;
+    sem.sem_op = -1;
+    sem.sem_flg = 0;
+
+    if (semop(semid, &sem, 1) &lt; 0) {
+        return -1;
+    }
+
+    return 1;
+}
+
+int sem_delete (int semid) {
+    return 0;
+}</code></pre>
+                            <p>Dans le fichier "<span class="em">shm.c</span>" :</p>
+<pre class="taille60"><code class="html">#ifndef _SHM_H_
+#define _SHM_H_
+
+#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/shm.h&gt;
+
+#define DEFAULT_MODE 0660
+
+int shm_init (key_t, int size);
+void *shm_get (int shmid);
+int shm_close (int shmid);
+int shm_destroy (int shmid);
+
+#endif</code></pre>
+                            <p>Dans le fichier "<span class="em">shm.c</span>" :</p>
+<pre class="taille60"><code class="html">#include "shm.h"
+
+int shm_init (key_t key, int size) {
+    int shmid;
+
+    if ((shmid = shmget(key, size, IPC_CREAT | DEFAULT_MODE)) &lt; 0) {
+        return -1;
+    }
+    
+    return shmid;
+}
+
+void *shm_get (int shmid) {
+    void *data;
+
+    if ((data = shmat(shmid, NULL, 0)) &lt; 0) {
+        return -1;
+    }
+
+    return data;
+}
+
+int shm_close (int shmid) {
+    if (shmdt(shmid) &lt; 0) {
+        return 0;
+    }
+
+    return shmid;
+}
+
+int shm_destroy (int shmid) {
+    if (shmctl(shmid, IPC_RMID, NULL) &lt; 0) {
+        return -1;
+    }
+
+    return shmid;
+}</code></pre>
+                            <p>Dans le fichier "<span class="em">makefile</span>" :</p>
+<pre class="taille60"><code class="html">CFLAGS = -std=c11 -Werror=vla -g
+
+sem.o : sem.c sem.h
+    cc $(CFLAGS) -c sem.c
+shm.o : shm.c shm.h
+    cc $(CFLAGS) -c shm.c
+clean :
+    rm - rf *.o</code></pre>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>

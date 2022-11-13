@@ -46,6 +46,7 @@
                 <nav role="navigation">
                     <ol>
                         <li><a href="../supplements.html">Retour au sommaire</a></li>
+                        <li><a href="#rsa">Cryptage du RSA</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1099,6 +1100,2385 @@ public class NomDeLaClasse extends ClasseParent implements Interface1, Interface
     }
     
 }<code></code></pre>
+                </article>
+                <article>
+                    <h2 id="rsa">Cryptage du RSA :</h2>
+                    <p>Dans le fichier "MathEXception.java" :</p>
+<pre class="taille60"><code class="html">package crypto;
+
+public class MathException extends RuntimeException {
+
+    /**
+    * 
+    */
+    private static final long serialVersionUID = 1L;
+
+    public MathException() {
+        super();
+    }
+
+    public MathException(String message) {
+        super(message);
+    }
+
+}</code></pre>
+                    <p>Dans le fichier "Zn.java" :</p>
+<pre class="taille60"><code class="html">package crypto;
+
+/*
+* Classe représentant Z_n : l'ensemble des entiers modulo n
+*/
+public class Zn {
+
+    private long n;
+
+    public Zn(long n) {
+        if (n <= 0) {
+            throw new IllegalArgumentException("n's less that 0 !");
+        }
+        this.n = n;
+    }
+
+    // renvoie le cardinal de Z_n
+    public long getN() {
+        return n;
+    }
+
+    // renvoie true si l'entier x appartient à Z_n, false sinon
+    public boolean contient(long x) {
+        return x < n && x >= 0;
+    }
+
+    // calcule a + b dans Z_n
+    // renvoie une IllegalArgumentException si a ou b n'appartient pas à Z_n
+    public long plus(long a, long b) {
+        if (!contient(a) || !contient(b)) {
+            throw new IllegalArgumentException("nor a or b are in Zn");
+        }
+        return (a + b) % n;
+    }
+
+    // calcule a * b dans Z_n
+    // renvoie une IllegalArgumentException si a ou b n'appartient pas à Z_n
+    public long fois(long a, long b) {
+        if (!contient(a) || !contient(b)) {
+            throw new IllegalArgumentException("nor a or b are in Zn");
+        }
+        return (a * b) % n;
+    }
+
+    // calcule l'inverse de x dans Z_n en utilisant l'algorithme d'Euclide étendu
+    // lance une IllegalArgumentException si x n'est pasdans Z_n
+    // lance une MathException si x n'admet pas d'inverse dans Z_n
+    public long inverse(long x) { // TODO
+        if (!contient(x)) {
+            throw new IllegalArgumentException("x's not in Zn");
+        }
+        if (x == 0) {
+            throw new MathException("x cannot be 0 because 0 is not invertible");
+        }
+        long vi0 = 0;
+        long vi1 = 1;
+        long lastVi0 = 0;
+        long lastVi1 = 1;
+        long ri0 = n;
+        long ri1 = x;
+        long qi = ri0 / ri1; // initiate Qi
+        long ri = ri0 % ri1; // initiate Ri
+        while (n > 1) {
+            // viGen2 = n
+            // n = ri;
+            
+            // z swap value
+            long temp = vi0;
+            vi0 = lastVi1 - qi *vi0; // put value lastVi - 2 + (-Qi * ViGen-2) in ViGen-2
+            lastVi1 = temp;
+            
+            // z swap value
+            temp = vi1;
+            vi1 = lastVi0 - qi *vi1; // do same for ViGen-1
+            lastVi0 = temp;
+        }
+        if (ri == 1) {
+            if (vi0 < 0) {
+                return (n - Math.negateExact(vi0)) % n;
+            }
+            return vi0;
+        } else {
+            throw new MathException("x is not invertible");
+        }
+    }
+    
+    // calcule x^a dans Z_n en utilisant l'algorithme récursif d'exponentiation rapide modulaire
+    // lance une IllegalArgumentExcepyion si x n'est pas dans Z_n ou si l'exposant est strictement négatif
+    // lance une MathException si x  = 0 et a = 0 (0^0 est une indetermination)
+    public long puissance (long x, long a) {
+        if (a == 0 && x == 0) {
+            throw new MathException("indetermined case0^0");
+        }
+        if (!contient(x) || a < 0) {
+            throw new IllegalArgumentException("either x is not in Zn or a is negative !");
+        }
+        if (a % 2 != 0) { // if the exponen's odd
+            long p = puissance(x, (a - 1) / 2);
+            return x * p * p;
+        } else {
+            long p = puissance(x, a / 2);
+            return p * p;
+        }
+    }
+}</code></pre>
+                    <p>Dans le fichier "TestZn.java" :</p>
+<pre class="taille60"><code class="html">package crypto;
+
+import java.lang.reflect.Field;
+import java.util.Scanner;
+
+public class TestZn {
+
+    private static Class<Zn> classe = Zn.class;
+    private static Field cardinal;
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final String[] NOMS_METHODES = { "du constructeur Zn(int n)", "de la méthode contient",
+            "de la méthode plus", "de la méthode fois", "de la méthode inverse", "de la méthode puissance" };
+
+    public static void main(String[] args) throws IllegalAccessException {
+        Field[] champs = classe.getDeclaredFields();
+        for (Field f : champs) {
+            if (f.getType() == long.class) {
+                if ("n".equals(f.getName())) {
+                    cardinal = f;
+                    cardinal.setAccessible(true);
+                }
+            }
+        }
+
+        System.out.println("*********************************");
+        System.out.println("Programme Test pour la classe Zn ");
+        System.out.println("*********************************");
+
+        int choix = 0;
+        while (true) {
+            for (int i = 0; i < NOMS_METHODES.length; i++) {
+                System.out.println((i + 1) + " -> Test " + NOMS_METHODES[i]);
+            }
+            System.out.println("autre -> Quitter");
+
+            choix = scanner.nextInt();
+            boolean testOK;
+            switch (choix) {
+            case 1:
+                testOK = testConstructeur();
+                break;
+            case 2:
+                testOK = testContient();
+                break;
+            case 3:
+                testOK = testPlus();
+                break;
+            case 4:
+                testOK = testFois();
+                break;
+            case 5:
+                testOK = testInverse();
+                break;
+            case 6:
+                testOK = testPuissance();
+                break;
+            default:
+                return;
+            }
+            if (testOK) {
+                System.out.println("Le test " + NOMS_METHODES[choix - 1] + " a réussi.");
+            } else {
+                System.out.println("Le test " + NOMS_METHODES[choix - 1] + " a échoué.");
+            }
+            System.out.println();
+        }
+    }
+
+    private static boolean testConstructeur() throws IllegalAccessException {
+
+        Zn zn;
+
+        System.out.println("Test 1");
+        System.out.println();
+
+        try {
+            zn = new Zn(0);
+            System.out.println("Il fallait une exception car n = 0");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancer la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        try {
+            zn = new Zn(-1);
+            System.out.println("Il fallait une exception car n est négatif");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancer la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 3");
+        System.out.println();
+
+        try {
+            long exemple = 5;
+            zn = new Zn(exemple);
+            long n = cardinal.getLong(zn);
+            if (n != exemple) {
+                System.out.println("Le cardinal deZn n'est pas bon : attendu : " + exemple + " reçu : " + n);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception");
+        }
+
+        return true;
+    }
+
+    private static boolean testContient() throws IllegalAccessException {
+
+        if (!testConstructeur()) {
+            System.out.println("Il faut d'abord écrire le constructeur de manière correcte.");
+            return false;
+        }
+
+        System.out.println("Constructeur OK");
+        System.out.println("Début des tests de la méthode contient");
+        System.out.println();
+        System.out.println("Test 1");
+        System.out.println();
+
+        long exemple = 32;
+        Zn zn = new Zn(exemple);
+        if (zn.contient(exemple)) {
+            System.out.println(exemple + " n'appartient pas à Z_" + cardinal.getLong(zn));
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        exemple = 33;
+        if (zn.contient(exemple)) {
+            System.out.println(exemple + " n'appartient pas à Z_" + cardinal.getLong(zn));
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 3");
+        System.out.println();
+
+        exemple = 355;
+        if (zn.contient(exemple)) {
+            System.out.println(exemple + " n'appartient pas à Z_" + cardinal.getLong(zn));
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 4");
+        System.out.println();
+
+        exemple = -1;
+        if (zn.contient(exemple)) {
+            System.out.println(exemple + " n'appartient pas à Z_" + cardinal.getLong(zn));
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 5");
+        System.out.println();
+
+        exemple = -32;
+        if (zn.contient(exemple)) {
+            System.out.println(exemple + " n'appartient pas à Z_" + cardinal.getLong(zn));
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 6");
+        System.out.println();
+
+        exemple = 0;
+        if (!zn.contient(exemple)) {
+            System.out.println(exemple + " appartient pas à Z_" + cardinal.getLong(zn));
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 7");
+        System.out.println();
+
+        exemple = 1;
+        if (!zn.contient(exemple)) {
+            System.out.println(exemple + " appartient pas à Z_" + cardinal.getLong(zn));
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 8");
+        System.out.println();
+
+        exemple = 31;
+        if (!zn.contient(exemple)) {
+            System.out.println(exemple + " appartient pas à Z_" + cardinal.getLong(zn));
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean testPlus() throws IllegalAccessException {
+        if (!testConstructeur()) {
+            System.out.println("Il faut d'abord écrire le constructeur de manière correcte.");
+            return false;
+        }
+
+        System.out.println("Constructeur OK");
+        System.out.println("Début des tests de la méthode plus");
+        System.out.println();
+        System.out.println("Test 1");
+        System.out.println();
+
+        Zn zn = new Zn(8);
+        long somme;
+
+        try {
+            somme = zn.plus(-1, 2);
+            System.out.println("Il fallait une exception car a = -1 < 0");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        try {
+            somme = zn.plus(8, 2);
+            System.out.println("Il fallait une exception car a = 8 >= n = 8");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 3");
+        System.out.println();
+
+        try {
+            somme = zn.plus(2, -1);
+            System.out.println("Il fallait une exception car b = -1 < 0");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 4");
+        System.out.println();
+
+        try {
+            somme = zn.plus(2, 8);
+            System.out.println("Il fallait une exception car b = 8 >= n = 8");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 5");
+        System.out.println();
+
+        try {
+            somme = zn.plus(-1, 2);
+            System.out.println("Il fallait une exception car a = -1 < 0");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 6");
+        System.out.println();
+
+        try {
+            somme = zn.plus(0, 3);
+            if (somme != 3) {
+                System.out.println("(0 + 3) mod 8 = 3 | reçu : (0 + 3) mod 8 = " + somme);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 7");
+        System.out.println();
+
+        try {
+            somme = zn.plus(5, 0);
+            if (somme != 5) {
+                System.out.println("(5 + 0) mod 8 = 5 | reçu : (5 + 0) mod 8 = " + somme);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 8");
+        System.out.println();
+
+        try {
+            somme = zn.plus(5, 2);
+            if (somme != 7) {
+                System.out.println("(5 + 2) mod 8 = 7 | reçu : (5 + 2) mod 8 = " + somme);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 9");
+        System.out.println();
+
+        try {
+            somme = zn.plus(5, 7);
+            if (somme != 4) {
+                System.out.println("(5 + 7) mod 8 = 4 | reçu : (5 + 7) mod 8 = " + somme);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean testFois() throws IllegalAccessException {
+        if (!testConstructeur()) {
+            System.out.println("Il faut d'abord écrire le constructeur de manière correcte.");
+            return false;
+        }
+
+        System.out.println("Constructeur OK");
+        System.out.println("Début des tests de la méthode fois");
+        System.out.println();
+        System.out.println("Test 1");
+        System.out.println();
+
+        Zn zn = new Zn(6);
+        long produit;
+
+        try {
+            produit = zn.fois(-1, 2);
+            System.out.println("Il fallait une exception car a = -1 < 0");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        try {
+            produit = zn.fois(6, 2);
+            System.out.println("Il fallait une exception car a = 6 >= n = 6");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 3");
+        System.out.println();
+
+        try {
+            produit = zn.fois(2, -1);
+            System.out.println("Il fallait une exception car b = -1 < 0");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 4");
+        System.out.println();
+
+        try {
+            produit = zn.fois(2, 6);
+            System.out.println("Il fallait une exception car b = 6 >= n = 6");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 5");
+        System.out.println();
+
+        try {
+            produit = zn.fois(-1, 2);
+            System.out.println("Il fallait une exception car a = -1 < 0");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 6");
+        System.out.println();
+
+        try {
+            produit = zn.fois(0, 3);
+            if (produit != 0) {
+                System.out.println("(0 * 3) mod 6 = 0 | reçu : (0 * 3) mod 6 = " + produit);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 7");
+        System.out.println();
+
+        try {
+            produit = zn.fois(5, 0);
+            if (produit != 0) {
+                System.out.println("(5 * 0) mod 6 = 0 | reçu : (5 * 0) mod 6 = " + produit);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 8");
+        System.out.println();
+
+        try {
+            produit = zn.fois(1, 2);
+            if (produit != 2) {
+                System.out.println("(1 * 2) mod 6 = 2 | reçu : (1 * 2) mod 6 = " + produit);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 9");
+        System.out.println();
+
+        try {
+            produit = zn.fois(5, 3);
+            if (produit != 3) {
+                System.out.println("(5 * 3) mod 6 = 3 | reçu : (5 * 3) mod 6 = " + produit);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 10");
+        System.out.println();
+
+        try {
+            produit = zn.fois(5, 5);
+            if (produit != 1) {
+                System.out.println("(5 * 5) mod 6 = 1 | reçu : (5 * 5) mod 6 = " + produit);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean testInverse() throws IllegalAccessException {
+        if (!testConstructeur()) {
+            System.out.println("Il faut d'abord écrire le constructeur de manière correcte.");
+            return false;
+        }
+
+        System.out.println("Constructeur OK");
+        System.out.println("Début des tests de la méthode inverse");
+        System.out.println();
+        System.out.println("Test 1");
+        System.out.println();
+
+        Zn zn = new Zn(21);
+        long inverse;
+        long exemple;
+
+        try {
+            exemple = -1;
+            inverse = zn.inverse(exemple);
+            System.out.println("Il fallait lancer une IllegalArgumentException car " + exemple
+                    + " n'appartient pas à Z_" + cardinal.getLong(zn));
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        try {
+            exemple = 21;
+            inverse = zn.inverse(exemple);
+            System.out.println("Il fallait lancer une IllegalArgumentException car " + exemple
+                    + " n'appartient pas à Z_" + cardinal.getLong(zn));
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 3");
+        System.out.println();
+
+        try {
+            exemple = 0;
+            inverse = zn.inverse(exemple);
+            System.out.println("Il fallait lancer une MathException car " + exemple + " n'a pas d'inverse dans Z_"
+                    + cardinal.getLong(zn));
+            return false;
+        } catch (MathException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 4");
+        System.out.println();
+
+        try {
+            exemple = 14;
+            inverse = zn.inverse(exemple);
+            System.out.println("Il fallait lancer une MathException car " + exemple + " n'a pas d'inverse dans Z_"
+                    + cardinal.getLong(zn));
+            return false;
+        } catch (MathException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 5");
+        System.out.println();
+
+        exemple = 1;
+        try {
+            inverse = zn.inverse(exemple);
+            if (inverse != 1) {
+                System.out.println(
+                        "L'inverse de " + exemple + " dans Z_" + cardinal.getLong(zn) + " est 1. Reçu : " + inverse);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception car " + exemple + " a un inverse dans Z_"
+                    + cardinal.getLong(zn));
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 6");
+        System.out.println();
+
+        exemple = 2;
+        try {
+            inverse = zn.inverse(exemple);
+            if (inverse != 11) {
+                System.out.println(
+                        "L'inverse de " + exemple + " dans Z_" + cardinal.getLong(zn) + " est 11. Reçu : " + inverse);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception car " + exemple + " a un inverse dans Z_"
+                    + cardinal.getLong(zn));
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 7");
+        System.out.println();
+
+        exemple = 7;
+        zn = new Zn(279180);
+        try {
+            inverse = zn.inverse(exemple);
+            if (inverse != 39883) {
+                System.out.println("L'inverse de " + exemple + " dans Z_" + cardinal.getLong(zn) + " est 39883. Reçu : "
+                        + inverse);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception car " + exemple + " a un inverse dans Z_"
+                    + cardinal.getLong(zn));
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 8");
+        System.out.println();
+
+        zn = new Zn(26);
+        try {
+            inverse = zn.inverse(exemple);
+            if (inverse != 15) {
+                System.out.println(
+                        "L'inverse de " + exemple + " dans Z_" + cardinal.getLong(zn) + " est 15. Reçu : " + inverse);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception car " + exemple + " a un inverse dans Z_"
+                    + cardinal.getLong(zn));
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean testPuissance() throws IllegalAccessException {
+        if (!testConstructeur()) {
+            System.out.println("Il faut d'abord écrire le constructeur de manière correcte.");
+            return false;
+        }
+
+        System.out.println("Constructeur OK");
+        System.out.println("Début des tests de la méthode puissance");
+        System.out.println();
+        System.out.println("Test 1");
+        System.out.println();
+
+        Zn zn = new Zn(21);
+        long puissance;
+
+        try {
+            puissance = zn.puissance(-1, -1);
+            System.out.println("Il fallait lancer une IllegalArgumentException car -1 n'appartient pas à Z_"
+                    + cardinal.getLong(zn));
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        try {
+            puissance = zn.puissance(21, 1);
+            System.out.println("Il fallait lancer une IllegalArgumentException car 21 n'appartient pas à Z_"
+                    + cardinal.getLong(zn));
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 3");
+        System.out.println();
+
+        try {
+            puissance = zn.puissance(2, -1);
+            System.out.println("Il fallait lancer une IllegalArgumentException car l'exposant est négatif");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 4");
+        System.out.println();
+
+        try {
+            puissance = zn.puissance(0, 0);
+            System.out.println("Il fallait lancer une MathException car 0^0 est indéterminé.");
+            return false;
+        } catch (MathException e) {
+
+        } catch (Exception e) {
+            System.out.println("Vous n'avez pas lancé la bonne exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 5");
+        System.out.println();
+
+        try {
+            puissance = zn.puissance(0, 2);
+            if (puissance != 0) {
+                System.out.println("0^2 mod 21 = 0 | reçu : 0^2 mod 21 = " + puissance);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception 0^2 mod 21 = 0.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 6");
+        System.out.println();
+
+        try {
+            puissance = zn.puissance(2, 0);
+            if (puissance != 1) {
+                System.out.println("2^0 mod 21 = 1 | reçu : 2^0 mod 21 = " + puissance);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception 2^0 mod 21 = 1.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 7");
+        System.out.println();
+
+        try {
+            puissance = zn.puissance(2, 5);
+            if (puissance != 11) {
+                System.out.println("2^5 mod 21 = 11 | reçu : 2^5 mod 21 = " + puissance);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception 2^5 mod 21 = 11.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 8");
+        System.out.println();
+
+        zn = new Zn(280453);
+        try {
+            puissance = zn.puissance(60521, 39883);
+            if (puissance != 38597) {
+                System.out.println("60521^39883 mod 280453 = 38597 | reçu : 60571^39883 mod 280453 = " + puissance);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception 60521^39883 mod 280453 = 38597.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 9");
+        System.out.println();
+
+        try {
+            long p = 69073;
+            long q = 69389;
+            long puissanceCorrecte = 4133696652l;
+            zn = new Zn(p * q);
+            puissance = zn.puissance(2011407, 5);
+            if (puissance != puissanceCorrecte) {
+                System.out.println(
+                        "2011407^5 mod 4792906397 = 4133696652  | reçu : 2011407^5 mod 4792906397 = " + puissance);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception 2011407^5 mod 4792906397 = 4133696652.");
+            return false;
+        }
+
+        return true;
+    }
+
+}</code></pre>
+                    <p>Dans le fichier "RSAClefPrivee.java" :</p>
+<pre class="taille60"><code class="html">package crypto;
+
+/*
+* Classe représentant une clef privée de codage RSA
+*/
+public class RSAClefPrivee {
+
+    private long d;
+    private Zn zn;
+
+    // crée une nouvelle clef privée (d, p, q)
+    public RSAClefPrivee(long d, long p, long q) {
+        zn = new Zn(p * q);
+        this.d = d;
+    }
+
+    // renvoie une String représentant le message M décodé par this
+    // lance une IllegalArgumentException si M n'est pas dans zn
+    public String decoder(long M) {
+        if (!zn.contient(M)) {
+            throw new IllegalArgumentException("M n'est pas dans z_n");
+        }
+        return convertir(zn.puissance(M, d));
+    }
+
+    // converti en texte l'entier m
+    public static String convertir(long m) {
+        long x = m;
+        String texte = "";
+        while (x != 0) {
+            char lettre = (char) (x % 100 + 64);
+            texte = lettre + texte;
+            x /= 100;
+        }
+        return texte;
+    }
+
+}</code></pre>
+                    <p>Dans le fichier "RSAClefPublique.java" :</p>
+<pre class="taille60"><code class="html">package crypto;
+
+/*
+* Classe représentant une clef publique de codage RSA
+*/
+public class RSAClefPublique {
+
+    private long e;
+    private Zn zn;
+
+    // crée une nouvelle clef publique (e,n)
+    public RSAClefPublique(long e, long n) {
+        this.e = e;
+        zn = new Zn(n);
+    }
+
+    // renvoie un entier représentant message codé par this.
+    // lance une IllegalArgumentException si message est null ou vide,
+    // si l'entier représentant message n'est pas dans zn
+    public long coder(String message) {
+        // TODO
+        if (message == null || message.isEmpty()) {
+            throw new IllegalArgumentException("Le message est null ou vide !");
+        }
+        if (!zn.contient(e)) {
+            throw new IllegalArgumentException("L'entier 'e' représentant le message n'est pas dans z_n");
+        }
+        long m = convertir(message);
+        return zn.puissance(m, e);
+    }
+
+    // converti le String texte en un nombre entier
+    public static long convertir(String texte) {
+        long m = 0;
+        for (char c : texte.toCharArray()) {
+            m = 100 * m + (int) c - 64;
+        }
+        return m;
+    }
+
+}</code></pre>
+                    <p>Pour le fichier "TestRSAClefs.java" :</p>
+<pre class="taille60"><code class="html">package crypto;
+
+import java.util.Scanner;
+
+public class TestRSAClefs {
+
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final String[] NOMS_METHODES = { "de la méthode coder de la classe RSAClefPublique",
+            "de la méthode decoder de la classe RSAClefPrivee" };
+
+    public static void main(String[] args) throws IllegalAccessException {
+
+        System.out.println("*****************************************************************");
+        System.out.println("Programme Test pour les classes RSAClefPublique et RSAClefPrivee ");
+        System.out.println("*****************************************************************");
+
+        int choix = 0;
+        while (true) {
+            for (int i = 0; i < NOMS_METHODES.length; i++) {
+                System.out.println((i + 1) + " -> Test " + NOMS_METHODES[i]);
+            }
+            System.out.println("autre -> Quitter");
+
+            choix = scanner.nextInt();
+            boolean testOK;
+            switch (choix) {
+            case 1:
+                testOK = testCoder();
+                break;
+            case 2:
+                testOK = testDecoder();
+                break;
+            default:
+                return;
+            }
+            if (testOK) {
+                System.out.println("Le test " + NOMS_METHODES[choix - 1] + " a réussi.");
+            } else {
+                System.out.println("Le test " + NOMS_METHODES[choix - 1] + " a échoué.");
+            }
+            System.out.println();
+        }
+    }
+
+    private static boolean testCoder() throws IllegalAccessException {
+
+        long M;
+
+        RSAClefPublique cp = new RSAClefPublique(27, 598153);
+
+        System.out.println("Test 1");
+        System.out.println();
+
+        try {
+            String texte = "null";
+            M = cp.coder(texte);
+            System.out.println("Il fallait une IllegalArguementException car le texte est null !");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e2) {
+            System.out.println("Vous n'avez pas lancé la bonne exception.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        try {
+            String texte = "";
+            M = cp.coder(texte);
+            System.out.println("Il fallait une exception car le texte est vide!");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e2) {
+            System.out.println("Vous n'avez pas lancé la bonne exception.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 3");
+        System.out.println();
+
+        try {
+            String texte = "GOUUUU";
+            M = cp.coder(texte);
+            System.out.println("Il fallait une exception car le texte est trop grand!");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e2) {
+            System.out.println("Vous n'avez pas lancé la bonne exception.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 4");
+        System.out.println();
+
+        try {
+            String texte = "GO";
+            M = cp.coder(texte);
+            if (M != 418483) {
+                System.out.println("Texte : GO : codé attendu : 418483 | reçu : " + M);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 5");
+        System.out.println();
+
+        cp = new RSAClefPublique(39883, 280453);
+        try {
+            String texte = "FEU";
+            M = cp.coder(texte);
+            if (M != 38597) {
+                System.out.println("Texte : FEU : codé attendu : 38597 | reçu : " + M);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 6");
+        System.out.println();
+
+        cp = new RSAClefPublique(5, 204255253);
+        try {
+            String texte = "BOUM";
+            M = cp.coder(texte);
+            if (M != 90252728) {
+                System.out.println("Texte : BOUM : codé attendu : 38597 | reçu : " + M);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean testDecoder() throws IllegalAccessException {
+
+        String texteAttendu;
+        String texte;
+
+        System.out.println("Test 1");
+        System.out.println();
+
+        RSAClefPrivee cp = new RSAClefPrivee(176755, 587, 1019);
+
+        try {
+            long M = -1;
+            texte = cp.decoder(M);
+            System.out.println("Il fallait une IllegalArguementException car le message est negatif !");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e2) {
+            System.out.println("Vous n'avez pas lancé la bonne exception.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        try {
+            long M = 598153;
+            texte = cp.decoder(M);
+            System.out.println("Il fallait une exception car le message est trop grand.");
+            return false;
+        } catch (IllegalArgumentException e) {
+
+        } catch (Exception e2) {
+            System.out.println("Vous n'avez pas lancé la bonne exception.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 3");
+        System.out.println();
+
+        try {
+            long M = 418483;
+            texte = cp.decoder(M);
+            texteAttendu = "GO";
+            if (!texte.equals(texteAttendu)) {
+                System.out.println("Texte attendu : " + texteAttendu + " | reçu : " + texte);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 4");
+        System.out.println();
+
+        cp = new RSAClefPrivee(7, 283, 991);
+        try {
+            long M = 38597;
+            texte = cp.decoder(M);
+            texteAttendu = "FEU";
+            if (!texte.equals(texteAttendu)) {
+                System.out.println("Texte attendu : " + texteAttendu + " | reçu : " + texte);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 5");
+        System.out.println();
+
+        cp = new RSAClefPrivee(122536001, 14107, 14479);
+
+        try {
+            long M = 90252728;
+            texte = cp.decoder(M);
+            texteAttendu = "BOUM";
+            if (!texte.equals(texteAttendu)) {
+                System.out.println("Texte attendu : " + texteAttendu + " | reçu : " + texte);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas d'exception");
+            return false;
+        }
+
+        return true;
+    }
+
+}</code></pre>
+                    <p>Pour le fichier "CodageRSA.java" :</p>
+<pre class="taille60"><code class="html">package crypto;
+
+import java.util.HashMap;
+
+public class CodageRSA {
+
+    private RSAClefPrivee clefPrivee;
+    private RSAClefPublique clefPublique;
+    private String proprietaire;
+    private static final HashMap<String, RSAClefPublique> REGISTRE = new HashMap<String, RSAClefPublique>(); // registre
+                                                                                                                // contenant
+                                                                                                                // toutes
+                                                                                                                // les
+                                                                                                                // clefs
+                                                                                                                // publiques
+                                                                                                                // existantes
+
+    // construit le codeage et publie la clef publique
+    // lance une IllegalArgumentException si p et q négatif,
+    // si p ou q n'est pas premier,
+    // si e n'est dans Z_phi,
+    // si (e, p * q) n'est pas une clef publique valable,
+    // si proprietaire est vide ou null
+    public CodageRSA(long e, long p, long q, String proprietaire) {
+        if (p <= 0 || q <= 0 || e <= 0) {
+            throw new IllegalArgumentException();
+        }
+        if (!estPremier(p) || !estPremier(q)) {
+            throw new IllegalArgumentException();
+        }
+        long phi = (p - 1) * (q - 1);
+        Zn znPhi = new Zn(phi);
+        if (!znPhi.contient(e)) {
+            throw new IllegalArgumentException();
+        }
+        if (pgcd(p * q, e) != 1) {
+            throw new IllegalArgumentException();
+        }
+        if (proprietaire == null || proprietaire.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        this.proprietaire = proprietaire;
+        clefPublique = new RSAClefPublique(e, p * q);
+        clefPrivee = new RSAClefPrivee(znPhi.inverse(e), p, q);
+        publier(proprietaire, clefPublique);
+    }
+
+    // renvoie la clef privée du codage
+    public RSAClefPrivee getClefPrivee() {
+        return clefPrivee;
+    }
+
+    // renvoie la clef publique du codage
+    public RSAClefPublique getClefPublique() {
+        return clefPublique;
+    }
+
+    // méthode publiant la clef (elle ajoute la clef dans le registre des clefs)
+    private void publier(String proprietaire, RSAClefPublique clef) {
+        CodageRSA.REGISTRE.put(proprietaire, clef);
+    }
+
+    // renvoie la clef publique associé à propriétaire s'il y en a une, null sinon
+    public static RSAClefPublique obtenirClefPublique(String proprietaire) {
+        return CodageRSA.REGISTRE.get(proprietaire);
+    }
+
+    // renvoie true si le nombre entier x est premier et false sinon
+    public static boolean estPremier(long x) {
+        if (x <= 1) {
+            return false;
+        }
+        for (int i = 2; i * i <= x; i++) {
+            if (x % i == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static long pgcd(long m, long n) {
+        long r;
+        while (n != 0) {
+            r = m % n;
+            m = n;
+            n = r;
+        }
+        return m;
+    }
+
+}</code></pre>
+                    <p>Dans le fichier "TestCodageRSA.java" :</p>
+<pre class="taille60"><code class="html">package crypto;
+
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class TestCodageRSA {
+
+    private static Class<CodageRSA> classe = CodageRSA.class;
+    private static Class<RSAClefPrivee> classeCPr = RSAClefPrivee.class;
+    private static Class<RSAClefPublique> classeCPu = RSAClefPublique.class;
+    private static Field clefPrivee;
+    private static Field clefPublique;
+    private static Field proprietaire;
+    private static Field registre;
+    private static Field znPr;
+    private static Field znPu;
+    private static Field e;
+    private static Field d;
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final String[] NOMS_METHODES = {
+            "du constructeur CodageRSA(long e, long p, long q, String proprietaire)", "estPremier(long x)" };
+
+    public static void main(String[] args) throws IllegalAccessException {
+        Field[] champs = classe.getDeclaredFields();
+        for (Field f : champs) {
+            if (f.getType() == RSAClefPrivee.class) {
+                if ("clefPrivee".equals(f.getName())) {
+                    clefPrivee = f;
+                    clefPrivee.setAccessible(true);
+                }
+            } else if (f.getType() == RSAClefPublique.class) {
+                if ("clefPublique".equals(f.getName())) {
+                    clefPublique = f;
+                    clefPublique.setAccessible(true);
+                }
+            } else if (f.getType() == java.lang.String.class) {
+                if ("proprietaire".equals(f.getName())) {
+                    proprietaire = f;
+                    proprietaire.setAccessible(true);
+                }
+            } else if (f.getType() == java.util.HashMap.class) {
+                if ("REGISTRE".equals(f.getName())) {
+                    registre = f;
+                    registre.setAccessible(true);
+                }
+            }
+        }
+
+        Field[] champsPr = classeCPr.getDeclaredFields();
+        for (Field f : champsPr) {
+            if (f.getType() == long.class) {
+                if ("d".equals(f.getName())) {
+                    d = f;
+                    d.setAccessible(true);
+                }
+            } else if (f.getType() == Zn.class) {
+                if ("zn".equals(f.getName())) {
+                    znPr = f;
+                    znPr.setAccessible(true);
+                }
+            }
+        }
+
+        Field[] champsPu = classeCPu.getDeclaredFields();
+        for (Field f : champsPu) {
+            if (f.getType() == long.class) {
+                if ("e".equals(f.getName())) {
+                    e = f;
+                    e.setAccessible(true);
+                }
+            } else if (f.getType() == Zn.class) {
+                if ("zn".equals(f.getName())) {
+                    znPu = f;
+                    znPu.setAccessible(true);
+                }
+            }
+        }
+
+        System.out.println("****************************************");
+        System.out.println("Programme Test pour la classe CodageRSA ");
+        System.out.println("****************************************");
+
+        int choix = 0;
+        while (true) {
+            for (int i = 0; i < NOMS_METHODES.length; i++) {
+                System.out.println((i + 1) + " -> Test " + NOMS_METHODES[i]);
+            }
+            System.out.println("autre -> Quitter");
+
+            choix = scanner.nextInt();
+            boolean testOK;
+            switch (choix) {
+            case 1:
+                testOK = testConstructeur();
+                HashMap<String, RSAClefPublique> registreCodage = (HashMap<String, RSAClefPublique>) registre
+                        .get(new CodageRSA(7, 3, 5, "moi"));
+                registreCodage.clear();
+                break;
+            case 2:
+                testOK = testEstPremier();
+                break;
+            default:
+                return;
+            }
+            if (testOK) {
+                System.out.println("Le test " + NOMS_METHODES[choix - 1] + " a réussi.");
+            } else {
+                System.out.println("Le test " + NOMS_METHODES[choix - 1] + " a échoué.");
+            }
+            System.out.println();
+        }
+    }
+
+    private static boolean testConstructeur() throws IllegalAccessException {
+
+        CodageRSA codage;
+
+        System.out.println("Test 1");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(-1, 5, 7, "loic");
+            System.out.println("Il fallait une exception car e < 0");
+            return false;
+        } catch (IllegalArgumentException e) {
+            if (CodageRSA.obtenirClefPublique("Loic") != null) {
+                System.out.println("Vous avez publié la clef publique alors qu'elle n'était pas valable");
+                return false;
+            }
+        } catch (Exception f) {
+            System.out.println("Vous n'avez pas lancer la bonne exception : " + f.getClass());
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(0, 5, 7, "loic");
+            System.out.println("Il fallait une exception car e = 0 n'est pas premier avec phi(n)");
+            return false;
+        } catch (IllegalArgumentException e) {
+            if (CodageRSA.obtenirClefPublique("Loic") != null) {
+                System.out.println("Vous avez publié la clef publique alors qu'elle n'était pas valable");
+                return false;
+            }
+        } catch (Exception f) {
+            System.out.println("Vous n'avez pas lancer la bonne exception : " + f.getClass());
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(24, 5, 7, "loic");
+            System.out.println("Il fallait une exception car e >= phi(n)");
+            return false;
+        } catch (IllegalArgumentException e) {
+            if (CodageRSA.obtenirClefPublique("Loic") != null) {
+                System.out.println("Vous avez publié la clef publique alors qu'elle n'était pas valable");
+                return false;
+            }
+        } catch (Exception f) {
+            System.out.println("Vous n'avez pas lancer la bonne exception : " + f.getClass());
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 4");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(30, 5, 7, "loic");
+            System.out.println("Il fallait une exception car e > phi(n)");
+            return false;
+        } catch (IllegalArgumentException e) {
+            if (CodageRSA.obtenirClefPublique("Loic") != null) {
+                System.out.println("Vous avez publié la clef publique alors qu'elle n'était pas valable");
+                return false;
+            }
+        } catch (Exception f) {
+            System.out.println("Vous n'avez pas lancer la bonne exception : " + f.getClass());
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 5");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(24, 5, 7, "loic");
+            System.out.println("Il fallait une exception car e >= phi(n)");
+            return false;
+        } catch (IllegalArgumentException e) {
+            if (CodageRSA.obtenirClefPublique("Loic") != null) {
+                System.out.println("Vous avez publié la clef publique alors qu'elle n'était pas valable");
+                return false;
+            }
+        } catch (Exception f) {
+            System.out.println("Vous n'avez pas lancer la bonne exception : " + f.getClass());
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 6");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(15, 5, 7, "loic");
+            System.out.println("Il fallait une exception car e = 15 n'a pas d'inverse dans Z_phi(n)");
+            System.out.println("car 15 n'est pas premier avec phi(n)=24");
+            return false;
+        } catch (IllegalArgumentException e) {
+            if (CodageRSA.obtenirClefPublique("Loic") != null) {
+                System.out.println("Vous avez publié la clef publique alors qu'elle n'était pas valable");
+                return false;
+            }
+        } catch (Exception f) {
+            System.out.println("Vous n'avez pas lancer la bonne exception : " + f.getClass());
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 7");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(15, 144, 17, "loic");
+            System.out.println("Il fallait une exception car p = 144 n'est pas premier");
+            return false;
+        } catch (IllegalArgumentException e) {
+            if (CodageRSA.obtenirClefPublique("Loic") != null) {
+                System.out.println("Vous avez publié la clef publique alors qu'elle n'était pas valable");
+                return false;
+            }
+        } catch (Exception f) {
+            System.out.println("Vous n'avez pas lancer la bonne exception : " + f.getClass());
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 8");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(15, 5, 22, "loic");
+            System.out.println("Il fallait une exception car q = 22 n'est pas premier");
+            return false;
+        } catch (IllegalArgumentException e) {
+            if (CodageRSA.obtenirClefPublique("Loic") != null) {
+                System.out.println("Vous avez publié la clef publique alors qu'elle n'était pas valable");
+                return false;
+            }
+        } catch (Exception f) {
+            System.out.println("Vous n'avez pas lancer la bonne exception : " + f.getClass());
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 9");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(13, 5, 7, null);
+            System.out.println("Il fallait une exception car proprietaire est null");
+            return false;
+        } catch (IllegalArgumentException e) {
+            if (CodageRSA.obtenirClefPublique("Loic") != null) {
+                System.out.println("Vous avez publié la clef publique alors qu'elle n'était pas valable");
+                return false;
+            }
+        } catch (Exception f) {
+            System.out.println("Vous n'avez pas lancer la bonne exception : " + f.getClass());
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 10");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(13, 5, 7, "");
+            System.out.println("Il fallait une exception car proprietaire est vide");
+            return false;
+        } catch (IllegalArgumentException e) {
+            if (CodageRSA.obtenirClefPublique("Loic") != null) {
+                System.out.println("Vous avez publié la clef publique alors qu'elle n'était pas valable");
+                return false;
+            }
+        } catch (Exception f) {
+            System.out.println("Vous n'avez pas lancer la bonne exception : " + f.getClass());
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 11");
+        System.out.println();
+
+        try {
+            codage = new CodageRSA(13, 5, 11, "Loic");
+            String prop = (String) proprietaire.get(codage);
+            if (prop == null) {
+                System.out.println("L'attribut proprietaire n'a pas été initialisé");
+                return false;
+            }
+            if (!prop.equals("Loic")) {
+                System.out.println("L'attribut proprietaire n'a pas été bien initialisé");
+                System.out.println("Attendu : Loic  |   Reçu : " + prop);
+                return false;
+            }
+
+            RSAClefPublique cPu = (RSAClefPublique) clefPublique.get(codage);
+            if (cPu == null) {
+                System.out.println("L'attribut clefPublique n'a pas été initialisé");
+                return false;
+            }
+            long ePu = e.getLong(cPu);
+            if (ePu != 13) {
+                System.out.println("L'attribut e de la clef publique n'a pas été bien initialisée : attendu : 13"
+                        + " | reçu : " + ePu);
+                return false;
+            }
+
+            Zn znPuO = (Zn) znPu.get(cPu);
+            if (znPuO.getN() != 55) {
+                System.out.println("Le Zn de la clef publique n'a pas été bien initialisée : attendu n = 55 "
+                        + "| reçu n = " + znPuO.getN());
+                return false;
+            }
+
+            RSAClefPrivee cPr = (RSAClefPrivee) clefPrivee.get(codage);
+            if (cPr == null) {
+                System.out.println("L'attribut clefPrivee n'a pas été initialisé");
+                return false;
+            }
+            long dPr = d.getLong(cPr);
+            if (dPr != 37) {
+                System.out.println("L'attribut d de la clef privee n'a pas été bien initialisée : attendu : 37"
+                        + " | reçu : " + dPr);
+                return false;
+            }
+
+            Zn znPrO = (Zn) znPr.get(cPr);
+            if (znPrO.getN() != 55) {
+                System.out.println("L'attribut Zn de la clef privee n'a pas été bien initialisée : attendu : 55 "
+                        + "| reçu : " + znPrO.getN());
+                return false;
+            }
+
+            if (CodageRSA.obtenirClefPublique("Loic") == null) {
+                System.out.println("Vous n'avez pas publiée la clef publique");
+                return false;
+            }
+
+        } catch (Exception e) {
+            System.out.println("Il ne fallait pas lancer d'exception : " + e.getClass());
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean testEstPremier() throws IllegalAccessException {
+
+        System.out.println("Test 1");
+        System.out.println();
+        if (CodageRSA.estPremier(-3)) {
+            System.out.println("-3 n'est pas premier car divisible par -1");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 2");
+        System.out.println();
+
+        if (CodageRSA.estPremier(0)) {
+            System.out.println("0 n'est pas premier car divisible par n'importe quel entier !");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 3");
+        System.out.println();
+
+        if (CodageRSA.estPremier(1)) {
+            System.out.println("1 n'est pas premier car n'admet que lui-même comme diviseur.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 4");
+        System.out.println();
+
+        if (CodageRSA.estPremier(169)) {
+            System.out.println("169 n'est pas premier car admet 13 comme diviseur");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 5");
+        System.out.println();
+
+        if (CodageRSA.estPremier(4)) {
+            System.out.println("4 n'est pas premier car admet 2 comme diviseur");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 6");
+        System.out.println();
+
+        long p = 999983;
+        p = p * p;
+
+        if (CodageRSA.estPremier(p)) {
+            System.out.println(p + " n'est pas premier car admet 999983 comme diviseur");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 7");
+        System.out.println();
+
+        p = 103 * 113;
+
+        if (CodageRSA.estPremier(p)) {
+            System.out.println(p + " n'est pas premier car admet 103 comme diviseur");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 8");
+        System.out.println();
+
+        p = 2;
+
+        if (!CodageRSA.estPremier(p)) {
+            System.out.println(p + " est premier car divisible uniquement par 1 et lui même.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 9");
+        System.out.println();
+
+        p = 101;
+
+        if (!CodageRSA.estPremier(p)) {
+            System.out.println(p + " est premier car divisible uniquement par 1 et lui-même.");
+            return false;
+        }
+
+        System.out.println();
+        System.out.println("Test 10");
+        System.out.println();
+
+        p = 999983;
+
+        if (!CodageRSA.estPremier(p)) {
+            System.out.println(p + " est premier car divisible uniquement par 1 et lui-même.");
+            return false;
+        }
+
+        return true;
+    }
+
+}</code></pre>
+                </article>
+                <article>
+                    <h2 id="vecteur">Vecteur (VECTOR) :</h2>
+                    <p>Un vecteur est une suite d'objets de même type, possédant un ordre bien précis, et dont le nombre est variable.</p>
+                    <p>Un vecteur peut être vide !</p>
+                    <p>L'ordre des éléments est important.</p>
+                    <p>On accède à un élément via son <span class="em">rang</span>.</p>
+                    <p>On appelle <span class="em">rang</span> d'un élément d'une structure linéaire, le nombre d'éléments situés avant lui. On abstrait ainsi la notion d'indice du tableau.</p>
+                    <h3>Méthodes de l'interface Vecteur :</h3>
+<pre class="taille60"><code class="html">public int taille ()
+public boolean estVide ()
+public String toString ()
+public Object element (int rang) throws VecteurOutException
+public void insere (int rang, Object element) throws VecteurOutException
+public void ajoute (Object valeur)
+public Object remplace (int rang, Object element) throws VecteurOutException
+public Object supprime (int rang) throws VecteurOutException
+<span class="em">public Iterator iterator()</span></code></pre>
+                    <p><img src="../images/vecteur.png" alt=""></p>
+<pre class="taille60"><code class="html">public class VecteurImpl implements Vecteur {
+
+    private Object[] table;
+    private int taille;
+
+    public VecteurImpl () {
+        this(16);
+    }
+
+    public VecteurImpl (int taille-) {
+        this.table = new Object[taille];
+        this.taille = 0;
+    }
+
+    public boolean estVide() {
+        return taille == 0;
+    }
+
+    // taille logique
+    public int taille() {
+        return taille;
+    }
+
+    public String toString() {
+        String aRenvoyer = "";
+        if (taille > 0) {
+            aRenvoyer += table[0];
+            for (int i = 1; i &lt; taille; i++) {
+                aRenvoyer += " " + table[i];
+            }
+        }
+        return aRenvoyer;
+    }
+
+    private void testRang (int rang) throws VecteurOutException {
+        if (rang &lt; 0 || rang &gt;= taille) {
+            throw new VecteurOutException();
+        }
+    }
+
+    private void testRangPourAjout (int rang) throws VecteurOutException{
+        if (rang &lt; 0 || rang &gt; taille) {
+            throw new VecteurOutException();
+        }
+    }
+
+    public Object element (int rang) throws VecteurOutException {
+        testRang(rang);
+        return table[rang];
+    }
+
+    // conserve l'ordre des objets (décalages)
+    public void insere (int rang, Objet element) throws VecteurOutException {
+        testRangPourAjout(rang);
+        if (taille == table.length) {
+            Object[] temp = new Object[table.length * 2];
+            for (int i = 0; i &lt; taille; i++) {
+                temp[i] = table[i];
+            }
+            table = temp;
+        }
+        for (int i = taille - 1; i &gt;= rang; i--) {
+            table[i + 1] = table[i];
+        }
+        taille++;
+        table[rang] = element;
+    }
+
+    // ajout en fin de table
+    public void ajoute (Object element) {
+        try {
+            insere(taille, element);
+        } catch (VecteurOutException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Object remplace (int rang, Object element) throws VecteurOutException {
+        testRang(rang);
+        Object aRenvoyer = table[rang];
+        table[rang] = element;
+        return aRenvoyer;
+    }
+
+    // conserve l'ordre des objets (décalages)
+    public Object supprime  (int rang) throws VecteurOutException {
+        testRang(rang);
+        Object aRenvoyer = table[rang];
+        for (int i = rang; i &lt; taille - 1; i++) {
+            table[i] = table[i + 1];
+        }
+        taille--;
+        return aRenvoyer;
+    }
+
+}</code></pre>
+                </article>
+                <article>
+                    <h2 id="pile">Pile (STACK) :</h2>
+                    <p>Une  pile est une suite d'objets de même type, possédant un ordre bien précis, et dont le nombre est variable.</p>
+                    <p>Une pile peut être vide !</p>
+                    <p>L'ajout et le retrait se font "au sommet" de la pile.</p>
+                    <p>ajouter &#8596; empiler &#8596; push</p>
+                    <p>retirer &#8596; dépiler &#8596; pop</p>
+                    <p>L.I.F.O. (Last In First Out)</p>
+                    <h3>Méthodes de l'interface Pile :</h3>
+<pre class="taille60"><code class="html">public int taille ()
+public boolean estVide ()
+public void push (Object c)
+public Object pop () throws PileVideException
+public Object sommet () throws PileVideException</code></pre>
+                    <p><img src="../images/pile.png" alt=""></p>
+                    <p><img src="../images/pile_impl.png" alt=""></p>
+<pre class="taille60"><code class="html">public class PileImpl implements Pile {
+
+    Object[] table;
+    int taille;
+
+    public PileImpl() {
+        this(4);
+    }
+
+    public PileImpl(int capacite) {
+        table = new Object[capacite];
+        taille = 0;
+    }
+
+    // renvoie le nombre d'objets contenus dans la pile
+    public int taille() {
+        return taille;
+    }
+
+    public boolean estVide() {
+        return taille == 0;
+    }
+
+    // ajoute l'élément sur la pile
+    pubic void push (Object element) {
+        if (taille == table.length) {
+            Object[] temp = new Object[table.length * 2];
+            for (int i = 0; i &lt; taille; i++) {
+                tmp[i] = table[i];
+            }
+            table = temp;
+        }
+        table[taille] = element;
+        taille++;
+    }
+
+    // enlève et renvoie l'objet qui se trouve au sommet de la pile
+    public Object pop() throws PileVideException {
+        if (estVide()) {
+            throw new PileVideException();
+        }
+        taille--;
+        return table[taille];
+    }
+
+    // renvoie l'objet qui se trouve au sommet de la pile sans l'enlever de la pile
+    public Objectt sommet() throws PileVideException {
+        if (estVide()) {
+            throw new PileVideException();
+        }
+        return table[taille - 1];
+    }
+
+}</code></pre>
+                </article>
+                <article>
+                    <h2 id="classes_internes">Les classes internes :</h2>
+                    <p>Attention : les itérateurs des collections seront des classes internes.</p>
+                    <p>Une classe interne (ou <span class="em">Inner class</span> en anglais) est une classe définie dans une autre classe.</p>
+                    <p>Une classe externe ou englobante (ou <span class="em">Outer class</span> en anglais) est une clsse qui contient la ou les classe(s) interne(s).</p>
+                    <p>Une classe interne a un accès direct aux attributs et méthodes de la classe englobante (à ses propriétés).</p>
+                    <ul>
+                        <li>
+                            <p>Avantage : une classe qui manipule les attributs d'une autre classe sans pour autant que cette seconde ne doive les rendre publics ou accessibles via getter/setter.</p>
+                        </li>
+                        <li>
+                            <p>À la construction, inutile de passer en paramètre les données de la classe englobante.</p>
+                        </li>
+                    </ul>
+                    <p>Une classe interne a les mêmes règles de visibilité que pour les attributs et méthodes de la classse englobante.</p>
+                </article>
+                <article>
+                    <h2 id="iterable_iterator">L'interface Iterable&lt;T&gt; et l'interface Iterator&lt;T&gt; :</h2>
+                    <p><span class="html">public Iterator&lt;T&gt; iterator() {...}</span> est la méthode imposée par l'ubrerface <span class="html">Iterable&lt;T&gt;</span>.</p>
+                    <ul>
+                        <li>
+                            <p>Un itérateur permet de parcourir qui se trouve dans une collection.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">&lt;T&gt;</span> : type d'objet contenu dans la liste.</p>
+                        </li>
+                        <li>
+                            <p>L'interface <span class="html">Iterator&lt;T&gt;</span> impose les méthodes suivantes :</p>
+                            <ul>
+                                <li>
+                                    <p class="html">public boolean hashNext() {...}</p>
+                                </li>
+                                <li>
+                                    <p class="html">public &lt;T&gt; next() {...}</p>
+                                </li>
+                                <li>
+                                    <p class="html">public void remove() {...}</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>La méthode <span class="html">public hasNext() {...}</span> a comme responsabilité de signaler s'il reste un élément de la collection qui n'a pas encore été consulté. Elle renvoie <span class="html">true</span> s'il y a encore un élément à consulter et <span class="html">false</span> s'il y en a plus.</p>
+                    <p>La méthode <span class="html">public &lt;T&gt; next() {...}</span> a comme responsabilité de renvoyer l'élément suivant, présent dans la collection parcourue par l'itérateur. Elle renvoie donc l'élément suivant de type <span class="html">&lt;T&gt;</span>. Une <span class="html">NoSuchElementException</span> est levée s'il n'y a plus d'élément à consulter. Une <span class="html">ConcurrentModificationException</span> est levée si la collection a été modifée, autrement que via l'itérateur, depuis le moment où l'iterateur a été créé.</p>
+                    <p>La méthode <span class="html">public void remove() {...}</span> a comme responsabilité de supprimer l'élément de la collection qui a été renvoyée par le dernier <span class="html">next()</span>. Une <span class="html">UnsupportedOperationException</span> est levée si les suppressions sont interdites. Une <span class="html">IllegalStateException</span> est levée si un appel à <span class="html">remove()</span> vient d'être fait ou si la méthode <span class="html">next()</span> n'a pas encore été appelée. Une <span class="html">ConcurrentModificationException</span> est levée si la collection a été modifiée, autrement que via l'itérateur, depuis le moment où l'itérateur a été créé.</p>
+                    <table class="tableBalises" role="presentation">
+                        <thead>
+                            <tr>
+                                <th>VecteurImpl</th>
+                                <th>ArrayList</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>VecteurImpl ()</td>
+                                <td>ArrayList ()</td>
+                            </tr>
+                            <tr>
+                                <td>VecteurImpl (int capacite)</td>
+                                <td>ArrayList (int initialCapacity)</td>
+                            </tr>
+                            <tr>
+                                <td>int taille ()</td>
+                                <td>int size ()</td>
+                            </tr>
+                            <tr>
+                                <td>boolean estVide ()</td>
+                                <td>boolean isEmpty ()</td>
+                            </tr>
+                            <tr>
+                                <td>Object element (int rang) throws VecteurOutException</td>
+                                <td>E get (int index) throw indexOutOfBoundsException</td>
+                            </tr>
+                            <tr>
+                                <td>void insere (int rang, Object element) throws VecteurOutException</td>
+                                <td>void add (int index, E element) throws indexOutOfBoundsException</td>
+                            </tr>
+                            <tr>
+                                <td>void ajoute (Object valeur)</td>
+                                <td>boolean remplace (E element)</td>
+                            </tr>
+                            <tr>
+                                <td>Object remplace (int rang, Object element) throws VecteurOutException</td>
+                                <td>E set (int index, E element) throws IndexOutOfBoundsException</td>
+                            </tr>
+                            <tr>
+                                <td>Object supprime (int rang) throws VecteurOutException</td>
+                                <td>E remove (int index) throws IndexOutOfBoundsException</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>boolean contains (Object o)</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>int indexOf (Object o)</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>boolean remove (Object o)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p><img src="../images/uml_iterateur.png" alt=""></p>
+                    <p>Exemple :</p>
+<pre class="taille60"><code class="html">import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class ListeDeCercles implements Iterable {
+
+    private Cercle[] cercles;
+    private int nombreDeCercles;
+    private int numVersion = 0;
+
+    public ListeDeCercles() {
+        this.cercles = new Cercle[20];
+    }
+
+    ...
+
+    public boolean ajouter (Cercle c) {
+        if (c == null) {
+            throw new IllegalArguementException();
+        }
+        if (contains(c)) {
+            return false;
+        }
+        if (cercle.length == nombreDeCercles) {
+            return false;
+        }
+        numVersion++;
+        cercles[nombreDeCercles] = c;
+        nombreDeCercles++;
+        return true;
+    }
+
+    public Iterator iterator() {
+        return new CercleIterateur();
+    }
+
+    // Classe interne : itérateur
+    public class CercleIterateur implements Iterator&lt;Cercle&gt; {
+
+        private int indice;
+        private int version;
+        private boolean removeAutorise;
+
+        public CerclceIterateur() {
+            this.version = numVersion;
+            this.indice = 0;
+            this.removeAutorise = false;
+        }
+
+        public boolean hashNext() {
+            return indice &lt; nombreDeCercles;
+        }
+
+        public Cercle next() {
+            if (numVersion != version) {
+                throw new ConcurrentModificationException();
+            }
+            if(!hasNext()){
+                throw new NoSuchElementException();
+            }
+            removeAutorise = true;
+            Cercle cercle = cercles[indice];
+            indice++;
+            return cercle;
+        }
+
+        public void remove() {
+            if (!removeAutorise) {
+                throw new IllegalArguementException();
+            }
+            if (numVersion != version) {
+                throw new ConcurrentModificationException();
+            }
+            removeAutorise = false;
+            cercles[indice - 1] = cercles[nombreDeCercles - 1];
+            cercles[nombreDeCercles - 1] = null;
+            indice--;
+            nombreDeCercles--;
+        }
+
+    } // fin de la classe interne
+
+    ...
+
+} // fin de la classe ListeDeCercles</code></pre>
+                </article>
+                <article>
+                    <h2 id="complexite_algorithme">La complexité d'un algorithme :</h2>
+                    <p>Soit f(n) une fonction de n.</p>
+                    <p>On dira qu'un algorithme est en <span class="html">O(f(n))</span> si son temps d'exécution est proportionnel à f(n).</p>
+                    <p>On dira qu'un algorithme est en O(f(n)) s'il existe deux nombres positifs constants k et n<sub>0</sub> tels que T(n) &lt;= k * f(n) quand n = n<sub>0</sub>.</p>
+                    <p>La fonction d(n) est appelée l'<span class="em">ordre de complexité</span> de l'algorithme.</p>
+                    <p>Les cas les plus fréquemment rencontrés sont les suivants :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">O(1)</span> : durée indépendante de n</p>
+                        </li>
+                        <li>
+                            <p><span class="html">O(log n)</span> : complexité logarithmique</p>
+                        </li>
+                        <li>
+                            <p><span class="html">O(n)</span> : complexité linéaire</p>
+                        </li>
+                        <li>
+                            <p><span class="html">O(n * log n)</span> : complexité  quasi-linéaire</p>
+                        </li>
+                        <li>
+                            <p><span class="html">O(n<sup>2</sup>)</span> : complexité quadratique</p>
+                        </li>
+                        <li>
+                            <p class="em"><span class="html">O(n<sup>3</sup>)</span> : complexité cubique</p>
+                        </li>
+                        <li>
+                            <p class="em"><span class="html">O(n<sup>d</sup>)</span> : complexité polynomiale</p>
+                        </li>
+                        <li>
+                            <p class="em"><span class="html">O(2<sup>n</sup>)</span> : complexité exponentielle</p>
+                        </li>
+                        <li>
+                            <p class="em"><span class="html">O(n<sup>!</sup>)</span> : complexité factorielle</p>
+                        </li>
+                    </ul>
+                    <p>Le facteur de proportionnalité est négligé. Il ne sera utilisé que pour départager deux agorithmes qui le même ordre de complexité.</p>
+                    <p>Par exemple : <span class="html">O(n/2)</span>, <span class="html">O(n)</span> et <span class="html">O(2n) &#8594; O(n)</span>.</p>
+                </article>
+                <article>
+                    <h2 id="file">FILE (QUEUE) :</h2>
+                    <p>Une file d'attente est une suite d'objets de même type, possédant un ordre bien précis, et dont le nombre est variable.</p>
+                    <p>Une file peut être vide !</p>
+                    <p>L'ajout se fait en queue (fin).</p>
+                    <p>Le retrait se fait en tête (début).</p>
+                    <p>ajouter &#8596; enfiler &#8596; enfile</p>
+                    <p>retirer &#8596; défiler &#8596; defile</p>
+                    <p>F.I.F.O. (Fist In First Out)</p>
+                    <p>Méthode de l'interface File :</p>
+<pre class="taille60"><code class="html">public int taille ()
+public boolean estVide ()
+public void enfile (Object c)
+public Object defile () throws FileVideException
+public premier () throws FileVideException</code></pre>
+                    <p><img src="../images/file.png" alt=""></p>
+                    <p><img src="../images/file_circulaire.png" alt=""></p>
+                    <table role="presentation" class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>FileImpl</th>
+                                <th>ArrayDeque</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>int taille ()</td>
+                                <td>int size ()</td>
+                            </tr>
+                            <tr>
+                                <td>boolean estVide ()</td>
+                                <td>boolean isEmpty ()</td>
+                            </tr>
+                            <tr>
+                                <td>Object defile () throws FileVideException</td>
+                                <td>E removeFirst () throws NoSuchElementException</td>
+                            </tr>
+                            <tr>
+                                <td>Object premier () throws FileVideException</td>
+                                <td>E getFirst () throws NoSuchElementException</td>
+                            </tr>
+                        </tbody>
+                    </table>
+<pre class="taille60"><code class="html">// implémentation de l'interface File via une table circulaire
+public class FileImpl implements File {
+
+    Object[] table;
+    int tete;
+    int queue;
+    int taille;
+
+    public FileImpl() {
+        table = new Object[4];
+        tete = queue = taille = 0;
+    }
+
+    // renvoie true ssi la file est vide
+    public boolean estVide() {
+        return taille == 0;
+    }
+
+    // renvoie le nombre d'objets contenus dans la file
+    public int taille() {
+        return taille;
+    }
+
+    // ajoute l'objet element en queue de file
+    public void enfile(Object element) {
+        if (!estVide() && tete == queue) {
+            doublerTaille(table);
+        }
+        table[queue] = element;
+        queue = (queue + 1) % table.length;
+        taille++;
+    }
+
+    // enlève et renvoie l'objet qui se trouve en tête
+    public Object defile() throws FileVideException {
+        if (estVide()) {
+            throw new FileVideException("la file est vide");
+        }
+        return table[tete];
+    }
+
+    private void doublerTaille(Object[] file) {
+        Object[] tmp = new Object[taille.length * 2];
+        int indice = 0;
+        for (int i = tete; i &lt; file.length; i++) {
+            tmp[i] = table[i];
+            indice++;
+        }
+        for (int j = 0; j  &lt; tete; j++) {
+            tmp[indice] = file[j];
+            indice++;
+        }
+        tete = 0;
+        queue = indice;
+        table = tmp;
+    }
+
+}</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
