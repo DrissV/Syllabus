@@ -63,6 +63,7 @@
                         <li><a href="#intro_json">JSON</a></li>
                         <li><a href="#http_servlet">HTTPServlet</a></li>
                         <li><a href="#authentification">Authentification, Session et JWT</a></li>
+                        <li><a href="#exercices">Exercices</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1482,6 +1483,991 @@ if (userID != null) { // ici on a pu récupérer un utilisateur valide
 <pre class="taille60"><code>resp.sendError(HttpServletReponse.SC_BAD_REQUEST, "Action invalide");</code></pre>
                         </li>
                     </ul>
+                </article>
+                <article>
+                    <h2 id="exercices">Exercices :</h2>
+                    <p>JavaScript est un langage aux nombreux interpréteurs. Bien sûr chaque navigateur possède le sien mais on le retrouve aussi du côté serveur avec Node.js par exemple. Pour le moment, nous utiliserons le moteur JavaScript fournit par Java 8, qui s'appelle Nasshorn.</p>
+                    <p>Prenez le fichier Nasshom.zip se trouvant sur l'ecampus, décompressez-le etimporter le projet Eclipse : <span class="em">File/Import/General/Existing Project Into Workspace/Browse/</span> pointez vers le répertoire que vous avez dézippé, puis Next etc. jusqu'à terminer l'import.</p>
+                    <p>Exécutez la classe Nasshom.</p>
+                    <p>Dans la console, entrez <span class="em">1+ 1</span>, faites Enter et hop, vous avez le résultat.</p>
+                    <p>Le moteur JavaScript possède ce qu'on appelle un store : un espace de stockage auquel on ajoute de l'information.</p>
+                    <p>Entrez : <span class="em">function hello(){return "hello";}</span></p>
+                    <p>La fonction est ajoutée au store. Entrez <span class="em">hello()</span> et elle est appelée.</p>
+                    <p>Ce serait plus pratique d'enregistrer tout cela dans un fichier. réez un fichier <span class="em">hello.js</span> à la racine (le répertoire src n'est pas la racine de votre projet mais son répertoire parent l'est par contre !) de votre projet Eclipse et copiez-y la définition de la fonction <span class="em">hello</span> ci-dessus. Pour charger le fichier, il faut faire : <span class="html">&gt; file.loadScript("hello.js")</span>.</p>
+                    <p>Le script est alors chargé et exécuté immédiatement.</p>
+                    <p>À noter : chaque chargement ajoute au store déjà existant. Si vous désirez nettoyer complètement le store, il faut faire : <span class="html">&gt; file.reload()</span>.</p>
+                    <p>Utiisation avancée :</p>
+                    <p>À chaque sauvegarde du fichier, il faut donc faire un <span class="html">location.reload</span> suivi d'un <span class="html">file.loadScript</span> pour obtenir le résultat de l'exécution de la nouvelle version. Ceci devenant vite lassant, on peut faire : <span class="html">&gt; file.reloadScript("hello.js")</span>.</p>
+                    <p>Une fois cette commande exécuté, le système surveille le fichier hello.js. À chaque fois qu'il est modifié (à chaque fois que vous sauvez une nouvelle version dans Eclipse), le <span class="html">location.reload</span> et le <span class="html">file.loadScript</span> sont automatiquement refait pour vous.</p>
+                    <h3 id="exercice1">Exercice n° 1 :</h3>
+                    <ol type="A">
+                        <li>
+                            <p>Écrivez une boucle qui va de 1 à 100. Imprimez chaque numéro à la console. C'est <span class="html">console.log(variable)</span> qui permet d'afficher variable à la console.</p>
+                        </li>
+                        <li>
+                            <p>Écrivez une boucle qui va de 1 à 100. Imprimez chaque numéro à la console, mais les chiffres multiples de 3 sont remplacés par Fizz, ceux multiples e 5 par Buzz et ceux multiples d'à la fois de 3 et 5 sont remplacés par FizzBuzz.</p>
+                            <p>Nota : x est multiple de y &#8596; le restant de la division entière de x par y zéro. En JavaScript, c'est l'opérateur % (appelé modulo) qui calcule le restant d'une division entière.</p>
+                        </li>
+                        <li>
+                            <p>Transformons la solution de l'exercice précédenten une fonction appelée <span class="em">fizzBuzz</span> et prenant le nombre d'itérations en paramètre. Appeler <span class="em">fizzBuzz(100)</span> va itérer sur les 100 premiers nombres, tandis que <span class="em">fizzBuzz(200)</span> sur les 200, etc. Sauvez cette fonction dans un fichier <span class="em">ex1c.js</span> à la racine de votre projet. Pour la charger : <span class="html">&gt; file.loadScript("ex1c.js")</span>.</p>
+                            <p>Notez le résultat : <span class="html">&lt;function&gt;</span> qui indique que la dernière chose évaluée lors de l'exécution de ce script est une fonction. Appelez-la : <span class="em">&gt; fizzBuzz(200)</span>.</p>
+                        </li>
+                    </ol>
+<pre class="taille60"><code class="html">function fizzBuzz(n) {
+    for (var i = 1; i &lt;= n; i++) ç
+        if (i % 3 === 0 && i % 5 === 0) {
+            console.log("FizzBuzz");
+        } else if (i % 3 === 0) {
+            console.log("Fizz");
+        } else if (i % 5 === 0) {
+            console.log("Buzz");
+        } else {
+            console.log(i);
+        }
+    }
+}</code></pre>
+                    <h3 id="exercice2">Exercice n° 2 :</h3>
+                    <p>Nous allons demander à l'ordinateur de jouer à Ding Ding Bottle. Les règles sont les suivantes :</p>
+                    <ul>
+                        <li>
+                            <p>Les multiples de 5 sont remplacés par Ding Ding.</p>
+                        </li>
+                        <li>
+                            <p>Les multiples de 7 et les chiffres se terminant par 7 sont remplacés par Bottle. Donc 7, 14, 21, ... mais aussi 17, 27, 37, ...</p>
+                        </li>
+                        <li>
+                            <p>Les multiples de 5 et 7 sont remplacés par Ding Ding Bottle.</p>
+                        </li>
+                        <li>
+                            <p>Le jeu se joue autour d'une table; chaque fois qu'un joueur a dit son chiffre ou son emplacement, c'est au joueur qui le suit dans le sens actuel de jeu qui doit s'occuper du chiffre suivant. Cependant,lorsqu'un Bottle est dit, le sens s'inverse ! C'est donc alors au joueur précédent dans l'ancien sens de rotation qui s'occupe du chiffre suivant.</p>
+                        </li>
+                    </ul>
+                    <ol type="A">
+                        <li>
+                            <p>Nous allons d'abord implémenter un joueur :</p>
+                            <ul>
+                                <li>
+                                    <p>Il possède un nom. Cette valeur est déterminée une fois pour toute.</p>
+                                </li>
+                                <li>
+                                    <p>Il possède un joueur à sa droite et un joueur à gauche. Ces valeurs peuvent être changées n'importe quand.</p>
+                                </li>
+                                <li>
+                                    <p>Il possède une fonction pour s'occuper d'un chiffre. Cette fonction reçoit le chiffre et la référence de qui l'appelle : ce sera soit son joueur de droite, soit son joueur de gauche. Cette seconde information permet de déterminer le sens du jeu. N'oubliez pas d'inverser ce sens en cas de Bottle !</p>
+                                </li>
+                                <li>
+                                    <p>Cette fonction affiche le nom du joueur suivi de ce qu'il doit dire, puis elle passe la main au joueur suivant. Quand le chiffre à afficher est plus grand que 100, cette fonction ne fait plus rien.</p>
+                                </li>
+                            </ul>
+                            <p>Implémentez ceci en utilisant la technique de pseudo-classe vue dans les diapos.</p>
+                        </li>
+                        <li>
+                            <p>Créons une partie en adaptant le code suivant en fonction de votre propre code :</p>
+<pre class="taille60"><code class="html">var a = joueur('a');
+var b = joueur('b');
+var c = joueur('c');
+a.setDroite(b);
+b.setDroite(c);
+c.setDroite(a),
+a.setGauche(c);
+c.setGauche(b);
+b.setGauche(a);
+a.traitement(1, c);</code></pre>
+                            <p>Notez la dernière ligne : elle demander au joueur a de traiter la valeur 1, et en déclarant c comme étant son prédécesseur afin d'imposer le sens initial a &#8594; b &#8594; c &#8594; a &#8594; ...</p>
+                            <p>Le résultat devvait être :</p>
+                            <p><img src="../images/dingdingbottle.png" alt=""></p>
+                        </li>
+                        <li>
+                            <p>Améliorons le programme : si b et à droite de a, alors a est à gauche de b. Automatisez cela chaque fois qu'on appelle <span class="em">setDroite</span> ou <span class="em">setGauche</span>, l'élément dans l'autre sens est aussi automatiquement placé. Comment faire pour éviter d'avoir une boucle infinie : a.setDroite(b) &#8594; b.setGauche(a) &#8594; a.setDroite(b) &#8594; ...</p>
+                            <p>C'est possible de trouver une solution sans introduire de getter sur les droites et gauches, et sans introduire de fonctions supplémentaires.</p>
+                        </li>
+                        <li>
+                            <p>Même s'il ne faut plus qu'utiliser <span class="em">setDroite</span> ou <span class="em">setGauche</span>, configurer une table de jeu reste pénible. Créons la fonction dingdingbottle qui prend un nombre arbitraire de paramètres. Chaque paramètre est un nom de joueur. La fonction configure une table avec ces joueurs dans l'ordre dans lesquels ils sont fournis, le dernier étant relié au premier. Ensuite, elle lance la partie. Ainsi : <span class="html">&gt; dingdingbottle("a", "b", "c")</span> donne de nouveau le résultat de la photo précédente.</p>
+                            <p>Pour réaliser cette fonction, nous aurons besoin de la variable appelée <span class="html">arguments</span> : c'est une variable de type tableau et automatiquement définie dans les fonctions. Elle contient l'ensemble des arguments passés en paramètre à la fonction <span class="html">arguments[0]</span> sera le premier paramètre, <span class="html">arguments[1]</span> le second, <span class="html">arguments.length</span> donnera le nombre d'arguments réellement passés, etc...</p>
+                        </li>
+                    </ol>
+<pre class="taille60"><code class="html">var joueur = function(nom) {
+
+	var droite, gauche;
+	
+	function setGauche(joueurGauche) {
+		if (gauche === undefined) {
+			gauche = joueurGauche;
+			gauche.setDroite(self);
+		}
+	}
+	
+	function setDroite(joueurDroite) {
+		if (droite === undefined) {
+			droite = joueurDroite;
+			droite.setGauche(self);
+		}
+	}
+	
+	function traitement(chiffre, joueur) {
+		if (chiffre &lt;= 100) {
+			var changerSens = afficher(chiffre);
+			var suiv = joueur;
+			if (!changerSens) {
+				suiv = (joueur === gauche) ? droite : gauche;
+			}
+			suiv.traitement(chiffre + 1, self);
+		}
+	}
+	
+	function afficher(chiffre) {
+		var sysout = chiffre;
+		if (chiffre % 5 === 0 && chiffre % 7 === 0) {
+			sysout = "Ding Ding Bottle";
+			console.log(nom + " : " + sysout);
+			return true;
+		}
+		if (chiffre % 7 === 0 || chiffre % 10 === 7) {
+			sysout = "Bottle";
+			console.log(nom + " : " + sysout);
+			return true;
+		}
+		if (chiffre % 5 === 0) {
+			sysout = "Ding Ding";
+		}
+		console.log(nom + " : " + sysout);
+		return false;
+	}
+	
+	var self = {
+		setDroite : setDroite,
+		setGauche : setGauche,
+		traitement : traitement
+	};
+	
+	return self;
+};
+
+function dingdingbottle() {
+	var joueurs = [];
+	for (var i = 0; i &lt; arguments.length; i++) {
+		joueurs.push(joueur(arguments[i]));
+	}
+	for (var i = 0; i &lt; arguments.length; i++) {
+		joueurs[i].setDroite(joueurs[i + 1]);
+	}
+	joueurs[arguments.length - 1].setDroite(joueurs[0]);
+	joueurs[0].traitement(1, joueurs[arguments.length - 1]);
+};
+
+dingdingbottle("a", "b", "c");</code></pre>
+                    <h3 id="exercice3">Exercice n° 3 :</h3>
+                    <p><a href="https://fr.wikipedia.org/wiki/Puissance_4" target="_blank">Jouons à Puissance 4.</a></p>
+                    <ol type="A">
+                        <li>
+                            <p>Créez un pseudio-objet grille.</p>
+                            <ol type="a">
+                                <li>
+                                    <p>Cette grille contient 7 colonnes de 6 cases. Chaque case contient soit : rien, un pion jaune ou un pion rouge.</p>
+                                </li>
+                                <li>
+                                    <p>Une fonction imprime la grille. Utilisez console.log. Comme cette fonction ne permet pas d'afficher de la couleur, utilisez X pour les pions jaunes et 0 pour les pions rouges.</p>
+                                </li>
+                                <li>
+                                    <p>Une fonction permet de jouer en désignant une colonne et une couleur. Elle renvoie vrai si le coup est valide (il reste de la place dans la colonne), faux sinon. La case la plus basse de cetet colonne prend la couleur désignée.</p>
+                                </li>
+                                <li>
+                                    <p>Une fonction interne (privée) vérifie s'il y a une suite de 4 pions de la même couleur dans chacune des colonnes. Elle retourne une valeur représentant rien, rouge ou jaune (par exemple un entier, ou un string ou ...).</p>
+                                </li>
+                                <li>
+                                    <p>Une fonction interne (privée) vérifie s'il y a une suite de 4 poins de la même couleur dans chacune des lignes. Elle retourne une valeur représentant rien, rouge ou jaune.</p>
+                                </li>
+                                <li>
+                                    <p>Une fonction interne (privée) vérifie s'il y a une suite de 4 pions de la même couleur en diagonale, dans les deux directions possibles. Elle retourne une valeur représentant rien, rouge ou jaune.</p>
+                                </li>
+                                <li>
+                                    <p>Une fonction qui vérifie s'il y a un gagnant. Elle retourne une valeur représentant rien, rouge ou jaune.</p>
+                                </li>
+                                <li>
+                                    <p>Une fonction qui vérifie s'il reste de la place dans la grille. Elle renvoie vrai quand la grille est remplie, faux sinon.</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Testez votre objet grille</p>
+                            <ol type="a">
+                                <li>
+                                    <p>À l'aide de lignes de code, ajoutez des points à la grille et validez que son état est correct via sa fonction d'affichage.</p>
+                                </li>
+                                <li>
+                                    <p>À l'aide de lignes de code, ajoutez des points à la grille pour créer une combinaison gagnante horizontalement. Validez que la fonction de vérification de gagnant détecte bien cette victoire.</p>
+                                </li>
+                                <li>
+                                    <p>Idem pour une combinaison verticale.</p>
+                                </li>
+                                <li>
+                                    <p>Idem pour une combinaison diagonale. En particulier, vérifier que cela fonctionne pour des diagonales pour lesquels un des points est un des quatre coins de la grille.</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Il est temps de jouer. Construisez une fonction de jeu.</p>
+                            <ol type="a">
+                                <li>
+                                    <p>Cette fonction demande alternativement à deux joueurs d'insérer un pion de leur couleur. La fonction <span class="html">console.readln()</span> retourne la chaîne de caractères rentrée par l'utilisateur. La fonction <span class="html">parseInt(s)</span> retourne le <span class="html">Number</span> équivalent à la chaîne de caractères passée en paramètre, ou null si la conversion n'a pas pi se faire (chaîne invalide).</p>
+                                </li>
+                                <li>
+                                    <p>Après chaquepion posé, la fonction regarde s'il y a une victoire et l'affiche le cas échéant : le jeu est terminé. S'il n'y a pas pas de victoire, la fonction regarde si la grille est pleine. Dans ce cas, c'est une égalité et le jeu est aussi terminé. S'il n'y a ni ctoire ni égalité, le jeu boucle en passant au joueur suivant.</p>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+<pre class="taille60"><code class="html">var nbrLignes = 6;
+var nbrColonnes = 7;
+var caseVide = ' ';
+var jetonRouge = 'O';
+var jetonJaune = 'X';
+var suite = 4;
+var jetonCourant = jetonRouge;
+var joueurCourant = "red";
+
+var jeu = function () {
+    
+    var grille = initialiserGrille();
+    
+    function initialiserGrille() {
+        var tab = [];
+        for (var ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            tab.push([]);
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
+                tab[ligne].push(caseVide);
+            }
+        }
+        return tab;
+    }
+    
+    function afficher() {
+        for (var ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            var ligneAAfficher = ' | ';
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
+                ligneAAfficher += grille[ligne][colonne] + ' | ');
+            }
+            console.log(ligneAAfficher);
+        }
+    }
+    
+    function jouer(colonne, couleur) {
+        colonne--;
+        var ligne;
+        for (ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            if (grille[ligne][colonne] !== caseVide) {
+                break;
+            }
+        }
+        if (ligne === 0) {
+            return false;
+        }
+        grille[ligne - 1][colonne] = couleur;
+        changerJoueur();
+        return true;
+    }
+    
+    function checkedColonne() {
+        for (var colonne = ; colonne &lt; nbrColonnes; colonne++) {
+            for (var ligne = ; ligne &lt;= nbrLignes - suite; ligne++) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne + 1][colonne] && grille[ligne][colonne] === grille[ligne + 2][colonne] && grille[ligne][colonne] === grille[ligne + 3][colonne]) {
+                    return grille[ligne][colonne];
+                }
+            }
+        }
+        return false;
+    }
+    
+    function checkedLigne() {
+        for (var colonne = ; colonne &lt;= nbrColonnes - suite; colonne++) {
+            for (var ligne = ; ligne &lt; nbrLignes; ligne++) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne][colonne + 1] && grille[ligne][colonne] === grille[ligne][colonne + 2] && grille[ligne][colonne] === grille[ligne][colonne + 3]) {
+                    return grille[ligne][colonne];
+                }
+            }
+        }
+        return false;
+    }
+    
+    function checkedD1() {
+        for (var ligne = 0; ligne &lt;= nbrLignes - suite; ligne++) {
+            for (var colonne = 0; colonne &lt;= nbrColonnes - suite; colonne++) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne - 1][colonne -1] && grille[ligne][colonne] === grille[ligne - 2][colonne - 2] && grille[ligne][colonne] === grille[ligne - 3][colonne -3]) {
+                    return grille[ligne][colonne];
+                }
+        }
+        return false;
+    }
+    
+    function checkedD2() {
+        for (var ligne = 0; ligne &lt;= nbrLignes - suite; ligne++) {
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne + 1][colonne -1] && grille[ligne][colonne] === grille[ligne + 2][colonne - 2] && grille[ligne][colonne] === grille[ligne + 3][colonne -3]) {
+                    return grille[ligne][colonne];
+                }
+        }
+        return false;
+    }
+    
+    function gagnant() {
+        var gagnant;
+        if ((gagnant = checkedLigne()) !== false) {
+            return gagnant;
+        }
+        if ((gagnant = checkedColonne()) !== false) {
+            return gagnant;
+        }
+        if ((gagnant = checkedD1()) !== false) {
+            return gagnant;
+        }
+        if ((gagnant = checkedD2()) !== false) {
+            return gagnant;
+        }
+        return false;
+    }
+    
+    function grilleRemplie() {
+        for (var ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
+                if (grille[ligne][colonne] === caseVide) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    function changerJoueur() {
+        if (joueurCourant === 'red') {
+            jetonCourant = jetonJaune;
+            joueurCourant = 'yellow';
+        } else {
+            jetonCourant = jetonRouge;
+            joueurCourant = 'red';
+        }
+    }
+    
+    var self = {
+        afficher : afficher,
+        jouer : jouer,
+        gagnant : gagnant,
+        grilleRemplie : grilleRemplie
+    };
+    
+    return self;
+}
+
+var game = jeu();
+var numCol;
+var gagnant;
+while ((gagnant = game.gagnant()) === false && !game.grilleRemplie()) {
+    console.log('C\'est aux ' + joueurCourant + ' de jouer');
+    if (!isNan(numCol = parseInt(console.readln()))) {
+        game.jouer(numCol, jetonCourant);
+        game.afficher();
+    }
+}
+if (game.grilleRemplie()) {
+    console.log('C\'est égalité');
+} else {
+    console.log('gagant = ' + gagnant);
+}</code></pre>
+                    <h3 id="exercice4">Exercice n° 4 :</h3>
+                    <p><a href="https://fr.wikipedia.org/wiki/Bataille_navale_(jeu)" target="_blank">Jouons à la bataille navale.</a></p>
+                    <p>Cette fois l'énoncé sera moins, directif, à vous de voir ce qui doit être fait pour que cela fonctionne !</p>
+                    <ol type="A">
+                        <li>
+                            <p>Créez une pseudo classe grille composée de 10 lignes et 10 colonnes.</p>
+                            <ol type="a">
+                                <li>
+                                    <p>Ajoutez les fonctions nécessaires à y placer les bateaux (4 bateaux de 2 cases, 3 de 3 cases, 2 de 4 cases et 1 de 5 cases).</p>
+                                </li>
+                                <li>
+                                    <p>Ajoutez les fonctions permettant de tirer sur les bateaux.</p>
+                                </li>
+                                <li>
+                                    <p>Ajoutez les fonctions permettant d'afficher l'état d'une grille. Une fonction affiche la grille du joueur qui voit ses propres bateaux, tandis que l'autre fonction n'affiche que les coups qu'il a joués et s'ils ont touchés ou pas.</p>
+                                </li>
+                                <li>
+                                    <p>Ajoutez une fonction permettant de placer les bateaux aléatoirement. Pour information, <span class="html">Math.random()</span> retourne un nombre compris entre 0 et 1 exclus.</p>
+                                </li>
+                                <li>
+                                    <p>Créez une fonction déterminant s'il reste des bateaux vivants sur la grille.</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Testez votre grille.</p>
+                        </li>
+                        <li>
+                            <p>Construisez une fonction de jeu.</p>
+                            <ol type="a">
+                                <li>
+                                    <p>Cette fonction instancie une grille pour l'ordinateur et une grille pour le joueur. Elle tire au hasard des positions pour les bateaux des deux grilles.</p>
+                                </li>
+                                <li>
+                                    <p>À chaque tour, les deux grilles sont affichées; celles de l'ordinateur n'affiche que les coups joués par le joueur, tandis que l'autre affiche aussi ses propres bateaux.</p>
+                                </li>
+                                <li>
+                                    <p>Quand c'est son tour, le joueur rentre la ligne puis ensuite il rentre la colonne du coup qu'il joue. L'ordinateur tire au hasard.</p>
+                                </li>
+                                <li>
+                                    <p>À chaque tour, il faut vérifier si un des joueurs a gagné et ne continuer que tant que ce n'est pas le cas.</p>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+<pre class="taille60"><code class="html">var nbrLignes = 10;
+var nbrColonnes = 10;
+var caseVide = ' ';
+var joueurCourant = 'ordi';
+var numCol, numLigne, etatGrilleJoueur, etatGrilleOrdi;
+
+var jeu = function () {
+    
+    var bateaux = [5, 4, 4, 3, 3, 3, 2, 2, 2, 2];
+    var grille = initialiserGrille();
+    var etatGrille = initialiserGrille();
+    placerBateaux();
+    
+    function initialiserGrille() {
+        var tab = [];
+        for (var ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            tab.push([]);
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
+                tab[ligne].push(caseVide);
+            }
+        }
+        return tab;
+    }
+    
+    function afficherEtat() {
+        var ligneAAfficher = '     0   1   3   4   5   6   7   8   9 \n';
+        for (var ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            ligneAAfficher += ligne + ' ';
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne) {
+                ligneAAfficher += ' | ' + etatGrille[ligne][colonne];
+            }
+            ligneAAfficher += ' |\n';
+        }
+        console.log(ligneAAfficher);
+        return etatGrille;
+    }
+
+    function afficherEtat() {
+        var ligneAAfficher = '     0   1   3   4   5   6   7   8   9 \n';
+        for (var ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            ligneAAfficher += ligne + ' ';
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne) {
+                ligneAAfficher += ' | ' + etatGrille[ligne][colonne];
+            }
+            ligneAAfficher += ' |\n';
+        }
+        console.log(ligneAAfficher);
+    }
+    
+    function placerBateaux() {
+        for (var i = 0; i &lt; bateaux.length; i++) {
+            placerBateau(bateaux[i]);
+        }
+    }
+    
+    function placerBateau(nbCases) {
+        var ok = false;
+        while (!ok) {
+            var placesLibres = true;
+            var inclinaison = Math.random();
+            var ligne = Math.ceil(Math.random() * nbrColonnes) - 1;
+            var colonne = Math.ceil(Math.random() * nbrLignes) - 1;
+            if (inclinaison &lt; 0.5) {
+                for (var i = 0; i &lt; nbCases; i++à {
+                    if (ligne + nbCases &gt;= nbrLignes || grille[ligne + i][colonne] !== caseVide) {
+                        placesLibres = false;
+                    }
+                }
+                if (placesLibres) {
+                    for (var i = 0; i &lt; nbCases; i++) {
+                        grille[ligne + i][colonne] = 'X';
+                    }
+                    ok = true;
+                }
+            } else {
+                for (var i = 0; i &lt; nbCases; i++) {
+                    if (colonne + nbCases &gt;= nbrColonnes || grille[ligne][colonne + i] !== caseVide) {
+                        placesLibres = false;
+                    }
+                }
+                if (placesLibres) {
+                    for (var i = 0; i &lt; nbCases; i++) {
+                        grille[ligne][colonne + i] = 'X';
+                    }
+                    ok = true;
+                }
+            }
+        }
+    }
+    
+    function tirer(ligne, colonne, grilleEnnemie) {
+        var touvher = grille[ligne][colonne] === 'X';
+        if (toucher) {
+            grilleEnnemie.placerBonCoup(ligne, colonne);
+        } else {
+            grilleEnnemie.placerMauvaisCoup(ligne, colonne);
+        }
+        return toucher;
+    }
+    
+    function placerBonCoup(ligne, colonne) {
+        etatGrille[ligne][colonne] = 'X';
+    }
+    
+    function placerMauvaisCoup(ligne, colonne) {
+        etatGrille[ligne][colonne] = 'O';
+    }
+    
+    function existeBateau() {
+        for (var i = 0; i &lt; nbrLignes; i++) {
+            for (var j = 0; j &lt; nbrColonnes; j++) {
+                if (grille[i][j] === 'X' && etatGrille[i][j] !== grille[i][j]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    var self = {
+        afficherEtat : afficherEtat,
+        afficherGrille : afficherGrille,
+        existeBateau : existeBateau,
+        tirer : tirer,
+        placerBonCoup : placerBonCoup,
+        placerMauvaisCoup : placerMauvaisCoups
+    };
+    
+    return self;
+}
+
+var gameOrdi = jeu();
+var gameJoueur = jeu();
+console.log('Grille de l\'ordi :');
+gameOrdi.afficherGrille();
+console.log('Grille du joueur :');
+gameJoueur.afficherGrille();
+while (gameOrdi.existeBateau() && gameJoueur.existeBateau()) {
+    console.log('Grille état de l\'ordi' :);
+    etatGrilleOrdi = gameOrdi.afficherEtat();
+    console.log('Grille état du joueur :');
+    etatGrilleJoueur = gameJoueur.afficherEtat();
+    while ('ordi' === joueurCourant) {
+        numLigne = Math.ceil(nbrLignes * Math.random()) - 1;
+        numCol = Math.ceil(nbrColonnes * Math.random()) -1;
+        if (etatGrilleJoueur[numLigne][numCol] === caseVide) {
+            gameOrdi.tirer(numLigne, numCol, gameJoueur);
+            joueurCourant = 'joueur';
+        }
+    }
+    while ('joueur' === joueurCourant) {
+        numLigne = parseInt(console.readln());
+        numCol = parseInt(console.readln());
+        if (!isNaN(numLigne) && !isNaN(numCol) && etatGrilleOrdi[numLigne][numCol] === caseVide) {
+            gameJoueur.tirer(numLigne, numCol, gameOrdi);
+            joueurCourant = 'ordi';
+        }
+    }
+}
+if (!gameOrdi.existeBateau()) {
+    console.log('Le joueur a gagné !');
+} else {
+    console.log('L\'ordi a gagné !');
+}</code></pre>
+                    <h3 id="exercice4">Exercice n° 4 :</h3>
+                    <p>Nous allons porter le Puissance 4 en HTML :</p>
+                    <ul>
+                        <li>
+                            <p>Créez une page qui contient une table de 7x7 cellules.</p>
+                        </li>
+                        <li>
+                            <p>Sur les six premières rangées, chaque cellule contient un &lt;div&gt; dont le width et height est de 100%.</p>
+                        </li>
+                        <li>
+                            <p>Sur la dernière rangée, chaque cellule contient un &lt;button&gt; dont le width et height est de 100%. De plus, le onclick de chaque bouton appelle la fonction joue avec en paramètre le numéro de colonne. Donc, <span class="html">onclick="joue(1)"</span> pour le premier bouton, <span class="html">onclick="joue(2)"</span> pour le second bouton etc.</p>
+                        </li>
+                        <li>
+                            <p>À la fin de la page, le fichier puissance4.js est chargé. Vous pouvez récupérer votre code code de puissance4 en console comme base de travail.</p>
+                        </li>
+                        <li>
+                            <p>L'affichage de l'état du jeu passe maintenantpar le DOM, écrivez une fonction pour le réaliser :</p>
+                            <ul>
+                                <li>
+                                    <p>Il faut trouver la table, par exemple en utilisant <a href="https://developer.mozilla.org/en-US/docs/Web/API/document/getElementsByTagName" class="html" target="_blank">getElementsByTagName</a>.</p>
+                                </li>
+                                <li>
+                                    <p>Il faut parcourir cette table pour trouver les cellules. Utilisez l'inspecteur du browser pour bien visualiser la structure de l'arbre. Utilisez par exemple <a href="http://www.w3schools.com/dom/prop_element_childnodes.asp" class="html" target="_blank">prop element childnodes</a>.</p>
+                                </li>
+                                <li>
+                                    <p>Les &lt;div&gt; dans chacune des cellules doivent avoir leurs backgroundColor misent à blanc, rouge ou jaune en fonction de l'état du jeu.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Les tours de jeu ne peuvent plus être gérés par une boucle utilisant un <span class="html">console.readln()</span> : ccette fonction n'existe pas dans un navigateur. Par contre, nous avons placé des boutons qui appelle la fonction joue et donnant en paramètre le numéro de colonne qui doit être joué. Implémentez cette fonction.</p>
+                        </li>
+                        <li>
+                            <p>Bonus 1 : améliorer le programme en soignant la présentation avec le CSS, ajoutez un texte qui indique qui doit jouer, gérer de la fin du jeu avec la possibilité de relancer une partie, etc...</p>
+                        </li>
+                        <li>
+                            <p>Bonus 2 : animons la descente d'un pion dans la grille. La manière d'effectuer cela en JavaScript est contre-intuitive : on ne peut pas faire une boucle qui passe le pion dans chacune des cases intermédiaires. Le résultat sera que le navigateur reste "gelé" durant toute la période de l'animation et seule la dernière étape est affichée. La raison est qu'un navigateur agit d'une manière mono-threadée : quand la boucle JavaScript s'exécute, rien d'autre ne se passe : pas d'intéraction avec l'utilisateur, pas de rafraïchissement de l'interface. Il faut donc "rendre" la main au navigateur, en terminant le traitement en cours (en laissant la fonction s'achever). Mais l'animation demande de reprendre la main après un certain temps pour afficher l'étape suivante. Nous utiliserons la fonction <span class="html">setTimeout(f, t)</span> pour effectuer cela : <span class="html">f</span> est une fonction qui sera appelée après <span class="html">t</span> millisecondes. Ainsi, si nous avons besoin d'une boucle, nous pouvons écrire :</p>
+<pre class="taille60"><code class="html">function boucle (etape, max) {
+    if (etape &gt;= max) {
+        return;
+    }
+    // gérer le traitement de l'étape n° etape
+    setTimeout(function() {
+        boucle(etape + 1, max);
+    }, 100);
+}
+boucle(1, 10);</code></pre>
+                            <p>Ainsi la fonction <span class="em">boucle</span> sera appelée jusqu'à ce que l'étape soit supérieur ou égal au max. Chaque traitement s'effectue à la place du commentaire, c'est similaire au corps d'une boucle for. Pour que l'itération suivante se fasse, la fonction setTimeout est appelée. Le premier paramètre est une fonction qui appelle la fonction <span class="em">boucle</span> en incrémentant le numéro d'étape. Le scond paramètre dit de le faire dans <span class="em">100 ms</span>.</p>
+                        </li>
+                    </ul>
+                    <p>Dans le fichier "puissance4.css" :</p>
+<pre class="taille60"><code class="html">#grille td {
+	width: 2cm;
+	height: 2cm;
+	border: 2px solid black;
+	border-radius: 50%;
+}
+
+#grille div, button {
+	width: 100%;
+	height: 100%;
+	border-radius: 50%;
+}
+
+button #reload {
+	border-radius: unset;
+	padding: 10px;
+	width: initial;
+	height: initial;
+}</code></pre>
+                    <p>Dans le fichier "puissance4.html" :</p>
+<pre class="taille60"><code class="html">&lt;!DOCTYPE HTML&gt;
+&lt;html lang="fr"&gt;
+    &lt;head&gt;
+        &lt;meta charset="utf-8"&gt;
+        &lt;title&gt;Puissance 4&gt;
+        &lt;link rel="stylesheet" type="text/css" href="puissance4.css"&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;C'est aux &lt;span id="information"&gt;red&lt;/span&gt; de jouer !!!&lt;/h1&gt;
+        &lt;table id="grille"&gt;
+            &lt;tbody&gt;
+                &lt;!-- 1 --&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;!-- 2 --&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;!-- 3 --&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;!-- 4 --&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;!-- 5 --&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;!-- 6 --&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;div&gt;&lt;/div&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;!-- 7 --&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;&lt;button onclick="joue(1)"&gt;1&lt;/button&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;button onclick="joue(2)"&gt;2&lt;/button&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;button onclick="joue(3)"&gt;3&lt;/button&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;button onclick="joue(4)"&gt;4&lt;/button&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;button onclick="joue(5)"&gt;5&lt;/button&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;button onclick="joue(6)"&gt;6&lt;/button&gt;&lt;/td&gt;
+                    &lt;td&gt;&lt;button onclick="joue(7)"&gt;7&lt;/button&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/tbody&gt;
+        &lt;/table&gt;
+        &lt;script type="application/javascript" src="puissance4.js"&gt;&lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>Dans le fichier "puissance4.js" :</p>
+<pre class="taille60"><code class="html">var nbrLignes = 6;
+var nbrColonnes = 7;
+var caseVide = ' ';
+var jetonRouge = 'O';
+var jetonCourant = jetonRouge;
+var joueurCourant = 'red';
+var suite = 4;
+var info = document.getElementById('information');
+var td = document.body.getElementsByTagName('td');
+
+var jeu = function () {
+    
+    var grille = initialiserGrille();
+    
+    function initialiserGrille() {
+        var tab = [];
+        for (var ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            tab.push([]);
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
+                tab[ligne].push(caseVide);
+            }
+        }
+        return tab;
+    }
+    
+    function afficher() {
+        for (var ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            var ligneAAfficher = ' | ';
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
+                ligneAAfficher += grille[ligne][colonne] + ' | ';
+            }
+            console.log(ligneAAfficher);
+        }
+    }
+    
+    function jouer(colonne) {
+        colonne--;
+        var ligne;
+        for (ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            if (grille[ligne][colonne] !== caseVide) {
+                break;
+            }
+        }
+        if (ligne === 0) {
+            return false;
+        }
+        ligne--;
+        grille[ligne][colonne] = jetonCourant;
+        /* var nb = (ligne * nbrColonnes) + colonne;
+        td[nb].style.backgroundColor = joueurCourant; */
+        animer(ligne, 0, colonne);
+        return true;
+    }
+    
+    function animer(max, ligne, colonne) {
+        if (ligne &gt; max) {
+            changerJoueur();
+            return;
+        }
+        if (ligne - 1 &gt;= 0) {
+            var nbO = ((ligne - 1) * nbrColonnes) + colonne;
+            td[nbO].style.backgroundColor = 'white';
+        }
+        var nbC= (ligne * nbrColonnes + colonne;
+        td[nbC].style.backgroundColor = joueurCourant;
+        setTimeOut(function() {
+            animer(max; ligne + 1, colonne);
+        }, 10);
+    }
+    
+    function checkedColonne() {
+        for (var colonne = ; colonne &lt; nbrColonnes; colonne++) {
+            for (var ligne = ; ligne &lt;= nbrLignes - suite; ligne++) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne + 1][colonne] && grille[ligne][colonne] === grille[ligne + 2][colonne] && grille[ligne][colonne] === grille[ligne + 3][colonne]) {
+                    return grille[ligne][colonne];
+                }
+            }
+        }
+        return false;
+    }
+    
+    function checkedLigne() {
+        for (var colonne = ; colonne &lt;= nbrColonnes - suite; colonne++) {
+            for (var ligne = ; ligne &lt; nbrLignes; ligne++) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne][colonne + 1] && grille[ligne][colonne] === grille[ligne][colonne + 2] && grille[ligne][colonne] === grille[ligne][colonne + 3]) {
+                    return grille[ligne][colonne];
+                }
+            }
+        }
+        return false;
+    }
+    
+    function checkedD1() {
+        for (var ligne = 0; ligne &lt;= nbrLignes - suite; ligne++) {
+            for (var colonne = 0; colonne &lt;= nbrColonnes - suite; colonne++) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne - 1][colonne -1] && grille[ligne][colonne] === grille[ligne - 2][colonne - 2] && grille[ligne][colonne] === grille[ligne - 3][colonne -3]) {
+                    return grille[ligne][colonne];
+                }
+        }
+        return false;
+    }
+    
+    function checkedD2() {
+        for (var ligne = 0; ligne &lt;= nbrLignes - suite; ligne++) {
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne + 1][colonne -1] && grille[ligne][colonne] === grille[ligne + 2][colonne - 2] && grille[ligne][colonne] === grille[ligne + 3][colonne -3]) {
+                    return grille[ligne][colonne];
+                }
+        }
+        return false;
+    }
+    
+    function gagnant() {
+        var gagnant;
+        if ((gagnant = checkedLigne()) !== false) {
+            return joueur(gagnant);
+        }
+        if ((gagnant = checkedColonne()) !== false) {
+            return joueur(gagnant);
+        }
+        if ((gagnant = checkedD1()) !== false) {
+            return joueur(gagnant);
+        }
+        if ((gagnant = checkedD2()) !== false) {
+            return joueur(gagnant);
+        }
+        return false;
+    }
+    
+    function grilleRemplie() {
+        for (var ligne = 0; ligne &lt; nbrLignes; ligne++) {
+            for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
+                if (grille[ligne][colonne] === caseVide) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    function joueur(jeton) {
+        return (jeton === jetonRouge) ? 'red' : 'yellow';
+    }
+    
+    function changerJoueur() {
+        if (joueurCourant === 'red') {
+            jetonCourant = jetonJaune;
+            joueurCourant = 'yellow';
+        } else {
+            jetonCourant = jetonRouge;
+            joueurCourant = 'red';
+        }
+    }
+    
+    var self = {
+        afficher : afficher,
+        jouer : jouer,
+        gagnant : gagnant,
+        grilleRemplie : grilleRemplie
+    };
+    
+    return self;
+}
+
+var game = jeu();
+var gagnant;
+var button = '&lt;br&gt;&lt;button onclick="location.reload();" id="reload"&gt;Recharger la grille&lt;/button&gt;
+function joue(i) {
+    game.jouer(i);
+    info.innerHTML = joueurCourant;
+    game.afficher();
+    if (game.grilleRemplie) {
+        info.innerHTML = 'C\'est égalité !' + button;
+    }
+    if ((gagnant = game.gagnant()) !== false) {
+        info.innerHTML = 'Le gagnant est les "' + gagnant + '"' + button;
+    }
+}</code></pre>
+                    <h3 id="exercice5">Exercices 5 sur JQuery :</h3>
+                    <h4>Préambule - Environnement de développement JQuery :</h4>
+                    <p>Consultez à l'aide de Notepad++ le code source de deux emples dans les répertoires suivants d'"Exercices 4" :</p>
+                    <ul>
+                        <li>
+                            <p>Base pour le développement</p>
+                        </li>
+                        <li>
+                            <p>Hello World !</p>
+                        </li>
+                    </ul>
+                    <p>Faites-les fonctionner dans le navigateur Web de votre choix.</p>
+                    <ol>
+                        <li>
+                            <p>À partir du code présenté dans le dossier "Exercice 4.1", écrivez un script JQuery pour :</p>
+                            <ol>
+                                <li>
+                                    <p>colorier le <sup>er</sup> élément de la liste en rouge</p>
+                                </li>
+                                <li>
+                                    <p>colorier les éléments de la liste une ligne sur deux en vert et l'autre ligne sur deux en rouge.</p>
+                                </li>
+                            </ol>
+                            <p>Dans le fichier "index.html" :</p>
+<pre class="taille60"><code class="html">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;meta charset="utf-8"&gt;
+        &lt;title&gt;Exercice 4.1&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div&gt;
+            &lt;ul id="list"&gt;
+                &lt;li&gt;Élément 1 de liste&lt;/li&gt;
+                &lt;li&gt;Élément 2 de liste&lt;/li&gt;
+                &lt;li&gt;Élément 3 de liste&lt;/li&gt;
+                &lt;li&gt;Élément 4 de liste&lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/div&gt;
+        &lt;script src="jquery.js"&gt;&lt;/script&gt;
+        &lt;script src="myscript.js"&gt;&lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                            <p>Dans le fichier "myscript.js" :</p>
+<pre class="taille60"><code class="html">$(function() {
+	$('#list &gt; li:first').css('color', 'red');
+	$('#list &gt; li:even').css('color', 'green');
+	$('#list &gt; li:odd').css('color', 'red');
+});</code></pre>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
