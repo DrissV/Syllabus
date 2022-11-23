@@ -46,12 +46,13 @@
                 <nav role="navigation">
                     <ol>
                         <li><a href="../supplements.html">Retour au sommaire</a></li>
-                        <li><a href="seance_1">Séance 1</a></li>
-                        <li><a href="seance_2">Séance 2</a></li>
-                        <li><a href="seance_3">Séance 3</a></li>
-                        <li><a href="seance_4">Séance 4</a></li>
-                        <li><a href="seance_5">Séance 5</a></li>
-                        <li><a href="poo">Programmation Orientée Objet</a></li>
+                        <li><a href="#seance_1">Séance 1</a></li>
+                        <li><a href="#seance_2">Séance 2</a></li>
+                        <li><a href="#seance_3">Séance 3</a></li>
+                        <li><a href="#seance_4">Séance 4</a></li>
+                        <li><a href="#seance_5">Séance 5</a></li>
+                        <li><a href="#poo">Programmation Orientée Objet</a></li>
+                        <li><a href="#enum">Les énumérations</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1781,6 +1782,7 @@ for item in dico.items() :
                 </article>
                 <article>
                     <h2 id="poo">Python : Programmation Orientée Objet :</h2>
+                    <p>Ce qui va suivre provient du <a href="https://openclassrooms.com/fr/courses/7150616-apprenez-la-programmation-orientee-objet-avec-python" target="_blank">cours d'OpenClassRooms "Apprenez la programmtion orientée objet avec Python"</a> !</p>
                     <p>Comme dans la plupart des langages de programmation, chaque déclaration de la classe commence avec le mot-clé <span class="html">class</span> suivi du nom de cette classe.</p>
                     <p>Voici un exemple :</p>
 <pre class="taille60"><code class="html">class Rectangle :
@@ -1846,6 +1848,18 @@ rectangle.color = "yellow"</code></pre>
 <pre class="taille60"><code class="html">area = rectangle.calculate_area()
 print(area)</code></pre>
                     <p>Python s'occupe de l'argument <span class="html">self</span> de la méthode calculate_area() pour nous ! Comme self fait simplement référence à cet objet, Python sait déjà sur quel objet vous invoquez la méthode. En fait, lors de l'appel d'une méthode d'instance, Python passe l'instance rectangle en tant que premier argument "self" à la classe Rectangle, sans crier garde ! Faire <span class="em">rectangle.calculate_area()</span> revient à faire <span class="em">Rectangle.calculate_area(rectangle)</span> ! Vous avouerez que la première version est plus élégante et compréhensible.</p>
+                    <p>Comme dit précédemment, les variables et les méthodes sont des attributs de classe. Donc, il existe également une méthode magique qui récupère la valeur de l'attribut, <span class="html">__getattribute__(name_of_attribute)</span>.</p>
+<pre class="taille60"><code class="html">rectangle = Rectangle(5, 3)
+color = rectangle.__getattribute__('color')
+print(color)
+calculate_area = rectangle.__getattribute__('calculate_area')
+print(calculate_area())
+
+# revient à la même chose que :
+
+rectangle = Rectangle(5, 3)
+print(rectangle.color)
+print(rectangle.calculate_area())</code></pre>
                     <p>L'une des choses les plus utiles de la programmation orientée objet, c'est le cconcept <span class="em">d'heritage</span>. L'héritage vous permet de créer une <span class="em">sous-classe</span> (ou classe <span class="em">enfant</span>) d'une classe <span class="em">parent</span>, qui contient les attributs du parent ansi que d'autres attributs spécifiques à l'enfant.</p>
                     <p>Nous utilisons l'héritage en programmation orientée objet pour plusieurs raisons différentes, mais liées entre elles :</p>
                     <ol>
@@ -1915,6 +1929,149 @@ class Coffee(Drink) :
                     <p>Le plus souvent, l'héritage multiple <span class="em">n'est pas une solution</span> à votre problème, mais il n'en reste pas moins qu'il existe quelques situations oµ il représente la meilleure solution possible. En tout cas, comme vous risquez de rencontrer l'héritage multiple dans votre activité professionnelle, nous le traiterons donc ici.</p>
                     <p>Le modèle que nous avons utilisé ici est souvent nommé un <span class="em">Mixin</span> - nommé ainsi car vous ajoutez ("mix in") une fonctionnalité nécessaire. Si vous avez programmé en d'autres langages, vous connaissez peut-être les <span class="em">interfaces</span>, <span class="em">traits</span>, ou <span class="em">classes de types</span> - qui sont tous des concepts similaires, mais distincts.</p>
                     <p>Le problème du diamant (ou le "Deadly Diamond of Death", soit littéralement le "diamant de la mort qui tue") est l'un des problèmes principaux de l'héritage multiple qui se passe quand deux classes parents implémentent la même méthode.</p>
+                </article>
+                <article>
+                    <h2 id="enum">Les énumérations :</h2>
+                    <p>Ce qui va suivre a été copié de <a href="https://docs.python.org/fr/3.7/library/enum.html" target="_blank">la documentation sur les énumérations de Python 3.7.</a> !</p>
+                    <p>Une énumération est un ensemble de noms symboliques, appelés <span class="em">membres</span>, liés à des valeurs constantes et uniques. Au sein d'une énumération, les membres peuvent être comparés entre eux et il est possible d'itérer sur l'énumération elle-même.</p>
+                    <h3 id="contenu_module_enum">Contenu du module :</h3>
+                    <p>Ce mdule définit quatre classes d'énumération qui permettent de définir des ensembles uniques de noms et de valeurs : <a target="#enum_class">Enum</a>, <a href="#intenum_class">IntEnum</a>, <a href="#flag_class">Flag</a> et <a href="#intflag_class">IntFlag</a>. Il fournit également un décorateur, <a href="#unique_decorateur">unique()</a>, ainsi qu'une classe utilitaire, <a href="#auto_class">auto</a>.</p>
+                    <dl>
+                        <dt id="enum_class" class="html">
+                            <p>class enum.Enum</p>
+                        </dt>
+                        <dd>
+                            <p>Classe de base pour créer une énumération de constantes.</p>
+                        </dd>
+                        <dt id="intenum_class" class="html">
+                            <p>class enum.IntEnum</p>
+                        </dt>
+                        <dd>
+                            <p>Classe de base pour créer une énumération de constantes qui sont également des sous-classes de <a href="https://docs.python.org/fr/3.7/library/functions.html#int" target="_blank">int</a>.</p>
+                        </dd>
+                        <dt id="intflag_class" class="html">
+                            <p>class enum.IntFlag</p>
+                        </dt>
+                        <dd>
+                            <p>Classe de base pour créer une énumération de constantes pouvant être combinées avec des opérateurs de comparaison bit-à-bit, sans perdre leur qualité de IntFlag. Les membres de IntFlag sont aussi des sous-classes de <a href="https://docs.python.org/fr/3.7/library/functions.html#int" target="_blank">int</a>.</p>
+                        </dd>
+                        <dt id="flag_class" class="html">
+                            <p>class enum.Flag</p>
+                        </dt>
+                        <dd>
+                            <p>Classe de base pour créer une énumération de constantes pouvant être combinées avec des opérateurs de comparaison bit-à-bit, sans perdre leur qualité de Flag.</p>
+                        </dd>
+                        <dt id="unique_decorateur" class="html">
+                            <p>enum.unique()</p>
+                        </dt>
+                        <dd>
+                            <p>Décorateur de classe qui garantit qu'une valeur ne puisse être associée qu'à un seul nom.</p>
+                        </dd>
+                        <dt id="auto_class" class="html">
+                            <p>class enum.auto</p>
+                        </dt>
+                        <dd>
+                            <p>Les instances sont remplacées par une valeur appropriée pour les membres Enum. La valeur initiale commence à 1.</p>
+                        </dd>
+                    </dl>
+                    <h3 id="creation_enum">Création d'une Enum :</h3>
+                    <p>Une énumération est créée comme une <span class="html">class</span>, ce qui la rend facile à lire et à écrire. Une autre méthode de création est décrite dans <a href="https://docs.python.org/fr/3.7/library/enum.html#functional-api" target="_blank">API par fonction</a>. Pour définir une énumération, il faut hériter de <span class="html">Enum</span> de la manière suivante :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;from enum import Enum
+&gt;&gt;&gt;class Color (Enum) :
+... RED = 1
+... GREEN = 2
+... BLUE = 3
+...</code></pre>
+                    <p>Note : La valeur d'un membre peut être de n'importe quel type : <span class="html">int</span>, <span class="html">str</span>, etc. Si la valeur exacte n'a pas d'importance, utilisez des instances de <span class="html">auto</span> et une valeur appropriée sera choisie pour vous. Soyez vigilant si vous mélangez <span class="html">auto</span> avec d'autres valeurs.</p>
+                    <p>Note : Nomenclature :</p>
+                    <ul>
+                        <li>
+                            <p>La classe <span class="em">Color</span> est une énumération (ou un enum).</p>
+                        </li>
+                        <li>
+                            <p>Les attributs <span class="em">Color.RED</span>, <span class="em">Color.GREEN</span>, etc., sont les membres de l'énumération (ou les membres de l'enum) et sont fonctionnellement des constantes.</p>
+                        </li>
+                        <li>
+                            <p>Les membres de l'enum ont chacun un nom et une valeur; le nom de <span class="em">Color.RED</span> est <span class="em">RED</span>, la valeur de <span class="em">COLOR.BLUE</span> est <span class="em">3</span>, etc.</p>
+                        </li>
+                    </ul>
+                    <p>Note : Même si on utilise la syntaxe en <span class="html">class</span> pour créer des énumérations, les Enums ne sont pas des vraies classes Python. <a href="https://docs.python.org/fr/3.7/library/enum.html#how-are-enums-different" target="_blank">En quoi les Enums sont différentes des vraies classes Python</a></p>
+                    <p>Les membres d'une énumération ont une représentation en chaîne de caractères compréhensible par un humain :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;print(Color.RED)
+Color.RED</code></pre>
+                    <p>... tandis que leur <span class="html">repr</span> contient plus d'informations :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;print(repr(Color.RED))
+&lt;Color.RED: 1&gt;</code></pre>
+                    <p>Le type d'un membre est l'énumération auquel ce membre appartient :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;type(Color.RED)
+&lt;enum 'Color'&gt;
+&gt;&gt;&gt;isinstance(Color.GREEN, Color)
+True
+&gt;&gt;&gt;</code></pre>
+                    <p>Les membres ont également un attribut qui contient leur nom :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;print(Color.RED.name)
+RED</code></pre>
+                    <p>Les énumérations sont itérables, l'ordre d'itération est celui dans lequel les membres sont déclarés :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;class Shake(Enum) :
+... VANILLA = 7
+... CHOCOLATE = 4
+... COOKIES = 9
+... MINT = 3
+...
+&gt;&gt;&gt;for shake in Shake :
+... print(shake)
+...
+Shake.VANILLA
+Shake.CHOCOLATE
+Shake.COOKIES
+Shake.MINT</code></pre>
+                    <p>Les membres d'une énumération sont hachables, ils peuvent ainsi être utilisés dans des dictionnaires ou des ensembles :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;apples = {}
+&gt;&gt;&gt;apples[Color.RED] = 'red delicious'
+&gt;&gt;&gt;apples[Color.GREEN] = 'granny smith'
+&gt;&gt;&gt;apples == {Color.RED : 'red delicious', Color.GREEN : 'granny smith'}
+True</code></pre>
+                    <h3 id="acces_dynamique_membres_attributs">Accès dynamique aux membres et à leurs attributs :</h3>
+                    <p>Il est parfois utile de pouvoir accéder dynamiquement aux membres d'une énumération (par exemple dans des situations où ils ne suffit pas d'utiliser <span class="em">Color.RED</span> car la couleur précise n'est pas connue à l'écriture du programme). <span class="html">Enum</span> permet de tels accès :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;Color(1)
+&lt;Color.RED: 1&gt;
+&gt;&gt;&gt;Color(3)
+&lt;Color.BLUE: 3&gt;</code></pre>
+                    <p>Pour accéder aux membres par leur nom, utilisez l'accès par indexation :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;Color['RED']
+&lt;Color.RED: 1&gt;
+&gt;&gt;&gt;Color['GREEN']
+&lt;Color.GREEN: 2&gt;</code></pre>
+                    <p>Pour obtenir l'attribut <span class="html">name</span> ou <span class="html">value</span> d'un membre :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;member = Color.RED
+&gt;&gt;&gt;member.name
+'RED'
+&gt;&gt;&gt;member.value
+1</code></pre>
+                    <h3 id="duplication_membres_valeurs">Duplications de membres et de valeurs :</h3>
+                    <p>Il n'est pas possible d'avoir deux membres du même nom dans un enum :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;class Shape(Enum) :
+... SQUARE = 2
+... SQUARE = 3
+...
+<span class="em">Traceback (most recent call last):
+...
+TypeError: Attempted to reuse key: 'SQUARE'</span></code></pre>
+                    <p>Cependant, deux membres peuvent avoir la même valeur. Si deux membres A et B ont la même valeur (et que A est défini en premier), B sera un alias de A. Un accès par valeur avec la valeur commune à A et B renverra A. Un accès à B par nom renverra aussi A :</p>
+<pre class="taille60"><code class="html">&gt;&gt;&gt;class Shape(Enum) :
+... SQUARE = 2
+... DIAMOND = 1
+... CIRCLE = 3
+... ALIAS_FOR_SQUARE = 2
+...
+&gt;&gt;&gt;Shape.SQUARE
+&lt;Shape.SQUARE: 2&gt;
+&gt;&gt;&gt;Shape.ALIAS_FOR_SQUARE
+&lt;Shape.SQUARE: 2&gt;
+&gt;&gt;&gt;Shape(2)
+&lt;Shape.SQUARE: 2&gt;</code></pre>
+                    <p>Note : Il est interdit de créer un memvre avec le même nom q'un attribut déjà défini (un autre membre, une méthode, etc.) ou de créer un attribut avec le nom d'un membre.</p>
+                    <p><a href="https://docs.python.org/fr/3.7/library/enum.html#ensuring-unique-enumeration-values" target="_blank">Le reste de la documentation sur les Enums en Python.</a></p>
                 </article>
             <!-- fin de section -->
             </section>
