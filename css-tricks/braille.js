@@ -1,5 +1,9 @@
 const texte = document.querySelector('#texte');
 const braille = document.querySelector('#braille');
+const email = document.querySelector('#email');
+const submit = document.querySelector('#submit');
+const traduction_braille = document.querySelector('#traduction_braille');
+
 const caracteresBraille = {
     "a" : ".",
     "b" : "⠃",
@@ -148,13 +152,17 @@ const enBraille = (texte) => {
 }
 
 texte.addEventListener('input', () => {
-    braille.innerText = '';
+    braille.innerHTML = '';
     // braille.innerText = enBraille(texte.value);
     for (const lettre of texte.value) {
         if (caracteresBraille[lettre] !== undefined) {
-            braille.innerText += caracteresBraille[lettre];
+            braille.innerHTML += caracteresBraille[lettre];
         } else {
-            braille.innerText += lettre;
+            braille.innerHTML += lettre;
         }
     }
+});
+
+email.addEventListener('input', () => {
+    traduction_braille.setAttribute('action', 'mailto:' + email.value);
 });
