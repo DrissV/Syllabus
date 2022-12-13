@@ -114,10 +114,14 @@ const caracteresBraille = {
 
     /* Accents graves */
     "à" : "⠜",
+    "è" : "⠮",
+    "ù" : "⠾",
     "À" : "⠪",
 
-    /* Tréma */
-    "ü" : "⠫",
+    /* Trémas */
+    "ë" : "⠫",
+    "ü" : "⠳",
+    "ï" : "⠻",
     "Ü" : "⠠⠫",
     
     /* Ponctuation */
@@ -147,6 +151,10 @@ texte.addEventListener('input', () => {
     braille.innerText = '';
     // braille.innerText = enBraille(texte.value);
     for (const lettre of texte.value) {
-        braille.innerText += caracteresBraille[lettre];
+        if (caracteresBraille[lettre] !== undefined) {
+            braille.innerText += caracteresBraille[lettre];
+        } else {
+            braille.innerText += lettre;
+        }
     }
 });
