@@ -164,5 +164,32 @@ texte.addEventListener('input', () => {
 });
 
 email.addEventListener('input', () => {
-    traduction_braille.setAttribute('action', 'mailto:' + email.value);
+    //traduction_braille.setAttribute('action', 'mailto:' + email.value);
+});
+
+let doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: [300, 120],
+});
+
+let pageWidth = doc.internal.pageSize.getWidth();
+
+//var container = document.getElementById("image-wrap"); //specific element on page
+
+
+submit.addEventListener('click', () => {
+    html2canvas(braille, { allowTaint: true }).then((canvas) => {
+
+        let imgUrl = canvas.toDataURL('image/png');
+        const imgProps= doc.getImageProperties(imgUrl);
+        doc.setFontSize(20);
+        doc.text(50, 15, texte.value, 'center');
+        let x = pageWidth - imgProps.width/3;
+        console.log(imgProps.width, x);
+        doc.addImage(imgUrl, 'png',   x/2 , 25);
+        doc.save(texte.value);
+        location.reload();
+
+    });
 });
