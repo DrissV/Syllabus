@@ -1,11 +1,5 @@
-const texte = document.querySelector('#texte');
-const braille = document.querySelector('#braille');
-const email = document.querySelector('#email');
-const submit = document.querySelector('#submit');
-const traduction_braille = document.querySelector('#traduction_braille');
-
 const caracteresBraille = {
-    "a" : ".",
+    "a" : "&#x2801;",
     "b" : "⠃",
     "c" : "⠉",
     "d" : "⠙",
@@ -151,8 +145,20 @@ const enBraille = (texte) => {
     return texte;
 }
 
+const texte = document.querySelector('#texte');
+const braille = document.querySelector('#braille');
+const email = document.querySelector('#email');
+const submit = document.querySelector('#submit');
+const traduction_braille = document.querySelector('#traduction_braille');
+const canvas = document.querySelector('#canvas');
+const ctx = canvas.getContext('2d');
+ctx.font = '48px sans-serif';
+x = 10;
+y = 50;
+
 texte.addEventListener('input', () => {
     braille.innerHTML = '';
+    // braille.innerHTML = br.braille(texte.value);
     // braille.innerText = enBraille(texte.value);
     for (const lettre of texte.value) {
         if (caracteresBraille[lettre] !== undefined) {
@@ -161,6 +167,12 @@ texte.addEventListener('input', () => {
             braille.innerHTML += lettre;
         }
     }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const lines = braille.value.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], x, y + y * i);
+    }
+    ctx.save();
 });
 
 email.addEventListener('input', () => {
@@ -170,26 +182,22 @@ email.addEventListener('input', () => {
 let doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
-    format: [300, 120],
+    format: 'a4',
 });
 
 let pageWidth = doc.internal.pageSize.getWidth();
 
-//var container = document.getElementById("image-wrap"); //specific element on page
-
+// var container = document.getElementById("image-wrap"); // specific element on page
 
 submit.addEventListener('click', () => {
-    html2canvas(braille, { allowTaint: true }).then((canvas) => {
-
-        let imgUrl = canvas.toDataURL('image/png');
-        const imgProps= doc.getImageProperties(imgUrl);
-        doc.setFontSize(20);
-        doc.text(50, 15, texte.value, 'center');
-        let x = pageWidth - imgProps.width/3;
-        console.log(imgProps.width, x);
-        doc.addImage(imgUrl, 'png',   x/2 , 25);
-        doc.save(texte.value);
-        location.reload();
-
-    });
+    let imgUrl = canvas.toDataURL('image/png');
+    const imgProps= doc.getImageProperties(imgUrl);
+    doc.setFontSize(20);
+    doc.text(100, 30, texte.value, 'center');
+    let x = pageWidth - imgProps.width / 3;
+    console.log(imgProps.width, imgProps.height, x);
+    const lines = braille.value.split('\n');
+    doc.addImage(imgUrl, 'png',   x / 2 , 50);
+    doc.save(texte.value);
+    // location.reload();
 });
