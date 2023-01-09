@@ -237,7 +237,8 @@ const pageHeight = doc.internal.pageSize.getHeight();
 
 submit.addEventListener('click', () => {
     let imgUrl = canvas.toDataURL('image/png');
-    // const imgProps = doc.getImageProperties(imgUrl);
+    const imgProps = doc.getImageProperties(imgUrl);
+    console.log(imgProps);
     const textlines = doc.setFontSize(20).splitTextToSize(texte.value, pageWidth / 3);
     doc.text(pageWidth / 3, 20, textlines);
 
@@ -252,5 +253,5 @@ submit.addEventListener('click', () => {
     let marginY = (pageHeight - canvasHeight) / 2;
     doc.addImage(imgUrl, 'png', marginX, pageHeight / 2, canvasWidth, canvasHeight);
     doc.save('test_braille');
-    // location.reload();
+    location.reload();
 });
