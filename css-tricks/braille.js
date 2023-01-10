@@ -1,5 +1,5 @@
 const caracteresBraille = {
-    "a" : "&#x2801;",
+    "a" : "⠁",
     "b" : "⠃",
     "c" : "⠉",
     "d" : "⠙",
@@ -143,7 +143,7 @@ const enBraille = (texte) => {
         texte = texte.replaceAll(caractere, caractereBraille);
     }
     return texte;
-}
+};
 
 const texte = document.querySelector('#texte');
 const braille = document.querySelector('#braille');
@@ -154,9 +154,20 @@ const canvas = document.querySelector('#canvas');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const ctx = canvas.getContext('2d');
-ctx.font = '40px sans-serif';
+ctx.font = '24pt sans-serif';
 x = 10;
-y = 50;
+y = 32;
+
+let doc = new jsPDF({
+    orientation: 'l',
+    unit: 'pt',
+    format: 'a4',
+});
+
+const pageWidth = doc.internal.pageSize.getWidth();
+const pageHeight = doc.internal.pageSize.getHeight();
+
+// var container = document.getElementById("image-wrap"); // specific element on page
 
 // @description: wrapText wraps HTML canvas text onto a canvas of fixed width
 // @param ctx - the context for the canvas we want to wrap text on
@@ -224,23 +235,12 @@ email.addEventListener('input', () => {
     //traduction_braille.setAttribute('action', 'mailto:' + email.value);
 });
 
-let doc = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4',
-});
-
-const pageWidth = doc.internal.pageSize.getWidth();
-const pageHeight = doc.internal.pageSize.getHeight();
-
-// var container = document.getElementById("image-wrap"); // specific element on page
-
-submit.addEventListener('click', () => {
+submit.addEventListener('click', (e) => {
     let imgUrl = canvas.toDataURL('image/png');
     const imgProps = doc.getImageProperties(imgUrl);
     console.log(imgProps);
-    const textlines = doc.setFontSize(20).splitTextToSize(texte.value, pageWidth / 3);
-    doc.text(pageWidth / 3, 20, textlines);
+    const textlines = doc.setFont('Braille Antoine').setFontSize(24).splitTextToSize(texte.value, pageWidth / 3);
+    doc.text(pageWidth / 3, 24, textlines);
 
     const widthRatio = pageWidth / canvas.width;
     const heightRatio = pageHeight / canvas.height;
