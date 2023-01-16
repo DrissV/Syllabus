@@ -235,7 +235,7 @@ email.addEventListener('input', () => {
     //traduction_braille.setAttribute('action', 'mailto:' + email.value);
 });
 
-submit.addEventListener('click', (e) => {
+submit.addEventListener('click', () => {
     let imgUrl = canvas.toDataURL('image/png');
     const imgProps = doc.getImageProperties(imgUrl);
     console.log(imgProps);
@@ -249,8 +249,8 @@ submit.addEventListener('click', (e) => {
     const canvasWidth = canvas.width * ratio;
     const canvasHeight = canvas.height * ratio;
 
-    let marginX = (pageWidth - canvasWidth) / 2;
-    let marginY = (pageHeight - canvasHeight) / 2;
+    const marginX = (pageWidth - canvasWidth) / 2;
+    const marginY = (pageHeight - canvasHeight) / 2;
     doc.addImage(imgUrl, 'png', marginX, pageHeight / 2, canvasWidth, canvasHeight);
     doc.save('test_braille');
     location.reload();
