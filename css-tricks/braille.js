@@ -158,7 +158,7 @@ ctx.font = '24pt sans-serif';
 x = 10;
 y = 32;
 
-let doc = new jsPDF({
+/*let doc = new jsPDF({
     orientation: 'l',
     unit: 'pt',
     format: 'a4',
@@ -166,6 +166,7 @@ let doc = new jsPDF({
 
 const pageWidth = doc.internal.pageSize.getWidth();
 const pageHeight = doc.internal.pageSize.getHeight();
+*/
 
 // var container = document.getElementById("image-wrap"); // specific element on page
 
@@ -236,10 +237,25 @@ email.addEventListener('input', () => {
 });
 
 submit.addEventListener('click', () => {
-    let imgUrl = canvas.toDataURL('image/png');
+    const message = `${texte.value}\r\n${braille.value}`;
+    // Générer le contenu du PDF
+    let docDefinition = {
+        defaultStyle: {
+            characterSet: 'utf-8',
+        },
+        content: [
+            {
+                text: message,
+            }
+        ]
+    };
+
+    // Télécharger le PDF en utilisant pdfmake
+    pdfMake.createPdf(docDefinition).download('myBraille.pdf');
+    /*let imgUrl = canvas.toDataURL('image/png');
     const imgProps = doc.getImageProperties(imgUrl);
     console.log(imgProps);
-    const textlines = doc.setFont('Braille Antoine').setFontSize(24).splitTextToSize(texte.value, pageWidth / 3);
+    const textlines = doc.setFont("Arial").setFontSize(24).splitTextToSize(message, pageWidth / 3);
     doc.text(pageWidth / 3, 24, textlines);
 
     const widthRatio = pageWidth / canvas.width;
@@ -253,5 +269,5 @@ submit.addEventListener('click', () => {
     const marginY = (pageHeight - canvasHeight) / 2;
     doc.addImage(imgUrl, 'png', marginX, pageHeight / 2, canvasWidth, canvasHeight);
     doc.save('test_braille');
-    location.reload();
+    location.reload();*/
 });
