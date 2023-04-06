@@ -104,10 +104,10 @@
                     <p>Les réseaux informatiques sont utilisés pour permettre à plusieurs hôtes d'échanger des informations entre eux. Pour permettre à n'importe quel hôte d'envoyer des messages à n'importe quel autre hôte du réseau, la solution la plus simple est de les organiser en maillage complet, avec un lien direct et dédié entre chaque paire d'hôtes. Cette topologie physique est parfois utilisée, en particulier lorsqu'une haute performance et une grande redondance sont requises pour un petit nombre d'hôtes. Cependant, elle présente deux inconvénients majeurs :</p>
                     <ul>
                         <li>
-                            <p>pour un réseau contenant n hôtes, chaque hôte doit avoir n-1 interfaces physiques. En pratique, le nombre d'interfaces physiques sur un noeud limitera la taille d'un réseau en maillage complet qui peut être construit.</p>
+                            <p>pour un réseau contenant <span class="em">n</span> hôtes, chaque hôte doit avoir <span class="em">n - 1</span> interfaces physiques. En pratique, le nombre d'interfaces physiques sur un noeud limitera la taille d'un réseau en maillage complet qui peut être construit.</p>
                         </li>
                         <li>
-                            <p>pour un réseau contenant n hôtes, (n<sup>2</sup>-n)/2 liens nécessaires. Ceci est possible lorsqu'il y a quelques noeuds dans la même pièce, mais rarement lorsqu'ils sont situés à plusieurs kilomètres de distance.</p>
+                            <p>pour un réseau contenant <span class="em">n</span> hôtes, <span class="em">(n<sup>2</sup> - n) / 2</span> liens nécessaires. Ceci est possible lorsqu'il y a quelques noeuds dans la même pièce, mais rarement lorsqu'ils sont situés à plusieurs kilomètres de distance.</p>
                         </li>
                     </ul>
                     <figure>
@@ -2140,7 +2140,7 @@ while True:
                     <p>Une solution classique pour éviter de se souvenir des connexions de transport précédentes afin de détecter les duplicatas est d'utiliser une horloge à l'intérieur de chaque entité de transport. Cette <span class="html">horloge de transport</span> a les caractéristiques suivantes :</p>
                     <ul>
                         <li>
-                            <p>L'<span class="em">horloge de transport</span> est implémenté comme un compteur à <span class="em">k</span> bits et son cycle d'horloge est tel que <span class="em">2<sup>k</sup> cycles &gt;&gt; MSL</span>. De plus, le compteur d'<span class="em">horloge de transport</span> est incrémenté à chaque cycle d'horloge et après chaque établissement de connexion. Cette horloge est illustrée dans la figure ci-dessous.</p>
+                            <p>L'<span class="em">horloge de transport</span> est implémenté comme un compteur à <span class="em">k</span> bits et son cycle d'horloge est tel que <span class="em">2<sup>k</sup> * cycles &gt;&gt; MSL</span>. De plus, le compteur d'<span class="em">horloge de transport</span> est incrémenté à chaque cycle d'horloge et après chaque établissement de connexion. Cette horloge est illustrée dans la figure ci-dessous.</p>
                         </li>
                         <li>
                             <p>L'<span class="em">horloge de transport</span> doit continuer à être incrémentée même si l'entité de transport s'arrête ou redémarre.</p>
@@ -2450,7 +2450,295 @@ while True:
                         </li>
                     </ul>
                     <p>La RFC 793 définit l'option TCP <span class="em">Maximum Segment Size (MSS)</span> qui doit être comprise par toutes les implémentations TCP. Cette option (type 2) a une longueur de 4 octets et contient un mot de 16 bits qui indique le MSS pris en charge par l'émetteur du segment <span class="em">SYN</span>. L'option MSS ne peut être utilisée que dans les segments TCP ayant le drapeau <span class="em">SYN</span> activé.</p>
-                    <p>La RFC 793 définit deux options spéciales qui doivent être prises en charge par toutes les implémentations TCP. La première option est <span class="html">End of option</span>. Elle est codée sur un seul octet ayant la valeur <span class="em">0x00</span> et peut être utilisée pour séassurer que l'extension d'en-tête se termine sur une limite de 32 bits. L'option <span class="html">No-Operation</span>, codée comme un octet unique ayant la valeur <span class="em">0x01</span>, peut être utilisée lorsque l'extension d'en-tête TCP contient plusieurs options TCP qui doivent être alignées sur des limites de 32 bits. Toutes les autres options sont codées en utilisant le format <span class="html">TLV</span>.</p>
+                    <p>La RFC 793 définit deux options spéciales qui doivent être prises en charge par toutes les implémentations TCP. La première option est <span class="html">End of option</span>. Elle est codée sur un seul octet ayant la valeur <span class="em">0x00</span> et peut être utilisée pour séassurer que l'extension d'en-tête se termine sur une limite de 32 bits. L'option <span class="html">No-Operation</span>, codée comme un octet unique ayant la valeur <span class="em">0x01</span>, peut être utilisée lorsque l'extension d'en-tête TCP contient plusieurs options TCP qui doivent être alignées sur des limites de 32 bits. Toutes les autres options sont codées en utilisant le format <span class="html">TLV</span>. La liste complète de toutes options TCP peut être trouvée à l'adresse suivante : <a href="http://www.iana.org/assignments/tcp-parameters/" target="_blank">http://www.iana.org/assignments/tcp-parameters/</a>.</p>
+                    <hr>
+                    <p>Note : Le principe de robustesse :</p>
+                    <p>Le traitement des options TCP  par les implémentations TCP est l'une des nombreuses applications du principe de robustesse, généralemnt attribué à Jon Postel et souvent cité comme <q>Sois libéral dans ce que tu acceptes, et conservateur dans ce que tu envoies</q> (RFC 1122).</p>
+                    <p>En ce qui concerne les options TCP, le principe de robustesse implique qu'ne implémentation TCP devrait être capable d'accepter des options TCP qu'elle ne comprend pas, en particulier dans les segments <span class="em">SYN</span> reçus, et qu'lle devrait être capable d'analyser n'importe quel segment reçu sans planter, même si le segment contient une option TCP inconnue. De plus, un serveyr ne doit pas envoyer dans le segment <span class="em">SYN+ACK</span> ou plus tard, des options qui n'ont pas été proposées par le client dans le segment <span class="em">SYN</span>.</p>
+                    <hr>
+                    <h4>4.3.2 Libération de la connexion TCP :</h4>
+                    <p>TCP, comme la plupart des protocoles de transport orientés connexion, prend en charge deux types de libération de la connexion :</p>
+                    <ul>
+                        <li>
+                            <p>Une libération de connexion gracieuse, où chaque utilisateur TCP libérer sa propre direction de transfert de données;</p>
+                        </li>
+                        <li>
+                            <p>Une libération de connexion abrupte, où soit un utilisateur ferme les deux directions de transfert de données, soit une entité TCP est forcée de fermer la connexion (par exemple, parce que l'hôte distant ne répond plus ou en raison d'un manque de ressources).</p>
+                        </li>
+                    </ul>
+                    <p>Le mécanisme de libération de connexion abrupte est très simple et repose sur un seul segment ayant le bit <span class="html">RST</span> activé. Un segment TCP contenant le bit <span class="em">RST</span> peut être envoyé pour les raisons suivantes :</p>
+                    <ul>
+                        <li>
+                            <p>Un segment non-<span class="em">SYN</span> a été reçu pour une connexion TCP inexistante RFC 793;</p>
+                        </li>
+                        <li>
+                            <p>Par extension, certaines implémentations répondent avec un segment <span class="em">RST</span> à un segment qui est reçu sur une connexion existante mais avec un en-tête invalide RFC 3360. Cela provoque la fermeture de la connexion correspondante et a causé des attaques de sécurité RFC 4953</p>
+                        </li>
+                        <li>
+                            <p>Par extension, certaines implémentations envoient un segment <span class="em">RST</span> lorsqu'elles doivent fermer une connexion TCP existante (par exemple, parce qu'il n'y a pas assez de ressources pour prendre en charge cette connexion ou parce que l'hôte distant est considéré comme inaccessible). Des mesures ont montré que cette utilisation de TCP <span class="em">RST</span> était répandue [AW05].</p>
+                        </li>
+                    </ul>
+                    <p>Lorsqu'un segment <span class="em">RST</span> est envoyé par une entité TCP, il doit contenir la valeur actuelle du numéro de séquence pour la connexion (ou <span class="em">0</span> s'il n'appartient à aucune connexion existante) et le numéro d'acquittement doit être défini sur le prochain numéro de séquence attendu en séquence sur cette connexion.</p>
+                    <hr>
+                    <p>Notes : Les guerres de TCP RST :</p>
+                    <p>Les implémenteurs de TCP doivent veiller à ce que deux entités TCP n'entrent jamais dans une guerre de <span class="em">RST</span> où l'hôte A envoie un segment <span class="em">RST</span> en réponse à un segment <span class="em">RST</span> qui ne transportent pas de données, une entité TCP n'est jamais autorisée à envoyer un segment <span class="em">RST</span> en réponse à un autre segment <span class="em">RST</span>.</p>
+                    <hr>
+                    <p>La manière normale de terminer une connexion TCP est d'utiliser la libération de connexion TCP gracieuse. Ce mécanisme utilise le drapeau <span class="html">FIN</span> de l'en-tête TCP et permet à chaque hôte de libérer sa propre direction de transfert de données. Comme le drapeau <span class="em">SYN</span>, l'utilisation du drapeau <span class="em">FIN</span> dans l'en-tête TCP consomme un numéro de séquence. La figure <span class="em">Fig-tcprelease</span> montre la partie de la FSM TCP utilisée lorsqu'une connexion TCP est libérée.</p>
+                    <figure>
+                        <img src="../images/FSM_liberation_connexion_TCP.jpg" alt="">
+                        <figcaption>Figure 4.41 : FSM pour la libération de connexion TCP</figcaption>
+                    </figure>
+                    <p>À partir de l'état <span class="em">Established</span>, il y a deux chemins principaux à travers cette FSM.</p>
+                    <p>Le premier chemin est lorsque l'hôte reçoit un segment avec le numéro de séquence <span class="em">x</span> et le drapeau <span class="em">FIN</span> est défini. L'utilisation du drapeau <span class="em">FIN</span> indique que le byte avant le numéro de séquence <span class="em">x</span>  était le dernier byte du flux de bytes envoyé par l'hôte distant. Une fois que toutes les données ont été livrées à l'utilisateur, l'entité TCP envoie un segment <span class="em">ACK</span> dont le champ <span class="em">ack</span> est défini à <span class="em">(x + 1) mod 232</span> pour accuser réception du segment <span class="em">FIN</span>. Le segment <span class="em">FIN</span> est soumis aux mêmes mécanismes de retransmission qu'un segment TCP normal. En particulier, sa transmission est protégée par le timer de retransmission. À ce stade, la connexion TCP entre dans l'état <span class="html">CLOSE_WAIT</span>. Dans cet état, l'hôte peut encore envoyer des données à l'hôte distant. Une fois que toutes ses données ont été envoyées, il envoie un segment <span class="em">FIN</span> et entre dans l'état <span class="html">LAST_ACK</span>. Dans cet état, l'entité TCP attend l'accusé de réception de son segment <span class="em">FIN</span>. Il peut toujours retransmettre des segments de données non accusés, par exemple si le timer de retransmission expire. À la réception de l'accusé de réception pour le segment <span class="em">FIN</span>, la connexion TCP est complètement fermée et son TCB peut être supprimé.</p>
+                    <p>Le deuxi!me chemin est lorsque l'hôte décide d'abord d'envoyer un segment <span class="em">FIN</span>. Dans ce cas, il entre dans l'état <span class="html">FIN_WAIT1</span>. Dans cet état, il peut retransmettre des segments non accusés mais ne peut pas envoyer de nouveaux segments de données. Il attend un accusé de réception de son segment <span class="em">FIN</span>, mais peut recevoir un segment <span class="em">FIN</span> envoyé par l'hôte distant. Dans le premier cas, la connexion TCP entre dans l'état <span class="html">FIN_WAIT2</span>. Dans cet état, de nouveaux segments de données de l'hôte distant sont encore acceptés jusqu'à la réception du segment <span class="em">FIN</span>. L'accusé de réception de ce segment <span class="em">FIN</span> est envoyé une fois que toutes les données reçues avant le segment <span class="em">FIN</span> ont été livrées à l'utilisateur et la connexion entre dans l'état <span class="html">TIME_WAIT</span>. Dans le deuxième cas, un segment <span class="em">FIN</span> est reçu et la connexion entre dans l'état <span class="html">Closing</span> une fois que toutes les données reçues de l'hôte distant ont été livrées à l'utilisateur. Dans cet état, aucun nouveau segment de données ne peut être envoyé et l'hôte attend un accusé de réception de son segment <span class="Em">FIN</span> avant d'entrer dans l'état <span class="em">TIME_WAIT</span>.</p>
+                    <p>L'état <span class="em">TIME_WAIT</span> est différent des autres états du FSM TCP. Une entité TCP entre dans cet état après avoir envoyé le dernier segment <span class="em">ACK</span> sur une connexion TCP. Ce segment indique à l'hôte distant que toutes les données qu'il a envoyées ont été correctement reçues et qu'il peut libérer en toute sécurité la connexion TCP et supprimer le TCP correspondant. Après avoir envoyé le dernier segment <span class="Em">ACK</span>, une connexion TCP entre en <span class="em">TIME_WAIT</span> et reste dans cet état pendant 2 secondes MSL. Pendant cette période, le TCB de la connexion est maintenu. Cela garantit que l'entité TCP qui a envoyé le dernier <span class="em">ACK</span> maintient suffisamment d'état pour pouvoir retransmettre ce segment si ce segment <span class="em">ACK</span> est perdu et que l'hôte distant retransmet son dernier segment <span class="em">FIN</span> ou un autre. Le délai de 2 secondes MSL garantit que tout segment en double sur la connexion serait traité correctement sans provoquer la transmission d'un segment <span class="em">RST</span>. Sans l'état <span class="em">TIME_WAIT</span> et le délai de 2 secondes MSL, la libération de la connexion ne serait pas gracieuse lorsque le dernier segment <span class="em">ACK</span> est perdu.</p>
+                    <hr>
+                    <p>Note : TIME_WAIT sur les serveurs TCP occupés :</p>
+                    <p>Le délai de 2 secondes MSL dans l'état <span class="em">TILME_WAIT</span> est un problème opérationnel important sur les serveurs ayant des milliers de connexions TCP ouvertes simultanément [FTY99]. Considéerons par exemple un serveur web occupé qui traite 10000 connexions TCP chaque seconde. SI chacune de ces connexions reste dans l'état <span class="em">TIME_WAIT</span> pendant 4 minutes, cela implique que le serveur devrait maintenir plus de 2 millions de TCB à tout moment. POur cette raison, certaines implémentations TCP préfèrent effectuer une libération abrupte de la connexion en envoyant un segment <span class="em">RST</span> pour fermer la connexion [AW05] et supprimer immédiatement le TCB correspondnat. Cependant, si le segment <span class="em">RST</span> est perdu, l'hôte distant continue de maintenir un TCB pour une connexion qui n'existe plus. Cette optimisation réduit le nombre de TCB maintenus par l'hôte envoyant le segment <span class="em">RST</span> mais au coût potentiel d'une augmentation du traitement sur l'hôte distant lorsque le segment <span class="em">RST</span> est perdu.</p>
+                    <hr>
+                    <h4>4.3.3 Transmission fiable de données TCP :</h4>
+                    <p>Les mécanismes de transfert de données TCP d'origine ont été définis dans la RFC 793. Basé sur l'expérience d'utilisation de TCP sur l'Internet mondial croissant, cette partie de la spécification TCP a été mise à jour et améliorée plusieurs fois, tout en préservant la compatibilité ascendante avec les anciennes implémentations TCP. Dans cette section, nous passons en revue les principaux mécanismes de transpert de données utilisés par TCP.</p>
+                    <p>TCP est un protocole de transport basé sur une fenêtre qui fournit un service de flux de bytes bidirectionnel. Cela a plusieurs implications sur les champs de l'en-tête TCP et les mécanismes utilsés par TCP. Les trois champs de l'en-tête TCP sont les suivants :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">sequence number</span>. TCP utilise un numéro de séquence de 32 bits. Le <span class="em">sequence number</span> placé dans l'en-tête d'un segment TCP contenant des données est le numéro de séquence du premier octet du payload du segment TCP.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">acknowledgment number</span>. TCP utilise des acquittements positifs cumulatifs. Chaque segment TCP contient le numéro de séquence de la prochaine byte que l'expéditeur de l'acquittement s'attend à recevoir de l'hôte distant. En théorie, l'<span class="em">acknowledgment number</span> n'est valide que si le drapeau <span class="em">ACK</span> de l'en-tête TCP est défini. En pratique, presque tous les segments TCP ont leur drapeau <span class="em">ACK</span> défini. En pratique, seuls les segments <span class="em">SYN</span> n'ont pas leur drapeau <span class="em">ACK</span> défini.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">window</span>. Un récepteur TCP utilise ce champ de 16 bits pour indiquer la taille actuelle de sa fenêtre de réception exprimée en octets.</p>
+                        </li>
+                    </ul>
+                    <hr>
+                    <p>Note : Le bloc de contrôle de transmission :</p>
+                    <p>Pour chaque connexion TCP établie, une implémentation TCP doit maintenir un bloc de contrôle de transmission (TCB). Un TCB contient toutes les informations requises pour envoyer et recevoir des segments sur cette connexion RFC 793. Cela inclut :</p>
+                    <ul>
+                        <li>
+                            <p>L'adresse IP distante.</p>
+                        </li>
+                        <li>
+                            <p>L'adresse IP distante.</p>
+                        </li>
+                        <li>
+                            <p>Le numéro de port TCP local.</p>
+                        </li>
+                        <li>
+                            <p>Le numéro de port distant.</p>
+                        </li>
+                        <li>
+                            <p>L'état actuel du FSM TCP.</p>
+                        </li>
+                        <li>
+                            <p>La <span class="em">taille maximale de segment</span> (MSS).</p>
+                        </li>
+                        <li>
+                            <p><span class="html">snd.nxt</span> : le numéro de séquence du prochain octet dans le flux de données (le premier octet d'un nouveau segment de données que vous envoyez utilise ce numéro de séquence).</p>
+                        </li>
+                        <li>
+                            <p><span class="html">snd.una</span> : le numéro de séquence le plus ancien qui a été envoyé mais qui n'a pas encore été accusé de réception.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">snd.wnd</span> : la talle actuelle de la fenêtre d'envoi (en octets).</p>
+                        </li>
+                        <li>
+                            <p><span class="html">rcv.nxt</span> : le numéro de séquence du prochain octet  qui est attendu pour être reçu depuis l'hôte distant.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">rcv.wnd</span> : la taille actuelle de la fenêtre de réception annoncée par l'hôte distant.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">sending buffer</span> (tampon d'envoi) : un tampon utilisé pour stocké toutes les données non acquittées.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">received buffer</span> (tampon de réception) : un tampon pour stocker toutes les données reçues de l'hôte distant qui n'ont pas encore été livrées à l'utilisateur. Les données peuvent être stockées dans le tampon de réception car elles n'ont pas été reçues dans l'ordre ou parce que l'utilisateur est trop lent pour les traiter.</p>
+                        </li>
+                    </ul>
+                    <p>Une implémentation TCP complète contient des informations supplémentaires dans son TCB, notamment pour prendre en charge le <span class="Em">Urgent pointer</span>. Cependant, cette partie de TCP n'est pas discutée dans ce livre. Référez-vous à la RFC 793 et à la RFC 2140 pour plus de détails sur le TCB.</p>
+                    <hr>
+                    <p>La spécification originale de TCP peut être catégorisée comme un protocole de transport qui fournit un service de flux de données et utilise <span class="em">Go-Back-N</span>.</p>
+                    <p>Pour envoyer de nouvelles données sur une connexion établie, une entité TCP effectue les opérations suivantes sur la TCB correspondante. Elle vérifie d'abord que le <span class="Em">tampon d'envoi</span> ne contient pas plus de donénes que la fenêtre de réception annoncée par l'hôte distant (<span class="em">rcv.wnd</span>. Si la fenêtre n'est pas pleine, jusqu'à <span class="em">MSS</span> octets de données sont placés dans le payload d'un segment TCP. Le <span class="em">numéeo de séquence</span> de ce segment est le numéro de séquence du premier octet du payload. Il est défini sur le premier numéro de séquence disponible : <span class="em">snd.nxt</span> et <span class="em">snd.nxt</span> est incrémenté de la longueur du payload du segment TCP. Le <span class="em">numéro d'acquittement</span> de ce segment est défini sur la valeur actuelle de <span class="em">rcv.nxt</span> et le champ de la fenêtre du segment TCP est calculé en fonction de l'ocupation actuelle du <span class="em">tampon de réception</span>. Les données sont conservées dans le <span class="em">tampon d'envoi</span> au cas où elles devraient être retransmises ultérieurement.</p>
+                    <p>Lorsqu'un segment TCP avec le drapeau <span class="em">ACK</span> est reçu, les opérations suivantes sont effectuées. <span class="em">rcv.wnd</span> est défini sur la valeur du champ de la fenêtre du segment reçu. Le <span class="em">numéro d'acquittement</span> est comparé à <span class="em">snd.una</span>. Les données nouvellemnt reconnues sont supprimées du <span class="em">tampon d'envoi</span> et <span class="em">snd.una</span> est mis à jour. Si le segment TCP contenait des données, le <span class="em">numéro de séquence</span> est comparé à <span class="em">rcv.nxt</span>. S'ils sont égaux, le segment a été reçu en séquence et les données peuvent être livrées à l'utilisateur et <span class="em">rcv.nxt</span> est mis à jour. Le contenu du <span class="em">tampon de réception</span> est vérifié pour voir si d'autres données déjà présentes dans ce tampon peuvent être livrées en séquence à l'utilisateur. Si c'est le cas, <span class="em">rcv.nxt</span> est mis à jour à nouveau. Sinon, le payload du segment est placé dans le <span class="em">tampon de réception</span>.</p>
+                    <p>Stratégies de transmission de segments :</p>
+                    <p>Dans un protocole de transport tel que TCP, qui offre un flux de données par octets, une question pratique qui a été laissée au choix de l'implémentation dans la RFC 793 est de décider quand un nouveau segment TCP contenant des données doit être envoyé. Il existe deux choix d'implémentation simples et extrêmes. Le premier choix d'implémentation consiste à envoyer un segment TCP dès que l'utilisateur a demandé la transmission de certaines données. Cela permet à TCP de fournir un service à faible latence. Cependant, si l'utilisateur envoie des données une par une, TCP placerait chaque octet de l'utilisateur dans un segment contenant 20 octets d'en-tête TCP. Ce segment TCP est ensuite placé dans une en-tête <span class="em">IP</span>. Nous décrivons <span class="em">IPv4</span> et <span class="em">IPv6</span> dans le prochain chapitre. La taille minimale de l'en-tête IPv4 (resp. IPv6) est de 20 octets (resp. 40 octets). C'est une surcharge énorme qui n'est pas acceptable dans les réseaux étendus. Une deuxième soloution consisterait à ne transmettre un nouveau segment TCP que lorsque l'utilisateur a produit MSS octets de données. Cette solution réduit la surcharge, mais au prix d'un délai potentiellement très élevé.</p>
+                    <p>Une solution élégante à ce problème a été proposée par John Nagle dans la RFC 896. John Nagle a observé que la surcharge causée par l'en-tête TCP était un problème dans les connexions à grande distance, mais moins dans les connexions en réseau local où la bande passante disponible est généralement plus élevée. Il a proposé les règles suivantes pour décider d'envoyer un nouveau segment de données lorsqu'une nouvelle donnée a été produite par l'utilisateur ou lorsqu'un nouveau segment <span class="em">ack</span> a été reçu.</p>
+<pre class="taille60"><code>if rcv.wnd &gt;= MSS and len(data) &gt;= MSS :
+    send one MSS-sized segment
+else:
+    if there are unacknowledged data:
+        place data in buffer until acknowledgement has been received
+    else:
+        send one TCP segment containing all buffered data</code></pre>
+                    <p>La première règle garantit qu'une connexion TCP utilisée pour le transfert de données en vrac envoie toujours des segments TCP complets. La deuxième règle envoie un segment TCP partiellement rempli toutes les fois que le temps d'aller-retour est écoulé.</p>
+                    <p>Cet algorithme, appelé l'algorithme de Nagle, nécessite quelques lignes de code dans toutes les implémentations TCP. Ces lignes de code ont un impact énorme sur les paquets échangés dans les réseaux TCP/IP. Des chercheurs ont analysé la distribution des tailles de paquets en capturant et en analysant tous les paquets passant par un lien donné. Ces études ont montré plusieurs résultats importants :</p>
+                    <ul>
+                        <li>
+                            <p>Dans les réseaux TCP/IPv4, une grande fraction des paquets sont des segments TCP ne contenant qu'un accusé de réception. Ces paquets représentent généralment 40 à 50% des paquets passant par le lien étudié.</p>
+                        </li>
+                        <li>
+                            <p>Dans les réseaux TCP/IPv4, la plupart des octets sont échangés dans de longs paquets, généralement des paquets contenant jusq'uà 1460 octets de payload, qui est la MSS par défaut pour les hôtes connectés à un réseau Ethernet, le type de LAN le plus populaire.</p>
+                        </li>
+                    </ul>
+                    <p>La figure ci-dessous fournit une distribution des tailles de paquets mesurées sur une liaison. Elle montre une distribution tri-modale de la taille des paquets. 50% des paquets contiennent des accusés de réception TCP purs et occupent 40 octets. Environ 20% des paquets contiennet environ 500 octets de données utilisateur et 12% des paquets contiennent 1460 octets de données utilisateur. Lorsque ces mesures ont été prises, certains hôtes avaient une MSS par défaut de 552 octets (par exemple, les dérivés BSD Unix) ou 536 octets (la MSS par défaut spécifiée dans le RFC 793). Aujourd'hui, la plupart des implémentations TCP dérivent la MSS de la taille maximale de paquet de l'interface LAN qu'elles utilisent (Ethernet dans la plupart des cas). Cependant, la plupart des données utilisateur sont transportées dans des paquets volumineux. Cette distribution de la taille des paquets a des implications sur la conception des routeurs, comme nous le discutons dans le prochain chapitre.</p>
+                    <figure>
+                        <img src="../images/distribution_taille_paquets_internet.png" alt="">
+                        <figcaption>FIgure 4.42 : Distribution de la taille des paquets dans l'Internet</figcaption>
+                    </figure>
+                    <p>Des mesures récentes indiquent que ces distributions de tailles de paquets sont toujours valables dans l'Internet actuel, bien que la distribution des paquets tendre à devenir bimodale avec de petits paquets correspondant aux <span class="em">ACK TCP</span> purs (40-64 octets selon l'utilisation des options TCP) et de grands paquets de 1460 octets transportant la plupart des données utilisateur.</p>
+                    <p>Fenêtres TCP :</p>
+                    <p>D'un point de vue de performance, l'une des principales limitations de la spécification TCP d'origine est le champ <span class="em">window</span> de 16 bits dans l'en-tête TCP. Comme ce champ indique la taille actuelle de la fenêtre de réception en octets, il llimite la fenêtre de réception TCP à 65535 octets. Cette limitation n'était pas un problème grave lorsque TCP a été conçu, car à cette époque, les réseaux étendus à haute vitesse offraient une bande passanta maximale de 56 kbps. Cependant, dasn les réseaux actuels, cette limitation n'est plus aceceptable. Le tableau ci-dessous fournit une estimation approximative du débit maximum pouvant être atteint par une connexion TCP avec une fenêtre de 64 Ko en fonction du temps de trajet aller-retour de la connexion. Une estimation précise de la bande passante maximale pouvant être atteinte par une connexion TCP doit tenir compte de la surchange des en-têtes TCP et IP.</p>
+                    <table role="presentation">
+                        <thead>
+                            <tr>
+                                <th>RTT</th>
+                                <th>Débit maximal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1 msec</td>
+                                <td>524 Mbps</td>
+                            </tr>
+                            <tr>
+                                <td>10 msec</td>
+                                <td>52.4 Mbps</td>
+                            </tr>
+                            <tr>
+                                <td>100 msec</td>
+                                <td>5.24 Mbps</td>
+                            </tr>
+                            <tr>
+                                <td>500 msec</td>
+                                <td>1.05 Mbps</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Pour résoudre ce problème, une extension compatible à l'arrière-plan qui permet à TCP d'utiliser des fenêtres de réception plus grandes a été proposée dans la RFC 1323. Aujourd'hui; la plupart des implémentations TCP prennent en charge cette option. L'idée de base est que, au lieu de stocker <span class="em">snd.wnd</span> et <span class="em">rcv.wnd</span> en tant qu'entiers sur 16 buts dans le <span class="em">TCB</span>, ils doivent être stockés en tant qu'entiers sur 32 bits. Comme l'en-tête de segment TCP ne contient que 16 bits pour placer le champ <span class="em">window</span>, il est impossible de copier la valeur de <span class="em">snd.wnd</span> dans chaque segment TCP envoyé. À la place, l'en-tête contient <span class="html">snd.wnd &gt;&gt; S</span> où <span class="em">S</span> est le facteur d'échelle (0 &lt;= S &lt;= 14) négocié lors de l'établissement de la connexion. Le client ajoute son facteur d'échelle proposé en tant qu'option TCP dans le segment <span class="em">SYN</span>. Si le serveur prend en charge la RFC 1323, il place dans le segment <span class="em">SYN+ACK</span> le facteur d'échelle qu'il utilise lors de l'annonce de sa propre fenêtre de réception. Les facteurs d'échelle local et distant sont inclus dans le TCB. Si le serveur ne prend pas en charge la RFC 1323, il ignore l'option reçue et aucune mise à l'échelle de fenêtre définies dans la RFC 1323, les implémentations TCP peuvent utiliser un tampon de réception allant jusqu'à 1 Go. Avec un tel tampon de réception, le débit maximal qu'une seule connexion TCP peut atteindre devient :</p>
+                    <table role="presentation">
+                        <thead>
+                            <tr>
+                                <th>RTT</th>
+                                <th>Débit maximal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1 mssec</td>
+                                <td>8590 Gbps</td>
+                            </tr>
+                            <tr>
+                                <td>10 mssec</td>
+                                <td>859 Gbps</td>
+                            </tr>
+                            <tr>
+                                <td>100 mssec</td>
+                                <td>86 Gbps</td>
+                            </tr>
+                            <tr>
+                                <td>500 mssec</td>
+                                <td>17 Gbps</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Ces débits sont acceptables dans les réseaux d'aujourd'hui. Cependant, il existe déjà des serveurs ayant des interfaces de 10 Gbps... Les premières implémentations TCP avaient des tampons d'envoi et de réception fixes. Consultez <a href="http://fasterdata.es.net/tuning.html" target="_blank">http://fasterdata.es.net/tuning.html</a> pour plus d'informations sur la façon d'ajuster une implémentation TCP. Les implémentations haute performance d'aujourd'hui sont capables d'ajuster autoatiquement la taille des tampons d'envoi et de réception pour mieux prendre en charge les flux à haute bande passanta [SMM1998].</p>
+                    <p>Le temps d'attente de retransmission TCP :</p>
+                    <p>Dans un protocole de transport <span class="em">Go-Back-N</span> tel que TCP, le temps d'attente de retransmission doit être correctement défini pour obtenir de bonnes performances. Si le temps d'attente de retransmission expire trop tôt, la bande passante est gaspillée en retransmettant des segments qui ont déjà été correctement reçus; tandis que si le temps d'attente de retransmission expire trop tard, la bande passante est gaspillée parce que l'émetteur est inactif en attendant l'expiration de son temps d'attente de retransmission.</p>
+                    <p>Un bon réglage du temps d'attente de retransmission dépend clairement d'une estimation précise du temps aller-retour de chaque connexion TCO. Le temps aller-retour diffère entre les connexions TCP, mais peut également changer au cours de la durée de vie d'une seule connexion. Par exemple, la figure ci-dessous montre l'évolution du temps aller-retour entre deux hôtes pendant une période de 45 secondes.</p>
+                    <figure>
+                        <img src="../images/evolution_round-trip-time_entre_2hotes.png" alt="">
+                        <figcaption>Figure 4.43 : Évolution du temps aller-retour entre deux hôtes</figcaption>
+                    </figure>
+                    <p>La solution la plus simple pour mesurer le temps aller-retour sur une coneexion TCP est de mesurer le délai entre la transmission d'un segment de données et la réception d'un accusé de réception correspondnat. En théorie, une implémentation TCP pourrait stocker l'horodatage de chaque segment de données transmis et calculer une nouvelle estimation pour le temps aller-retour lors de la réception de l'accusé de réception correspondant. Cependant, l'utilisation de mesures aussi fréquentes introduit beaucoup de bruit en pratique et de nombreuses implémentations mesurent toujours le temps aller-retour une fois par temps aller-retour en enregistrant le temps de transmission d'un segment à la fois RFC 2988. Comme illustré dans la figure ci-dessous, cette mesure fonctionne bien lorsqu'il n'y a pas de pertes de segments.</p>
+                    <figure>
+                        <img src="../images/mesurer_round-trip-time.jpg" alt="">
+                        <figcaption>Figure 4.44 : Comment mesurer le temps aller-retour ?</figcaption>
+                    </figure>
+                    <p>Cependant, lorsqu'un segment de données est perdu, comme illustré dans la partie inférieure de la figure, la mesure devient ambigüe car l'émetteur ne peut déterminer si l'accusé de réception reçu a été déclenché par la première transmission du segment <span class="em">123</span> ou par sa retransmission. L'utilisation d'estimations incorrectes du temps de trajet aller-retour pourrait conduire à des valeurs incorrectes du délai de retransmission. Pour cette raison, Phil Karn et Craig Patridge ont proposé, dans [KP91], d'ignorer les mesures de temps de trajet aller-retour effectuées pendant les retransmisions.</p>
+                    <p>Pour éviter cette ambiguïté dans l'estimation du temps de trajet aller-retour lors de la retransmission de segments, les implémentations récentes de TCP reposent sur l'option <span class="html">timestamp</span> définie dans la RFC 1323. Cette option permet à un émetteur TCP de placer deux horodatages de 32 bits dans chaque segment TCP qu'il envoie. Le premier horodatage, <span class="html">TS Value (TSval)</span>, est choisi par l'émetteur du segment. Il pourrait par exemple s'agir de la valeur actuelle de son horloge en temps réel. Certains expertes en sécurité ont soulevé des préoccupations selon lesquelles l'utilisation de l'horloge en temps réel pour définir le <span class="em">TSval</span> dans l'option <span class="em">timestamp</span> peut divulguer des informations telles que le temps de fonctionnement du système. Des solutions proposées pour résoudre ce problème peuvent être trouvées dans [CNPI09]. La deuxième valeur, <span class="html">TS Echo Reply (TSecr)</span>, est le dernier <span class="em">TSval</span> qui a été reçu de l'hôte distant et stocké dans le <span class="em">TCB</span>. La figure ci-dessous montre comment l'utilisation de cette option <span class="em">timestamp</span> permet de dissocier la mesure du temps de trajet aller-retour lorsqu'il y a des retransmissions.</p>
+                    <figure>
+                        <img src="../images/dissiper_ambiguite_mesures_round-trip-time_option_timestamp_RFC1323.png" alt="">
+                        <figcaption>Figure 4.45 : Dissiper l'ambiguïté des mesures de temps aller-retour avec l'option timestamp de RFC 1323</figcaption>
+                    </figure>
+                    <p>Une fois que les mesures de temps aller-retour ont été collectées pour une connexion TCP donnée, l'entité TCP doit calculer le temps d'attente de retransmission. Comme les mesures de temps aller-retour peuvent changer pendant la durée de vie d'une connexion, le temps d'attente de retransmission peut également charger. Au début d'une connexion, l'entité TCP qui envoie un segment <span class="em">SYN</span> ne connaît pas le temps aller-retour pour atteindre l'hôte distant et le temps d'attente de retransmission initial est généralmenet fixé à 3 secondes RFC 2988. Comme un client TCP établit souvent plusieurs connexions parallèles ou successives avec le même serveur, la RFC 2140 a proposé de réutiliser pour une nouvelle connexion certaines informations qui ont été collectées dans le TCB d'une connexion précédente, telles que le temps aller-retour mesuré. Cependant, cette solution n'a pas été largement implémentée.</p>
+                    <p>La spécification TCP originale proposée dans la RFC 793 propose d'inclure deux variables supplémentaires dans le TCB :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">srtt</span> (smoothed round)trop-time) : le temps aller-retour lissé calculé comme <span class="html">(&#945; * srtt) + ((1 - &#945;) * rtt)</span> où <span class="em">rtt</span> est le temps aller)retour mesuré selon la proccédure ci-dessus  et <span class="em">&#945;</span> un facteur de lissage (par exemple 0,8 ou 0,9).</p>
+                        </li>
+                        <li>
+                            <p><span class="html">rto</span> (retransmission timeout) : le temps d'attente de retransmission est calculé comme <span class="html">rto = min(60, max(1, &#946; * srtt))</span> où <span class="em">&#946;</span> est utilisé pour tenir compte de la variance du délai (valeur : 1,3 à 3,0). Les constantes <span class="em">60</span> et <span class="em">1</span> sont utilisées pour garantir que le <span class="em">rto</span> n'est pas plus grand qu'une minute ni plus petit qu'une seconde.</p>
+                        </li>
+                    </ul>
+                    <p>Cependant, en pratique, ce calcul pour le temps d'attente de retransmission ne fonctionnait pas bien. Le principal problème était que le <span class="em">rto</span> calculé ne prenait pas correctement en compte les variations du temps aller-retour mesuré. Van Jacobson a proposé dans son article fondateyr [Jacobson1988] un algorithme pour calculer le <span class="em">rto</span> et l'a implémenté dans la distribution BSD Unix. Cet algorithme fait maintenant partie de la norme TCP RFC 3988.</p>
+                    <p>L'algorithme de Jacobson utilise deux variables d'état, <span class="em">srtt</span> le temps aller-retour lissé et <span class="html">rttvar</span> l'estimation de la variance du temps aller-retour et deux paramètres : <span class="em">&#945;</span> et <span class="em">&#946;</span>. lorsqu'une connexion TCP démarre, le premier <span class="em">rto</span> est fixé à 3 secondes. Lorsqu'une première estimation du temps aller-retour est disponible, le <span class="em">srtt</span>, le <span class="em">rttvar</span> et le <span class="em">rto</span> sont calculés comme suit :</p>
+<pre class="taille60"><code>srtt = rtt
+rttvar = rtt / 2
+rto = srtt + 4 * rttvar</code></pre>
+                    <p>Ensuite, lorsque d'autres mesures de temps aller-retour sont collectées, <span class="em">srtt</span> et <span class="em">rtttvar</span> sont mis à jour comme suit :</p>
+<pre class="taille60"><code>rttvar = (1 - &#946;) * rrtvar + &#946; * |srtt - rtt|
+srtt = (1 - &#945;) * srtt + &#945; * rtt
+rto = srtt + 4 * rttvar</code></pre>
+                    <p>Les valeurs proposées pour les paramètres sont <span class="em">&#945; = 1 / 8</span> et <span class="em">&#946; = 1 / 4</span>. Cela permet à une implémentation TCP, implémentée dans le noyau, de calculer le <span class="em">rtt</span> en utilisant des opérations de décalage au lieu des opérations à virgule flottante plus coûteuses [Jacobson1988]. La figure ci-dessous illustre le calcul de <span class="em">rto</span> en cas de changements de <span class="em">rtt</span>.</p>
+                    <figure>
+                        <img src="../images/exemple_calcul_rto.png" alt="">
+                        <figcaption>Figure 4.46 : Exemple de calcul de rto</figcaption>
+                    </figure>
+                    <p>Statégies de retransmission avancées :</p>
+                    <p>La stratégie de retransmission par défaut <span class="em">Go-Back-N</span> a été définie dans le RFC 793. Lorsque le timer de retransmission expire, TCP retransmet le premier segment non acquitté (c'est-à-dire celio ayant un numéro de séquence <span class="em">snd.una</span>). Après chaque expiration du timeout de retransmission, le RFC 2988 recommande de doubler la valeur du timeout de retransmission. Cela s'appelle un "<span class="html">exponential backoff</span>". Ce doublement du timeout de retransmission après une retransmission a été inclus dans TCP pour faire face à des problèmes tels que la surcharge réseau/récepteur et les estimations initiales incorrectes du timeout de retransmission. Si le même segment est retransmis plusieurs fois jusqu'à ce qu'il atteigne un maximum configuré. Le RFC 2988 suggère un maximum de timeout de retransmission d'au moins 60 secondes. Une fois que le timeout de retransmission atteint ce maximum configuré, l'hôte distant est considéré comme inaccessible et la connexion TCP est fermée.</p>
+                    <p>Cette stratégie de retransmission a été affinée en fonction de l'expérience de l'utilisation de TCP sur Internet. La première amélioration a été une clarification de la stratégie utilisée pour envoyer les accusés de réception. Comme TCP utilise le <span class="em">piggybacking</span>, la méthode la plus facile et la moins coûteuse pour envoyer les accusés de réception est de les placer dans les segments de données envoyés dans l'autre sens. Cependant, peu de protocoles de couche application échangent des données dans les deux sens en même temps, et donc cette méthode fonctionne rarement. Pour une application qui envoie des segments de données dans une direction seulement, l'entité TCP distante renvoie des segments TCP vides dont la seule information utile est leur numéro d'accusé de réception. Cela peut causer une grande surcharge dans le réseau étendu si un segment <span class="em">ACK</span> pur est envoyé en réponse à chaque segment de données reçu. La plupart des implémentations TCP utilisent une stratégie d'accusé de réception différé. Cette stratégie garantit que le <span class="em">piggybacking</span> est utilisé chaque fois que possible, sinon des segments <span class="em">ACK</span> purs sont envoyés pour chaque deuxième segment de données reçu lorsqu'il n'y a pas de perte.  Lorsqu'il y a des pertes ou des réorganisations, les segments <span class="em">ACK</span> sont plus importants pour l'expéditeur et ils sont envoyés immédiatement RFC 813 RFC 1122. Cette stratégie repose sur un nouveau timer avec un court délai (par exemple 50 millisecondes) et un drapeau  supplémentaire dans le <span class="em">TCB</span>. Elle peut être implémentée comme suit :</p>
+<pre class="taille60"><code>reception of a data segment:
+    if pkt.seq==rcv.nxt: # segment received in sequence
+        if delayedack :
+            send pure ack segment
+            cancel acktimer
+            delayedack=False
+        else:
+            delayedack=True
+            start acktimer
+    else: # out of sequence segment
+        send pure ack segment
+        if delayedack:
+            delayedack=False
+            cancel acktimer
+
+transmission of a data segment: # piggyback ack
+    if delayedack:
+        delayedack=False
+        cancel acktimer
+
+acktimer expiration:
+    send pure ack segment
+    delayedack=False</code></pre>
+                    <p>En raison de cette stratégie de reconnaissance de retard, lors d'un transfert en vrac, une implémentation TCP reconnaît généralement chaque deuxième segment TCP reçu.</p>
+                    <p>La stratégie de retransmission par défaut de type "<span class="em">Go-Back-N</span>" utilisée par TCP a l'avantage d'être simple à implémenter, en particulier du côté du récepteur, mais lorsqu'il y a des perte, une stratégie "<span class="em">Selective Repeat</span>" fournit des performances inférieures à une stratégie "<span class="em">Go-Back-N</span>". Les développeurs de TCP ont conçu plusieurs extensions de TCP pour lui permettre d'utiliser une stratégie "<span class="em">Selective Repeat</span>" tout en maintenant une compatibilité descendante avec les anciennes implémentations de TCP/ Ces extensions de TCP supposent que le récepteur est capable de mettre en tampon les segments qu'il reçoit hors séquence. La première extension proposée est l'heuristique de retransmission rapide. Cette extension peut être implémentée sur les émetteurs TCP et ne nécessite donc aucun changement du protocole. Elle suppose simplement que le récepteur TCP est capable de mettre en tampon les segments hors séquence.</p>
+                    <p>D'un point de vue de la performance, un problème avec le délai de retransmission de TCP est que lorsque des pertes de segments isolées se produisent, l'émetteur TCP reste souvent inactif en attendant l'expiration de ses délais de retransmission. De telles pertes isolées sont fréquentes dans l'Internet mondial [Paxson99]. Une heuristique pour traiter les pertes isolées sans attendre l'expiration du délai de retransmission a été incluse dans de nombreuses implémentations TCP depuis le début des années 1990. Pour comprendre cette heuristique, considérons la figure ci-dessous qui montre les segments échangés sur une connexion TCP lorsqu'un segment isolé est perdu.</p>
+                    <figure>
+                        <img src="../images/detection_pertes_segments_isoles.jpg" alt="">
+                        <figcaption>Figure 4.47 : Détection de pertes de segments isolées</figcaption>
+                    </figure>
+                    <p>Comme indiqué ci-dessus, lorsqu'un seglent isolé est perdu, l'émetteur reçoit plusieurs acquittements en double car le récepteur TCP envoie immédiatement un acquittement pur lorsqu'il reçoit un segment hors séquence. Un acquittement en double est un acquittement qui contient le même numéro d'acquittement qu'un segment précédent. Un seul acquittement en double n'implique pas nécessairemnt qu'un segment a été perdu, car une simple réorganisation des segments peut également provoquer des acquittements en double. Des mesures [Paxson99] ont montré que la réorganisation de segments est fréquente dans l'Internet. Sur la base de ces observations, l'heuristique de retransmission rapide a été incluse dans la plupart des implémentations TCP. Elle peut être implémentée comme suit :</p>
+<pre class="taille60"><code>ack arrival:
+    if tcp.ack==snd.una: # duplicate acknowledgement
+        dupacks++
+        if dupacks==3:
+            retransmit segment(snd.una)
+    else:
+        dupacks=0
+        # process acknowledgment</code></pre>
+                    <p>Cette heuristique nécessite une variable supplémentaire dans le TCB (<span class="html">dupacks</span>). La pluaprt des implémentations définissent le nombre par défaut d'acquittements dupliqués déclenchant une retransmission à 3. Elle fait désormais partie de la spécification standard de TCP RFC 2581. L'heuristique de <span class="em">retransmission rapide</span> améliore les performances de TCP à condition que des segments isolés soient perdus et que la fenêtre actuelle soit suffisamment grande pour permettre à l'émetteur d'envoyer trois acquittements dupliqués.</p>
+                    <p>La figure ci-dessous illustre le fonctionneement de l'heuristique de <span class="em">retransmission rapide</span> de TCP.</p>
+                    <figure>
+                        <img src="../images/heuristiques_retransmission_rapide_TCP.jpg" alt="">
+                        <figcaption>Figure 4.48 : Heuristiques de retransmission rapide de TCP</figcaption>
+                    </figure>
+                    <p>Lorsque les pertes ne sont pas isolées ou que les fenêtres sont petites, la performance de l'heuristique de <span class="em">retransmission rapide</span> diminuent. Dans de tels environnements, il est nécessaire de permettre à un émetteur TCP d'utiliser une stratégie "<span class="em">Selective Repeat</span>" au lieu de la stratégie par défaut "<span class="em">Go-Back-N</span>". L'implémentation de la <span class="em">Selective Repeat</span> nécessite une modification du protocole TCP, car le récepteur doit être capable d'informer l'émetteur des segments hors séquence qu'il a déjà reçus. Cela peut être fait en utilisant l'option <span class="html">Selective Acknowledgements (SACK)</span> définie dans la RFC 2018. Cette option TCP est négociée lors de l'établissement d'une connexion TCP. Si les deux hôtes TCP prennent en charge l'option, des blocs <span class="em">SACK</span> peuvent être attachés par le récepteur aux segments qu'il envoie. Les blocs <span class="em">SACK</span> permettent à un récepteur TCP d'indiquer les blocs de données qu'il a reçus correctement mais hors séquence. La figure ci-dessous illustre l'utilisation des blocs <span class="em">SACK</span>.</p>
+                    <figure>
+                        <img src="../images/accuses_reception_selectifs_TCP.jpg" alt="">
+                        <figcaption>Figure 4.49 : Accusés de réception sélectifs TCP (SACK)</figcaption>
+                    </figure>
+                    <p>Une option <span class="em">SACK</span> contient un ou plusieurs blocs. Un bloc correspond à tous les numéros de séquence entre le <span class="html">left edge (trad. bord gauche)</span> et le <span class="html">right edge (trad. bord droit)</span> du bloc. Les deux bords du bloc sont encodés sous forme de nombres de 32 bits (de la même taille que le numéro de séquence TCP) dans une option <span class="em">SACK</span>. Comme l'option <span class="em">SACK</span> contient un octet pour coder son type et un octet pour sa longueur, une option <span class="em">SACK</span> contenant <span class="em">b</span> blocs est encodée sous forme d'une séquence de <span class="em">2 + 8 * b</span> octets. En pratique, la taille de l'option <span class="em">SACK</span> peut poser problème car l'extension d'en-tête TCP facultative ne peut pas dépasser 44 octets. Comme l'option <span class="em">SACK</span> est généralement combinée avec l'extension de marque temporelle RFC 1323, cela implique qu'un segment TCP ne peut généralement pas contenir plus de trois blocs <span class="em">SACK</span>. Cette limitation implique qu'un récepteur TCP ne peut pas toujours placer dans l'option <span class="em">SACK</span> qu'il envoie, des informations sur tous les blocs reçus.</p>
+                    <p>Pour faire face à la taille limitée de l'option <span class="em">SACK</span>, un récepteur TCP ayant actuellement plus de 3 blocs dans son tampon de réception doit sélectionner les blocs à placer dans l'option <span class="em">SACK</span>. Une bonne heuristique consiste à placer dans l'option <span class="em">SACK</span> les blocs qui ont changé le plus récemment, car l'émetteur est susceptible d'être déjà au courant des blocs plus anciens.</p>
+                    <p>Lorsqu'un émetteur reçoit une option <span class="em">SACK</span> indiquant un nouveau bloc et donc une nouvelle perte possible de segment, il ne réémet généralement pas immédiatement le ou les segments manquants. Pour traiter la réorganisation, un émetteur TCP peut utiliser une heuristique similaire à la retransmission rapide en retransmettant un écart uniquement une fois qu'il a reçu trois options <span class="em">SACK</span> indiquant cet écart. Il convient de noter que l'option <span class="em">SACK</span> ne remplace pas le numéro d'accusé de réception de l'en-tête TCP. Un émetteur TCP ne peut supprimer des données de son tampon d'envoi que lorsqu'elles ont été accusées de réception cumulatifs de TCP. Cette conception a été choisie pour deux raisons. Premièrement, elle eprmet au récepteur de supprimer des parties de son tampon de réception lorsqu'il manque de mémoire sans perdre de données. Deuxièmement, comme l'option <span class="em">SACK</span> n'est pas transmise de manière fiable, les accusés de réception cumulatifs sont toujours nécessaires pour traiter les pertes de segments <span class="em">ACK</span> transportant uniquement des informations <span class="em">SACK</span>. Ainsi, l'option <span class="em">SACK</span> ne sert que d'indice permettant à l'émetteur d'optimiser ses retransmissions.</p>
                     
                 </article>
             <!-- fin de section -->
