@@ -2882,7 +2882,413 @@ Expiration of the retransmission timer :
                         <img src="../images/evolution_fenetre_congestion_pertes_regulieres.jpg" alt="">
                         <figcaption>Figure 4.58 : Évolution de la fenêtre de congestion avec des pertes régulières</figcaption>
                     </figure>
-                    
+                    <p>Comme les pertes sont régulièrement espacées, la fenêtre de congestion commence toujours à une certaine valeur (<span class="em">W/2</span>) et est incrémentée d'un MSS à chaque aller-retour jusqu'à ce qu'elle atteigne deux fois cette valeur (<span class="em">W</span>). À ce stade, un segment est retransmis et le cycle recommence. Si la fenêtre de congestion est mesurée en segments de taille MSS, un cycle dure <span class="em">W</span> aller-retour. La bande passante de la connexion TCP est le nombre d'octets qui ont été transmis pendant une période donnée. Pendant un cycle, le nombre de segments qui sont envoyés sur la connexion TCP est égal à l'aire du trapèze jaune dans la figure. Son aire est donc :</p>
+<pre class="taille60"><code>aire = (w/2)<sup>2</sup> + 1/2 * (w/2)<sup>2</sup> = (3 * w<sup>2</sup>)/8</code></pre>
+                    <p>Cependant, étant donné les pertes régulières que nous considérons, le nombre de segments qui sont envoyés entre deux pertes (c'est-à-dire pendant un cycle) est par définition égal à <span class="em">1/p</span>. Ainsi, <span class="em">W = &#8730;(8/3*p) = k/(&#830;(p))</span>. Le débit (en octets par seconde) de la connexion TCP est égal au nombre de segments transmis divisé par la durée du cycle :</p>
+<pre class="taille60"><code>Throughput = (area * MSS) / time = ((3 * w<sup>2</sup>) / 8) / ((w/2) * rtt)
+# où, après avoir éliminé W,
+Throughput = &#8730;(3/2) * (MSS / (rtt * &#8730;(p)))</code></pre>
+                    <p>Les modèles plus détaillés et l'analyse de simulations ont montré qu'un modèle de première ordre du débit TCP lorsque des pertes surviennent était <span class="em">Throughput &#8776; (k * MSS) / (rtt * &#8730;(p))</span>. Ceci est un résultat important que montre que :</p>
+                    <ul>
+                        <li>
+                            <p>Les connexions TCP ayant un temps de trajet aller-retour (RTT) court peuvent atteindre un débit plus élevé que les connexions TCP ayant un RTT plus long lorsque des pertes surviennent. Cela implique que le mécanisme de contrôle de congestion de TCP n'est pas complètement équitable car il favorise les connexions ayant un RTT plus court.</p>
+                        </li>
+                        <li>
+                            <p>Les connexions TCP utilisant une grande MSS peuvent atteindre un débit plus élevé que les connexions TCP utilisant une taille de MSS plus petite. Cela crée une autre source d'injustice entre les connexions TCP. Cependant, il convient de noter qu'aujourd'hui, la plupart des hôtes utilisent une MSS presque identique, d'environ 1460 octets.</p>
+                        </li>
+                    </ul>
+                    <p>En général, le débit maximal qu'une connexion TCP peut atteindre dépend de sa taille maximale de fenêtre et du RTT s'il n'y a pas de pertes. S'il y a des pertes, cela dépend de la MSS, du RTT et du taux de perte.</p>
+<pre class="taille60"><code>Throughput &lt; min(window / rtt, (k * MSS) / (rtt * &#8730;(p)))</code></pre>
+                    <hr>
+                    <p>Note : La ménagerie de contrôle de congestion TCP :</p>
+                    <p>Le premier schéma de contrôle de congestion TCP a été proposé par Van Jacobson dans [Jacobson1988]. En plus d'avoir écrit l'article scientifique, Van Jacobson a également implémenté les mécanismes du démarrage lent et d'évitement de congestion dans la version 4.3 <span class="em">Tahoe</span> du système d'exploitation BSD Unix distribué par l'Université de Berkeley. Par la suite, il a amélioré le contrôle de congestion en ajoutant les mécanismes de retransmission rapide et de récupération rapide dans la version <span class="em">Reno</span> de 4.3 BSD Unix. Depuis lors, de nombreux chercheurs ont proposé, simulé et implémenté des modifcations du schéma de contrôle de congestion TCP. Certaines de ces modifications sont encore utilisées aujourd'hui, par exemple :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">NewReno</span> (RFC 3782) qui a été proposé comme amélioration du mécanisme de récupération rapide dans l'implémentation <span class="em">Reno</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">TCP Vegas</span>, qui utilise des changements dans le temps aller-retour pour estimer la congestion afin de l'éviter [BOP1994].</p>
+                        </li>
+                        <li>
+                            <p><span class="html">CUBIC</span>, qui a été conçu pour les liens à large bande passante et est le schéma de contrôle de congestion par défaut dans le noyau Linux 2.6.19 [HRX2008].</p>
+                        </li>
+                        <li><span class="html">Compound TCP</span>, qui a été conçu pour les liens à haute bande passante est le schéma de contrôle de congestion par défaut dans plusieurs systèmes d'exploitation Microsoft [STBT2009].</li>
+                    </ul>
+                    <p>Une recherche dans la littérature scientifique (RFC 6077) révélera probablement plus de 100 variantes différentes du schéma de contrôle de congestion TCP. La plupart d'entre elles n'ont été évaluées que par des simulations. Cependant, l'implémentation TCP dans les noyaux Linux récents prend en charge plusieurs schémas de contrôle de congestion et de nouveaux peuvent être facilement ajoutés. Nous pouvons nous attendre à ce que de nouveaux schémas de contrôle de congestion TCP continuent toujours à apparaître.</p>
+                    <hr>
+                    <h3>4.4 Exercices :</h3>
+                    <p>Cette section est divisée en deux parties. La première partie contient des exercices sur les principes des protocoles de transport, y compris TCP. La deuxième partie contient des défis de programmation pour les outils d'analyse de paquets afin d'observer le comportement des protocoles de transport.</p>
+                    <h4>4.4.1 Principes :</h4>
+                    <ol>
+                        <li>
+                            <p>Considérons le protocole de bit alterné (ABP) tel que décrit dans ce chapitre :</p>
+                            <ul>
+                                <li>
+                                    <p>Comment le protocole récupère-t-il la perte d'un segment de données ?</p>
+                                </li>
+                                <li>
+                                    <p>Comment le protocole récupère-t-il la perte d'un accusé de réception</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Un étudiant a proposé d'optimisé le protocole d ebit alterné en ajoutant un accusé de réception négatif, c'est-à-dire que le récepteur envoie un segment de contrôle <span class="em">NAK</span> lorsqu'il reçoit un segment de données corrompu. Quel type d'informations devrait être placé dans ce segment de contrôle et comment l'émetteur devrait-il réagir lorsqu'il reçoit un tel <span class="em">NAK</span> ?</p>
+                        </li>
+                        <li>
+                            <p>Les protocoles de transport s'appuient sur différents types de sommes de contrôel pour vérifier si les segments ont été affectés par des erreurs de transmission. Les sommes de contrôle les plus fréquemment utilisées sont :</p>
+                            <ul>
+                                <li>
+                                    <p>La somme de contrôle Internet utilisée par UDP, TCP et d'autres protocoles Internet qui est définie dans la RFC 1071 et implémentée dans divers modules, par exemple <a href="http://ilab.cs.byu.edu/cs460/code/ftp/ichecksum.py" target="_blank">http://ilab.cs.byu.edu/cs460/code/ftp/ichecksum.py</a> pour une implémentation en Python.</p>
+                                </li>
+                                <li>
+                                    <p>Les codes de véirification de redondance cyclique (CRC) de 16 bits ou de 32 bits qui sont souvent utilisés sur les disques, dans les archives zip et dans les protocoles de couche de liaison de donnés. Voir <a href="http://docs.python.org/library/binascii.html" target="_blank">http://docs.python.org/library/binascii.html</a> pour un module Python qui contient le CRC de 32 bits.</p>
+                                </li>
+                                <li>
+                                    <p>La somme de contrôle Alder définie dans la RFC 2920 pour le protocole SCTP mais remplacée par un CRC dans la RFC 3309.</p>
+                                </li>
+                                <li>
+                                    <p>La somme de contrôle Fletcher [Fletcher1982], voir <a href="http://drdobbs.com/database/184408761" target="_blank">http://drdobbs.com/database/184408761</a> pour les détails d'implémentation.</p>
+                                </li>
+                            </ul>
+                            <p>En utilisant vos connaissances sur la somme de contrôle Internet, pouvez-vous trouver une erreur de transmission qui ne sera pas détectée par la somme de contrôle Internet</p>
+                        </li>
+                        <li>
+                            <p>Les CRC sont des codes de détection d'erreurs efficaces qui sont capables de détecter :</p>
+                            <ul>
+                                <li>
+                                    <p>Toutes les erreurs qui affectent un nombre impair de bits.</p>
+                                </li>
+                                <li>
+                                    <p>Toutes les erreurs qui affectent une séquence de bits plus courte que la longueur du CRC.</p>
+                                </li>
+                            </ul>
+                            <p>Effectuez des expériences avec une implémentation de CRC-32 pour vérifier que c'est effectivement le cas.</p>
+                        </li>
+                        <li>
+                            <p>Les sommes de contrôle et les CRC ne doivent pas être confondus avec les fonctions de hachage sécurisées telles que MD5 définie dans la RFC 1321 ou SHA-1 décrite dans la RFC 4634. Les fonctions de hachage sécurisées sont utilisées pour s'assurer que les fichiers ou parfois les paquets/segments n'ont pas été modifiés. Les fonctions de hachage sécurisées visent à détecter les modifications malveillantes tandis que les sommes de contrôle et les CRC ne détectent que les erreurs de transmission aléatoires. Effectuez des expériences avec des fonctions de hachage telles que celles définies dans le module hashlib de Python à l'adresse <a href="http://docs.python.org/library/hashlib.html" target="_blank">http://docs.python.org/library/hashlib.html</a> pour vérifier que c'est effectivement le cas.</p>
+                        </li>
+                        <li>
+                            <p>Une version du Alternating Bit Protocol prenant en charge des segments de longueur variable un en-tête qui contient les champs suivants :</p>
+                            <ul>
+                                <li>
+                                    <p>un <span class="em">nombre</span> (0 ou 1)</p>
+                                </li>
+                                <li>
+                                    <p>un champ <span class="em">length</span> qui indique la longueur des données</p>
+                                </li>
+                                <li>
+                                    <p>un <span class="em">CRC</span></p>
+                                </li>
+                            </ul>
+                            <p>Pour accélérer la transmission des segments, un étudiant propose de calculer le CRC sur la partie des données du segment mais pas sur l'en-tête. Que pensez-vous de cette optimisation</p>
+                        </li>
+                        <li>
+                            <p>Sur les hôtes Unix, la commande <span class="html">ping(8)</span> peut être utilisée pour mesurer le temps de trajet aller-retour pour envoyer et recevoir des paquets depuis un hôte distant. Utilisez <span class="em">pring(8)</span> pour mesurer le temps de trajet aller-retour vers un hôte distant. Choisissez une destination lointaine par rapport à votre emplacement actuel, par exemple un petit serveur Web dans un pays éloigné. Il existe des implémentations de <span class="em">ping</span> dans divers langages, voir par exemple <a href="http://pypi.python.org/pypi/ping/0.2" target="_blank">http://pypi.python.org/pypi/ping/0.2</a> pour une implémantion de "<span class="em">ping</span>" en Python.</p>
+                        </li>
+                        <li>
+                            <p>Comment définiriez-vous le timer de retransmission si vous implémentiez l'Alternating Bit Protocol pour échanger des fichiers avec un serveur tel que celui que vous avez mesuré ci-dessus ?</p>
+                        </li>
+                        <li>
+                            <p>Quels sont les facteurs qui affectent les performances du Alternating Bit Protocol ?</p>
+                        </li>
+                        <li>
+                            <p>Les liaisons sont souvent considérées comme symétriques, c'est-à-dire qu'elles offrent la même bande passante dans les deux directions. Les liaisons symétriques sont largement utilisées dans les réseaux locaux et dans le coeur d'Internet, mais il existe de nombreuses technologies de liaison asymétrique. L'exemple le plus courant est celui des divers types de technologies ADSL et CATV. Considérez une implémentation du Alternating Bit Protocol qui est utilisée entre deux hôtes qui sont directement connectés en utilisant une liaison asymétrique. Supposons qu'un hôte envoie des segments contenant 10 octets d'informations de contrôle et 90 octets de données et que les accusés de réception sont longs de 10 octets. Si le temps de trajet aller-retour est négligeable, quelle est la bande passante minimale requise sur le lien de retour pour s'assurer que la transmission des accusés de réception ne constitue pas un goulot d'étranglement ?</p>
+                        </li>
+                        <li>
+                            <p>Dérivez une expression mathématique qui fournit le débit atteint par le protocole de bits alternés en supposant que :</p>
+                            <ul>
+                                <li>
+                                    <p>Chaque segment contient <span class="em">D</span> octets de donénes et <span class="em">c</span> octets d'informations de contrôle.</p>
+                                </li>
+                                <li>
+                                    <p>Chaque accusé de réception contient <span class="em">c</span> octets d'informations de contrôle.</p>
+                                </li>
+                                <li>
+                                    <p>La bande passante des deux directions du lien est réglée sur <span class="em">B</span> bits par seconde.</p>
+                                </li>
+                                <li>
+                                    <p>Le délai entre les deux hôtes est de <span class="em">s</span> secondes dans les deux sens.</p>
+                                </li>
+                            </ul>
+                            <p>Le débit est défini comme la quantité d'unités de données de service (mesurée en octets) qui est transférée avec succès pendant une période de temps.</p>
+                        </li>
+                        <li>
+                            <p>Considérez un Alternating Bit Protocol qui est utilisé sur une liaison qui souffre d'erreurs déterministes. Lorsque le taux d'erreur est fixé à <span class="em">1/p</span>, cela signifie que <span class="em">p - 1</span> bits sont transmis correctement et le <span class="em">p<sup>ème</sup></span> bit est corrompu. Discutez des facteurs qui affectent les performances du Alternating Bit Protocol sur une telle liaison.</p>
+                        </li>
+                        <li>
+                            <p>Amazon propose le <span class="em">service de stockage S3</span> où les entreprises et les chercheurs peuvent stocker de grandes quantités d'informations et effectuer des calculs sur les informations stockées. Amazon permet aux utilisateurs d'envoyer des fichiers via Internet, mais également en envoyant des disques durs. Supposons q'un disque dur d'un téraoctet peut être livré dans les 24 heures à Amazon par service de messagerie. Quelle est la bande passante minimale requise pour égaler la bande passante de ce service de messagerie ?</p>
+                        </li>
+                        <li>
+                            <p>Plusieurs grands opérateurs de centres de données (par exemple, Microsoft et Google) ont annoncé qu'ils installent des serveurs sous forme de conteneurs, chaque conteneur hébergeant jusqu'à 2000 serveurs. En supposant un conteneur avec 2000 serveurs et chaque serveur stockant 500 Go de données, combien de temps est nécessaire pour déplacer l'ensembles des données stockées dans un conteneur sur un lien de 10 Gbps ? Quelle est la bande passante d'un camion qui a besoin de 10 heures pour déplacer un conteneur d'un centre de données à un autre ?</p>
+                        </li>
+                        <li>
+                            <p>Quelles sont les techniques utilisées par un émetteur Go-Back-N pour récupérer :</p>
+                            <ul>
+                                <li>
+                                    <p>les erreurs de transmission</p>
+                                </li>
+                                <li>
+                                    <p>les pertes de segments de données</p>
+                                </li>
+                                <li>
+                                    <p>les pertes d'acquittements</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Considérez une liaison de <span class="em">b</span> bits par seconde entre deux hôtes qui a un retard de propagation de <span class="em">t</span> secondes. Dérivez une formule qui calcule le temps écoulé entre la transmission du premier bit d'un segment de <span class="em">d</span> octets à partir d'un hôte émetteur et la réception du dernier bit de ce segment sur l'hôte récepteur.</p>
+                        </li>
+                        <li>
+                            <p>Considérez un émetteur de type "Go-Back-N" et unrécepteur de type "Go-Back-N" qui sont directement connectés avec une liaison de 10 Mbps qui a un retard de propagation de 100 millisecondes. Supposons que le timer de retransmission est réglé sur trois secondes. Si la fenêtre a une longueur de 4 segments, dessinez un diagramme de séquence temporelle montrant la transmission de 10 segments (chaque segment contient 10000 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>quand il n'y a pas de pertes</p>
+                                </li>
+                                <li>
+                                    <p>lorsque les trosième et septième segments sont perdus</p>
+                                </li>
+                                <li>
+                                    <p>lors les deuxième, quatrième, sixième, huitième,... acquittements sont perdus</p>
+                                </li>
+                                <li>
+                                    <p>lorsque les troisième et quatrième segments de données sont réordonnés (c'est-à-dire que le quatrième arrive avant le troisième)</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Même question lors de l'utilisation de "Selective Repeat" au lieu de "Go-Back-N". Notez que la réponse n'est pas nécessairelent la même.</p>
+                        </li>
+                        <li>
+                            <p>Considérons deux serveurs haut de gamme connectés directement en utilisant une interface de 10 Gbps. Si le délai entre les deux serveurs est d'une milliseconde, quel est le débit qui peut être atteint par un protocole de transport qui utilise des segments de 10000 bits et une fenêtre de :</p>
+                            <ul>
+                                <li>
+                                    <p>un segment</p>
+                                </li>
+                                <li>
+                                    <p>dix segments</p>
+                                </li>
+                                <li>
+                                    <p>cent segments</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Considérons deux serveurs connectés directement en utilisant un lien de <span class="em">b</span> bits par seconde avec un temps aller-retour de <span class="em">r</span> secondes. Les deux serveurs utilisent un protocole de transport qui envoie des segments contenant <span class="em">s</span> octets et des acquittements composés de <span class="em">a</span> octets. Pouvez-vous dériver une formule qui calcule la plus petite fenêtre (mesurée en segments) nécessaire pour garantir que les serveurs pourront utiliser complètement le lien ?</p>
+                        </li>
+                        <li>
+                            <p>Même question que ci-dessus si les deux serveurs sont connectés via une liaison asymétrique qui transmet <span class="em">bu</span> bits par seconde dans la direction utilisée pour envoyer les segments de données et <span class="em">bd</span> bits par seconde dans la direction utilisée pour envoyer les accusés de réception.</p>
+                        </li>
+                        <li>
+                            <p>Le <span class="html">protocole de transfert de fichiers trivial (TFTP pour Trivial File Transfer Protocol)</span> est un protocole de transfert de fichiers très simple qui est souvent utilisé des hôtes sans disque lorsqu'ils démarrent à partir d'un serveur. Lire la spécification TFP dans la RFC 1350 et expliquer comment TFTP récupère des erreurs et des pertes de transmission.</p>
+                        </li>
+                        <li>
+                            <p>Est-il possible pour un récepteur Go-Back-N d'interopérer avec un émetteur à "Selective repeat" ? Justifiez votre réponse.</p>
+                        </li>
+                        <li>
+                            <p>Est-il possible pour un récepteur à "Selective repeat" d'interopérer avec un émetteur Go-Back-N ? Justifiez votre réponse.</p>
+                        </li>
+                        <li>
+                            <p>Les mécanismes de Go-Back-N et de Selective repeat décrits dans le livre reposent exclusivement sur des accusés de réception cumulatifs. Cela implique qu'un récepteur retourne toujours à l'envoyeur des informations sur le dernier segment qui a été reçu dans l'ordre. En cas de pertes ou de réarrangements fréquents, un récepteur à Selective repeat pourrait retourner plusieurs fois le même accusé de réception cumulatif. Pouvez-vous penser à d'autres types d'accusés de réception qui pourraient être utilisés par un récepteur à Selective repeat pour fournir des informations supplémentaires sur les segments hors-séquence qu'il a reçus ? Concevez de tels accusés de réception et expliquez comment l'émetteur devrait réagir à la réception de ces informations.</p>
+                        </li>
+                        <li>
+                            <p>Le <span class="em">goodput (débit utile)</span> atteint par un protocole de transport est généralement défini comme le nombre de bytes de la couche application échangés par unité de temps. Quels sont les facteurs qui peuvent influencer le goodput atteint par un protocole de transport donné ?</p>
+                        </li>
+                        <li>
+                            <p>Lorsqu'il est utilisé avec IPv4, le protocole de contrôle de transmission (TCP) attache 40 octets d'informations de contrôle à chaque segment envoyé. En supposant une fenêtre infinie et aucune perte ni erreur de transmission, dérivez une formule qui calcule le débit TCP maximal en fonction de la taille des segments qui sont envoyés.</p>
+                        </li>
+                        <li>
+                            <p>Un émetteur Go-Back-N utilise une taille de <span class="em">n</span> bits. Combien de segments peut-il envoyer sans recevoir d'accusé de réception</p>
+                        </li>
+                        <li>
+                            <p>Considérez la situation suivante. Un récepteur Go-Back-N a envoyé une fenêtre complète de segments de données. Tous les segments ont été reçus correctement et dans l'ordre par le récepteur, mais tous les accusés de réception retournés ont été perdus. Montrez en utilisant un diagramme de séquence temporelle (par exemple, en considérant une fenêtre de quatre segments) ce qui se passe dans ce cas. Pouvez-vous corriger le problème sur l'émetteur Go-Back-N ?</p>
+                        </li>
+                        <li>
+                            <p>Même question que ci-dessus, mais supposez maintenant que l'émetteur et le récepteur implémentent la Selective repeat. Notez que la réponse sera différente de la question précédente.</p>
+                        </li>
+                        <li>
+                            <p>Considérez un transport qui prend en charge une fenêtre de cent segments de 1250 octets. Quelle est la bande passante maximale que ce protocole peut atteindre si le temps aller-retour est fixé à une seconde ? Que se passe-t-il sin au lieu d'annoncer une fenêtre de cent segments, le récepteur décide d'annoncer une fenêtre de 10 segments ?</p>
+                        </li>
+                        <li>
+                            <p>Pour comprendre le fonctionnement du mécanisme de contrôle de congestion TCP, il est utile de dessiner des diagrammes de séquence temporelle. Considérons un scénario simple d'un client Web connecté à Internet qui souhaite récupérer une simple page Web à partir d'un serveur Web distant. Pour simplifier, nous supposerons que le délai entre le client et le serveur est de 0,5 seconde et que les temps de transmission de paquets sur le client et les serveurs sont négligeables (par exemple, ils sont tous deux connectés à un réseau de 1 Gbit/s). Nous supposerons égalemnt que le client et le serveur utilisent des segments de 1 Kbyte.</p>
+                            <ol>
+                                <li>
+                                    <p>Calculez le temps nécessaire pour ouvrir une connexion TCP, envoyer une requête HTTP et récupérer une page Web de 16 KBytes. Cette taille de page est typique des résultats renvoyés par les moteurs de recherche tels que Google ou Bing. Un facteur important de ce délai est la taille initiale de la fenêtre de congestion TCP sur le serveur. Supposons d'abord que la fenêtre initiale soit définie à 1 segmpent selon la RFC 2001, à 4 KBytes (c'est-à-dire 4 segments dans ce cas) comme proposé dans la RFC 3390 ou à 16 KBytes comme proposé dans un article récent.</p>
+                                </li>
+                                <li>
+                                    <p>Effectuez la même analyse avec une fenêtre initiale d'un segment si le troisième segment envoyé par le serveur est perdu et que le délai de retransmission est fixé et réglé à 2 secondes.</p>
+                                </li>
+                                <li>
+                                    <p>Même question que ci-dessus, mais supposons maintenant que le sixième segment est perdu.</p>
+                                </li>
+                                <li>
+                                    <p>Même question que ci-dessus, mais considérez maintenant la perte des deuxième et septième accusés de réception envoyés par le client.</p>
+                                </li>
+                                <li>
+                                    <p>Est-ce que l'analyse ci-dessus change si la fenêtre initiale est définie à 16 KBytes au lieu d'un segment ?</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Plusieurs MBytes ont été envoyés sur une connexion TCP et elle reste inactive pendant plusieurs minutes. Discutez des valeurs qui devraient être utilisées pour la fenêtre de congestion, le seuil de démarrage lent et les timers de retransmission.</p>
+                        </li>
+                        <li>
+                            <p>Pour fonctionner de manière fiable, un protocole de transport qui utilise Go-Back-N (resp. Selective repeat) ne peut pas utiliser une fenêtre plus grande que <span class="em">2<sup>n</sup> - 1</span>( resp. <span class="em">2<sup>n-1</sup></span>) segments. Cettr limitation affecte-t-elle TCP ? Expliquez votre réponse.</p>
+                        </li>
+                        <li>
+                            <p>Considérons le réseau simple représenté dans la figure ci-dessous. Dans ce réseau, le routeur entre le client et le serveur ne peut stocker sur chaque interface de sortie qu'un seul paquet en plus du paquet qu'il est en train de transmettre. Il ignore tous les paquets qui arrivent lorsque son tampon est plein. En supposant que vous pouvez négliger le temps de transmission des accusés de réception et que le serveur utilise une fenêtre initiale d'un segment et a un timer de retransmission réglé sur 500 millisecondes, combien de temps est nécessaire pour transmettre 10 segments du client au serveur. Les performances augmentent-elles si le serveur utilise une fenêtre initiale de 16 segments à la place ?</p>
+                            <figure>
+                                <img src="../images/reseau_simple.jpg" alt="">
+                                <figcaption>Figure 4.59 : Réseau simple</figcaption>
+                            </figure>
+                        </li>
+                        <li>
+                            <p>La figure ci-dessous décrit l'évolution de la fenêtre de congestion d'une connexion TCP. Pouvez-vous trouver les raisons des trois événements marqués sur la figure ?</p>
+                            <figure>
+                                <img src="../images/evolution_fenetre_congestion.jpg" alt="">
+                                <figcaption>Figure 4.60 : Évolution de la fenêtre de congestion</figcaption>
+                            </figure>
+                        </li>
+                        <li>
+                            <p>La figure ci-dessous décrit l'évolution de la fenêtre de congestion d'une connexion TCP. Pouvez-vous trouver les raisons des trois événements marqués sur la figure ?</p>
+                            <figure>
+                                <img src="../images/evolution_fenetre_congestion_2.png" alt="">
+                                <figcaption>Figure 4.61 : Évolution de la fenêtre de congestion</figcaption>
+                            </figure>
+                        </li>
+                        <li>
+                            <p>Un serveur web sert principalement des pages HTML qui tiennent dans 10 segments TCP. En supposant que le temps de transmission de chaque segment peut être négligé, calculez le temps total de transfert d'une telle page (en temps aller-retour) en supposant que :</p>
+                            <ul>
+                                <li>
+                                    <p>la pile TCP utilise une taille de fenêtre initiale de 1 segment;</p>
+                                </li>
+                                <li>
+                                    <p>la pile TCP utilise une taille de fenêtre initiale de trois segments.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>La RFC 3168 définit des mécanismes qui permettent aux routeurs de marquer les paquets en définissant un bit dans l'en-tête du paquet lorsqu'ils sont congestionnés. Lorsqu'un destinataire TCP reçoit une telle marque dans un paquet, il renvoie la marque de congestion à la source qui réagit en réduisant de moitié sa fenêtre de congestion et en effectuant un évitement de congestion. Considérez une connexion où le quatrième segment de données rencontre une congestion. Comparez le délai de transmisison de 8 seglents dans un réseau où les routeurs rejettent les paquets pendant la congestion et un réseau où les routeurs marquent les paquets pendant la congestion.</p>
+                        </li>
+                    </ol>
+                    <h3>4.5 Pratique :</h3>
+                    <ol>
+                        <li>
+                            <p>L'interface de socket vous permet d'utiliser le protocole UDP sur un hôte Unix. UDP fournit un service non fiable sans connexion qui théoriquement vous permet d'envoyer des SDU allant jusqu'à 64 Ko.</p>
+                            <ul>
+                                <li>
+                                    <p>Implémentez un petit client UDP et un petit serveur UDP (en python, vous pouvez partir de l'exemple fourni dans <a href="http://docs.python.org/library/socket.html" target="_blank">http://docs.python.org/library/socket.html</a> mais vous pouvez également utiliser C ou Java).</p>
+                                </li>
+                                <li>
+                                    <p>Exécutez le client et les serveurs sur des postes de travail différents pour déterminer expérimentalement la plus grande SDU prise en charge par votre langage et votre OS. Si possible, utilisez des langages et des systèmes d'exploitation différents dans chaque groupe.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>En utilisant l'interface de socket, implémentez, sur le service non fiable sans connexion fourni par UDP, un client simple qui envoie le message suivant illustré dans la figure ci-dessous.</p>
+                            <figure>
+                                <img src="../images/format_SDU_simple.png" alt="">
+                                <figcaption>Figure 4.62 : format de SDU simple</figcaption>
+                            </figure>
+                            <p>Dans ce message, les indicateurs de bits doivent être réglés sur <span class="em">01010011b</span>, la valeur du champ de 16 bits doit être la racine carrée de la valeur contenue dans le champ de 32 bits, la chaîne de caractères doit être une représentation ASCII (sans aucun octet de remplissage) du nombre contenu dans le champ de caractères de 32 bits. Les 16 derniers bits du message contiennent une somme de contrôle Internet qui a été calculée sur l'ensemble du message.</p>
+                            <p>À la réception d'un message, le serveur vérifie que :</p>
+                            <ul>
+                                <li>
+                                    <p>le drapeau a la valeur correcte</p>
+                                </li>
+                                <li>
+                                    <p>l'entier de 32 bits est le carré de l'entier de 16 bits</p>
+                                </li>
+                                <li>
+                                    <p>la chaîne de caractères est une représentation ASCII de l'entier de 32 bits</p>
+                                </li>
+                                <li>
+                                    <p>la somme de contrôle Internet est correcte</p>
+                                </li>
+                            </ul>
+                            <p>Si la vérification réussit, le serveur renvoie une SDU contenant <span class="em">11111111b</span>. Sinon, il renvoie <span class="em">01010101b</span>.</p>
+                            <p>Votre implémentation doit pouvoir fonctionner sur des machines low endian et big endian. Si vous avez accès à différents types de machines (par exemple, des ordinateurs portables x86 et des serveurs SPARC), essayez de faire fonctionner votre implémentation sur les deux types de machines.</p>
+                        </li>
+                        <li>
+                            <p>La bibliothèque de sockets est également utilisée pour développer des applications au-dessus du service de flux de bytes fiable fourni par TCP. Nous avons installé sur le serveur <span class="em">cnp3.info.ucl.ac.be</span> un serveur simple qui fournit un service client-serveur simple. Le service fonctionne comme suit :</p>
+                            <ul>
+                                <li>
+                                    <p>le serveur écoute sur le port <span class="em">62141</span> pour une connexion TCP</p>
+                                </li>
+                                <li>
+                                    <p>lors de l'établissement d'une connexion TCP, le serveur envoie un entier en utilisant le format TLV suivant :</p>
+                                    <ul>
+                                        <li>
+                                            <p>les deux premiers bits indiquent le type d'information (01 pour ASCII, 10 pour booléen)</p>
+                                        </li>
+                                        <li>
+                                            <p>les six prochains bits indiquent la longueur de l'information (en octets)</p>
+                                        </li>
+                                        <li>
+                                            <p>Un TLV ASCII a une longueur variable et les octets suivants contiennent un caractère ASCII par octet. Un TLV booléen a une longueur d'un octet. L'octet est défini sur <span class="em">00000000b</span> et <span class="em">00000001b</span> pour faux.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>le serveur renvoie un TLV contenant vrai si l'entier était correct et un TLC contenant faux sinon et ferme la connexion TCP</p>
+                                </li>
+                            </ul>
+                            <p>Implémentez un client pour interagir avec ce serveur en C, Java ou Python.</p>
+                        </li>
+                        <li>
+                            <p>Il est maintenant temps de mettre en place un petit protocole de transport. Le protocole utilise une fenêtre coulissante pour transmettre plusieurs segments sans être contraint d'attendre un accusé de réception. Votre implémentation doit prendre en charge une fenêtre coulissante de taille variable, car l'autre extrémité du flux peut envoyer sa taille de fenêtre maximale. La taille de la fenêtre est encodée en tant qu'entier non signé sur trois bits.</p>
+                            <p>Le protocole identifie les segments de données en utilisant des numéros de séquence. Le numéro de séquence du premier segment doit être 0. Il est incrémenté de un pour chaque nouveau segment. Le récepteur doit reconnaître les segments livrés en envoyant un segment ACK. Le champ <span class="em">numéro de séquence</span> du prochain segment attendu dans la séquence par le récepteur. Le flux de données est unidirectionnel, ce qui signifie que l'émetteur ne transmet que des segments ACK.</p>
+                            <p>Pour traiter avec les pertes de segments, le protocole doit implémenter une technique de récupération telle que Go-Back-N ou Selective repeat et utiliser des timers de retransmission. Vous pouvez sélectionner la technique qui convient le mieux à vos besoins et partir d'une technique simple que vous améliorez par la suite.</p>
+                        </li>
+                    </ol>
+                    <figure>
+                        <img src="../images/format_segment.png" alt="">
+                        <figcaption>Figure 4.62 : format de segment</figcaption>
+                    </figure>
+                    <p>Ce format de segment contient les champs suivants :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">Type</span> : type de segment :</p>
+                            <ul>
+                                <li>
+                                    <p>0x1 segment DATA.</p>
+                                </li>
+                                <li>
+                                    <p>0x2 segment ACK.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p><span class="html">WIN</span> : la taille de la fenêtre actuelle (un entier encodé sur 3 bits). Dans les segments DATA, ce champ indique la taille de la fenêtre d'envoi de l'émetteur. Dans les segments ACK, ce champ indique la valeur actuelle de la fenêtre de réception.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Sequence</span> : Numéro de séquence (entier non signé sur 8 bits), commence à 0. Le numéro de séquence est incrémenté de 1 pour chaque nouveau segment DATA envoyé par l'émetteur. Dans un segment ACK, le champ de séquence contient le numéro de séquence du prochain segment attendu dans la séquence par le récepteur.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Length</span> : longueur du payload en multiples d'un octet. Tous les segments DATA contiennent une charge utile avec 512 octets de données, sauf le dernier segment DATA qui peut être plus court. La réception d'un segment DATA dont la longueur est différente de 512 indique la fin du transit de données.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Payload</span> : les données à envoyer.</p>
+                        </li>
+                    </ul>
+                    <p>Le client et le serveur échangent des datagrammes UDP qui contiennent les segments DATA et ACK. Ils doivent fournir une interface en ligne de commande qui permet de transmettre un fichier binaire et prendre en charge les paramètres suivants :</p>
+<pre class="taille60"><code>sender &lt;destination_DNS_name&gt; &lt;destination_port_number&gt; &lt;window_size&gt; &lt;input_file&gt;
+receiver &lt;listening_port_number&gt; &lt;window_size&gt; &lt;output_file&gt;</code></pre>
+                    <p>Pour tester les réactions de votre protocole contre les erreurs et les pertes, vous pouvez utiliser un générateur de nombres aléatoires pour abandonner probabilistiquement les segments reçus et introduire des délais aléatoires à l'arrivée d'un segment.</p>
+                    <h4>4.5.1 Analyse de la trace de paquets :</h4>
+                    <p>Lors du débogage de problèmes de réseau ou pour analyser des problèmes de performance, il est parfois utile de capturer les segments échangés entre deux hôtes et de les analyser.</p>
+                    <p>Plusieurs outils d'analyse de trace de paquets sont disponibles, soit comme des outils commerciaux ou open source. Ces outils sont capables de capturer tous les paquets échangés sur une liaison. Bien sûr, la capture de paquets nécessite des privilèges administrateur. Ils peuvent également analyser le contenu des paquets capturés et afficher des informations à leur sujet. Les paquets capturés peuvent être stockés dans un fichier pour une analyse hors ligne.</p>
+                    <p><span class="html">tcpdump</span> est probablement l'un des logiciels de capture de paquets les plus connus. Il peut à la fois capturer des paquets et afficher leur contenu. <span class="em">tcpdump</span> est un outil basé sur du texte qui peut afficher la valeur des champs les plus importants des paquets capturés. Des informations supplémentaires sur <span class="em">tcpdump</span> peuvent être trouvées dans <span class="em">tcpdump(1)</span>. Le texte ci-dessous est un exemple de sortie de <span class="em">tcpdump</span> pour les premiers segments TCP échangés lors d'un transfert scp entre deux hôtes.</p>
+<pre class="taille60"><code>21:05:56.230737 IP 192.168.1.101.54150 &gt; 130.104.78.8.22: S 1385328972:1385328972(0) win 65535 &lt;mss
+21:05:56.251468 IP 130.104.78.8.22 &gt; 192.168.1.101.54150: S 3627767479:3627767479(0) ack 1385328973
+21:05:56.251560 IP 192.168.1.101.54150 &gt; 130.104.78.8.22: . ack 1 win 65535 &lt;nop,nop,timestamp 274527749&gt;
+21:05:56.279137 IP 130.104.78.8.22 &gt; 192.168.1.101.54150: P 1:21(20) ack 1 win 49248 &lt;nop,nop,timestamp 274527749&gt;
+21:05:56.279241 IP 192.168.1.101.54150 &gt; 130.104.78.8.22: . ack 21 win 65535 &lt;nop,nop,timestamp 274527749&gt;
+21:05:56.279534 IP 192.168.1.101.54150 &gt; 130.104.78.8.22: P 1:22(21) ack 21 win 65535 &lt;nop,nop,timestamp 274527749&gt;
+21:05:56.303527 IP 130.104.78.8.22 &gt; 192.168.1.101.54150: . ack 22 win 49248 &lt;nop,nop,timestamp 1212093357&gt;
+21:05:56.303623 IP 192.168.1.101.54150 &gt; 130.104.78.8.22: P 22:814(792) ack 21 win 65535 &lt;nop,nop,&gt;</code></pre>
+                    <p>Vous pouvez facilement reconnaître dans la sortie ci-dessus le segment <span class="em">SYN</span> contenant les options <span class="html">MSS</span>, <span class="html">window scale</span>, <span class="html">timestamp</span> et <span class="html">sackOK</span>, le segment <span class="em">SYN+ACK</span> dont l'option <span class="html">wscale</span> utilise le scaling de fenêtre pour cette connexion, puis les premiers segments échangés sur la connexion.</p>
+                    <p><span class="html">Wireshark</span> est plus récent que <span class="em">tcpdump</span>. Il a évolué à partir du logiciel d'analyse de trace de paquets <span class="html">Ethereal</span>. Il peut être utilisé comme outil texte comme <span class="em">tcpdump</span>. Pour une connexion TCP, <span class="em">wireshark</span> fournirait presque la même sortie que <span class="em">tcpdump</span>. Le principal avantage de <span class="em">wireshark</span> est qu'inclut également une interface utilisateur graphique qui permet d'effectuer différents types d'analyses sur une trace de paquets.</p>
+                    <p>La fenêtre de wireshark est divisée en trois parties.</p>
                 </article>
             <!-- fin de section -->
             </section>
