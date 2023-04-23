@@ -2559,7 +2559,7 @@ while True:
                     <p>La spécification originale de TCP peut être catégorisée comme un protocole de transport qui fournit un service de flux de données et utilise <span class="em">Go-Back-N</span>.</p>
                     <p>Pour envoyer de nouvelles données sur une connexion établie, une entité TCP effectue les opérations suivantes sur la TCB correspondante. Elle vérifie d'abord que le <span class="Em">tampon d'envoi</span> ne contient pas plus de donénes que la fenêtre de réception annoncée par l'hôte distant (<span class="em">rcv.wnd</span>. Si la fenêtre n'est pas pleine, jusqu'à <span class="em">MSS</span> octets de données sont placés dans le payload d'un segment TCP. Le <span class="em">numéeo de séquence</span> de ce segment est le numéro de séquence du premier octet du payload. Il est défini sur le premier numéro de séquence disponible : <span class="em">snd.nxt</span> et <span class="em">snd.nxt</span> est incrémenté de la longueur du payload du segment TCP. Le <span class="em">numéro d'acquittement</span> de ce segment est défini sur la valeur actuelle de <span class="em">rcv.nxt</span> et le champ de la fenêtre du segment TCP est calculé en fonction de l'ocupation actuelle du <span class="em">tampon de réception</span>. Les données sont conservées dans le <span class="em">tampon d'envoi</span> au cas où elles devraient être retransmises ultérieurement.</p>
                     <p>Lorsqu'un segment TCP avec le drapeau <span class="em">ACK</span> est reçu, les opérations suivantes sont effectuées. <span class="em">rcv.wnd</span> est défini sur la valeur du champ de la fenêtre du segment reçu. Le <span class="em">numéro d'acquittement</span> est comparé à <span class="em">snd.una</span>. Les données nouvellemnt reconnues sont supprimées du <span class="em">tampon d'envoi</span> et <span class="em">snd.una</span> est mis à jour. Si le segment TCP contenait des données, le <span class="em">numéro de séquence</span> est comparé à <span class="em">rcv.nxt</span>. S'ils sont égaux, le segment a été reçu en séquence et les données peuvent être livrées à l'utilisateur et <span class="em">rcv.nxt</span> est mis à jour. Le contenu du <span class="em">tampon de réception</span> est vérifié pour voir si d'autres données déjà présentes dans ce tampon peuvent être livrées en séquence à l'utilisateur. Si c'est le cas, <span class="em">rcv.nxt</span> est mis à jour à nouveau. Sinon, le payload du segment est placé dans le <span class="em">tampon de réception</span>.</p>
-                    <p>Stratégies de transmission de segments :</p>
+                    <h5>Stratégies de transmission de segments :</h5>
                     <p>Dans un protocole de transport tel que TCP, qui offre un flux de données par octets, une question pratique qui a été laissée au choix de l'implémentation dans la RFC 793 est de décider quand un nouveau segment TCP contenant des données doit être envoyé. Il existe deux choix d'implémentation simples et extrêmes. Le premier choix d'implémentation consiste à envoyer un segment TCP dès que l'utilisateur a demandé la transmission de certaines données. Cela permet à TCP de fournir un service à faible latence. Cependant, si l'utilisateur envoie des données une par une, TCP placerait chaque octet de l'utilisateur dans un segment contenant 20 octets d'en-tête TCP. Ce segment TCP est ensuite placé dans une en-tête <span class="em">IP</span>. Nous décrivons <span class="em">IPv4</span> et <span class="em">IPv6</span> dans le prochain chapitre. La taille minimale de l'en-tête IPv4 (resp. IPv6) est de 20 octets (resp. 40 octets). C'est une surcharge énorme qui n'est pas acceptable dans les réseaux étendus. Une deuxième soloution consisterait à ne transmettre un nouveau segment TCP que lorsque l'utilisateur a produit MSS octets de données. Cette solution réduit la surcharge, mais au prix d'un délai potentiellement très élevé.</p>
                     <p>Une solution élégante à ce problème a été proposée par John Nagle dans la RFC 896. John Nagle a observé que la surcharge causée par l'en-tête TCP était un problème dans les connexions à grande distance, mais moins dans les connexions en réseau local où la bande passante disponible est généralement plus élevée. Il a proposé les règles suivantes pour décider d'envoyer un nouveau segment de données lorsqu'une nouvelle donnée a été produite par l'utilisateur ou lorsqu'un nouveau segment <span class="em">ack</span> a été reçu.</p>
 <pre class="taille60"><code>if rcv.wnd &gt;= MSS and len(data) &gt;= MSS :
@@ -2585,7 +2585,7 @@ else:
                         <figcaption>FIgure 4.42 : Distribution de la taille des paquets dans l'Internet</figcaption>
                     </figure>
                     <p>Des mesures récentes indiquent que ces distributions de tailles de paquets sont toujours valables dans l'Internet actuel, bien que la distribution des paquets tendre à devenir bimodale avec de petits paquets correspondant aux <span class="em">ACK TCP</span> purs (40-64 octets selon l'utilisation des options TCP) et de grands paquets de 1460 octets transportant la plupart des données utilisateur.</p>
-                    <p>Fenêtres TCP :</p>
+                    <h5>Fenêtres TCP :</h5>
                     <p>D'un point de vue de performance, l'une des principales limitations de la spécification TCP d'origine est le champ <span class="em">window</span> de 16 bits dans l'en-tête TCP. Comme ce champ indique la taille actuelle de la fenêtre de réception en octets, il llimite la fenêtre de réception TCP à 65535 octets. Cette limitation n'était pas un problème grave lorsque TCP a été conçu, car à cette époque, les réseaux étendus à haute vitesse offraient une bande passanta maximale de 56 kbps. Cependant, dasn les réseaux actuels, cette limitation n'est plus aceceptable. Le tableau ci-dessous fournit une estimation approximative du débit maximum pouvant être atteint par une connexion TCP avec une fenêtre de 64 Ko en fonction du temps de trajet aller-retour de la connexion. Une estimation précise de la bande passante maximale pouvant être atteinte par une connexion TCP doit tenir compte de la surchange des en-têtes TCP et IP.</p>
                     <table role="presentation">
                         <thead>
@@ -2683,7 +2683,7 @@ rto = srtt + 4 * rttvar</code></pre>
                         <img src="../images/exemple_calcul_rto.png" alt="">
                         <figcaption>Figure 4.46 : Exemple de calcul de rto</figcaption>
                     </figure>
-                    <p>Statégies de retransmission avancées :</p>
+                    <h5>Statégies de retransmission avancées :</h5>
                     <p>La stratégie de retransmission par défaut <span class="em">Go-Back-N</span> a été définie dans le RFC 793. Lorsque le timer de retransmission expire, TCP retransmet le premier segment non acquitté (c'est-à-dire celio ayant un numéro de séquence <span class="em">snd.una</span>). Après chaque expiration du timeout de retransmission, le RFC 2988 recommande de doubler la valeur du timeout de retransmission. Cela s'appelle un "<span class="html">exponential backoff</span>". Ce doublement du timeout de retransmission après une retransmission a été inclus dans TCP pour faire face à des problèmes tels que la surcharge réseau/récepteur et les estimations initiales incorrectes du timeout de retransmission. Si le même segment est retransmis plusieurs fois jusqu'à ce qu'il atteigne un maximum configuré. Le RFC 2988 suggère un maximum de timeout de retransmission d'au moins 60 secondes. Une fois que le timeout de retransmission atteint ce maximum configuré, l'hôte distant est considéré comme inaccessible et la connexion TCP est fermée.</p>
                     <p>Cette stratégie de retransmission a été affinée en fonction de l'expérience de l'utilisation de TCP sur Internet. La première amélioration a été une clarification de la stratégie utilisée pour envoyer les accusés de réception. Comme TCP utilise le <span class="em">piggybacking</span>, la méthode la plus facile et la moins coûteuse pour envoyer les accusés de réception est de les placer dans les segments de données envoyés dans l'autre sens. Cependant, peu de protocoles de couche application échangent des données dans les deux sens en même temps, et donc cette méthode fonctionne rarement. Pour une application qui envoie des segments de données dans une direction seulement, l'entité TCP distante renvoie des segments TCP vides dont la seule information utile est leur numéro d'accusé de réception. Cela peut causer une grande surcharge dans le réseau étendu si un segment <span class="em">ACK</span> pur est envoyé en réponse à chaque segment de données reçu. La plupart des implémentations TCP utilisent une stratégie d'accusé de réception différé. Cette stratégie garantit que le <span class="em">piggybacking</span> est utilisé chaque fois que possible, sinon des segments <span class="em">ACK</span> purs sont envoyés pour chaque deuxième segment de données reçu lorsqu'il n'y a pas de perte.  Lorsqu'il y a des pertes ou des réorganisations, les segments <span class="em">ACK</span> sont plus importants pour l'expéditeur et ils sont envoyés immédiatement RFC 813 RFC 1122. Cette stratégie repose sur un nouveau timer avec un court délai (par exemple 50 millisecondes) et un drapeau  supplémentaire dans le <span class="em">TCB</span>. Elle peut être implémentée comme suit :</p>
 <pre class="taille60"><code>reception of a data segment:
@@ -2739,7 +2739,7 @@ acktimer expiration:
                     <p>Une option <span class="em">SACK</span> contient un ou plusieurs blocs. Un bloc correspond à tous les numéros de séquence entre le <span class="html">left edge (trad. bord gauche)</span> et le <span class="html">right edge (trad. bord droit)</span> du bloc. Les deux bords du bloc sont encodés sous forme de nombres de 32 bits (de la même taille que le numéro de séquence TCP) dans une option <span class="em">SACK</span>. Comme l'option <span class="em">SACK</span> contient un octet pour coder son type et un octet pour sa longueur, une option <span class="em">SACK</span> contenant <span class="em">b</span> blocs est encodée sous forme d'une séquence de <span class="em">2 + 8 * b</span> octets. En pratique, la taille de l'option <span class="em">SACK</span> peut poser problème car l'extension d'en-tête TCP facultative ne peut pas dépasser 44 octets. Comme l'option <span class="em">SACK</span> est généralement combinée avec l'extension de marque temporelle RFC 1323, cela implique qu'un segment TCP ne peut généralement pas contenir plus de trois blocs <span class="em">SACK</span>. Cette limitation implique qu'un récepteur TCP ne peut pas toujours placer dans l'option <span class="em">SACK</span> qu'il envoie, des informations sur tous les blocs reçus.</p>
                     <p>Pour faire face à la taille limitée de l'option <span class="em">SACK</span>, un récepteur TCP ayant actuellement plus de 3 blocs dans son tampon de réception doit sélectionner les blocs à placer dans l'option <span class="em">SACK</span>. Une bonne heuristique consiste à placer dans l'option <span class="em">SACK</span> les blocs qui ont changé le plus récemment, car l'émetteur est susceptible d'être déjà au courant des blocs plus anciens.</p>
                     <p>Lorsqu'un émetteur reçoit une option <span class="em">SACK</span> indiquant un nouveau bloc et donc une nouvelle perte possible de segment, il ne réémet généralement pas immédiatement le ou les segments manquants. Pour traiter la réorganisation, un émetteur TCP peut utiliser une heuristique similaire à la retransmission rapide en retransmettant un écart uniquement une fois qu'il a reçu trois options <span class="em">SACK</span> indiquant cet écart. Il convient de noter que l'option <span class="em">SACK</span> ne remplace pas le numéro d'accusé de réception de l'en-tête TCP. Un émetteur TCP ne peut supprimer des données de son tampon d'envoi que lorsqu'elles ont été accusées de réception cumulatifs de TCP. Cette conception a été choisie pour deux raisons. Premièrement, elle eprmet au récepteur de supprimer des parties de son tampon de réception lorsqu'il manque de mémoire sans perdre de données. Deuxièmement, comme l'option <span class="em">SACK</span> n'est pas transmise de manière fiable, les accusés de réception cumulatifs sont toujours nécessaires pour traiter les pertes de segments <span class="em">ACK</span> transportant uniquement des informations <span class="em">SACK</span>. Ainsi, l'option <span class="em">SACK</span> ne sert que d'indice permettant à l'émetteur d'optimiser ses retransmissions.</p>
-                    <p>Contrôle de congestion TCP :</p>
+                    <h5>Contrôle de congestion TCP :</h5>
                     <p>Dans les sections précédentes, nous avons expliqué les mécanismes que TCP utilise pour traiter les erreurs de retransmission et les pertes de segments. Dans un réseau hétérgogène tel que l'Internet ou les réseaux IP d'entreprise, les systèmes terminaux sont des serveurs haut de gamme attachés à des liaisons de 10 Gbps, tandis que d'autres sont des dispositifs mobiles attachés à une liaison sans fil à très faible bande passante. Malgré ces énorms différences de performances, un dispositif mobile devrait être capable d'éffacer efficacement des segments avec un serveur haut de gamme.</p>
                     <p>Pour mieux comprendre ce problème, considérons le scénario illustré dans la figure ci-dessous, où un serveur (<span class="em">A</span>) attaché à une liaison de 10 Mbps envoie des segments TCP à un autre ordinateur (<span class="em">C</span>) via un chemin qui contient une liaison de 2 Mbps.</p>
                     <figure>
@@ -3304,10 +3304,890 @@ receiver &lt;listening_port_number&gt; &lt;window_size&gt; &lt;output_file&gt;</
                         <img src="../images/wireshark_graphe_numero_sequence.png" alt="">
                         <figcaption>Figure 4.66 : graphique de numéro de séquence</figcaption>
                     </figure>
+                    <p>Un deuxième graphique intéressant est le graphique du temps aller-retour qui montre l'évolution du temps aller-retour en fonction du temps. Ce graphique peut être utilisé pour vérifier si le temps aller-retour reste stable ou non. Notez que depuis une trace de paquets, Wireshark peut tracer deux graphiques de temps aller-retour, un pour le flux du client vers le serveur et l'autre pour le sens inverse. Wireshark affichera le graphique de temps aller-retour qui correspond au paquet sélectionné dans la fenêtre supérieure de Wireshark.</p>
+                    <figure>
+                        <img src="../images/wireshark_graphe_round-trip-time.png" alt="">
+                        <figcaption>Figure 4.67 : Wireshark : graphe du temps aller-retour</figcaption>
+                    </figure>
+                    <h4>Émulation de reséau avec Netkit :</h4>
+                    <p><span class="html">Netkit</span> est un émulateur de réseau basé sur User Mode Linux. Il permet de mettre en place facilement un réseau émulé de machines Linux, qui peuvent agir comme des hôtes finaux ou des routeurs.</p>
+                    <hr>
+                    <p>Note : Où puis-je trouver Netkit ?</p>
+                    <p>Netkit est disponible sur <a href="http://www.netkit.org/" target="_blank">http://www.netkit.org/</a>. Les fichiers peuvent être téléchargés depuis <a href="http://wiki.netkit.org/index.php/Download_Official" target="_blank">http://wiki.netkit.org/index.php/Download_Official</a>, et les instructions d'installation sont disponibles ici : <a href="http://wiki.netkit.org/download/netkit/INSTALL" target="_blank">http://wiki.netkit.org/download/netkit/INSTALL</a>.</p>
+                    <p>Il y a deux façons d'utiliser Netkit : la méthode manuelle et l'utilisation de laboratoires pré-configurés. Dans le premier cas, vous démarrez et contrôlez chaque machine individuellement, en utilisant les commandes commençant par un "<span class="em">v</span>" (pour machine virtuelle). Dans le second cas, vous pouvez démarrer tout un réseau en une seule opération. Les commandes de contrôle du laboratoire commencent par un "<span class="em">l</span>". Les pages de manuel de ces commandes sont disponibles sur <a href="http://wiki.netkit.org/man/man7/netkit.7.html" target="_blank">http://wiki.netkit.org/man/man7/netkit.7.html</a>.</p>
+                    <p>Vous devez être attentif à ne pas oublier d'arrêter vos machines virtuelles et laboratoires, en utilisant soit <span class="html">vhalt</span>, soit <span class="html">lhalt</span>.</p>
+                    <hr>
+                    <p>Un laboratoire Netkit est simplement un répertoire contenant au moins un fichier de configuration appelé <span class="em">lab.conf</span>, et un répertoire pour chaque machine virtuelle. Dans le cas du laboratoire disponible sur iCampus, le réseau est composé de deux ordinateurs, <span class="em">pc1</span> et <span class="em">pc2</span>, tous deux connectés à un routeur <span class="em">r1</span>. Le fichier lab.conf contient les lignes suivantes :</p>
+<pre class="taille60"><code>pc1[0]=A
+pc2[0]=B
+r1[0]=A
+r1[1]=B</code></pre>
+                    <p>Cela signifie que <span class="em">pc1</span> et <span class="em">r1</span> sont connectés à un "LAN virtuel" nommé <span class="em">A</span> via leur interface <span class="em">eth0</span>, tandis que <span class="em">pc2</span> et <span class="em">r1</span> sont connectés au "LAN virtuel" <span class="em">B</span> via respectivement leurs interfaces <span class="Em">eth0</span> et <span class="em">eth1</span>.</p>
+                    <p>Le répertoire du laboratoire peut contenir des fichiers facultatifs. Dans le laboratoire qui vous est fourni, le fichier "pc1.startup" contient les instructions de shell à exécuter au démarrage de la machine virtuelle. Dans ce cas particulier, le script configure l'interface <span class="em">eth0</span> pour permettre les échanges de trafic entre <span class="em">pc1</span> et <span class="em">r1</span>, ainsi que l'entrée de la table de routage pour rejoindre <span class="em">pc2</span>.</p>
+                    <p>Le démarrage d'un laboratoire consiste donc simplement à décompresser l'archive fournie, à entrer dans le répertoire du laboratoire et à taper <span class="html">Istart</span> pour démarrer le réseau.</p>
+                    <hr>
+                    <p>Note : Partage de fichiers entre les machines virtuelles et l'hôte :</p>
+                    <p>Les machines virtuelles peuvent accéder au répertoire du laboratoire auquel elles appartiennent. Ce répertoire est monté dans leur système de fichiers sous le chemin <span class="em">/hostlab</span>.</p>
+                    <hr>
+                    <p>Dans le laboratoire netkit (<span class="em">exercises/netkit/netkit_lab_2hosts_1tr_ipv4.tar.tar.gz</span>), vous pouvez trouver une application client/serveur Python simple qui établit des connexions TCP. N'hésitez pas à réutiliser ce code pour effectuer vos analyses.</p>
+                    <hr>
+                    <p>Note : outils Netkit :</p>
+                    <p>Comme les machines virtuelles exécutent Linux, des outils de réseau standard tels que <span class="html">hping</span>, <span class="html">tcpdump</span>, <span class="html">netstat</span>, etc. sont disponibles comme d'habitude.</p>
+                    <p>Notez que la capture de traces réseau peut être facilitée en utilisant l'extension <span class="html">uml_dump</span> disponible sur <a href="http://kartoch.msi.unilim.fr/blog/?p=19" target="_blank">http://kartoch.msi.unilim.fr/blog/?p=19</a>. Cette extension est déjà installée dans l'installation Netkit sur le laboratoire étudiant. Pour capturer le trafic échangé sur un "virtual LAN" donné, vous devez simpelement saisir la commande <span class="html">vdump &lt;nom LAN&gt;</span> sur l'hôte. Si vous voulez rediriger la trace vers Wireshark, vous pouvez utiliser <span class="html">vdump A | wireshark -i --k</span>.</p>
+                    <hr>
+                    <ol>
+                        <li>
+                            <p>Une pile TCP/IP reçoit un segment SYN avec le numéro de séquence fixé à 1234. Quelle sera la valeur du numéro d'accusé de réception dans le segment SYN+ACK retourné ?</p>
+                        </li>
+                        <li>
+                            <p>Est-il possible pour une pile TCP/IP de renvoyer un segment SYN+ACK avec le numéro d'accusé de réception fixé à 0 ? Si non, expliquez pourquoi. SI oui, quel était le contenu du segment SYN reçu.</p>
+                        </li>
+                        <li>
+                            <p>Ouvrez la trace de paquets <span class="html">tcpdump</span> <span class="em">exercices/traces/trace.5connections_opening_closing.pcap</span> et identifez le nombre de connexions TCP différentes établies et fermées. Pour chaque connexion, expliquez par quel mécanisme elles sont fermées. Analysez les numéros de séquence initiaux utilisés dans les segments SYN et SYN+ACK. COmment évoluent ces numéros de séquenc einitiaux ? Sont-ils augmentés toutes les 4 microsecondes ?</p>
+                        </li>
+                        <li>
+                            <p>La trace de paquets <span class="html">tcpdump</span> <span class="em">exercices/traces/trace.5connections.pcap</span> contient plusieurs tentatives de connexion. Pouvez-vous expliquer ce qui se passe avec ces tentatives de connexion ?</p>
+                        </li>
+                        <li>
+                            <p>La trace de paquets <span class="html">tcpdump</span> <span class="em">exercises/traces/trace.ipv6.google.com.pcap</span> a été collectée à partir d'un site Web populaire accessible en utilisant IPv6. Expliquez les options TCP prises en charge par le client et le serveur.</p>
+                        </li>
+                        <li>
+                            <p>La trace de paquets <span class="html">tcpdump</span> <span class="em">exercises/traces/trace/sirius.info.ucl.ac.be.pcpap</span> a été collectée sur le serveur départemental. QUelles sont les options TCP prises en charge par ce serveur ?</p>
+                        </li>
+                        <li>
+                            <p>Une implémentation TCP maintient un bloc de contrôle de transmission (TCB) pour chaque connexion TCP. Ce TCB est une structure de données qui contient l'ensemble de l'"état" de chaque connexion TCP. Le TCB est décrit dans la RFC 793. Il contient d'abord l'identification de la connexion TCP :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">localip</span> : l'adresse IP de l'hôte local.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">remoteip</span> : l'adresse IP de l'hôte distant.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">remoteport</span> : le port TCP utilisé pour cette connexion sur l'hôte distant.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">localport</span> : le port TCP utilisé pour cette connexion sur l'hôte local. Notez que lorsqu'un client ouvre une connexion TCP, le port local sera souvent choisi dans la plage de ports éphémères (49152 &lt;= localport &lt;= 65535).</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">sndnxt</span> : le numéro de séquence du prochain octet dans le flux d'octets (le premier octet d'un nouveau segment de données que vous envoyez utilisera ce numéro de séquence).</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">snduna</span> : le numéro de séquence du prochain octet que votre implémentation s'attend à recevoir de l'hôte distant. Pour cet exercice, vous n'avez pas besoin de maintenir un tampon de réception et votre implémentation peut ignorer les segments hors séquence qu'elle reçoit.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">sndwnd</span> : la fenêtre d'envoi actuelle.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">rcwnd</span> : la fenpêtre actuellement annoncée par le récepteur.</p>
+                                </li>
+                            </ul>
+                            <p>En utilisant la trace de paquets <span class="em">exerses/traces/trace.sirius.info.ucl.ac.be.pcap</span>, quel est le TCB de la connexion sur l'hôte 130.104.78.8 lorsqu'il envoie le troisième segment de la trace ?</p>
+                        </li>
+                        <li>
+                            <p>La tace de paquets <span class="html">tcpdump</span> <span class="em">exersises/traces/trace.maps.google.com</span> a été collectée en accédant à un site web populaire qui fournit des informations de cartographie. Combien de connexions TCP ont été utilisées pour récupérer les informations de ce serveur</p>
+                        </li>
+                        <li>
+                            <p>Certains outils de serveillance réseau tels que <span class="html">ntop</span> collectent tous les segments TCP envoyés et reçus par un hôte ou un groupe d'hôtes et fournissent des statistiques intéressantes que le nombre de connexions TCP, le nombre d'octets échangés sur chaque connexion TCP, etc. En supposant que vous puissiez capturer tous les segments TCP envoyés par un hôte, proposez le pseudo-code d'une application qui répertorie toutes les connexions TCP établies et acceptées par cet hôte et le nombre d'octets échangés sur chaque connexion. Doit-on compter le nombre d'octets contenus dans chaque segment pour rapporter le nombre d'octets échangés sur chaque connexion TCP ?</p>
+                        </li>
+                        <li>
+                            <p>Il existe deux types de pare-feux : des dispositifs spéciaux placés à la frontière des réseaux d'entreprise ou de campus et des logiciels qui s'éxécutent sur des hôtes finaux. Un pare-feu est un dispositif matériel ou logiciel qui analyse les paquets TCP/IP et décide, en fonction d'un ensemble de règles, d'accepter ou de rejeter les paquets reçus ou envoyés. Les règles utilisées par un pare-feu dépendent généralement de la valeur de certains champs des paquets (par exemple, le type de protocole de transport, les ports, ...). Nous discuterons plus en détail du fonctionnement des pare-feux dans le chapitre sur la couche réseau. Les logiciels de pare-feux analysent généralement tous les paquets reçus par un hôte et décident, en fonction de l'en-tête du contenu du paquet, s'il peut être traité par la pile réseau de l'hôte ou s'il doit être rejeté. Les administrateurs système configurent souvent des pare-feux sur les ordinateurs portables ou les machines étudiantes pour empêcher les étudiants d'installer des serveurs sur leurs machines. Comment concevriez-vous une pare-feu simple qui bloque toutes les connexions TCP entrantes mais qui permet néanmoins à l'hôte d'établir des connexions TCP avec n'importe quel serveur distant ?</p>
+                        </li>
+                        <li>
+                            <p>En utilisant le laboratoire Netkit expliqué ci-dessus, effectuez quelques tests en utilisant <span class="html">hping3(8)</span>. <span class="em">hping3(8)</span> est un outil en ligne de commande qui permet à quiconque (ayant des privilèges d'administrateur système) d'envoyer des paquets IP spéciaux et des segments TCP, <span class="em">hping3(8)</span> peut être utilis& pour vérifier la configuration des pare-feux ou diagnostiquer des problèmes. Nous l'utiliserons pour tester le fonctionnement de la pile TCP Linux en cours d'exécution dans Netkit.</p>
+                            <ul>
+                                <li>
+                                    <p>Sur l'hôte serveur, lancez <span class="html">tcpdump(1)</span> avec <span class="html">-vv</span> en paramètre pour collecter tous les paquets reçus du client et les afficher. En utilisant <span class="em">hping3(8)</span> sur l'hôte client, envoyez un segment SYN valide vers un port inutilisé sur l'hôte serveur (par exemple 12345). Quels sont les contenus du segment renvoyé par le serveur ?</p>
+                                </li>
+                                <li>
+                                    <p>Effectuez la même expérience, mais envoyez maintenant un segment SYN vers le port 7. Ce port est le port par défaut pour le service de discard (voir <span class="html">services(5)</span>) lancé par <span class="html">xinetd(8)</span>. Quel segment le serveur envoie-t-il en réponse ? Que se passe-t-il à la réception de ce segment ? Expliquez votre réponse.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Le stack TCP/IP de Linux peut être facilement configuré en utilisant <span class="html">sysctl(8)</span> pour modifier les variables de configuration du kernel. Consultez <a href="http://fasterdata.es.net/TCP-tuning/ip-sysctl-2.6.txt" target="_blank">http://fasterdata.es.net/TCP-tuning/ip-sysctl-2.6.txt</a> pour une liste récente des variables <span class="em">sysctl</span> sur le stack TCP/IP de linux. Essayez de désactiver les accusés de réception sélectifs et les options de timestamp RFC1323 et de fenêtre large, et ouvrez une connexion TCP sur le port 7 sur le serveur en utilisant <span class="html">telnet(1)</span>. Vérifiez en utilisant <span class="html">tcpdump(1)</span> l'effet de ces variables du kernel sur les segments envoyés par le stack Linux dans Netkit.</p>
+                        </li>
+                        <li>
+                            <p>Les administrateurs réseau doivent parfois vérifier quels démons de réseau sont actifs sur un serveur. Lorsqu'ils sont connectés au serveur, plusieurs outils peuvent être utilisés pour vérifier cela. Une première solution consiste à utiliser la commande <span class="html">netstat(8)</span>. Cette commande permet d'extraire diverses statistiques de la pile réseau sur le noyau Linux. Pour TCP, <span class="html">netstat</span> peut lister toutes les connexions TCP actives avec l'état de leur FSM. <span class="em">netstat</span> prend en charge les options suivantes qui pourraient être utiles pendant ces exercices :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">-t</span> demande des informations sur les connexions TCP.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">-n</span> demande une sortie numérique (par défaut, <span class="em">netstat</span> envoie des requêtes DNS pour résoudre les adresses IP en noms d'hôtes et utilise <span class="em">/etc/services</span> pour convertir le numéro de port en noms de service, <span class="em">-n</span> est recommandé sur les machines Netkit).</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">-e</span> fournit plus d'informations sur l'état des connexions TCP.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">-o</span> fournit des informations sur les timers.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">-a</span> fournit des informations sur toutes les connexions TCP, pas seulement celles dans l'état "<span class="em">Established</span>".</p>
+                                </li>
+                            </ul>
+                            <p>Sur le laboratoire Netkit, lancez un démon et démarrez une connexion TCP en utilisant <span class="html">telnet(1)</span> et utilisez <span class="html">netstat(8)</span> pour vérifier l'état de ces connexions.</p>
+                            <p>Une deuxième solution pour déterminer quels démons réseau sont en cours d'exécution sur un serveur consiste à utiliser un outil comme <span class="html">nmap(1)</span>. <span class="em">nmap(1)</span> peut être exécuté à distance et peut être exécuté à distance et peut donc fournir des informations sur un hôte sur lequel l'administrateur système ne peut pas se connecter. Utilisez <span class="em">tcpdump(1)</span> pour collecter les seglents envoyés par <span class="em">nmap(1)</span> s'exécutant sur le client et expliquez comment <span class="em">nmap(1)</span> fonctionne.</p>
+                        </li>
+                        <li>
+                            <p>Les connexions TCP à long terme sont susceptibles de subir des <span class="html">attaques dites RST</span>. Essayez de trouver des informations supplémentaires sur cette attaque et expliquez comment un stack TCP pourrait atténuer de telles attaques.</p>
+                        </li>
+                        <li>
+                            <p>Pour les exercices ci-dessous, nous avons effectué des mesures dans un réseau émulé similaire à celui représenté ci-dessous. Avec un réseau émulé, il est plus difficile d'obtenir des résultats quantitatifs qu'avec un réseau réel car toutes les machines émulées doivent partager le même CPU et la même mémoire. Cela crée des interactions entre les différentes machines émulées qui ne se produisent pas dans le monde réel. Cependant, étant donnée que l'objectif de cet exercice est simplement de permettre aux étudiants de comprendre le comportement du mécanisme de contrôle de congestion TCP, ce n'est pas un problème grave.</p>
+                            <figure>
+                                <img src="../images/reseau_emule.jpg" alt="">
+                                <figcaption>Figure 4.68 : Réseau émulé</figcaption>
+                            </figure>
+                            <p>Le réseau émulé est composé de trois machines UML : un client, un serveur et un routeur. Pour plus d'informations sur les schémas de contrôle de congestion TCP implémentés dans le noyau Linux, voir <a href="http://linuxgazette.net/135/pfeiffer.html" target="_blank">http://linuxgazette.net/135/pfeiffer.html</a> et <a href="http://www.cs.helsinki.fi/research/iwtcp/papers/linuxtcp.pdf" target="_blank">http://www.cs.helsinki.fi/research/iwtcp/papers/linuxtcp.pdf</a> ou le code source d'un noyau Linux récent. Une description de certains des variables <span class="html">sysctl</span> qui permettent de régler l'implémentation TCP dans le noyau LInux peut être trouvée à l'adresse <a href="http://fasterdata.es.net/TCP-tuning/linux.html" target="_blank">http://fasterdata.es.net/TCP-tuning/linux.html</a>. Pour cet exercice, nous avons configuré le noyau Linux pour utiliser le schéma NewReno RFC 3782 qui est très proche de la norme officielle définie dans le RFC 5681. Le client et le serveur sont connectés via le routeur. Le client envoie des données au serveur. Le lien entre le routeur et le client est contrôlé en utilisant le module du noyau Linux "netem". Ce module nous permet d'insérer des délais supplémentaores, de réduire la bande passante du lien et d'insérer des pertes de paquets aléatoires.</p>
+                            <p>Nous avons utilisé <span class="html">netem</span>pour collecter plusieurs traces :</p>
+                            <ul>
+                                <li>
+                                    <p class="em">/transport/exercises/traces/trace0.pcap</p>
+                                </li>
+                                <li>
+                                    <p class="em">/transport/exercises/traces/trace1.pcap</p>
+                                </li>
+                                <li>
+                                    <p class="em">/transport/exercises/traces/trace2.pcap</p>
+                                </li>
+                                <li>
+                                    <p class="em">/transport/exercises/traces/trace2.pcap</p>
+                                </li>
+                            </ul>
+                            <p>En utilisant Wireshark ou tcpdump, effectuez les analyses suivantes :</p>
+                            <ol>
+                                <li>
+                                    <p>Identifier les options TCP utilisées sur la connexion TCP en utilisant Wireshark ou tcpdump.</p>
+                                </li>
+                                <li>
+                                    <p>Analyser l'évolution du temps aller-retour (RTT) sur chacune des connexions TCP en utilisant le graphique de temps aller-retour de Wireshark. Attention à l'estimation du RTT car certaines versions de Wireshark peuvent être défectueuses.</p>
+                                </li>
+                                <li>
+                                    <p>Vérifier si l'implémentation TCP utilisée a implémenté des <span class="html">accusés de réception différés</span>.</p>
+                                </li>
+                                <li>
+                                    <p>Dans chaque trace de paquets, trouvez :</p>
+                                    <ol>
+                                        <li>
+                                            <p>un segment qui a été retransmis en utilisant une <span class="em">retransmission rapide (fast retransmit)</span>. Expliquer cette retransmission en détail.</p>
+                                        </li>
+                                        <li>
+                                            <p>un segment qui a été retransmis grâce à l'expiration du délai de retransmission TCP. Expliquer pourquoi ce segment n'aurait pas pu être retransmis en utilisant une <span class="em">retransmission rapide</span>.</p>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <p>Wireshark contient deux graphiques utiles : le graphique du <span class="em">temps aller-retour</span> et le graphique de <span class="em">séquence temporelle</span>. Expliquez comment vous calculeriez le même graphique à partir d'une telle trace.</p>
+                                </li>
+                                <li>
+                                    <p>Lors de l'affichage des segments TCP, les versions récentes de Wireshark contiennent des heuristiques d'<span class="em">analyse experte</span> qui indiquent si le segment a été retransmis, s'il s'agit d'un ack en double ou si le délai de retransmission a expiré. Expliquez comment vous implémenteriez les même heuristiques que Wireshark.</p>
+                                </li>
+                                <li>
+                                    <p>Pouvez-vous trouver quel fichier a été échangé lors du transfert ?</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Vous avez été embauché en tant qu'expert en réseaux par une entreprise. Dans cette entreprise, les utilisateurs d'une application en réseau se plaignent que le réseau est très lent. Les développeurs de l'application affirment que tout retard est causé par des pertes de paquets et un réseau défectueux. L'administrateur réseau sontient que le réseau fonctionne parfaitement et que les retards perçus par les utilisateurs sont causés par les applications ou les serveurs sur lesquels l'application est exécutée. Pour résoudre le cas et déterminer si le problème est dû au réseau a collecté une trace de paquets représentative que vous pouvez télécharger depuis <span class="em">exercises/traces/trace9.pcao</span>. En regardant la trace, pouvez-voud résoudre ce cas et indiquer si le réseau ou l'application est le coupable</p>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="couche_reseau">Partie 5 : La couche réseau :</h2>
+                    <h3>5.1 La couche réseau :</h3>
+                    <p>La couche transport permet aux applications d'échanger des données de manière efficace et fiable. Les entités de la couche transport s'attendent à pouvoir envoyer des segments vers n'importe quelle destination sans avoir à comprendre quoi que ce soit sur les technologies de sous-réseau sous-jacentes. Il esiste de nombreuses technologies de sous-réseau, la plupart différant dans des détails subtils (taille de trame, adressage, etc.). La couche réseau est la liaison entre ces sous-réseaux et la couche de transport. Elle cache à la couche transport toute la complexité des sous-réseaux sous-jacents et garantit que des informations peuvent être échangées entre des hôtes connectés à différents types de sous-réseaux.</p>
+                    <p>Dans ce chapitre, nous expliquons d'abord les principes de la couche réseau. Ces principes comprennent les modes datagramme et circuit virtuel, la séparation entre le plan de données et le plan de contrôle et les algorithmes utilisés par les protocoles de routage. Ensuite, nous expliquons plus en détail la couche réseau dans Internet, en commençant par IPv4 et IPv6, puis en passant aux protocoles de routage (RIP, OSPF et BGP).</p>
+                    <h4>5.1.1 Principes :</h4>
+                    <p>L'objectif principal de la couche réseau est de permettre aux systèmes finaux, connectés à différents réseaux, d'échanger des informations via des systèmes intermédiaires appelés <span class="html">routeurs</span>. L'unité d'information dans la couche réseau est appelée un <span class="html">paquet</span>.</p>
+                    <figure>
+                        <img src="../images/couche_reseau_modele_reference.png" alt="">
+                        <figcaption>Figure 5.1 : La couche réseau dans le modèle de référence</figcaption>
+                    </figure>
+                    <p>Avant d'expliquer en détail la couche réseau, il est utile de commencer par analyser le service fourni par la couche liaison de données. Il existe de nombreuses variantes de la couche liaison de données. Certaines fournissent un service orienté connexion, tandis que d'autres fournissent un service sans connexion. Dans cette section, nous nous concentrons sur les services de la couche liaison de données sans connexion, car ils sont les plus largement utilisés. L'utilisation d'une couche liaison de données orientée connexion cause certains problèmes qui dépassent le cadre de ce chapitre. Voir la RFC 3819 pour une discussion sur ce sujet.</p>
+                    <p>Il existe trois principaux types de couches liaison de données. La couche de liasion de données la plus simple est utilisée lorsque seuls deux systèmes communicants sont directement connectés via la couche physique. Une telle couche liaison de données est utilisée lorsqu'il existe une liaison point-à-point entre les deux systèmes communicants. Les deux systèmes peuvent être des systèmes terminaux ou des routeurs. PPP (Point-to-Point Protocol), défini dans le RFC 1661, est un exemple d'une telle couche liaison de données point-à-point. Les couches liaison de données échangent des trames et une trame de liaison de données envoyée par une entité de la couche liaison de données à gauche est transmise via la couche physique, de sorte qu'elle peut atteindre l'entité de la couche liaison de données à droite. Les couches liaison de données point-à-point peuvent fournir un service non fiable (les trames peuvent être corrompues ou perdues) ou un service fiable (dans ce cas, la couche liaison de données inclut des mécanismes de retransmission similaires à ceux utilisés dans la couche transport). Le service non fiable est fréquemment utilisé au-dessus de couches physiques (par exemple, la fibre optique, les paires torsadées) ayant un faible taux d'erreur de bits, tandis que les mécanismes de fiabilité sont souvent utilisés dans les réseaux sans fil pour récupérer localement des erreurs de transmission.</p>
+                    <figure>
+                        <img src="../images/couche_liaison_donnees_point_a_point.png" alt="">
+                        <figcaption>Figure 5.2 : La couche liaison de données point-à-point</figcaption>
+                    </figure>
+                    <p>Le deuxième type de couche liaison de données est celui utilisé dans les réseaux locaux (LAN). Conceptuellement, un LAN est un ensemble de dispositifs communicants tels que deux dispositifs quelconques peuvent échanger directement des trames via la couche liaison de données. Des systèmes terminaux et des routeurs peuvent être connectés à un LAN. Certains LAN ne connectent que quelques dispositifs, mais il existe des LAN qui peuvent connecter des centaines, voire des miliers de dispositifs.</p>
+                    <figure>
+                        <img src="../images/LAN.png" alt="">
+                        <figcaption>Figure 5.3 : Un réseau local (LAN)</figcaption>
+                    </figure>
+                    <p>Dans le prochain chapitre, nous décrivons l'organisation et le fonctionnement des réseaux locaux. Une différence importante entre les couches liaison de données point à point et les couches liaison de données utilisées dans les LAN est que dans un LAN, chaque dispositif communicant est identifié par une adresse unique de couche liaison de données. Cette adresse est généralement intégrée dans le matériel du dispositif et différents types de LAN utilisent différents types d'adresses de couche liaison de données. Un dispositif communicant attaché à un LAN peut envoyer une trame de liaison de données à n'importe quel autre dispositif communicant attaché au même LAN. La plupart des LAN prennent également en charge des adresses de couche liaison de données spéciales de diffusion et de multidiffusion. Une trame envoyée à l'adresse de diffusion du LAN est distribuée à tous les dispositifs communicants qui sont attachés au LAN. Les adresses de multidiffusion sont utilisées pour identifier des groupes de dispositifs communicants. Lorsqu'une trame est envoyée vers une adresse de couche liaison de données de multidiffusion, elle est distribuée par le LAN à tous les dispositifs communicants qui appartiennent au groupe correspondant.</p>
+                    <p>Le troisième type de couches de liaison de données sont utilisés dans les réseaux NBMA (Non-Broadcast Multi Access). Ces réseaux sont utilisés pour interconnecter des dispositifs comme un LAN. Tous les dispositifs attachés à un réseau NBMA sont identifés par un réseau NBMA sont identifiés par une adresse de couche de liaison de données unique. Cependant, et c'est la principale différence entre un réseau NBMA et un LAN traditionnel, le service NBMA ne prend en charge que l'unicast. Le service de couche de liaison de données fourni par un réseau NBMA ne prend en charge ni la diffusion ni la multidiffusion.</p>
+                    <p>Malheureusement, aucune couche de liaison de données ne peut envoyer des trames de taille illimitée. Chaque couche de liaison de données est caractérisée par une taille maximale de trame. Il existe plus d'une douzaine de couches de liaison de données différentes et malheureusement la plupart d'entre elles utilisent une taille maximale de trame différente. La couche réseau doit faire face à l'hétérogénéité de la couche de liaison de données.</p>
+                    <p>La couche réseau elle-même repose sur les principes suivants :</p>
+                    <ol>
+                        <li>
+                            <p>Chaque entité de la couche réseau est identifiée par une <span class="em">adresse de couche réseau</span>. Cette adresse est indépendante des adresses de la couche liaison de données qu'elle peut utiliser.</p>
+                        </li>
+                        <li>
+                            <p>Le service fourni par la couche réseau ne dépend pas du service ou de l'organisation interne des couches liaison de données sous-jacentes.</p>
+                        </li>
+                        <li>
+                            <p>La couche réseau est conceptuellement divisée en deux plans : le <span class="html">plan de données</span> et le <span class="html">plan de contrôle</span>. Le <span class="em">plan de données </span> contient les protocoles et mécanismes qui permettent aux hôtes et aux routeurs d'échanger de paquets portant des données utilisateur. Le <span class="em">plan de contrôle</span> contient les protocoles et mécanismes qui permettent aux routeurs d'apprendre efficacement comment transférer les paquets vers leur destination finale.</p>
+                        </li>
+                    </ol>
+                    <p>L'indépendance de la couche réseau vis-à-vis de la couche liaison de données sous-jacente est un principe clé de la couche réseau. Cela garantit que la couche réseau peut être utilisée pour permettre aux hôtes attachés à différents types de couches liaison de données d'échanger des paquets via des routeurs intermédiaires. De plus, cela permet aux couches liaison de données et à la couche réseau d'évoluer indépendamment les unes des autres. Cela permet à la couche réseau de s'adapter facilment une nouvelle couche liaison de données chaque fois qu'une nouvelle couche liaison de données est inventée.</p>
+                    <p>Il existe deux types de service pouvant être fournis par la couche réseau :</p>
+                    <ul>
+                        <li>
+                            <p>un service <span class="em">non fiable et sans connexion</span>.</p>
+                        </li>
+                        <li>
+                            <p>un service <span class="em">orienté connexion</span>, fiable ou non fiable.</p>
+                        </li>
+                    </ul>
+                    <p>Les services orientés connexion ont été populaires avec des technologies telles que <span class="em">X.25</span> et <span class="em">ATM</span> ou <span class="em">frame-relay</span>, mais de nos jours, la plupart des réseaux utilisent un service non fiable et sans connexion. C'est notre principal sujet de discussion dans ce chapitre.</p>
+                    <h5>Organisation de la couche réseau :</h5>
+                    <p>Il existe deux organisations internes posibles de la couche réseau :</p>
+                    <ul>
+                        <li>
+                            <p>datagramme</p>
+                        </li>
+                        <li>
+                            <p>circuits virtuels</p>
+                        </li>
+                    </ul>
+                    <p>L'organisation interne du réseau est indépendante du service qu'il fournit, mais la plupart du temps une organisation en datagramme est utilisée pour fournir un service sans connexion, tandis qu'une organisation en circuits virtuels est utilisée dans les réseaux qui fournissent un service orienté connexion.</p>
+                    <h5>L'organisation en datagramme :</h5>
+                    <p>La première et la plus populaire organisation de la couche réseau est l'organisation en datagramme. Cette organisation est inspirée de l'organisation du service postal. Chaque hôte est inspirée de l'organisation du service postal. Chaque hôte est identifié par une adresse de couche réseau. Pour envoyer des informations à un hôte distant, un hôte crée un paquet qui contient :</p>
+                    <ul>
+                        <li>
+                            <p>l'adresse de couche réseau de l'hôte de destination.</p>
+                        </li>
+                        <li>
+                            <p>sa propre adresse de couche réseau.</p>
+                        </li>
+                        <li>
+                            <p>les informations à envoyer.</p>
+                        </li>
+                    </ul>
+                    <p>La couche réseau limite la taille maximale du paquet. Ainsi, les informations doivent avoir été divisées en paquets par la couche  transport avant d'être transmises à la couche réseau.</p>
+                    <p>Pour comprendre l'organisation en datagramme, considérons la figure ci-dessous. Une adresse de couche réseau, représentée par une lettre, a été attribuée à chaque hôte et routeur. Pour envoyer des informations à l'hôte <span class="em">J</span>, l'hôte <span class="em">A</span> crée un paquet contenant sa propre adresse, l'adresse de destination et les informations à échanger.</p>
+                    <p>Avec l'organisation en datagramme, les routeurs utilsent une <span class="html">transmission hop-by-hop</span>. Cela signifie que lorsqu'un routeur reçoit un paquet qui n'est pas destiné à lui-même, il recherche l'adresse de destination du paquet dans sa <span class="html">table de routage</span>. Une <span class="em">table de routage</span> est une structure de données qui associe chaque adresse de destination (ou ensemble d'adresses de destination) à l'interface de sortie sur laquelle un paquet destiné à cette adresse doit être transmis pour atteindre sa destination finale.</p>
+                    <p>La principale contrainte imposée aux tables de routage est qu'elles doivent permettre à n'importe quel hôte du réseau d'atteindre n'importe quel autre hôte. Cela implique que chaque routeur doit connaître une route vers chaque destination, mais aussi que les chemins composés des informations stockées dans les tables de routage ne doivent pas contenir de boucles. Sinon, certaines destinations serianet inaccessibles.</p>
+                    <figure>
+                        <img src="../images/inter-reseau_simple.PNG" alt="">
+                        <figcaption>Figure 5.4 : Un inter-réseau simple</figcaption>
+                    </figure>
+                    <p>Dans l'exemple ci-dessus, l'hôte <span class="em">A</span> envoie son paquet au routeur <span class="em">R1</span>. <span class="em">R1</span> consulte sa table de routage et transfère le paquet vers <span class="em">R2</span>. Sur la base de sa propre table de routage, <span class="em">R2</span> décide de transférer le paquet vers <span class="em">R5</span> qui peut le livrer à sa destination.</p>
+                    <p>Pour permettre aux hôtes d'échanger des paquets, un réseau repose sur deux types différents de protocoles et de mécanismes.</p>
+                    <p>Pour permettre aux hôtes d'échanger des paquets, un réseau repose sur deux types différents de protocoles et des mécanismes. Tout d'abord, il doit avoir une définition précise du format des paquets qui sont envoyés par les hôtes et traités par les routeurs. Deuxièmement, l'algorithme utilisé par les routeurs pour transférer ces paquets doit être défini. Ce protocole et cet algorithme font partie du plan de données de la couche réseau. Le plan de données contient tous les protocoles et algorithmes utilisés par les hôtes et les routeurs pour créer et traiter les paquets qui contiennent des données utilisateur.</p>
+                    <p>Le <span class="em">plan de données</span>, et en particulier l'algorithme de transfert utilisé par les routeurs, dépend des tables de routage maintenues sur chaque routeur. Ces tables de routage peuvent être maintenues en utilisant diverses techniques (configuration manuelle, protocoles distribués, calcul centralisé, etc.). Ces techniques font partie du plan de contrôle de la couche réseau. Le <span class="em">plan de contrôle</span> contient tous les protocoles et mécanismes utilisés pour calculer et installer les tables de routage sur les routeurs.</p>
+                    <p>L'organisation de datagramme a été très populaire dans les réseaux informatiques. Les couches réseau basées sur les datagrammes incluent IPv4 et IPv6 dans l'Internet global, CLNP défini par l'ISO, IPX défini par Noveil ou XNS défini par Xerox [Perlman2000].</p>
+                    <h5>L'organisation en circuits virtuels :</h5>
+                    <p>Le principal avantage de l'organisation en datagramme est sa simplicité. Les principes de cette organisation peuvent être facilement compris. De plus, cela permet à un hôte d'envoyer facilement un paquet vers n'importe quelle destination à tout moment. Cependant, comme chaque paquet est transmi indépendamment par des routeurs intermédiaires, les paquets envoyés par un hôte peuvent ne pas suivre le même chemin pour atteindre une destination donnée. Cela peut causer un réarrangement de paquets, ce qui peut être gênant pour les protocoles de transport. De plus, comme un routeur utilisant une transmission de saut en saut envoie toujours des paquets envoyés vers la même destination sur la même destination sur la même interface sortante, cela peut causer une congestion sur certains liens.</p>
+                    <p>La deuxième organisation de la couche réseau, appelée <span class="html">circuits virtuels</span>, a été inspirée par l'organisation des réseaux téléphoniques. Les réseaux téléphoniques ont été conçus pour transporter des appels téléphoniques qui durent généralemnt quelques minutes. Chaque téléphone est identifié par un numéro de téléphone et est connecté à un commutateur téléphonique. Pour initier un appel téléphonique, un téléphone doit d'abord envoyer le numéro de téléphone de destination à son commutateur local. Le commutateur coopère avec les autres commutatuers du réseau pour créer un canal bidirectionnel entre les deux téléphones à travers le réseau. Ce canal sera utilisé par les deux téléphones pendant la durée de l'appel et sera libéré à la fin de l'appel. Jusqu'aux années 1960, la plupart de ces canaux étaient créés manuellement, par des opérateurs téléphoniques, sur demande de l'appelant. Les réseaux téléphoniques d'aujourd'hui utilisent des commutateurs automatisés et permettent à plusieurs canaux d'être transportés sur le même lien physique, mais les principes restent globalement les mêmes.</p>
+                    <p>Dans un réseau utilisant des circuits virtuels, tous les hôtes sont identifiés par une adresse de couche réseau. Cependant, un hôte doit explicitement demander l'établissement d'un circuit virtuel ayant de pouvoir envoyer des paquets à un hôte de destination. La demande d'établissement d'un circuit virtuel est traitée par le plan de contrôle, qui installe un état pour créer le circuit virtuel entre la source et la destination à travers les routeurs intermédiaires. Tous les paquets qui sont envoyés sur le circuit virtuel contiennent un identificateur de circuit virtuel qui permet aux routeurs de déterminer à quel circuit virtuel chaque paquet appartient. Cela est illustré dans la figure ci-dessous avec un circuit virtuel entre l'hôte <span class="em">A</span> et l'hôte <span class="em">I</span> et un autre entre l'hôte <span class="em">A</span> et l'hôte <span class="em">J</span>.</p>
+                    <figure>
+                        <img src="../images/inter-reseau_simple_utilisation_circuits_virtuels.png" alt="">
+                        <figcaption>Figure 5.5 : Un inter-réseau simple utilisant des circuits virtuels</figcaption>
+                    </figure>
+                    <p>L'établissement d'un circuit virtuel est effectué à l'aide d'un protocole de signalisation dans le <span class="em">plan de contrôle</span>. Généralement, l'hôte source envoie un message de signalisation pour indiquer à son routeur l'adresse de destination et éventuellement certaines caractéristiques de performance du circuit virtuel à établir. Le premier routeur peut traiter le message de signalisation de deux manières différentes.</p>
+                    <p>Une première solution consiste pour le routeur à consulter sa table de routage, à se souvenir des caractéristiques du circuit virtuel demandé et à la transmettre sur son interface de sortie vers la destination. Le message designalisation est ainsi transmis de saut en saut jusqu'à ce qu'il atteigne la destination et que le circuit virtuel soit ouvert le long du chemin suivi par le message de signalisation. Ceci est illustré avec le circuit virtuel rouge dans la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/etablissement_circuit_virtuel.png" alt="">
+                        <figcaption>Figure 5.6 : Établissement de circuits virtuels</figcaption>
+                    </figure>
+                    <p>Une deuxième solution peut être utilisée si les routeurs connaissent l'ensemble de la topologie du réseau. Dans ce cas, le premier routeur peut utiliser une technique appelée <span class="html">routage source</span>. À la réception du message de signalisation, le premier routeur choisit le chemin du circuit virtuel dans le réseau. Ce chemin est codé sous forme de liste des adresses de tous les routeurs intermédiaires pour atteindre la destination. Il est inclus dans le message de signalisation et les routeurs intermédiaires peuvent retirer leur adresse du message de signalisation avant de le transférer. Cette technique permet aux routeurs de mieux répartir les circuits virtuels dans l'ensemble du réseau. Si les routeurs connaissent la charge des liens distants, ils peuvent également sélectionner le chemin le moins chargé lors de l'établissement d'un circuit virtuel. Cette solution est illustrée avec le circuit bleu dans la figure ci-dessus.</p>
+                    <p>Le dernier point à discuter concernant l'organisation du circuit virtuel est son <span class="em">plan de données</span>. Le <span class="em">plan de données</span> définit principalement le format des paquets de données et l'algorithme utilisé par les routeurs pour transmettre les paquets. Les paquets de données contiennent un identifiant de circuit virtuel, encodé sous forme d'un nombre fixe de bits. Ces identifiants de circuits virtuels sont généralement appelés des <span class="html">étiquettes</span>.</p>
+                    <p>Chaque hôte maintient une table de flux qui associe une étiquette à chaque circuit qu'il a établi. Lorsqu'un routeur reçoit un paquet  contenant une étiquette, il extrait l'étiquette et consulte sa <span class="html">table de transfert d'étiquettes</span>. Cette table est une structure de données qui associe chaque couple <span class="em">(interface d'entrée, étiquette)</span> à l'interface de sortie à utiliser pour transmettre le paquet ainsi que l'étiquette qui doit être placée dans les paquets de sortie. En pratique, la table de transfert d'étiquettes peut être implémentée sous forme de vecteur et le couple <span class="em">(interface d'entrée, étiquette)</span> est l'indice de l'entrée dans le vecteur qui contient l'interface de sortie et l'étiquette de sortie. Ainsi, une seule lecture de mémoire est nécessaire pour consulter la table de transfert d'étiquettes. L'utilisation de la table de transfert d'étiquettes est illustrée dans la figure ci-desous.</p>
+                    <figure>
+                        <img src="../images/tables_transfert_label_reseau_utilisation_circuits_virtuels.png" alt="">
+                        <figcaption>Figure 5.7 : Tables de transfert d'étiquettes dans un réseau utilisant des circuits virtuels</figcaption>
+                    </figure>
+                    <p>La structure du circuit virtuel a été principalement utilisée dans les réseaux publics, à partir de X.25, puis dans Frame Relay et le réseau de <span class="html">mode de transfert asynchrone (ATM)</span>.</p>
+                    <p>Les deux structures, le datagramme et le circuit virtuel, ont des avantages et des inconvénients. Le principal avantage de l'organisation en datagramme est que les hôtes peuvent facilement envoyer des paquets à un nombre quelconque de destinations, tandis que l'organisation en circuit virtuel nécessite l'établissement d'un circuit virtuel avant la transmission d'un paquet de données. Cette solution peut être coûteuse pour les hôtes qui échangent de petites quantités de données. En revanche, le principal avantage de l'organisation en circuit virtuel est que l'algorithme de transfert utilisé par les routeurs est plus simple que lors de l'utilisation de l'organisation en datagramme. De plus, l'utilisation de circuits virtuels peut permettre de mieux répartir la charge  à travers le réseau grâce à l'utilisation de plusieurs circuits virtuels. La technique <span class="html">MultiProtocol Label Switching (MPLS)</span> que nous discuterons dans une autre révision de ce livre peut être considérée comme un bon compromis entre le datagramme et les circuits vituels. MPLS utilise des ciruits virtuels entre les routeurs, mais ne les étend pas aux hôtes finaux. Des informations supplémentaires sur MPLS peuvent être trouvées dans [ML2011].</p>
+                    <h5>Le plan de contrôle :</h5>
+                    <p>L'un des objectifs du <span class="em">plan de contrôle</span> dans la couche réseau est de maintenir les tables de routage utilisées sur tous les routeurs. Comme indiqué précédemment, une table de routage est une structure de données qui contient, pour chaque adresse de destination (ou bloc d'adresses) connue par le routeur, l'interface de sortie par laquelle le routeur doit faire passer un paquet destiné à cette adresse. La table de routage peut également contenir des informations supplémentaires telles que l'adresse du prochain routeur sur le chemin vers la destination ou une estimation du coût de ce chemin.</p>
+                    <p>Dans cette section, nous discutons des trois principales techniques pouvant être utilisées pour maintenir les tables de routage dans un réseau.</p>
+                    <h5>Le routage statique :</h5>
+                    <p>La solution la plus simple est de pré-calculer toutes les tables de routage de tous les routeurs et de les installer sur chaque routeur. Plusieurs algorithmes peuvent être calculer ces tables.</p>
+                    <p>Une solution simple consiste à utiliser le routage de chemin le plus court et à minimiser le nombre de routeurs intermédiaires pour atteindre chaque destination. Des algorithmes plus complexes peuvent prendre en compte la charge attendue sur les liens pour garantir qu'il n'y a pas de congestion pour une demande de trafic donnée. Ces algorithles doivent tous garantir que :</p>
+                    <ul>
+                        <li>
+                            <p>tous les routeurs sont configurés avec une route pour atteindre chaque destination.</p>
+                        </li>
+                        <li>
+                            <p>aucun des chemins composés des entrées trouvées dans les tables de routage ne contient de cycle. Un tel cycle entraînerait une boucle de transfert.</p>
+                        </li>
+                    </ul>
+                    <p>La figure ci-dessous montre des tables de routage d'exemple dans un réseau de cinq routeurs.</p>
+                    <figure>
+                        <img src="../images/tables_routage_reseau_simple.png" alt="">
+                        <figcaption>Figure 5.8 : Tables de routage dans un réseau simple</figcaption>
+                    </figure>
+                    <p>Le principal inconvénient du routage statique est qu'il ne s'adapte pas à l'évolution du réseau. Lorsqu'un nouveau routeur ou lien est ajouté, toutes les tables de routage doivent être recalculées. De plus, lorsqu'un lien ou un routeur tombe en panne, les tables de routage doivent également être mises à jour.</p>
+                    <h5>Le routage par vecteur de distance :</h5>
+                    <p>Le routage par vecteur de distance est un protocole de routage distribué simple. Le routage par vecteur de distance permet aux routeurs de découvrir automatiquement les destinations atteignables à l'intérieur du réseau ainsi que le chemin le plus court pour atteindre chacune de ces destinations. Le chemin le plus court est calculé sur la base de <span class="em">métriques</span> ou de <span class="em">coûts</span> qui sont associés à chaque lien. Nous utilisons <span class="em">l.cost</span> pour représenter la métrique qui a été configurée par le lien <span class="em">l</span> sur un routeur.</p>
+                    <p>Chaque routeur maintient une table de routage. La table de routage <span class="em">R</span> peut être modélisée comme une structure de données qui stocke, pour chaque adresse de destination connue <span class="em">d</span>, les attributs suivants :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">R[d].link</span> est le lien de sortie que le routeur utilise pour acheminer les paquets vers la destination <span class="em">d</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">R[d].cost</span> est la somme des métriques des liens qui composent le plus court chemin pour atteindre la destination <span class="em">d</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">R[d].time</span> est l'horodatage du dernier vecteur de distance contenant la destination <span class="em">d</span>.</p>
+                        </li>
+                    </ul>
+                    <p>Un routeur qui utilise le routage par vecteur de distance envoie régulièrement son vecteur de distance sur toutes ses interfaces. Le vecteur de distance est un résumé de la table de routage du routeur qui indique la distance vers chaque destination connue. Ce vecteur de distance peut être calculé à partir de la table de routage en utilisant le pseudo-code ci-dessous.</p>
+<pre class="taille60"><code>Every N seconds:
+    v=Vector()
+    for d in R[]:
+        # add destination d to vector
+        v.add(Pair(d,R[d].cost))
+    for i in interfaces
+        # send vector v on this interface
+        send(v,interface)</code></pre>
+                    <p>Lorsqu'un routeur démarre, il ne connaît aucune destination dans le réseau et sa table de routage ne contient que lui-même. Il envoie donc à tous ses voisins un vecteur de distance qui ne contient que son adresse à une distance de <span class="em">0</span>. Lorsqu'un routeur reçoit un vecteur de distance sur la liaison <span class="em">l</span>, il le traite comme suit.</p>
+<pre class="taille60"><code># V : received Vector
+# l : link over which vector is received
+def received(V,l):
+    # received vector from link l
+    for d in V[]
+        if not (d in R[]) :
+            # new route
+            R[d].cost=V[d].cost+l.cost
+            R[d].link=l
+            R[d].time=now
+        else :
+            # existing route, is the new better ?
+            if ( ((V[d].cost+l.cost) &lt; R[d].cost) or ( R[d].link == l) ) :
+                # Better route or change to current route
+                R[d].cost=V[d].cost+l.cost
+                R[d].link=l
+                R[d].time=now</code></pre>
+                    <p>Le routeur itère sur toutes les adresses incluses dans le vecteur de distnace. Si le vecteur de distance contient une adresse que le routeur ne connaît pas, il insère la destination dans sa table de routage via la liaison <span class="em">l</span> et à une distance qui est la somme entre la distance indiquée dans le vecteur de distance et le coût associé à la liaison <span class="em">l</span>. Si la destination était déjà connue du routeur, il met à jour l'entrée correspondante dans sa table de routage si soit :</p>
+                    <ul>
+                        <li>
+                            <p>le coût de la nouvelle route est inférieur au coût de la route déjà connue (<span class="em">(V[d].cost+l.cost) &lt; R[d].cost</span></p>
+                        </li>
+                        <li>
+                            <p>la nouvelle route a été apprise via la même liaison que la meilleure route courante vers cette destination (<span class="em">R[d].link == l</span>).</p>
+                        </li>
+                    </ul>
+                    <p>La première condition permet au routeur de découvrir le chemin le plus court vers chaque destination. La deuxième condition est utilisée pour prendre en compte les changements de routes qui peuvent survenir après une défaillance de liaison ou une modification de la métrique associée à une liaison.</p>
+                    <p>Pour comprendre le fonctionnement d'un protocole de vecteur de distance, prenons en compte le réseau de cinq routeurs présenté ci-dessous.</p>
+                    <figure>
+                        <img src="../images/fonctionnement_routage_vecteur_distance_reseau_simple.png" alt="">
+                        <figcaption>Figure 5.9 : Fonctionnement du routage de vecteur de distance dans un réseau simple</figcaption>
+                    </figure>
+                    <p>D'après l'hypothèse que <span class="em">A</span> envoie en premier son vecteur de distance <span class="em">[A=0]</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">B</span> et <span class="em">D</span> traitent le vecteur de distance reçu et mettent à jour leur table de routage avec une route vers <span class="em">A</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">D</span> envoie son vecteur de distance <span class="em">[D=0,A=1]</span> à <span class="em">A</span> et <span class="em">E</span>. <span class="em">E</span> peut maintenant atteindre <span class="em">A</span> et <span class="em">D</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">C</span> envoie son vecteur de distance <span class="Em">[C=0]</span> à <span class="em">B</span> et <span class="em">E</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">E</span> envoie son vecteur de distance <span class="em">[E=0,D=1,A=2,C=2]</span> à <span class="em">D</span>, <span class="em">B</span> et <span class="em">C</span>. <span class="em">B</span> peut maintenant atteindre <span class="em">A</span>, <span class="em">C</span>, <span class="em">D</span> et <span class="em">E</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">B</span> envoie son vecteur de distance <span class="em">[B=0,A=1,C=1,D=2,E=1]</span> à <span class="em">A</span>, <span class="em">C</span> et <span class="em">E</span>. <span class="em">A</span>, <span class="em">B</span>, <span class="em">C</span> et <span class="em">E</span> peuvent maintenant atteindre toutes les destinations.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">A</span> envoie son vecteur de distance <span class="em">[A=0,B=1,C=2,D=1,E=2]</span> à <span class="em">B</span> et <span class="em">D</span>.</p>
+                        </li>
+                    </ul>
+                    <p>À ce stade, tous les routeurs peuvent atteindre tous les autres routeurs du réseau grâce aux tables de routage affichées dans la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/tables_routage_calculees_vecteur_distance_reseau_simple.png" alt="">
+                        <figcaption>Figure 5.10 : Tables de routage calculées par vecteur de distance dans un réseau simple</figcaption>
+                    </figure>
+                    <p>Pour faire face aux pannes de liens et de routeurs, les routeurs utilisent le timestamp stocké dans leur table de routage. Comme tous les routeurs envoient leur vecteur de distance toutes les <span class="em">N</span> secondes, le timestamp de chaque route devrait être régulièrement actualisé. Ainsi, aucune route ne doit avoir un timestamp plus ancien que <span class="em">N</span> secondes, sauf si la route n'est pas atteignable. En pratique, pour faire face à la perte possible d'un vecteur de distance due à des erreurs de transmission, les routeurs vérifient le timestamp des routes stockées dans leur table de routage toutes les <span class="em">N</span> secondes et suppriment les routes qui ont plus de <span class="em">3 * N </span> secondes. Lorsqu'un routeur remarque qu'une route vers une direction a expiré, il doit d'abord associer un coût <span class="em">&#8734;</span> à cette route et envoyer son vecteur de distance à ses voisins pour les informer. La route peut ensuite être supprimée de la table de routage après un certain temps (par exemple, <span class="em">3 * N</span> secondes), pour s'assurer que les routeurs voisins ont reçu les mauvaises nouvelles, même si certains vecteurs de distance ne les atteignent pas en raison d'erreurs de transmission.</p>
+                    <p>Considérons l'exemple ci-dessus et supposons que le lien entre les routeurs <span class="em">A</span> et <span class="em">B</span> échoue. Avant la défaillance, <span class="em">A</span> utilisait <span class="em">B</span> pour atteindre les destinations <span class="em">B</span>, <span class="em">C</span> et <span class="Em">E</span>, tandis que <span class="em">B</span> n'utilisait que le lien <span class="em">A-B</span> pour atteindre <span class="em">A</span>. Les entrées affectées expirent sur les routeurs <span class="em">A</span> et <span class="em">B</span> et ils envoient tous deux leur vecteur de distance.</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">A</span> envoie son vecteur de distance <span class="em">[A = 0, D = &#8734;, C = &#8734;, D = 1, E = &#8734;]</span>. <span class="em">D</span> sait qu'il ne peut plus atteindre <span class="em">B</span> via <span class="em">A</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">D</span> envoie son vecteur de distance <span class="em">[D = 0, B = &#8734;, A = 1, C = 2, E = 1]</span> à <span class="em">A</span> et <span class="em">E</span>. <span class="em">A</span> récupère les routes vers <span class="em">C</span> et <span class="em">E</span> via <span class="em">D</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">B</span> envoie son vecteur de distance <span class="em">[B = 0, B = &#8734;, C = 1, D = 2, E = 1]</span> à <span class="em">E</span> et <span class="em">C</span>. <span class="em">D</span> apprend qu'il n'y a plus de route pour atteindre <span class="em">A</span> via <span class="em">B</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">E</span> envoie son vecteur de distance <span class="em">[E = 0, A = 2, C = 1, D = 1, B = 1]</span> à <span class="em">D</span>, <span class="em">B</span> et <span class="em">C</span>. <span class="em">D</span> apprend une route vers <span class="em">B</span>. <span class="em">C</span> et <span class="em">B</span> apprennent une route vers <span class="em">A</span>.</p>
+                        </li>
+                    </ul>
+                    <p>À ce stade, tous les routeurs ont une table de routage leur permettant d'atteindre tous les autres routeurs, sauf le routeur <span class="em">A</span>, qui ne peut pas encore atteindre le routeur <span class="em">B</span>. <span class="em">A</span> récupère la route vers <span class="em">B</span> une fois que le routeur <span class="em">D</span> envoie son vecteur de distance mis à jour <span class="em">[A = 1, B = 2, C = 2, D = 1, E = 1]</span>. Cette dernière étape est illustrée dans la figure "<span class="em">Tables de routage calculées par vecteur de distance après une défaillance</span>", qui montre les tables de routage sur tous les routeurs.</p>
+                    <figure>
+                        <img src="../images/tables_routage_calculees_vecteur_distance_apres_echec.png" alt="">
+                        <figcaption>Figure 5.11 : Tables de routage calculées par vecteur de distance après une défaillance</figcaption>
+                    </figure>
+                    <p>Considérons maintenant que le lien entre <span class="em">D</span> et <span class="em">E</span> échoue. Le réseau est maintenant partionné en deux parties disjointes : <span class="em">(A, D)</span> et <span class="em">(B, E, C)</span>. Les routes vers <span class="em">B</span>, <span class="em">C</span> et <span class="em">E</span> expirent en premier sur le routeur <span class="em">D</span>. À ce moment, le routeur <span class="em">D</span> met à jour sa table de routage.</p>
+                    <p>Si <span class="em">D</span> envoie <span class="em">[D = 0, A = 1, B = &#8734;, C = &#834;, E = &#8734;]</span>, <span class="em">A</span> apprend que <span class="em">B</span>, <span class="em">C</span> et <span class="em">E</span> sont injoignables et met à jour sa table de routage.</p>
+                    <p>Malheureusement, si le vecteur de distance envoyé à <span class="em">A</span> est perdu ou si <span class="em">A</span> envoie son propre vecteur de distance (<span class="em">[A = 0, D = 1, B = 3, C = 3, E = 2]</span>) en même temps que <span class="em">D</span>envoie son vecteur de distance, <span class="em">D</span> met à jour sa tables de routage pour utiliser les routes plus courtes annoncées par <span class="em">A</span> vers <span class="em">B</span>, <span class="em">C</span> et <span class="em">E</span>. Après un certain temps, <span class="em">D</span> envoie un nouveau vecteur de distance : <span class="em">[D = 0, A = 1, E = 3, C = 4, B = 4]</span>. <span class="em">A</span> met à jour sa table de routage et après un certain temps envoie son propre vecteur de distance <span class="em">[A = 0, D = 1, B = 5, C = 5, E = 4]</span>, etc. Ce problème est connu sous le nom de <span class="html">problème de comptage à l'infini</span> dans la littérature sur les réseaux. Les routeurs <span class="em">A</span> et <span class="em">D</span> échangent des vecteurs de distance avec des coûts croissants jusqu'à ce que ces coûts atteignent <span class="em">&#8734;</span>. Ce problème peut se produire dans d'autres scénarios que celui représenté dans la figure ci-dessus. En fait, le routage vectoriel peut souffrir de problèmes de comptage à l'infini dès qu'il y a un cycle dans le réseau. Les cycles sont nécessaires pour avoir suffisamment de redondance pour faire face aux pannes de liens et de routeurs. Pour atténuer l'impact du comptage à l'infini, certains protocoles de routage vectoriel considèrent que <span class="em">16 = &#8734;</span>. Malheureusement, cela limite les métriques que les opératuers de réseau peuvent utiliser et le diamètre des réseaux utilisant des vecteurs de distance.</p>
+                    <p>Ce problème de comptage à l'infini se produit parce que le routeur <span class="em">A</span> annonce au routeur <span class="em">D</span> une route qu'il a apprise via le routeur <span class="em">D</span>. Une solution possible pour éviter ce problème pourrait être de changer la façon dont la façon dont un routeur crée son vecteur de distance. Au lieu de calculer un vecteur de distance spécifique à chaque voisin et ne contenant que les routes qui n'ont pas été apprises via ce voision. Ceci pourrait être implémenté avec le pseudo-code suivant.</p>
+<pre class="taille60"><code>Every N seconds:
+    # one vector for each interface
+    for l in interfaces:
+        v=Vector()
+        for d in R[]:
+            if (R[d].link != i) :
+                v=v+Pair(d,R[d.cost])
+        send(v)
+        # end for d in R[]
+    #end for l in interface</code></pre>
+                    <p>La technique utilisée s'appelle <span class="html">split-horizon</span>. Avec cette technique, le problème du comptage à l'infini ne se serait pas produit dans le scénario ci-dessus, car le routeur <span class="em">A</span> aurait annoncé <span class="em">[A = 0]</span>, car il a appris toutes ses autres routes via le routeur <span class="em">D</span>. Une autre variante appelée <span class="html">split-horizon avec poison reverse</span> est également possible. Les routeurs utilisant cette variante annoncent un coût de <span class="em">&#8734;</span> pour les destinations qu'ils atteignent via le routeur auquel ils envoient le vecteur de distance. Cela peut être implémenté en utilisant le pseudo-code ci-dessous.</p>
+<pre class="taille60"><code>Every N seconds:
+    for l in interfaces:
+        # one vector for each interface
+        v=Vector()
+        for d in R[]:
+            if (R[d].link != i) :
+                v=v+Pair(d,R[d.cost])
+            else:
+                v=v+Pair(d,infinity);
+        send(v)
+        # end for d in R[]
+    #end for l in interface</code></pre>
+                    <p>Malheureusement, la technique du "split-horizon" n'est pas suffisante pour éviter tous les problèmes de comptage à l'infini avec le routage par vecteur de distance. Considérez la défaillance du lien <span class="em">A-B</span> dans le réseau de quatre routeurs ci-dessous.</p>
+                    <figure>
+                        <img src="../images/probleme_comptage_infini.png" alt="">
+                        <figcaption>Figure 5.12 : Problème du comptage à l'infini</figcaption>
+                    </figure>
+                    <p>Après avoir détecté la défaillance, le routeur <span class="em">A</span> envoie ses vecteurs de distance :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">[A = &#8734;, B = 0, C = &#8734;, E = 1]</span> au routeur <span class="em">C</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">[A = &#8734;, B = 0, C = 1, E = &#8734;]</span> au routeur <span class="em">E</span>.</p>
+                        </li>
+                    </ul>
+                    <p>Si, malheureusement, le vecteur de distance envoyé au routeur <span class="em">C</span> est perdu en raison d'une erreur de transmission ou parce que le routeur <span class="em">C</span> est surchargé, un nouveau problème de comptage à l'infini peut survenir. Si le routeur <span class="em">C</span> envoie son vecteur de distance <span class="em">[A = 2, B = 1, C = 0, E = &#8734;]</span> au routeur <span class="em">E</span>, ce routeur envoie ses vecteurs de distance <span class="em">[A = 3, B = &#8734;, C = 1, E = 1]</span> au routeur <span class="em">B</span> et <span class="em">[A = &#8734;, B = 1, C = &#8734;, E = 0]</span> au routeur <span class="em">C</span>. Ce vecteur de distance permet à <span class="em">B</span> de récupérer une route de distance <span class="em">4</span> pour atteindre <span class="em">A</span>.</p>
+                    <h5>Le routage par état de lien :</h5>
+                    <p>Le routage par état de lien est la seconde famille de protocoles de routage. Alors que les routeurs à vecteurs de distance utilisent un algorithme distribué pour calculer leurs tables de routage, les routeurs à état de lien échangent des messages pour permettre à chaque routeur d'apprendre la topologie complète du réseau. En se basant sur cette topologie apprise, chaque routeur est ensuite en mesure de calculer sa table de routage en utilisant un calcul de chemin le plus court [Dijkstra1959].</p>
+                    <p>Pour le routage par état de lien, un réseau est modélisé comme un <span class="em">graphe pondéré orienté</span>. Chaque routeur est un noeud, et les liens entre les routeurs sont les arrêtes du graphe. Un poids positif est associé à chaque arrête dirigée et les routeurs utilisent le chemin le plus court pour atteindre chaque destination. En pratique, différents types de poids peuvent être associés à chaque arrête dirigée :</p>
+                    <ul>
+                        <li>
+                            <p>poids unitaire. Si tous les liens ont un poids unitaire, le routage par chemin le plus court préfère les chemins avec le moins de routeurs intermédiaires.</p>
+                        </li>
+                        <li>
+                            <p>poids proportionnel au délai de propagation sur le lien. Si tous les poids de lien sont configurés de cette manière, le routage par chemin le plus court utilise les chemins avec le plus petit délai de propagation.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">weight = C/bandwidth</span> où <span class="em">C</span> est une constante supérieure à la bande passante de lien la plus élevée dans le réseau. Si tous les poids de lien sont configurés de cette manière, le routage par chemin le plus court préfère les chemins à bande passante plus élevée par rapport aux chemins à bande passante plus faible.</p>
+                        </li>
+                    </ul>
+                    <p>Généralement, le même poids est asocié aux deux arêtes dirigées qui correspondent à un lien physique (c'est-à-dire <span class="em">R1 &#8594; R2</span> et <span class="em">R2 &#8594; R1</span>). Cependant, rien dans les protocoles d'état de lien ne l'exige. Par exemple, si le poids est défini en fonction de la bande passante de lien, alors une liaison ADSL asymétrique pourrait avoir un poids différent pour les directions amont et aval. D'autres variantes sont possibles. Certains réseaux utilisent des algorithmes d'optimisation pour trouver le meilleur ensemble de poids pour minimiser la congestion à l'intérieur du réseau pour une demande de trafic donnée [FRT2002].</p>
+                    <p>Lorsqu'un routeur à état de liaison démarre, il doit d'abord découvrir à quels autres routeurs il est directement connecté. Pour cela, chaque routeur envoie un message HELLO toutes les <span class="em">N</span> secondes sur toutes ses interfaces. Ce message contient l'adresse du routeur. Chaque routeur a une adresse unique. Comme ses routeurs voisins envoient également des messages HELLO, le routeur découvre automatiquement à quels voisins il est connecté. Ces messages HELLO ne sont envoyés qu'aux voisins qui sont directement connectés à un routeur, et un routeur ne transmet jamais les messages HELLO qu'il reçoit. Les messages HELLO sont également utilisés pour détecter les pannes de lien et de routeur. Un lien est considéré comme défaillant si aucun message HELLO n'a été reçu du routeur voisin pendant une période de <span class="em">k * N</span> secondes.</p>
+                    <figure>
+                        <img src="../images/echange_messages_HELLO.png" alt="">
+                        <figcaption>Figure 5.13 : L'échange de messages HELLO</figcaption>
+                    </figure>
+                    <p>Une fois qu'un routeur a découvert ses voisins, il doit distribuer de manière fiable ses liens locaux à tous les routeurs du réseau pour leur permettre de calculer leur vue locale de la topologie du réseau. Pour cela, chaque routeur construit un <span class="html">paquet d'état de liaison (LSP pour Link-State Packet)</span> contenant les informations suivantes :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">LSP.Router</span> : identification (adresse) de l'émetteur du LSP</p>
+                        </li>
+                        <li>
+                            <p><span class="html">LSP.age</span> : âge ou durée de vie restante du LSP</p>
+                        </li>
+                        <li>
+                            <p><span class="html">LSP.seq</span> : numéro de séquence du LSP</p>
+                        </li>
+                        <li>
+                            <p><span class="html">LSP.Links[]</span> : liens annoncés dans le LSP. Chaque lien dirigé est représenté avec les informations suivantes :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">LSP.Links[i].Id</span> : identification du voisin.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">LSP.Links[i].cost</span> : cout du lien.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>Ces LSP doivent être distribués de manière fiable à l'intérieur du réseau sans utiliser la table de routage du routeur, car ces tables ne peuvent être calculées qu'une fois que les LSP ont été reçus. L'algorithme <span class="html">Flooding</span> est utilisé pour distribuer efficacement les LSP de tous les routeurs. Chaque routeur qui implémente le flooding maintient une <span class="html">base de données d'état de lien (LSDB pour Link-State DataBase)</span> contenant le LSP le plus récent envoyé par chaque routeur. Lorsqu'un routeur reçoit un LSP, il vérfie d'abord si ce LSP est déjà stocké dans sa LSDB. Si tel est le cas, le routeur a déjà distribué le LSP plus tôt et il n'a pas besoin de le transmettre. Sinon, le routeur a déjà distribué le LSP plus tôt et il n'a pas besoin de le transmettre. Sinon, le routeur transmet le LSP sur tous les liens sauf le lien par lequel le LSP a été reçu. Le flooding fiable peut être implémenté en utilisant le pseudo-code suivant.</p>
+<pre class="taille60"><code># links is the set of all links on the router
+# Router R's LSP arrival on link l
+if newer(LSP, LSDB(LSP.Router)) :
+    LSDB.add(LSP)
+    for i in links :
+        if i!=l :
+            send(LSP,i)
+else:
+    # LSP has already been flooded</code></pre>
+                    <p>Dans ce pseudo-code, <span class="em">LSDB(r)</span> renvoie le LSP le plus récent provenant du routeur <span class="em">r</span> qui est stocké dans la base de données LSDB. <span class="em">newer(lsp1,lsp2)</span> renvoie vrai si <span class="em">lsp1</span> est plus récent que <span class="em">lsp2</span>. Voir la note ci-dessous pour une discussion sur la façon dont <span class="html">newer</span> peut être implémenté.</p>
+                    <hr>
+                    <p>Note : Quel est le LSP le plus récent ?</p>
+                    <p>Un routeur qui implémente le flooding doit être capable de détecter si un LSP reçu est plus récent que le LSP stocké. Cela nécessite une comparaison entre le numéro de séquence du LSP reçu et le numéro de séquence du LSP stocké dans la base de données d'état de liaison. Le protocole de routage ARPANET [MRR1979] utilisait un numéro de séquence de 6 bits et implémentait la comparaison comme suit RFC 789.</p>
+<pre class="taille60"><code>def newer( lsp1, lsp2 ):
+    return ( ( ( lsp1.seq &gt; lsp2.seq) and ( (lsp1.seq - lsp2.seq) &lt;= 32) ) or ( ( lsp1.seq &lt; lsp2.seq) and ( (lsp2.seq - lsp1.seq) &gt; 32) ) )</code></pre>
+                    <p>Cette comparaison prend en compte l'arithmétique modulo 2<sup>6</sup> utilisée pour incrémenter les numéros de séquence. De manière intuitive, la comparaison divise le cercle de tous les numéros de séquence en deux moitiés. Habituellement, le numéro de séquence de LSP reçu est égal au numéro de séquence de LSP stocké incrémenté de un, mais parfois les numéros de séquence de deux LSP successifs peuvent différer, par exemple si un routeur a été déconnecté du réseau pendant un certain temps. La comparaison ci-dessus a bien fonctionné jusqu'au 27 octobre 1980. Ce jour-là, l'ARPANET s'est complètement écrasé. L'accident était complexe et impliquait plusieurs routeurs. À un moment donné, les LSP <span class="em">40</span> et <span class="em">44</span> d'un des routeurs ont été stockés dans la LSDB de certains routeurs de l'ARPANET. Comme LSP <span class="em">44</span> était le plus récent, il aurait dû remplacer <span class="em">LSP 40</span> sur tous les routeurs. Malheureusement, l'un des routeurs de l'ARPANET souffrait d'un problème de mémoire et le numéro de séquence <span class="em">40</span> (<span class="em">101000</span> en binaire) a été remplacé par <span class="em">8</span> (<span class="em">001000</span> en binaire) dans le routeur défecteux et diffusé. Trois LSP étaient présents dans le réseau et <span class="em">44</span> était plus récent que <span class="em">40</span> qui était plus récent que <span class="em">8</span>, mais malheureusement, <span class="em">8</span> était considéré comme plus récent que <span class="em">44</span>... Tous les routeurs ont commencé à échanger ces trois paquets d'état de lien pour toujours et la seule solution pour récupérer de ce problème était de fermer tout le réseau. (RFC 789)</p>
+                    <p>Les protocoles de routage d'état de lien actuels utilisent généralement des numéros de séquence de 32 bits et incluent un mécanisme spécial dans le cas peu probable où un numéro de séquence atteint la valeur maximale (l'utilisation d'un espace de numéros de séquence de 32 bits prend 136 ans si un paquet d'état de lien est généré chaque seconde).</p>
+                    <p>Pour traiter le problème de corruption de mémoire, les paquets d'état de lien contiennent un code de contrôle de redondance cyclique (CRC). Ce CRC est calculé par le routeur qui génère le paquet d'état de lien. Chaque routeur doit vérifier le CRC lorsqu'il reçoit ou propage un paquet d'état de lien. De plus, chaque routeur doit vérifier périodiquement les CRC des paquets d'état de lien stockés dans sa base de données d'état de lien.</p>
+                    <hr>
+                    <p>La technique de Flooding est illustrée dans la figure ci-dessous. En échangeant des messages HELLO, chaque routeur apprend les routeurs voisins avec lesquels il est directement connecté. Par exemple, le routeur <span class="em">E</span> qu'il apprend qu'il est directement connecté aux routeurs <span class="em">D</span>, <span class="em">B</span> et <span class="em">C</span>. Son premier LSP a un numéro de séquence <span class="em">0</span> et contient les liens <span class="em">E&#8592;D</span>, <span class="em">E&#8592;B</span> et <span class="em">E&#8592;C</span>. Le routeur <span class="em">E</span> envoie son LSP sur toutes ses liaisons et les routeurs <span class="em">D</span>, <span class="em">B</span> et <span class="em">C</span> insèrent le LSP dans leur LSDB et le transmettent sur leurs autres liens.</p>
+                    <figure>
+                        <img src="../images/exemple_flooding.png" alt="">
+                        <figcaption>Figure 5.14 : Flooding : exemple</figcaption>
+                    </figure>
+                    <p>Le flooding permet aux LSP d'être distribuées à tous les routeurs à l'intérieur du réseau sans se fier aux tables de routage. Dans l'exemple ci-dessus, il est probable que la LSP envoyée par le routeur <span class="em">E</span> soit envoyée deux fois sur certains liens du réseau. Par exemple, les routeurs <span class="em">B</span> et <span class="em">C</span> reçoivent la LSP de <span class="em">E</span> presque en même temps et la transmettent sur le lien <span class="em">B-C</span>. Pour éviter d'envoyer deux fois la même LSP sur chaque lien, une solution possible consiste à modifier légèrement le pseudo-code ci-dessus pour qu'un routeur attende un temps aléatoire avant de transférer une LSP sur chaque lien. L'inconvénient de cette solution est que le délai pour diffuser une LSP à tous les routeurs du réseau augmente. En pratique, les routeurs innondent immédiatement les LSP qui contiennent de nouvelles informations (par exemple, l'ajout ou la suppression d'un lien) et retardent l'inondation des LSP de rafraîchissement (c'est-à-dire les LSP qui contiennent exactement les mêmes informations que la LSP précédente provenant de ce routeur) [FFEB2005].</p>
+                    <p>Afin de garantir que tous les routeurs reçoivent tous les LSP, même lorsqu'il y a des erreurs de transmission, les protocoles de routage à état de lien utilisent le <span class="html">flooding fiable</span>. Avec le flooding fiable, les routeurs utilisent des accusés de réception et, si nécessaire, des retransmissions pour s'assurer que tous les paquets d'état de lien sont transférés avec succès à tous les routeurs voisins. Grâce au flooding fiable, tous les routeurs stockent dans leur base de données d'&tat de lien le LSP le plus récent envoyé par chaque routeur du réseau. En combinant les LSP reçus avec son propre LSP, chaque routeur peut calculer la topologie de l'ensemble du réseau.</p>
+                    <figure>
+                        <img src="../images/db_etat_liaison_recues_tous_routeurs.png" alt="">
+                        <figcaption>Figure 5.15 : Base de données d'état de liaison reçues par tous les routeurs.</figcaption>
+                    </figure>
+                    <hr>
+                    <p>Note : Métriques de lien statiques ou dynamiques ?</p>
+                    <p>Comme les paquets d'état de liaison sont régulièrement diffusés, les routeurs sont caoables de mesurer la qualité (par exemple, le délai ou la charge) de leurs liens et d'ajuster la métrique de chaque lien en fonction de sa qualité actuelle. De tels ajustements dynamiques ont été inclus dans le protocole de roitage ARPANET [MRR1979]. Cependant, l'expérience a montré qu'il était difficle d'ajuster les ajustements dynamiques et de garantir qu'aucune boucle de renvoi ne se produit dans le réseau [K71989]. Les protocoles de routage d'état de liaison actuels utilisent des métriques qui sont configurées manuellement sur les routeurs et ne sont modifiées que par les opérateurs de réseau ou les outils de gestion de réseau [FRT2002].</p>
+                    <hr>
+                    <p>Lorsqu'un lien échoue, les deux routeurs attachés au lien détectent la panne par l'absence de messages HELLO reçus dans les dernières <span class="em">k * N</span> secondes. Une fois qu'un routeur a détecté une défaillance de lien locale, il génère et diffuse un nouveau LSP qui ne contient plus le lien défaillant et le nouveau LSP remplace le LSP précédent dans le réseau. Comme les deux routeurs attachés à un lien ne détectent pas cette panne exactement en même temps, certains liens peuvent être annoncés dans une seule direction. Cela est illustré dans la figure ci-dessous. Le routeur <span class="em">E</span> a détecté les pannes du lien <span class="em">E-B</span> et a diffusé un nouveau LSP, mais le routeur <span class="em">B</span> n'a pas encore détecté la panne.</p>
+                    <figure>
+                        <img src="../images/verification_connectivite_bidirectionnelle.png" alt="">
+                        <figcaption>Figure 5.16 : La vérification de la connectivité bidirectionnelle</figcaption>
+                    </figure>
+                    <p>Lorsqu'un lien est signalé dans le LSP d'un seul des routeurs connectés, les routeurs considèrent que le lien a échoué et le suppriment du graphe orienté qu'ils calculent à partir de leur LSDB. Cela s'appelle la <span class="html">vérification de connectivité à deux voies</span>. Cette vérification permet de diffuser rapidement les pannes de liaison car un seul LSP est suffisant pour annoncer une telle mauvaise nouvelle. Cependant, lorsqu'un lien se rétablit, il ne peut être utilisé que lorsque les deux routeurs connectés ont envoyé leurs LSP. La <span class="em">vérification de connectivité à deux voies</span> permet également de faire face aux pannes de routeur. Lorsqu'un routeur tombe en panne, tous ses liens échouent par définition. Malheureusement, il ne peut pas, bien sûr, envoyer un nouvel LSP pour annoncer sa défaillance. La <span class="em">vérification de connectivité à deux voies</span> garantit que le routeur en panne est supprimé du graphe.</p>
+                    <p>Lorqu'un routeur a échoué, son LSP doit être supprimé de la LSDB de tous les routeurs. Il convient de noter que le routage à état de lien suppose que tous les routeurs du réseau disposent de suffisamment de mémoire pour stocker l'ensemble de la LSDB. Les routeurs qui n'ont pas suffisamment de mémoire pour stocker l'ensemble de la LSDB ne peuvent pas participer au routage à état de lien. Certains protocoles à état de lien permettent aux routeurs de signaler qu'ils n'ont pas suffisamment de mémoire et doivent être supprimés du graphe par les autres routeurs du réseau. Cela peut être fait en utilisant le champ <span class="em">age</span> qui est inclus dans chaque LSP. Le champ <span class="em">age</span> est utilisé pour limiter la durée de vie maximale d'un paquet d'état de lien dans le réseau. Lorsqu'un routeur génère un LSP, il définit sa durée de vie (généralement mesurée en secondes) dans le champ <span class="em">age</span>. Tous les routeurs décrémentent régulièrement l'<span class="em">age</span> des LSP de leur LSDB et un LSP est supprimé une fois que son <span class="em">age</span> atteint <span class="em">0</span>. Grâce au champ <span class="em">age</span>, le LSP d'un routeur défaillant ne reste pas indéfiniment dans les LSDB.</p>
+                    <p>Pour calculer sa table de routage, chaque routeur calcule l'arbre de recouvrement enraciné en lui-même en utilisant l'algorithme du plus court chemin de Dijkstra [Dijkstra1959]. La table de routage peut être dérivée automatiquement de l'arbre de recouvrement, comme illustré dans la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/calcul_table_routage.png" alt="">
+                        <figcaption>Figure 5.17 : Calcul de la table de routage</figcaption>
+                    </figure>
+                    <h4>5.1.2 Internet Protocol (IP) :</h4>
+                    <p>Le protocole Internet (IP) est le protocole de couche réseau de la suite de protocoles TCP/IP. IP permet aux applications fonctionannt au-dessus de la couche de transport (UDP/TCP) d'utiliser une large gamme de couches de liaison de données hétérogènes. IP a été conçu à une époque où la plupart des liaisons point à point étaient des lignes téléphoniques avec des modems. Depuis, IP a été capable d'utiliser des réseaux locaux (Ethernet, Token Ring, FDDI, ...), de nouvelles technologies de couche de liaison de données étendues (X.25, ATM, Frame Relay, ...) et plus récemment des réseaux sans fil (802.11, 802.15, UMTS, GPRS, ...). La flexibilité d'IP et sa capacité à utiliser divers types de technologies de couche de liaison de données sous-jacentes constituent l'un de ses principaux avantages.</p>
+                    <figure>
+                        <img src="../images/IP_modele_reference.png" alt="">
+                        <figcaption>Figure 5.18 : IP et le modèle de référence</figcaption>
+                    </figure>
+                    <p>La version actuelle d'IP est la version 4 spécifiée dans la RFC 791. Nous décrivons d'abord cette version et expliquons ensuite la version 6 d'IP, qui devrait remplacer la version 4 d'IP dans un avenir proche.</p>
+                    <p>La version 4 d'IP est le protocole du plan de données de la couche réseau de la suite de protocoles TCP/IP. La conception de la version IPv4 était basée sur les hypothèses suivantes :</p>
+                    <ul>
+                        <li>
+                            <p>IP doit fournir un service de connexion sans fiablité (TCP fournit la fiabilité lorsque l'application en a besoin).</p>
+                        </li>
+                        <li>
+                            <p>IP fonctionne avec le mode de transmission de datagrammes.</p>
+                        </li>
+                        <li>
+                            <p>les adresses IP ont une taille fixe de 32 bits.</p>
+                        </li>
+                        <li>
+                            <p>IP doit être utilisable au-dessus de différents types de couches de liaison de données.</p>
+                        </li>
+                        <li>
+                            <p>Les hôtes IP échangent des paquets de longueur variable.</p>
+                        </li>
+                    </ul>
+                    <p>Les adresses sont une partie importante de tout protocole de couche réseau. À la fin des années 1970, les développeurs d'IPv4 ont conçu IPv4 pour un réseau de recherche qui interconnecterait certains laboratoires de recherche et universités. Pour cette utilisation, les adresses de 32 bits étaient beaucoup plus grandes que le nombre attendu d'hôtes sur le réseau. De plus, 32 bits étaient une belle taille d'adresse pour les routeurs basés sur un logiciel. Aucun des développeurs d'IPv4 ne s'attendait à ce qu'IPv4 devienne aussi largement utilisé qu'il ne l'est aujourd'hui.</p>
+                    <p>Les adresses IPv4 sont codées sous forme d'un champ de 32 bits. Elles sont souvent représentées sous forme <span class="html">décimale pointée</span>, c'est-à-dire une séquence de quatre nombres entiers séparés par des points. Le premier nombre entier représente la vaeur décimale du byte le plus significatif de l'adresse IPv4 de 32 bits, ... Par exemple :</p>
+                    <ul>
+                        <li>
+                            <p>1.2.3.4 correspond à 00000001000000100000001100000100.</p>
+                        </li>
+                        <li>
+                            <p>127.0.0.1 correspond à 01111111000000000000000000000001.</p>
+                        </li>
+                        <li>
+                            <p>255.255.255.255 correspond à 11111111111111111111111111111111.</p>
+                        </li>
+                    </ul>
+                    <p>Une adresse IPv4 est utilisée pour identifier une interface sur un routeur ou un hôte. Un routeur possède donc autant d'adresses IPv4 que le nombre d'interfaces qu'il possède dans la couche de liaison de données. La plupart des hôtes ont une seule interface de liaison de données et donc une seule adresse IPv4. Cependant, avec la croissance des réseaux sans fil, de plus en plus d'hôtes ont plusieurs interfaces de liaison de données (par exemple, une interface Ethernet et une interface WiFi). Ces hôtes sont dits <span class="html">"multi-homed" (ou "multi-attaché")</span>. Un hôte multi-attaché avec deux interfaces a donc deux adresses IPv4.</p>
+                    <p>Un point important à définir dans un protocole de couche réseau est l'allocation des adresses de couche réseau. Un schéma d'allocation naïf serait de fournir une adresse IPv4 à chaque hôte lorsqu'il est connecté à Internet sur une base de premier arrivé, premier servi. Avec cette solution, un hôte en Belgique pourrait avoir l'adresse 2.3.4.5 tandis qu'un autre hôte situé en Afrique utiliserait l'adresse 2.3.4.6. Malheureusement, cela obligerait tous les routeurs à maintenir une route spécifique vers chaque hôte. La figure ci-dessous montre un réseau d'entreprise simple avec deux routeurs et trois hôtes et les tables de routage associées si de telles adresses isolées étaient utilisées.</p>
+                    <figure>
+                        <img src="../images/problemes_evolutivite_utilisation_IP_isolees.png" alt="">
+                        <figcaption>Figure 5.19 : Problèmes de mise à l'échelle lors de l'utilisation d'adresses IP isolées.</figcaption>
+                    </figure>
+                    <p>Pour préserver la scalabilité du système de routage, il est important de minimiser le nombre de routes stockées sur chaque routeur. Un routeur ne peut pas stocker et maintenir une route pour chacun des presque 1 milliard d'hôtes connectés à l'Internet d'aujourd'hui. Les routeurs ne doivent stocker que des routes vers des blocs d'adresses et non vers des hôtes individuels. Pour cela, les hôtes sont regroupés en sous-réseaux en fonction de leur emplacement dans le réseau. Un sous-réseau typique regroupe tous les hôtes faisant partie de la même entreprise. Un réseau d'entreprise en généralement composé de plusieurs LAN interconnectés par des routeurs. Un petit bloc d'adresses de l'entreprise est généralement assigné à chaque LAN. Une adresse IPv4 est composé de deux parties : un <span class="html">identifiant de sous-réseau</span> et un <span class="html">identifant d'hôte</span>. L'identifiant de sous-réseau est composé des bits de poids fort de l'adresse et l'identifiant d'hôte est encodé dans les bits de poids faible de l'adresse. Ceci est illustré dans la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/identifiants_sous-reseau_hote_IPv4.png" alt="">
+                        <figcaption>Figure 5.20 : Les identifiants de sous-réseau et d'hôte à l'intérieur d'une adresse IPv4</figcaption>
+                    </figure>
+                    <p>Lorsqu'un routeur doit transférer un paquet, il doit connaître le sous-réseau de l'adresse de destination pour pouvoir consulter sa table de routage et transférer le paquet. La RFC 791 a proposé d'utiliser les bits d'ordre supérieur de l'adresse pour encoder la longueur de l'identifiant de sous-réseau. Cela a conduit à la définition de trois <span class="html">classes</span> unicast. En plus des classes <span class="em">A</span>, <span class="em">B</span> et <span class="em">C</span>, la RFC 791 a également défini les classes <span class="em">D</span> et <span class="em">E</span> d'adresses IPv4. Les adresses de classe <span class="em">D</span> (resp. <span class="em">E</span>) sont celles dont les bits d'ordre supérieur sont définis à <span class="em">1110</span> (resp. <span class="em">1111</span>). Les adresses de classe <span class="em">D</span> sont utilisées par IP multicast et seront expliquées plus tard. Les adresses de classe <span class="em">E</span> sont actuellement inutilisées, mais il existe des discussions sur des utilisations futures possibles [WMH2008] [FLM2008].</p>
+                    <table role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Classe</th>
+                                <th>Bits de poids fort</th>
+                                <th>Longueur de l'identifiant de sous-réseau</th>
+                                <th>Nombre de réseaux</th>
+                                <th>Adresses par réseau</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Classe A</td>
+                                <td class="em">0</td>
+                                <td>8 bits</td>
+                                <td>128</td>
+                                <td>16777216 (2<sup>24</sup>)</td>
+                            </tr>
+                            <tr>
+                                <td>Classe B</td>
+                                <td class="em">10</td>
+                                <td>16 bits</td>
+                                <td>16384</td>
+                                <td>65536 (2<sup>16</sup>)</td>
+                            </tr>
+                            <tr>
+                                <td>Classe C</td>
+                                <td class="em">110</td>
+                                <td>24 bits</td>
+                                <td>2097152</td>
+                                <td>256 (2<sup>8</sup>)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Cependant, ces trois classes d'adresses n'étaient pas assez flexibles. Un sous-réseau de classe <span class="em">A</span> était trop grand pour la plupart des organisations et un sous-réseau de classe <span class="em">C</span> était trop petit. La flexibilité a été ajoutée par l'introduction de <span class="html">sous-réseaux de longueurs variables </span> dans la RFC 1519. Avec les sous-réseaux de longueurs variables, l'identifiant de sous-réseau peut avoir une taille quelconque, de <span class="em">1</span> à <span class="em">31</span> bits. Les sous-réseaux de longueurs variables permettent aux opérateurs de réseau d'utiliser un sous-réseau qui correspond mieux au nombre d'hôtes placés à l'intérieur du sous-réseau. Un identifiant de sous-réseau ou préfixe IPv4 est généralement représenté sous la forme <span class="em">A.B.C.D/p</span> où <span class="em">A.B.C.D</span> est l'adresse de réseau obtenue en concaténant l'identifiant de sous-réseau avec un identifiant d'hôtes contenant uniquement des <span class="em">0</span> et <span class="em">p</span> est la longueur de l'identifant de sous-réseau en bits. Une autre façon de représenter les sous-réseaux IP est d'utiliser des masques de réseau. Un masque de réseau est un champ de 32 bits dont les <span class="em">p</span> bits de poids fort sont mis à <span class="em">1</span> et les bits de poids faible sont mis à <span class="em">0</span>. Le nombre de bits de poids fort mis à <span class="em">1</span> indique la longueur de l'identifiant de sous-réseau. Les masques de réseau sont généralment représentés dans le même format décimal pointé que les adresses IPv4. Par exemple, <span class="em">10.0.0.0/8</span> serait représenté comme <span class="em">10.0.0.0 255.0.0.0</span> alors que <span class="em">192.168.1.0/24</span> serait représenté comme <span class="em">192.168.1.0 255.255.255.0</span>. Dans certains cas, le masque de réseau peut être représenté en hexadécimal. Le tableau ci-dessous fournit des exemples de sous-réseaux IP.</p>
+                    <table role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Sous-réseau</th>
+                                <th>Nombre d'adresses</th>
+                                <th>Adresse la plus petite</th>
+                                <th>Adresse la plus élevée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>10.0.0.0/8</td>
+                                <td>16777216</td>
+                                <td>10.0.0.0</td>
+                                <td>10.255.255.255</td>
+                            </tr>
+                            <tr>
+                                <td>192.168.0.0</td>
+                                <td>65536</td>
+                                <td>192.168.0.0</td>
+                                <td>192.168.255.255</td>
+                            </tr>
+                            <tr>
+                                <td>198.18.0.0/15</td>
+                                <td>131072</td>
+                                <td>198.18.0.0</td>
+                                <td>198.19.255.255</td>
+                            </tr>
+                            <tr>
+                                <td>192.0.2.0/24</td>
+                                <td>256</td>
+                                <td>192.0.2.0</td>
+                                <td>192.0.2.255</td>
+                            </tr>
+                            <tr>
+                                <td>10.0.0.0/30</td>
+                                <td>4</td>
+                                <td>10.0.0.0</td>
+                                <td>10.0.0.3</td>
+                            </tr>
+                            <tr>
+                                <td>10.0.0.0/31</td>
+                                <td>2</td>
+                                <td>10.0.0.0</td>
+                                <td>10.0.0.1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>La figure ci-dessous fournit un exemple simple de l'utilisation des sous-réseaux IPv4 dans un réseau d'entreprise. La longueur de l'identifiant de sous-réseau attribué à un LAN dépend généralement du nombre attendu d'hôtes connectés au LAN. Pour les liaisons point à point, de nombreuses installations ont utilisé des préfixes <span class="em">/30</span>, mais les routeurs récents utilsient maintenant des sous-réseaux <span class="em">/31</span> sur des liaisons point à point RFC 3021 ou n'utilisent même pas d'adresses IPv4 sur de telles liaisons. Une liaison point à point à laquelle aucune adresse IPv4 n'a été attribuée est appelée liaison non numérotée. Voir la section 2.2.7 de la RFC 1812 pour une discussion de ces liaisons non numérotées.</p>
+                    <figure>
+                        <img src="../images/sous-reseaux_IP_reseau_entreprise_simple.png" alt="">
+                        <figcaption>Figure 5.21 ; Sous-réseaux IP dans un réseau d'entreprise simple</figcaption>
+                    </figure>
+                    <p>Un deuxième problème concernant les adresses de la couche réseau est le schéma d'allocation utilisé pour attribuer des blocs d'adresses aux organisations. Le premier schéma d'allocation était basé sur les différentes classes d'adresses. La réserve d'adresses IPv4 était gérée par un secrétariat qui attribuait des blocs d'adresses selon le principe du premier arrivé, premier servu. De grandes organisations telles qye IBM, BBN, ainsi que Standford ou le MIT ont pu obtenir un bloc d'adresses de classe <span class="em">A</span>. La plupart des organisations ont demandé un bloc d'adresses de classe <span class="em">B</span> contenant 65536 adresses, ce qui convenait à la plupart des entreprises et des universités. Le tableau ci-dessous fournit des exemples de certains blocs d'adresses IPv4 dans l'espace de classe <span class="em">B</span>.</p>
+                    <table role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Sous-réseau</th>
+                                <th>Organisation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>130.100.0.0/16</td>
+                                <td>Ericsson, Sweden</td>
+                            </tr>
+                            <tr>
+                                <td>130.101.0.0/16</td>
+                                <td>University of Akron, USA</td>
+                            </tr>
+                            <tr>
+                                <td>130.102.0.0/16</td>
+                                <td>The University of Queensland, Australia</td>
+                            </tr>
+                            <tr>
+                                <td>130.103.0.0/16</td>
+                                <td>Lotus Development, USA</td>
+                            </tr>
+                            <tr>
+                                <td>130.104.0.0/16</td>
+                                <td>Uniserte catholique de Louvain, Belgium</td>
+                            </tr>
+                            <tr>
+                                <td>130.105.0.0/16</td>
+                                <td>Open Software Foundation, USA</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Cependant, l'Internet a été victime de son propre succès à la fin des années 1980, de nombreuses organisations demandaient des blocs d'adresses IPv4 et commençaient à se connecter à l'Internet. La plupart de ces organisations ont demandé des blocs d'adresses de classe <span class="em">B</span>, car les blocs d'adresses de classe <span class="em">A</span> étaient trop grands et en quantité limitée, tandis que les blocs d'adresses de classe <span class="em">C</span> étaient considérés comme trop petits. Malheureusement, il n'y avait que 16384 blocs d'adresses de classe <span class="em">B</span> différents et cet espace d'adressage était rapidement consommé. Par conséquent, les tables de routage maintenues par les routeurs augmentaient rapidement et certains routeurs avaient des difficultés à maintenir toutes ces routes dans leur mémoire limitée. Des exemples de routeurs de cette période incluent les Cisco AGS <a href="http://www.knossos.net.nz/don/wn1.html" target="_blank">http://www.knossos.net.nz/don/wn1.html</a> et AGS+ <a href="http://www.ciscopress.com/articles/article.asp?p=25296" target="_blank">http://www.ciscopress.com/articles/article.asp?p=25296</a>.</p>
+                    <figure>
+                        <img src="../images/evolution_taille_tables_routage_internet.png" alt="">
+                        <figcaption>Figure 5.22 : Évolution de la taille des tables de routage sur Internet (juillet 1988 - décembre 1992 - source : RFC 1518)</figcaption>
+                    </figure>
+                    <p>Face à ces deux problèmes, l'Internet Engineering Task Force a décidé de développer l'architecture CIDR (Classless Interdomain Routing) RFC 1518. Cette architecture vise à permettre au routage IP de mieux s'échelonner que l'architecture basée sur les classes. CIDR contient trois modifications importantes par rapport à RFC 791.</p>
+                    <ul>
+                        <li>
+                            <p>Les classes d'adresses IP sont obsolètes. Tout équipement IP doit utiliser et prendre en charge des sous-réseaux de longueur variable.</p>
+                        </li>
+                        <li>
+                            <p>Les blocs d'adresses IP ne sont plus alloués selon le principe du premier arrivé, premier servi. Au lieu de cela, CIDR introduit un schéla d'allocation d'adresses hiérarchique.</p>
+                        </li>
+                        <li>
+                            <p>Les routeurs IP doivent utiliser la correspondance de préfixe le plus long lorsqu'ils recherchent une adresse de destination dans leur table de transfert.</p>
+                        </li>
+                    </ul>
+                    <p>Les deux dernières modifications ont été introduites pour améliorer la scalabilité du système de routage IP. Le principal inconvénient du schéma d'allocation de blocs d'adresses premier arrivé, premier servi était que des blocs d'adresses voisins étaient alloués à des organisations très différentes et inversement, des blocs d'adresses très différents étaient alloués à des organisations similaires. Avec CIDR, les blocs d'adresses sont alloués par les Registres IP régionaux (RIR) de manière agréable. Un RIR est responsable d'un grand bloc d'adresses et d'une région. Par exemple, RIPE est le RIR responsable de l'Europe. Un RIR alloue de plus petits blocs d'adresses à partir de son grand bloc à des fournisseurs de services Internet RFC 2050. Les fournisseurs de services Internet allouent ensuite de plus petits blocs d'adresses à leurs clients. Lorsqu'une organisation demande un bloc d'adresses, elle doit prouver qu'elle possède déjà ou qu'elle s'attend à avoir dans un avenir proche un nombre d'hôtes ou de clients équivalent à la taille du bloc d'adresses demandé.</p>
+                    <p>Le principal avantage de ce schéma hiérarchique d'allocation de blocs d'adresses est qu'il permet aux routeurs de maintenir moins de routes. Par exemple, considérons les blocs d'adresses qui ont été alloués à certaines universités belges comme indiqué dans le tableau ci-dessous.</p>
+                    <table role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Bloc d'adresses</th>
+                                <th>Organisation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>130.103.0.0/16</td>
+                                <td>Universite catholique de Louvain</td>
+                            </tr>
+                            <tr>
+                                <td>134.58.0.0/16</td>
+                                <td>Katholiek Universiteit Leuven</td>
+                            </tr>
+                            <tr>
+                                <td>138.48.0.0/16</td>
+                                <td>Facultes universitaires Notre-Dame de la Paix</td>
+                            </tr>
+                            <tr>
+                                <td>139.165.0.0/16</td>
+                                <td>Univerte de Liege</td>
+                            </tr>
+                            <tr>
+                                <td>164.15.0.0/16</td>
+                                <td>Universite Libre de Bruxelles</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Ces universités sont toutes connectées à Internet exclusivement via <span class="em">Belnet</span>. Comme chaque univerté a été attribuée à un bloc d'adresses différent, les routeurs de Belnet doivent annoncer une route pour chaque université et tous les routeurs sur Internet doivent maintenir une route vers chaque univerté. En revanche, considérons toutes les hautes écoles et les institutions gouvernementales qui sont connectées à Internet via Belnet. Un bloc d'adresses a été attribué à ces institutions après l'introduction de CIDR dans le bloc d'adresses <span class="em">193.190.0.0/15</span> appartenant à Belnet. Avec CIDR, Belnet peut annoncer une seule route vers <span class="em">193.190.0.0/15</span> qui couvre toutes ces hautes écoles.</p>
+                    <p>Cependant, il y a une difficulté avec les sous-réseaux à longueur variable agrégeables utilisés par CIDR. Prenons par exemple <span class="em">FEDICT</span>, une institution gouvernementale qui utilise le bloc d'adresses <span class="em">193.191.244.0/23</span>. Supposons que, en plus d'être connecté à Internet via Belnet, FEDICT souhaite également être connecté à un autre fournisseur d'accès Internet. Le réseau FEDICT est alors dit "multi-homed". Ceci est montré dans la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/multihoming_CIDR.jpg" alt="">
+                        <figcaption>Figure 5.23 : Multi-attachement et CIDR</figcaption>
+                    </figure>
+                    <p>Avec un réseau multi-homed tel que celui-ci, les routeurs span.em{R1} et <span class="em">R2</span> auraient deux routes vers l'adresse IPv4 <span class="em">193.191.245.88</span> : une route via Belnet (<span class="em">193.190.0.0/15</span>) et une route directe (<span class="em">193.191.245.88</span>). Les deux routes correspondent à l'adresse IPv4 <span class="em">193.191.145.88</span>. Depuis la RFC 1519, lorsqu'un routeur connaît plus routes vers la même adresse de destination, il doit tansférer les paquets le long de la route ayant la plus longue longueur de préfixe. Dans le cas de <span class="em">193.191.235.88</span>, il s'agit de la route <span class="em">193.181.244.0/23</span> qui est utilisée pour acheminer le paquet. Cette règle de transfert est appelée <span class="html">correspondance de préfixe le plus long</span> ou <span class="html">correspondance la plus spécifique</span>. Tous les routeurs IPv4 implémentent cette règle de transfert.</p>
+                    <p>Pour comprendre transfert de la <span class="em">correspondance de préfixe le plus long</span>, considérons la figure ci-dessous. Avec cette règle, la route <span class="em">0.0.0.0/0</span> joue un rôle particulier. Comme cette route a une longueur de préfixe de <span class="em">0</span> bits, elle correspond à toutes les adresses de destination. Cette route est souvent appelée la route <span class="em">par défaut</span>.</p>
+                    <ul>
+                        <li>
+                            <p>Un paquet avec une destination <span class="em">192.168.1.1</span> reçu par le routeur <span class="em">R</span> est destiné au routeur lui-même. Il est livré au protocole de transport approprié.</p>
+                        </li>
+                        <li>
+                            <p>Un paquet avec une destination <span class="em">11.2.3.4</span> corrspond à deux routes : <span class="em">11.0.0.0/8</span> et <span class="em">0.0.0.0/0</span>. Le paquet est transféré sur l'interface <span class="em">Ouest (West en anglais)</span></p>
+                        </li>
+                        <li>
+                            <p>Un paquet avec une destination <span class="em">120.4.3.4</span> corrspond à une route : <span class="em">0.0.0.0/0</span>. Le paquet est transféré sur l'interface <span class="em">Nord (North en anglais)</span>.</p>
+                        </li>
+                        <li>
+                            <p>Un paquet avec une destination <span class="em">4.4.5.6</span> correspond à deux routes : <span class="Em">4.0.0.0/8</span> et <span class="em">0.0.0.0/0</span>. Le paquet est transféré sur l'interface <span class="em">Ouest (West en anglais)</span>.</p>
+                        </li>
+                        <li>
+                            <p>Un paquet avec une destination <span class="em">4.10.11.254</span> correspond à trois routes : <span class="em">4.0.0.0/8</span>, <span class="em">4.10.11.0/24</span> et <span class="em">0.0.0.0/0</span>. Le paquet est transféré sur l'interface <span class="em">Sud (South en anglais)</span>.</p>
+                        </li>
+                    </ul>
+                    <figure>
+                        <img src="../images/exmple_correspondance_prefixe_plus_long.png" alt="">
+                        <figcaption>Figure 5.24 : Exemple de la correspondance de préfixe le plus long</figcaption>
+                    </figure>
+                    <p>La correspondance de préfixe le plus long peut être implémentée en utilisant différentes structures de données. Une possibilité est d'utiliser un arbre. La figure ci-dessous montre un arbre qui code six routes ayant différentes interfaces sortantes.</p>
+                    <figure>
+                        <img src="../images/arbre_representant_table_routage.png" alt="">
+                        <figcaption>Figure 5.25 : Un arbre représentant une table de routage</figcaption>
+                    </figure>
+                    <hr>
+                    <p>Note : Adresses IPv4 spéciales :</p>
+                    <p>La plupart des adresses IPv4 unicast peuvent apparaître en tant qu'adresses source et de destination dans les paquets sur l'Internet mondial. Cependant, il convient de noter que certains blocs d'adresses IPv4 ont une utilisation spéciale, comme décrit dans la RFC 5735.</p>
+                    <p>Celles-ci comprennent :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">0.0.0.0/8</span>, qui est réservé à l'auto-identification. Une adresse courante dans ce bloc est <span class="em">0.0.0.0</span>, qui est parfois utilisée lorsqu'un hôte démarre et ne connaît pas encore son adresse IPv4.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">127.0.0.0/8</span>, qui est réservé aux adresses de boucle locale (loopback en anglais). Chaque hôte implémentant IPv4 doit avoir une interface de bouclage (qui n'est pas attachée à une couche de liaison de données). Par convention, l'adresse IPv4 <span class="em">127.0.0.1</span> est assignée à cette interface. Cela permet aux processus s'exécutant sur un hôte d'utiliser TCP/IP pour contacter d'autres propcessus s'exécutant sur le même hôte. Cela peut être très utilse à des fins de test.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">10.0.0.0/8</span>, <span class="html">172.16.0.0/12</span> et <span class="html">192.168.0.0/16</span> sont réservés pour les réseaux privés qui ne sont pas directement attachés à l'Internet. Ces adresses sont souvent appelées adresses privées ou adresses RFC 1918.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">169.254.0.0/24</span> est utilisé pour les adresses link-local RFC 3927. Certains hôtes utilisent une adresse dans ce bloc lorsqu'ils sont connectés à un réseau qui n'alloue pas d'adresses comme prévu.</p>
+                        </li>
+                    </ul>
+                    <hr>
+                    <h5>Paquets IPv4 :</h5>
+                    <p>Maintenant que nous avons clarifié l'allocation des adresses IPv4 et l'utilisation de la correspondance de préfixes la plus longue pour faire suivre les paquets IPv4, nous pouvons examiner plus en détail IPv4 en commençant par le format des paquets IPv4. Le format des paquets IPv4 a été défini dans la RC 791. Mis à part quelques carifications et quelques changements compatibles en arrière, le format des paquets IPv4 n'a pas beaucoup changé depuis la publication de la RFC 791. Tous les paquets IPv4 utilisent l'en-tête de 20 octets montré ci-dessous. Certains paquets IPv4 contiennent une extension d'en-tête facultative qui est décrite plus tard.</p>
+                    <figure>
+                        <img src="../images/entete_IPv4.png" alt="">
+                        <figcaption>Figure 5.26 : L'en-tête IPv4</figcaption>
+                    </figure>
+                    <p>Les principaux champs de l'en-tête IPv4 sont :</p>
+                    <ul>
+                        <li>
+                            <p>Un champ <span class="html">version</span> de 4 bits qui indique la version d'IP utilisée pour construire l'en-tête. L'utilisation d'un champ de version dans l'en-tête permet au protocole de couche réseau d'évoluer.</p>
+                        </li>
+                        <li>
+                            <p>Un champ <span class="html">longueur d'en-tête IP (IHL pour IP Header Length)</span> de 4 bits qui indique la longueur de l'en-tête IP en mots de 32 bits. Ce champ permet à IPv4 d'utiliser des options si nécessaire, mais comme il est encodé sur 4 bits, l'en-tête IPv4 ne peut pas dépasser 64 octets.</p>
+                        </li>
+                        <li>
+                            <p>Un champ <span class="html">DS</span> de 8 bits qui est utilis& pour la qualité de service et dont l'utilisation est décrite plus tard.</p>
+                        </li>
+                        <li>
+                            <p>Un champ <span class="html">Protocole</span> de 8 bits qui indique le prototocole de couche de transport qui doit traiter le payload du paquet à la destination. Les valeurs courantes pour ce champ sont <span class="em">6</span> pour TCP et <span class="em">17</span> pour UDP. Voir <a href="http://www.iana.org/assignments/protocol-numbers/" target="_blank">http://www.iana.org/assignments/protocol-numbers/</a> pour la liste de tous les numéros de protocole assignés.</p>
+                        </li>
+                        <li>
+                            <p>Un champ <span class="html">Length</span> de 16 bits qui indique la longueur totale de l'ensemble du paquet IPv4 (en-tête et payload) en octets. Cela implique qu'un paquet IPv4 ne peut pas dépasser 65535 octets.</p>
+                        </li>
+                        <li>
+                            <p>Un champ d'<span class="html">adresse source</span> de 32 bits qui contient l'adresse IPv4 de l'hôte source.</p>
+                        </li>
+                        <li>
+                            <p>Un champ d'<span class="html">adresse de destination</span> de 32 bits qui contient l'adresse IPv4 de l'hôte de destination.</p>
+                        </li>
+                        <li>
+                            <p>Un <span class="html">checksum</span> de 16 bits qui ne protège que l'en-tête IPv4 contre les erreurs de transmission.</p>
+                        </li>
+                    </ul>
+                    <p>Les autres champs de l'en-tête IPv4 sont utilisés à des fins spécifiques. Le premier est le champ <span class="html">Time To Live (TTL)</span> de 8 bits. Ce champ est utilisé par IPv4 pour éviter le risque qu'un paquet IPv4 soit pris dans une boucle infinie en raison d'une erreur transitoire ou permanente dans les tables de routage. La spécification IP initiale dans RFC 791 suggérait que les routeurs décrémenteraient le <span class="em">TTL</span> d'au moins une fois par seonde. Cela garantirait qu'un paquet ne resterait jamais plus de <span class="em">TTL</span> secondes dans le réseau. Cependant, en pratique, la plupart des implémentations de routeurs choisissent simplement de décrémenter le <span class="em">TTL</span> d'une unité. Considérez par exemple la situation représentée dans la figure ci-dessous où la destination <span class="em">D</span> utilise l'adresse <span class="em">11.0.0.56</span>. Si <span class="em">S</span> envoie un paquet vers cette destination, le paquet est transmis au routeur <span class="em">B</span> qui le transmet au routeur <span class="em">C</span> qui le renvoie au routeur <span class="em">A</span>, etc.</p>
+                    <figure>
+                        <img src="../images/boucles_transfert_reseau_IP.png" alt="">
+                        <figcaption>Figure 5.27 : Boucles de transfert dans un réseau IP</figcaption>
+                    </figure>
                     
                 </article>
             <!-- fin de section -->
             </section>
         </main>
+        <footer role="contentinfo">
+            <div>
+                <address>
+                    Professeurs :
+                    <a class="mail" href="mailto:olivier.choquet@vinci.be">Choquet Olivier</a>
+                    <a class="mail" href="mailto:driss.vandenheede.techinfo@gmail.com">Vandenheede Driss</a>
+                </address>
+            </div>
+            <div>
+                <p>Si vous détectez une erreur, une faute d'orthographe, n'hésitez pas à envoyer un mail aux adresses juste à côté avec le nom de la page et l'erreur détectée.</p>
+            </div>
+            <div id="version">
+                <p>Syllabus HTML</p>
+                <p>Version 5.0</p>
+            </div>
+        </footer>
     </body>
 </html>
