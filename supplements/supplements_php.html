@@ -58,6 +58,7 @@
                         <li><a href="#classes_php">Classes PHP</a></li>
                         <li><a href="#expressions_regulieres_php">Expressions régulières en PHP</a></li>
                         <li><a href="#intro_mvc">Introduction à MVC</a></li>
+                        <li><a href="#upload_fichiers">Upload de fichiers en PHP</a></li>
                         <li><a href="#dans_application_web_mvc">MVC en théorie</a></li>
                         <li><a href="#pratique_mvc_php">MVC en pratique avec PHP</a></li>
                         <li><a href="#frameworks_mvc">Frameworks MVC</a></li>
@@ -191,6 +192,8 @@
 <pre class="taille60"><code>&lt;?php
     define("WEB", "http://www.heb.be/esi");
     echo "Site internet : " . WEB . "&lt;br&gt;";
+    // ou encore
+    echo "Site internet : " . constant('WEB') . "&lt;br&gt;";
 ?&gt;</code></pre>
                     <p>Notez que l'accès la valeur de la constante se fait en notant son nom, <span class="em">sans</span> le précéder par l'opérateur $.</p>
                     <p>PHP possède en outre quelques constantes prédéfinies :</p>
@@ -283,7 +286,7 @@
                             <p>La boucle "pour chaque" <span class="html">foreach</span> :</p>
 <pre class="taille60"><code>&lt;?php
     $arr = array(1, 2, 3, 4);
-    foreach($arr as &$value) {
+    foreach ($arr as &$value) {
         $value *= 2;
     }
 ?&gt;</code></pre>
@@ -540,6 +543,132 @@
                     <p><a href="../files/6-Cookies_et_Sessions_PHP.pptx">Cookies et Sessions (PowerPoint)</a></p>
                     <p><a href="../files/7-PHP-PDO.ppt">PHP PDO (PowerPoint)</a></p>
                     <p><a href="../files/8-PHP-systeme-de-fichiers.ppt">PHP - Système de fichiers (PowerPoint)</a></p>
+                </article>
+                <article>
+                    <h2 id="upload_fichiers">Upload de fichiers en PHP :</h2>
+                    <p>Pour télécharger des fichiers sur le serveur, il vous faut un formulaire munis d'un champ de type file. Vous devez rajouter l'attribut <span class="html">enctype</span> ayant pour valeur : "<span class="html">multipart/form-data</span>", ce qui veut dire que votre formulaire va pouvoir transférer des données de type binaire.</p>
+<pre class="taille60"><code>&lt;!-- Le type d'encodage des données enctype doit être spécifié --&gt;
+&lt;form enctype="multipart/form-data" action="URL à préciser" method="post"&gt;
+    &lt;!-- MAX_FILE_SIZE doit précéder le champ input de type file --&gt;
+    &lt;input type="hidden" name="MAX_FILE_SIZE" value="1000000"&gt;
+    &lt;label&gt;Votre fichier :&lt;/label&gt;
+    &lt;!-- Le name est à bien définir, il détermine l'indice dans le tableau associatif $_FILES --&gt;
+    &lt;input type="file" name="mon_fichier"&gt;&lt;br&gt;
+    &lt;input type="submit" value="Envoyer"égt;
+&lt;/form&gt;</code></pre>
+                    <p>Pour récupérer votre, fichier, vous avez à votre disposition le tableau superglobal <span class="html">$_FILES</span> qui aura plusieurs entrées :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">$_FILS['mon_fichier']['tmp_name']</span> : le nom temporaire du fihcier sur le serveur.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">$_FILES['mon_fichier']['name']</span> : le nom original du fichier sur la machine cliente.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">$_FILES['mon_fichier']['type']</span> : le type MIME du fichier.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">$_FILES['mon_fichier']['size']</span> : la taille du fichier.</p>
+                        </li>
+                    </ul>
+                    <p>Avant de vouloir sauvegarder le fichier téléchargé il faut vérifier son envoi.</p>
+                    <h3>Gestion des erreurs d'envoi :</h3>
+                    <p>Vous pouvez gérer les erreurs de chargement avec <span class="html">$_FILES['mon_fichier']['error']</span> :</p>
+<pre class="taille60"><code>&lt;?php
+
+    if ($_FILES['nom_fichier']['error']) {
+        switch ($_FILES['nom_fichier']['error']) {
+            case 1 : // UPLOAD_ERR_INI_SIZE
+                echo "Le fichier dépasse la limite autorisée par le serveur (fichier php.ini) !";
+                break;
+            case 2 : // UPLOAD_ERR_FORM_SIZE
+                echo "Le fichier dépasse la limite autorisée dans le formulaire HTML !";
+                break;
+            case 3 : // UPLOAD_ERR_PARTIAL
+                echo "L'envoi du fichier a été interrompu pendant le transfert !";
+                break;
+            case 4 : // UPLOAD_ERR_NO_FILE
+                echo "Le fichier que vous avez envoyé a une taille nulle !";
+                break;
+        }
+    }  else {
+        // $_FILES['nom_fichier']['error'] vaut 0 soit UPLOAD_ERR_OK
+        // ce qui signifie qu'il n'y a eu aucune erreur
+    }
+
+?&gt;</code></pre>
+                    <p>Explication :</p>
+                    <ul>
+                        <li>
+                            <p>La première erreur "<span class="html">UPLOAD_ERR_INI_SIZE</span>" concerne la taille maximum autorisé par votre serveur, cette dépend donc de votre hébergement.</p>
+                        </li>
+                        <li>
+                            <p>La deuxième erreur "<span class="html">UPLOAD_ERR_FORM_SIZE</span>" concerne la valeur maximum autorisée par le forumaire, elle est définie par le champs de type <span class="em">hidden</span> dont le nom doit impérativemnt avoir pour valeur <span class="html">MAX_FILE_SIZE</span>. La taille est définie par l'attribut "<span class="em">value</span>".</p>
+<pre class="taille60"><code>&lt;input type="hidden" name="MAX_FILE_SIZE" value="1000000"&gt;</code></pre>
+                            <p>Le champs caché doit être appelé avec le champs de type <span class="em">file</span>.</p>
+                            <p>Note : l'attribut <span class="em">value</span> est exprimée en octets.</p>
+                        </li>
+                        <li>
+                            <p>La troisième erreur "<span class="html">UPLOAD_ERR_PARTIAL</span>" se produit si le transfert est interrompu et que le fichier est partiellement téléchargé.</p>
+                        </li>
+                        <li>
+                            <p>La dernière erreur "<span class="html">UPLOAD_ERR_NO_FILE</span>" concerne le transfert d'un fichier vide.</p>
+                        </li>
+                    </ul>
+                    <p>On peut également l'extension du fichier, ainsi que le mime-type avec <span class="html">getimagesize()</span>.</p>
+                    <p>Dans le cas où le transfert n'échoue pas, vous pouvez envisager de sauvegarder le fichier.</p>
+                    <h3>Sauvegarder le fichier :</h3>
+                    <p>Lors de l'envoi d'un fichier, son nom est mémoriser temporairement dans "<span class="html">$_FILES['mon_fichier']['tmp_name']</span>" et sera automatiquement détruit à la fin de l'exécution du script.</p>
+                    <p>La fonction <span class="html">move_uploaded_file()</span> est utilisée pour le sauvegarder à un emplacement définitif.</p>
+<pre class="taille60"><code>&lt;?php
+
+    $nom = $_FILES['mon_fichier']['tmp_name'];
+    $nom_destination = './images/725.jpg';
+    move_uploaded_file($nom, $nom_destination);
+
+?&gt;</code></pre>
+                    <p>La fonction accepte deux paramètres, le premier est le nom temporaire du fichier et le deuxième est son emplacement sur votre serveur. Dans cet exemple, le fichier est renommé "<span class="em">725.jpg</span>" et placé dans le répertoire "<span class="em">./image</span>".</p>
+                    <p>Le code complet avec la gestion des erreurs serait donc ceci :</p>
+<pre class="taille60"><code>&lt;?php
+
+    if ($_FILES['nom_fichier']['error']) {
+        switch ($_FILES['nom_fichier']['error']) {
+            case 1 : // UPLOAD_ERR_INI_SIZE
+                echo "Le fichier dépasse la limite autorisée par le serveur (fichier php.ini) !";
+                break;
+            case 2 : // UPLOAD_ERR_FORM_SIZE
+                echo "Le fichier dépasse la limite autorisée dans le formulaire HTML !";
+                break;
+            case 3 : // UPLOAD_ERR_PARTIAL
+                echo "L'envoi du fichier a été interrompu pendant le transfert !";
+                break;
+            case 4 : // UPLOAD_ERR_NO_FILE
+                echo "Le fichier que vous avez envoyé a une taille nulle !";
+                break;
+        }
+    }  else {
+        // $_FILES['nom_fichier']['error'] vaut 0 soit UPLOAD_ERR_OK
+        // ce qui signifie qu'il n'y a eu aucune erreur
+        $nom = $_FILES['mon_fichier']['tmp_name'];
+        $nom_destination = './images/725.jpg';
+        move_uploaded_file($nom, $nom_destination);
+    }
+
+?&gt;</code></pre>
+                    <p>Si vous voulez ignorer la gestion des erreurs lors d'un transfert, vous pouvez utiliser la fonction <span class="html">is_uploaded_file()</span> qui indique si le fichier a été téléchargé par HTTP POST.</p>
+<pre class="taille60"><code>&lt;?php
+
+    if (is_uploaded_file($_FILES['userfile']['tmp_name'])) {
+        $nom = $_FILES['mon_fichier']['tmp_name'];
+        $nom_destination = './images/725.jpg';
+        move_uploaded_file($nom, $nom_destination);
+    } else {
+        echo "Attaque possible par téléchargement de fichier : ";
+        echo "Nom du fichier : '" . $_FILES['userfile']['tmp_name'] . "'.";
+    }
+
+?&gt;</code></pre>
+                    <p>Cette méthode ne fournit cependant aucune information sur le type d'erreur.</p>
                 </article>
                 <article id="mvc">
                     <h2>Architecture MVC pour une application Web :</h2>

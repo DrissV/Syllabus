@@ -4168,6 +4168,599 @@ else:
                         <img src="../images/boucles_transfert_reseau_IP.png" alt="">
                         <figcaption>Figure 5.27 : Boucles de transfert dans un réseau IP</figcaption>
                     </figure>
+                    <p>Malheureusement, de tels boucles de redirection peuvent se produire pour deux raisons dans les réseaux IP. Premièrement, si le réseau utilise un routage statique, la boucle peut être causée par une simple erreur de configuration. Deuxièmement, si le réseau utilise un routage dynamique, une telle boucle peut se produire de manière transitoire, par exemple pendant la convergence du protocole de routage après une panne de lien ou de routeur. Le champ <span class="em">TTL</span> de l'en-tête IPv4 garantit que même s'il y a des voucles de redirection dans le réseau, les paquets ne boucleront pas indéfiniment. Les hôtes envoient leurs paquets IPv4 avec un <span class="em">TTL</span> positif (généralement <span class="em">64</span> ou plus). La valeur <span class="em">TTL</span> initialise utilisée pour envoyer les paquets IP varie d'une implémentation à l'autre. La plupart des implémentations IP actuelles utilisent un <span class="em">TTL</span> initial de <span class="em">64</span> ou plus. Consultez <a href="http://members.cox.net/~ndav1/self_published/TTL_values.html" target="_blank">http://members.cox.net/~ndav1/self_published/TTL_values.html</a> pour des informations supplémentaires. Lorsqu'un routeur reçoiy un paquet IPv4, il diminue d'abord le <span class="em">TTL</span> de un. Si le <span class="em">TTL</span> devient <span class="em">0</span>, le paquet est rejeté et un message est renvoyé à la source du paquet (voir la section ICMP). Sinon, le routeur effectue une recherche dans sa table de redirection pour acheminer le paquet.</p>
+                    <p>Un deuxième problème pour IPv4 est l'hétérogénéité de la couche de liaison de données. IPv4 est utilisé au-dessus de nombreuses couches de liaison de données très différentes. Chaque couche de liaison de données a ses propres caractéristiques et, comme indiqué précédemment, chaque couche de liaison de données est caractérisée par une taille de trame maximale. Du point de vue de l'IP, une interface de couche de liaison de données est caractérisée par son <span class="html">unité de transmission maximale (MTU pour Maximum Transmission Unit)</span>. La MTU d'une interface est le plus grand paquet IPv4 (y compris l'en-tête) qu'elle peut envoyer. Le tableau ci-dessous fournit quelques tailles de MTU courantes. La prise en charge d'IP sur la technologie de couche de liaison de données 802.15.4 nécessite des mécanismes spéciaux. Consultez la RFC 4944 pour une discussion des problèmes spéciaux posés par 802.15.4.</p>
+                    <table role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Couche liaison de données</th>
+                                <th>MTU</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Ethernet</td>
+                                <td>1500 octets</td>
+                            </tr>
+                            <tr>
+                                <td>WiFi</td>
+                                <td>2272 octets</td>
+                            </tr>
+                            <tr>
+                                <td>ATM (AAL5)</td>
+                                <td>9180 octets</td>
+                            </tr>
+                            <tr>
+                                <td>802.15.4</td>
+                                <td>102 ou  81 octets</td>
+                            </tr>
+                            <tr>
+                                <td>Token Ring</td>
+                                <td>4464 octets</td>
+                            </tr>
+                            <tr>
+                                <td>FDDI</td>
+                                <td>4352 octets</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Bien que IPv4 puisse envoyer des paquets de 64 Ko, peu de technologies de couche liaison de données utilisées aujourd'hui sont capables d'envoyer un paquet IPv4 de 64 Ko dans une trame. De plus, comme illustré dans la figure ci-dessous, un autre problème est qu'un hôte peut envoyer un paquet qui serait trop grand pour l'une des couches liaison de données utilisées par les routeurs intermédiaires.</p>
+                    <figure>
+                        <img src="../images/besoin_fragmentation_assemblement.jpg" alt="">
+                        <figcaption>Figure 5.28 : Le besoin de fragmentation et de réassemblage</figcaption>
+                    </figure>
+                    <p>Pour résoudre ces problèmes, IPv4 inclut un mécanisme de fragmentation et de réassemblage de paquets. Les hôtes et les routeurs intermédiaires peuvent tous les deux fragmenter un paquet IPv4 si celui-ci est trop long pour être envoyé via la couche de liaison de données. Dans IPv4, la fragmentation est entièrement réalisée dans la couche IP et un paquet IPv4 de grande taille est fragmenté en deux ou plusieurs paquets IPv4 (appelés fragments). Les fragments IPv4 d'une paquet de grande taolle sont des paquets IPv4 normaux qui sont envoyés vers la destination du paquet de grande taille par des routeurs intermédiaires.</p>
+                    <p>Le mécanisme de fragmentation d'IPv4 repose sur quatre champs de l'en-tête IPv4 : la <span class="html">longueur (Length)</span>, l'<span class="html">identification (Identification)</span>, les <span class="html">indicateurs de fragmentation (flags)</span> et l'<span class="html">offset de fragmentation (Fragment Offset)</span>. L'en-tête IPv4 contient deux indicateurs de fragmentation (flags) : <span class="html">More fragments</span> et <span class="html">Don't Fragment (DF)</span>. Lorsque l'indicateur (flag) <span class="em">DF</span> est activé, cela indique que le paquet ne peut pas être fragmenté.</p>
+                    <p>Le fonctionnement de base de la fragmentation IPv4 est le suivant. Un paquet de grande taille est fragmenté en deux ou plusieurs fragments. La taille de tous les fragments, sauf le dernier, est égale à l'unité de transmission maximale du lien utilisé pour transmettre le paquet. Chaque paquet IPv4 contient un champ d'<span class="em">identification</span> de 16 bits. Lorsq'un paquet est fragmenté, l'<span class="em">identification</span> du paquet de grande taille est copiée dans tous les fragments pour permettre à la destination de réassembler les fragments reçus. Dans chaque fragment, le décalage de fragment indique, en unités de 8 octets, la position du payload du fragment dans le payload du paquet d'origine. Le champ de <span class="em">longueur</span> de chaque fragment indique la longueur du payload du fragment comme dans un paquet IPv4 normal. Enfin, le drapeau <span class="em">More fragments</span> est activé uniquement dans le dernier fragment d'un paquet de grande taille.</p>
+                    <p>Le pseudo-code suivant détaille la fragmentation IPv4, en supposant que le paquet ne contient pas d'options.</p>
+<pre class="taille60"><code>#mtu : maximum size of the packet (including header) of outgoing link
+    if p.len &lt; mtu :
+        send(p)
+    # packet is too large
+    maxpayload=8*int((mtu-20)/8) # must be n times 8 bytes
+    if p.flags=='DF' :
+        discard(p)
+    # packet must be fragmented
+    payload=p[IP].payload
+    pos=0
+    while len(payload) &gt; 0 :
+        if len(payload) &gt; maxpayload :
+            toSend=IP(dest=p.dest,src=p.src,
+                        ttl=p.ttl, id=p.id,
+                        frag=p.frag+(pos/8),
+                        len=mtu, proto=p.proto)/payload[0:maxpayload]
+            pos=pos+maxpayload
+            payload=payload[maxpayload+1:]
+        else
+            toSend=IP(dest=p.dest,src=p.src,
+                        ttl=p.ttl, id=p.id,
+                        frag=p.frag+(pos/8),
+                        flags=p.flags,
+                        len=len(payload), proto=p.proto)/payload
+        forward(toSend)</code></pre>
+                    <p>Les fragments d'un paquet IPv4 peuvent arriver à destination dans n'importe quel ordre, car chaque fragment est transmis indépendamment dans le réseau et peut suivre des chemins différents. De plus, certains fragments peuvent être perdus et ne jamais atteindre la destination.</p>
+                    <p>L'algorithme de réassemblage urilisé par l'hôte de destination est frossièrement le suivant. Tout d'abord, la destination peut vérifier si un paquet IPv4 reçu est un fragment ou non en vérifiant la valeur du bit <span class="em">More fragments</span> et de l'<span class="em">offset de fragment</span>. Si l'<span class="em">offset de fragment</span> est fixé à <span class="em">0</span> et que le bit <span class="em">More fragments</span> est réinitialisé, le paquet reçu n'a pas été fragmenté. Sinon, le paquet a été fragmenté et doit être réassemblé. L'algorithme de réassemblage repose sur le champ <span class="em">Identification</span> des fragments reçus pour associer un fragment au paquet correspondant en cours de réassemblage. De plus, le champ <span class="em">Fragment Offset</span> indique la position du payload du fragment dans le paquet original non fragmenté. Enfin, le paquet avec le bit <span class="em">More fragments</span> réinitialisé permet à la destination de déterminer la longueur totale du paquet original non fragmenté.</p>
+                    <p>Notez que l'algoritjme de réassemblage doit faire face à l'absence de fiabilité du réseau IP. Cela implique qu'un fragment peut être dupliqué ou qu'n fragment peut ne jamais atteindre la destination. La destination peut facilement détecter la duplication de fragments grâce à l'<span class="em">offset de fragment</span>. Pour faire face à la perte de fragments, l'algorithle de réassemblage doit limiter le temps pendant lequel les fragments d'un paquet sont stockés dans son tampon pendant que le paquet est en cours de réassemblage. Cela peut être implémenté en démarrant un timer lorsque le premier fragment est reçu. Si le paquet n'a pas été réassemblé à l'expiration du timer, tous les fragments sont jetés et le paquet est considéré comme perdu.</p>
+                    <p>La spécification IP originale, dans la RFC 791, a défini plusieurs types d'options qui peuvent être ajoutées à l'en-tête IP. Chaque option est encodée en utilisant un format de <span class="html">valeur de longueur de type</span>. Elles ne sont pas largement utilisées aujourd'hui et sont donc seulement brièvement décrites. Des détails supplémentaires peuvent être trouvés dans la RFC 791.</p>
+                    <p>Les options les plus intéressantes d'IPv4 sont les trois options liées au routage. L'option <span class="html">Record route</span> a été définie pour permettre aux gestionnaires de réseau de déterminer le chemin suivi par un paquet. Lorsque l'option <span class="em">Record route</span> était présente, les routeurs sur le chemin du paquet devaient insérer leur adresse IP dans l'option. Cette option a été implémentée, mais comme la partie optionnelle de l'en-tête IPv4 ne peut contenir que 44 octets, il est impossible de découvrir l'ensemble du chemin sur l'Internet mondial. <span class="html">traceroute(8)</span>, malgré ses limites, est une meilleure solution pour enregister le chemin vers une destination.</p>
+                    <p>Les autres options de routage sont l'option de <span class="html">route source stricte (Strict source route)</span> et l'option de <span class="html">route source lâche (Loose source route)</span>. L'idée principale derrière ces options est qu'un hôte peut souhaiter, pour une raison quelconque, spécifier le chemin à suivre par les paquets qu'il envoie. L'option de <span class="em">route source stricte</span> permet à un hôte d'indiquer à l'intérieur de chaque paquet le chemin exact à suivre. L'option de <span class="em">route source stricte</span> contient une liste d'adresses IPv4 et un pointeur pour indiquer la prochaine adresse dans la liste. Lorsqu'un routeur reçoit un paquet contenant cette option, il ne cherche pas l'adresse de destination dans sa table de routage mais transfère le paquet directement au prochain routeur de la liste et avance le pointeur. Ceci est illustré dans la figure ci-dessous où <span class="em">S</span> force ses paquets à suivre le chemin <span class="em">RA-RB-RD</span>.</p>
+                    <figure>
+                        <img src="../images/utilisation_option_route_source_stricte.png" alt="">
+                        <figcaption>Figure 5.29 : Utilisation de l'option de route source stricte</figcaption>
+                    </figure>
+                    <p>La longueur maximale de la partie optionnelle de l'en-tête IPv4 constitue une limitation importante pour l'option de <span class="em">route source stricte</span> et l'option de <span class="em">route d'enregistrement (Record route)</span>. Cependant, l'option de <span class="em">route source lâche</span> ne souffre pas de cette limitation. Cette option permet à l'hôte émetteur d'indiquer à l'intérieur de son paquet certains des routeurs qui doivent être traversés pour atteindre la destination. Cela est illsutré dans la figure ci-dessous. <span class="em">S</span> envoie un paquet contenant une liste d'adresses et un pointeur vers le prochain routeur de la liste. Initialement, ce pointeur pointe vers <span class="em">RB</span>. Lorsque <span class="em">RA</span> reçoit le paquet envoyé par <span class="em">S</span>, il recherche dans sa table de routage l'adresse pointée dans l'option de <span class="em">route source lâche</span> et non l'adresse de destination. Le paquet est alors transmis au routeur <span class="em">RB</span> qui reconnaît son adresse dans l'option et avance le pointeur. Comme il n'y a plus d'adresse répertoriée dans l'option de <span class="em">route source lâche</span>, <span class="em">RB</span> et d'autres routeurs en aval transfèrent le paquet en effectuant une recherche pour l'adresse de destination.</p>
+                    <figure>
+                        <img src="../images/utilisation_option_route_source_perte.png" alt="">
+                        <figcaption>Figure 5.30 : Utilisation de l'option de route source lâche</figcaption>
+                    </figure>
+                    <p>Ces deux options sont généralement ignorées par les routeurs car elles causent des problèmes de sécurité (RFC 6274).</p>
+                    <h5>ICMP version 4 :</h5>
+                    <p>Il est parfois nécessaire pour les routeurs intermédiaires ou l'hôte de destination d'informer l'expéditeur du paquet d'un problème survenu lors du traitement d'un paquet. Dans la suite de protocoles TCP/IP, ce reporting est effectué par l'<span class="html">Internet Control Message Protocol (ICMP)</span>. ICMP est défini fans la RFC 792. Les messages ICMP sont transportés en tant que payload des paquets IP (la valeur de protocole réservée pour ICMP est <span class="em">1</span>). Un message ICMP est composé d'un en-tête de 8 octets est d'un payload de longueur variable qui contient généralment les premiers octets du paquet qui a déclenché la transmission du message ICMP.</p>
+                    <figure>
+                        <img src="../images/ICMPv4.png" alt="">
+                        <figcaption>Figure 5.31 : ICMP version 4 (RFC 792)</figcaption>
+                    </figure>
+                    <p>Dans l'en-tête ICMP, les champs <span class="html">Type</span> et <span class="html">Code</span> indiquent le type de problème qui a été détecté par l'expéditeur du message ICMP. Le <span class="html">Checksum</span> protège l'intégralité du message ICMP contre les erreurs de transmission et le champ <span class="html">Data</span> contient des informations supplémentaires pour certains messages ICMP.</p>
+                    <p>Les principaux types de messages ICMP sont :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">Inaccessibilité de la destination</span> : un message ICMP <span class="html">Destination</span> est envoyé lorsqu'un paquet ne peut pas être livré à sa destination en raison de problèmes de routage. Différents types d'inacessibilité sont distingués :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">Inaccessibilité du réseau</span> : ce message ICMP est envoyé par un routeur qui n'a pas de route pour le sous-réseau contenant l'adresse de destination du paquet.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">Inaccessibilité de l'hôte</span> : ce message est envoyé par un routeur qui est connecté au sous-réseau contenant l'adresse de destination du paquet, mais cette adresse de destination ne peut pas être atteinte pour le moment.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">Inacessibilité de protocole</span> : ce message ICMP est envoyé par un hôte de destination qui a reçu un paquet, mais ne prend pas en charge le protocole de transport indiqué dans le champ <span class="html">Protocol</span> du paquet.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">Inaccessibilité de port</span> : ce message ICMP est envoyé par un hôte de destination qui a reçu un paquet destiné à un numéro de port, mais aucun processus serveur n'est lié à ce port.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p><span class="html">Fragmentation nécessaire</span> : ce message ICMP est envoyé par un routeur qui reçoit un paquet avec le drapeau <span class="em">Don't Fragment</span> activé et qui est plus grand que la MTU de l'interface de sortie.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Redirect</span> : ce message ICMP peut être envoyé lorsqu'il y a deux routeurs sur le même LAN. Considérez un LAN avec un hôte et deux routeurs : <span class="em">R1</span> et <span class="em">R2</span>. Supposons que <span class="em">R1</span> soit également connecté au sous-réseau<span class="em">130.104.0.0/16</span> tandis que <span class="em">R2</span> est connecté au sous-réseau <span class="em">138.48.0.0/16</span>. Si un hôte sur le LAN envoie un hôte sur le LAN envoie un paquet vers <span class="em">130.104.1.1</span> à <span class="em">R2</span>, <span class="em">R2</span> doit transférer le paquet à nouveau sur le LAN pour atteindre <span class="em">R1</span>. Ce n'est pas optimal car le paquet est envoyé deux fois sur le même LAN. Dans ce cas, <span class="em">R2</span> pourrait envoyer un message ICMP <span class="html">Redirect</span> à l'hôte pour l'informer qu'il aurait dû envoyer le paquet directemnt à <span class="em">R1</span>. Cela permet de à l'hôte d'envoyer les autres paquets à <span class="em">130.104.1.1</span> directement via <span class="em">R1</span>.</p>
+                            <figure>
+                                <img src="../images/redirection_ICMP.png" alt="">
+                                <figcaption>Figure 5.32 : Redirect ICMP</figcaption>
+                            </figure>
+                        </li>
+                        <li>
+                            <p><span class="html">Problème de paramètre</span> : ce message ICMP est envoyé lorsqu'un routeur ou un hôte reçoit un paquet IP contenant une erreur (par exemple, une option invalide).</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Source quench</span> : un routeur était censé envoyer ce message lorsqu'il devait rejeter des paquets en raison de la congestion. Cependant, l'envoi de messages ICMP en cas de congestion n'était pas la meilleure façon de réduire la congestion et depuis l'inclusion d'un mécanisme de contrôle de congestion dans TCP, ce message ICMP est obsolète.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Temps écoulé (Time Exceeded)</span> : il existe deux types de messages ICMP <span class="em">Temps écoulé</span>.</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">TTL dépassé (TTL exeeded)</span> : un message <span class="em">TTL dépassé</span> est envoyé par un routeur lorsqu'il jette un paquet IPv4 car son <span class="em">TTL</span> est arrivé à <span class="em">0</span>.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">Temps de réassemblage dépassé (Reassembly time exceeded)</span> : ce message ICMP est envoyé lorsqu'une destination n'a pas pu réassembler tous les fragments d'un paquet avant l'expiration de son timer de réassemblage.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p><span class="html">Demande d'écho (Echo request)</span> et <span class="html">réponse d'écho (Echo reply)</span> : ces messages ICMP sont utilisés par le logiciel de débogage réseau <span class="html">ping(8)</span>.</p>
+                        </li>
+                    </ul>
+                    <hr>
+                    <p>Note : Attaques de redirection :</p>
+                    <p>Les messages de redirection ICMP sont utiles lorsque plusieurs routeurs sont attachés au même LAN que les hôtes. Cependant, ils doivent être utilisés avec prudence car ils créent également un risque de sécurité important. L'une des attaques les plus ennuyeuses dans un réseau IP s'appelle l'attaque de l'homme du milieu. Une telle attaque se produit si un attaquant est capable de recevoir, traiter, éventuellement modifier et renvoyer tous les paquets échangés entre une source et une destination. Comme l'attaquant reçoit tous les paquets, il peut facilement collecter des mots de passe ou des numéros de carte de crédit, voire injecter de fausses informations dans une connexion TCP établie. Les redirections ICMP permettent malheureusement à un attaquant de facilement effectuer une telle attaque. Dans la figure ci-dessus, considérez l'hôte <span class="em">H</span> qui est attaché au même LAN que <span class="em">A</span> et <span class="em">R1</span>. Si <span class="em">H</span> envoie à <span class="em">A</span> une redirection ICMP pour le préfixe <span class="em">138.48.0.0/16</span>, <span class="em">A</span> transmet à <span class="em">H</span> tous les paquets qu'il veut envoyer à ce préfixe. <span class="em">H</span> peut ensuite les transmettre à <span class="em">R2</span>. Pour éviter ces attaques, les hôtes doivent ignorer les messages de redirection ICMP qu'ils reçoivent.</p>
+                    <hr>
+                    <p><span class="em">ping(8)</span> est souvent utilisé par les opérateurs de réseau pour vérifier qu'une adresse IP donnée est accessible. Chaque hôte est censé répondre avec un message ICMP <span class="em">Echo reply</span> lorsqu'il reçoit un message ICMP <span class="em">Echo request</span>. Jusqu'à il y a quelques années, tous les hôtes répondaient aux messages ICMP <span class="em">Echo request</span>. Cependant, en raison des problèmes de sécurité qui ont affecté les implémentations TCP/IP, de nombreuses implémentations peuvent mainteanant être configurées pour désactiver la réponse aux messages ICMP <span class="em">Echo request</span>. Un exemple d'utilisation de <span class="em">ping(8)</span> est présenté ci-dessous.</p>
+<pre class="taille60"><code>PING 130.104.1.1 (130.104.1.1): 56 data bytes
+64 bytes from 130.104.1.1: icmp_seq=0 ttl=243 time=19.961 ms
+64 bytes from 130.104.1.1: icmp_seq=1 ttl=243 time=22.072 ms
+64 bytes from 130.104.1.1: icmp_seq=2 ttl=243 time=23.064 ms
+64 bytes from 130.104.1.1: icmp_seq=3 ttl=243 time=20.026 ms
+64 bytes from 130.104.1.1: icmp_seq=4 ttl=243 time=25.099 ms
+--- 130.104.1.1 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 19.961/22.044/25.099/1.938 ms</code></pre>
+                    <p>Un autre outil de débogage très utile est <span class="html">traceroute(8)</span>. La page de manuel de traceroute décrit cet outil comme "<span class="em">affichant le chemin que les paquets empruntent vers l'hôte réseau</span>". traceroute utilise les messages ICMP <span class="em">TTL dépassé</span> pour découvrir les routeurs intermédiaires sur le chemin vers une destination. Le principe derrière traceroute est très simple. Lorsqu'un routeur reçoit un paquet IP dont le <span class="em">TTL</span> est réglé à <span class="em">1</span>, il décrémente le <span class="em">TTL</span> et est obligé de retourner à l'hôte d'envoi un message ICMP <span class="em">TTL dépassé</span> contenant l'en-tête et les premiers octets du paquet IP rejeté. Pour découvrir tous les routeurs sur un chemin de réseau, une solution simple consiste à d'abord envoyer un paquet dont le <span class="em">TTL</span> est réglé à <span class="em">1</span>, puis un paquet dont le <span class="em">TTL</span> est réglé à <span class="em">2</span>, etc. Un exemple de sortie traceroute est présenté ci-dessous.</p>
+<pre class="taille60"><code>traceroute www.ietf.org
+traceroute to www.ietf.org (64.170.98.32), 64 hops max, 40 byte packets
+    1 CsHalles3.sri.ucl.ac.be (192.168.251.230) 5.376 ms 1.217 ms 1.137 ms
+    2 CtHalles.sri.ucl.ac.be (192.168.251.229) 1.444 ms 1.669 ms 1.301 ms
+    3 CtPythagore.sri.ucl.ac.be (130.104.254.230) 1.950 ms 4.688 ms 1.319 ms
+    4 fe.m20.access.lln.belnet.net (193.191.11.9) 1.578 ms 1.272 ms 1.259 ms
+    5 10ge.cr2.brueve.belnet.net (193.191.16.22) 5.461 ms 4.241 ms 4.162 ms
+    6 212.3.237.13 (212.3.237.13) 5.347 ms 4.544 ms 4.285 ms
+    7 ae-11-11.car1.Brussels1.Level3.net (4.69.136.249) 5.195 ms 4.304 ms 4.329 ms
+    8 ae-6-6.ebr1.London1.Level3.net (4.69.136.246) 8.892 ms 8.980 ms 8.830 ms
+    9 ae-100-100.ebr2.London1.Level3.net (4.69.141.166) 8.925 ms 8.950 ms 9.006 ms
+    10 ae-41-41.ebr1.NewYork1.Level3.net (4.69.137.66) 79.590 ms
+       ae-43-43.ebr1.NewYork1.Level3.net (4.69.137.74) 78.140 ms
+       ae-42-42.ebr1.NewYork1.Level3.net (4.69.137.70) 77.663 ms
+    11 ae-2-2.ebr1.Newark1.Level3.net (4.69.132.98) 78.290 ms 83.765 ms 90.006 ms
+    12 ae-14-51.car4.Newark1.Level3.net (4.68.99.8) 78.309 ms 78.257 ms 79.709 ms
+    13 ex1-tg2-0.eqnwnj.sbcglobal.net (151.164.89.249) 78.460 ms 78.452 ms 78.292 ms
+    14 151.164.95.190 (151.164.95.190) 157.198 ms 160.767 ms 159.898 ms
+    15 ded-p10-0.pltn13.sbcglobal.net (151.164.191.243) 161.872 ms 156.996 ms 159.425 ms
+    16 AMS-1152322.cust-rtr.swbell.net (75.61.192.10) 158.735 ms 158.485 ms 158.588 ms
+    17 mail.ietf.org (64.170.98.32) 158.427 ms 158.502 ms 158.567 ms</code></pre>
+                    <p>Le résultat de la commande <span class="em">traceroute(8)</span> ci-dessus montre un chemin de 17 sauts entre un hôte de l'UCLouvain et l'un des principaux serveurs de l'IETF. Pour chaque saut, traceroute fournit l'adresse IPv4 du routeur qui a envoyé le message ICMP et le temps aller-retour mesuré entre la source et ce routeur. Traceroute envoie trois sondes avec chaque valeur de <span class="em">TTL</span>. Dans certains cas, comme pour le 10<sup>ème</sup> saut ci-dessus, les messages ICMP peuvent être reçus à partir d'adresses différentes. Cela est généralemnt dû au fait que différents paquets de la même source ont suivi des chemins différents dans le réseau. Une analyse détaillée de la sortie de traceroute dépasse le cadre de ce document. Des informations supplémentaires peuvent être trouvées dans [ACO+2006] et [DT2007].</p>
+                    <p>Une autre utilisation importante des messages ICMP est de découvrir la taille maximale de MTU qui peut être utilisée pour atteindre une destination sans fragmentation. Comme expliqué précédemment, lorsqu'un routeur IPv4 reçoit un paquet qui est plus grand que le MTU de la liaison de sortie, il doit fragmenter le paquet. Malheureusement, la fragmentation est une opération complexe et les routeurs ne peuvent pas la réaliser à la cadence de la ligne [KM1995]. De plus, lorsqu'un segment TCP est transporté dans un paquet IP qui est fragmenté dans le réseau, la perte d'un seul fragment oblige TCP à retransmettre l'ensemble du segment (et donc tous les fragments). Si TCP était capable d'envoyer uniquement des paquets qui ne nécessitent pas de fragmentation dans le réseau, il pourrait retransmettre uniquement les informations qui ont été perdues dans le réseau. De plus, la réassemblage IP pose plusieurs défis à grande vitesse, comme discuté dans la RFC 4963. L'utilisation de la fragmentation IP pour permettre aux applications UDP d'échanger de grands messages soulève plusieurs problèmes de sécurité [KPS2003].</p>
+                    <p>ICMP, combiné avec le drapeau <span class="em">DF (Don't fragment)</span> IPv4, est utilisé par les implémentations TCP pour découvrir la taille de MTU la plus grande autorisée pour atteindre un hôte de destination sans provoquer de fragmentation du réseau. C'est le mécanisme de <span class="html">découverte du MTU de chemin (Path MTU discovery)</span> dans la RFC 1191. Une implémentation TCP qui inclut la <span class="em">découverte du MTU de chemin</span> (la plupart le font) demande à la couche IPv4 d'énvoyer tous les segments à l'intérieur de paquest IPv4 d'envoyer tous les segments à l'intérieur de paquets IPv4 ayant le drapeau <span class="em">DF</span> défini. Cela interdit aux routeurs intermédiaires de fragmenter ces paquets. Si un routeur doit transférer un paquet non fragmentable sur une liaison avec un MTU plus petit, il renvoie un message ICMP de fragmentation nécessaire à la source, indiquant le MTU de sa liaison de sortie du routeur. À la réception de ce message ICMP, l'implémentation TCP source ajuste sa taille de segment maximum (MSS) de sorte que les paquets contenant les segments qu'elle envoie puissent être transmis par ce routeur sans nécessiter de fragmentation.</p>
+                    <h5>Interactions entre IPv4 et la couche liaison de données :</h5>
+                    <p>Comme mentionné dans la première section de ce chapitre, il existe trois types principaux de couches liaison de données : les liens point-à-point, les LAN prenant en charge la diffusion et la multidiffusion et les réseaux <span class="em">NBMA</span>. Deux problèmes importants doivent être abordés lors de l'utilisation d'IPv4 dans ces types de réseaux. Le premier problème est de savoir comment est de savoir comment les paquets IPv4 sont échangés sur le service de couche liaison de données.</p>
+                    <p>Sur un lien <span class="em">point-à-point</span>, les adresses IPv4 des dispositifs communicants peuvent être configurées manuellement ou en utilisant un protocole simple. Les adresses IPv4 sont souvent configurées manuellement sur des liens <span class="em">point-à-point</span> entre des routeurs. Lorsque des liens <span class="em">point-à-point</span> sont utilisés pour attacher des hôtes au réseau, la configuration automatique est souvent préférée afin d'éviter des problèmes avec des adresses IPv4 incorrectes. Par exemple, le PPP (protocole point-à-point), spécifié dans la RFC 1661, inclut un protocole de contrôle de réseau IP qui peut être utilisé par le routeur dans la figure ci-dessous pour envoyer l'adresse IPv4 que l'hôte connecté doit configurer pour son interface. La transmision de paquets IPv4 sur un lien <span class="em">point-à-point</span> sera discutée dans le chapitre sur les réseaux locaux (<span class="em">chap:lan)</span>).</p>
+                    <figure>
+                        <img src="../images/IPv4_liens_point_point.jpg" alt="">
+                        <figcaption>Figure 5.33 : IPv4 sur des liens point-à-point</figcaption>
+                    </figure>
+                    <p>L'utilisation d'IPv4 dans un réseau local (LAN) introduit un problème supplémentaire. Sur un LAN, chaque appareil est identifié par son adresse unique de couche liaison de données. Le service de couche liaison de données peut être utilisé par n'importe quel hôte connecté au LAN pour envoyer une trame à n'importe quel hôte au LAN pour envoyer une trame à n'importe quel autre hôte connecté au même LAN. Pour cela, l'hôte émetteur doit connaître l'adresse de couche liaison de données de l'hôte de destination. Par exemple, la figure ci-dessous montre quatre hôtes connectés au même LAN configurés avec des adresses IPv4 dans le sous-réseau <span class="em">10.0.1.0/24</span> et des adresses de couche liaison de données représentées par un seul caractère. En pratique, la plupart des réseaux locaux utilisent des adresses encodées sur un champ de 48 bits [802]_. Certaines technologies de réseau local récentes utilisent des adresses de 64 bits. Dans ce réseau, si l'hôte <span class="em">10.0.1.22/24</span> veut envoyer un paquet IPv4 à l'hôte ayant l'adresse <span class="em">10.0.1.8</span>, il doit savoir que l'adresse de couche liaison de données de cet hôte est <span class="em">C</span>.</p>
+                    <figure>
+                        <img src="../images/LAN_simple.png" alt="">
+                        <figcaption>Figure 5.34 : Un LAN simple</figcaption>
+                    </figure>
+                    <p>Dans un réseau simple comme celui illustré ci-dessus, il pourrait être possible de configurer manuellement la correspondance entre les adresses IPv4 des hôtes et les adresses de couche liaison de donnés correpondnat à toute adresse IPv4 sur le même LAN. C'est l'objectif du <span class="html">protocole de résolution d'adresse (ARP pour Address Resolution Protocol)</span> défini dans la RFC 826. ARP est un protocole de couche liaison de données utilisé par IPv4. Il repose sur la capacité du service de couche liaison de données à livrer facilement une trame de diffusion à tous les périphériques connectés au même LAN.</p>
+                    <p>Le moyen le plus simple de comprendre le fonctionnement d'ARP est de considérer le réseau simple illustré ci-dessus et de supposer que l'hôte <span class="em">10.0.1.22/24</span> doit envoyer un paquet IPv4 à l'hôte <span class="em">10.0.1.8</span>. Comme cette adresse IP appartient au même sous-réseau, le paquet doit être envoyé directement à sa destination via le service de couche liaison de données. Pour utiliser ce service, l'hôte émetteur doit trouver l'adresse de couche liaison de données qui est attachée à l'hôte <span class="em">10.0.1.8</span>. Chaque hôte IPv4 maintient un cache ARP contenant la liste de toutes les correspondances entre les adresses IPv4 et les adresses de couche liaison de données qu'il connaît. Lorsqu'un hôte IPv4 démarre, son cache ARP est vide. Ainsi, <span class="em">10.0.1.22</span> consulte d'abord son cache ARP. Comme le cache ne contient pas la correspondance demandée, l'hôte <span class="em">10.0.1.22</span> envoie une trame de requête ARP de diffusion sur le LAN. La trame contient l'adresse de couche liaison de données de l'hôte émetteur (<span class="em">A</span>) et l'adresse IPv4 demandée (<span class="em">10.0.1.8</span>). Cette trame de diffusion est reçue par tous les périphériques du LAN et seul l'hôte qui possède l'adresse IPv4 demandée répond en renvoyant une trame de réponse ARP unicast avec la correspondance demandée. À la réception de cette réponse, l'hôte émetteur met à jour son cache ARP et envoie le paquet IPv4 en utilisant le service de couche liaison de données. Pour faire face aux périphériques qui se déplacent ou dont les adresses sont reconfigurées, la plupart des implémentations ARP suppriment les entrées du cache qui n'ont pas été utilisées pendant quelques minutes. Certaines implémentations ré-valident les entrées du cache ARP de temps en temps en envoyant des requêtes ARP. Voir le chapitre 28 de [Benvenuti2005] pour une description de l'implémentation d'ARP dans le noyau Linux.</p>
+                    <hr>
+                    <p>Note : Problèmes de sécurité avec le protocole ARP : </p>
+                    <p>ARP est un vieux protocole largement utilisé qui a malheureusement été conçu à une époque où les problèmes de sécurité n'étaient pas une préoccupation. ARP est presque intrinsèquement peu sûr. Les hôtes utilisant ARP peuvent être sujets à plusieurs types d'attaques. Tout d'abord, un hôte malveillant pourrait créer une attaque de déni de service sur un LAN en envoyant des réponses aléatoires aux requêtes ARP reçues. Cela polluerait le cache ARP des autres hôtes sur le même LAN. Sur un réseau fixe, de telles attaques peuvent être détectées par l'administrateur système qui peut physiquement retirer les hôtes malveillants du LAN. Sur un réseau sans fil, le retrait d'un hôte malveillant est beaucoup plus difficile.</p>
+                    <p>Un deuxième type d'aataque concerne les attaques <span class="html">man-in-the-middle</span>. Ce nom est utilisé pour les attaques réseau où l'attaquant est capable de lire et éventuellement des modifier tous les messages envoyés par les appareils attaqués. Une telle attaque est possible sur un LAN. Supposons, dans la figure ci-dessus, que l'hôte <span class="em">10.0.1.9</span> est malveillant et souhaite recevoir et modifier tous les paquets envoyés par l'hôte <span class="em">10.0.1.22</span> à l'hôte <span class="em">10.0.1.8</span>. Cela peut être facilement réalisé si l'hôte <span class="em">10.0.1.9</span> réussi, en envoyant de fausses réponses ARP, à convaincre l'hôte <span class="em">10.0.1.22</span> (resp. <span class="em">10.0.1.8</span>) que son propre adresse de couche liaison de données doit être utilisée pour atteindre <span class="em">10.0.1.8</span> (resp. <span class="em">10.0.1.22</span>).</p>
+                    <hr>
+                    <p>ARP est utilisé par tous les appareils connectés à un réseau local et qui implémentaent IPv4. Les routeurs ainsi que les hôtes finaux implémentent ARP. Lorsq'un hôte doit envoyer un paquet IPv4 à une destination en dehors de son sous-réseau local, il doit d'abord envoyer le paquet à l'un des routeurs qui se trouvent sur ce sous-réseau. Considérez par exemple le résenté dans la figure ci-dessous. Chaque hôte est configuré avec une adresse IPv4 dans le sous-réseau <span class="em">10.0.1.0/24</span> et utilise <span class="em">10.0.1.1</span> comme routeur par défaut. Pour envoyer un paquet à l'adresse <span class="em">1.2.3.4</span>, l'hôte <span class="em">10.0.1.8</span> devra d'abord connaître la couche liaison de données de son routeur par défaut. Il enverra donc une requête ARP pour <span class="em">10.0.1.1</span>. À la réception de la réponse ARP, l'hôte <span class="em">10.0.1.8</span> met à jour sa table ARP et envoie son paquet dans une trame à son routeur par défaut. Le routeur acheminera ensuite le paquet vers sa destination finale.</p>
+                    <figure>
+                        <img src="../images/LAN_simple_avec_routeur.jpg" alt="">
+                        <figcaption>Figure 5.35 : Un LAN simple avec un routeur</figcaption>
+                    </figure>
+                    <p>Au début de l'Internet, les adresses IP étaient configurées manuellement sur les hôtes et les routeurs et presque jamais modifiées. Cependant, cette configuration manuelle peut être complexe et provoque souvent des erreurs qui sont parfois difficiles à déboguer. Par exemple, considérez toutes les options qui peuvent être spécifiées par l'utilitaire <span class="em">ifconfig</span> sur les hôtes Unix. Les implémentations TCP/IP récentes sont capables de détecter certaines de ces erreurs de configuration. Par exemple, si deux hôtes sont attachés au même sous-réseau avec la même adresse IPv4, ils ne pourront pas communiquer. Pour détecter ce problème, les hôtes envoient une demande ARP pour leur adresse configurée chaque fois que leur adresse est modifiée (RFC 5227). S'ils reçoivent une réponse à cette demande ARP, ils déclenchent une alarme ou informent l'administrateur système.</p>
+                    <p>Pour faciliter la connexion des hôtes aux sous-réseaux, la plupart des réseaux prennent en charge le protocole de configuration dynamique des hôtes (DHCP pour Dynamic Host Configuration Protocol) RFC 2131. Le DHCP permey à un hôte de récupérer automatiquement son adresse IPv4 attribuée. Un serveur DHCP est associé à chaque sous-réseau. En pratique, il y a généralement un serveur DHCP par groupe de sous-réseaux et les routeurs capturent sur chaque sous-réseau les messages DHCP et les transfèrent au serveur DHCP. Chaque serveur DHCP gère un pool d'adresses IPv4 attribuées au sous-réseau. Lorsqu'un hôte est d'abord connecté au sous-réseau, il envoie une demande DHCP dans un segment UDP (le serveur DHCP écoute sur le port 67). Comme l'hôte ne connaît ni son adresse IPv4 ni l'adresse IPv4 du serveur DHCP, ce segment UDP est envoyé à l'intérieur d'un paquet IPv4 dont les adresses source et destination sont respectivement <span class="em">0.0.0.0</span> et <span class="em">255.255.255.255</span>. La demande DHCP peut contenir diverses options telles que le nom de l'hôte, son adresse de couche liaison de données, etc. Le serveur capture la demande DHCP et sélectionne une adresse non attribuée dans son pool d'adresses. Il envoie ensuite l'adresse IPv4 attribuée dans un message de réponse DHCP qui contient l'adresse de couche liaison de données de l'hôte et des informations supplémentaires telles que le masque de sous-réseau de l'adresse IPv4, l'adresse du routeur par défaut ou l'adresse du résolveur DNS. Ce message de réponse DHCP est envoyé dans un paquet IPv4 dont les adresses source et destination sont respectivement l'adresse IPv4 du serveur DHCP et l'adresse de diffusion <span class="em">255.255.255.255</span>. La réponse DHCP spécifie également la durée de vie de l'allocation d'adresse. Cela force l'hôte à renouveler son allocation d'adresse une fois celle-ci expirée. Grâce à la durée de bail limitée, les adresses IP sont automatiquement retournées au pool d'adresses lorsque les hôtes sont éteints. Cela réduit le gaspillage des adresses IPv4.</p>
+                    <p>Dans un réseau NBMA, les interactions entre IPv4 et la couche de liaison de données sont plus complexes car le protocole ARP ne peut pas être utilisé comme dans un LAN. Ces réseaux NBMA utilisent des serveurs spéciaux qui stockent les correspondances entre les adresses IP et l'adresse de la couche de liaison de données correspondante. Les réseaux Asynchronous Transfer Mode (ATM), par exemple, peuvent utiliser soit le protocole ATMARP défini dans la RFC 2225, soit le protocole de résolution de prochain saut (NHRP pour NextHop Resolution Protocol) défini dans la RFC 2332. Les réseaux ATM sont moins couramment utilisés aujourd'hui et nous ne décrirons pas en détail le fonctionnement de ces serveurs.</p>
+                    <p>Pour simplifier la discussion dans cette section, nous ignorons l'utilisation des options IPv4. Ce n'est pas une limitation sévère car aujourd'hui, les paquets IPv4 contiennent rarement des options. Les détails sur le traitement des options IPv4 peuvent être trouvés dans les RFC pertinentes, telles que la RFC 791. De plus, nous supposons également que seules les liaisons point à point sont utilisées. Nous reportons l'explication du fonctionnement d'IPv4 sur les réseaux locaux à la prochaine section.</p>
+                    <p>Un hôte ayant <span class="em">n</span> interfaces de couche liaison de données gère <span class="em">n +1</span> adresses IPv4 :</p>
+                    <ul>
+                        <li>
+                            <p>L'adresse IPv4 <span class="em">127.0.0.1/32</span> assignée par convention à son adresse de bouclage.</p>
+                        </li>
+                        <li>
+                            <p>Une adresse IPv4 <span class="html">A.B.C.D/p</span> assignée à chacune de ses <span class="em">n</span> interfaces de couche liaison de données.</p>
+                        </li>
+                    </ul>
+                    <p>un tel hôte maintient une table de routage contenant une entrée pour son adresse de bouclage et une entrée pour chaque identifiant de sous-réseau attribué à ses interfaces. De plus, l'hôte utilise généralement l'une de ses interfaces comme interface <span class="em">par défaut</span> lorsqu'il envoie des paquets qui ne sont pas destinés à une destination directement connectée. Cela est représenté par la route par défaut : <span class="em">0.0.0.0/0</span> qui est associée à une interface.</p>
+                    <p>Lorsqu'un protocole de transport en cours d'exécution sur l'hôte demande la transmission d'un segment, il fournit généralement à la couche IPv4 l'adresse de destination IPv4 en plus du segment. Une implémentation de protocole de transport peut également spécifier si le paquet doit être envoyé avec le drapeau <span class="em">DF</span> activé ou désactivé. Une implémentation TCP utilisant <span class="em">Path MTU discovery</span> demandanderait toujours la transmisison de paquets IPv4 avec le drapeau <span class="em">DF</span> activé. L'implémentation IPv4 effectue d'abord une recherche de préfixe le plus long avec l'adresse de destination dans sa table de routage. La recherche renvoie l'identification de l'interface qui doit être utilisée pour envoyer le paquet. L'hôte peut alors créer le paquet IPv4 contenant le segment. L'adresse IPv4 source du paquet est l'adresse IPv4 de l'hôte sur l'interface renvoyée par la recherche de préfixe le plus long. Le champ de <span class="em">protocole</span> du paquet est défini sur l'identification du protocole de transport local qui a créé le segment. Le champ <span class="em">TTL</span> du paquet est défini sur le <span class="em">TTL</span> par d&faut utilisé par l'hôte. L'hôte doit maintenant choisir l'<span class="em">identification</span> du paquet. Cette <span class="em">identification</span> est importante si le paquet est fragmenté dans le réseau, car elle permet de s'assurer que la destination est en mesure de réassembler les fragments reçus. Idéalement, un hôte émetteur ne devrait jamais envoyer deux fois le même paquet avec la même identification vers le même hôte de destination, afin de garantir que tous les fragments sont correctement réassemblés par la destination. Malheureusement, avec un champ d'<span class="em">identification</span> de 16 bits et un MSL attendu de 2 minutes, cela implique que la bande passante maximale vers une destination donnée est limitée à environ 286 Mbps. Avec un MTU plus réaliste de 1500 octets, cette passante tombe à 6,4 Mbps RFC 4963 si la fragmentation doit être possible. Il convient de noter que seuls les paquets qui peuvent être fraglmentés (c'est-à-dire dont le bit <span class="em">DF</span> est réinitialisé) doivent avoir des champs d'<span class="em">identification</span> différents. Le champ d'<span class="em">identification</span> n'est pas utilisé dans les paquets ayant le bit <span class="em">DF</span> défini. Ceci est très faible et est une autre raison pour laquelle il est fortement recommandé aux hôtes d'éviter la fragmentation. Si, malgré tout cela, le MTU de l'interface de sortie est inférieur à la longueur du paquet, le paquet est fragmenté. Enfin, la somme de contrôle du paquet est calculée avant la transmission.</p>
+                    <p>Lorsqu'un hôte reçoit un paquet IPv4 destiné à lui-même, plusieurs opérations doivent être effectuées. Tout d'abord, il doit vérifier la somme de contrôle du paquet. Si la somme de contrôle est incorrecte, le paquet est rejeté. Ensuite, il doit vérifier si le paquet a été fragmenté. Si c'est le cas, le paquet est transmis à l'algorithme de réassemblage décrit précédemment. Sinon, le paquet doit être transmis à la couche supérieure. Cela se fait en examinant le champ <span class="em">Protocol</span> (<span class="em">6</span> pour TCP, <span class="em">17</span> pour UDP). Si l'hôte n'implémente pas le protocole de couche de transport correspondant au champ <span class="em">Protocol</span> reçu, il envoie un message ICMP "<span class="html">protocole inaccessible (Protocol unreachable)</span>" à l'hôte émetteur. Si le paquet reçu contient un message ICMP (champ <span class="em">Protocol</span> défini à <span class="em">1</span>), le traitement est plus complexe. Un message ICMP <span class="em">Echo-reply</span>. Les autres types de messages ICMP indiquent une erreur qui a été causée par un paquet précédemment transmis. Ces messages ICMP sont généralement transmis au protocole de transport qui a envoyé le paquet erroné. Cela peut être fait en inspectant le contenu du message ICMP qui inclut l'en-tête et les premiers 64 bits du paquet erroné. Si le paquet IP ne contenait pas d'options, ce qui est le cas pour la plupart des paquets IPv4, le protocole de transport peut trouver dans les 32 premiers bits de l'en-tête de transport les ports source et destination pour déterminer le flux de transport concerné. Ceci est important pour la découverte de MTU de chemin, par exemple.</p>
+                    <p>Lorsqu'un routeur reçoit un paquet IPv4, il doit d'abord vérifier le checksum du paquet. S'il est invalide, le paquet est rejeté. Sinon, le routeur doit vérifier si l'adresse de destination est l'une des adresses IPv4 assignées au routeur. Si tel est le cas, le routeir doit se comporter comme un hôte et traiter le paquet comme décrit précédemment. Bien que les routeurs acheminent principalement les paquets IPv4, ils doivent parfois être accessibles en tant qu'hôtes poar les opérateurs de réseau ou les logiciels de gestion de réseau.</p>
+                    <p>Si le paquet n'est pas adressé au routeur, il doit être transmis sur une interface de sortie conformément à la table de routage du routeur. Le routeir commence par décrémenter le <span class="em">TTL</span> du paquet. Si le <span class="em">TTL</span> atteint un <span class="em">0</span>, un message ICMP "<span class="em">TTL Exceeded</span>" est renvoyé à la source. Comme l'en-tête du paquet a été modifié, le checksum doit être recalculé. Heureusement, comme IPv4 utilise un checksum arithmétique, un routeur peut mettre à jour de manière incrémentale le checksum du paquet, comme décrit dans la RFC 1624. Ensuite, le routeur effectue une correspondance de préfixe le plus long pour l'adresse de destination du paquet dans sa table de transfert. Si aucune correspondance n'est trouvée, le routeur doit renvoyer un message ICMP "<span class="em">Destination unreachable</span>" à la source. Sinon, la recherche renvoie l'interface sur laquelle le paquet doit être transmis. Avant de transférer le paquet sur cette interface, le routeur doit d'abord comparer la longueur du paquet avec la MTU de l'interface de sortie. Si le paquet est plus petit que la MTU, il est transféré. Sinon, un message ICMP "<span class="html">Fragmentation needed</span>" est envoyé su le flag <span class="em">DF</span> était activé ou le paquet est fragmenté s'il était désactivé.</p>
+                    <hr>
+                    <p>Note : Correspondance de préfixe le plus long dans les routeurs IP :</p>
+                    <p>Effectuer la correspondance de préfixe le plus long à la ligne sur des routeurs nécessite des structures de données et des algorithmes hautement optimisés. Considérons par exemple une implémentation de la correspondance la plus longue basée sur un arbre Radix sur un lien de 10 Gbps. Sur un tel lien, un routeur peut recevoir 31250000 paquets IPv4 de 40 octets chaque seconde. Pour transférer les paquets à la ligne, le routeur doit traiter un paquet IPv4 toutes les 32 nanosecondes. Cela ne peut pas être réalisé par une implémentation logicielle. Pour une implémentation matérielle, la principale difficulté réside dans le nombre d'accès mémoire nécessaires pour effectuer la correspondance de préfixe le plus long. Des informations supplémentaires sur les algorithmes de correspondance de préfixe le plus long plus rapides peuvent être trouvées dans [Varghese2005].</p>
+                    <hr>
+                    <h5>IP version 6 :</h5>
+                    <p>Dans la fin des années 1980 et le début des années 1990, la croissance de l'Internet posait plusieurs problèmes opérationnels sur les routeurs. Beaucoup de ces routeurs avaient un seul CPU et jusqu'à 1 Mo de RAM pour stocker leur système d'exploitation, des tampons de paquets et des tables de routage. Étant donné le rythme d'attribution de préfixes IPv4 aux entreprises et aux universités désireuses de rejoindre l'Internet, les tables de routage augmentaient très rapidement et certains craignaient que tous les préfixes IPv4 soient rapidement attribués. En 1987, une étude citée dans la RFC 1752 estimait qu'il y aurait 100000 réseaux dans un proche avenir. En août 1990, des estimations indiquaient que l'espace de classe B serait épuisé en mars 1994. Deux types de solutions ont été développées pour résoudre ce problème. La première solution à court terme a été l'introduction du <span class="html">routage interdomaines sans classe (CIDR pour Classless Inter Domain Routing)</span>. Une deuxième solution à court terme a été le mécanisme de <span class="html">traduction d'adresse réseau (NAT pour Network Address Translation)</span>, défini dans la RFC 1631. Le NAT permettait à plusieurs hôtes de partager une seule adresse IP publique, cela est expliqué dans la section <span class="em">Middleboxes</span>.</p>
+                    <p>Cependant, en parrallèle avec ces solutions à court terme, qui ont permis à l'Internet IPv4 de rester utilisable jusqu'à présent, le groupe de travail de l'Internet Engineering Task Force a commencé à travailler sur le développemnt d'un remplaçant pour IPv4. Ce travail a commencé par un appel ouvert à propositions, décrit dans la RFC 1550. Plusieurs groupes ont répondu à cet appel avec des propositions pour un protocole Internet de nouvelle génération (IPng) :</p>
+                    <ul>
+                        <li>
+                            <p>TUBA proposé dans les RFC 1347 et 1561.</p>
+                        </li>
+                        <li>
+                            <p>PIP proposé dans la RFC 1621.</p>
+                        </li>
+                        <li>
+                            <p>SIPP proposé dans la RFC 1710.</p>
+                        </li>
+                    </ul>
+                    <p>L'IETF a décidé de poursuivre le développement de l'IPng basé sur la proposition SIPP. Comme IPv5 était déjà utilisée par le protocole expérimental ST-2 défini dans la RFC 1819, le successeur de IPv4 est la IPv6. L'IPv6 initiale définie dans la RFC 1752 a été conçue sur la base des hypothèses suivantes :</p>
+                    <ul>
+                        <li>
+                            <p>Les adresses IPv6 sont encodées en tant que champ de 128 bits.</p>
+                        </li>
+                        <li>
+                            <p>L'en-tête IPv6 a un format simple qui peut être facilement analysé par des dispositifs matériels.</p>
+                        </li>
+                        <li>
+                            <p>Un hôte devrait pouvoir configurer automatiquement son adresse IPv6.</p>
+                        </li>
+                        <li>
+                            <p>La sécurité doit faire partie d'IPv6.</p>
+                        </li>
+                    </ul>
+                    <hr>
+                    <p>Note : La taille de l'adresse IPng :</p>
+                    <p>Lorsque le travail sur l'IPng a commencé, il était clair que 32 bits étaient trop petits pour coder une adresse IPng et toutes les propositions utilisaient des adresses plus longues. Cependant, il y avait de nombreuses discussions sur la longueur d'adresse la plus appropriée. Une première approche, proposée par SIPP dans la RFC 1710, était d'utiliser des adresses de 64 bits. Un espace d'adressage de 64 bits était 4 milliards de fois plus grand que l'espace d'adressage IPv4 et, en outre, du point de vue de l'implémentation, les processeurs de 64 bits étaient envisagés et les adresses de 64 bits s'intégreraient naturellement dans leurs registres. Une autre approche était d'utiliser un format d'adresse existant. C'était la proposition TUBA (RFC 1347) qui réutilisait les adresses ISO CLNP de 20 octets. Les adresses de 20 octets laissaient de la place pour la croissance, mais l'utilisation d'ISO CLNP n'était pas favorisée par l'IETF en partie pour des raisons politiques, malgré le fait que des implémentations CLNP matures étaient déjà disponibles. 128 bits semblait être un compromis raisonnable à l'époque.</p>
+                    <hr>
+                    <h5>Architecture d'adressage IPv6 :</h5>
+                    <p>L'expérience d'IPv4 a révélé que la scalabilité d'un protocole de couche réseau dépend fortement de son architecture d'adressage. Les concepteurs d'IPv6 ont donc consacré beaucoup d'efforts à définir son architecture d'adressage, décrite dans la RFC 3513. Toutes les adresses IPv6 font 128 bits de long. Cela implique qu'il existe 340282366920938463374607431768211456 (3,4 * 10<sup>38</sup>) adresses IPv6 différentes. Comme la surface de la Terre est d'environ 510072000 km<sup>2</sup>, cela signifie qu'il y a environ 6,67 * 10<sup>23</sup> adresses IPv6 par mètre carré sur Terre. Comparé à IPv4, qui offre seulement 9 adresses par kilomètre carré, cela représente une amélioration significative sur papier.</p>
+                    <p>IPv6 prend en charge les adresses unicast, multicast et anycast. Comme avec IPv4, une adresse unicast IPv6 est utilisée pour identifier une interface de couche de liaison de données sur un hôte. Si un hôte dispose de plusieurs interfaces de couche liaison de données (par exemple, une interface Ethernet et une interface WiFi), alors il a besoin de plusieurs adresses IPv6. En général, une adresse unicast IPv6 est structurée comme indiqué dans la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/structure_adresses_unicast_IPv6.jpg" alt="">
+                        <figcaption>Figure 5.36 : Structure des adresses unicast IPv6</figcaption>
+                    </figure>
+                    <p>Une adresse IPv6 unicast est composée de trois parties :</p>
+                    <ol>
+                        <li>
+                            <p>Un préfixe de routage global qui est assigné à l'ISP qui possède ce bloc d'adresses.</p>
+                        </li>
+                        <li>
+                            <p>Un identifiant de sous-réseau qui identifie un client de l'ISP.</p>
+                        </li>
+                        <li>
+                            <p>Un identifiant d'interface qui identifie une interface particulière sur un équipement terminal.</p>
+                        </li>
+                    </ol>
+                    <p>Dans les déploiements actuels, les identifiants d'interface sont toujours de 64 bits. Cela simplique que bien qu'il y a 2<sup>128</sup> adresses IPv6 différentes, elles doivent être regroupées en 2<sup>64</sup> sous-réseaux. Cela peut sembler gaspiller des ressources, mais utiliser 64 bits pour l'identifant d'hôte permet aux adresses IPv6 d'être autoconfigurées et offre également certains avantages d'un point de vue de la sécurité, comme expliqué dans la section ICMPv6.</p>
+                    <hr>
+                    <p>Note : représentation textuelle des adresses IPv6 :</p>
+                    <p>IIl est parfois nécessaire d'écrire des adresses IPv6 sous forme textuelle, par exemple lors de la configuration manuelle d'adresses ou à des fins de documentation. Le format préféré pour l'écriture des adresses IPv6 est <span class="em">x:x:x:x:x:x:x:x</span>, où les <span class="em">x</span> sont des chiffres hexadécimaux représentant les huit parties de 16 bits de l'adresse. Voici quelques exemples d'adresses IPv6 :</p>
+                    <ul>
+                        <li>
+                            <p>abcd:Eef01:2345:6789:abcd:ef01:2345:6789</p>
+                        </li>
+                        <li>
+                            <p>2001:db8:0:0:8:800:200c:417a</p>
+                        </li>
+                        <li>
+                            <p>fe80:0:0:0:219:e3ff:fed7:1204</p>
+                        </li>
+                    </ul>
+                    <p>Les adresses IPv6 contiennent souvent une longue séquence de bits définis à <span class="em">0</span>. Dans ce cas, une notation compacte a été définies. Avec cette notation, <span class="em">::</span> est utilisé pour indiquer un ou plusieurs groupes de blocs de 16 bits conteant uniquement des bits définis à <span class="em">0</span>. Par exemple :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">2001:db8:0:0:8:800:200c:417a</span> est représenté comme <span class="em">2001:db8::8:800:200c:417a</span></p>
+                        </li>
+                        <li>
+                            <p><span class="em">ff01:0:0:0:0:0:0:101</span> est représenté comme <span class="em">ff01::101</span></p>
+                        </li>
+                        <li>
+                            <p><span class="em">0:0:0:0:0:0:0:1</span> est représenté comme <span class="em">::1</span></p>
+                        </li>
+                        <li>
+                            <p><span class="em">0:0:0:0:0:0:0:0</span> est représenté comme <span class="em">::</span></p>
+                        </li>
+                    </ul>
+                    <p>Un préfixe IPv6 peut être représenté comme adresse/longueur, où la longueur est la longueur du préfixe en bits. Par exemple, les trois notations ci-dessous correspondent au même préfixe IPv6 :</p>
+                    <ul>
+                        <li>
+                            <p>2001:0db8:0000:cd30:0000:0000:0000:0000/60</p>
+                        </li>
+                        <li>
+                            <p>2001:0db8::cd30:0:0:0:0/60</p>
+                        </li>
+                        <li>
+                            <p>2001:0db8:0:cd30::/60</p>
+                        </li>
+                    </ul>
+                    <hr>
+                    <p>En pratique, il existe plusieurs types d'adresses IPv6 unicast. La plupart des adresses IPv6 unicast sont allouées par blocs sous la responsabilité de l'IANA. Les allocations IPv6 actuelles dfont partie du bloc d'adresses <span class="em">2000::/3</span>. Les Registres INternet Régionaux (RIR) tels que RIPE en Europe, ARIN en Amérique du Nord ou AfriNIC en Afrique ont chacun reçu un bloc d'adresses IPv6 qu'ils sous-allouent aux fournisseurs de services Internet de leur région. Les FAI (ISP en anglais) allouent ensuite des adresses à leurs clients.</p>
+                    <p>Lorsqu'on considère l'allocation des adresses IPv6, deux types d'allocation d'adresses sont souvent distingués. Les RIR allouent des adresses <span class="html">indépendantes des fournisseurs (PI pour provider-independent)</span>. Les adresses PI sont généralement allouées aux fournisseurs d'accès Internet et aux grandes entreprises qui sont connectées à au moins deux fournisseurs d'accès différents [CSP2009]. Une fois qu'un bloc d'adresses PI a été attribué à une entreprise, cette dernière peut utiliser son bloc d'adresses avec le fournisseur de son choix et changer de fournisseur à volonté. Les fournisseurs d'accès Internet allouent des blocs d'adresses <span class="html">agrégables par les fournisseurs (PA pour provider-aggregatable)</span> à partir de leur propre bloc d'adresses PI à leurs clients. Une entreprise connecté à un seul fournisseur, elle doit changer toutes les adresses qu'elle utilise. Cela peut être un cauchemar d'un point de vue opérationnel et de nombreuses entreprises font pression pour obtenir des blocs d'adresses PI même si elles sont petites et connectées à un seul fournisseur. Les tailles typiques des blocs d'adresses IPv6 sont :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">/32</span> pour un fournisseur d'accès Internet.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">/48</span> pour une seule entreprise.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">/64</span> pour un seul utilisateur (par exemple, un utilisateur domestique connecté via ADSL).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">/128</span> dans le cas rare où il est connu qu'il n'y aura pas plus d'un hôte final attaché.</p>
+                        </li>
+                    </ul>
+                    <p>Pour les entreprises qui veulent utiliser IPv6 sans être connectées à Internet IPv6, la RFC 4193 définit les adresses <span class="html">Unique Local Unicast (ULA)</span> (<span class="em">fc00::/7</span>). Ces adresses ULA jouent un rôle similaire aux adresses IPv4 privées définies dans la RFC 1918. Cependant, la taille du bloc d'adresseses <span class="em">fc00::/7</span> permet à ULA d'être beaucoup plus flexible que les adresses IPv4 privées.</p>
+                    <p>De plus, l'IETF a réservé certaines adresses IPv6 pour une utilisation spéciale. Les deux plus importantes sont :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">0:0:0:0:0:0:0:1</span> (<span class="em">::1</span> en forme compacte) est l'adresse de bouclage IPv6. C'est l'adresse d'une interface logique qui est toujours active et fonctionne sur les hôtes compatibles IPv6. C'est l'équivalent de <span class="em">127.0.0.1</span> en IPv4.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">0:0:0:0:0:0:0:0</span> (<span class="em">::</span> en forme compacte) est l'adresse IPv6 non spécifiée. C'est l'adresse IPv6 qu'un hôte peut utiliser comme adresse source lorsqu'il essaie d'acquérir une adresse officielle.</p>
+                        </li>
+                    </ul>
+                    <p>Le dernier type d'adresses IPv6 unicast est celui des adresses <span class="html">Link Local Unicast</span>. Ces adresses font partie du bloc d'adresses <span class="em">fe80::/10</span> et sont définies dans la RFC 4291. Chaque hôte peut calculer sa propre adresse locale en concaténant le préfixe <span class="em">fe80::/64</span> avec l'identificateur de 64 bits de son interface. Les adresses locales de liaison peuvent être utilisées lorsque les hôtes connectés à la même liaison (ou réseau local) ont besoin d'échanger des paquets. Elles sont notamment utilisées à des fins de découverte d'adresses et de configuration automatique. Leur utilisation est limitée à chaque liaison et un routeur ne peut pas transférer un paquet dont l'adresse source ou de destination est une adresse locale de liaison. Des adresses locales de liaison ont également été définies pour IPv4 dans la RFC 3927. Cependant, les adresses IPv4 locales de laison ne sont utilisées que lorsqu'un hôte ne peut pas obtenir une adresse IPv4 régulière, par exemple sur un LAN isolé.</p>
+                    <figure>
+                        <img src="../images/structure_adresses_IPv6_liaison locale.png" alt="">
+                        <figcaption>Figure 5.37 : Structure des adrresses IPv6 de liaison locale</figcaption>
+                    </figure>
+                    <p>Une conséquence importante de l'architecture d'adressage unicast IPv6 et de l'utilisation d'adresses de liaison locale est qu'un hôte IPv6 dispose de plusieurs adresses IPv6. Cela implique qu'une pile IPv6 doit être capable de gérer plusieurs adresses IPv6. Ce n'était pas toujours le cas avec IPv4.</p>
+                    <p>RFC 4291 définit un type spécial d'adresse IPv6 anycast. Sur un sous-réseau ayant le préfixe <span class="em">p/n</span>, l'adresse IPv6 dont les <span class="em">128-n</span> bits de poids faibles sont tous à <span class="em">0</span> est l'adresse anycast qui correspond à tous les routeurs de ce sous-réseau. Cette adresse anycast peut être utilisée par les hôtes pour envoyer rapidement un paquet à l'un des routeurs de leur propre sous-réseau.</p>
+                    <p>Enfin, RFC 4291 définit la structure des adresses multicast IPv6. La liste complète des adresses multicast IPv6 allouées est disponible sur <a href="http://www.iana.org/assignments/ipv6-multicast-addresses" target="_blank">http://www.iana.org/assignments/ipv6-multicast-addresses</a>. Cette structure est représentée dans la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/structure_adresse_multicast_IPv6.jpg" alt="">
+                        <figcaption>Figure 5.38 : Structure d'adresse multicast IPv6</figcaption>
+                    </figure>
+                    <p>Les 112 bits de poids faible d'une adresse multicast IPv6 sont l'identifiant du groupe. Les bits de poids fort sont utilisés comme marqueur pour distinguer les adresses multicast des adresses unicast. En particulier, les 4 bits du champ <span class="em">flags</span> indiquent si l'adresse est temporaire ou permanente. Enfin, le champ de portée indique les limites de la diffusion des paquets destinés à une adresse particulière. Une portée de lien local indique qu'un routeur ne doit pas transférer un paquet destiné à une telle adresse multicast. Une portée d'organisation locale indique qu'un paquet envoyé à une adresse de destination multicast de ce type ne doit pas quitter l'organisation. Enfin, la portée mondiale est déstinée aux groupes multicast couvrant l'ensemble de l'Internet mondial.</p>
+                    <p>Parmi ces adresses, certaines sont bien connues. Par exemple, tous les systèmes finaux appartiennent automatiquement au groupe multicast <span class="em">ff02::1</span> tandis que tous les routeurs appartiennent automatiquement au groupe multicast <span class="em">ff02::2</span>. Nous discutons de la multidiffusion IPv6 plus tard.</p>
+                    <h5>Le format de paquet IPv6 :</h5>
+                    <p>Le format de paquet IPv6 a été fortement inspiré par le format de paquet proposé pour le protocole SIPP dans RFC 1710. L'en-tête IPv6 standard défini dans RFC 2460 occupe 40 octets et contient 8 champs différents, comme indiqué dans la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/entete_IPv6.png" alt="">
+                        <figcaption>Figure 5.39 : L'en-tête IPv6 (RFC 2460)</figcaption>
+                    </figure>
+                    <p>À part les adresses source et de destination, l'en-tête IPv6 contient les champs suivants :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Version</span> : un champ de 4 bits défini sur 6 et destiné à permettre à IP d'évoluer à l'avenir si nécessaire.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Traffic class</span> : ce champ de 8 bits joue un rôle similaire à celui de l'octet <span class="em">DS</span> de l'en-tête IPv4.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Flow label</span> : ce champ était initialement destiné à être utilisé pour étiqueter les paquets appartenant au même flux. Cependant, à l'heure où nous écrivons ces lignes, il n'y a pas de directive claire sur la façon dont ce champ doit être utilisé par les hôtes et les routeurs.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Payload length</span> : il s'agit de la taille du payload du paquet en octets. Comme la longueur est encodée sur 16 bits, un paquet IPv6 peut contenir jusqu'à 65535 octets de payload.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Next Header</span> : ce champ de 8 bits indique le type d'en-tête qui suit l'en-tête IPv6. L'IANA maintient la liste de tous les types d'en-tête suivant alloués sur <a href="http://www.iana.org/assignments/protocol-numbers/" target="_blank">http://www.iana.org/assignments/protocol-numbers/</a>. Le même registre est utilisé pour le champ de transport (par exemple <span class="em">6</span> pour TCP ou <span class="em">17</span> pour UDP) ou d'une option IPv6. Le traitement des options en tant qu'en-tête suivant permet de simplifier le traitement des paquets IPv6 par rapport à IPv4.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Hop Limit</span> : ce champ de 8 bits indique le nombre de routeurs qui peuvent transférer le paquet. Il est décrémenté de un par chaque routeur et le même but que le champ TTL de l'en-tête IPv4.</p>
+                        </li>
+                    </ul>
+                    <p>En comparaison avec IPv4, les paquets IPv6 sont beaucoup plus simples et plus faciles à traiter par les routeurs. Une première différence importante est qu'il n'y a pas de checksum à l'intérieur de l'en-tête IPv6. C'est principalement parce que toutes les couches de liaison de données et les protocoles de transport incluent un checksum ou un CRC pour protéger leurs trames/segments contre les erreurs de transmission. Ajouter un checksum dans l'en-tête IPv6 aurait obligé chque routeur à recalculer le checksum de tous les paquets, avec un bénéfice limité pour détecter les erreurs. En pratique, un checksum IP permet de détecter les erreurs qui se produisent à l'intérieur des routeurs (par exemple, en raison d'une corruption de mémoire) avant que le paquet n'atteigne sa destination. Cependant, on a constaté que ce bénéfice était trop faible compte tenu de la fiabilité des mémoires actuelles et du coût de calcul du checksum sur chaque routeur.</p>
+                    <p>La deuxième différence avec IPv4 est que l'en-tête IPv6 ne supporte pas la fragmentation et la réassemblage. L'expérience avec IPv4 a montré que la fragmentation des paquets dans les routeurs était coûteuse [KM1995] et les développeurs d'IPv6 ont décidé que les routeurs ne fragmenteraient plus les paquets. Si un routeur reçoit un paquet trop long pour être transmis, le paquet est abandonné et le routeur renvoie un message ICMPv6 pour informer l'expéditeur du problème. L'expéditeur peut ensuite soit fragmenté le paquet, soit effectuer la découverte du MTU de chemin. En IPv6, la fragmentation de paquets est effectuée uniquement par la source en utilisant des options IPv6.</p>
+                    <p>La troisième différence concerne les options IPv6, qui sont plus simples et plus faciles à traiter que les options IPv4.</p>
+                    <hr>
+                    <p>Note : Compression d'en-tête sur les liaisons à faible bande passante :</p>
+                    <p>Les options IPv6 sont des champs variables qui peuvent être ajoutés au-delà de l'en-tête IPv6 de base pour fournir des fonctionnalités supplémentaires. Les options IPv6 sont plus simples et plus faciles à traiter que les options IPv4. Les options IPv6 sont encapsulées dans un en-tête d'option IPv6 et sont traitées de manière séquentielle. La dernière option IPv6 a un indicateur "<span class="em">Next Header</span>" qui indique le type de l'en-tête qui suit les options. Les options IPv6 peuvent être utilisées pour fournir un support de sécurité supplémentaire, un routage souple, une qualité de service et une fragmentation de paquets. L'utilisation de ces options est négociée par les hôtes émetteurs, ce qui signifie qu'elles ne sont utilisées que si les deux hôtes les supportent.</p>
+                    <hr>
+                    <h5>Options IPv6 :</h5>
+                    <p>En IPv6, chaque option est considérée comme un en-tête contenant un multiple de 8 octets pour garantir que les options IPv6 dans un paquet sont alignées sur des limites de 64 bits. IPv6 définit plusieurs types d'options :</p>
+                    <ul>
+                        <li>
+                            <p>Les options saut-par-saut sont des options qui doivent être traitées par les routeurs sur le chemin du paquet.</p>
+                        </li>
+                        <li>
+                            <p>L'en-tête de routage de type 0, qui est similaire à l'option de routage source lâche IPv4.</p>
+                        </li>
+                        <li>
+                            <p>L'option de fragmentation, qui est utilisée lors de la fragmentation d'un paquet IPv6.</p>
+                        </li>
+                        <li>
+                            <p>Les options de destination.</p>
+                        </li>
+                        <li>
+                            <p>Les options de sécurité qui permettent aux hôtes IPv6 d'échanger des paquets avec une authentification cryptographique (en-tête AH) ou une authentification et un chiffrement (en-tête ESP).</p>
+                        </li>
+                    </ul>
+                    <p>RFC 2460 fournit de nombreux détails sur les codages des différents types d'options. Dans cette section, nous ne discutons que de certains d'entre eux. Le lecteur peut consulter le RFC 2460 pour plus d'informations sur les autres options. Le premier point à noter est que chaque option contient un champ "<span class="em">Next Header</span>" qui indique le type d'en-tête qui suit l'option. Un deuxième point à noter est que, afin de permettre aux routeurs de parcourir efficacement les paquets IPv6. Les options qui doivent être traitées par les routeurs (options <span class="em">hop-by-hop (saut-par-saut)</span> et l'<span class="em">en-tête de routage de type 0</span>) doivent apparaître en prmeier dans le paquet. Cela permet au routeur de traiter un paquet sans être obligé d'analyser toutes les options du paquet. Un troisième point à noter est que les options saut-par-saut et de destination sont codées en utilisant un format de <span class="em">type-longueur-valeur</span>. De plus, le champ <span class="em">type</span> contient des bits qui indiquent si un routeur qui ne comprend pas cette option doit ignorer l'option ou rejeter le paquet. Cela permet l'introduction de nouvelles options dans le réseau sans obliger tous les dispositifs à être mis à niveau pour les supporter en même temps.</p>
+                    <p>Deux options <span class="em">saut-par-saut (hop-by-hop)</span> ont été dénies. RFC 2675 spécifie le jumbogramme qui permet à IPv6 de prendre en charge des paquets contenant un payload supérieur à 65535 octets. Ces paquets jumbo ont leur <span class="em">longueur de payload</span> définie à <span class="em">0</span> et l'option jumbogramme contient la longueur du paquet sous forme d'un champ de 32 bits. De tels paquets ne peuvent être envoyés d'une source à une destination que si tous les routeurs sur le chemin prennent en charge cette option. Cependant, à l'heure actuelle, il ne semble pas que l'option jumbogramme ait été implémentée. L'option d'alerte de routeur définie dans le RFC 2711 est le deuxième exemple d'une option <span class="em">hop-by-hop</span>. Les paquets contenant cette option doivent être traités de manière spéciale par les routeurs intermédiaires. Cette option est utilisée pour les paquets IP qui transportent des messages du <span class="html">protocole de réservation de ressources (RSVP pour Resource Reservation Protocol)</span>. Son utilisation est expliquée plus tard.</p>
+                    <p>L'en-tête de routage de type 0 défini dans la RFC 2460 est un exemple d'option IPv6 qui doit être traitée par certains routeurs. Cette option est encodée comme indiqué ci-dessous.</p>
+                    <figure>
+                        <img src="../images/entete_routage_type_0.png" alt="">
+                        <figcaption>Figure 5.40 : L'en-tête de routage de type 0 (RFC 2460)</figcaption>
+                    </figure>
+                    <p>L'en-tête de routage de type 0 avait pour objectif de permettre à un hôte d'indiquer une route source approximative que devrait suivre un paquet en spécifiant les adresses de certains des routeurs qui doivent faire avancer ce paquet. Malheureusement, des travaux ultérieurs sur cet en-tête de routage y compris une démonstration amusante avec scapy [BE2007], ont révélé des problèmes de sécrurité graves avec cet en-tête de routage. Pour cette raison, le routage source approximatif avec l'en-tête de routage de type 0 a été supprimé de la spécification IPv6 RFC 5095.</p>
+                    <p>En IPv6, la fragmentation est effectuée exclusivement par l'hôte source et repose sur l'en-tête de fragmentation. Cet en-tête de 64 bits est composé de six champs :</p>
+                    <ul>
+                        <li>
+                            <p>un champ <span class="em">Next Header</span> qui indique le type d'en-tête qui suit l'en-tête de fraglentation.</p>
+                        </li>
+                        <li>
+                            <p>un champ <span class="em">reserved</span> mis à <span class="em">0</span>.</p>
+                        </li>
+                        <li>
+                            <p>le <span class="em">Fragment Offset</span> est un entier non signé de 13 bits qui contient l'offset, en unités de 8 octets, des données suivant cet en-tête, par rapport au début du paquet d'origine.</p>
+                        </li>
+                        <li>
+                            <p>le drapeau <span class="em">More</span>, qui est mis à <span class="em">0</span> dans le dernier fragment d'un paquet et à <span class="em">1</span> dans tous les autres fragments.</p>
+                        </li>
+                        <li>
+                            <p>le champ <span class="em">Identification</span> de 32 bits indique à quel paquet d'origine appartient un fragment. Lorsq'un hôte envoie des paquets fragmentés, il doit s'assurer qu'il ne réutilise pas le même champ d'identification pour les paquets envoyés à la même destination pendant une période de MSL secondes. Cela est plus facile avec l'identification de 32 bits utilisée dans l'en-tête de fragmentation IPv6, qu'avec le champ d'identification de 16 bits de l'en-tête IPv4.</p>
+                        </li>
+                    </ul>
+                    <p>Certaines implémentations IPv6 envoient les fragments d'un paquet dans l'ordre croissant des fragments d'offset, en commeçant par le premier fragment. D'autres envoient les fragments dans l'ordre inverse, en commençant par le dernier fragment. Cette dernière solution peut être avantageuse pour l'hôte qui doit réassembler les fragments, car il peut facilement allouer le tampon requis pour réassembler tous les fragments du paquet lors de la réception du dernier fragment. Lorsqu'un hôte reçoit le premier fragment d'un paquet IPv6, il ne peut pas connaître à priori la longueur de l'ensemble du paquet IPv6.</p>
+                    <p>La figure ci-dessous fournit un exemple d'un paquet IPv6 fragmenté contenant un segment UDP. Le type <span class="em">Next Header</span> réservé pour l'option de fragmentation IPv6 est 44.</p>
+                    <figure>
+                        <img src="../images/exemple_fragmentation_IPv6.jpg" alt="">
+                        <figcaption>Figure 5.41 : Exemple de fragmentation IPv6</figcaption>
+                    </figure>
+                    <p>Enfin, le dernier type d'options IPv6 est le <span class="html">Payload de Sécurité Encapsulé (ESP pour Encapsulating Security Payload)</span> défini dans RFC 4303 et l'<span class="html">En-tête d'Authentification (AH pour AUthentification Header)</span> défini dans RFC 4302. Ces deux en-têtes sont utilisés par IPSec RFC 4301. Ils sont discutés dans un autre chapitre.</p>
+                    <h5>ICMP version 6 :</h5>
+                    <p>ICMPv6 défini dans la RFC 4443 est le protocole compagnon d'IPv6, tout comme ICMPv4 est le protocole compagnon d'IPv4. ICMPv6 est utilisé par les routeurs et les hôtes pour signaler les problèmes lors du traitement des paquets IPv6. Cependant, comme nous le verrons dans le chapitre sur <span class="em">la couche de liaison de données et les réseaux locaux</span>, ICMPv6 est également utilisé lors de la configuration automatique des adresses.</p>
+                    <p>L'utilisation traditionnelle d'ICMPv6 est similaire à celle d'ICMPv4. Les messages ICMPv6 sont transportés à l'intérieur de paquets IPv6 (le champ <span class="em">Next Header</span> pour ICMPv6 est 58). Chaque message ICMP contient un en-têtete de 8 bits avec un champ de <span class="em">type</span>, un champ de <span class="em">code</span> et une <span class="em">somme de contrôle </span> de 16 bits calculée sur l'ensemble du message ICMPv6. Le corps du message contient une copie du paquet IPv6 en erreur.</p>
+                    <figure>
+                        <img src="../images/format_paquet_ICMPv6.png" alt="">
+                        <figcaption>Figure 5.42 : Format de paquet ICMPv6</figcaption>
+                    </figure>
+                    <p>ICMPv6 spécifie deux classes de messages : les messages d'erreur qui indiquent un problème de traitement d'un paquet et les messages d'information. Quatre types de messages d'erreur sont définis dans la RFC 4443 :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">1</span>[<span class="em">Destination Unreachable</span> : Un tel message ICMPv6 est envoyé lorsque l'adresse de destination d'un paquet est inaccessible. Le champ de <span class="em">code</span> de l'en-têtete ICMP contient des informations supplémentaires sur le type d'inaccessibilité. Les codes suivants sont spécifiés dans le RFC 4443 :]</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">0</span> : Pas de route vers la destination. Cela indique que le routeur qui a envoyé le message ICMPv6 n'avait pas de route vers la destination du paquet.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">1</span> : Communication avec la destinayion interdite par l'administrateur. Cela indique qu'un pare-feu a refusé de faire suivre le paquet vers sa destination.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">2</span> : Hors de portée de l'adresse source. Ce message peut être envoyé si la source utilise des adresses de liaison locale pour atteindre une adresse de liaison unicast globzlr en dehors de son sous-réseau.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">3</span> : Adresse inaccessible. Ce message indique que le paquet a atteint le sous-réseau de la destination, mais que l'hôte qui possède cette adresse de destination ne peut pas être atteint.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">4</span> : Port inaccessible. Ce message indique que le paquet IPv6 a été reçu par la destination, mais qu'il n'y avait pas d'application à l'écoute du port spécifié.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p><span class="em">2</span> : Paquet trop grand. Le routeur qui devait envoyer le message ICMPv6 a reçu un paquet IPv6 plus grand que la MTU du lien de sortie. Le message ICMPv6 contient la MTU de ce lien en octets. Cela permet à l'hôte émetteur d'implémenter la découverte du MTU du chemin (Path MTU discovery) RFC 1981.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">3</span> : Temps dépassé. Ce message d'erreur peut être envoyé soit par un routeur soit par un hôte. Un routeur metterait le <span class="em">code</span> à <span class="em">0</span> pour signaler la réception d'un paquet dont le <span class="em">Hop Limit</span> est tombé à <span class="em">0</span>. Un hôte metterait le <span class="em">code</span> à <span class="em">1</span> pour signaler qu'il n'y a pas pu réassembler les fragments IPv6 reçus.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">4</span> : Problème de paramètre. Ce message ICMPv6 est utilisé pour signaler soit la réception d'un paquet IPv6 avec un champ d'en-tête erroné (type <span class="em">0</span>), soit une option IP ou un <span class="em">Next Header</span> inconnu (types <span class="em">1</span> et <span class="em">2</span>). Dans ce cas, le corps du message contient le paquet IPv6 erroné et les 32 premiers bits du corps du message contiennent un pointeur vers l'erreur.</p>
+                        </li>
+                    </ul>
+                    <p>Deux types de messages ICMPv6 informatifs sont définis dans RFC 4443 : la <span class="em">Echo request</span> et la <span class="em">Echo reply</span>, qui sont utilisées pour tester la disponibilité d'une destination en utilisant <span class="em">ping6(8)</span>.</p>
+                    <p>ICMPv6 permet également la découverte du chemin entre une source et une destination en utilisant <span class="em">traceroute6(8)</span>. La sortie ci-dessous montre un traceroute entre un hôte à l'UCLouvain et l'un des principaux serveurs de l'IETF. Notez que ce chemin IPv6 est différent du chemin IPv4 décrit précédemment bien que les deux traceroutes aient été effectués simultanément.</p>
+<pre class="taille60"><code>traceroute6 www.ietf.org
+traceroute6 to www.ietf.org (2001:1890:1112:1::20) from 2001:6a8:3080:2:217:f2ff:fed6:65c0, 30 hop1 2001:6a8:3080:2::1 13.821 ms 0.301 ms 0.324 ms
+2 2001:6a8:3000:8000::1 0.651 ms 0.51 ms 0.495 ms
+3 10ge.cr2.bruvil.belnet.net 3.402 ms 3.34 ms 3.33 ms
+4 10ge.cr2.brueve.belnet.net 3.668 ms 10ge.cr2.brueve.belnet.net 3.988 ms 10ge.cr2.brueve.beln5 belnet.rt1.ams.nl.geant2.net 10.598 ms 7.214 ms 10.082 ms
+6 so-7-0-0.rt2.cop.dk.geant2.net 20.19 ms 20.002 ms 20.064 ms
+7 kbn-ipv6-b1.ipv6.telia.net 21.078 ms 20.868 ms 20.864 ms
+8 s-ipv6-b1-link.ipv6.telia.net 31.312 ms 31.113 ms 31.411 ms
+9 s-ipv6-b1-link.ipv6.telia.net 61.986 ms 61.988 ms 61.994 ms
+10 2001:1890:61:8909::1 121.716 ms 121.779 ms 121.177 ms
+11 2001:1890:61:9117::2 203.709 ms 203.305 ms 203.07 ms
+12 mail.ietf.org 204.172 ms 203.755 ms 203.748 m</code></pre>
+                    <hr>
+                    <p>Note : Limitation de la fréquence des messages ICMP :</p>
+                    <p>Les routeurs haut de gamme utilisent des puces spéciales sur leurs interfaces pour acheminer les paquets IPv6 à la vitesse de la ligne. Ces puces sont optimisées pour traiter les paquets IP corrects. Elles ne sont pas capables de créer des messages de créer des messages ICMP à la vitesse de la ligne. Lorsqu'une telle puce reçoit un paquet IP qui déclenche un message ICMP, elle interrompt le CPU principal du routeur et le logiciel s'exécutant sur ce CPU traite le paquet. Ce CPU est beaucoup plus lent que l'accélération matérielle trouvée sur les interfaces [Gill2004]. Il serait surchargé s'il devait traiter les paquets IP à la vitesse de la ligne et générer un message ICMP pour chaque paquet reçu. Pour protéger ce CPU, les routeurs haut de gamme limitent la vitesse à laquelle le matériel peut interrompre le CPU principal et donc la vitesse à laquelle les messages ICMP peuvent être générés. Cela implique que tous les paqutes IP erronés ne provoquent pas la transmission d'un message ICMP. Le risque de surcharge du CPU principal du routeur est également la raison pour laquelle l'utilisation d'options IPv6 <span class="em">Hop-by-hop</span>, y compris l'option d'alerte de routeur, est découragée. Pour une discussion des problèles avec l'option IP d'alerte de routeur, voir <a href="http://tools.ietf.org/html/draft-rahman-rtg-router-alert-dangerous-00" targte="_blank">http://tools.ietf.org/html/draft-rahman-rtg-router-alert-dangerous-00</a> ou <a href="http://tools.ietf.org/html/draft-rahman-rtg-router-alert-considerations-03" target="_blank">http://tools.ietf.org/html/draft-rahman-rtg-router-alert-considerations-03</a>.</p>
+                    <hr>
+                    <h5>Interactions entre IPv6 et la couche de liaison de données :</h5>
+                    <p>Il existe plusieurs différences entre IPv6 et IPv4 lorsqu'on considère leurs interactions avec la couche de liaison de données. En IPv6, les interactions avec la couche de liaison de données. En IPv6, les interactions entre le réseau et la couche de liaison de données sont effectuées à l'aide d'ICMPv6.</p>
+                    <p>Tout d'abord, ICMPv6 est utilisé pour résoudre l'adresse de la couche liaison de données correspondant à une adresse IPv6 donnée. Cette partie d'ICMPv6 est le protocole NDP (Neighbour Discovery Protocol) défini dans la RFC 4861. NDP est similaire à ARP, mais il y a deux différences importantes. Premièrement, les meesages NDP sont échangés dans des messages ICMPv6 tandis que les messages ARP sont envoyés sous forme de trames de couche liaison de données. Deuxièmement, une requête ARP est envoyée en tant que trame de diffusion tandis qu'un message de sollicitation NDP est envoyé en tant que trame de diffusion tandis qu'un message de sollicitation NDP est envoyé en tant que paquet ICMPv6 multicast qui est transporté à l'intérieur d'une trame multicast. Le fonctionnement du protocole NDP est similaire à ARP. Pour obtenir une correspondance d'adresse, un hôte envoie un message de sollicitation de voisinage. Ce message est envoyé à l'intérieur d'un message ICMPv6 qui est placé dans un paquet IPv6 dont l'adresse source est l'adresse IPv6 de lhôte demandeur et l'adresse de destination est l'adresse IPv6 multicast de tous les hîtes (FF02::1) auxquels tous les hôtes IPv6 écoutent. La sollicitation de voisinage contient l'adresse IPv6 demandée. Le propriétaire de l'adresse demandée répond en envoyant un message d'annonce de voisinage unicast à l'hôte demandeur. NDP souffre de problèmes de sécurité similaires au protocole ARP. Cependant, il est possible de sécuriser NDP en utilisant les <span class="html">adresses IPv6 générées de manières cryptographique (CGA pour Cryptographically Generated IPv6 Addresses)</span> définies dans la RFC 3972. Le protocole de découverte de voisinage sécurisé est défini dans la RFC 3971, mais une description détaillée de ce protocole est hors du champ d'application de ce chapitre.</p>
+                    <p>Les réseaux IPv6 supportent également le protocole de configuration dynmique des hôtes (DHCP). Les extensions IPv6 à DHCP sont définies dans la RFC 3315. Le fonctionnement de DHCPv6 est similaire à celui de DHCP décrit précédemment. En plus de DHCPv6, les réseaux IPv6 prennent en charge un autre mécanisme pour assigner des adresses IPv6. Il s'agit de la configuration d'addresses sans état (SLAC pour Stateless Address Configuration) définie dans la RFC4882. Lorsqu'un h^te démarre, il dérive son identificateur de son adresse de couche de liaison de données et concatène cet identificateur de 64 bits au préfixe <span class="em">FE80::/64</span> pour obtenir son adresse IPv6 de liaison locale. L'utilisation d'une adresse de couche de liaison de données pour dériver un identificateur de 64 bits pour chaque hôte soulevée des préoccupations en matière de confidentialité, car l'hôte utilisera toujours le même identificateur. Les attaquants pourraient l'utiliser pour suivre les hôtes sur Internet. Une extension du mécanisme de configuration d'adresses sans état qui ne soulève pas de préoccupations en matière de confidentialité est définie dans la RFC 4941. Ces extensions de confidentialité permettent à un hôte de générer son identificateur de 64 bits aléatoirement chaque fois qu'il se connecte à un sous-réseau. Il devient alors impossible pour un attaquant d'utiliser l'identificateur de 64 bits pour suivre un hôte, il envoie ensuite une sollicitaion de voisinage avec son adresse de liaison locale comme cible pour vérifier si un autre hôte utilise la même adresse de liaison locale sur ce sous-réseau. S'il reçoit une annonce de voisinage indiquant que l'adresse de liaison locale est utilisée par un autre hôte, il génère un autre identificateur de 64 bits et envoie à nouveau une sollicitation de voisinage. S'il n'y a pas de réponse, l'hôte considère son adresse de liaison locale comme valide. Cette adressse sera utilisée comme adresse source pour tous les messages NDP envoyés sur le sous-réseau. Pour configurer automatiquement son adresse IPv6 globale, l'hôte doit connaître le préfixe IPv6 globalement routable utilisé sur le sous-réseau local. Les routeurs IPv6 envoient régulièrement des messages d'annonce de routeur ICMPv6 qui indiquent le préfixe IPv6 assigné à chaque sous-réseau. À la réception de ce message, l'hôte peut dériver son adresse IPv6 globale en concaténant son identificateur de 64 bits avec le préfixe reçu. Il conclut la SLAC en envoyant un message de sollicitation de voisinage ciblant son adresse IPv6 globale pour s'assurer qu'un autre hôte n'utilise pas la même adresse IPv6.</p>
+                    <h5>Boîtes intermédiaires (Middleboxes) :</h5>
+                    <p>Lorsque l'architecture TCP/IP et le protocole IP ont été définis, deux types d'appareils ont été considérés dans la couche réseau : les hôtes finaux et les routeurs. Les hôtes finaux sont les sources et les destinations des paquets IP, tandis que les routeurs les acheminent. Lorsq'un routeur achemine un paquet IP, il consulte sa table de routage, met à jour le TTL du paquet, recalcule son checksum et l'achemine vers le prochain saut. Un routeur n'a pas besoin de lire ou de modifier le contenu du payload du paquet.</p>
+                    <p>Cependant, dans l'Internet d'aujourd'hui, il existe des appareils qui ne sont pas strictement des routeurs mais qui traitent, parfois modifient et acheminent les paquets IP. Ces appareils sont souvent appelés des middleboxes RFC 3234. Certaines middleboxes ne fonctionnent que dans la couche réseau, mais la plupart des middleboxes sont capables d'analyser le payload des paquets reçus et d'extraire l'en-tête de transport, et dans certains cas les protocoles de la couche application.</p>
+                    <figure>
+                        <img src="../images/boites_intermediaires_IP_modele_reference.jpg" alt="">
+                        <figcaption>Figure 543 : Middleboxes IP et le modèle de référence</figcaption>
+                    </figure>
+                    <p>Dans cette section, nous décrivons brièvement deux types de moddleboxes : les pare-feu et les dispositifs de traduction d'adresses réseau (NAT). Une discussion des différents types de middleboxes avec des références peut être trouvée dans la RFC 3234.</p>
+                    <p>Lorsque l'Internet n'était qu'un réseau de recherche interconnectant des laboratoires de recherche, la sécurité n'était pas une préoccupation et la plupart des hôtes ont accepté d'échanger des paquets via des connexions TCP avec la plupart des autres hôtes. Cependant, à mesure que de plus en plus d'utilisateurs et d'entreprises se sont connectés à l'Ineternet, le fait de permettre un accès illimité aux hôtes qu'ils gérzient a commencé à préoccuper les entreprises. De plus, à la fin des années 1980, plusieurs problèmes de sécurité ont affecté Internet, tels que le premier ver Internet [RE1989] et certaines violations de sécurité largement médiatisées [Stoll1988] [CB2003] [ Cheswick1990].</p>
+                    <p>Ces problèmes de sécurité ont convaincu l'industrie que les réseaux IP sont une partie essentielle de l'infrastructure d'une entreprise, qui devrait être protégée par des dispositifs spéciaux comme des gardes de sécurité et des clôtures sont utilisées pour protéger les bâtiments. Ces dispositifs spéciaux ont rapidement été appelés des pare-feu. Un pare-feu typique a deux interfaces :</p>
+                    <ul>
+                        <li>
+                            <p>une interface externe connectée à Internet.</p>
+                        </li>
+                        <li>
+                            <p>une interface interne connectée  à un réseau de confiance.</p>
+                        </li>
+                    </ul>
+                    <p>Les premiers pare-feu étaient dotés de filtres de paquets configurables. Un filtre de paquets est un ensemble de règles définissant la politique de sécurité d'un réseau. En pratique, ces règles reposent sur les valeurs des champs dans les en-têtes de couche IP ou de transport. N'importe quel champ de l'en-tête IP ou de transport peut être utilisé dans une règle de pare-feu, mais les plus courants sont :</p>
+                    <ul>
+                        <li>
+                            <p>Filtrer sur l'adresse de destination. Par exemple, les hôtes du laboratoire de recherche d'une entreprise peuvent recevoir des paquets provenant d'Internet global, mais pas les hôtes du département financier.</p>
+                        </li>
+                        <li>
+                            <p>Filtrer sur le numéro de protocole trouvé dans l'en-tête IP. Par exemple, une entreprise peut autoriser uniquement ses hôtes à utiliser TCP ou UDP, mais pas d'autres protocoles de transport plus expérimentaux.</p>
+                        </li>
+                        <li>
+                            <p>Filtrer sur les numéros de port TCP ou UDP. Par exemple, seul le serveur DNS d'une entreprise devrait recevoir des segments UDP dont le port de destination est défini sur <span class="em">53</span> ou seulement les serveurs SMTP officiels de l'entreprise peuvent envoyer des segments TCP dont les ports source sont définis sur <span class="em">25</span>.</p>
+                        </li>
+                        <li>
+                            <p>Filtrer sur les indicateurs de drapeau TCP. Par exemple, une solution simple pour interdire aux hôtes d'ouvrir des connexions TCP avec les hôtes à l'intérieur de l'entreprise est de rejeter tous les segments TCP reçus depuis l'interface externe avec uniquement le drapeau SYN activé.</p>
+                        </li>
+                    </ul>
+                    <p>Ces pare-feu sont souvent appelés pare-feu sans état car ils ne conservent pas d'état sur les connexions TCP qui passent à travers eux.</p>
+                    <p>Un autre type de pare-feu est le pare-feu <span class="em">étatique</span>. Un pare-feu étatoque suit l'état de chaque connexion TCP qui le traverse et maintient un TCB pour chacune de ces connexions TCP. Ce TCB lui permet de réassembler les segments reçus afin d'extraire leur payload et de procéder à des vérifications dans la couche application. Certains parfeu sont capables d'inspecter les URLs accédées en utilisant HTTP et de journaliser toutes les URLs visitées ou de bloquer les connexions TCP où une URL dangereuse est échangée. Certains pare-feu peuvent vérifier que des commandes SMTP sont utilisées lorsqu'une connexion TCP est établie sur le port <span class="em">25</span> ou qu'une connexion TCP sur le port <span class="em">80</span> transporte des commandes et des réponses HTTP.</p>
+                    <hr>
+                    <p>Note : Au-delà des pare-feu :</p>
+                    <p>En dehors des pare-feu, différents types de dispositifs de sécurité ont été installés à la périphérie des réseaux d'entreprise. Les systèmes de détection d'intrusion (IDS pour Intrusion Detection Systems), tels que le populaire <span class="em">Snort</span>, sont des dispositifs étatiques capables de faire correspondre les segments reconstitués à des expressions régulières correspondant à des signatures de virus, de vers ou d'autres types d'attaques. L'inspection approfondie de paquets (DPI pour Deep Packet Inspection est un autre type de boîtier intermédiaire qui analyse le payload du paquet et est capable de reconstituer des segments TCP afin de détecter des utilisations inappropriées. Bien que les IDS soient principalement utilisés dans les réseaux d'entreprise, le DPI est principalement utilisé chez les fournisseurs de services Internet. Certains fournisseurs de services Internet utilisent le DPI pour détecter et limiter la bande passante consommée par les applications pair-à-pair. Certains pays comme la Chine ou l'Iran utilisent le DPI poyr détecter une utilisation inappropriée d'Internet.</p>
+                    <hr>
+                    <h5>NAT :</h5>
+                    <p>La "Network Address Translation" (NAT) a été proposée dans [TE1993] et RFC 3022 comme une solution à court terme pour faire face à la pénurie prévue d'adresses IPv4 à la fin des années 80 - début des années 90. combinée avec CIDR, NAT a controbué à ralentir considérablement la consommation d'adresses IPv4. Un NAT est une boîte intermédiaire qui interconnecte deux réseaux utilisant des adresses IPv4 de différents espaces d'adressage. Généralement, l'un de ces espaces d'adressage est l'Internet public, tandis que l'autre utilise les adresses IPv4 privées définies dans la RFC 1918.</p>
+                    <p>Un déploiement très courant de NAT se trouve dans les routeurs d'accès à large bande, comme le montre la figure ci-dessous. Le routeur d'accès à large bande interconnecte un réseau domestique, soit WiFi soit basé sur Ethernet, et l'Internet global via un FAI sur ADSL ou CATV. Une seule adresse IPv4 est attribuée au routeur d'accès à large bande, et la traduction d'adresse réseau permet à tous les hôtes connectés au réseau domestique de partager une seule adresse IPv4 publique.</p>
+                    <figure>
+                        <img src="../images/NAT_simple_adresse_IPv4_publique.jpg" alt="">
+                        <figcaption>Figure 5.44 : Un NAT simple avec une adresse IPv4 publique</figcaption>
+                    </figure>
+                    <p>Un deuxième type de déploiement se trouve dans les réseaux d'entreprise, comme le montre la figure ci-dessous. Dans ce cas, la fonctionnalité NAT est installée sur un routeur frontal de l'entreprise. Une adresse IPv4 privée est attribuée à chaque hôte d'entreprise, tandis que le routeur frontal gère une pool contenant plusieurs adresses IPv4 publiques.</p>
+                    <figure>
+                        <img src="../images/NAT_entreprise_adresses_IPv4_publiques.jpg" alt="">
+                        <figcaption>Figure 5.45 : Un NAT d'entreprise avec plusieurs adresses IPv4 publiques</figcaption>
+                    </figure>
+                    <p>Comme son nom l'indique, un NAT est un dispositif qui "traduit" les adresses IP. Un NAT maintient une table de correspondance entre les adresses IP privées utilisées dans le réseau interne et les adresses IPv4 publiques. NAT permet à un grand nombre d'hôtes de partager une pool d'adreses IP, car ces hôtes n'accèdent pas tous à l'Internet global en même temps.</p>
+                    <p>Le NAT le plus simple est une boîte intermédiaire qui utilise une correspondance un-à-un entre une dresse IP privée et une adresse publique. Pour comprendre son fonctionnement, supposons qu'un NAT, tel que celui montré ci-dessus, vient d'être démarré. Lorsque le NAT reçoit le premier paquet de la source <span class="em">S</span> dans le réseau interne qui est destiné à l'Internet public, il crée une correspondance entre l'adresse interne <span class="em">S</span> et la première adresse de sa pool d'adresses publiques (<span class="em">P1</span>). Ensuite, il traduit le paquet reçu afin qu'il puisse être envoyé à l'Internet public. Cette traduction est effectuée comme suit :</p>
+                    <ul>
+                        <li>
+                            <p>L'adresse source du paquet (<span class="em">S</span>) est remplacée par l'adresse publique correspondante (<span class="em">P1</span>).</p>
+                        </li>
+                        <li>
+                            <p>La somme de contrôle de l'en-tête IP est mis à jour de manière incrémentielle car son contenu a changé.</p>
+                        </li>
+                        <li>
+                            <p>Si le paquet contenait un segment TCP ou UDP, la somme de contrôle de la courche transport trouvée dans le segment inclus doit également être mise à jour car elle est calculée sur le segment et un psuedo-en-tête qui inclus les adresses source et de destination.</p>
+                        </li>
+                    </ul>
+                    <p>Lorsqu'un paquet destiné à <span class="em">P1</span> est reçu depuis l'Internet public, le NAT consulte sa table de correspondance pour trouver <span class="em">S</span>. Le paquet reçu est traduit et transmis dans le réseau interne.</p>
+                    <p>Cela fonctionne tant que la plage d'adresses IP publiques du NAT n'est pas épuisée. Dans ce cas, une correspondance doit être supprimée de la table de correspondance pour permettre la traduction d'un paquet provenant d'un nouvel hôte. Cette suppression peut être implémentée en ajoutant à chaque entrée de la table de correspondance un horodatage contenant le temps d'utilisation de la dernière entrée de correspondance. Cet horodatage est mis à jour chaque fois que l'entrée correspondante est utilisée. Ensuite, l'algorithme de nettoyage peut supprimer l'entrée de correspondance la plus ancienne de la table.</p>
+                    <p>Un inconvénient d'un NAT d'entreprise aussi simple est la taille de la plage d'adresses IPv4 publiques, qui est souvent trop petite pour permettre à un grand nombre d'hôtes de partager un tel NAT. Dans ce cas, une meilleure solution est de permettre au NAT de traduire à la fois les adresses IP et les numéros de port.</p>
+                    <p>Un tel NAT maintient une table de correspondance qui associe une adresse IP interne et un numéro de port TCP à une adresse IP externe et un numéro de port TCP. Lorsqu'un tel NAT reçoit un paquet provenant du réseau interne, il effectue une recherche dans la table de correspondance avec l'adresse IP source du paquet et le numéro de port source TCP. Si une correspondance est trouvée, l'adresse IP source et le numéro de port TCP source du paquet sont traduits avec les valeurs trouvées dans la table de correspondance, les sommes de contrôle sont mises à jour et le paquet est envoyé à l'Internet global. Si aucune correspondance n'est trouvée, une nouvelle correspondance est créée avec le premier couple disponible (adresse IP, numéro de port TCP) et le paquet est traduit. Les entrées de la table de correspondance sont soit supprimées à la fin de la connexion TCP correspondante, car le NAT suit l'état de la connexion TCP comme un pare-feu étatique soit après un certain temps d'inactivité.</p>
+                    <p>Lorsqu'un tel NAT reçoit un paquet de l'Internet glocal, il recherche dans sa table de correspondance l'adresse IP de destination du paquet et le numéro de port TCP de destination. Si une correspondance est trouvée, le paquet est traduit et retransmis dans le réseau interne. Sinon, le paquet est rejeté car le NAT ne peut pas déterminer à quel hôte interne particulier le paquet doit être transmis. Pour cette raison,</p>
+                    <p>Avec 2<sup>16</sup> numéros de port différents, un NAT peut prendre en charge un grand nombre d'hôtes avec une seule adresse IPv4 publique. Cependant, il convient de noter que certaines applications ouvrent un grand nombre de connexions TCP [Miyakawa2008]. Chacune de ces connexions TCP consomme une entrée de correspondance dans la table de correspondance du NAT.</p>
+                    <p>Le NAT permet à de nombreux hôtes de partager une ou quelques adresses IPv4 publiques. Cependant, l'utilisation de NAT présente deux inconvénients importants. Premièrement, il est difficile pour les hôtes externes d'ouvrir des connexions TCP avec des hôtes qui se trouvent derrière un NAT. Certains considèrent cela comme un avantage d'un point de vue de la sécurité. Cependant, un NAT ne doit pas être confondu avec un pare-feu car il existe des techniques pour traverser les NAT. Deuxièmement, le NAT rompt la transparence de bout en bout des couches réseau et transport. Le principal problème se pose lorsque le protocole de la couche applicative utilise des adresses IP dans certaines des unités de données applicatives (ADU pour Application Data Unit) qu'il envoie. Un exemple populaire est le protocole FTP défini dans la RFC 959. Dans ce cas, il y a une incohérence entre l'en-tête de paquet traduit par le NAT et le payload du paquet. La seule solution pour résoudre ce problème est de placer une passerelle de niveau applicatif (ALG pour Application Level Gateway) sur le NAT qui comprend le protocole de la couche applicative et peut ainsi traduire les adresses IP et les numéros de port trouvés dans les ADU. Cependant, la définition d'un ALG pour chaque application est coûteuse et les développeurs d'applications devraient éviter d'utiliser des adresses IP dans les messages échangés dans la couche applicative RFC 3235.</p>
+                    <hr>
+                    <p>Note : IPv6 et NAT :</p>
+                    <p>NAT a été très réussi avec IPv4. Compte tenu de la taille de l'espace d'adressage IPv6, les concepteurs d'IPv6 ont prévu que NAT ne serait jamais utile avec IPv6. La transparence de bout en bout d'IPv6 a été l'un de ses points forts par rapport à IPv4. Cependant, la pénurie attendue d'adresses IPv4 a incité les administrateurs de réseau d'entreprise à considérer plus sérieusement IPv6. L'un des résultats de cette analyse est que l'IETF a défini des dispositifs NAT RFC 6296 spécifiques à IPv6. Un autre usage de NAT avec IPv6 est de permettre aux hôtes IPv6 d'accéder à des destinations IPv4 et voce versa. Les premières spécifications IPv6 comprenaient le mécanisme de traduction de protocole NAT (NAT-PT) défini dans la RFC 2766. Ce mécanisme a ensuite été déconseillé dans la RFC 4966 mais a été récemment relancé sous le nom de NAT64 RFC 6144. Un NAT63 est une boîte intermédiaire qui effectue la traduction de paquets IPv6&#9456;IPv4 pour permettre aux hôtes IPv6 de contacter des serveurs IPv3 RFC 6144.</p>
+                    <hr>
+                    <h4>5.1.3 Routage dans les réseaux IP :</h4>
+                    <p>Dans un réseau IP étendu tel que l'Internet global, les routeurs doivent échanger des informations de routage. L'Internet est une interconnexion de réseaux, souvent appelés domaines, qui sont sous des responsabilités différentes. Au moment de la rédaction de ce texte, l'Internet est composé de plus de 30000 domaines différents et ce nombre est toujours en croissance. Un domaine peut être une petite entreprise qui gère quelques routeurs dans un seul bâtiment, une entreprise plus importante avec une centaine de routeurs à plusieurs endroits, ou un grand fournisseur de services Internet qui gère des milliers de routeurs. Deux classes de protocoles de routage sont utilisées pour permettre à ces domaines d'échanger efficacement des informations de routage.</p>
+                    <figure>
+                        <img src="../images/organisation_petit_internet.jpg" alt="">
+                        <figcaption>Figure 5.46 : Organisation d'un petit Internet.</figcaption>
+                    </figure>
+                    <p>La première classe de protocoles de routage sont les <span class="html">protocoles de routage intradomaine</span> (parfois appelés protocoles de passerelle intérieure ou <span class="html">IGP pour Interior Gateway Protocols</span>). Un protocole de routage intradomaine est utilisé par tous les routeurs à l'intérieur du domaine. Il existe plusieurs protocoles de routage intradomaine. Certains domaines utilisent <span class="html">RIP</span>, qui est un protocole de vecteur de distance. D'autres domaines utilisent des protocoles de routage à état de liaison tels que <span class="html">OSPF</span> ou <span class="html">IS-IS</span>. Enfin, certains domaines utilisent le routage statique ou des protocoles propriétaires tels que <span class="html">IGRP</span> ou <span class="html">EIGRP</span>.</p>
+                    <p>Ces protocoles de routage intradomaine ont généralement deux objectifs. Tout d'abord, ils distribuent des informations de routage correspondant au chemin le plus court entre deux routeurs du domaine. Deuxièmement, ils doivent permettre aux routeurs de récupérer rapidement en cas de panne de liaison ou de routeur.</p>
                     
                 </article>
             <!-- fin de section -->
