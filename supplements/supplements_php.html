@@ -546,6 +546,21 @@
                 </article>
                 <article>
                     <h2 id="upload_fichiers">Upload de fichiers en PHP :</h2>
+                    <h3>Introduction :</h3>
+                    <p>Toutes les fonctions WEB d'upload de fichiers sont potentiellement vulnérables. L'expérience nous montre que régulièrement ces fonctions ne sont pas corresctement sécurisées, particulièrement dans certains espaces d'administration ou les développeurs sont plus laxistes avec la sécurité.</p>
+                    <p>Ces failles sont pourtant très dangereuses et systématiquement testées par les attaquants désireux de prendre le contrôle du site Internet cible.</p>
+                    <p>Dans cet article, nous aborderons plusieurs exemples de vulnérabilités afin de comprendre comment un auditeur ou pirate pourra les contourner, puis nous terminerons par un exemple de code propre et sécurisé.</p>
+                    <p>Les risques liés aux failles d'upload sont :</p>
+                    <ul>
+                        <li>
+                            <p>Upload d'une backdoor (porte dérobée).</p>
+                        </li>
+                        <li>
+                            <p>Écrasement de fichiers.</p>
+                        </li>
+                    </ul>
+                    <h3>L'upload de fichiers :</h3>
+                    <p>Voici un exemple de code HTML et PHP d'upload de fichiers sans restrictions pour que les néophytes comprennent le principe. Notez qu'il faudra les droits en écriture pour que l'on puisse importer des fichiers dans le dossier "images".</p>
                     <p>Pour télécharger des fichiers sur le serveur, il vous faut un formulaire munis d'un champ de type file. Vous devez rajouter l'attribut <span class="html">enctype</span> ayant pour valeur : "<span class="html">multipart/form-data</span>", ce qui veut dire que votre formulaire va pouvoir transférer des données de type binaire.</p>
 <pre class="taille60"><code>&lt;!-- Le type d'encodage des données enctype doit être spécifié --&gt;
 &lt;form enctype="multipart/form-data" action="URL à préciser" method="post"&gt;
@@ -573,6 +588,7 @@
                     </ul>
                     <p>Avant de vouloir sauvegarder le fichier téléchargé il faut vérifier son envoi.</p>
                     <h3>Gestion des erreurs d'envoi :</h3>
+                    <p>Les restrictions côté client sont les plus facile à contourner, on peut les trouver en HTML ou en JavaScript.</p>
                     <p>Vous pouvez gérer les erreurs de chargement avec <span class="html">$_FILES['mon_fichier']['error']</span> :</p>
 <pre class="taille60"><code>&lt;?php
 
@@ -615,7 +631,124 @@
                             <p>La dernière erreur "<span class="html">UPLOAD_ERR_NO_FILE</span>" concerne le transfert d'un fichier vide.</p>
                         </li>
                     </ul>
+                    <p>Pour contourner les protections côté client il y a plusieurs méthodes possible. Par exemple, nous pouvons enregistrer le formulaire sur notre machine, supprimer les protections, mettre l'adresse du site et le chemin de la page PHP dans les champs "action" de "form" créant ainsi notre formulaire sans les rections. Il nous restera plus qu'à l'utiliser.</p>
                     <p>On peut également vérifier par exemple l'extension du fichier ou encore même le mime-type avec <span class="html">getimagesize()</span>.</p>
+                    <p>Par exemple, le code suivant prend en considération le type de contenu du fichier et n'autorise que le contenu de type image/png.</p>
+<pre class="taille60"><code>&lt;?php
+
+    if (isset($_FILES['mon_fichier'])) {
+        $dir = './images/';
+        $file = $dir . basename($_FILES['mon_fichier']['name']);
+
+        if ($_FILES['mon_fichier']['type'] != 'image/png') {
+            print 'Erreur ! seul les png sont autorisés.';
+            exit;
+        }
+
+        if (file_exists($file)) {
+            print 'Erreur ! Fichier existant.';
+            exit;
+        }
+
+        if (move_uploaded_file($_FILES['mon_fichier']['tmp_name'], $file)) {
+            print "Fichier uploadé : &lt;a href='" . $file . "'&gt;ici&lt;/a&gt;";
+        } else {
+            print 'Erreur ! Fichier non uploadé.';
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Donc, si l'on envoie un fichier PHP, nous verrons un message d'erreur. Alors que si l'on envoie un fichier PNG, il sera correctement uploadé. La faille dans cette protection est que le type de contenu est envoyé depuis le client. Par conséquent, si nous modifions le type de contenu de notre fichier PHP, celui-ci sera uploadé.</p>
+                    <p>On peut aussi vérifier que l'extension du fichier uploadé soit parmi les extensions valides. Dans le code suivant, les extensions valides sont : .jpg, .gif et .png.</p>
+<pre class="taille60"><code>&lt;?php
+
+    if (isset($_FILES['mon_fichier'])) {
+        $dir = './images/';
+        $file = $dir . basename($_FILES['mon_fichier']['name']);
+        $whitelist = array('.jpg', '.gif', '.png');
+
+        if (!in_array($_FILES['mon_fichier']['name'], $whitelist, true)) {
+            print 'Erreur ! seul les images sont aurorisées.';
+            exit;
+        }
+
+        if (file_exists($file)) {
+            print 'Erreur ! Fichier existant.';
+            exit;
+        }
+
+        if (move_uploaded_file($_FILES['mon_fichier']['tmp_name'], $file)) {
+            print "Fichier uploadé : &lt;a href='" . $file . "'&gt;ici&lt;/a&gt;";
+        } else {
+            print 'Erreur ! Fichier non uploadé.';
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Cette fois-ci, la faille ne vient pas que de notre script, celui se contente de vérifier les extensions et, si elles correspondent avec celles de la white list, le fichier est autorisé.</p>
+                    <p>Il arrive que la configuration d'Apache avec l'utilisation d'un code comme celui ci-dessus provoque une faille de sécurité. Quand Apache est configuré pour exécuter un script il y a deux façons de le configurer : en utilisant <span class="html">AddHandler</span> ou <span class="html">AddType</span>. Dans les deux cas, si la configuration suivante (mime.conf) est utilisée, l'image sera interprésentée.</p>
+<pre class="taille60"><code><span class="em">AddHandler application/x-httpd-php .gif</span>
+Ou
+<span class="em">AddType application/w-httpd-php .gif</span></code></pre>
+                    <p>Ce congenre de configuration d'Apache est utilisé plus fréquemment que l'on pourrait le penser, on peut les trouver par exemple dans la cas de figure où un code PHP génère dynamiquement un grpahique. Il ne reste qu'à modifier l'extension de notre fichier <span class="em">test.php</span> en <span class="em">test.gif</span> et le tour est joué.</p>
+                    <p>Dans la même catégorie, si le serveur Apache utilise la configuration ci-dessous nous sommes en présence d'une autre faille.</p>
+<pre class="taille60"><code>AddHandlerapplication/x-httpd-php.php</code></pre>
+                    <p>Le problème est que tous les fichiers ayant dans leurs noms "<span class="em">.php</span>" seront interprétés par PHP, aussi bien <span class="em">test.php</span> que <span class="em">test.php.gif</span>.</p>
+                    <p>Cette fois, en renommant notre <span class="em">test.php</span> en <span class="em">test.php.gif</span>, notre fichier passera le script de restriction des extensions et sera interprété avec succès.</p>
+                    <p>La fonction <span class="html">getimagesize()</span> détermine la taille de l'image fournie et en retourner les dimensions, elle peut également retourner plus d'informations comme le type de fichier.</p>
+                    <p>Utilisons un script qui vérifie le type de l'image avec cette fonction et n'autorise que les JPG.</p>
+<pre class="taille60"><code>&lt;?php
+
+    if (isset($_FILES['mon_fichier'])) {
+        $dir = './images/';
+        $file = $dir . basename($_FILES['mon_fichier']['name']);
+        $imageinfo = getimagesize($_FILES['mon_fichier']['tmp_name']);
+
+        if ($imageinfo['mime'] != 'image/jpeg') {
+            print 'Erreur ! seul les JPG sont autorisés.';
+            exit;
+        }
+
+        if (file_exists($file)) {
+            print 'Erreur ! Fichier existant.';
+            exit;
+        }
+
+        if (move_uploaded_file($_FILES['mon_fichier']['tmp_name'], $file)) {
+            print "Fichier uploadé : &lt;a href='" . $file . "'&gt;ici&lt;/a&gt;";
+        } else {
+            print 'Erreur ! Fichier non uploadé.';
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Il ne suffira pas de changer le <span class="html">content-type</span> comme on l'a vu précédemment, car cette fonction travaille directement sur le fichier uploadé dans le dossier temporaire.</p>
+                    <p>Il va falloir ruser un peu et lui fournir une vraie image pour qu'il passe le filte, cette image aura l'extension <span class="em">.php</span> pour que Apache demande à PHP de l'interpréter qu'il y a it du code PHP dedans.</p>
+                    <p>Une autre façon de sécuriser l'envoi de fichiers est de mettre un <span class="em">.htaccess</span> dans le répertoire d'upload qui interdit les extensions de fihciers black listées et n'autorise que les extensionde fichiers images white listées.</p>
+                    <p>Pour notre démonstration, nous utiliserons le <span class="em">.htaccess</span> ci-dessous dans le répertoire images.</p>
+<pre class="taille60"><code>Options -Indexes
+Options -ExecCGI
+AddHandlercgi-script .php .php3 .php4 .phtml .pl .py .jsp .asp .htm
+.shtml .sh .cgi
+&lt;Files ^(*.jpeg|*.jpg|*.png|*.gif)&gt;
+orderdeny,allow
+deny from all
+&lt;/Files&gt;</code></pre>
+                    <p>Ainsi que ce script d'upload.</p>
+<pre class="taille60"><code>&lt;?php
+    if (isset($_FILES["image"])) {
+        $dir = './images/';
+        $file = $dir . basename($_FILES['mon_fichier']['name']);
+        
+        if (move_uploaded_file($_FILES['mon_fichier']['tmp_name'], $file)) {
+            print "Fichier upload : &lt;a href='" . $file . "'&gt;ici</a>";
+        } else {
+            print "Erreur! Fichier non upload";
+        }
+    }
+?&gt;</code></pre>
+                    <p>Nous remarquons qu'il n'y a plus la vérification qui permet de déterminer si un fichier du même nom que celui à uploader existe déjà. La faille réside dans ce manque de vérification. Il devient alors possible d'envoyer un fichier <span class="em">.htaccess</span> qui va écraser celui déjà présent.</p>
+                    <p>Donc, en créant un .htaccess vierge et l'uploadant celui-ci écrasera l'ancien, supprimant les restrictions. Il est maintenant possible d'exécuter du PHP dans le répertoire images.</p>
                     <p>Dans le cas où le transfert n'échoue pas, vous pouvez envisager de sauvegarder le fichier.</p>
                     <h3>Sauvegarder le fichier :</h3>
                     <p>Lors de l'envoi d'un fichier, son nom est mémoriser temporairement dans "<span class="html">$_FILES['mon_fichier']['tmp_name']</span>" et sera automatiquement détruit à la fin de l'exécution du script.</p>
@@ -669,6 +802,36 @@
 
 ?&gt;</code></pre>
                     <p>Cette méthode ne fournit cependant aucune information sur le type d'erreur.</p>
+                    <h3>Contre-mesure :</h3>
+                    <p>Voici quelques conseils qui vous permettront de sécuriser ces failles :</p>
+                    <ul>
+                        <li>
+                            <p>Ne jamais se fier à ce que peut envoyer le client.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier la configuration d'Adaphe afin d'agir en conséquence.</p>
+                        </li>
+                        <li>
+                            <p>Ne pas placer le <span class="html">.htaccess</span> dans le répertoir d'upload.</p>
+                        </li>
+                        <li>
+                            <p>Ne pas permettre l'écrasement de fichiers.</p>
+                        </li>
+                        <li>
+                            <p>Générer un nom aléatoire pour le fichier uploadé et enregistrer le nom dans une base de données.</p>
+                        </li>
+                        <li>
+                            <p>Ne pas permettre de l'<span class="html">index of</span> (la liste de tous les fichiers et répertoires) du répertoire d'upload.</p>
+                        </li>
+                        <li>
+                            <p>Assigner les bonnes permissions au répertoire.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier le <span class="em">mime-type</span> avec <span class="em">getimagesize()</span> et l'extension du fichier.</p>
+                        </li>
+                    </ul>
+                    <h3>Conclusion :</h3>
+                    <p>Vous avez pu constater que de mauvaises implémentations de sécurité d'upload de fichiers permettent l'exécution de code. Dans le cadre d'un audit ou d'une attaque, une backdoor aurait pu être envoyée. Il est vraiment vital pour la sécurité des données que cette fonctionnalité soit correctement protégée.</p>
                 </article>
                 <article id="mvc">
                     <h2>Architecture MVC pour une application Web :</h2>
@@ -710,21 +873,35 @@
                     <p>Les interactions de l'utilisateur avec le serveur d'une application Web se font toujours par l'intermédiaire d'une requête au serveur (à priori via HTTP).</p>
                     <p>Par conséquent, le rôle du contrôleur d'une application Web est de traduire une requête. C'est ce qu'on appelle un <span class="html">Router</span> : il fait le lien entre une adresse URL appelée avec une méthode HTTP (GET, POST, etc.) et les manipulation de modèle à effectuer et/ou la vue à afficher en réponse.</p>
                     <h3 id="pratique_implementation_mvc_php">En pratique : implémentation MVC en PHP :</h3>
+                    <p>Pour savoir si on est sur un serveur ou en local, on peut faire le test suivant :</p>
+<pre class="taille60"><code>&lt;?php
+    $ips_local = array('127.0.0.1', '::1');
+    if (in_array($_SERVER['REMOTE_ADDR'], $ips_local)) {
+        echo 'Je suis en local !';
+    } else {
+        echo 'Je suis sur un serveur !';
+    }
+
+?&gt;</code></pre>
                     <h4 id="modele_pratique">Modèle :</h4>
                     <p>PHP possède plusieurs librairies permettant d'interragir avec des bases de données persistantes. Nous montrerons ici <a href="https://www.w3schools.com/php/php_mysql_connect.asp" target="_blank">PDO</a>, qui a l'avantage de permettre des interactions avec de nombreux schémas de bases de données différents.</p>
                     <p>Il faudra s'assurer que PDO est installé dans votre exécutable avant de vous en servir (les versions récentes de WAMP ou XAMPP (pour Mac OS) l'incluent normalement par défaut). Une fois cela fait, vous pouvez créer un objet de la classe PDO comme suit (en supposant que la base de données utilise un schéma MySQL) :</p>
 <pre class="taille60"><code>&lt;?php
-    $servername = "localhost";
-    $dbname = "myDB";
-    $username = "username";
-    $password = "password";
+
+    $servername = 'localhost';
+    $dbname = 'myDB';
+    $username = 'username';
+    $password = 'password';
 
     try {
-        $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+        # Ne jamais écrire d'espace dans une string de connexion
+        // vérifier que la base de données, les tables et les champs soient bien tous en UTF8 : interclassement utf8_general_ci
+        $conn = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
         $conn-&gt;setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     } catch(PDOException $e) {
         // Gestion d'erreur avec $e-&gt;getMessage(); pour voir le message.
     }
+    
 ?&gt;</code></pre>
                     <p>Une fois l'objet <span class="html">$conn</span> créé, sa méthode <a href="https://www.php.net/manual/en/pdo.query.php" class="html" target="_blank">query($sql)</a> permet de transmettre une requête contenie dans la variable à la base de données. Le résultat de cette méthode, de type <a href="https://www.php.net/manual/en/class.pdostatement.php" class="em" target="_blank">PDOStatement</a>. On peut alors parcourir les résultats de celle-ci, par exemple via la méthode <span class="html">PDOStatement::fetchAll()</span>, qui renvoie une matrice mixte contenant les données demandées.</p>
                     <p>De même, pour une requête qui met à jour les données de la base de données (INSERT, UPDATE, DELETE), la méthode <a href="https://www.php.net/manual/en/pdo.exec.php" class="html" target="_blank">PDO::exec($sql)</a> permet de transmettre la requête à la base de données. Cette méthode renvoie comme valeur le nombre de rangs modifiés dans la base de données.</p>

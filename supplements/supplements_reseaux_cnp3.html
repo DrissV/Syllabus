@@ -4800,11 +4800,261 @@ traceroute6 to www.ietf.org (2001:1890:1112:1::20) from 2001:6a8:3080:2:217:f2ff
                             <p>Routeurs frontière de zone : Un routeur qui est attaché à plusieurs zones.</p>
                         </li>
                     </ul>
-                    <p>La figure ci-dessous montre un réseau divisé en trois zones : la <span class="em">zone 1</span> contenant les routeurs <span class="em">R1</span>, <span class="em">R3</span>, <span class="em">R4</span>, <span class="em">R5</span> et <span class="em">RA</span>, la <span class="em">zone 2</span> contenant les routeurs <span class="em">R7</span>, <span class="em">R8</span>, <span class="em">R9</span>, <span class="em">R10</span>, <span class="em">RB</span> et <span class="em">RC</span>. Les zones OSPF sont identifiées par un entier de 32 bits, qui est parfois représenté comme une adresse IP. Parmi les zones OSPF, la <span class="em">zone 0</span>, également appelée <span class="em">zone dorsale</span>, a un rôle spécial. La zone dorsale regroupe tous les routeurs frontière de zone (routeurs <span class="em">RA</span>, <span class="em">RB</span> et <span class="em">RC</span> dans la figure ci-dessous) et les routeurs qui sont directement connectés aux routeurs dorsaux mais ne font pas partie d'une autre zone (routeur <span><em>RD</em> dans la figure ci-dessous). Une restriction importante imposée par OSPF est que le chemin entre deux routeurs appartenant à deux zones différentes (par exemple <span class="em">R1</span> et <span class="em">R8</span> dans la figure ci-dessous) doit passer par la zone dorsale.</p>
+                    <p>La figure ci-dessous montre un réseau divisé en trois zones : la <span class="em">zone 1</span> contenant les routeurs <span class="em">R1</span>, <span class="em">R3</span>, <span class="em">R4</span>, <span class="em">R5</span> et <span class="em">RA</span>, la <span class="em">zone 2</span> contenant les routeurs <span class="em">R7</span>, <span class="em">R8</span>, <span class="em">R9</span>, <span class="em">R10</span>, <span class="em">RB</span> et <span class="em">RC</span>. Les zones OSPF sont identifiées par un entier de 32 bits, qui est parfois représenté comme une adresse IP. Parmi les zones OSPF, la <span class="em">zone 0</span>, également appelée <span class="em">zone de base</span>, a un rôle spécial. La zone de base regroupe tous les routeurs frontière de zone (routeurs <span class="em">RA</span>, <span class="em">RB</span> et <span class="em">RC</span> dans la figure ci-dessous) et les routeurs qui sont directement connectés aux routeurs dorsaux mais ne font pas partie d'une autre zone (routeur <span><em>RD</em> dans la figure ci-dessous). Une restriction importante imposée par OSPF est que le chemin entre deux routeurs appartenant à deux zones différentes (par exemple <span class="em">R1</span> et <span class="em">R8</span> dans la figure ci-dessous) doit passer par la zone de base.</p>
                     <figure>
                         <img src="../images/zones_OSPF.jpg" alt="">
                         <figcaption>Figure 5.50 : Zones OSPF</figcaption>
                     </figure>
+                    <p>À l'intérieur de chaque zone qui n'est pas la zone de base, les routeurs distribuent la topologie de la zone en échangeant des paquets d'état de lien avec les autres routeurs de la zone. Les routeurs internes ne connaissent pas la topologie des autres zones, mais chaque routeur sait comment atteindre la zone de base. À l'intérieur d'une zone, les routeurs n'échangent des paquets d'état de lien que pour toutes les destinations atteignables à l'intérieur de la zone. Dans OSPF le routage inter-domaine est effectuée en échangeant des vecteurs de distance. Cela est illustré par la topologie du réseau ci-dessous.</p>
+                    <figure>
+                        <img src="../images/routage_hierarchique_avec_OSPF.jpg" alt="">
+                        <figcaption>Figure 5.51 : Routage hiérarchique avec OSPF</figcaption>
+                    </figure>
+                    <p>Examinons d'abord le routage OSPF à l'intérieur de la <span class="em">zone 2</span>. Tous les routeurs de la zone apprennent une route vers <span class="em">192.168.1.0/24</span> et <span class="em">192.168/10.0/24</span>. Les deux routeurs frontière de zone, <span class="em">RB</span> et <span class="em">RC</span>, créent des annonces de résumé de réseau. En supposant que toutes les liaisons ont une métrique de lien unitaire, celles-ci seraient :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">RB</span> annonce <span class="em">192.168.1.0/24</span> à une distance de <span class="em">2</span> et <span class="em">192.168.10.0/24</span> à une distance de <span class="em">3</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">RC</span> annonce <span class="em">192.168.1.0/24</span> à une distance de <span class="em">3</span> et <span class="em">192.168.10.0/24</span> à une distance de <span class="em">2</span>.</p>
+                        </li>
+                    </ul>
+                    <p>Ces annonces de résumé sont diffusées à travers la zone de base connectée aux routeurs <span class="em">RA</span>, <span class="em">RB</span> et <span class="em">RC</span>. Dans sa table de routage, le routeur <span class="em">RA</span> sélectionne le résumé annoncé par <span class="em">RB</span> pour atteindre <span class="em">192.168.1.0/24</span> et le résumé annoncé par <span class="em">RC</span> pour atteindre <span class="em">192.168.10.0/24</span>. À l'intérieur de la <span class="em">zone 1</span>, le routeur <span class="em">RA</span> annonce un résumé indiquant que <span class="em">192.168.1.0/24</span> et <span class="em">192.168.19.0/24</span> sont tous deux à distance de <span class="em">3</span> de lui-même.</p>
+                    <p>D'autre part, considérons les préfixes <span class="em">10.0.0.0/24</span> et <span class="em">10.0.1.0/24</span> qui sont dans la <span class="em">zone 1</span>. Le routeur <span class="em">RA</span> est le seul routeur frontière de zone qui est attaché à cette zone. Ce routeur peut créer deux annonces de résumé réseau différentes :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">10.0.0.0/24</span> à une distance de <span class="em">1</span> et <span class="em">10.0.1.0/24</span> à une distance de <span class="em">2</span> de <span class="em">RA</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">10.0.0.0/23</span> à une distance de <span class="em">2</span> de <span class="em">RA</span>.</p>
+                        </li>
+                    </ul>
+                    <p>Le premier résumé fournit des informations précises sur la distance utilisée pour atteindre chaque préfixe. Cependant, tous les routeurs du réseau doivent maintenir une route vers <span class="em">10.0.0.0/24</span> et une route vers <span class="em">10.0.1.0/24</span> qui passent toutes deux par le routeur <span class="em">RA</span>. La deuxième annonce amélirorerait la scalabilité d'OSPF en réduisant le nombre de routes qui sont annoncées à travers les frontières de zone. Cependant, en pratique cela nécessite une configuration manuelle sur les routeurs de bordure.</p>
+                    <p>La deuxième particularité d'OSPF qui vaut la peine d'être discutée est le supoort des Réseaux Locaux (LAN). Comme illustré dans l'exemple, ci-dessous, plusieurs routeurs peuvent être connectés au même LAN.</p>
+                    <figure>
+                        <img src="../images/LAN_OSPF_contenant_routeurs.png" alt="">
+                        <figcaption>Figure 5.52 : Un LAN OSPF contenant plusieurs routeurs</figcaption>
+                    </figure>
+                    <p>Une première solution pour supporter un réseau local (LAN) avec un protocole de routage à état de lien serait de considérer qu'un LAN est équivalent à une maille complète de liaisons point-à-point comme si chaque routeur peut atteindre directement n'importe quel autre routeur sur le LAN. Cependant, cette approche présente deux inconvénients importants :</p>
+                    <ol>
+                        <li>
+                            <p>Chaque routeur doit échanger des HELLOs et des LSP avec tous les autres routeurs sur le LAN. Cela augmente le nombre de paquets OSPF qui sont envoyés et traités par chaque routeur.</p>
+                        </li>
+                        <li>
+                            <p>Les routeurs distants, lorsqu'ils regardent la topologie distribuée par OSPF, considèrent qu'il y a une maille complète de liens dentre tous les routeurs du LAN. Une telle maille complète implique beaucoup de redondance en cas de défaillance, alors qu'en pratique, l'ensemble du LAN, tous les routeurs doivent détecter les défaillances et diffuser des LSP avant que le LAN ne soit complètement supprimé de la topologie OSPF par les routeurs distants.</p>
+                        </li>
+                    </ol>
+                    <p>Pour mieux représenter les LAN et réduire le nombre de paquets OSPF échangés, OSPF traite les LAN différemment. Lorsque les routeurs OSPF démarrent sur un LAN, ils élisent l'un d'entre eux comme routeur désigné (<span class="em">DR</span>) (RFC 2328). La procédure d'élection du routeur désigné OSPF est définie dans la RFC 2328. Chaque routeur peut être configuré avec une priorité de routeur qui influence le processus d'élection, car le routeur avec la priorité la plus élevée est préféré lorsqu'une élection est exécutée. Le routeur <span class="em">DR</span> représente le réseau local et annonce le sous-réseau LAN (<span class="em">138.48.4.0/24</span> dans l'exemple ci-dessus). De plus, les routeurs LAN n'échangent des paquets HELLO qu'avec le <span class="em">DR</span>. Grâce à l'utilisation d'un <span class="em">DR</span>, la topologie du LAN apparaît comme un ensemble de liaisons point-à-point connectées au <span class="em">DR</span>, comme illustré dans la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/representation_OSPF_LAN.jpg" alt="">
+                        <figcaption>Figure 5.53 : Représentation OSPF avec un LAN</figcaption>
+                    </figure>
+                    <hr>
+                    <p>Note : Comment détecter rapidement une défaillance de liaison ?</p>
+                    <p>Les opérateurs de réseau s'attendent à ce qu'un réseau OSPF soit capable de récupérer rapidement des pannes de liaison ou de routeur [VPD2004]. Dans un réseau OSPF, la récupération après une panne est effectuée en trois étapes [FFEB2005] :</p>
+                    <ul>
+                        <li>
+                            <p>Les routeurs adjacents à la panne la détectent rapidement. La solution par défaut est de s'appuyer sur l'échange régulier de paquets HELLO. Cependant, l'intervalle entre les HELLO successifs est souvent fixé à 10 secondes... Le fait de régler la minuterie HELO à quelques millisecondes est difficile car les paquets HELLO sont créés et traités par le CPU principal des routeurs et ces routeurs ne peuvent pas facilement générer et traiter un paquet HELLO toutes les millisecondes sur chacune de leurs interfaces. Une meilleure solution est d'utiliser un protocole de détection de défaillance dédié tel que le protocole Bidirectinal Forwarding Detection (BFD) défini dans [KW2009] qui peut être mis en oeuvre directement sur les interfaces de routeur. Une autre solution pour détecter la panne consiste à instrumenter la couche physique et la couche de liaison de données de manière à ce qu'elles puissent interrompre le routeur lorsqu'une liaison échoue. Malheureusement, une telle solution ne peut pas être utilisée sur tous les types de couches physiques et de liaison de données.</p>
+                        </li>
+                        <li>
+                            <p>Les routeurs qui ont détecté la panne diffusent leurs LSP mis à jour dans le réseau.</p>
+                        </li>
+                        <li>
+                            <p>Tous les routeurs mettent à jour leur table de routage.</p>
+                        </li>
+                    </ul>
+                    <hr>
+                    <h5>Routage interdomaine :</h5>
+                    <p>Comme expliqué précédemment, Internet est composé de plus de 30000 réseaux différents appelés <span class="html">domaines</span>. Une analyse de l'évolution du nombre de domaines sur l'Internet mondial au cours des dix dernières années peut être trouvée à l'adresse <a href="http://www.potaroo.net/tools/asn32/" target="_blank">http://www.potaroo.net/tools/asn32/</a>. Chaque domaine est composé d'un groupe de routeurs et dhôtes gérés par la même organisation. Des exemples de domaines incluent <span class="em">belnet</span>, <span class="em">sprint</span>, <span class="em">level3</span>, <span class="em">geant</span>, <span class="em">abilene</span>, <span class="em">cisco</span> ou <span class="em">google</span>...</p>
+                    <p>Chaque domaine contient un ensmeble de routeurs. Du point de vie du routage, ces domaines peuvent être divisés en deux classes : les domaines de <span class="html">transit</span> et les domaines d'<span class="html">échappement (stub)</span>. Un domaine déchappement envoie et reçoit des paquets dont la source ou la destination est l'un de ses propres hôtes. Un domaine de transit est un domaine qui fournit un service de transit pour d'autres domaines, c'est-à-dire que les routeurs de ce domaine font avancer des paquets dont la source et la destination n'appartiennent pas au domaine de transit. Au moment de la rédaction de ce texte, environ 85% des domaines de l'Internet sont des domaines d'échappement. Plusieurs sites web collectent et analysent des données sur l'évolution de BGP dans l'Internet mondial. <a href="http://bgp.potaroo.net/" target="_blank">http://bgp.potaroo.net/</a> fournit de nombreuses statistiques et analyses mises à jour quotidiennement. Un domaine d'échappement connecté à un seul domaine de transit est appelé un domaine d'échappement à un seul lien. Un domaine d'échappement multi-attaché est un domaine d'échappement connecté à deux ou plusieurs fournisseurs de transit.</p>
+                    <figure>
+                        <img src="../images/domaines_transit_stub.jpg" alt="">
+                        <figcaption>Figure 5.54 : Domaines de transit et d'échappement</figcaption>
+                    </figure>
+                    <p>Les domaines stub peuvent être classés en fonction de leur activité principale, c'est-à-dire s'ils envoient ou reçoivent principalement des paquets. Un domaine stub <span class="html">riche en accès</span> est un domaine qui contient des hôtes qui reçoivent principalement des paquets. Des exemples typiques comprennent les petits fournisseurs de services Internet basés sur l'ADSL et le câble ou les réseaux d'entreprise. En revanche, un domaine stub <span class="html">riche en contenu</span> est un domaine qui produit principalement des paquets. Des exemples de domaines stub riches en contenu comprenant <span class="em">Google</span>, <span class="em">Yahoo</span>, <span class="em">Microsoft</span>, <span class="em">Facebook</span> ou les réseaux de distribution de contenu tels que <span class="em">Akamai</span> ou <span class="em">Limelight</span>. Ces dernières années, nous assisté à une croissance rapide de ces domaines stub riches en contenu. Des mesures récentes [ATLAS2009] indiquent qu'une proportion croissante de tous les paquets échangés sur Internet sont produits dans les centres de données gérés par ces fournisseurs de contenu.</p>
+                    <p>Les domaines doivent être interconnectés pour permettre à un hôte situé dans un domaine d'échanger des paquets IP avec des hôtes situés dans d'autres domaines. Du point de vue physiuqe, les domaines peuvent être interconnectés de deux manières différentes. La première solution consiste à connecter directement un routeur appartenant au premier domaine à un routeur à l'intérieur du deuxième domaine. De tels liens entre les domaines sont appelés liens d'interconnexion privés ou <span class="html">liens de peering privés</span>. En pratique, pour des raisons de redondance ou de performance, des liens physiques distincts sont généralement établis entre différents routeurs dans les deux domaines interconnectés.</p>
+                    <figure>
+                        <img src="../images/interconnexion_domaines_liaison_peering_privee.png" alt="">
+                        <figcaption>Figure 5.55 : Interconnexion de deux domaines via un lien de peering privé</figcaption>
+                    </figure>
+                    <p>Les liens privés de peering sont utiles lorsque, par exemple, un réseau d'entreprise ou universitaire doit être connecté à son fournisseur de service Internet. Cependant, certains domaines sont connectés à des centaines d'autres domaines. Pour ce domaines, utiliser uniquement des liens privés de peering serait trop coûteux. Une meilleure solution pour permettre à de nombreux domaines de s'interconnecter à moindre coût sont les <span class="html">points d'échange Internet (IXP pour Internet eXchange Points)</span>. Un <span class="em">IXP</span> est généralement un espace dans un centre de données qui héberge des routeurs appartenant à différents domaines. UN domaine souhaitant échanger des paquets avec d'autres domaines présents sur l'<span class="em">IXP</span> installe l'un de ses routeurs sur l'IXP et le connecte à d'autres routeurs à l'intérieur de son propre réseau. L'<span class="em">IXP</span> contient un réseau local auquel tous les routeurs participants sont connectés. Lorsque deux domaines présents sur l'<span class="em">IXP</span> souhaitent échanger des paquets, ils utilisent simplement le réseau local. Les <span class="em">IXP</span> sont très populaires en Europe et de nombreux fournisseurs de services Internet et fournisseurs de contenu y sont présents. Deux routeurs attachés au même <span class="em">IXP</span> n'échangent des paquets que lorsque les propriétaires de leurs domaines ont une incitation économique à échanger des paquets sur cet <span class="em">IXP</span>. Habituellement, un routeur sur un <span class="em">IXP</span> n'est capable d'échanger des paquets qu'avec une petite fraction des routeurs qui sont présents sur le même <span class="em">IXP</span>.</p>
+                    <figure>
+                        <img src="../images/interconnexion_domaines_IXP.jpg" alt="">
+                        <figcaption>Figure 5.56 : Interconnexion de deux domaines à un point d'échange Internet</figcaption>
+                    </figure>
+                    <p>Au début de l'Internet, les domaines échangeaient simplement toutes les routes qu'ils connaissaient pour permettre à un hôte à l'intérieur d'un domaine d'atteindre n'importe quel hôte dans l'Internet global. Cependant, dans l'Internet commercial d'aujourd'hui, cela n'est plus vrai car le routage interdomaine doit principalement prendre en compte les relations économiques entre les domaines. De plus, alors que le routage intradomaine préfère généralement certaines routes par rapport à d'autres en fonction de leurs mérites techniques (par exemple, préférer une route avec le nombre minimal de sauts, préférer une route avec le délai minimal, préférer les routes à bande passante élevée plutôt que faible, etc.), le routage interdomaine traite principalement des problèmes économiques. Pour le routage interdomaine, le coût d'utilisation d'une route est souvent plus important que la qualité de la route mesurée par sa latence ou sa bande passante.</p>
+                    <p>Il existe différents types de relations économiques qui peuvent exister entre les domaines. Le routage interdomaine convertit ces relations en relations de peering entre les domaines qui sont connectés via des liens de peering.</p>
+                    <p>La première catégorie de relation de peering est la relation <span class="em">client&#8594;fournisseur</span>. Une telle relation est utilisée lorsqu'un domaine client paie un fournisseur de services Internet pour pouvoir échanger des paquets avec l'Internet mondial via une liaison interdomaine. Une relation similaire est utilisée lorsqu'un petit fournissseur de services Internet paie un plus grand fournisseur de services Internet pour échanger des paquets avec l'Internet mondial.</p>
+                    <figure>
+                        <img src="../images/internet_simple_relations_peering.jpg" alt="">
+                        <figcaption>Figure 5.57 : Un internet simple avec des relations de peering</figcaption>
+                    </figure>
+                    <p>Pour comprendre la relation <span class="em">client&#8594;fournisseur</span>, considérons le réseau illustré dans la figure ci-dessus. Dans ce réseau, <span class="em">AS7</span> est un domaine de support connecté à un seul fournisseur, <span class="em">AS4</span>. Le contrat entre <span class="em">AS4</span> et <span class="em">AS7</span> permet à un hôte situé à l'intérieur d'<span class="em">AS7</span> d'échanger des paquets avec n'importe quel hôte dans le réseau. Pour permettre ccet échange de paquets, <span class="Em">AS7</span> doit connaître une route vers n'importe quel domaine et tous les domaines du réseau doivent connaître une route via <span class="em">AS4</span> qui leur permet de rejoindre les hôtes à l'intérieur d'<span class="em">AS7</span>. D'un point de vue de routagen le contrat commercial entre <span class="em">AS7</span> et <span class="em">AS4</span> conduit aux règles suivantes :</p>
+                    <ul>
+                        <li>
+                            <p>via une relation <span class="em">client&#8594;fournisseur</span>, le domaine <span class="em">client</span> annonce à son fournisseur toutes ses routes et toutes les routes qu'il a apprises de ses propres clients.</p>
+                        </li>
+                        <li>
+                            <p>via une relation <span class="em">fournisseur&#8594;client</span>, le <span class="em">fournisseur</span> annonce toutes les routes qu'il connaît à son client.</p>
+                        </li>
+                    </ul>
+                    <p>La deuxième règle garantit que le domaine client reçoit une route vers toutes les destinations atteignables via son fournisseur. La première règle permet aux routes du domaine client d'être distribuées dans l'ensemble d'Internet.</p>
+                    <p>Revenant à la figure ci-dessus, <span class="em">AS4</span> annonce à ses deux fournisseurs <span class="em">AS1</span> et <span class="em">AS2</span> ses propres routes ainsi que les routes apprises de son client, <span class="em">AS7</span>. D'autre part, <span class="em">AS4</span> annonce à <span class="em">AS7</span> qu'il connaît.</p>
+                    <p>Le deuxième type de relation d'interconnexion est la relation d'interconnexion à <span class="html">coût partagé</span>. Une telle relation n'implique généralement pas de paiement d'un domaine à l'autre, contrairement à la relation <span class="em">client&#8594;fournisseur</span>. Une relation d'interconnexion à coût partagé est généralement établie entre des domaines de taille et de couverture géographique similaires. Par exemple, considérons la figure ci-dessus. Si <span class="em">AS3</span> et <span class="em">AS4</span> échangent de nombreux paquets via <span class="em">AS1</span>, ils doivent tous deux payer <span class="em">AS1</span>. Une alternative moins coûteuse pour <span class="em">AS3</span> et <span class="em">AS4</span> serait d'établir une interconnexion à coût partagé. Une telle interconnexion peut être établie au niveau des IXP où <span class="em">AS3</span> et <span class="em">AS4</span> sont présents ou en utilisant des liens d'interconnexion privés. Cette interconnexion à côut ârtagé devrait être utilisée pour échanger des paquets entre les hôtes à l'intérieur d'<span class="em">AS3</span> et les hôtes d'<span class="em">AS4</span>. Cependnat, <span class="em">AS3</span> ne veut pas recevoir sur les liens d'interconnexion à coût partagé <span class="em">AS3-AS4</span> des paquets dont la destination appartient à <span class="em">AS1</span>, car <span class="em">AS3</span> devrait payer pour envoyer ces paquets à <span class="em">AS1</span>.</p>
+                    <p>D'un point de vue routage, dans une relation de peering à coûts partagés, un domaine n'annonce que ses routes internes et les routes qu'il a apprises de ses clients. Cette restriction garantit que seuls les paquets destinés au domaine local ou à l'un de ses clients sont reçus sur la relation de peering à coûts partagés. Cela implique que les routes apprises d'un fournisseur ou d'un autre pair à coûts partagés ne sont pas annoncées sur une relation de peering à coûts partagés. Cette restriction est motivée par des raisons économiques. Si un domaine annonçait les routes qu'il a appris d'un fournisseur sur une relation de peering à coûts partagés qui ne rapporte pas de revenus, il permettrait à son pair à coûts partagés d'utiliser le lien avec son fournisseur sans aucun paiement. Si un domaine annonçait les routes apprises sur une relation de perring à coûts partagés sur une autre relation de peering à coûts partagés, il permettrait à ces pairs à coûts partagés d'utiliser son propre réseau (qui peut s'étendre sur un ou plusieurs continents librement pour échanger des paquets.</p>
+                    <p>Enfin, le dernier type de relation de pering est le <span class="html">sibling</span>. Une telle relation est utilisée lorsque deux domaines échangent toutes leurs routes dans les deux sens. En pratique, une telle relation n'est utilisée qu'entre des domaines appartenant à la même entreprise.</p>
+                    <p>Ces différents types de relations sont implémentés dans les <span class="html">politiques de routage interdomaine</span> définies par chaque domaine. La politique de routage interdomaine d'un domaine est composée de trois parties principales :</p>
+                    <ul>
+                        <li>
+                            <p>Le <span class="html">filtre d'importation</span> qui spécifie, pour chaque relation de peering, les routes qui peuvent être acceptées du domaine voisin (les routes non acceptables sont ignorées et le domaine ne les utilise jamais pour faire avancer les paquets).</p>
+                        </li>
+                        <li>
+                            <p>Le <span class="html">filtre d'exportation</span> qui spécifie, pour chaque relation de peering, les routes qui peuvent être annoncées au domaine voisin.</p>
+                        </li>
+                        <li>
+                            <p>L'algorithme de <span class="html">classement</span> qui est utilisé pour sélectionner la meilelure route parmi toutes les routes que le domaine a reçues vers le même préfixe de destination.</p>
+                        </li>
+                    </ul>
+                    <p>Les filtres d'importation et d'exportation d'un domaine peuvent être définis en utilisant le langage de spécification de politique de routage (RPSL pour Route Policy Specification Language) soécifié dans la RFC 2622 [GAVE1999]. Certains fournisseurs de services Internet, notamment en Europe, utilisent RPSL pour documenter leurs politiques d'importation et d'exportation. Consultez <a href="ftp://ftp.ripe.net/ripe/dbase" target="_blank">ftp://ftp.ripe.net/ripe/dbase</a> pour la base de données RIPE qui contient les politiques d'importation et d'exportation de nombreux fournisseurs de services Internet européens. Plusieurs outils aident à convertir facilement une politique RPSL en commandes de routeur.</p>
+                    <p>La figure ci-dessous fournit un exemple simple de filtres d'importation et d'exportation pour deux domaines dans un inter-réseau simple. En RPSL, le mot-clé <span class="html">ANY</span> est utilisé pour remplacer n'importe quelle route de n'importe quel domaine. Il est généralement utilisé par un fournisseur pour indiquer qu'il annonce toutes ses routes à un client via une relation <span class="em">fournisseur&#8594;client</span>. C'est le cas de la politique d'exportation d'<span class="em">AS4</span>. L'exemple ci-dessous montre clairement la différence entre une relation <span class="em">fournisseur&#8594;client</span> et une relation de coûts partagés. Le filtre d'exportation d'<span class="em">AS4</span> indique qu'il annonce uniquement ses routes internes (<span class="em">AS4</span>) et les routes apprises auprès de ses clients (<span class="em">AS7</span>) sont son partage de coût avec <span class="em">AS3</span>, tandis qu'il annonce toutes les routes qu'il utilise (y compris les routes apprises auprès d'<span class="em">AS3</span>) à <span class="em">AS7</span>.</p>
+                    <figure>
+                        <img src="../images/politiques_importation_exportation.jpg" alt="">
+                        <figcaption>Figure 5.58 : Politiques d'importation et d'exportation</figcaption>
+                    </figure>
+                    <h5>Le protocole de passerelle frontière (BGP) :</h5>
+                    <p>L'Internet utilise un seul protocole de protocole interdomaine : le <span class="html">Border Gateway Protocol (BGP)</span>. La version actuelle de BGP est définie dans la RFC 4271. BGP diffère des protocoles de routage intradomaine que nous avons déjà discutés de plusieurs façons. Tout d'abord, BGP est un protocole de vecteur de chemin. Lorsqu'un routeur BGP annonce une route vers un préfixe, il annonce le préfixe IP et le chemin interdomaine utilisé pour atteindre ce préfixe. Du point de vue de BGP, chaque domaine est identifié par un numéri de <span class="html">système autonome (AS pour Autonomous System)</span> unique et le chemin interdomaine contient les numéros AS des domaines de transit qui sont utilisés pour atteindre le préfixe associé. Dans ce texte, nous considérons les termes "système autonome" et "domaine" comme synonymes. En pratique, un domaine peut être divisé en plusieurs systèmes autonomes, mais nous ignorons ce détail. Ce chemin interdomaine est appelé le <span class="html">chemin AS</span>. Grâce à ces chemins AS, BGP ne souffre pas des problèmes de comptage à l'infini qui affectent les protocoles de routage de vecteur de distance. De plus, le chemin AS peut être utilisé pour implémenter certaines politiques de routage. Une autre différence entre BGP et les protocoles de routage intradomaine est qu'un routeur BGP n'envoie pas régulièrement à ses voisins l'intégralité du contenu de sa table de routage. Étant donné la taille de l'Internet global, les routeurs seraient surchargés par le nombre de messages BGP qu'ils devraient traiter. BGP utilises des mises à jour incrémentales, c'est-à-dire qu'il ne signale à ses voisins que les routes qui ont changé.</p>
+                    <p>La figure ci-dessous montre un exemple simple des routes BGP échangées entre les domaines. Dans cet exemple, le préfixe <span class="em">1.0.0.0/8</span> est annoncé par <span class="em">AS1</span>. <span class="em">AS1</span> annonce une route BGP vers ce préfixe à <span class="em">AS2</span>. Le chelin AS de cette route indique qu'<span class="em">AS1</span> est l'originateur du préfixe. Lorsque <span class="em">AS4</span> reçoit la route BGP d'<span class="em">AS1</span>, il la réannonce à <span class="em">AS2</span> et ajoute son numéro d'AS au chemin AS. <span class="em">AS2</span> a appris deux routes vers le préfixe <span class="em">1.0.0.0/8</span>. Il compare les deux routes et préfère la route apprise d'<span class="em">AS4</span> en fonction de son propre algorithme de classement. <span class="em">AS2</span> annonce à <span class="em">AS5</span> une route vers <span class="em">1.0.0.0/8</span> avec son chemin AS défini à <span class="em">AS2:AS4:AS1</span>. Grâce au chemin AS, <span class="em">AS5</span> sait que si elle envoie un paquet vers <span class="em">1.0.0.0/8</span>, le paquet passe d'abord par <span class="em">AS2</span>, puis par <span class="em">AS4</span> avant d'atteindre sa destination à l'intérieur d'<span class="em">AS1</span>.</p>
+                    <figure>
+                        <img src="../images/echange_simple_routes_BGP.jpg" alt="">
+                        <figcaption>Figure 5.59 : Échange simple de routes BGP</figcaption>
+                    </figure>
+                    <p>Les routeurs BGP échangent des routes via des sessions BGP. Une session BGP est établie entre deux routeurs appartenant à deux différents qui sont directement connectés. Comme expliqué précédemment, la connexion physique entre les deux routeurs peut être mise en place comme une liaison privée ou via un IPX. Une session BGP entre deux routeurs adjacents fonctionne au-dessus d'une connexion TCP (le port BGP par défaut est <span class="em">179</span>). Contrairement aux protocoles de routage intradomaine qui échangent des paquets IP ou des segments UDP, BGP fonctionne au-dessus de TCP car TCP assure une livraison fiable des messages BGP envoués par chaque routeur sans forcer les routeurs à implémenter des accusés de réception, des sommes de contrôle, etc. De plus, les deux routeurs considèrent que la liaison de peering est active tant que la session BGP et la connexion TCP sous-jacente restent actives. Les deux extrémités d'une session BGP sont appelées <span class="html">pairs BGP</span>. Les sessions BGP et la connexion TCP sous-jacente sont généralement établies par les routeurs lorsqu'ils démarrent en fonction des informations trouvées dans leur configuration Les sessions BGP sont rarement libérées, sauf si la liaison de perring correspondante échoue ou si l'une des extrémités tombe en panne ou doit être redémarrée.</p>
+                    <figure>
+                        <img src="../images/session_peering_BGP_routeurs_directement_connectes.png" alt="">
+                        <figcaption>Figure 5.60 : Une session de peering BGP entre deux routeurs directement connectés</figcaption>
+                    </figure>
+                    <p>En pratique, pour établir une session BGP entre les routeurs <span class="em">R1</span> et <span class="em">R2</span> dans la figure ci-dessus, l'administrateur réseau de <span class="em">AS3</span> doit d'abord configurer sur <span class="em">R1</span> l'adresse IP de <span class="em">R2</span> sur le lien <span class="em">R1-R2</span> ainsi que le numéro AS de <span class="em">R2</span>. Le routeur <span class="em">R1</span> essaie ensuite régulièrement d'atablir la session BGP avec <span class="em">R2</span>. <span class="em">R2</span> n'accepte d'établir la session BGP avec <span class="em">R1</span> lorsqu'il a été configuré avec l'adresse IP de <span class="em">R1</span> et son numéro AS. Pour des raisons de sécurité, un routeur n'établit jamais de session BGP qui n'a pas été configurée manuellement sur le routeur.</p>
+                    <p>Le protocole BGP RFC 4271 définit plusieurs types de messages qui peuvent être échangés au cours d'une session BGP :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">OPEN</span> : ce message est envoyé dès que la connexion TCP entre les deux routeurs a été établie. Il initialise la session BGP et permet la négociation de certaines options. Les détails de ce message peuvent être trouvés dans la RFC 4271.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">NOTIFICATION</span> : ce message est utilisé pour terminer une session BGP, généralement parce qu'une erreur a été détectée par le pair BGP. Un routeur qui envoie ou reçoit un message <span class="em">NOTIFICATION</span> arrête immédiatement la session BGP correspondante.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">UPDATE</span> : ce message est utilisé pour annoncer de nouvelles routes ou des routes modifiées ou pour retirer des routes précédemment annoncées.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">KEEPALIVE</span> : ce message est utilisé pour assurer un échange régulier de messages sur la session BGP, même en l'absence de changements de routes. Lorsqu'un routeur BGP n'a pas envoyé de message <span class="em">UPDATE</span> au cours des dernières 30 secondes, il envoie un message <span class="em">KEEPALIVE</span> pour confirmer à l'autre pair qu'il est toujours actif. Si un pair ne reçoit aucun message BGP pendant une période de 90 secondes, la session BGP est considérée comme étant interrompue et toutes les routes apprises via cette session sont retirées. 90 secondes est le délai par défaut recommandé par la RFC 4271. Cependant, deux pairs BGP peuvent négocier un timer différent lors de l'établissement de leur session BGP. L'utilisation d'un intervalle trop court pour détecter les pannes de session BGP n'est pas recommandée. BFD [KW2009] peut être utilisé pour remplacer le mécanisme <span class="em">KEEPALIVE</span> de BGP si une détection rapide des pannes de lien interdomaine est nécessaire.</p>
+                        </li>
+                    </ul>
+                    <p>Comme expliqué précédemment, BGP repose sur des mises à jour incrémentielles. Cela signifie que lorsqu'une session BGP démarre, chaque routeur envoie d'abord des messages BGP <span class="em">UPDATE</span> pour annoncer à l'autre pair toutes les routes exportables qu'il connaît. Une fois que toutes ces routes ont été annoncées, le routeur BGP n'envoie des messages BGP <span class="em">UPDATE</span> pour un préfixe que si la route est nouvelle, si l'un de ses attributs a changé ou si la route est devenue inaccessible et doit être retirée. Le message BGP <span class="em">UPDATE</span> permet aux routeurs BGP d'échanger efficacement ces informations tout en minimisant le nombre d'octets échangés. Chaque message BGP <span class="em">UPDATE</span> contient :</p>
+                    <ul>
+                        <li>
+                            <p>une liste de préfixes IP sont retirés.</p>
+                        </li>
+                        <li>
+                            <p>une liste de préfixes IP qui sont (ré-)annoncés.</p>
+                        </li>
+                        <li>
+                            <p>l'ensemble des attributs (par exemple, le chemin AS) associés aux préfixes annoncés.</p>
+                        </li>
+                    </ul>
+                    <p>Dans le reste de chapitre, et bien que toutes les informations de routage soient échangées à l'aide de message BGP <span class="em">UPDATE</span>, nous supposons pour simplifier qu'un message BGP contient uniquement des informations sur un préfixe et nous utilisons les termes suivants :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">Message de retrait (Withdraw message)</span> pour indiquer un message BGP <span class="em">UPDATE</span> contenant une route retirée.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Message de mise à jour (Update message)</span> pour indiquer un message BGP <span class="em">UPDATE</span> contenant une nouvelle route ou une route mise à jour vers un préfixe de destination avec ses attributs.</p>
+                        </li>
+                    </ul>
+                    <p>D'un point de vue conceptuel, un routeur BGP connecté à <span class="em">N</span> pairs BGP peut être décrit comme étant composé de quatre parties, comme le montre la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/organisation_routeur_BGP.jpg" alt="">
+                        <figcaption>Figure 5.61 : Organisation d'un routeur BGP</figcaption>
+                    </figure>
+                    <p>Dans cette figure, le routeur reçoit des messages BGP sur la partie gauche de la figure, traite ces messages et envoie éventuellement des messages BGP sur la partie droite de la figure. Un routeur contient trois structures de données importantes :</p>
+                    <ul>
+                        <li>
+                            <p>L'<span class="em">Adj-RIB-In</span> contient les routes BGP qui ont été reçues de chaque pair BGP. Les routes de l'<span class="em">Adj-RIB-IN</span> sont filtrées par le <span class="em">filtre d'importation</span> avant d'être placées dans la <span class="em">BGP-Loc-RIB</span>. Il y a un <span class="em">filtre d'importation</span> par pair BGP.</p>
+                        </li>
+                        <li>
+                            <p>La <span class="html">base d'information de routage locale (Loc-RIB pour Local Routing Information Base)</span> contient toutes les routes considérées comme acceptables par le routeur. Le <span class="em">Loc-RIB</span> peut contenir plusieurs routes, apprises à partir de différents pairs BGP, vers le même préfixe de destination.</p>
+                        </li>
+                        <li>
+                            <p>La <span class="html">base d'informations de forwarding (FIB pour Forwarding Information Base)</span> est utilisée par le plan de données pour acheminer les paquets vers leur destination. La FIB contient, pour chaque destination, la meilleure route sélectionnée par le processus de décision BGP. Ce processus de décision est un algorithme qui sélectionne, pour chaque préfixe de destination, la meilleure route selon l'algorithme de classement de politiques du routeur.</p>
+                        </li>
+                        <li>
+                            <p>L'<span class="html">Adj-RIB-Out</span> contient les routes BGP qui ont été annoncées à chaque pair BGP. L'<span class="em">Adj-RIB-Out</span> pour un pair donné est construit en appliquant le <span class="em">filtre d'exportation</span> du pair aux routes qui ont été installées dans la FIB. Il y a un <span class="em">filtre d'exportation</span> par pair BGP. Pour cette raison, l'<span class="em">Adj-RIB-Out</span> d'un pair peut contenir des routes différentes de l'<span class="em">Adj-RIB-Out</span> d'un autre pair.</p>
+                        </li>
+                    </ul>
+                    <p>Lorsqu'une session BGP démarre, les routeurs échangent d'abord des messages <span class="em">OPEN</span> pour négocier les options qui s'appliquent tout au long de la session. Ensuite, chaque routeur extrait de sa FIB les routes à annoncer à son pair. Il est important de noter que, pour chaque préfixe de destination connu, un routeur BGP ne peut annoncer à un pair que la route qu'il a lui-même installée dans sa FIB. Les routes qui sont annoncées à un pair doivent passer le <span class="em">filtre d'exportation</span> du pair. Le <span class="em">filtre d'exportation</span> est un ensemble de règles qui définissent quelles routes peuvent être annoncées sur la session correspondante, éventuellement après avoir modifié certaines de ses attributs. Un <span class="em">filtre d'exportation</span> est associé à chaque session BGP. Par exemple, sur une interconnexion à coût partagé, le filtre d'exportation ne sélectionne que les routes internes et les routes apprises auprès d'un client. Le pseudo-code ci-dessous montre l'initialisation d'une session BGP.</p>
+<pre class="taille60"><code>def initiliaze_BGP_session( RemoteAS, RemoteIP):
+    # Initialize and start BGP session
+    # Send BGP OPEN Message to RemoteIP on port 179
+    # Follow BGP state machine
+    # advertise local routes and routes learned from peers*/
+    for d in BGPLocRIB :
+        B=build_BGP_Update(d)
+        S=Apply_Export_Filter(RemoteAS,B)
+        if (S != None) :
+            send_Update(S,RemoteAS,RemoteIP)
+    # entire RIB has been sent
+    # new Updates will be sent to reflect local or distant
+    # changes in routers</code></pre>
+                    <p>Dans le pseudo-code ci-dessus, la procédure <span class="em">build_BGP_UPDATE(d)</span> extrait de la <span class="em">BGP-Loc-RIB</span> la meilleure route vers la destination <span class="em">d</span> (c'est-à-dire la route installée dans le FIB) et prépare le message BGP <span class="em">UPDATE</span> correspondant.</p>
+                    <p>Ce message est ensuite transmis au filtre d'<span class="em">filtre d'exportation</span> qui renvoie NULL si la route ne peut pas être annoncée au pair ou le message BGP <span class="em">UPDATE</span> (éventuellement modifié) à annoncer. Les routeurs BGP permettent aux administrateurs réseau de spécifier des <span class="em">filtres d'exportation</span> très complexes, voir par exemple [WMS2004]. Un <span class="em">filtre d'exportation</span> simple qui implémente l'équivalent de l'horizon divisé est présenté ci-dessous.</p>
+<pre class="taille60"><code>def apply_export_filter(RemoteAS, BGPMsg) :
+    # check if RemoteAS already received route
+    if RemoteAS is BGPMsg.ASPath :
+        BGPMsg=None
+        # Many additional export policies can be configured :
+        # Accept or refuse the BGPMsg
+        # Modify selected attributes inside BGPMsg
+    return BGPMsg</code></pre>
+                    <p>À ce stade, le routeur distant a reçu toutes les routes BGP exportables. Après cet échange initial, le routeur envoie uniquement des messages BGP <span class="em">UPDATE</span> lorsqu'il y a un changement (ajout ou suppression d'une route ou changement des attributs d'une route) dans l'une de ces routes exportables. Un tel changement peut se produire lorsque le routeur reçoit un message BGP. Le pseudo-code ci-dessous résume le traitement de ces messages BGP.</p>
+<pre class="taille60"><code>def Recvd_BGPMsg(Msg, RemoteAS) :
+    B=apply_import_filer(Msg,RemoteAS)
+    if (B== None): # Msg not acceptable
+        return
+    if IsUPDATE(Msg):
+        Old_Route=BestRoute(Msg.prefix)
+        Insert_in_RIB(Msg)
+        Run_Decision_Process(RIB)
+        if (BestRoute(Msg.prefix) != Old_Route) :
+            # best route changed
+            B=build_BGP_Message(Msg.prefix);
+            S=apply_export_filter(RemoteAS,B);
+            if (S!=None) : # announce best route
+                send_UPDATE(S,RemoteAS,RemoteIP);
+            else if (Old_Route != None) :
+                send_WITHDRAW(Msg.prefix,RemoteAS, RemoteIP)
+    else : # Msg is WITHDRAW
+        Old_Route=BestRoute(Msg.prefix)
+        Remove_from_RIB(Msg)
+        Run_Decision_Process(RIB)
+        if (Best_Route(Msg.prefix) !=Old_Route):
+            # best route changed
+            B=build_BGP_Message(Msg.prefix)
+            S=apply_export_filter(RemoteAS,B)
+            if (S != None) : # still one best route towards Msg.prefix
+                send_UPDATE(S,RemoteAS, RemoteIP);
+            else if(Old_Route != None) : # No best route anymore
+                send_WITHDRAW(Msg.prefix,RemoteAS,RemoteIP);</code></pre>
+                    <p>Lorsqu'un message BGP est reçu, le routeur applique d'abord le <span class="em">filtre d'importation</span> du pair pour vérifier si le message est acceptable ou non. Si le message n'est pas acceptable, le traitement s'arrête. Le pseudo-code ci-dessous montre un <span class="em">filtre d'importation</span> simple. Ce <span class="em">filtre d'importation</span> accepte toutes les routes, sauf celles qui contiennent déjà le système autonome local dans leur chemin d'AS. Si un telle route était utilisée, elle causerait une boucle de routage. Un autre exemple de <span class="em">filtre d'importation</span> serait un filtre utilisé par un fournisseur de services Internet sur une session avec un client pour n'accepter que les routes vers les préfixes IP attribués au client par le fournisseur. Sur de vrais routeurs, les <span class="em">filtres d'importation</span> peuvent être beaucoup plus complexes et certains <span class="em">filtres d'importation</span> modifient les attributs de la BGP <span class="em">UPDATE</span> reçue [WMS2004].</p>
+<pre class="taille60"><code>def apply_import_filter(RemoteAS, BGPMsg):
+    if MysAS in BGPMsg.ASPath :
+        BGPMsg=None
+        # Many additional import policies can be configured :
+        # Accept or refuse the BGPMsg
+        # Modify selected attributes inside BGPMsg
+    return BGPMsg</code></pre>
+                    <hr>
+                    <p>Note : Les filtres bogon :</p>
+                    <p>Un autre exemple de filtres d'importation couramment utilisés sont les filtres que les fournisseurs de services Internet utilisent pour ignorer les routeurs bogon. Dans la communauté des fournisseurs de services Internet, une route bogon est une route qui ne doit pas être annoncée sur Internet. Des exemples typiques incluent les préfixes IPv4 privés définis dans la RFC 1918, les préfixes de bouclage (<span class="em">127.0.0.1/8</span> et <span class="em">::1/128</span>) ou les préfixes IP qui n'ont pas encore été attribués par l'IANA. Un routeur BGP bien géré doit veiller à ne jamais annoncer de bogons sur Internet. Des informations détaillées sur ces bogons peuvent être trouvées sur <a href="http://www.team-cymru.org/Services/Bogons/" target="_blank">http://www.team-cymru.org/Services/Bogons/</a>.</p>
+                    <hr>
                     
                 </article>
             <!-- fin de section -->
