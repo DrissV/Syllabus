@@ -4835,13 +4835,13 @@ traceroute6 to www.ietf.org (2001:1890:1112:1::20) from 2001:6a8:3080:2:217:f2ff
                         <img src="../images/LAN_OSPF_contenant_routeurs.png" alt="">
                         <figcaption>Figure 5.52 : Un LAN OSPF contenant plusieurs routeurs</figcaption>
                     </figure>
-                    <p>Une première solution pour supporter un réseau local (LAN) avec un protocole de routage à état de lien serait de considérer qu'un LAN est équivalent à une maille complète de liaisons point-à-point comme si chaque routeur peut atteindre directement n'importe quel autre routeur sur le LAN. Cependant, cette approche présente deux inconvénients importants :</p>
+                    <p>Une première solution pour supporter un réseau local (LAN) avec un protocole de routage à état de lien serait de considérer qu'un LAN est équivalent à un maillage complète de liaisons point-à-point comme si chaque routeur peut atteindre directement n'importe quel autre routeur sur le LAN. Cependant, cette approche présente deux inconvénients importants :</p>
                     <ol>
                         <li>
                             <p>Chaque routeur doit échanger des HELLOs et des LSP avec tous les autres routeurs sur le LAN. Cela augmente le nombre de paquets OSPF qui sont envoyés et traités par chaque routeur.</p>
                         </li>
                         <li>
-                            <p>Les routeurs distants, lorsqu'ils regardent la topologie distribuée par OSPF, considèrent qu'il y a une maille complète de liens dentre tous les routeurs du LAN. Une telle maille complète implique beaucoup de redondance en cas de défaillance, alors qu'en pratique, l'ensemble du LAN, tous les routeurs doivent détecter les défaillances et diffuser des LSP avant que le LAN ne soit complètement supprimé de la topologie OSPF par les routeurs distants.</p>
+                            <p>Les routeurs distants, lorsqu'ils regardent la topologie distribuée par OSPF, considèrent qu'il y a un maillage complète de liens dentre tous les routeurs du LAN. Un tel maillage complète implique beaucoup de redondance en cas de défaillance, alors qu'en pratique, l'ensemble du LAN, tous les routeurs doivent détecter les défaillances et diffuser des LSP avant que le LAN ne soit complètement supprimé de la topologie OSPF par les routeurs distants.</p>
                         </li>
                     </ol>
                     <p>Pour mieux représenter les LAN et réduire le nombre de paquets OSPF échangés, OSPF traite les LAN différemment. Lorsque les routeurs OSPF démarrent sur un LAN, ils élisent l'un d'entre eux comme routeur désigné (<span class="em">DR</span>) (RFC 2328). La procédure d'élection du routeur désigné OSPF est définie dans la RFC 2328. Chaque routeur peut être configuré avec une priorité de routeur qui influence le processus d'élection, car le routeur avec la priorité la plus élevée est préféré lorsqu'une élection est exécutée. Le routeur <span class="em">DR</span> représente le réseau local et annonce le sous-réseau LAN (<span class="em">138.48.4.0/24</span> dans l'exemple ci-dessus). De plus, les routeurs LAN n'échangent des paquets HELLO qu'avec le <span class="em">DR</span>. Grâce à l'utilisation d'un <span class="em">DR</span>, la topologie du LAN apparaît comme un ensemble de liaisons point-à-point connectées au <span class="em">DR</span>, comme illustré dans la figure ci-dessous.</p>
@@ -5055,7 +5055,236 @@ traceroute6 to www.ietf.org (2001:1890:1112:1::20) from 2001:6a8:3080:2:217:f2ff
                     <p>Note : Les filtres bogon :</p>
                     <p>Un autre exemple de filtres d'importation couramment utilisés sont les filtres que les fournisseurs de services Internet utilisent pour ignorer les routeurs bogon. Dans la communauté des fournisseurs de services Internet, une route bogon est une route qui ne doit pas être annoncée sur Internet. Des exemples typiques incluent les préfixes IPv4 privés définis dans la RFC 1918, les préfixes de bouclage (<span class="em">127.0.0.1/8</span> et <span class="em">::1/128</span>) ou les préfixes IP qui n'ont pas encore été attribués par l'IANA. Un routeur BGP bien géré doit veiller à ne jamais annoncer de bogons sur Internet. Des informations détaillées sur ces bogons peuvent être trouvées sur <a href="http://www.team-cymru.org/Services/Bogons/" target="_blank">http://www.team-cymru.org/Services/Bogons/</a>.</p>
                     <hr>
-                    
+                    <p>Si le filtre d'importation accepte le message BGP, le pseudo-code distingue deux cas. S'il s'agit d'un <span class="em">message de mise à jour</span> pour le préfixe <span class="em">p</span>, cela peut être une nouvelle route pour ce préfixe ou une modification des attributs de la route. Le routeur récupère d'abord de sa table RIP la meilleur route vers le préfixe <span class="em">p</span>. Ensuite, la nouvelle route est insérée dans la table RIB et le processus de décision BGP est exécuté pour déterminer si la meilleure route vers la destination <span class="em">p</span> a changé. Un message BGP ne doit être envoyer aux pairs du routeur que si la meilleure route a changé. Pour chaque pair, le routeur applique le <span class="em">filtre d'exportation</span> pour vérifier si la route peut être annoncée. Si c'est le cas, le message BGP filtré est envoyé. Sinon, un message de retrait est envoyé. Lorsque le routeur reçoit un message de retrait, il vérifie également si la suppression de la route de sa table RIB a causé un changement dans la meilleure route vers ce préfixe. Il convient de noter que, selon le contenu de la table RIB et les <span class="em">filtres d'exportation</span>, un routeur BGP peut avoir besoin d'envoyer un message de retrait à un pair après avoir reçu un <span class="em">message de mise à jour</span> d'un autre pair et inversement.</p>
+                    <p>Expliquons maintenant en détail le fonctionnement de BGP dans un réseau IPv4. Pour cela, considérons le réseau simple composé de trois routeurs situés dans trois AS différents et représentés dans la figure ci-dessous.</p>
+                    <figure>
+                        <img src="../images/utilisation_attribut_nexthop_BGP.png" alt="">
+                        <figcaption>Figure 5.62 : Utilisation de l'attribut NextHop de BGP</figcaption>
+                    </figure>
+                    <p>Ce réseau contient trois routeurs : <span class="em">R1</span>, <span class="em">R2</span> et <span class="em">R3</span>. Chaque routeur est connecté à un sous-réseau IPv4 local qu'il annonce à l'aide de BGP. Il y a deux sessions BGP, une entre <span class="em">R1</span> et <span class="em">R2</span> et la deuxième entre <span class="em">R2</span> et <span class="em">R3</span>. Un sous-réseau <span class="em">/30</span> est utilisé sur chaque lien interdomaine (<span class="em">195.100.0.0/30</span> sur <span class="em">R1-R2</span> et <span class="em">195.100.0.4/30</span> sur <span class="em">R2-R3</span>). Les sessions BGP fonctionnent au-dessus de connexions établies entre les routeurs voisins (par exemple, <span class="em">195.100.0.1-195.100.0.2</span> pour la session <span class="em">R1-R2</span>).</p>
+                    <p>Supposons que la session BGP <span class="em">R1-R2</span> est la première à être établie. Un message BGP <span class="em">BGP</span> envoyé sur une telle session contient trois champs :</p>
+                    <ul>
+                        <li>
+                            <p>le préfixe annoncé</p>
+                        </li>
+                        <li>
+                            <p>le NextHop de BGP</p>
+                        </li>
+                        <li>
+                            <p>les attributs, y compris le chemin AS</p>
+                        </li>
+                    </ul>
+                    <p>Nous utilisons la notation <span class="html">U(préfixe, nexthop, attributs)</span> pour représenter un tel message BGP <span class="em">Update</span>. De même, <span class="html">W(préfixe)</span> représente un retrait BGP pour le préfixe spécifié. Une fois que la session <span class="em">R1-R2</span> a été établie, <span class="em">R1</span> envoie <span class="em">U(194.100.0.0/24,195.100.0.1,AS10)</span> à <span class="em">R2</span> et <span class="em">R2</span> envoie <span class="em">U(194.100.2.0/23,195.100.0.2,AS20)</span>. À ce stade, <span class="em">R1</span> peut atteindre <span class="em">194.100.2.0/23</span> via <span class="em">195.100.0.2</span> et <span class="em">R2</span> peut atteindre <span class="em">194.100.0.0/24</span> via <span class="em">195.100.0.1</span>.</p>
+                    <p>Une fois que la session <span class="em">R2-R3</span> a été établie, <span class="em">R3</span> envoie <span class="em">U(194.100.1.0/24,195.100.0.6,AS30)</span>. <span class="em">R2</span> annonce sur la session <span class="em">R2-R3</span> toutes les routes à l'intérieur de sa RIB. Il envoie donc à <span class="em">R3</span> : <span class="em">U(194.100.0.0/24,195.100.0.5,AS20:AS10)</span> et <span class="em">U(194.100.2.0/23;195.100.0.5,AS20)</span>. Notez que lorsque <span class="em">R2</span> annonce la route qu'il a apprise de <span class="em">R1</span>, il met à jour le NextHop de BGP et ajoute son numéro AS au chemin AS. <span class="em">R2</span> envoie également <span class="em">U(194.100.1.0/24,195.100.0.2,1S20:AS30)</span> à <span class="em">R1</span> sur la session <span class="em">R1-R3</span>. À ce stade, toutes les routes BGP ont été échangées et tous les routeurs peuvent atteindre <span class="em">194.100.0.0/24</span>, <span class="em">194.100.2.0/23</span> et <span class="em">194.100.1.0.24</span>.</p>
+                    <p>Si le lien entre <span class="em">R2</span> et <span class="em">R3</span> échoue, <span class="em">R3</span> détecte la défaillance car elle n'a pas reçu de messages <span class="em">KEEPALIVE</span> de <span class="em">R2</span> récemment. À ce moment, <span class="em">R3</span> supprime de sa table de routage toutes les routes apprises via la session BGP <span class="em">R2-R3</span>. <span class="em">R2</span> supprime également de sa table de routage les routes apprises de <span class="em">R3</span>. <span class="em">R2</span> envoie également <span class="em">W(194.100.1.0/24)</span> à <span class="em">R1</span> via la session BGP <span class="em">R1-R3</span>, car il n'a plus de route vers ce préfixe.</p>
+                    <hr>
+                    <p>Note : Origine des routes annoncées par un routeur BGP :</p>
+                    <p>Une question pratique fréquente concernant le fonctionnement de BGP est de savoir comment un routeur BGP décide de produire ou d'annoncer une route pour la première fois. En pratique, cela se produit dans deux situations :</p>
+                    <ul>
+                        <li>
+                            <p>Le routeur a été configuré manuellement par l'opérateur réseau pour toujours annoncer une ou plusieurs routes sur une session BGP. Par exemple, sur la session BGP entre l'UCLouvain et son fournisseur <span class="em">Belnet</span>, le routeur de l'UCLouvain annonce toujours le préfixe IPv4 <span class="em">130.104.0.0/16</span> assigné au réseau du campus.</p>
+                        </li>
+                        <li>
+                            <p>Le routeur a été configuré par l'opérateur réseau pour annoncer sur sa session BGP certaines des routes qu'il apprend avec son protocole de routage intradomaine. Par exemple, un routeur d'entreprise peut annoncer sur une session BGP avec son fournisseur les routes vers des sites distants lorsque ces routes sont accessibles et annoncées par le protocole de routage intradomaine.</p>
+                        </li>
+                    </ul>
+                    <p>La première solution est la plus fréquente. Il n'est pas recommandé d'annoncer des routes apprises à partir d'un protocole de routage intradomaine, car si la route fluctue, cela causerait un grand nombre de messages BGP échangés dans l'Internet mondial. On dit qu'un lien est en train de fluctuer s'il passe plusieurs fois entre un état opérationnele et un état désactivé dans un court laps de temps. Un routeur attaché à un tel lien aurait besoin d'envoyer fréquemment des messages de routage.</p>
+                    <hr>
+                    <p>La plupart des réseaux qui utilisent BGP contiennent plus d'un routeur. Par exemple, considérons le réseau illustré dans la figure ci-dessous où <span class="em">AS20</span> contient deux routeurs reliés par des liens interdomaines : <span class="em">R2</span> et <span class="em">R4</span>. Dans ce réseau, deux protocoles de routage sont utilisés par <span class="em">R2</span> et <span class="em">R4</span>. Ils utilisent un protocole de routage intradomaine tel que OSPF pour distribuer les routes vers les préfixes internes : <span class="em">195.100.0.8/30</span>, <span class="em">195.100.0.0/30</span>, ... <span class="em">R2</span> et <span class="em">R4</span> utilisent également BGP. <span class="em">R2</span> reçoit les routes annoncées par <span class="em">AS10</span> tandis que <span class="em">R4</span> reçoit les routes annoncées par <span class="em">AS30</span>. Ces deux routeurs doivent échanger les routes qu'ils ont respectivement reçues via leurs sessions BGP.</p>
+                    <figure>
+                        <img src="../images/reseau_plus_large_utilisant_BGP.png" alt="">
+                        <figcaption>Figure 5.63 : Un réseau plus large utilisant BGP</figcaption>
+                    </figure>
+                    <p>Une première solution pour permettre à <span class="em">R2</span> et <span class="em">R3</span> d'échanger les routes interdomaines qu'ils ont apprises via leurs sessions BGP respectives serait de configurer le protocole de routage intradomaine pour distribuer à l'intérieur de l'<span class="em">AS20</span> les routes apprises via les sessions BGP. Bien que les routeurs actuels prennent en charge cette fonctionnalité, c'est une mauvaise solution pour deux raisons :</p>
+                    <ol>
+                        <li>
+                            <p>Les protocoles de routage intradomaines ne peuvent pas distribuer les attributs attachés à une route BGP. Si <span class="em">R4</span> recevait via le protocole de routage intradomaine une route vers <span class="em">194.100.0.0/23</span> que <span class="em">R2</span> a apprise via BGP, il ne saurait pas que la route a été initiée par <span class="em">AS10</span> et la seule annonce qu'il pourrait envoyer à <span class="em">R3</span> contiendrait un chemin AS incorrect.</p>
+                        </li>
+                    </ol>
+                    <p>La meilleure solution pour permettre aux routeurs BGP de distribuer, à l'intérieur d'un AS, toutes les routes apprises via des sessions BGP, consiste à établir des sessions BGP entre tous les routeurs BGP à l'intérieur de l'AS. En pratique, il existe deux types de sessions BGP :</p>
+                    <ul>
+                        <li>
+                            <p>Une session <span class="html">eBGP</span> ou <span class="html">session BGP externe</span>. Une telle session BGP est établie entre deux routeurs qui sont directement connectés et appartiennent à deux domaines différents.</p>
+                        </li>
+                        <li>
+                            <p>Une session <span class="html">iBGP</span> ou <span class="html">session BGP interne</span>. Une telle session BGP est établie entre deux routeurs appartenant au même domaine. Ces deux routeurs n'ont pas besoin d'être directement connectés.</p>
+                        </li>
+                    </ul>
+                    <p>En pratique, chaque routeur BGP à l'intérieur d'un domaine maintient une <span class="em">session iBGP</span> avec tous les autres routeurs BGP du domaine. L'utilisation d'un maillage complet de <span class="em">sessions iBGP</span> est adaptée aux petits réseaux. Cependant, cette solution ne permet pas de scaler les grands réseaux contenant des centaines ou plus de routeurs, car <span class="em">(n*(n-1))/2</span> sessions iBGP doivent être établies dans un domaine contenant <span class="em">n</span> routeurs BGP. Les grands domaines utilisent soit la <span class="html">réflexion de route (Route Reflection)</span> RFC 4456, soit les confédérations RFC 5065 pour scaler leur iBGP, mais cela dépasse le cadre de cette introduction. Cela crée un maillage complet de <span class="em">sessions iBGP</span> entre tous les routeurs BGP du domaine. Les <span class="em">sessions iBGP</span>, tout comme les <span class="em">sessions eBGP</span>, s'exécutent sur des connexions TCP. Notez que contrairement aux <span class="em">sessions eBGP</span> qui sont établies entre des routeurs directement connectés, les <span class="em">sessions iBGP</span> sont souvent établies entre des routeurs qui ne sont pas directement connectés.</p>
+                    <p>Un point important à noter à propos des <span class="em">sessions iBGP</span> est qu'un routeur BGP ne fiffuse une route que sur une <span class="em">session iBGP</span> à condition que :</p>
+                    <ul>
+                        <li>
+                            <p>le routeur utilise cette route pour faire avancer les paquets, et</p>
+                        </li>
+                        <li>
+                            <p>la route a été apprise via l'une des <span class="em">sessions eBGP</span> du routeur.</p>
+                        </li>
+                    </ul>
+                    <p>Un routeur n'annonce pas une route qu'il a apprise sur une <span class="em">session iBGP</span> sur une autre <span class="em">session iBGP</span>. Notez qu'un routeur peut bien sûr annoncer sur une <span class="em">session eBGP</span> une route qu'il a apprise sur une <span class="em">session iBGP</span>. Cette différence de comportement d'un routeur BGP sur une <span class="em">session iBGP</span> et une <span class="em">session eBGP</span> est due à l'utilisation d'un maillage complet de <span class="em">sessions iBGP</span>. Considérez un réseau contenant trois routeurs BGP : <span class="em">A</span>, <span class="em">B</span> et <span class="em">C</span> interconnectés via un maillage complet de sessions iBGP. Si le routeur <span class="em">A</span> apprend une route vers le préfixe <span class="em">p</span> depuis le routeur <span class="em">B</span>, le routeur <span class="em">A</span> n'a pas besoin d'annoncer la route reçue au routeur <span class="em">C</span> car le routeur <span class="em">C</span> apprend égalemnt la même route sur la <span class="em">session iBGP</span> <span class="em">C-B</span>.</p>
+                    <p>Pour comprendre l'utilisation d'une <span class="em">session iBGP</span>, prenons l'exemple où le routeur <span class="em">R1</span> envoie <span class="em">U(194.100.0.0/23,195.100.0.1,AS10)</span> dans le réseau illustré ci-dessous. Ce message BGP est traité par <span class="em">R2</span> qui l'annonce sur sa <span class="em">session iBGP</span> avec <span class="em">R4</span>. L'<span class="em">Update BGP</span> envoyé par <span class="em">R2</span> contient le même nexthop et le même chemin AS que dans l'<span class="em">Update BGP</span> reçu par <span class="em">R2</span>. <span class="em">R4</span> envoie alors <span class="em">U(194.100.0.0/23,195.100.0.5,AS20:AS10)</span> à <span class="em">R3</span>. Notez que le nexthop BGP et le chemin AS ne sont mis à jour que lorsqu'une route BGP est annoncée sur une <span class="em">session eBGP</span>. Certains routeurs, lorsqu'ils reçoivent un <span class="em">Update BGP</span> sur une <span class="em">session eBGP</span>, définissent le nexthop de la route reçue sur l'une de leurs propres adresses. Cela s'appelle <span class="html">nexthop-self</span>. Voir, par exemple, [WMS2004] pour plus de détails.</p>
+                    <figure>
+                        <img src="../images/sessions_iBGP_eBGP.png" alt="">
+                        <figcaption>Figure 5.64 : Sessions iBGP et eBGP</figcaption>
+                    </figure>
+                    <hr>
+                    <p>Note : Interfaces de loopback et sessions iBGP :</p>
+                    <p>En plus de leurs interfaces physiques, les routeurs peuvent également être configurés avec une interface de loopback spéciale [#fbgploop]_. Une interface de loopback est une interface logicielle qui est toujours active. Lorsqu'une interface de loopback est configurée sur un routeur, l'adresse associée à cette interface est annoncée par le protocole de routage intradomaine.</p>
+                    <p>COnsidérons par exemple un routeur avec deux interfaces point-à-point et une interface de loopback. Lorsqu'une interface point-à-point échoue, elle devient inaccessible et le routeur ne peut plus recevoir de paquets via cette adresse IP. Ce n'est pas le cas pour l'interface de loopback. Elle reste accessible tant qu'au moins l'une des interfaces du routeur reste active. Les <span class="em">sessions iBGP</span> sont généralement établies en utilisant les adresses de loopback du routeur en tant que points d'extrémité. Cela permet à la <span class="em">session iBGP</span> et à sa connexion TCP sous-jacente de rester active même si des interfaces physiques échouent sur les routeurs.</p>
+                    <hr>
+                    <p>Maintenant que les routeurs peuvent apprendre des routes inter-domaines via des sessions iBGP et eBGP, examinons ce qui se passe lorsque le routeur <span class="em">R3</span> envoie un paquet destiné à <span class="em">194.100.1.234</span>. <span class="em">R3</span> transfère ce paquet à <span class="em">R4</span>. <span class="em">R4</span> utilise un protocole de routage intra-domaine et BGP. Sa table de routage BGP contient la correspondance de préfixe la plus longue suivante :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">194.100.0.0/23</span> via <span class="em">195.100.0.1</span></p>
+                        </li>
+                    </ul>
+                    <p>
+                        Cette route indique que pour faire avancer un paquet vers 
+                        <soan class="em">194.100.0.0/23</soan>
+                        , <span class="em">R4</span> doit faire avancer le paquet le long de la route vers <span class="em">195.100.0.1</span>. Cependant, <span class="em">R4</span> n'est pas directement connecté à <span class="em">195.100.0.1</span>. <span class="em">R4</span> a appris une route qui correspond à cette adresse grâce à son protocole de routage intra-domaine qui a distribué les routes suivantes :</p>
+                        <ul>
+                            <li>
+                                <p><span class="em">195.100.0.0/30</span> via <span class="em">195.100.0.10</span></p>
+                            </li>
+                            <li>
+                                <p><span class="em">195.100.0.4</span> Est</p>
+                            </li>
+                            <li>
+                                <p><span class="em">195.100.0.8/30</span> Nord</p>
+                            </li>
+                            <li>
+                                <p><span class="em">194.100.2.0/23</span> via <span class="em">195.100.0.10</span></p>
+                            </li>
+                            <li>
+                                <p><span class="em">194.100.0.4/23</span> Ouest</p>
+                            </li>
+                        </ul>
+                        <p>Pour construire sa table de routage, <span class="em">R4</span> doit combiner les routes apprises du protocole de routage intradomaine avec celles apprises de BGP. Grâce à sa table de routage intradomaine, pour chaque route interdomaine, <span class="em">R4</span> remplace le nexhop BGP par son chemin le plus court calculé par le protocole de routage intradomaine. Dans la figure ci-dessus, <span class="em">R4</span> envoie des paquests vers <span class="em">194.100.0.0/23</span> via <span class="em">195.100.0.10</span>, à laquelle il est directement connecté via son interface <span class="em">North</span>. La table de routage résultante de <span class="em">R4</span>, qui associe une interface sortante pour un préfixe directement connecté ou un nexthop directement connecté et une interface sortante pour les préfixes appris via BGP, est la suivante :</p>
+                        <ul>
+                            <li>
+                                <p><span class="em">194.100.0.0/23</span> via <span class="em">195.100.0.10</span> (Nord)</p>
+                            </li>
+                            <li>
+                                <p><span class="em">195.100.0.0/30</span> via <span class="em">195.100.0.10</span> (Nord)</p>
+                            </li>
+                            <li>
+                                <p><span class="em">195.100.0.4/30</span> Est</p>
+                            </li>
+                            <li>
+                                <p><span class="em">195.100.0.8/30</span> Nord</p>
+                            </li>
+                            <li>
+                                <p><span class="em">194.100.2.0/23</span> via <span class="em">195.100.0.10</span> (Nord)</p>
+                            </li>
+                            <li>
+                                <p><span class="em">194.100.4.0/23</span> Ouest</p>
+                            </li>
+                        </ul>
+                        <p>Il y a donc un couplage entre les tables de routage interdomaine et intradomaine. Si les routes intradomaines changent, par exemple en raison de pannes de liens ou de changements de métriques de liens, alors la table de forwariding doit être mise à jour sur chaque routeur car le chemin le plus court vers un nexthop BGP peut avoir changé.</p>
+                        <p>Le dernier point à discuter avant d'examiner le processus de décision BGP est qu'un réseau oeut contenir des routeurs qui ne maintiennent aucune session eBGP. Ces routeurs peuvent petre des routeurs stub attachés à un seul routeur dans le réseau ou des routeurs centraux qui résident sur le chemin entre deux routeurs frontière qui utilisent BGP comme illustré dans la figure ci-dessous.</p>
+                        <figure>
+                            <img src="../images/comment_gerer_routeurs_non_BGP.png" alt="">
+                            <figcaption>Figure 5.65 : Comment gérer les routeurs non-BGP ?</figcaption>
+                        </figure>
+                        <p>Dans le scénario ci-dessus, le routeur <span class="em">R2</span> doit être en mesure de transférer un paquet vers n'importe quelle destination dans le préfixe <span class="em">12.0.0.0/8</span> à l'intérieur de l'<span class="em">AS30</span>. Un tel paquet devrait être transmis par le routeur <span class="em">R5</span>, car ce routeur réside sur le chemin entre <span class="em">R2</span> et son nexthop BGP attaché à <span class="em">R4</span>. Deux solutions peuvent être utilisées pour s'assurer que <span class="em">R2</span> est en mesure de transférer de tels paquets inter-domaines :</p>
+                        <ul>
+                            <li>
+                                <p>Activier BGP sur le routeur <span class="em">R5</span> et inclure ce routeur dans le maillage complet <span class="em">iBGP</span>. Deux sessions iBGP seraient ajoutées dans la figure ci-dessus : <span class="em">R2-R5</span> et <span class="em">R4-R5</span>. Cette solution fonctionne et est utilisée par de nombreux AS. Cependant, elle oblige tous les routeurs à avoir suffisament de ressources (CPU et mémoire) pour ecécuter BGP et maintenir une grande table de routage.</p>
+                            </li>
+                            <li>
+                                <p>Encapsuler les paquets inter-domaines envoyés à travers l'AS afin que le routeur <span class="Em">R5</span> n'ait jamais besoin de transmettre un paquet dont la destination est en dehors de l'AS local. Différents mécanismes d'encapsulation existent. MultiProtocol Label Switching (MPLS) RFC 3031 et le Layer 2 Tunneling Protocol (L2TP) RFC 3931 sont fréquemment utilisés dans les grands domaines, mais une explication détaillée de ces techniques est hors de portée de cette section. Le schéma d'encapsulation le plus simple à comprendre est celui de l'IP sur IP défini dans la RFC 2003. Ce schéma d'encapsulation place un paquet IP (appelé paquet intérieur), incluant son payload, en tant que payload d'un paquet IP plus grand (appelé paquet extérieur). Il peut être utilisé par les routeurs de frontière pour transmettre des paquets via des routeurs qui ne maintiennent pas de table de routage BGP. Par exemple, dans la figure ci-dessus, si le routeur <span class="em">R2</span> doit transférer un paquet vers la destination <span class="em">12.0.0.1</span>, il peut ajouter à l'avant de ce paquet un en-tête IPv4 dont l'adresse source est définie sur l'une de ses adresses IPv4 et dont l'adresse de destination est l'une des adresses IPv4 de <span class="em">R4</span>. Le champ <span class="em">Protocol</span> de l'en-tête IP est défini sur <span class="em">4</span> pour indiquer qu'il contient un paquet IPv4. Le paquet est transmis par <span class="em">R5</span> à <span class="em">R4</span> en fonction de la table de transfert qu'il a construit grâce à sa table de routage intra-domaine. Á la réception du paquet, <span class="em">R4</span> supprime l'en-tête extérieur et consulte sa table de transfert (BGP) pour transférer le paquet vers <span class="em">R3</span>.</p>
+                            </li>
+                        </ul>
+                        <p><span class="html">Le processus de décision de BGP</span> : Outre les filtres d'importation et d'exportation, une différence clé entre BGP et les protocoles de routage intra-domaine est que chaque domaine est que chaque domaine peut définir son propre algorithme de classement pour déterminer quelle route est choisie pour acheminer les paquets lorsque plusieurs routes ont été apprises vers le même préfixe. Ce classement dépend de plusieurs attributs BGP qui peuvent être attachés à une route BGP.</p>
+                        <p>Le premier attribut BGP utilisé pour classer les routes BGP est l'attribut de <span class="html">préférence locale (local-pref pour local-preference)</span>. Cet attribut est un entier non signé qui est attaché à chaque route BGP reçue sur une session eBGP par le filtre d'importation associé.</p>
+                        <p>Lors de la comparaison des routes vers le même préfixe de destination, un routeur BGP préfère toujours les routes avec la valeur <span class="em">local-pref</span>la plus élevée. Si le routeur BGP connaît plusieurs routes avec la même <span class="em">local-pref</span>, il préfère parmi les routes ayant cette <span class="em">local-pref</span> avec le chemin AS le plus court.</p>
+                        <p>L'attribut <span class="em">local-pref</span> est souvent utilisé pour préférer certaines routes par rapport à d'autres. Cet attribut est toujours présent dans les <span class="em">BGP Update</span> échangées sur des <span class="em">sessions iBGP</span>, mais jamais présent dans les messages échangés sur des <span class="em">sessions eBGP</span>.</p>
+                        <p>Une utilisation courante de la <span class="em">local-pref</span> est de prendre en charge les liens de secours. Considérons la situation représentée dans la figure ci-dessous. <span class="em">AS1</span> souhaite toujours utiliser le lien à haute bande passante pour envoyer et recevoir des paquets via <span class="em">AS2</span> et n'utilisent le lien de secours qu'en cas de défaillance du lien primaire.</p>
+                        <figure>
+                            <img src="../images/comment_creer_lien_sauvegarde_BGP.png" alt="">
+                            <figcaption>Figure 5.66 : Comment créer un lien de sauvegarde avec BGP ?</figcaption>
+                        </figure>
+                        <p>Comme les routeurs BGP préfèrent toujours les routes avec l'attribut <span class="em">local-pref</span> le plus élevé, cette politique peut être implémentée en utilisant le filtre d'importation suivant sur <span class="em">R1</span>.</p>
+<pre class="taille60"><code>import: from AS2 RA at R1 set localpref=100;
+        from AS2 RB at R1 set localpref=200;
+        accept ANY</code></pre>
+                        <p>Avec ce filtre d'importation, toutes les routes BGP apprises de <span class="em">RB</span> via les liens haute bande passante sont préférées aux routes apprises via le lien de sauvegarde. Si le lien principal échoue, les routes correspondantes sont supprimées de la table de RIB de <span class="em">R1</span> et <span class="em">R1</span> utilise la route apprise de <span class="em">RA</span>. <span class="em">R1</span> réutilise les routes via <span class="em">RB</span> dès qu'elles sont annoncées par <span class="em">RB</span> une fois que le lien <span class="em">R1-RB</span> est rétabli.</p>
+                        <p>Le filtre d'importation ci-dessus modifie la sélection des routes BGP à l'intérieur d'<span class="em">AS1</span>. Ainsi, il influence la route suivie par les paquets transmis par <span class="em">AS1</span>. En plus d'utiliser le lien principal pour envoyer des paquets, <span class="em">AS1</span> souhaite recevoir ses paquets via le lien à haute bande passante. Pour cela, <span class="em">AS2</span> doit également définir l'attribut de <span class="em">local-pref</span> dans son filtre d'importation.</p>
+<pre class="taille60"><code>import: from AS1 R1 at RA set localpref=100;
+        from AS1 R1 at RB set localpref=200;
+        accept AS1</code></pre>
+                        <p>Parfois, l'attribut de <span class="em">local-pref</span> est utilisé pour préférer une liaison <span class="em">bon marché</span> par rapport à une plus coûteuse. Par exemple, dans le réseau ci-dessous, <span class="em">AS1</span> peut souhaiter envoyer et recevoir des paquets principalement via sa liaison interdomaine avec <span class="em">AS4</span>.</p>
+                        <figure>
+                            <img src="../images/comment_preferer_lien_bon_marche_plus_cher.png" alt="">
+                            <figcaption>Figure 5.67 : Comment préférer une liaison bon marché par rapport à une plus coûteuse ?</figcaption>
+                        </figure>
+                        <p><span class="em">AS1</span> peut installer le filtre d'importation suivant sur <span class="em">R1</span> pour s'assurer qu'il envoie toujours des paquets via <span class="em">R2</span> lorsqu'il a appris une route via <span class="em">AS2</span> et une autre via <span class="em">AS4</span>.</p>
+<pre class="taille60"><code>import: from AS2 RA at R1 set localpref=100;
+        from AS4 R2 at R1 set localpref=200;
+        accept ANY</code></pre>
+                        <p>Cependant, ce filtre d'importation n'influence pas la façon dont <span class="em">AS3</span>, par exemple, préfère certaines routes par rapport à d'autres. Si le lien entre <span class="em">AS3</span> et <span class="em">AS2</span> est moins cher que le lien entre <span class="em">AS3</span> et <span class="em">AS4</span>, <span class="em">AS3</span> pourrait envoyer tous ses paquets via <span class="em">AS2</span> et <span class="em">AS1</span> recevrait des paquets via son lien coûteux. Un point important à retenir à propos de <span class="em">local-pref</span> est qu'il peut être utilisé pour préférer certaines routes à d'autres pour envoyer des paquets, mais il n'a aucune influence sur les routes suivies par les paquets reçus.</p>
+                        <p>Une autre utilisation importante de l'attribut <span class="em">local-pref</span> est de supporter les relations d'interconnexion <span class="em">client&#8594;fournisseur</span> et de partage des coûts. Du point de vue économique, il existe une différence importante entre ces trois types de relations d'interconnexion. Un domaine gagne généralement de l'argent lorsqu'il envoie des paquets via une relation <span class="em">client&#8594;fournisseur</span>. En revanche, il doit payer son fournisseur lorsqu'il envoie des paquets via une relation <span class="em">fournisseur&#8594;client</span>. Utiliser une interconnexion de partage des coûts pour envoyer des paquets est généralemnt neutre du point de vue économique. Pour prendre en compte ces problèmes économiques, les domaines configurent généralement les filtres d'importation sur leurs routeurs de la manière suivante :</p>
+                        <ul>
+                            <li>
+                                <p>Insérer un attribut <span class="em">local-pref</span> élevé dans les routes apprises d'un client.</p>
+                            </li>
+                            <li>
+                                <p>Insérer un attribut <span class="em">local-pref</span> moyen dans les routes apprises via une interconnexion de partage des coûts.</p>
+                            </li>
+                            <li>
+                                <p>Insérer un attribut <span class="em">local-pref</span> faible dans les routes apprises d'un fournisseur.</p>
+                            </li>
+                        </ul>
+                        <p>Avec un tel filtre d'importation, les routeurs d'un domaine préfèrent toujours atteindre les destinations via leurs clients chaque fois qu'une telle route existe. Sinon, ils préfèrent utiliser des relations d'échange de coûts partagés et ne n'envoient des paquets via leurs fournisseurs que lorsqu'ils ne connaissent aucune route alternative. Une conséquence de la définition de l'attribut de <span class="em">local-pref</span> de cette manière est que les chemins Internet sont souvent asymétriques. Considérez par exemple l'inter-réseau montré dans la figure ci-dessous.</p>
+                        <figure>
+                            <img src="../images/asymetrie_chemins_Internet.png" alt="">
+                            <figcaption>Figure 5.68 : Asymétrie des chemins Internet</figcaption>
+                        </figure>
+                        <p>Considérons, dans cet inter-réseau, les routes disponibles à l'intérieur de <span class="em">AS1</span> pour atteindre <span class="em">AS5</span>. <span class="em">AS1</span> apprend le chemin <span class="em">AS4:AS6:AS7:AS5</span> depuis <span class="em">AS4</span>, le chemin <span class="em">AS3:AS8:AS5</span> depuis <span class="em">AS3</span> et le chemin <span class="em">AS2:AS5</span> depuis <span class="em">AS2</span>. Le premier chemin est choisi car il a été appris depuis un client. D'autre part, <span class="em">AS5</span> reçoit trois chemins vers <span class="em">AS1</span> via ses fournisseurs. Il peut sélectionner n'importe lequel de ces chemins pour atteindre <span class="em">AS1</span>, en fonction de ses préférences pour un fournisseur plutôt qu'un autre.</p>
+                        <p>En revenant à l'organisation d'un routeur BGP présentée dans la figure "<span class="em">Organisation d'un routeur BGP</span>", la dernière partie à discuter est le processus de décision BGP. Le processus de décision BGP est l'algorithme utilisé par les routeurs pour sélectionner la route à installer dans la FIB lorsqu'il y a plusieurs routes vers le même préfixe. Le processus de décision BGP reçoit un ensemble de routes candidates vers le même préfixe et utilise sept étapes. À chaque étape, certaines routes sont retirées de l'ensemble des candidats et le processus lorsque l'ensemble ne contient plus qu'une seule route. Certaines implémentations de BGP peuvent être configurées pour installer plusieurs routes vers un même préfixe dans leur FIB à des fins d'équilibrage de charge. Cependant, cela dépasse cette introduction à BGP.</p>
+                        <ol>
+                            <li>
+                                <p>Ignorer les routes ayant un nexthop BGP injoignable.</p>
+                            </li>
+                            <li>
+                                <p>Préférer les routes ayant la local-pref la plus haute.</p>
+                            </li>
+                            <li>
+                                <p>Préférer les routes ayant le plus court chemin AS.</p>
+                            </li>
+                            <li>
+                                <p>Préférer les routes ayant le MED le plus petit.</p>
+                            </li>
+                            <li>
+                                <p>Préférer les routes apprises via les sessions eBGP aux routes apprises via les sessions iBGP.</p>
+                            </li>
+                            <li>
+                                <p>Préférer les routes ayant le nexthop le plus proche.</p>
+                            </li>
+                            <li>
+                                <p>Règles de résolution des égalités : préférer les routes apprises du routeur ayant le plus bas ID de routeur.</p>
+                            </li>
+                        </ol>
+                        <p>La première étape du processus de décision BGP assure qu'un routeur BGP n'installe pas dans sa table FIB une route dont le nexthop est considéré comme inaccessible par le protocole de routage intra-domaine. Cela pourrait se produire, par exemple, lorsqu'un routeur a planté. Le protcole de routage intra-domaine signale généralement la défaillance de ce routeur avant la défaillance des sessions BGP qu'il termine. Cette règle implique que le processus de décision BGP doit être relancé chaque fois que le prototole de routage intra-domaine signale une modification de la disponibilité d'un préfixe contenant un ou plusieurs nexthops BGP.</p>
+                        <p>La deuxième règle permet à chaque domaine de définir ses préférences de routage. L'attribut <span class="em">local-pref</span> est défini par le filtre d'importation du routeur qui a appris une route via une session eBGP.</p>
+                        <p>En contraste avec les protocoles de routage intradomaine, BGP ne contient pas de métrique explicite. Cela est dû au fait qu'il est impossible pour tous les domaines de s'entendre sur une métrique commune qui répondrait aux exigences de tous les domaines. Malgré cela, les routeurs BGP préfèrent les routes ayant un attribut de chemin AS court par rapport aux routes ayant un chemin AS long. Cette étape du processus de décision de BGP est motivée par le fait que les opérateurs s'attendent à ce qu'une route avec un chemin AS long soit de moins bonne qualité qu'une route avec un chemin AS plus court. Cependant, des études ont montré qu'il n'y avait pas toujours une forte corrélation entre la qualité d'une route et la longueur de son chemin AS [HFPMC2002].</p>
+                        <p>Avant d'expliquer la quatrième étape du processus de décision de BGP, expliquons d'abord les cinquième et sixième étapes. Ces deux étapes sont utilisées pour implémenter le <span class="html">routage de la patate chaude</span>. Intuitivement, lorsqu'un domaine implémente le <span class="em">routage de la patate chaude</span>, il essaie de transférer les paquets destinés à des adresses en dehors de son domaine, vers d'autres domaines aussi rapidement que possible.</p>
+                        <p>Pour comprendre le <span class="em">routage de la patate chaude</span>, considérons les deux domaines présentés dans la figure ci-dessous. <span class="em">AS2</span> annonce le préfixe <span class="em">1.0.0.0/8</span> sur les liens de peering <span class="em">R2-R6</span> et <span class="em">R3-R7</span>. Les routeurs à l'intérieur d'<span class="em">AS1</span> apprennent deux routes vers <span class="em">1.0.0.0/8</span> : l'une via <span class="em">R6-R2</span> et la deuxième via <span class="em">R7-R3</span>.</p>
+                        <figure>
+                            <img src="../images/routage_chaud_froid_patate.png" alt="">
+                            <figcaption>Figure 5.69 : Routage de la patate chaude et de la patate froide</figcaption>
+                        </figure>
+                        <p>Avec la cinquième étape du processus de décision BGP, un routeur oréfère toujours utiliser une route apprise via une <span class="em">session eBGP</span> par rapport à une route apprise via une <span class="em">session iBGP</span>. Ainsi, le routeur <span class="em">R6</span> (resp. <span class="em">R7</span>) préfère utiliser la route via le routeur <span class="em">R2</span> (resp. <span class="em">R3</span>) pour atteindre le préfixe <span class="em">1.0.0.0/8</span>.</p>
+                        <p>La sixième étape du processus de décision BGP prend en compte la distance, mesurée comme la longueur du chemin intradomaine le plus court, entre un routeur BGP et le nexthop BGP pour les routes apprises via les <span class="em">sessions iBGP</span>. Cette règle est utilis&e sur le routeur <span class="em">R8</span> dans l'exemple ci-dessus. Ce routeur a reçu deux routes vers <span class="em">1.0.0.0/8</span> :</p>
+                        <ul>
+                            <li>
+                                <p><span class="em">1.0.0.0/8</span> via <span class="em">R7</span> qui est à une distance de <span class="em">1</span> de <span class="em">R8</span>.</p>
+                            </li>
+                            <li>
+                                <p><span class="em">1.0.0.0/8</span> via <span class="em">R6</span> qui est à une distance de <span class="em">50</span> de <span class="em">R8</span>.</p>
+                            </li>
+                        </ul>
+                        <p>La première route, via <span class="em">R7</span>, est celle que le routeur <span class="em">R8</span> préfère, car c'est la route qui minimise le coût de transfert des paquets à l'intérieur de <span class="em">AS1</span> avant de les envoyer à <span class="em">AS2</span>.</p>
+                        
                 </article>
             <!-- fin de section -->
             </section>
