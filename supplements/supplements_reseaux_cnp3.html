@@ -5949,8 +5949,718 @@ h4[0]="lan3"</code></pre>
                                     </li>
                                 </ol>
                             </li>
-                            
+                            <li>
+                                <p>Utilisez le réseau configuré ci-dessus pour tester la fragmentation des paquets IP. La commande <span class="em">ifconfig</span> vous permet de spécifier l'Unité de Transmission Maximale (MTU), c'est-à-dire la taille maximale des trames autorisées sur une interface donnée. La MTU par défaut sur les interfaces <span class="em">eth?</span> est de 1500 octets.</p>
+                                <ol>
+                                    <li>
+                                        <p>Forcez une MTU de 500 octets sur les trois interfaces connectés à <span class="em">lan2</span>.</p>
+                                    </li>
+                                    <li>
+                                        <p>Utilisez la commande <span class="html">ping -s 1000</span> pour envoyer un paquet ping de 1000 octets depuis <span class="em">h3</span> vers l'un des routeurs connectés à <span class="em">lan2</span> et capturez les paquets sur l'autre routeur en utilisant <span class="html">tcpdump(8)</span>. Dans quel ordre l'hôte émulé envoie-t-il les fragments IP ?</p>
+                                    </li>
+                                    <li>
+                                        <p>Utilisez la commande <span class="html">ping -s 2000</span> pour envoyer un paquet ping de 2000 =octets depuis <span class="em">h1</span> vers <span class="em">h4</span> et capturez les paquets sur <span class="em">lan2</span> et <span class="em">lan3</span> en utilisant <span class="html">tcpdump(8)</span>. Dans quel ordre l'hôte émulé envoie-t-il les fragments IP ?</p>
+                                    </li>
+                                    <li>
+                                        <p>À partir de vos mesures, comment un hôte émulé génère-t-il les identifiants des paquets IP qu'il envoie ?</p>
+                                    </li>
+                                    <li>
+                                        <p>Réinitialisez la MTU sur l'interface <span class="em">eth1</span> du routeur <span class="em">r1</span> à 1500 octets, mais laissez la MTU  sur l'interface <span class="em">eth0</span> du routeur <span class="em">r2</span> à 500 octets. Vérifiez si l'hôte <span class="em">h1</span> peut envoyer un ping à l'hôte <span class="em">h4</span>. Utilisez <span class="html">tcpdump(8)</span> pour analyser ce qui se passe.</p>
+                                    </li>
+                                    <li>
+                                        <p>Le protocole d'information de routage (RIP) est un protocole de vecteur de distance souvent utilisé dans les petits réseaux IP. Pour cet exercice, vous utiliserez <span class="html">quagga</span>, une implémentation open-source de plusieurs protocoles de routage IP qui s'exécute sur Linux et d'autres systèmes d'exploitation compatibles Unix. <span class="html">quagga(8)</span> est en fait un ensemble de démons qui interagissent entre eux et avec la table de routage du noyau Linux. Pour cet exercice, vous utiliserez deux de ces démons : <span class="html">zebra(8)</span> et <span class="html">ripd(8)</span>. <span class="em">zebra(8)</span> est le démon principal qui gère les interactions entre la table de routage du noyau Linux et les protocoles de routage. <span class="em">ripd(8)</span> est l'implémentation du protocole RIP. Il interagit avec les tables de routage Linux via le démon <span class="em">zebra(8)</span>.</p>
+                                        <p>Pour utiliser une machine réelle ou virtuelle Linux en tant que routeur, vous devez d'abord configurer les adresses IP des interfaces de la machine. Une fois cette configuration vérifiée, vous pouvez configurer les démons <span class="em">zebra(8)</span> et <span class="em">ripd(8)</span>. Les fichiers de configuration de ces démons se trouvent dans <span class="em">/etc/zebra</span>. Le premier fichier de configuration est <span class="em">/etc/zebra/daemons</span>. Il répertorie les démons qui sont lancés lorsque <span class="em">zebra</span> est démarré par <span class="em">/etc/init.d/zebra</span>. Pour activer <span class="em">ripd(8)</span> et <span class="em">zebra(8)</span>, ce fichier sera configuré comme suit.</p>
+<pre class="taille60"><code># This file tells the zebra package
+# which daemons to start.
+# Entries are in the format: <daemon>=(yes|no|priority)
+# where 'yes' is equivalent to infinitely low priority, and
+# lower numbers mean higher priority. Read
+# /usr/doc/zebra/README.Debian for details.
+# Daemons are: bgpd zebra ospfd ospf6d ripd ripngd
+zebra=yes
+bgpd=no
+ospfd=yes
+ospf6d=no
+ripd=no
+ripngd=no</code></pre>
+                                        <p>Le deuxième fichier de configuration est le fichier <span class="em">/etc/zebra/zebra.conf</span>. Il définit les règles de configuration globales qui s'appliquent à <span class="em">zebra(8)</span>. Pour cet exercice, nous utilisons le fichier de configuration par défaut illusrré ci-dessous.</p>
+<pre class="taille60"><code>! -*- zebra -*-
+!
+! zebra configuration file
+!
+hostname zebra
+password zebra
+enable password zebra
+!
+! Static default route sample.
+!
+!ip route 0.0.0.0/0 203.181.89.241
+!
+log file /var/log/zebra/zebra.log</code></pre> 
+                                        <p>Dans le fichier de configuration zebra, les lignes commençant par <span class="em">!</span> sont des commentaires. Cette configuration définit le nom d'hôte en tant que <span class="em">zebra</span> et deux mots de passe. Le mot de passe par défaut (<span class="html">password zebra</span>) doit être fourni lors de la connexion à la console de gestion <span class="em">zebra(8)</span> via une connexion TCP. Cette console de gestion peut être utilisée comme un shell sur un hôte Unix pour spécifier des commandes aux démons <span class="em">zebra(8)</span>. Le deuxième mot de passe (<span class="html">enable password zebra</span>) spécifie le mot de passe à fournir avant de donner des commandes qui modifient la configuration du démon. Il est également possible de spécifier des routes statistiques dans ce fichier de configuration, mais nous n'utilisons pas cette fonctionnalité dans cet exercice. Le dernier paramètre spécifié est le fichier journal où <span class="em">zebra(8)</span> écrit les informations de débogage. Des informations supplémentaires sur <span class="em">quagga</span> sont disponibles sur <a href="http://www.quagga.net/docs/docs-info.php" target="_blank">http://www.quagga.net/docs/docs-info.php</a>.</p>
+                                        <p>Le fichier de configuration le plus intéressant pour cet exercice est le fichier <span class="em">/etc/zebra/ripd.conf</span>. Il contient tous les paramètre spécifiques au fonctionnement du protocole RIP. Un exemple de fichier de configuration <span class="em">ripd(8)</span> est présenté ci-dessus.</p>
+<pre class="taille60"><code>!
+hostname ripd
+password zebra
+enable password zebra
+!
+router rip
+network 100.1.0.0/16
+redistribute connected
+!
+log file /var/log/zebra/ripd.log</code></pre>
+                                        <p>Ces fichiers de configuration montrent les deux différentes façons de configurer <span class="em">ripd(8)</span>. L'instruction <span class="html">router rip</span> indique le début de la configuration du protcole de routage RIP. Les lignes indentées qui suivent font partie de la configuration de ce protocole. La première ligne, <span class="em">network 100.1.0.0/16</span>, est utilisée pour activer RIP sur l'interface dont le sous-réseau OP corrspond à <span class="em">100.1.0.0/16</span>. La deuxième ligne, <span class="em">redistribute connected</span>, indique que tous les sous-réseaux directement connectés au routeur doivent être annoncés. Lorsque cette ligne de configuration est utilisée, <span class="em">ripd(8)</span> interagit avec la table de routage du noyau Linux et annonc tous les sous-réseaux directement connects au routeur. Si une nouvelle interface est activée et configurée sur le routeur, son préfixe de sous-réseau sera automatiquement annoncé. De même, le préfixe de sous-réseau sera automatiquement supprimé si l'interface du sous-réseau est désactivée.</p>
+                                        <p>Pour expérimenter avec RIP, vous utiliserez les routeurs émulés illustrés dans la figure ci-dessous. Vous pouvez télécharger l'ensemble du laboratoire à partir du fichier <span class="em">exercises/labs/lab-5routers-rip.tar.gz</span>.</p>
+                                        <figure>
+                                            <img src="../images/laboratoire_5routeurs.png" alt="">
+                                            <figcaption>Figure 5.94 : Le laboratoire à cinq routeurs</figcaption>
+                                        </figure>
+                                        <p>Le fichier <span class="em">lab.conf</span> décrivant la topologie et les interfaces utilisées sur tous les hôtes est présenté ci-dessous.</p>
+<pre class="taille60"><code>r1[0]="A"
+r1[1]="B"
+r1[2]="F"
+r1[3]="V"
+r2[0]="A"
+r2[1]="C"
+r2[2]="W"
+r3[0]="B"
+r3[1]="C"
+r3[2]="D"
+r3[3]="X"
+r4[0]="D"
+r4[1]="E"
+r4[2]="Y"
+r5[0]="E"
+r5[1]="F"
+r5[2]="Z"</code></pre>
+                                        <p>Il existe deux types de sous-réseaux dans cette topologie. Les sous-réseaux du préfixe <span class="em">172.16.0.0/16</span> sont utilisés sur les liaisons entre les routeurs, tandis que les sous-réseaux du préfixe <span class="em">192.168.0.0/16</span> sont utilisés sur les réseaux locaux qui sont connectés à un seul routeur.</p>
+                                        <p>Un routeur peut être configuré de deux manières différentes : en spécifiant des fichiers de configuration ou en tapant les commandes directment sur le routeur en utilisant <span class="html">telnet(1)</span>. Les quatre premiers routeurs ont été configurés dans les fichiers de configuration fournis. Consultez le fichier <span class="em">r1.startup</span> et les fichiers de configuration dans le répertoire <span class="em">r1/tmp/zebra</span> du laboratoire pour le routeur <span class="em">r1</span>. Les fichiers <span class="em">r?.startup</span> contiennent les commandes <span class="em">ifconfig(8)</span> qui sont utilisées pour configurer les interfaces de chaque routeur virtuel. Les fichiers de configuration situés dans <span class="em">r?/tmp/zebra</span> sont également copiés automatiquement sur le routeur virtuel de son démarrage.</p>
+                                        <ol>
+                                            <li>
+                                                <p>Lancez le laboratoire en utilisant la commande <span class="em">lstart</span> et vérifiez si le routeur <span class="em">r1</span> peut atteindre les adresses IP <span class="em">192.168.2.2</span>, <span class="em">192.168.3.3</span> et <span class="em">192.168.4.4</span>. Vous pouvez également utiliser la commande <span class="html">traceroute(8)</span> pour déterminer le chemin emprunté par vos paquets.</p>
+                                            </li>
+                                            <li>
+                                                <p>Le démon <span class="em">ripd(8)</span> peut également être configuré en tapant des commandes via une connexion TCP. <span class="em">ripd(8)</span> écoute sur le port <span class="em">2602</span>. Sur le routeur <span class="em">r1</span>, utilisez la commande <span class="html">telnet 127.0.0.1 2602</span> pour vous connecter au démon <span class="em">ripd(8)</span>. Le mot de passe par défault est <span class="html">zebra</span>. Une fois connecté au démon <span class="em">ripd(8)</span>, vous accédez à l'invite <span class="em">&gt;</span> où vous pouvez interroger l'état du routeur. En tapant <span class="html">?</span> à l'invite, vous obtiendrez la liste des commandes prises en charge. La commande <span class="html">show</span> est particulièrement utile. Tapez <span class="html">show ?</span> pour obtenir la liste de ses sous-options. Par exemple, la commande <span class="html">show ip rip</span> affichera la table de routage maintenue par le démon <span class="em">ripd(8)</span>.</p>
+                                            </li>
+                                            <li>
+                                                <p>Désactivez l'interface <span class="em">eth3</span> sur le routeur <span class="em">r1</span> en tapant la commande <span class="html">ifconfig eth3 down</span> sur ce routeur. Vérifiez l'impact de cette commande sur les tables de routage des autres routeurs du réseau. Réactivez cette interface en tapant la commande <span class="html">ifconfig eth3 up</span>.</p>
+                                            </li>
+                                            <li>
+                                                <p>Faites de même avec l'interface <span class="em">eth1</span> sur le routeur <span class="em">r3</span>.</p>
+                                            </li>
+                                            <li>
+                                                <p>Modifiez le fichier de configuration <span class="em">/etc/zebra/ripd.conf</span> sur le routeur <span class="em">r5</span> pour que ce routeur fasse partie du réseau. Vérifiez que <span class="em">192.168.5.5</span> est accessible depuis tous les routeurs à l'intérieur du réseau.</p>
+                                            </li>
+                                        </ol>
+                                    </li>
+                                    <li>
+                                        <p>L'Open Shortest Path First Protocol (OSPF) est un protocole de type d'état de lien souvent utilisé dans les réseaux IP d'entreprise. OSPF est implémenté dans le démon <span class="html">ospfd(8)</span> qui fait partie de <span class="em">quagga</span>. Nous utilsons la même topologie que dans l'exercice précédent. Le laboratoire <span class="em">Netkit</span> peut être téléchargé à partir de <span class="em">exercises/labs/lab-5routers-ospf.tar.gz</span>.</p>
+                                        <p>Le démon <span class="em">ospfd(8)</span> prend en charge une configuration plus complexe que le démon <span class="em">ripd(8)</span>. Un exemple de configuration est présenté ci-dessous.</p>
+<pre class="taille60"><code>!
+hostname ospfd
+password zebra
+enable password zebra
+!
+interface eth0
+ip ospf cost 1
+interface eth1
+ip ospf cost 1
+interface eth2
+ip ospf cost 1
+interface eth3
+ip ospf cost 1
+!
+router ospf
+router-id 192.168.1.1
+network 172.16.1.0/24 area 0.0.0.0
+network 172.16.2.0/24 area 0.0.0.0
+network 172.16.3.0/24 area 0.0.0.0
+network 192.168.1.0/24 area 0.0.0.0
+passive-interface eth3
+!
+log file /var/log/zebra/ospfd.log</code></pre>
+                                        <p>Dans ce fichier de configuration, la commande <span class="html">ip ospf cost 1</span> spécifie une métrique de <span class="em">1</span> pour chaque interface. La configuration de <span class="em">ospfd(8)</span> est composée de trois parties. Tout d'abord, chaque routeur doit avoir un identifiant unique à l'intérieur du réseau. Habituellement, cet identifiant est l'une des adresses IP attribuées au routeur. Ensuite, chaque sous-réseau sur le routeur est associé à une zone. Dans cet exemple, nous utilisons uniquement la zone principale (c'est-à-dire <span class="em">0.0.0.0</span>). La dernière commande spécifie que les messages Hello OSPF ne doivent pas être envoyés via l'interface <span class="em">eth3</span>, bien que son sous-réseau soit annoncé par le routeur. Une telle commande est souvent utilisée sur des interfaces qui sont attachées à des hôtes finaux pour éviter tout problème si un étudiant configure un routeur OSPF logiciel sur son ordinateur portable connecté à cette interface.</p>
+                                        <p>Le laboratoire <span class="em">Netkit contient déjà la configuration des routeurs </span><span class="em">r1</span> à <span class="em">r4</span>.</p>
+                                        <p>Le démon <span class="em">ospfd(8)</span> écoute sur le port TCP <span class="em">2604</span>. Vous pouvez suivre l'évolution du protocole OSPF en utilisant les commandes <span class="html">show ip ospf ?</span></p>
+                                        <ol>
+                                            <li>
+                                                <p>Lancez le laboratoire en utilisant la commande <span class="em">lstart</span> et vérfiez que les adresses <span class="em">192.168.1.1</span>, <span class="em">192.168.2.2</span>, <span class="em">192.168.3.3</span> et <span class="em">192.168.4.4</span> sont accessibles depuis n'importe quel routeur à l'intérieur du réseau.</p>
+                                            </li>
+                                            <li>
+                                                <p>Configurez le routeur <span class="em">r5</span> en modifiant le fichier <span class="em">/etc/zebra/ospfd.conf</span> et redémarrez le démon. Vérifiez que l'adresse <span class="em">192.168.5.5</span> est accessible depuis n'importe quel routeur à l'intérieur du réseau.</p>
+                                            </li>
+                                            <li>
+                                                <p>Comment pouvez-vous mettre à jour la configuration réseau pour que les paquets envoyés par le routeur <span class="em">r1</span> vers le routeur <span class="em">r5</span> utilisent la liaison directe entre les deux routeurs tandis que les paquets envoyés par <span class="em">r5</span> sont acheminés via <span class="em">r4</span> ?</p>
+                                            </li>
+                                            <li>
+                                                <p>Désactivez l'interface <span class="em">eth3</span> sur le routeur <span class="em">r1</span> et observez la rapidité avec laquelle le réseau converge. Vous pouvez suivre l'évolution de la table de routage sur un routeur en tapant <span class="html">netstat -rnc</span>. Réactivez l'interface <span class="em">eth3</span> sur le routeur <span class="em">r1</span>.</p>
+                                            </li>
+                                            <li>
+                                                <p>Modifiez le MTU de l'interface span.em{eth0} sur le routeur <span class="em">r1</span>, mais laissez-le inchangé sur l'interface <span class="em">eth0</span> du routeur <span class="em">r2</span>. Quel est l'impact de cette modification ? Pouvez-vous l'expliquer ?</p>
+                                            </li>
+                                            <li>
+                                                <p>Désactivez l'interface <span class="em">eth1</span> sur le routeur <span class="em">r3</span> et observez la rapidité avec laquelle le réseau converge. Réactivez cette interface.</p>
+                                            </li>
+                                            <li>
+                                                <p>Arrêtez le routeur <span class="em">r2</span> en utilisant la commande <span class="html">vcrash r2</span>. À quelle vitesse le réseau réagit-il à cette défaillance ?</p>
+                                            </li>
+                                        </ol>
+                                    </li>
+                                </ol>
+                            </li>
                         </ol>
+                </article>
+                <article id="partie6">
+                    <h2>Partie 6 : La couche de liaison de données et les LAN :</h2>
+                    <h3>6.1 La couche de liaison de données et les LAN :</h3>
+                    <p>La couche de liaison de données est la plus basse couche du modèle de référence que nous étudions en détail. Comme mentionné précédemment, il existe deux types de couches de liaison de données. Les premières couches de liaison de données qui sont apparues sont celles utilisées sur des liens point-à-point entre des appareils connectés directement par une liaison physique. Nous discuterons brièvement de l'une de ces couches de liaison de données dans ce chapitre. Le deuxième type de couches de liaison de données est celui utilisé dans les réseaux locaux (LAN). La principale différence entre les couches de liaison de données point-à-point et les couches de liaison de données LAN est que ces dernières doivent réguler l'accès au réseau local, qui est généralement un support partagé.</p>
+                    <p>Ce chapitre est organisé comme suit. Nous commenàons par discuter des principes de la couche de liaison de données ainsi que des services qu'elle utilise de la couche physique. Nous décrivons ensuite plus en détail plusieurs algorithmes de contrôle d'accès au support utilisés dans les réseaux locaux pour réguler l'accès au support partgé. Enfin, nous examinons en détail les technologies importantes de la couche de liaison de données, en mettant l'accent sur les réseaux Ethernet et WiFi.</p>
+                    <h4>5.1.1 Principes :</h4>
+                    <p>La couche de liaison de données utilise le service fourni par la couche physique. Bien qu'il existe de nombreuses implémentations différentes de la couche physique d'un point de vue technologique, elles fournissent toutes un service qui permet à la couche de liaison de données d'envoyer et de recevoir des bits entre des appareils directement connectés. La couche de liaison de données reçoit des paquets de la couche réseau. Deux entités de la couche de liaison de données échangent des <span class="html">trames (frames en anglais)</span>. Comme expliqué dans le chapitre précédent, la plupart des technologies de la couche de liaison de données imposent des limitations sur la taille des trames. Certaines technologies imposent uniquement une taille maximale de trame, d'autres imposent à la des fois des tailles minimales et maximales de trame, et enfin, certaines technologies ne prennent en charge qu'une seule taille de trame. Dans ce dernier cas, la couche de liaison de données inclura généralement une sous-couche d'adaptation pour permettre à la couche réseau d'envoyer et de recevoir des paquets de longueur variable. Cette couche d'adaptation peut inclure des mécanismes de fragmentation et de réassemblage.</p>
+                    <figure>
+                        <img src="../images/couche_liaison_donnees_modele_reference.png" alt="">
+                        <figcaption>Figure 6.1 : La couche de liaison de données et le modèle de référence</figcaption>
+                    </figure>
+                    <p>Le service de la couche physique facilite l'envoi et la réception des bits. De plus, il est généralement loin d'être parfait, comme expliqué dans l'introduction :</p>
+                    <ul>
+                        <li>
+                            <p>La couche physique peut subir des changements, par exemple en raison d'interférences électromagnétiques, affectant ainsi la valeur d'un bit transmis.</p>
+                        </li>
+                        <li>
+                            <p>La couche physique peut livrer <span class="em">plus</span> de bits au récepteur que ceux envoyés par l'émetteur.</p>
+                        </li>
+                        <li>
+                            <p>La couche physique peut livrer <span class="em">moins</span> de bits au récepteur que ceux envoyés par l'émetteur.</p>
+                        </li>
+                    </ul>
+                    <p>La couche de liaison de données doit permettre aux systèmes finaux d'échanger des trames contenant des paquets malgré toutes ces limitations. Sur les liens point-à-point et les LAN, le premier problème à résoudre est comment coder une trame en tant que séquence de bits, de sorte que le récepteur puisse facilement récupérer la trame re!ue malgré les limitations de la couche physique.</p>
+                    <p>Si la couche physique était parfaite, le problème serait très simple. La couche de liaison de données aurait simplement besoin de définir comment encoder chaque trame en tant que séquence de bits consécutifs. Le récepteur pourrait alors facilement extraire les trames des bits reçus. Malheureusement, les imperfections de la couche physique rendent ce problème de découpage légèrement plus complexe. Plusieurs solutions ont été proposées et sont utilisées en pratique dans différentes technologies de la couche de liaison de données.</p>
+                    <h5>Le découpage en trames :</h5>
+                    <p>Ceci est le problème du <span class="html">découpage en trames</span>. On peut le définir ainsi : "<span class="em">Comment un émetteur encode-t-il des trames de sorte que le récepteur puisse les extraire efficacement du flux de bits qu'il reçoit de la couche physique</span>".</p>
+                    <p>Une première solution pour résoudre le problème de découpage en trames consiste à demander à la couche physique de rester inactive pendant un certain temps après la transmission de chaque trame. Ces périodes d'inactivité peuvent ^^etre détectées par le récepteur et servir de repère pour délimiter les limites des trames. Malheureusement, cette solution n'est pas suffisante pour deux riasons. Premièrement, certaines couches physiques ne peuvent pas rester inactives et doivent toujours transmettre des bits. Deuxièmement, l'insertion d'une période d'inactivité entre les trames réduit la bande passante maximale pouvant être atteinte par la couche de liaison de données.</p>
+                    <p>Certaines couches physiques proposent une alternative à cette période d'inactivité. Toutes les couches physiques sont capables d'envoyer et de recevoir des symboles physiques qui représentent les valeurs <span class="em">0</span> et <span class="em">1</span>. Cpendant, pour diverses raisons qui dépassent le cadre de ce chapitre, plusieurs couches physiques sont capables d'échanger d'autres symboles physiques. Par exemple, le codage Manchester utilisé dans plusieurs couches physiques peut envoyer quatre symboles différents. Le codage Manchester est un schéma de codage différentiel dans lequel le temps est divisé en périodes de longueur fixe. Chaque période est divisée en deux moitiés et deux niveaux de tension différents peuvent être appliqués. Pour envoyer un symbole, l'émetteur doit définir l'un de ces deux niveaux de tension pendant chaque moitié de période. Pour envoyer un <span class="em">1</span> (resp. <span class="em">0</span>, l'émetteur doit définir une tension élevée (resp. faible) pendant la première moitié de la période et une tensions faible (resp. élevée) pendant la deuxième moitié. Ce codage garantit qu'il y aura une transition au milieu de chaque période et permet au récepteur de synchroniser son horloge sur celle de l'émetteur. En dehors des codages pour <span class="em">0</span> et <span class="em">1</span>, le codage Manchester prend également en charge deux symboles supplémentaires : <span class="html">InvH</span> et <span class="html">InvB</span>, où le même niveau de tension est utilisé pour les deux demi-périodes. Par définition, ces deux symboles ne peuvent pas apparaître à l'intérieur d'une trame qui est composée uniquement de <span class="em">0</span> et de <span class="em">1</span>. Certaines technologies utilisent ces symboles spéciaux comme marqueurs pour le début ou la fin des trames.</p>
+                    <figure>
+                        <img src="../images/codage_Manchester.png" alt="">
+                        <figcaption>Figure 6.2 : Codage Manchester</figcaption>
+                    </figure>
+                    <p>Malheureusement, les encodages à plusieurs symboles ne peuvent pas être utilisés par tous les couches physiques et une solution générique qui peut être utilisée avec n'importe quelle cocuhe physique capable de transmettre et de recevoir uniquement des <span class="em">0</span> et des <span class="em">1</span> est nécessaire. Cette solution générique s'appelle le "<span class="html">stuffing (remplissage)</span>" et deux variantes existent : le <span class="html">bit stuffing (remplissage de bits)</span> et le <span class="html">character stuffing (remplissage de caractères)</span>. Pour permettre à un récepteur de délimiter facilement les limites des trames, ces deux techniques réservent des chaînes de bits spéciales en tant que marqueurs de délimitation de trame et encodent les trames de manière à ce que ces chaînes de bits spéciales n'apparaissent pas à l'intérieur des trames.</p>
+                    <p>Le <span class="em">bit stuffing</span> réserve la séquence de bits <span class="em">01111110</span> comme marqueur de délimitation de trame et garantit qu'ik n'y aura jamais six symboles <span class="em">1</span> consécutifs transmis par la couche physique à l'intérieur d'une trame. Avec le <span class="em">bit stuffing</span>, une trame est envoyée de la manière suivante : tout d'abord, l'émetteur transmet le marqueur, c'est-à-dire <span class="em">01111110</span>. Ensuite, il envoie tous les bits de la trame et insère un bit supplémentaire à <span class="em">0</span> après chaque séquence de cinq bits consécutifs à <span class="em">1</span>. Cela garantit que la trame envoyée ne contient jamais une séquence de six bits consécutifs à <span class="em">1</span>. Par conséquent, le motif du marqueur ne peut pas apparaître à l'intérieur de la trame envoyée. Le marqueur est également envoyé pour marquer la fin de la trame. Le récepteur effectue l'opération inverse pour décoder une trame reçue. Il détecte d'abord le début de la trame grâce au marqueur <span class="em">01111110</span>. Ensuite, il traite les bits reçus et compye le nombre de bits consécutifs à <span class="em">1</span>. Si un <span class="em">0</span> suit cinq bits consécutifs à <span class="em">1</span>, ce bit est supprimé car il a été inséré par l'émetteur. Si un <span class="em">1</span> suit cinq bits bits consécutifs à <span class="em">1</span>, cela indique un marqueur s'il est suivi d'un bit à <span class="em">0</span>. Le tableau ci-dessous illustre l'application du <span class="em">bit stuffing</span> à quelques trames.</p>
+                    <table class="tableBalises" role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Trame originale</th>
+                                <th>Trame transmise</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>0001001001001001001000011</td>
+                                <td>01111110000100100100100100100001101111110</td>
+                            </tr>
+                            <tr>
+                                <td>0110111111111111111110010</td>
+                                <td>01111110011011111011111011111011001001111110</td>
+                            </tr>
+                            <tr>
+                                <td>01111110</td>
+                                <td>0111111001111101001111110</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Par exemple, considérons la transmission de <span class="em">0110111111111111111110010</span>. L'émetteur commencera par envoyer le marqueur <span class="em">01111110</span>, suivi de <span class="em"> 011011111</span>. Après ces cinq bits consécutifs à <span class="em">1</span>, il insère un bit à <span class="em">0</span>suivi de <span class="em">11111</span>. Un nouveau <span class="em">0</span> est inséré, suivi de <span class="em">11111</span>. Un nouvzau <span class="em">0</span> est inséré, suivi de la fin de la fin de la trame <span class="em">110010</span> et du marqueur <span class="em">01111110</span>.</p>
+                    <p>Le <span class="em">bit stuffing</span> augmente le nombre de bits nécessaires pour transmettre chaque trame. Le pire cas pour le <span class="em">bit stuffing</span> est bien sûr une longue séquence de bits à <span class="em">1</span> à l'intérieur de la trame. En cas d'erreurs de transmission, les bits ou marqueurs insérés peuvent être erronés. Dans ces cas, la trame affectée par l'erreur, et éventuellement la trame suivante, ne seront pas correctement décodées par le récepteur, mais il sera capable de se resynchroniser au prochain marqueur valide.</p>
+                    <p>Le <span class="em">bit stuffing</span> peut être facilement implémenté en matériel. Cependant, son implémentation en logiciel est difficile en raison de la surcharge plus élevée des manipulations de bits en logiciel. Les implémentations logicielles préfèrent traiter les caractères plutôt que les bits, c'est pourquoi les couches de liaison de données basées sur des logiciels utilisent généralement le <span class="em">character stufffing</span>. Cette technique opère sur des trames contenant un nombre entier de caractères de 8 bits. Certains caractères sont utilisés comme marqueurs pour délimiter les limites de la trame. De nombreuses techniques de <span class="em">character stuffing</span> les caractères <span class="html">DLE</span><span class="html">STX</span> et <span class="html">ETX</span> de l'ensemble de caractères ASCII. <span class="html">DLE STX</span> (resp. <span class="html">DLE ETX</span>) est utilisé pour marquer le début (la fin) d'une trame. Lors de la transmission d'une trame, l'émetteur ajoute un caractère <span class="html">DLE</span> après chaque caractère <span class="html">DLE</span> transmis. Cela garantit que aucun des marqueurs ne peut apparaître à l'intérieur de la trame transmise. Le récepteur détecte les limites de la trame et supprime le deuxième <span class="html">DLE</span> lorsqu'il reçoit deux caractères <span class="html">DLE</span> consécutifs. Par exemple, pour transmettre la trame <span class="em">1 2 3 DLE STX 4</span>, un émetteur enverra d'abord <span class="html">DLE STX</span> en tant que marqueur, suivi de <span class="Em">1 2 3 DLE</span>. Ensuite, l'émetteur transmet un caractère <span class="html">DLE</span> supplémentaire suivi de <span class="em">STX 4</span> et du marqueur <span class="html">DLE ETX</span>.</p>
+                    <table class="tableBalises" role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Trame originale</th>
+                                <th>Trame transmise</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1 2 3 4</td>
+                                <td>DLE STX 1 2 3 4 DLE ETX</td>
+                            </tr>
+                            <tr>
+                                <td>1 2 3 DLE STX 4</td>
+                                <td>DLE STX 1 2 3 DLE DLE STX 4 DLE ETX</td>
+                            </tr>
+                            <tr>
+                                <td>DLE STX DLE ETX</td>
+                                <td>DLE STX DLE DLE STX DLE DLE ETX DLE ETX</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Le <span class="em">character stuffing</span>, tout comme le <span class="em">bit stuffing</span>, augmente la longuer des trames transmises. Pour le <span class="em">character stuffing</span>, la pire trame est une trame contenant de nombreux caractères <span class="html">DLE</span>. Lorsque des erreurs de transmission se produisent, le récepteur peut décoder de manière incorrecte une ou deux trames (par exemple, si les erreurs se produisent dans les marqueurs). Cependant, il sera capable de se resynchroniser avec les marqueurs correctement reçus suivants.</p>
+                    <h5>Détection d'erreurs :</h5>
+                    <p>En plus du framing (délimitation des trames), les couches de liaison de données incluent également des mécanismes pour détecter et parfois même récupérer des erreurs de transmission. Pour permettre à un récepteur de détecter les erreurs de transmission, l'émetteur doit ajouter des informations redondantes sous la forme d'un code de <span class="em">détection d'erreur</span> à la trame transmise. Ce code de <span class="em">détection d'erreur</span> est calculé par l'émetteur sur la trame qu'il transmet. Lorsque le récepteur reçoit une trame avec un code de <span class="em">détection d'erreur</span>, il le recalcul et vérifie le code de <span class="em">détection d'erreur</span> reçu corrspond au code de <span class="em">détection d'erreur</span> calculé. S'ils corrspondent, la trame est considérée comme valide. De nombreux schémas de <span class="em">détection d'erreurs</span> existent et des livres entiers ont été écrits sur le sujet. Une discussion détaillée de ces techniques dépasse le cadre de ce livre, et nous ne discuterons que de quelques exemples pour illustrer les principes clés.</p>
+                    <p>Pour comprendre les codes de <span class="em">détection d'erreurs</span>, considérons deux dispositifs qui échangent des chaînes de bits contenant <span class="em">N</span> bits. Pour permettre au récepteur de détecter une erreur de transmission, l'émetteur convertit chaque chaîne de <span class="em">N</span> en une chaîne de <span class="em">N+r</span> bits. Généralement, les <span class="em">r</span> bits redondants sont ajoutés au début ou à la fin de la chaîne de bits transmise, mais certaines techniques entrelacent les bits redondants avec les bots d'origine. Un code de <span class="em">détection d'erreurs</span> peut être défini comme une fonction qui calcule les <span class="em">r</span> bits redondants correspondant à chaque chaîne de <span class="em">N</span> bits. Le code de <span class="em">détection d'erreurs</span> le plus simple est le <span class="html">bit de parité</span>. Il existe deux types de schémas de parité : la <span class="html">parité paire</span> et la <span class="html">parité impaire</span>. Avec le schéma de <span class="em">parité paire</span> (resp. <span class="em">impaire</span>), le bit redondant est choisi de telle sorte qu'un nombre pair (resp. impair) de bits soit défini à <span class="em">1</span> dans la chaîne de bits transmise de <span class="em">N+r</span> bits. Le récepteur peut facilement recalculer la parité de chaque chaîne de bits reçue et rejeter les chaînes avec une parité invalide. Le schéma de parité est souvent utilisé lors de l'échange de caractères de 7 bits. Dans ce cas, le huitième bit est souvent un <span class="html">bit de parité</span>. Le tableau ci-dessous montre les bits de parité qui sont calculés pour les chaînes de bits contenant trois bits.</p>
+                    <table class="tableBalises" role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Chaîne de 3 bits</th>
+                                <th>Parité impaire</th>
+                                <th>Parité paire</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>000</td>
+                                <td>1</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>001</td>
+                                <td>0</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>010</td>
+                                <td>0</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>100</td>
+                                <td>0</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>111</td>
+                                <td>0</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>110</td>
+                                <td>1</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>101</td>
+                                <td>1</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>011</td>
+                                <td>1</td>
+                                <td>0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Le bit de parité permet au récepteur de détecter les erreurs de transmission qui ont affecté un seul bit parmi les <span class="em">N+r</span> bits transmis. Si deux bits ou plus sont erronés, le récepteur peut ne pas nécessairement être en mesure de détecter l'erreur de transmission. Des schémas de détection d'erreurs plus puissants ont été définis. Les contrôles de redondance cyclique (CRC) sont largement utilisés dans les protocoles de la couche de liaison de données. Un CRC de <span class="em">N</span> bits peut détecter toutes les erreurs de transmission affectant une séquence de moins de <span class="em">N</span> bits dans la trame transmise et toutes les erreurs de transmission affectant un nombre impair de bits. Des détails supplémentaires sur les CRC peuvent être trouvés dans [Williams1993].</p>
+                    <p>Il est également possible de concevoir un code qui permet au récepteur de corriger les erreurs de transmission. Le code de correction d'erreurs le plus simple est la <span class="html">redondance triple modulaire (TMR pour Triple Modular Redundancy)</span>. Pour transmettre un bit défini à <span class="em">1</span> (resp. <span class="em">0</span>), l'émetteur transmet <span class="em">111</span> (resp. <span class="em">000</span>). Lorsqu'il n'y a pas d'erreurs de transmission, le récepteur peut décoder <span class="em">111</span> comme <span class="em">1</span>. Si des erreurs de transmission ont affecté un seul bit, le récepteur effectue un vote majoritaire comme indiqué dans le tableau ci-dessous. Ce schéma permet au récepteur de corriger toutes les erreurs de transmission affectant un seul bit.</p>
+                    <table class="tableBalises" role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Bits reçus</th>
+                                <th>Bit décodé</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>000</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>001</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>010</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>100</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>111</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>110</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>101</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>011</td>
+                                <td>1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>D'autres codes de correction d'erreurs plus puissants ont été proposés et sont utilisés dans certaines applications. Le <span class="html">code de Hamming</span> est une combinaison astucieuse de bits de parité qui offre des capacités de détection et de correction d'erreurs. En pratique, les protocoles de la couche de liaison de données combinent le <span class="em">bit stuffing</span> ou le <span class="em">character stuffing</span> avec une indication de longueur dans l'en-tête de la trame et un checksum ou un CRC. Le checksum/CRC est calculé par l'émetteur et placé dans la trame avant d'appliquer le <span class="em">bit stuffing</span> ou le <span class="em">character stuffing</span>.</p>
+                    <h4>6.1.2 Contrôle d'accès au support (Medium Access Control) :</h4>
+                    <p>Les couches de liaison de données point-à-point doivent sélectionner l'une des techniques de cadrage décrites ci-dessus et éventuellement ajouter des algorithmes de retransmission tels que ceux expliqués pour la couche transport afin de fournir un service fiable. Les couches de liaison de données pour les réseaux locaux font face à deux problèmes supplémentaires. Un réseau local est composé de plusieurs hôtes qui sont connectés au même support physique partagé. Du point de vue de la couche physique, un réseau local peut être organisé de quatre manières différentes :</p>
+                    <ul>
+                        <li>
+                            <p>Un réseau en forme de bus où tous les hôtes sont connectés au même câble physique.</p>
+                        </li>
+                        <li>
+                            <p>Un réseau en forme d'anneau où tous les hôtes sont connectés à un noeud amont et à un noeud aval de sorte que l'ensemble du réseau forme un anneau.</p>
+                        </li>
+                        <li>
+                            <p>Un réseau en forme d'étoile où tous les hôtes sont connectés au même périphérique.</p>
+                        </li>
+                        <li>
+                            <p>Un réseau sans fil où tous les hôtes peuvent envoyer et recevoir des trames à l'aide de signaux radio.</p>
+                        </li>
+                    </ul>
+                    <p>Ces quatre organisations physiques de base des réseaux locaux sont représentées graphiquement dans la figure ci-dessous. Nous nous concentrerons d'abord sur une organisation physique à la fois.</p>
+                    <figure>
+                        <img src="../images/LAN_bus_anneau_etoile.png" alt="">
+                        <figcaption>Figure 6.3 : Réseau local en forme de bus, d'anneau et d'étoile</figcaption>
+                    </figure>
+                    <p>Le problème commun à toutes ces organisations de réseau est de partager efficacement l'accès au réseau local. Si deux dispositifs envoient une trame en même temps, les deux signaux électriques, optiques ou radio correspondant à ces trames apparaîtront en même temps sur le support de transmission et un récepteur ne pourra pas décoder l'une ou l'autre trame. De telles transmissions simultanées sont appelés <span class="html">collisions</span>. Une collision peut impliquer des trames transmises par deux ou plusieurs dispositifs connectés au réseau local. Les collisions sont la principale cause d'erreurs dans les réseaux locaux câblés.</p>
+                    <p>Toutes les technologies de réseau local reposent sur un algorithme de <span class="em">contrôle d'accès au support (MAC pour Medium Access Control)</span> pour réguler afin de minimiser ou d'éviter les collisions. Il existe deux grandes familles d'algorithmes de <span class="em">contrôle d'accès au support</span> :</p>
+                    <ol>
+                        <li>
+                            <p>Les algorithmes MAC <span class="html">déterministes</span> ou <span class="html">pessimistes</span> : Ces algorithmes partent du principe que les collisions sont un problème très grave et qu'elles doivent être totalement évitées. Ces algorithmes garantissent qu'à tout moment, au plus un dispositif est autorisé à envoyer une trame sur le réseau local. Cela est généralement réalisé en utilisant un protocole distribué qui sélectionne un dispositif autorisé à transmettre à chaque instant. Un algorithme MAC déterministe garantit l'absence de collision, mais il y a une certaine surcharge liée à la régulation des transmissions de tous les dispositifs connectés au réseau local.</p>
+                        </li>
+                        <li>
+                            <p>Les algorithmes MAC <span class="html">stochastiques</span> ou <span class="html">optimistes</span> : Ces algorithmes considèrent que les collisions font partie du fonctionnement normal d'un réseau local. Ils visent à minimiser le nombre de collisions, mais ils n'essaient pas d'éviter toutes les collisions. Les algorithmes <span class="Em">stochastiques</span> sont généralement plus faciles à implémenter que les algorithmes <span class="em">déterministes</span>.</p>
+                        </li>
+                    </ol>
+                    <p>Nous commencerons par discuter d'un algorithme MAC déterministe simple, puis nous décrirons plusieurs algorithmes optimistes importants avant de revenir à un algorithme MAC distribué et déterministe.</p>
+                    <h5>Méthodes d'allocation statique :</h5>
+                    <p>Une première solution pour partager les ressources disponibles entre tous les dispositifs connectés à un réseau local consiste à définir, à priori, la répartition des ressources de transmission parmi les différents dispositifs. Si <span class="em">N</span> dispositifs doivent partager les capacités de transmission d'un réseau local fonctionnant à <span class="em">b</span> Mbps, chaque dispositif pourrait se voir attribuer une bande passante de <span class="em">b/N</span> Mbps.</p>
+                    <p>Les ressources limitées doivent être partagées dans d'autres environnements que les réseaux locaux. Depuis les première transmissions radio par <span class="em">Marconi</span> il y a plus d'un siècle, de nombreuses applications qui échangent des informations par le biais de signaux radio ont été développées. Chaque signe radio est une onde électromagnétique dont la puissance est centrée autour d'une fréquence donnée. Le spectre radio correspond aux fréquences comprises entre environ 2 kHz et 300 GHz. Des plans d'allocation de fréquences négociés entre les gouvernements réservent la plupart des gammes de fréquences à des applications spécifiques telles que la radio-diffusion, la télévision, les communications mobiles, la navigation radio aéronautique, la radio amateur, les satellites, etc. Chaque plage de fréquences est ensuite subdivisée en canaux et chaque canal peut être réservé pour une application donnée.</p>
+                    <p>La <span class="html">multiplexion par répartition en fréquence (FDM, pour Frequency Division Multiplexing)</span> est une méthode d'allocation statique dans laquelle une fréquence est attribuée à chaque appareil au support partagé. Comme chaque appareil utilise une fréquence de transmission différente, les coliisions ne peuvent pas se produire. Dans les réseaux optiques, une variante de la <span class="em">FDM</span> appelée <span class="html">multiplexage par répartition en longueur d'onde (WDM, pour Wavelength Division Multiplexing)</span> peut être utilisée. Une fibre optique peut transporter de la lumière à différentes longueurs d'onde sans interférence. Avec le <span class="em">WDM</span>, une longueur d'onde différente est attribuée à chaque appareil partageant la m^me fibre optique.</p>
+                    <p>La <span class="html">multiplexion par répartition dans le temps (TDM, pour Time Division Multiplexing)</span> est une méthode d'allocation statique de bande passante qui a été initialement définie pour le réseau téléphonique. Dans le réseau téléphonique fixe, une conversation vocale est généralment transmise sous forme d'un signal de 64 kbps. Ainsi, une conversation téléphonique génère 8 Ko par seconde, soit un octet toutes les 125 microsecondes. Les conversations téléphoniques doivent souvent être multiplxées sur une seule ligne. Par exemple, en Europe, trente signaux vocaux de 64 Kbps sont multiplexés sur une seule ligne de 2 Mbps (<span class="em">E1</span>). Cela est réalisé en utilisant le <span class="em">TDM</span>. Le TDM divise les intervalles de transmission en <span class="em">crénaux (slots)</span>. Dans le réseau téléphonique, un créeau correspond à 125 microsecondes. Une position à l'intérieur de chaque créneau est réservée à chaque signal vocal. La figure ci-dessous illustre le TDM sur une liaison utilisée pour transporter quatre conversations vocales. Les lignes verticales représentent les limites des créneaux et les lettres représentent les différentes conversations vocales. Un octet de chaque conversation vocale est envoyé pendant chaque créneau de 125 microsecondes. L'octet correspondant à une conversation donnée est toujours envoyé à la même position dans chaque créneau.</p>
+                    <figure>
+                        <img src="../images/TDM.png" alt="">
+                        <figcaption>Figure 6.4 : Multiplexion par répartition dans le temps</figcaption>
+                    </figure>
+                    <p>Le TDM, tel qu'illustré ci-dessus, peut être entièrement statique, c'est-à-dire que les mêmes conversations partagent toujours la liaison, ou dynamique. Dans ce dernier cas, les deux extrémités de la liaison doivent échanger des messages spécifiant quelle conversation utilise quel octet à l'intérieur de chaque créneau. Grâce à ces messages de signalisation, il est possible d'ajouter et de supprimer dynamiquement des conversations vocales à partir d'une liaison donnée.</p>
+                    <p>Le TDM et la FDM sont largement utilisés dans les réseaux téléphoniques pour prendre en charge des conversations à bande passante fixe. Les utiliser dans des réseaux locaux qui prennent en charge des ordinateurs serait probablement inefficace. Les ordinateurs n'envoient généralement pas d'informations à un débit fixe. Au lieu de cela, ils ont souvent un comportement marche-arrêt. Pendant la période d'activité, l'ordinateur essaie d'envoyer à un débit maximal possible, par exemple pour transférer un fichier. Pendant la période d'inactivité, qui est souvent beaucoup plus longue que la période d'activité, l'ordinateur ne transmet aucun paquet. Utiliser un schéma d'allocation statique pour les ordinateurs connectés à un réseau local entraînerait d'énormes inefficacités, car ils ne pourraient transmettre qu'à <span class="em">1/N</span> de la bande passante totale pendant leur période d'activité, malgré le fait que les autres ordinateurs soient en période d'inactivité et n'aient donc pas besoin de transmettre d'informations. Les algorithmes MAC dynamiques discutés dans le reste de ce chapitre visent à résoudre ce problème.</p>
+                    <h5>ALOHA :</h5>
+                    <p>Dans les années 1960, les ordinateurs étaient principalement des ordinateurs centraux avec quelques dizaines de terminaux qui y étaient connectés. Ces terminaux étaient généralement situés dans le même bâtiment que l'ordinateur central et y étaient directement connectés. Dans certains cas, les terminaux étaient installés dans des endroits éloignés et connectés via un modem attaché à une ligne téléphonique. L'université d'Hawaï a choisi une organisation différente. Au lieu d'utiliser des lignes téléphoniques pour connecter les terminaux distants, ils ont développé la première technologies de radio paquet [Abramson1970]. Jusque-là, les réseaux informatiques étaient construits sur la base du réseau téléphonique ou de câbles physiques. ALOHANet a démontré qu'il était possible d'utiliser des signaux radio pour interconnecter des ordinateurs.</p>
+                    <p>La première version d'ALOHANet, décrite dans [Abraham1970], fonctionnait de la manière suivante ; tout d'abord, les terminaux et l'ordinateur central échangeaient des trames de longueur fixe composées de 704 bits. Chaque trame contenait 80 caractères de 8 bits, ainsi que certains bits de contrôles et des informations de parité pour détecter les erreurs de transmission. Deux canaux dans la plage de 400 MHz étaient réservés pour le fonctionnement d'ALOHANet. Le premier canal était utilisé par l'ordinateur central pour envoyer des trames à tous les terminaux. Le deuxième canal était partagé par tous les terminaux pour envoyer des trames à l'ordinateur central. Étant donné que tous les terminaux partagent le même canal de transmission, il y a un risque de collision. Pour faire face à ce problème ainsi qu'aux erreurs de transmission, l'ordinateur central vérifiait les bits de parité de la trame reçue et envoyait un accusé de réception sur son canal pour chaque trame correctement reçue. Les terminaux, quant à eux, devaient retransmettre les trames non acquittées. Comme pour TCP, retransmettre ces trames immédiatement après l'expiration d'un délai d'attente fixe n'est pas une bonne approche, car plusieurs terminaux peuvent retransmettre leurs trames en même temps, ce qui entraîne un effondrement du réseau. Une meilleure approche, mais toujours loin d'être parfaite, consite à ce que chaque terminal attende un laps de temps aléatoire après l'expiration de son délai de retransmission. Cela évite la synchronisation entre les multiples terminaux en cours de retransmission.</p>
+                    <p>Le pseudo-code ci-dessous illustre le fonctionnement d'un terminal ALOHANet. Nous utilisons cette syntaxe Python pour tous les algorithmes MAC décrits dans ce chapitre. L'algorithme est appliqué à chaque nouvelle trame devant être transmise. Il tente de transmettre une trame au maximum <span class="em">mex</span> fois (<span class="em">boucle while</span>). Chaque tentative de transmission est effectuée comme suit ; d'abord, la trame est envoyée. Chaque trame est protégée par un délai d'attente. Ensuite, le terminal attend soit une trame d'acquittement valide, soit l'expiration de son délai d'attente. Si le terminal reàoit un acquittement, la trame a été livrée correctement et l'algorithme se termine. Sinon, le terminal attend un temps aléatoire et tente de retransmettre la trame.</p>
+<pre class="taille60"><code># ALOHA
+N=1
+while N &lt;= max :
+    send(frame)
+    wait(ack_on_return_channel or timeout)
+    if (ack_on_return_channel):
+        break # transmission was successful
+    else:
+        # timeout
+        wait(random_time)
+        N=N+1
+else:
+    # Too many transmission attempts</code></pre>
+                    <p>[Abramson1970] a analysé les performances de ALOHANet et en supposant certaines conditions particulières et a constaté que ALOHANet fonctionnait bien lorsque le canal était peu chargé. Dans ce cas, les trames sont rarement retransmises et le trafic du canal, c'est-à-dire le nombre total de trames (correctes et retransmises) transmises par unité de temps, est proche de l'utilisation du canal, c'est-à-dire le nombre de trames correctement transmises par unité de temps. Malheureusement, l'analyse révèle également que l'utilisation du canal atteint son maximum à 1/(2 * e) = 0,186 fois la largueur de bande du canal. À une utilisation plus élevée, ALOHANet devient instable et le réseau s'effondre en raison des retransmissions en collision.</p>
+                    <hr>
+                    <p>Note : Radio amateur en paquets :</p>
+                    <p>Les technologies de radio en paquets ont évolué dans différentes directions depuis les premières expériences réalisées à l'Université d'Hawaï. Le service de radio amateur en paquets développé par des opérateurs radio amateurs est l'un des descendants d'ALOHANet. De nombreux opérateurs radio amateurs sont très intéressés par les nouvelles technologies et passent souvent d'innombrables heures à développer de nouvelles antennes ou émetteurs-récepteurs. Lorsque les premiers ordinateurs personnels sont apparus, plus opérateurs radio amateurs ont conçu des modems radio et leurs propres protocoles de couche de liaison de données [KPD1985] [BNT1997]. Ce réseau s'est développé et il était possible de se connecter à des serveurs dans plusieurs payes européens en utilisant uniquement des relais de radio en paquets. Certains opérateurs radio amateurs ont également développé des piles de protocoles TCP/IP qui étaient utilisées via le service de radio en paquets. Certaines parties du réseau de radio amateur en paquets sont connectées à Internet et utilisent le préfixe <span class="em">44.0.0.0/8</span>.</p>
+                    <hr>
+                    <p>De nombreuses améliorations de ALOHANet ont été proposées depuis la publication de [Abraham1970], et cette technique, ou certaines de ses variantes, se retrouvent encore dans les réseaux sans fil aujourd'hui. La technique à créneaux proposée dans [Roberts1975] est importante car elle montre qu'une simple modification peut améliorer significativement l'utilisation du canal. Au lieu de permettre à tous les terminaux de transmettre à tout moment, [Roberts1975] a proposé de diviser le temps en créneaux et de permettre aux terminaux de transmettre uniquement au début de chaqye créneau. Chaque créneau correspond au temps nécessaire pour transmettre une trame de taille fixe. En pratique, ces créneaux peuvent être imposés par une seule horloge reçue par tous les terminaux. Dans ALOHANet, cela aurait pu être situé sur le mainframe central. L'analyse dans [Roberts1975] révèle que cette simple modification améliore l'utilisation du canal d'un facteur de deux.</p>
+                    <h5>Accès multiple par détection de porteuse (CSMA) :</h5>
+                    <p>ALOHA et ALOHA à créneaux peuvent être facilement implémenté, mais malheureusement, ils ne peuvent être utilisés que dans des réseaux très peu chargés. Concevoir un réseau pour une utilisation très faible est possible, mais cela augmente clairement le coût du réseau. Pour surmonter les problèmes de ALOHA, de nombreux mécanismes de MAC ont été proposés pour améliorer l'utilisation du canal. L'<span class="html">accès multiple par détection de porteuse (CSMA, pour Carrier Sense Multiple Access)</span> est une amélioreation significative par rapport à ALOHA. <span class="em">CSMA</span> néccessite que tous les noeuds écoutent le canal de transmission pour vérifier s'il est libre avant de transmettre une trame [KT1975]. Lorsqu'un noeud détecte que le canal est occupé, il diffère sa transmission jusqu'à ce que le canal redevienne libre. Le pseudo-code ci-dessous fournit une description plus détaillée du fonctionnement de <span class="em">CSMA</span>.</p>
+<pre class="taille60"><code># persistent CSMA
+N=1
+while N &lt;= max :
+    wait(channel_becomes_free)
+    send(frame)
+    wait(ack or timeout)
+    if ack :
+        break # transmission was successful
+    else :
+        # timeout
+        N=N+1
+# end of while loop
+    # Too many transmission attempts</code></pre>
+                    <p>Le pseudo-code ci-dessus est souvent appelé <span class="html">CSMA persistant</span> [KT1975], car le terminal écoute en continu le canal et transmet sa trame dès que le canal devient libre. Une autre variante importante de CSMA est le <span class="html">CSMA non persistant</span> [KT1975]. La principale différence entre CSMA persistant et non persistant, décrite dans le pseudo-code ci-dessous, est qu'un noeud CSMA non persistant n'écoute pas en continu le canal pour déterminer quand il devient libre. Lorsqu'un terminal CSMA non persistant détecte que le canal de transmission est occupé, il attend un temps aléatoire avant de vérifier à nouveau l'état du canal. Cela améliore l'utilisation du canal par rapport à CSMA persistant. Avec CSMA persistant, lorsque deux terminaux détectent que le canal est occupé, ils transmettent tous les deux (et provoquent ainsi une collision) dès que le canal devient livre. Avec CSMA non persistant, cette synchronisation ne se produit pas, car les terminaux attendent un temps aléatoire après avoir détecté l'état du canal de transmission. Cependant, l'utilisation du canal plus élevée obtenue par CSMA non persistant s'accompagne d'un léger temps d'attente supplémentaire dans les terminaux lorsque le réseau est peu chargé.</p>
+<pre class="taille60"><code># Non persistent CSMA
+N=1
+while N &lt;= max :
+    listen(channel)
+    if free(channel):
+        send(frame)
+        wait(ack or timeout)
+        if received(ack) :
+            break # transmission was successful
+        else :
+            # timeout
+            N=N+1
+    else:
+        wait(random_time)
+# end of while loop
+    # Too many transmission attempts</code></pre>
+                    <p>[KT1975] analyse en détail les perdormances de plusieurs variantes de CSMA. Sous certaines hypothèses concernant le canal de transmission et le trafic, l'analyse compora ALOHA, ALOHA à crénaux, CSMA persistant et CSMA non persistant. Selon ces hypothèses, ALOHA atteint une utilisation du canal correspondant à seulement 18,4% de la capacité du canal. ALOHA à créneaux parvient à utiliser 36,6% de cette capacité. CSMA persistant améliore l'utilisation en atteignant 52,9% de la capacité, tandis que CSMA non persistant atteint 81,5% de la capacité du canal.</p>
+                    <h5>CSMA avec détection de collision :</h5>
+                    <p>CSMA améliore l'utilisation du canal par rapport à ALOHA. Cependant, les performances peuvent encore être améliorées, en particulier dans les réseaux câblés. Considérons la situation de deux terminaux connectés au même câble. Ce câble pourrait, par exemple, être un câble coaxial comme dans les premiers jours d'Ethernet [Metcalfe1976]. Il pourrait également être constitué de paires torsadées. Avant d'étendre CSMA, il est utile de comprendre de manière plus intuitive comment les trames sont transmises dans un tel réseau et comment les collisions peuvent se produire. La figure ci-dessous illustre la transmission physique d'une trame sur un tel câble. Pour transmettre sa trame, l'hôte <span class="em">A</span> doit envoyer un signal étrique sur le support partagé. La première étape consiste donc à commencer la transmission du signal électrique. Cela correspond au point (<span class="em">1</span>) dans la figure ci-dessous. Ce signal électrique se propage le long du câble. Bien que les signaux électriques se déplacent rapidement, nous savons que l'information ne peut pas se déplacer plus rapodement que la vitesse de la lumière (c'est-çà-dire 300000 kilomètres par seconde). Sur un câble coaxial, un signal électrique est légèrement plus lent que la vitesse de la lumière et une estimation raisonnable est de 200000 kilomètres par seconde. Cela implique que si le câble a une longueur d'un kilomètre, le signal électrique mettra 5 microsecondes pour se déplacer d'une extrémité du câble à l'autre. Les exrémités des câbles coaxiaux sont équipées de terminaisons qui veillent à ce que le signal électrique ne soit pas réfléchi vers sa souce. Cela est illustré au point (<span class="em">3</span>) de la figure, où le signal électrique a atteint l'extrémité gauche et l'hôte <span class="em">B</span>. À ce stade, <span class="em">B</span> commence à recevoir la trame transmise par <span class="em">A</span>. Remarquez qu'il y a un délai entre la transmission d'un bit sur l'hôte <span class="em">A</span> et sa réception par l'hôte <span class="em">B</span>. Si d'autres hôtes étaient connectés au câble, ils recevraient le premier bit de la trame à des moments légèrement différents. Comme nous le verrons plus tard, cette différence de synchronisation pose un problème clé pour les algorithmes MAC. Au point (<span class="em">4</span>, le signal électrique a atteint les deux extrémités du câble et l'occupe complètement. L'hôte <span class="em">A</span> continue de transmettre le signal électrique jusqu'à la fin de la trame. Comme indiqué au point (<span class="em">5</span>), lorsque l'hôte émetteur arrête sa transmission, le signal électrique correspondant à la fin de la trame quitte le câble coaxial. Le canal redevient vide une fois que l'ensemble du signal électrique a été retiré du câble.</p>
+                    <figure>
+                        <img src="../images/transmission_trame_bus_partage.png" alt="">
+                        <figcaption>Figure 6.5 : Transmission des trames sur un bus partagé</figcaption>
+                    </figure>
+                    <p>Maintenant que nous avons examiné comment une trame est réellement transmise sous forme de signal électrique sur un bus partagé, il est intéressant de se pencher plus en détail sur ce qui se passe lorsque deux hôtes transmettent une trame presque simultanément. Cela est illustré dans la figure ci-dessous, où les hôtes <span class="em">A</span> et <span class="em">B</span> commencent leur transmission en même temps (point (<span class="em">1</span>)). À ce moment-là, si l'hôte <span class="em">C</span> détecte le canal, il le considérera comme libre. Cela ne durera pas longtemps et au point (<span class="em">2</span>), les signaux électriques des hôtes <span class="em">A</span> et <span class="em">B</span> atteignent l'hôte <span class="em">C</span>. Le signal électrique combiné (représenté graphiquement par la superposition des deux courbes dans la figure) ne peut pas être décodé par l'hôte <span class="em">C</span>. L'hôte <span class="em">C</span> détecte une collision, car il reçoit un signal qu'il ne peut pas décoder. Étant donné que l'hôte <span class="em">C</span> ne peut pas décoder les trames, il ne peut pas déterminer quels hôtes envoient les trames en collision. Notez que l'hôte <span class="em">A</span> (et l'hôte <span class="em">B</span>) détectera la collision après l'hôte <span class="em">C</span>(point (<span class="em">3</span>) dans la figure ci-dessous).</p>
+                    <figure>
+                        <img src="../images/collision_trame_bus_partage.jpg" alt="">
+                        <figcaption>Figure 6.6 : Collision de trames sur un bus partagé</figcaption>
+                    </figure>
+                    <p>Comme indiqué ci-dessus, les hôtes détectent les collisions lorsqu'ils reçoivent un signal électrique qu'ils ne peuvent pas décoder. Dans un réseau câblé, un hôte est capable de détecter une telle collision à la fois lorsqu'il est en écoute (par exemple, comme l'hôte <span class="em">C</span> dans la figure ci-dessus) et lorsqu'il envoie sa propre trame. Lorsqu'un hôte émet une trame, il peut comparer le signal électrique qui'il émet avec le signal électrique qu'il détecte sur le câble. Aux points (<span class="em">1</span>) et (<span class="em">2</span>) dans la figure ci-dessus, l'hôte <span class="em">A</span> ne détecte que son propre signal. Au point (<span class="em">3</span>), il détecte un signal électrique différent du sien et peut ainsi détecter la collision. À ce stade, sa trame est corrompue et il peut arrêter sa transmission. La capacité de détecter les collisions pendant la transmission est le point de départ de l'algorithme MAC <span class="html">Carrier Sense Multiple Access with Collision Detection (CSMA/CD)</span>, qui est utilisé dans les réseaux Ethernet [Metcalfe1976] [802.3]. Lorsqu'un hôte Ethernet détecte une collision pendant sa transmission, il arrête immédiatement sa transmission.</p>
+                    <p>Par rapport au CSMA pur, le CSMA/CD constitue une amélioration importante car lorsqu'une collision se produit, elle ne dure que jusqu'à ce que les hôtes en collision l'aient détectée et arrêtent leur transmission. En pratique, lorsqu'un hôte détecte une collision, il envoie un signal d'interférence spécial sur le câble pour s'assurer que tous les hôtes ont détecté la collision.</p>
+                    <p>Pour mieux comprendre ces collisions, il est utile d'analyser ce qui serait la pire collision sur un réseau à bus partagé. Prenons un câble avec deux hôtes attachés aux deux extrémités, comme illustré dans la figure ci-dessous. L'hôte <span class="em">A</span> commence à transmettre sa trame et son signal électrique se propage sur le câble. Le temps de propagation dépend de la longueur physique du câble et de la vitesse du signal électrique. Utilisons <span class="em">&#964;</span> pour représenter ce délai de propagation en secondes. Légèrement moins de <span class="em">&#964;</span> secondes après le début de la transmission de la trame d'<span class="em">A</span>, <span class="em">B</span> décide de commencer à transmettre sa propre trame. Au bout de <span class="em">e</span> secondes, <span class="em">B</span> détecte la trame d'<span class="em">A</span>, détecte la collision et arrête sa transmission. Le début de la trame de <span class="em">B</span> se propage sur le câble jusqu'à ce qu'elle atteigne l'hôte <span class="em">A</span>. <span class="em">A</span> peut ainsi détecter la collision à l'instant <span class="em">&#964; - e + &#964; &#8776; 2 * &#964;</span>. Un point important à noter est qu'une collision ne peut se produire que pendant les premières <span class="em">2 * &#964;</span> secondes de sa transmission. Si une collision ne s'est pas produite pendant cette période, elle ne peut pas se produire par la suite car le canal de transmission est ocuupé après <span class="em">&#964;</span> secondes et les hôtes CSMA/CD détectent le canal de transmission avant de transmettre leur trame.</p>
+                    <figure>
+                        <img src="../images/pire_collision_bus_partage.jpg" alt="">
+                        <figcaption>Figure 6.7 : La pire collision sur un bus partagé</figcaption>
+                    </figure>
+                    <p>De plus, sur les réseaux câblés où le CSMA/CD est utilisé, les collisions sont presque la seule cause d'erreurs de transmission qui affectent les trames. Les erreurs de transmission qui n'affectent que quelques bits à l'intérieur d'une trame sont rares dans ces réseaux câblés. Pour cette raison, les concepteurs du CSMA/CD ont choisi de supprimer complètement les trames d'acquittement dans la couche liaison de données. Lorsqu'un hôte transmet une trame, il vérifie si sa transmission a été affectée par une collision. Si ce n'est pas le cas, compte tenu du taux d'erreur de bit négligeable du réseau sous-jacent, il suppose que la trame a été correctement reçue par sa destination. Sinon, la trame est retrransmise après un certain délai.</p>
+                    <p>Supprimer les acquittements est une optimisation intéressante car cela réduit le nombre de trames échangées sur le réseau et le nombre de trames qui doivent être traitées par les hôtes. Cependant, pour utiliser cette optimisation, nous devons nous assurer que tous les hôtes seronht en mesure de détecter toutes les collisions qui affectent leurs trames. Le problème est important pour les trames courtes. Considérons deux hôtes, <span class="em">A</span> et <span class="em">B</span>, qui envoient une petite trame à l'hôte <span class="em">C</span> comme illustré dans la figure ci-dessous. Si les trames envoyées par <span class="em">A</span> et <span class="em">B</span> sont très courtes, la situation illustrée ci-dessous peut se produire. Les hôtes <span class="em">A</span> et <span class="em">B</span> envoient leur trame et arrêtent leur transmission (point (<span class="em">1</span>)). Lorsque les deux trames courtes arrivent à l'emplacement de l'hôte <span class="em">C</span>, elles entrent en collision et l'hôte <span class="em">C</span> ne peut pas les décoder (point (<span class="em">2</span>)). Les deux trames sont absorbées par les extrémités du câble. Ni l'hôte <span class="em">A</span> ni l'hôte <span class="em">B</span> n'ont détecté la collision. Ils considèrent tous les deux que leur trame a été reçue correctement par sa destination.</p>
+                    <figure>
+                        <img src="../images/probleme_collision_trames_courtes.png" alt="">
+                        <figcaption>Figure 6.8 : Le problème de collision des trames courtes</figcaption>
+                    </figure>
+                    <p>Pour résoudre ce problème, les réseaux utilisant CSMA/CD exigent que les hôtes transmettent pendant au moins pendant au moins <span class="em">2 * &#964;</span> secondes. Étant donné que la vitesse de transmission du réseau est fixe pour une technologie de réseau donnée, cela implique qu'une technologie utilidant CSMA/CD impose une taille minimale de trame. Dans la technologie CSMA/CD la plus populaire, Ethernet, <span class="em">2 * &#964;</span> est appelé le <span class="html">temps de fente (slot time)</span>. Ce terme ne doit pas être confondu avec la durée d'une fente de transmission dans slotted ALOHA. Dans les réseaux CSMA/CD, temps de fente est la durée pendnat laquelle une collision peut se produire au début de la transmission d'une trame. Dans slotted ALOHA, la durée d'une fente est le temps de transmission d'une trame de taille fixe dans son intégralité.</p>
+                    <p>La dernière innovation introduire par CSMA/CD est le calcul du délai de retransmission. Comme pour ALOHA, ce délai ne peut pas être fixe, sinon les hôtes pourraient se synchroniser et toujours retransmettre en même temps. Le réglage d'un tel déali est toujours un compromis entre le délai d'accès au réseau et le nombre de collisions. Un délai court entraînerait un faible délai d'accès au réseau mais avec un risque plus élevé de collisions. En revanche, un délai long entraînerait un long délai d'accès au réseau mais un risque moindre de collisions. L'algorithme de <span class="html">recul exponentiel binaire (binary exponential back-off)</span> a été introduit dans les réseaux CSMA/CD pour résoudre ce problème.</p>
+                    <p>Pour comprendre le <span class="em">recul exponentiel binaire</span>, considérons une collision causée par exactement deux hôtes. Une fois qu'il a détecté la collision, un hôte peut soit retransmettre immédiatement son cadre soit différer sa transmission pendant un certain temps. Si chaque hôte en collision lance une pièce de monnaie pour décider s'il doit retransmettre immédiatement ou différer sa retransmission, quatre cas sont possibles :</p>
+                    <ol>
+                        <li>
+                            <p>Les deux hôtes retransmettent immédiatement et une nouvelle collision se produit.</p>
+                        </li>
+                        <li>
+                            <p>Le premier hôte retransmet immédiatement et le second diffère sa retransmission.</p>
+                        </li>
+                        <li>
+                            <p>Le second hôte retransmet immédiatement et le premier diffère sa retransmission.</p>
+                        </li>
+                        <li>
+                            <p>Les deux hôtes diffèrent leur retransmission et une nouvelle collision se produit.</p>
+                        </li>
+                    </ol>
+                    <p>Dans les deuxième et troisième cas, les deux hôtes ont lancé des pièces de monnaie différentes. Le délai choisi par l'hôte qui diffère sa retransmission doit être suffisamment long pour garantir que sa retransmission ne sera pas en collision avec la retransmission immédiate de l'autre hôte. Cependant, le délai ne doit pas être plus long que le temps nécessaire pour éviter la collision, car si les deux hôtes décident de différer leur transmission, le réseau sera inactif pendant ce temps. Le <span class="em">temps en créneau</span> est le délai optimal car c'est le délai plus court qui garantit que le premier hôte pourra retransmettre complètement son cadre sans collision.</p>
+                    <p>Si deux hôtes sont en compétition, l'algorithme ci-dessus évitera une deuxième collision 50% du temps. Cependant, si le réseau est fortement chargé, plusieurs hôtes peuvent être en compétition en même temps. Dans ce cas, les hôtes doivent être capables d'adapter automatiquement leur délai de retransmission. Le <span class="em">recul exponentiel binaire</span> effectue cette adaptation en fonction du nombre de collisions qui ont affecté une trame. Après la première collision, l'hôte lance une pièce de monnaie et attend 0 ou 1 temps de créneau. Après la deuxième collision, il génère un nombre aléatoire et attend 0, 1, 2 ou 3 temps en créneaux. Le pseudo-code complet de l'algorithme CSMA/CD est indiqué ci-dessous.</p>
+<pre class="taille60"><code># CSMA/CD pseudo-code
+N=1
+while N &lt;= max :
+    wait(channel_becomes_free)
+    send(frame)
+    wait_until (end_of_frame) or (collision)
+    if collision detected:
+        stop transmitting
+        send(jamming)
+        k = min (10, N)
+        r = random(0, 2k - 1) * slotTime
+        wait(r*slotTime)
+        N=N+1
+    else :
+        wait(inter-frame_delay)
+        break
+# end of while loop
+    # Too many transmission attempts</code></pre>
+                    <p>Le délai intertrame utilisé dans ce pseudo-code est un court délai correspondant au temps nécessaire à un adaptateur réseau pour passer du mode transmission au mode de réception. Il est égalment utilisé pour empêcher un hôte d'envoyer en continu des trames sans laisser d'opportunités de transmission pour d'autres hôtes sur le réseau. Cela contribue à l'quité de CSMA/CD. Malgré ce délai, il existe encore des conditions où CSMA/CD n'est pas complètement équitable [RY1994]. Prenons par exemple un réseau avec deux hôtes : un serveur envoyant des trames longues et un client envoyant des accusés de réception. Des mesures rapportées dans [RY1994] ont montré qu'il existe des situations où le client pourrait souffrir de collisions répétées qui le conduisent à attendre de longues périodes en raison de l'algorithme de rétrogradation exponentielle.</p>
+                    <h5>Le CSMA avec évitement de colision (CSMA/CA) :</h5>
+                    <p>L'algorithme MAC <span class="html">Carrier Sense Multiple Access with Collision Avoidance (CSMA/CA)</span> a été conçu pour la technologie de réseau sans fil WiFi populaire [802.11]. CSMA/CA détecte également le canal de transmission avant d'envoyer une trame. De plus, CSMA/CA essaie d'éviter les collisions en ajustant soigneusement les timers utilisés par les dispositifs CSMA/CA.</p>
+                    <p>CSMA/CA utilise des accusés de réception, tout comme CSMA. Chaque trame contient un numéro de séquence et un CRC. Le CRC est utilisé pour détecter les erreurs de transmission, tandos que le numéro de séquence est utilisé pour éviter la duplication des trames. Lorsqu'un appareil reçoit une trame correcte, il renvoie un accusé de réception spécial à l'expéditeur. CSMA/CA introduit un léger délai, appelé <span class="html">intervalle court entre trames (Short Inter Frame Spacing - SIFS)</span>, entre la réception d'une trame et la transmission de l'accusé de réception. Ce délai correspond au temps nécessaire pour passer la radio d'un appareil entre les modes de réception et de transmission.</p>
+                    <p>Comparé à CSMA, CSMA/CA définit de manière plus précise quand un appareil est autorisé à envoyer une trame. Tout d'abord, CSMA/CA définit deux délais : <span class="html">DIFS</span> et <span class="html">EIFS</span>. Pour envoyer une trame, un appareil doit d'abord attendre que le canal soit inactif pendant au moins le <span class="html">Distributed Coordination Function Inter Frame Space (DIFS)</span> si la trame précédente a été reçue correctement. Cependant, si la trame précédemment reçue était corrompue, cela indique qu'il y a eu des collisions et l'appareil doit détecter un canal inactif pendant au moins l'<span class="html">Extended Inter Frame Space (EIFS)</span>, avec <span class="em">SIFS &lt; DIFS &lt; EIFS</span>. Les valeurs exactes de SIFS, DIFS et EIFS dépendent de la couche physique sous-jacente [802.11].</p>
+                    <p>La figure ci-dessous montre le fonctionnement de base des appareils CSMA/CA. Avant de transmettre, l'hôte <span class="em">A</span> vérifie que le canal est vide pendant une période suffisamment longue. Ensuite, il envoie sa trame de données. Après avoir vérifié la validité de la trame reçue, le destinataire envoie une trame d'accusé de réception après un court délai SIFS. L'hôte <span class="em">C</span>, qui ne participe pas à l'échange de trames, détecte que le canal est occupé au début de la trame de données. L'hôte <span class="em">C</span> peut utiliser cette information pour déterminer la durée pendant laquelle le canal sera occupé. Notez que puisque <span class="em">SIFS &lt; DIFS &lt; EIFS</span>, même un appareil qui commencerait à détecter le canal immédiatement après le dernier bit de la trame de données ne pourrait pas décider de transmettre sa propre trame pendant la transmission de la trame d'accusé de réception.</p>
+                    <figure>
+                        <img src="../images/operation_appareil_CSMA_CA.png" alt="">
+                        <figcaption>Figure 6.9 : Fonctionnement d'un appareil CSMA/CA</figcaption>
+                    </figure>
+                    <p>La principale difficulté avec CSMA/CA survient lorsque deux ou plusieurs appareils transmettent en même temps et provoquent des collisions. Cela est illustré dans la figure ci-dessous, en supposant un délai fixe après la transmission d'une trame de données. Avec CSMA/CA, le délai après la transmission d'une trame de données est très court, car il correspond au SIFS plus le temps nécessaire pour transmettre la trame d'accusé de réception.</p>
+                    <figure>
+                        <img src="../images/collisions_avec_CSMA_CA.png" alt="">
+                        <figcaption>Figure 6.10 : Collisions avec CSMA/CA</figcaption>
+                    </figure>
+                    <p>Pour résoudre ce problème, CSMA/CA utilise un timer de recul (backoff timer). Ce timer de recul est un délai aléatoire choisi par chaque appareil dans une plage qui dépend du nombre de retransmissions pour la trame en cours. La plage augmente de manière exponentielle avec les retransmissions, tout comme CSMA/CD. La plage minimale pour le timer de recul est <span class="em">[0,7 * slotTime]</span>, pù le <span class="em">slotTime</span> est un paramètre qui dépend de la couche physique sous-jacente. Comparé au recul exponentiel de CSMA/CD, il y a deux différences importantes à noter. Premièrement, la plage initiale pour le timer de recul est sept fois plus grande. Cela est dû au fait qu'il est impossible de détecter les collisions avec CSMA/CA au moment où elles se produisent. Avec CSMA/CD, elle ne peut affter que le début de la trame. Deuxièmement, un appareil CSMA/CA doit régulièrement détecter le canal de transmission pendant son timer de recul. Si le canal devient occupé (c'est-à-dire qu'un autre appareil est en train de transmettre), alors le timer de recul doit être gelé jusqu'à ce que le canal redevienne libre. Une fois que le canal redevient libre, le timer de recul est redémarré. Cela contraste avec CSMA/CD où le recul est recalculé après chaque collision. Cela est illustré dans la figure ci-dessous. L'hôte <span class="em">A</span> choisit un recul plus court que l'hôte <span class="em">C</span>. Lorsque <span class="em">C</span> détecte que le canal est occupé, il gèle son timer de recul et ne le redémarre que lorsque le canal redevient libre.</p>
+                    <figure>
+                        <img src="../images/exemple_detaille_CSMA_CA.png" alt="">
+                        <figcaption>Figure 6.11 : Exemple détaillé avec CSMA/CA</figcaption>
+                    </figure>
+                    <p>Le pseudo-code ci-dessous résume le fonctionnement d'un appareil CSMA/CA. Les valeurs de SIFS, DIFS, EIFS et slotTime dépendent de la technologie de la couche physique sous-jacente [802.11].</p>
+<pre class="taille60"><code># CSMA/CA simplified pseudo-code
+N=1
+while N &lt;= max :
+    waitUntil(free(channel))
+    
+    if correct(last_frame) :
+        wait(channel_free_during_t >=DIFS)
+    else:
+        wait(channel_free_during_t >=EIFS)
+    
+    back-off_time = int(random[0,min(255,7*(2^(N-1)))])*slotTime
+    wait(channel free during backoff_time)
+    # backoff timer is frozen while channel is sensed to be busy
+    send(frame)
+    wait(ack or timeout)
+    if received(ack)
+        # frame received correctly
+        break
+    else:
+        # retransmission required
+        N=N+1</code></pre>
+                    <p>Un autre problème rencontré par les réseaux sans fil est souvent appelé le <span class="html">problème de la station cachée</span>. Dans un réseau sans fil, les signaux radio ne se propagent pas toujours de la même manière dans toutes les directions. Par exemple, deux appareils sépar&s par un mur peuvent ne pas être en mesure de recevoir le signal émis par un troisième hôte. Cela est illustré dans figure ci-dessous, mais cela peut se produire dans d'autres environnements. Par exemple, deux appareils situés de part et d'autre d'une colline peuvent ne pas être en mesure de recevoir le signal envoyé par une station au sommet de la colline. De plus, les confitions de propagation radio peuvent changer avec le temps. Par exemple, un camion peut bloquer temporairement la communication entre deux appareils proches.</p>
+                    <figure>
+                        <img src="../images/probleme_station_cachee.png" alt="">
+                        <figcaption>Figure 6.12 : Le problème de la station cachée</figcaption>
+                    </figure>
+                    <p>Pour éviter les collisions dans ces situations, CSMA/CA permet aux appareils de réserver le canal de transmission pendnat un certain temps. Cela est réalisé en ytilisant deux trames de contrôle : <span class="html">request To Send (RTS, demande d'envoi)</span> et <span class="html">Clear To Send (RTS, autorisation d'envoi)</span>. Les deux trames sont très courtes pour minimiser le risque de collisions. Pour réserver le canal de transmission, un appareil envoie une trame RTS au destinataire prévu du cadre de données. La trame RTS contient la durée de la réservation demandée. Le destinataire répond, après un délai SIFS, avec une trame CTS qui contient également la durée de la réservation. Comme la durée de la réservation a été envoyée à la fois dans les trames RTS et CTS, tous les hôtes susceptibles de provoquer une collision avec l'émetteur ou la réception de la frame de données sont informés de la réservation. Ils peuvent calculer la durée totale de la transmission et différer leur accès au canl de transmission jusqu'à cette durée. Cela est illustré dans la figure ci-dessous où l'hôte <span class="em">A</span> réserve le canal de transmission pour envoyer un cadre de données à l'hôte <span class="em">B</span>. L'hôte <span class="em">C</span> remarque la réservation et diffère sa transmission.</p>
+                    <figure>
+                        <img src="../images/reservations_CSMA_CA.png" alt="">
+                        <figcaption>Figure 6.13 : Réservations avec CSMA/CA</figcaption>
+                    </figure>
+                    <p>L'utilisation des réservations avec CSMA/CA est une optimisation utile lorsque les collisions sont fréquentes. S'il y a peu de collisions, le temps nécessaire pour transmettre les trames RTS et CTS peut devenir significatif, en particulier lors de l'échange de trames courtes. Certains appareils n'activent RTS/CTS qu'après des erreurs de transmission.</p>
+                    <h5>Algrithmes de contrôle d'accès déterministes au support de transmission :</h5>
+                    <p>Au cours des années 1970 et 1980, il y a eu d'énormes débats au sein de la communauté de réseautage sur les algorithmes MAC les mieux adaptés aux LAN. Les algorithmes optimistes que nous avons décrits jusqu'à présent étaient relativement faciles à implémenter lorsqu'ils ont été conçus. Du point de vue des performances, les modèles mathématiques et les simulations ont montré la capacité de ces techniques optimistes n'est capable de garantir qu'une trame sera livrée dans un délai donné, et certaines applications nécessitent des délais de transmission prévisibles. Les algorithmes MAC déterministes ont été considérés par une fraction de la communauté de réseautage comme la meilleure solution pour répondre aux besoins des LAN.</p>
+                    <p>Les partisans des techniques déterministes et oportunistes ont fait pression pour développer des normes pour les LAN qui intègreraient leur solution respective. Au lieu de chercher à trouver un compromis impossible entre ces points de vue divergents, le comité IEEE 802, chargé de développer des normes pour les LAN, a choisi de travailler en parallèle sur trois technologies LAN différentes et a créé trois groupes de travail. Le groupe de travail IEEE 802.3 est devenu responsable de CSMA/CD. Les partisans des algorithmes MAC déterministes se sont mis d'accord sur le principe de base consistant à échanger des trames spéciales appelés <span class="html">jetons (tokens en anglais)</span> entre les appareils pour réguler l'accès au support de transmision. Cependnat, ils n'étaient pas d'accord sur la configuration physique la plus appropriée pour le réseau. IBM soutenait les réseaux en forme d'anneau, tandiq que l'industrie manufacturière, dirigée par General Motors, soutenait les réseaux en forme de bus. Cela a conduit à la création du groupe de travail IEEE 802.4 pour normaleiser les réseaux <span class="html">Token Bus</span> et du groupe de travail IEEE 802.5 pour normaliser les réseaux <span class="html">Token Ring</span>. Bien que ces technologies ne soient plus largeemnt utilisées aujourd'hui d'un protocole basé sur les <span class="em">jetons</span> sont toujours importants.</p>
+                    <p>La technologie Token Ring IEEE 802.5 est définie dans [802.5]. Nous utilsons Token Ring comme exemple pour expliquer les principes des algorithmes MAC basés sur les jetons dans les réseaux en forme d'anneau. D'autres réseaux en forme d'anneau incluent le FDDI presque obsolète [Ross1989] ou le plus récent Risilient Pack Ring [DYGU2004]. Une bonne étude des réseaux en forme d'anneau basés sur les jetons peut être trouvéee dans [Bux1989].</p>
+                    <p>Un réseau Token Ring est composé d'un ensemble de stations qui sont connectées à une boucle unidirectionnelle. Le principe de base de l'algorithme MAC Token Ring est que deux types de trames circulent sur la boucle : les jetons (tokens) et les trames de données. Lorsque le Token Ring démarre, l'une des stations envoie le jeton. Le jeton est une petite trame qui représente l'autorisation de transmettre des données sur la boucle. Pour transmettre une trame de données sur la boucle, une station doit d'abord capturer le jeton en le retirant de la boucle. Comme seule une station peut capturer le jeton à la fois, la station qui possède le jeton peut transmettre en toute sécurité une trame de données sur la boucle sans risque de collisions. Après avoir transmis sa trame, la station doit la retirer de la boucle et renvoyer le jeton afin que d'autres stations puissent transmettre leurs propres trames.</p>
+                    <p>Bien que les principes de base du Token Ring soient simples, il existe plusieurs détails d'implémentation subtils qui ajoutent de la complexité aux réseaux Token Ring. Pour comprendre ces détails, analysons le fonctionnement d'une interface Token Ring sur une station. Une interface Token Ring remplit trois fonctions différentes. Comme les autres interfaces LAN, elle doit être capable d'envoyer et de recevoir des trames. De plus, une interface Token Ring fait partie de la boucle et, en tant que telle, elle doit être capable de transmettre le signal électrique qui circule sur la boucle même lorsque sa station est éteinte.</p>
+                    <p>Lorsqu'elle est sous tension, les interfaces Token Ring fonctionnent en deux modes différents : <span class="html">@coute</span> et <span class="html">transmission</span>. En mode <span class="em">écoute</span>, une interface Token Ring reçoit un signal électrique de son voisin amont sur la boucle, introduit un retard égal au temps de transmission d'un bit sur la boucle et régénère le signal avant de l'envoyer à son voisin aval sur la boucle.</p>
+                    <figure>
+                        <img src="../images/reseau_token_ring.png" alt="">
+                        <figcaption>Figure 6.14 : Un réseau Token Ring</figcaption>
+                    </figure>
+                    <p>Le premier problème auquel est confronté un réseau Token Ring est que, comme le jeton représente l'autorisation de transmettre, il doit circuler en continu sur la boucle lorsque aucune trame de données n'est en cours de transmission. Supposons qu'un jeton ait été produit et envoyé sur la boucle par une station. Dans les réseaux Token Ring, le jeton est une trame de 24 bits dont la structure est indiqué ci-dessus.</p>
+                    <figure>
+                        <img src="../images/format_token_802.5.png" alt="">
+                        <figcaption>Figure 6.15 : Format du jeton 802.5</figcaption>
+                    </figure>
+                    <p>Le jeton est composé de trois champs. Tout d'abord, le <span class="html">délimiteur de début (Starting Delimiter)</span> est le marqueur qui indique le début d'une trame. Les premiers réseaux Token Ring utilisaient le codage Manchester et le <span class="em">délimiteur de début</span> contenait à la fois des symboles représentant <span class="em">0</span> et des symboles qui ne représentent pas de bits. Le dernier champ est le <span class="html">délimiteur de fin (Ending Delimiter)</span> qui marque la fin du jeton. Le champ de <span class="html">ontrôle d'accès (Access Control)</span> est présent dans toutes les trames et contient plusieurs indicateurs. Le plus important est le bit de <span class="em">jeton</span> qui est défini dans les tames de jeton et réinitialisé dans les autres trames. Prenons en considération le réseau à cinq stations représenté dans la figure du réseau Token Ring ci-dessus et supposons que la station <span class="em">S1</span> envoie un jeton. Si nous négligeons le délai de propagation sur les liaisons inter-stations, chaque station introduisant un délai d'un bit, le premier bit de la trame reviendrait à pendant qu'elle envoie le cinquième bit du jeton. Si la station <span class="em">S1</span> est éteinte à ce moment-là, seuls les cinq premiers bits du jeton circuleront sur la boucle. Pour éviter ce problème, il y a une station spéciale appelée le <span class="html">Moniteur</span> sur chaque réseau Token Ring. Pour garantir que le jeton puisse circuler en continu sur la boucle, ce <span class="em">Moniteur</span> insère un délai égal au moins 24 fois le temps de transmission d'un bit. Si la station <span class="em">S3</span> était le <span class="em">Moniteur</span> dans la figure du réseau Token Ring, <span class="em">S1</span> aurait pu transmettre l'intégralité du jeton avant de recevoir le premier bit du jeton de son voisin amont.</p>
+                    <p>Maintenant que nous avons expliqué comment le jeton peut être transmis sur la boucle, analysons comment une station peut capturer un jeton pour transmettre une trame de données. Pour cela, nous avons besoin d'informations sur le format des trames de données. Une trame de données 802.5 commence par le <span class="em">délimiteur de début</span>, suivi du champ de <span class="em">contrôle d'accès</span> dont le bit de jeton est réinitialisé, un champ de <span class="html">contrôle de trame (Frame Control)</span> qui permet la définition de plusieurs types de trames, une adresse de destination et une adresse source, un payload, un CRC, le <span class="em">délimiteur de fin</span> et un champ d'<span class="html">état de trame (Frame Status)</span>. Le format des trames de données du Token Ring est illustré ci-dessous.</p>
+                    <figure>
+                        <img src="../images/format_trame_donnees.png" alt="">
+                        <figcaption>Figure 6.16 : Format de trame de données 802.5</figcaption>
+                    </figure>
+                    <p>Pour capturer un jeton, une station doit fonctionner en mode <span class="em">écoute</span>. Dans ce mode, la station reçoit les bits de sa station amont. Si les bits correspondent à une trame de données, ils doivent être transmis à la station aval. S'ils correspondent à un jeton, la station peut le capturer et transmettre sa trame de données. Tant la trame de données que le jeton sont encodées sous forme d'une chaîne de bits commençant par le <span class="em">délimiteur de début</span>, suivi du champ de <span class="em">contrôle d'accès</span>. Lorsque la station reçoit le premier bit d'un <span class="em">délimiteur de début</span>, elle ne peut pas savoir s'il s'agit d'une trame de données ou d'un jeton et doit transmettre l'intégralité du délimiteur à sa station aval. Ce n'est qu'à la réception du quatrième bit du champ de <span class="em">contrôle d'accès</span> (c'est-à-dire le bit de <span class="em">jeton</span>) que la station sait s'il s'agit d'une trame de données ou d'un jeton. Si le bit de <span class="em">jeton</span> est réinitialisé, cela indique une trame de données et les bits restants de la trame de données doivent être transmis à la station aval. SInon (le bit de <span class="em">jeton</span> est activé), il s'agit d'un jeton et la station peut le capturer en réinitialisant le bit qui se trouve actuellement dans son tampn. Grâce à cette modification, le début du jeton devient le début d'une trame de données et la station peut passer en mode <span class="em">transmission</span> et envoyer sa trame de données à partir du cinquième bit du champ de <span class="em">contrôle d'accès</span>. Ainsi, le retard d'un bit introduit par chaque station Token Ring joue un rôle clé en permettant aux stations de capturer efficacement le jeton.</p>
+                    <p>Une fois qu'elle a transmis sa trame de données, la station doit rester en mode <span class="em">transmission</span> jusqu'à ce qu'elle ait reçu le dernier bit de sa propre trame de données. Cela garantit que les bits envoyés par une station ne restent pas indéfiniment dans le réseau. Une trame de données envoyée par une station dans un réseau Token Ring passe devant toutes les stations connectées au réseau. Chaque station peit détecter la trame de données et analyser l'adresse de destination pour éventuellement la capturer.</p>
+                    <p>Le texte ci-dessus décrit le fonctionnement de base d'un réseau Token Ring lorsque toutes les stations fonctionnent correctement. <span class="html">LAPB (Link Access Procedure, Balanced)</span> et <span class="html">HDLC (High-Level Data Link Control)</span> étaient des protocoles largement utilisés de la couche de liaison de données. Malheureusement, le véritable réseau Token Ring doit être capable de gérer différents types d'anomalies, ce qui augmente la complexité des stations Token Ring. Nous énumérons brièvement les problèmes et esquissons leurs solutions ci-dessous. Une description détaillée du fonctionnement des stations Token Ring peut être trouvée dans [802.5]. Le premier problème survient lorsque toutes les stations attachées au réseau démarrent. L'une d'entre elles doit initialiser le réseau en envoyant le premier jeton. Pour cela, toutes les stations implémentent un mécanisme d'élection distribué qui est utilisé pour sélectionner le <span class="em">Moniteur</span>. N'importe quelle station peut devenir un <span class="em">Moniteur</span>. Le <span class="em">Moniteur</span> gère le réseau Token Ring et s'assure qu'il fonctionne correctement. Son premier rôle est d'introduire un délai de 24 fois le temps de transmission d'un bit pour garantir que le jeton peut circuler en douceur sur l'anneau. Deuxièmement, le <span class="em">Moniteur</span> envoie le premier jeton sur l'anneau. Il doit également vérifier que le jeton circule régulièrement. Selon la norme Token Ring [802.5], une station ne peut pas conserver le jeton pour transmettre des trames de données pendant une durée au <span class="html">temps de détention du jeton (THT, pour Token Holding Time)</span> (légèrement inférieur à 10 millisecondes). Sur un réseau contenant <span class="em">N</span> stations, le <span class="em">Moniteur</span> doit recevoir le jeton au moins toutes les <span class="em">N * THT</span> secondes. Si le <span class="em">Moniteur</span> ne reçoit pas de jeton pendnat une telle période, il coupe l'anneau pendant un certain temps, puis réinitiliase l'anneau et envoie un jeton.</p>
+                    <p>Plusieurs autres anomalies peuvent se produire dans un réseau Token Ring. Par exemple, une station pourrait capturer un jeton et s'éteindre avant d'avoir renvoyé le jeton. Une autre station pourrait avoir capturé le jeton, envoyé sa trame de données et s'éteindre avant de recevoir l'intégralité de sa trame de données. Dans ce cas, la chaîne de bits correspondant à la fin d'une trme resterait sur l'anneau sans être supprimée par son expéditeur. Plusieurs techniques sont définies dans [802.5] pour permettre au <span class="em">Moniteur</span> de gérer tous ces problèmes. Si malheureusement, le <span class="em">Moniteur</span> échoue, une autre station sera élue pour devenir le nouveau <span class="em">Moniteur</span>.</p>
+                    <h4>6.1.3 Technologies de la couche de liaison de données :</h4>
+                    <p>Dans cette section, nous examinons les caractéristiques clés de plusieurs technologies de la couche de liaison de données. Nous disutons plus en détail des technologies largement utilisées aujourd'hui. Une étude détaillée de toutes les technologies de la couche de liaison de données serait en dehors du cadre de ce livre.</p>
+                    <h5>Le protocole point-à-point :</h5>
+                    <p>De nombreuses couches de liaison de données point-à-point ont été développées, à partir des années 1960 [McFadyen1976]. Dans cette section, nous nous concentrons sur les protocoles qui sont souvent utilisés pour transporter des paquets IP entre des hôtes ou des routeurs directement connectés par une liaison point-à-point. Cette liaison peut être un câble physique dédié, une ligne louée à travers le réseau téléphonique ou une connexion à composition automatique avec des modems sur les deux hôtes communicants.</p>
+                    <p>La première solution pour transporter des paquets IP sur une ligne série a été proposée dans la RFC 1055 et est connue sous le nom de <span class="html">Serial Line IP (SLIP)</span>. SLIP est une technique simple de bourrage de caractères appliquée aux paquets IP. SLIP définit deux caractères spéciaux : <span class="html">END</span> (décimal 192) et <span class="html">ESC</span> (décimal 219). <span class="em">END</span> apparaît au début et à la fin de chaque paquet IP transmis, et l'émetteur ajoute <span class="em">ESC</span> avant chaque caractère <span class="em">END</span> à l'intérieur de chaque paquet IP transmis. SLIP ne prend en charge que la transmission de paquets IP et suppose que les deux hôtes/routeurs communiquants ont été configurés manuellement avec les adresses IP de l'autre. SLIP était principalement utilisé sur des liens offrant une bande passante souvent inférieure à 20 Kbps. Sur un lien de si faible bande passante, l'envoi de 20 octets d'en-tête IP suivi de 20 octets d'en-tête TCP pour chaque segment TCP prend beaucoup de temps. Cela a initié le développement d'une famille de techniques de compression pour compresser efficacement les en-têtes TCP/IP. La première technique de compression d'en-tête proposée dans la RFC 1144 a été conçue pour exploiter la redondance entre plusieurs segments consécutifs appartenant à la même connexion TCP. Dans tous ces segments, les adresses IP et les numéros de port sont toujours les mêmes. De plus, des champs tels que les numéros de séquence et d'accusé de réception ne changent pas de manière aléatoire. La RFC 1144 a défini des techniques simples pour réduire la redondance trouvée dans les segments successifs. Le développement des techniques de compression des en-têtes a continué et des améliorations sont encore en cours de développement aujourd'hui (RFC 5795).</p>
+                    <p>Alors que SLIP a été implémenté et utilisé dans certains environnements, il présentait plusieurs limitations discutées dans la RFC 1055. Le <span class="html">protocole point-à-point (PPP)</span> a été conçu peu de temps après et est spécifié dans la RFC 1548. PPP vise à prendre en charge IP et d'autres protocoles de couche réseau sur différents types de lignes série. PPP est en fait une famille de de trois protocoles qui sont utilisés ensemble :</p>
+                    <ol>
+                        <li>
+                            <p>Le <span class="html">protocole point-à-point (PPP, pour Point-to-Point Protocol)</span> définit la technique d'encadrement pour transporter les paquets de la couche réseau.</p>
+                        </li>
+                        <li>
+                            <p>Le <span class="html">protocole de contrôle de liaison (LCP, pour Link Control Protocol)</span> est utilisé pour négocier les options et authentifier la session en utilisant un nom d'utilisateur et un mot de passe ou d'autres types d'informations d'identification.</p>
+                        </li>
+                        <li>
+                            <p>Le <span class="html">protocole de contrôle de réseau (NCP, pour Network Control Protocol)</span> est spécifique à chaque protocole de couche réseau. Il est utilisé pour négocier des options spécifiques à chaque protocole. Par exemple, le protocole NCP IPv4 (RFC 1548) peut négocier l'adresse IPv4 à utiliser et l'adresse IPv4 du serveur DNS. Le NCP IPv6 est défini dans la RFC 5072.</p>
+                        </li>
+                    </ol>
+                    <p>Le protcole d'encadrement PPP (RFC 1662) s'est inspiré des protocoles de couche de liaison de donénes normalisés par l'ITU-T et l'ISO. Une trame PPP typique est composée des champs illustrée dans la figure ci-dessous. Une trame PPP commence par un octet de flag contenant <span class="em">01111110</span>. PPP peut utiliser le bit stuffing ou le character stuffing selon l'environnement dans lequel le protocole est utilisé. Les champs d'adresse et de contrôle sont présents pour des raisons de compatibilité ascendante. Le champ de protocole de 16 bits contient l'identifiant du protocole de couche réseau transporté dans la trame PPP. L'IANA gère le registre de tous les champs de protocole PPP attribués à l'adresse suivante <a href="http://www.iana.org/assignments/ppp-numbers" target="_blank">http://www.iana.org/assignments/ppp-numbers</a>. <span class="em">0x002d</span> est utilisé pour un paquet IPv4 compressé avec RFC 1144, tandis que <span class="em">0x002f</span> est utilisé pour un paquet IPv4 non compressé. <span class="em">0xc021</span> est utilisé par le <span class="em">protocole de contrôle de liaison (LCP)</span>, <span class="em">0xc023</span> est utilisé par le <span class="html">protocole d'authentification par mot de passe (PAP, pour Password Authentication Protocol)</span>. <span class="em">0x0057</span> est utilisé pour les paquets IPv6. PPP prend en charge des paquets de longueur variable, mais LCP peut négocier une longueur maximale de paquet. La trame PPP se termine par une <span class="html">séquence de contrôle de trame (FCS, pour Frame Check Sequence)</span>. Par défaut, il s'agit d'un CRC sur 16 bits, mais certaines implémentations peuvent négocier un CRC sur 32 bits. La trame se termine par le flag <span class="em">01111110</span>.</p>
+                    <figure>
+                        <img src="../images/format_trame_PPP.png" alt="">
+                        <figcaption>Figure 6.17 : format de trame PPP</figcaption>
+                    </figure>
+                    <p>PPP a joué un rôle essentiel en permettant aux fournisseurs de services Internet de fournir un accès à distance via des modems à la fin des années 1990 et au début des années 2000. Les ISP exploitaient des banques de modems connectées au réseau téléphonique. Pour ces ISP, un problème clé était d'authentifier chaque utilisateur connecté via le réseau téléphonique. Cette authentification était effectuée en utilisant le <span class="html">protocole d'authentification extensible (EAP, pour Extensible Authentication Protocol)</span> défini dans le RFC 3748. EAP est un protocole simple, mais extensible, qui était initialement utilisé par les routeurs d'accès pour authentifier les utilisateurs connectés via des lignes de composition. Plusieurs méthodes d'authentification, allant des simples paires nom d'utilisateur/mot de passe à des schémas plus complexes, ont été définies et implémentées. Lorsque les ISP ont commencé à mettre à niveau leur infrastructure physique pour fournir un accès Internet via des <span class="html">lignes d'abonné numérique asymétriques (ADSL, Asymetric Digital Subscriber Lines)</span>, ils ont tenté de réutiliser leurs systèmes d'authentification (et de facturation) existants. Pour répondre à ces exigences, l'IETF a développé des spécifications permettant de transporter des trames PPP sur d'autres réseaux que les liaisons point-à-point pour lesquelles PPP a été conçu. De nos jours, la plupart des déploiements ADSL utilisent PPP sur ATM (RFC 2364) ou sur Ethernet (RFC 2516).</p>
+                    <h5>Ethernet :</h5>
+                    <p>Ethernet a été conçu dans les années 1970 au Palo Alto Research Center [Metcalfe1976]. Le premier prototype utilisait un câble coaxial en tant que support partagé et offrait une bande passante de 3 Mbps. Des informations supplémentaires sur l'histoire de la technologie Ethernet peuvent être trouvées sur <a href="http://ethernethistory.typepad.com/" target="_blank">http://ethernethistory.typepad.com/</a>. Ethernet a été amélioré au cours des années 1970 et 1980, et Digital Equipement, Intel et Xerox ont publié la première spécification officielle d'Ethernet [DIX]. Cette spécification définit plusieurs paramètres importants pour les réseaux Ethernet. La première décision a été de standardiser Ethernet commercial à 10 Mbps. La deuxième décision a été la durée du slot. Dans Ethernet, un long slot permet aux réseaux de couvrir une longue distance mais oblige l'hôte à utiliser une taille minimale de trame plus grande. Le compromis a été une durée de slot de 51,2 microsecondes, ce qui correspond à une taille minimale de trame de 64 octets.</p>
+                    <p>La troisième décision concernait le format des trames. Le réseau Ethernet expérimental de 3 Mbps construit chez Xerox utilisait des trames courtes contenant des champs d'adresses source et destination de 8 bits, une indication de type de 16 bits, jusqu'à 554 octets de payload et un CRC de 16 bits. L'utilisation d'adresses de 8 bits convenait à un réseau expérimental, mais il était clairement trop petit pour des déploiements commerciaux. Bien que la spécification initiale d'Ethernet [DIX] ne permettait que jusqu'à 1024 hôtes sur un réseau Ethernet, elle recommandait également trois changements importants par rapport aux technologie de mise en réseau disponibles à l'époque. Le premier changement consistait à exiger que chaque hôte connecté à un réseau Ethernet ait une adresse de couche de liaison de données globalement unique. Jusque-là, les adresses de couche de liaison de données étaient configurées manuellement sur chaque hôte. [BP1981] allait à l'encontre de cet état de l'art et notait : <q class="em">Des procédures administratives spécifiques à l'installation sont également nécessaires pour attribuer des numéros aux hôtes sur un réseau. Si un hôte est déplacé d'un réseau à un autre, il peut être nécessaire de modifier son numéro d'hôte si son ancien numéro est utilisé sur le nouvel réseau. Cela est plus facile à dire qu'à faire, car chaque réseau doit avoir un administrateur qui doit enregistrer l'état en constante évolution du système (souvent sur un morceau de papier accroché au mir !). On prévoit qu'à l'avenir, dans les environnements de bureau, les emplacements des hôtes changeront aussi souvent ques les téléphones sont changés dans les bureaux d'aujourd'hui.</q> Le deuxième changement introduit par Ethernet consistait à coder chaque adresse comme un champ de 48 bits [DP1981]. Les adresses de 48 bits étaient énormes par rapport aux technologies de mise en réseau disponibles dans les années 1980, mais l'espace d'adressage étendu avait plusieurs avantages [DP1981], notamment la possibilité d'allouer de grands blocs d'adresses aux fabricants. Finalement, d'autres technologies LAN ont également opté pour des adresses de 48 bits [802]. Le troisième changement introduit par Ethernet était la définition des adresses de diffusion et de multidiffusion. Le besoin de multidiffusion Ethernet était prévu dans [DP1981] et grâce à la taille de l'espace d'adressage possible de réserver un grand bloc d'adresses de multidiffusion pour chaque fabricant.</p>
+                    <p>Les adresses de couche de liaison de données utilisées dans les réseaux Ethernet sont souvent appelées <span class="html">adresses MAC</span>. Elles sont structurées comme indiqué dans la figure ci-dessous. Le premier bit de l'adresse indique si l'adresse identifie un adaptateur réseau ou un groupe multidiffusion. Les 24 bits supérieurs sont utilisés pour coder un <span class="html">identifiant unique d'organisation (OUI, pour Organisation Unique Identifier)</span>. Ce OUI identifie un bloc d'adresses qui a été attribué par le secrétariat responsable de l'unicité des adresses Ethernet à un fabricant. Initialement, les OUI étaient attribués par Xerox [BP1981]. Cependant, une fois qu'Ethernet est devenu une norme IEEE puis ISO, l'attribution des OUI a été transférée à l'IEEE. La liste de toutes les allocations OUI peut être consultée sur le site <a href="http://standards.ieee.org/regauth/oui/index.shtml" target="_blank">http://standards.ieee.org/regauth/oui/index.shtml</a>. Une fois qu'un fabricant a reçu un OUI, il peut concevoir et vendre des produits avec l'une des 16 millions d'adresses de ce bloc.</p>
+                    <figure>
+                        <img src="../images/format_adresse_ethernet_48_bits.jpg" alt="">
+                        <figcaption>Figure 6.18 : format d'adresse Ethernet de 48 bits</figcaption>
+                    </figure>
+                    <p>La spécification originale d'Ethernet à 10 Mbps [DIX] définissait un format de trame simple où chaque trame est composée de cinq champs. La trame Ethernet commence par un préambule (non représenté dans la figure ci-dessous) utilisé par la couche physique du récepteur pour synchorniser son horloge avec celle de l'émetteur. Le premier champ de la trame est l'adressse de destination. Comme cette adresse est placée au début de la trame, une interface Ethernet peut rapidement vérifier si elle est le destinataire de la trame et, le cas échéant, annuler le traitement de la trame arrivante. Le deuxième champ est l'adresse source. Alors que l'adresse de destination peut être soit une adresse unicast, soit une adresse multidiffusion/broadcast, l'adresse source doit toujours être une adresse unicast. Le troisième champ est un entier de 16 bits qui indique le type de paquet de la couche réseau transporté dans la trame. Ce champ est souvent appelé <span class="html">Ether Type</span>. Les valeurs <span class="em">Ether Type</span> fréquemment utilisées comprennent <span class="em">0x0800</span> pour IPv4, <span class="em">0x86DD</span> pour IPv6 et <span class="em">0x806</span> pour le protocole de résolution d'adresse (ARP). La liste officielle de toutes les valeurs de type Ethernet assignées est disponible sur <a href="http://standards.ieee.org/regauth/ethertype/eth.txt" target="_blank">http://standards.ieee.org/regauth/ethertype/eth.txt</a>. Le lecteur attentif peut se demander pourquoi différents <span class="em">Ether Types</span> sont nécessaires pour IPv4 et IPv6 alors que l'en-tête IP contient déjà un champ de version qui peut être utilisé pour distinguer les paquets IPv4 et IPv6. Théoriquement, IPv4 et IPv6 pourraient utiliser le même <span class="em">Ether Type</span>. Malheureusement, les développeurs des premières implémentations IPv6 ont constaté que certains appareils ne vérifiaient pas le champ de version des paquets IPv4 qu'ils recevaient et analysaient les trames dont l'<span class="em">Ether Type</span> était défini  sur <span class="em">0x0800</span> comme des paquets IPv4. Envoyer des paquets IPv6 à de tels appareils aurait provoqué des perturbations. Pour éviter ce problème, l'IETF a décidé de demander une valeur <span class="em">Ether Type</span> distincte pour IPv6. Un tel choix est maintenant obligatoire selon la RFC 6274 (section 3.1), bien que nous puissions trouver un contre-exemple amusant dans la RFC 6214.</p>
+                    <p>La quatrième partie de la trame Ethernet est le payload. La longueur minimale du payload est de 46 octets pour assurer une taille minimale de trame, y compris l'en-tête de 512 bits. Le payload Ethernet ne peut pas dépasser 1500 octets. Cette taille a été jugée raisonnable lorsque la première spécification Ethernet a été rédigée. À l'époque, Xerox utilisait son Ethernet expérimental à 3 Mbps qui offrait 554 octets de payload et la RFC 1122 exigeait un MTU minimum de 572 octets pour IPv4. 1500 octets étaient suffisamment grands pour répondre à ces besoins sans contraindre les adaptateurs réseau à contenir des mémoires excessivement grandes. De plus, des simulations et des études de mesure dans des réseaux Ethernet ont révélé que CSMA/CD était capable d'atteindre une utilisation très élevée. Cela est illsutré dans la figure ci-dessous, basée sur [SH1980], qui montre l'utilisation du canal obtenue dans des réseaux Ethernet contenant différents nombres d'hôtes envoyant des trames de différentes tailles.</p>
+                    <figure>
+                        <img src="../images/impact_longueur_trame_utilisation_chaine_maximum.png" alt="">
+                        <figcaption>Figure 6.19 : Impact de la longueur de trame sur l'utilisation maximale du canal[SH1980]</figcaption>
+                    </figure>
+                    <p>Le dernier champ de la trame Ethernet est un code de redondance cyclique (CRC) de 32 bits. Ce CRC est capable de détecter un nombre beaucoup plus important d'erreurs de transmission que la somme de contrôle Internet utilisé par IP, UDP et TCP [SGP98]. Le format de la trame Ethernet est illustré ci-dessous.</p>
+                    <figure>
+                        <img src="../images/format_trame_DIX_ethernet.png" alt="">
+                        <figcaption>Figure 6.20 : Format de trame Ethernet DIX</figcaption>
+                    </figure>
+                    <hr>
+                    <p>Note : Où doit être situé le CRC dans une trame ?</p>
+                    <p>Les couches de transport et de liaison de données choisissent généralement des stratégies différentes pour placer leurs CRC ou sommes de contrôle (checksums). Les protocoles de la couche de transport placent généralement leurs CRC ou sommes de contrôle dans l'en-tête du segment. Les protocoles de la couche de liaison de données placent parfois leur CRC dans l'en-tête de la trame, mais souvent dans une partie additionnelle à la fin de la trame, appelée <span class="html">trailer</span>. Ce choix reflète des hypothèses d'implémentation, mais influence également les performances [RFC 893]. Lorsque le CRC est placé dans le <span class="em">trailer</span>, comme dans Ethernet, la couche de liaison de données peut le calculer pendant la transmission de la trame et l'insérer à la fin de la transmission. Toutes les interfaces Ethernet utilisent cette optimisation aujourd'hui. Lorsque la somme de contrôle est placée dans l'en-tête, comme dans un segment TCP, il est impossible pour l'interface réseau de le calculer pendant la transmission du segment. Certaines interfaces réseau fournissent une assistance matérielle pour calculer la somme de contrôle TCP, mais cela est plus complexe que si la somme de contrôle TCP était placée dans le <span class="em">trailer</span>. Ces interfaces réseau calculent la somme de contrôle TCP pendnat le transfert d'un segment de la mémoire de l'hôte vers l'interface réseau [SH2004].</p>
+                    <hr>
+                    <p>Le format de trame Ethernet indiqué ci-dessus est spécifié dans [DIX]. C'est le format utilisé pour envoyer à la fois les paquets IPv4 [RFC 894] et IPv6 [RFC 2464]. Après la publication de [DIX], l'Institute of Electrical and Electronic Engineers (IEEE) a commencé à standardiser plusieurs technologies de réseau local (LAN). L'IEEE a travaillé sur plusieurs technologies LAN, commençant par Ethernet, Token Ring et Token Bus. Ces trois technologies étaient complètement différentes, mais elles ont toutes convenu d'utiliser les adresses MAC de 48 bits spécifiées initialement pour Ethernet [802]_. Lors du développement de sa norme Ethernet [802.3], le groupe de travail IEEE 802.3 a été confronté à un problème. Ethernet imposait une taille minimale de payload de 46 octets, tandis que certaines entreprises recherchaient une technologie LAN pouvant transporter de manière transparente des trames courtes ne contenant que quelques octets de payload. Une telle trame peut être envoyée par un hôte Ethernet en la remplissant pour s'assurer que le payload fait au moins 46 octets. Cependant, étant donné que l'en-tête Ethernet [DIX] ne contient pas de champ de longuueur, il est impossible pour le récepteur de déterminer combien d'octets utiles ont été placés dans le champ de payload. Pour résoudre ce problème, l'IEEE a décidé de remplacer le champ <span class="em">Type</span> de l'en-tête Ethernet [DIX] par un champ <span class="em">Length</span>. Heuresuement, l'IEEE a pu définir le format de trame [802.3] tout en assurant la compatibilité descendante avec le format de trame Ethernet [DIX]. L'astuce a été d'attribuer uniquement des valeurs supérieures à 1500 en tant que valeurs <span class="em">Ether Type</span>. Lorsqu'un hôte reçoit une trame, il peut déterminer son format en vérifiant le champ <span class="em">Ether Type/Length</span>. Une valeur inférieure à 1501 est clairement un indicateur de longueur et donc une trame [802.3]. Une valeur supérieure à 1501 ne peut être qu'un type et donc une trame [DIX]. Ce champ <span class="em">Length</span> contient le nombre d'octets utiles dans le payload de la trame. Le payload doit encore contenir au moins 48 octets, mais des octets de bourrage (padding bytes) sont ajouté par l'émetteur et supprimés par le récepteur. Afin d'ajouter le champ <span class="em">Length</span> sans modifier significativement le format de la trame, l'IEEE a dû supprimer le champ <span class="em">Type</span>. Sans ce champ, il est impossible pour un hôte récepteur d'identifier le type de paquet de la couche réseau à l'intérieur d'une trame reçue. Pour résoudre ce nouveau problème, L'IEEE a développé une nouvelle sous-couche appelée <span class="html">Logical Link Control</span> [802.2]. Plusieurs protocoles ont été dénis dans cette sous-couche. L'un d'entre eux fournissait une version légèrement différente du champ <span class="em">Type</span> du format de trame Ethernet original. Un autre contenait des accusés de réception et des retransmissions pour fournir un service fiable... En pratique, [802.2] n'est jamais utilisé pour prendre en charge IP dans les réseaux Ethernet. La figure ci-dessous montre le format officiel de trame [802.3].</p>
+                    <figure>
+                        <img src="../images/format_trame_ethernet_802.3.png" alt="">
+                        <figcaption>Figure 6.21 : Format de trame Ethernet 802.3</figcaption>
+                    </figure>
+                    <hr>
+                    <p>Note : Quel est le service Ethernet ?</p>
+                    <p>Un réseau Ethernet offre un service non fiable et sans connexion. Il prend en charge trois modes de transmission : <span class="html">unicast</span>, <span class="html">multicast</span> et <span class="html">broadcast</span>. Bien que le service Ethernet soit théoriquement non fiable, un bon réseau Ethernet devrait, en pratique, fournir un service qui :</p>
+                    <ul>
+                        <li>
+                            <p>Livre les trames à leur destination avec une très forte probabilité de réussite.</p>
+                        </li>
+                        <li>
+                            <p>Ne réorganise pas les trames transmises.</p>
+                        </li>
+                    </ul>
+                    <p>La première porpriété est une conséquence de l'utilisation du CSMA/CD. La deuxième propriété est une conséquence de l'organisation physique du réseau Ethernet en tant que bus partagé. Ces deux propriétés sont importantes et toutes les évolutions de la technologie Ethernet les ont préservées.</p>
+                    <hr>
+                    <p>Plusieurs couches physiques ont été définies pour les réseaux Ethernet. La première couche physique, généralement appelée 10Base5, offrait une vitresse de 10 Mbps sur un câble coaxial épais. Les caractéristiques du câble et des émetteurs-récepteurs utilisés à l'époque permettaient l'utilisation de segments d'une longueur de 500 mètres. Un réseau 10Base5 peut également inclure des répéteurs entre les segments.</p>
+                    <p>La deuxième couche physique était 10Base2. Cette couche physique utilisait un câble coaxial fin qui était plus facile à installer que le câble 10Base5, mais sa longueur maximale ne pouvait pas dépasser 185 mètres. Une couche physique 10BaseF a égalemennt été définie pour transporter Ethernet sur des liaisons optiques point à point. Le principal changement apporté à la couche physique était la prise en charge des paires torsadées dans la spécification 10BaseT. Les câbles à paires torsadées sont traditionnellement utilisés pour prendre en charge le service téléphonique dans les immeubles de bureaux. La plupart des immeubles de bureaux sont aujourd'hui équipés d'un câblage structuré. Plusieurs câbles à paires torsadées sont installés entre chaque pièce et un placard de télécommunication central par bâtiment ou par étage dans les grands bâtiments. Ces placards de télécommunication servent de points de concentration pour le service téléphonique, mais aussi pour les LAN.</p>
+                    <p>L'introduction des paires torsadées a entraîné deux changements majeurs dans Ethernet. Le premier changement concerne la topologie physique du réseau. Les réseaux 10Base2 et 10Base5 sont des bus partagés, où le câble à paires coaximal passe généralment par chaque pièce contenant un ordinateur connecté. Un réseau 10BaseT est un réseau en étoile. Tous les appareils connectés au réseau sont reliés à câble à paires torsadées qui se termine dans le placard de télécommunication. Du point de vue de la maintenance, il s'agit d'une amélioration majeure. Le câble est un point faible dans les réseaux 10Base2 et 10Base5. Tout dommage physique sur le câble rompt l'ensemble du réseau et lorsque cela se produit, l'administrateur réseau devait vérifier manuellement tout le câble pour détecter où il était endommagé. Avec 10BaseT, lorsqu'une paire torsadée est endommagée, seul l'appareil connecté à cette paire torsadée est affecté et cele n'affecte pas les autres appareils. Le deuxième changement majeur introduit par 10BaseT &tait qu'il était impossible de construire un réseau 10BaseT en connectant simplement toutes les paires torsadées ensemble. Toutes les paires torsad&es doivent connectées à un relais qui fonctionne dans la couche physique. Ce relais s'appelle un <span class="html">concentrateur Ethernet (ou Ethernet hub en anglais)</span>. Un concentrateur est donc un relais de couche physique qui reçoit un signal éléctrique sur l'une de ses interfaces, régénère le signal et le transmet sur toutes ses autres interfaces. Certains concentrateurs sont également capables de convertir le signal électrique d'une couche physique à un autre (par exemple, conversion de 10BaseT à 10Base2).</p>
+                    <figure>
+                        <img src="../images/hubs_ethernet_modele_reference.png" alt="">
+                        <figcaption>Figure 6.22 : Concentrateurs Ethernet dans le modèle de référence</figcaption>
+                    </figure>
+                    <p>Les ordinateurs peuvent être directement connectés aux concentrateurs Ethernet. Les concentrateurs Ethernet eux-mêmes peuvent être connectés d'autres concentrateurs Ethernet eux-mêmes peuvent être connectés d'autres concentrateurs Ethernet pour construire un réseau plus large. Cependant, certaines directives importantes doivent être suivies lors de la construction d'un réseau complexe avec des concentrateurs. Premi!rement, la topologie du réseau doit être un arbre. Comme les concentrateurs sont des relais dans la couche physique, l'ajout d'un lien entre le <span class="html">Hub2</span> et le <span class="html">Hub3</span> dans le réseau ci-dessous créerait un raccourci électrique qui perturberait complètement le réseau. Cela implique qu'il ne peut y avoir aucune redondance dans un réseau basé sur des concentrateurs. Une défaillance d'un concentrateur ou d'un lien entre deux concentrateurs diviserait le réseau en deux réseaux isolés. Deuxièmement, comme les concentrateurs sont des relais dans la couche physique, des collisions peuvent se produire et doivent être gérées par CSMA/CD comme dans un réseau 10Base5. Cela implique que le délai maximum entre n'importe quelle paire d'appareils dans le réseau ne peut pas être supérieur à la durée d'une fente de 51,2 microsecondes. Si le délai est plus long, les collisions entre les trames courtes peuvent être correctement détectées. Cette contrainte limite la portée géographique des réseaux 10BaseT contenant des concentrateurs.</p>
+                    <figure>
+                        <img src="../images/reseau_ethernet_hierarchique_compose_hubs.png" alt="">
+                        <figcaption>Figure 6.23 : Un réseau Ethernet hiérarchique composé de concentrateurs</figcaption>
+                    </figure>
+                    <p>À la fin des années 1980, 10 Mbps est devenu trop lent pour certaines applications et les fabricants de réseaux ont développé plusieurs technologies LAN offrant une bande passante plus élevée, telles que le LAN FDDI 100 Mbps utilisant des fibres optiques. Comme le développement de 10Base5, 10Base2 et 10BaseT avait montré qu'Ethernet pouvait être adapté à différentes couches physiques, plusieurs fabricants ont commencé à travailler sur Ethernet 100 Mbps et ont convaincu l'IEEE de standardiser cette nouvelle technologie initialement appelée <span class="html">Fast Ethernet</span>. <span class="em">Fast Ethernet</span> a été conçu en respectant deux contraintes. Premièrement, <span class="em">Fast Ethernet</span> devait prendre en charge les paires torsadées. Bien qu'il soit plus facile du point de vue de la couche physique de prendre en charge une bande passante plus élevée sur des câbles coaxiaux que sur des paires torsadées, les câbles coaxiaux étaient un cauchemar du point de vue du déploiement et de la maintenance. Deuxièmement, <span class="em">Fast Ethernet</span> devait être parfaitement compatible avec les Ethernet 10 Mbps existants pour permettre à la technologie <span class="em">Fast Ethernet</span> d'être utilisée initialement comme une technologie de backbone pour interconnecter des réseaux Ethernet 10 Mbps. Cela a obligé <span class="em">Fast Ethernet</span> à utiliser exactement le même format de trame que l'Ethernet 10 Mbps. Cela impliuait que la taille minimale de trame <span class="em">Fast Ethernet</span> reste à 512 bits. Pour préserver CSMA/CD avec cette taille minimale de trame et une vitesse de 100 Mbps au lieu de 10 Mbps, la durée de la fente temporelle a été réduite à 5,12 microsecondes.</p>
+                    <p>L'évolution d'Ethernet ne s'est pas arrêtée. En 1998, l'IEEE a publié une première norme pour fournir Ethernet Gigabit sur fibres optiques. Plusieurs autres types de couches physiques ont été ajoutés par la suite. La norme Ethernet 10 Gigabit est apaprue en 2002. Les travaux sont en cours pour développer des normes Ethernet 40 Gigabit et 100 Gigabit, et certains réfléchissent déjà à Ethernet Terabit. Le tableau ci-dessous répertorie les principales normes Ethernet. Une liste plus détaillée peut être consultée sur <a href="http://en.wikipedia.org/wiki/Ethernet_physical_layer" target="_blank">http://en.wikipedia.org/wiki/Ethernet_physical_layer</a>.</p>
+                    <table class="tableBalises" role="presentation">
+                        <thead>
+                            <tr>
+                                <th>Standard</th>
+                                <th>Commentaires</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>10Base5</td>
+                                <td>Câble coaxial épais, 500 m</td>
+                            </tr>
+                            <tr>
+                                <td>10Base2</td>
+                                <td>Câble coaxial mince, 185 m</td>
+                            </tr>
+                            <tr>
+                                <td>10BaseT</td>
+                                <td>Deux paires de câble UTP de catégirue 3+, 10 Mbit/s</td>
+                            </tr>
+                            <tr>
+                                <td>10Base-F</td>
+                                <td>10 Mbit/s sur fibre optique</td>
+                            </tr>
+                            <tr>
+                                <td>100Base-Tx</td>
+                                <td>Câble UTP ou STP de catégorie 5, 100 m maximum</td>
+                            </tr>
+                            <tr>
+                                <td>100Base-FX</td>
+                                <td>Deux fibres optiques multimode, 2 km maximum</td>
+                            </tr>
+                            <tr>
+                                <td>1000Base-CX</td>
+                                <td>Deux paires de câble torsadé blindé, 25 m maximum</td>
+                            </tr>
+                            <tr>
+                                <td>1000Base-SX</td>
+                                <td>Deux fibres optiques multimode ou monomode avec lasers</td>
+                            </tr>
+                            <tr>
+                                <td>10 Gbps</td>
+                                <td>Fibre optique mais aussi câble UTP de catégorie 6</td>
+                            </tr>
+                            <tr>
+                                <td>40-100 Gbps</td>
+                                <td>Fibre optique (des expériences sont réalisées avec du cuivre)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h5>Commutateurs Ethernet :</h5>
+                    
                 </article>
             <!-- fin de section -->
             </section>
