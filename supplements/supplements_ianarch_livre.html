@@ -75,7 +75,7 @@
                     <p>MySQL a plusieurs moteurs de stockage, mais deux sortent du lot : MyISAM et InnoDB. MyISAM est le moteur historique. Il a l'avantage d'être performant, mais l'inconvénient de ne pas gérer l'intégrité des données (pas de contraintes d'intégrité, pas de clésétrangères, pas de transactions...). Au contraire, InnoDB gère bien toute l'intégrité des donées, mais au prix de performances moindres.</p>
                     <p>Pour un site internet, la performance est généralement un critère plus important que l'intégrité des données. MyISAM semble donc une solution à privilégier pour un site web écoconçu.</p>
                     <p>Syntaxe pour la création d'une table avec le moteur MyISAM :</p>
-<pre class="taille60"><code>CREATE TABLE nom
+<pre><code>CREATE TABLE nom
 (
     ...
 ) ENGINE = MYISAM;</code></pre>
@@ -164,7 +164,7 @@
                     <p>Le type <span class="html">CHAR</span> représente une chaîne de caractères de taille fixe. Ainsi pour une colonne de type <span class="html">CHAR</span>, tous les enregistrements auront le même nombre de caractères pour cet attribut. Une colonne de type <span class="html">VARCHAR</span> permet de stocker des chaînes de caractères de tailles différentes d'un enregistremnt à l'autre.</p>
                     <p>Les bases de données MySQL et MariaDB supportent l'Unicode, en particulier l'UTF-8. Cela permet de pouvoir utiliser l'ensemble des caractères existant sur la terre, mais également d'occuper un minimum de place.</p>
                     <p class="souligne">Syntaxe :</p>
-<pre class="taille60"><code>CREATE TABLE nomTable
+<pre><code>CREATE TABLE nomTable
 (
     ...
 ) CHARACTER SET 'utf8' COLLATE 'utf8mb4_unicode_ci';</code></pre>
@@ -176,19 +176,19 @@
                     <p class="souligne">Exemples :</p>
                     <ul>
                         <li>
-<pre class="taille60"><code>idVelo SMALLINT UNSIGNED CONSTRAINT pk_velos PRIMARY KEY...</code></pre>
+<pre><code>idVelo SMALLINT UNSIGNED CONSTRAINT pk_velos PRIMARY KEY...</code></pre>
                         </li>
                         <li>
-<pre class="taille60"><code>idPedalo INT UNSIGNED CONSTRAINT pk_pedalos PRIMARY KEY...</code></pre>
+<pre><code>idPedalo INT UNSIGNED CONSTRAINT pk_pedalos PRIMARY KEY...</code></pre>
                         </li>
                         <li>
-<pre class="taille60"><code>idVoilier CHAR (2) CONSTRAINT pk_voiliers PRIMARY KEY...</code></pre>
+<pre><code>idVoilier CHAR (2) CONSTRAINT pk_voiliers PRIMARY KEY...</code></pre>
                         </li>
                     </ul>
                     <h3 id="jointures">Les jointures :</h3>
                     <p>Les clés étrangères peuvent être nommées comme les clés primaires qu'elles référencent. Cela permet d'effectuer des jointures en utilisant le mot-clé <span class="html">USING</span> à la place de <span class="html">ON</span> suivi de la condition de jointure.</p>
                     <p class="souligne">Exemple :</p>
-<pre class="taille60"><code>SELECT *
+<pre><code>SELECT *
 FROM employes
 INNER JOIN services USING (codeService);</code></pre>
                     <p>Ceci est plus conscis et évite de potentielles erreurs dans la condition de jointure.</p>
@@ -196,12 +196,12 @@ INNER JOIN services USING (codeService);</code></pre>
                     <h3 id="index">Les index :</h3>
                     <p>Les index peuvent améliorer les performances à condition qu'ils soient utilisés à bon escient et qu'ils ne soient pas trop nombreux. Un trop grand nombre d'index est pire d'un point de vue performance que pas d'index du tout ! Néanmoins, il est intéressant d'avoir des index sur les attributs constituant une clé étrangère ou utilisés régulièrement dans des restrictions (clause <span class="html">WHERE</span>) ou des tris (clause <span class="html">ORDER BY</span>).</p>
                     <p class="souligne">Syntaxe :</p>
-<pre class="taille60"><code>CREATE INDEX nomIndex ON nomTable (nomColonnes);</code></pre>
+<pre><code>CREATE INDEX nomIndex ON nomTable (nomColonnes);</code></pre>
                     <p>L'avantagedes requêtes provenant d'un site web est qu'elles sont connues à l'avance. Ainsi, il est possible de les analyser pour déterminer les attributs nécessitant des index.</p>
                     <h3 id="index_recherche_textuelle">Les index pour la recherche textuelle :</h3>
                     <p>Lorsqu'un site internet met en place un moteur de recherche, il faut qu'il puisse trouver les pages qui contiennent les termes recherchés. Si les articles sont contenus dans une base de données et si lespages sont créées dynamiquement, il faut alors rechercher ces termes dans la base.</p>
                     <p>Soit la table Articles :</p>
-<pre class="taille60"><code>CREATE TABLE articles
+<pre><code>CREATE TABLE articles
 (
     idArticle INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     adresse VARCHAR (20) NOT NULL UNIQUE,
@@ -209,25 +209,25 @@ INNER JOIN services USING (codeService);</code></pre>
     contenu TEXT NOT NULL
 ) ENGINE = MYISAM;</code></pre>
                     <p>Pour rechercher les pages contenant le terme saisi, il faut alors effectuer une recherche du type :</p>
-<pre class="taille60"><code>SELECT adresse
+<pre><code>SELECT adresse
 FROM articles
 WHERE title LIKE '%motCleRecherche%'
 OR contenu LIKE '%motCleRecherche%';</code></pre>
                     <p>Cette requête ne peut pas être accélérée en utilisant un index classique. Heureusement, les index pour la recherche textuelle (<span class="em">full-text search</span> en anglais) permettent d'indexer l'ensemble des mots contenus dans un ensemble d'attributs. Les mots trop courts ou trop longs ne sont toutefois pas indexés. Pour des raisons d'efficacité, il est préférable d'insérer les données en premier, puis de créer l'index ensuite.</p>
                     <p class="souligne">Syntaxe :</p>
-<pre class="taille60"><code>CREATE FULLTEXT INDEX nomIndex ON nomTable (attributs);</code></pre>
+<pre><code>CREATE FULLTEXT INDEX nomIndex ON nomTable (attributs);</code></pre>
                     <p class="souligne">Exemple :</p>
-<pre class="taille60"><code>CREATE FULLTEXT INDEX in_articles_fulltext_titrecontenu ON articles (titre, contenu);</code></pre>
+<pre><code>CREATE FULLTEXT INDEX in_articles_fulltext_titrecontenu ON articles (titre, contenu);</code></pre>
                     <p>Il est alors possible d'utiliser les fonctions <span class="html">MATCH()</span> et <span class="html">AGAINST()</span> avec la syntaxe suivante :</p>
-<pre class="taille60"><code>MATCH (attributs) AGAINST ('termesRecherches' [ IN BOOLEAN MODE ])</code></pre>
+<pre><code>MATCH (attributs) AGAINST ('termesRecherches' [ IN BOOLEAN MODE ])</code></pre>
                     <p>La requête de l'exemple précédent devient alors :</p>
-<pre class="taille60"><code>SELECT adresse
+<pre><code>SELECT adresse
 FROM articles
 WHERE MATCH (titre, contenu)
 AGAINST ('termesRecherches');</code></pre>
                     <p>Les avantages de cette technique sont multiples : en plus d'être performante, elle permet d'obtenirles résultats triés par pertinence, de facilement rechercher plusieurs termes et d'en exclure certains en utilisant les mots-clés <span class="html">IN BOOLEAN MODE</span>.</p>
                     <p class="souligne">Exemple :</p>
-<pre class="taille60"><code>SELECT adresse
+<pre><code>SELECT adresse
 FROM articles
 WHERE MATCH (titre, contenu)
 AGAINST ('+SQL -Oracle' IN BOOLEAN MODE);</code></pre>
@@ -240,7 +240,7 @@ AGAINST ('+SQL -Oracle' IN BOOLEAN MODE);</code></pre>
                     <p>Enfin, d'un point de vue sécurité, les procédures ou fonctions stockées sont également très avantageuses. Il est possible d'accorder à l'utilisateur de la base de données des droits uniques sur ces procédures ou fonctions stockées et non sur les tables. Ainsi, la surface d'attaque est moindre. De plus, en passant par ces procédures et fonctions stockées, il est possible de s'assurer de l'intégrité des données, même si le moteur de stockage ne le permet pas.</p>
                     <h3 id="mise_en_place">La mise en place :</h3>
                     <p>Illustrons ceci avec l'exemple de l'ajout d'un utilisateur. La première étape est la création des tables utilisateurs et adresses en utilisant PHPMyAdmin :</p>
-<pre class="taille60"><code>CREATE TABLE utilisateurs
+<pre><code>CREATE TABLE utilisateurs
 (
     id_utilisateur INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR (20) NOT NULL,
@@ -258,7 +258,7 @@ CREATE TABLE adresses
     ville VARCHAR (30) NOT NULL
 ) ENGINE = MYISAM;</code></pre>
                     <p>La deuxième étape est la création de la procédure stockée :</p>
-<pre class="taille60"><code>DELIMITER |
+<pre><code>DELIMITER |
 CREATE PROCEDURE ajouterUtilisateur (IN nom VARCHAR (20), IN prenom VARCHAR (20), IN email VARCHAR (40), IN ligne1_adresse VARCHAR (40), IN ligne2_adresse VARCHAR (40), IN code_postal MEDIUMINT (5), IN ville VARCHAR (30))
 BEGIN
     INSERT INTO adresses (ligne1, ligne2, code_postal, ville) VALUES (ligne1_adresse, ligne2_adresse, code_postal, ville);
@@ -266,15 +266,15 @@ BEGIN
 END |
 DELIMITER;</code></pre>
                     <p>Il est possible de tester celle-ci de la manière suivante :</p>
-<pre class="taille60"><code>CALL ajouterUtilisateur('MARCHIX', 'Agathe', 'agathe.marchix@eni.fr', '2A rue Benjamin Franklin', NULL, 44800, 'Saint-Herblain');</code></pre>
+<pre><code>CALL ajouterUtilisateur('MARCHIX', 'Agathe', 'agathe.marchix@eni.fr', '2A rue Benjamin Franklin', NULL, 44800, 'Saint-Herblain');</code></pre>
                     <p>La troisième étape est la création d'un utilisateur avec des droits uniquement sur l'exécution des procédures stockées :</p>
-<pre class="taille60"><code>CREATE USER siteweb@'%' IDENTIFIED BY 'OILQcvXhvIzQj75s';
+<pre><code>CREATE USER siteweb@'%' IDENTIFIED BY 'OILQcvXhvIzQj75s';
 GRANT USAGE ON greenitaccess.* TO siteweb@'%' REQUIRE NONE WITH
 MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0
 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
 GRANT EXECUTE ON greenitaccess.* TO siteweb@'%';</code></pre>
                     <p>Il est possible de tester la connexion et l'appel à cette procédure stockée pour cet utilisateur avec le code PHP suivant :</p>
-<pre class="taille60"><code>&lt;?php
+<pre><code>&lt;?php
     require_once 'connexion.php';
     $query = 'CALL ajouterUtilisateur (:nom, :prenom, :email, :ligne1, :ligne2, NULL, :cp, :ville);';
     $prep = $pdo-&gt;prepare($query);
@@ -287,7 +287,7 @@ GRANT EXECUTE ON greenitaccess.* TO siteweb@'%';</code></pre>
     $prep-&gt;execute();
 ?&gt;</code></pre>
                     <p>Le fichier connexion.php :</p>
-<pre class="taille60"><code>&lt;?php
+<pre><code>&lt;?php
     $pdo = new PDO('mysql:host=localhost;dbname=greenitaccess', 'siteweb', 'OILQcvXhvIzQj75s', [PDO::MYSQL_ATTR_INIT_COMMAND =&gt; "SET NAMES utf8"]);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 ?&gt;</code></pre>
@@ -296,7 +296,7 @@ GRANT EXECUTE ON greenitaccess.* TO siteweb@'%';</code></pre>
                     <p>Vous pouvez vérifier les résultats à l'aide de PHPMyAdmin et constater les insertons des nouvelles lignes.</p>
                     <p>Pour prouver que l'utilisateur de base de données créé ne peut pas exécutér d'autres instructions que les procédures et fonctions stockées, vous pouvez essayer d'envoyer un autre type de requête.</p>
                     <p class="souligne">Exemple :</p>
-<pre class="taille60"><code>&lt;?php
+<pre><code>&lt;?php
     require_once 'connexion.php';
     $query = 'INSERT INTO adresses (code_postal, ville) VALUES (:cp, :ville);';
     $prep = $pdo-&gt;prepare($query);
@@ -311,7 +311,7 @@ GRANT EXECUTE ON greenitaccess.* TO siteweb@'%';</code></pre>
                     <p>Lorsque nous avons à manipuler des collections de données, il est assez tentant de créer une boucle <span class="em">for</span> en PHP et d'effectuer dans cette boucle un voire plusieurs appels à la base de données pour effectuer le traitement. Il est préférable de n'effectuer qu'un seul appel pour l'ensemble de la collection.</p>
                     <p>Imaginons une page listant des utilisateurs. Il est possible d'en sélectionner plusieurs pour les supprimer.</p>
                     <p>Voici la page utilisateurs.php créée à cet effet :</p>
-<pre class="taille60"><code>&lt;!DOCTYPE html&gt;
+<pre><code>&lt;!DOCTYPE html&gt;
 &lt;html lang="fr"&gt;
     &lt;head&gt;
         &lt;meta charset="UTF-8"&gt;
@@ -355,7 +355,7 @@ GRANT EXECUTE ON greenitaccess.* TO siteweb@'%';</code></pre>
 &lt;/html&gt;</code></pre>
                     <p>La partie sous le titre de niveau 1, permettra d'afficher les messages d'erreur ou de succès lorsqu'elle sera à nouveau affichée après une suppression.</p>
                     <p>Ensuite, la procédure suivante est appelée :</p>
-<pre class="taille60"><code>DELIMITER |
+<pre><code>DELIMITER |
 CREATE PROCEDURE listerUtilisateurs()
 BEGIN
     SELECT id_utilisateur, nom, prenom FROM utilisateurs ORDER BY nom, prenom;
@@ -363,7 +363,7 @@ END |
 DELIMITER;</code></pre>
                     <p>En fonction des données récupérées, le tableau est créé ou un message est affiché s'il n'y a aucun utilisaateur. Toutes les cases à cocher pour sélectionner les personnes ont été pourvues d'un attribut <span class="html">aria-label</span> contenant le nom de la personne afin d'être accessibles avec une lecture d'écran. Elles ont toutes un nom constitué de <span class="em">idsUtilisateurs</span> suivi de l'identifiants des personnes cochées se retrouvent dans les paramètres <span class="em">POST</span> dans un tableau nommé <span class="em">idsUtilisateurs</span>. Le bouton de suppression possède un attribut <span class="html">formaction</span>. Ainsi, si nous ajoutions d'autres actions groupées, elles pourraient être dans le même formulaire avec les mêmes cases à cocher. Par exemple, il serait imaginable d'avoir une réinitialisation de mots de passe pour l'ensemble des personnes sélectionnées.</p>
                     <p>Lors d'un clic sur le bouton de suppression, la page <span class="em">supprimerUtilisateurs.php</span> est appelée :</p>
-<pre class="taille60"><code>&lt;?php
+<pre><code>&lt;?php
     if (filter_input(INPT_POST, 'suppr', FILTER_SANITIZE_STRING)) {
         session_start();
         if (!isset($_POST['idsUtilisateurs'])) {
@@ -384,7 +384,7 @@ DELIMITER;</code></pre>
     header('location: utilisateurs.php');
 ?&gt;</code></pre>
                     <p>Cette page commence par s'assurer que le formulaire a bien été soumis via le bouton de suppression. Elle teste si au moins une case à cocher a été sélectionnée. Si c'est bien le cas, tous les identifiants sont récupérés et vérifiés. Ils sont concaténés, avec une virgule en guise de caractère séparateur, et envoyés comme paramètre à la procédure suivante :</p>
-<pre class="taille60"><code>DELIMITER |
+<pre><code>DELIMITER |
 CREATE PROCEDURE supprimerUtilisateurs (IN ids VARCHAR (100))
 BEGIN
     DELETE FROM adresses WHERE id_adresse IN (SELECT id_adresse FROM utilisateurs WHERE FIND_IN_SET (id_utilisateur, ids) &lt;&gt; 0);
@@ -400,12 +400,12 @@ DELIMITER;</code></pre>
                     <p>Une fois que nous avons réduit le nomnre de colonnes récupérées par la requête, l'autre moyen de baisser le volume des données transférées est de réduire le nombre de lignes retournées par la requête. Il est possible de mettre en place une pagination pour afficher, non pas tous les résultats d'une requête, mais seulement les n premiers, et d'afficher les suivants à la demande de l'utilisateur. L'expérience montre que généralement, seuls les premiers résultats sont utilisés et cela permet à la fois de moins solliciter le serveur de base de données et de produire des pages plus légères.</p>
                     <p>Avec MySQL ou MariaDB, il est possible de réaliser cela avec la clause <span class="html">LIMIT</span>.</p>
                     <p class="souligne">Syntaxe :</p>
-<pre class="taille60"><code>SELECT ...
+<pre><code>SELECT ...
 LIMIT debut, nombre;</code></pre>
                     <p>La valeur <span class="em">nombre</span> correspond au nombre de lignes à récupérer, et <span class="em">debut</span> au nombre de lignes à sauter avant de commencer à récupérer les résultats. Par exemple, <span class="html">LIMIT 3, 2</span> récupère deux lignes après avoir sauté les trois premières, soit dans l'exemple suivant les lignes 4 et 5.</p>
                     <h4 id="pagination_resultats_moteur_recherche">La pagination des résultats du moteur de recherche :</h4>
                     <p>Supposons que nous souhaitons mettre en place un moteur de recherche sur notre site internet. Nous pouvons alors créer la procédure suivante utilisant <span class="html">LIMIT</span> :</p>
-<pre class="taille60"><code>DELIMITER |
+<pre><code>DELIMITER |
 CREATE PROCEDURE rechercher (IN motsclefs VARCHAR (50), IN debut SMALLINT UNSIGNED, IN nombre TINYINT UNSIGNED)
 BEGIN
     SELECT adresse, titre
@@ -416,7 +416,7 @@ BEGIN
 END |
 DELIMITER;</code></pre>
                     <p>Une fonction stockée est également nécessaire pour connaître le nombre de résultats :</p>
-<pre class="taille60"><code>DELIMITER |
+<pre><code>DELIMITER |
 CREATE FUNCTION nbResultats (motsclefs VARCHAR (50)) RETURNS INT
 BEGIN
     DECLARE nb INT;
@@ -428,7 +428,7 @@ BEGIN
 END |
 DELIMITER;</code></pre>
                     <p>Voici l'extrait de la page permettant de lancer la recherche :</p>
-<pre class="taille60"><code>&lt;div role="search"&gt;
+<pre><code>&lt;div role="search"&gt;
     &lt;form method="GET" action="recherche.php"&gt;
         &lt;input type="search" name="motsClefs"&gt;
         &lt;input type="submit" value="Rechercher"&gt;
@@ -436,7 +436,7 @@ DELIMITER;</code></pre>
 &lt;/div&gt;</code></pre>
                     <p>Remarque : Comme cela a été dit précédemment, il est souhaitable que ce formulaire de recherche soit intégré dans le template de page afin qu'il soit présent sur toutes les pages du site.</p>
                     <p>Voici enfin la page affichant les résultats de la recherche (recherche.php) :</p>
-<pre class="taille60"><code>&lt;?php
+<pre><code>&lt;?php
     const NB_PAR_PAGE = 5;
     $motsClefs = filter_input(INPUT_GET, 'motsClefs', FILTER_SANITIZE_STRING);
     $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?? 1;
@@ -494,11 +494,11 @@ DELIMITER;</code></pre>
                     <h3 id="sous-requetes_correlees">Les sous-requêtes corrélées :</h3>
                     <p>Il existe deux catégories de sous-requêtes : les sous-requêtes imbriquées et les sous-requêtes corrélées. La différence entre les deux est qu'il est possible d'exécuter seule une sous-requête imbriquée alors que ce n'est pas possible pour une sous-requête corrélée. Celle-ci dépend d'au moins un élément de la requête principale :</p>
                     <p class="souligne">Exemple de sous-requête imbriquée :</p>
-<pre class="taille60"><code>SELECT ligne1, ligne2, code_postal, ville
+<pre><code>SELECT ligne1, ligne2, code_postal, ville
 FROM adresses
 WHERE id_adresse NOT IN (SELECT DISTINCT id_adresse FROM utilisateurs);</code></pre>
                     <p class="souligne">Exemple de sous-requête corrélée :</p>
-<pre class="taille60"><code>SELECT ligne1, ligne2, code_postal, ville
+<pre><code>SELECT ligne1, ligne2, code_postal, ville
 FROM adresses a
 WHERE NOT EXISTS (SELECT * FROM utilisateurs u WHERE a.id_adresse = u.id_adresse);</code></pre>
                     <p>Dans l'exemple de la sous-requête imbriquée, il est possible d'exécuter seule la sous-requête. Cela donne l'ensemble des identifiants des adresses qui sont associées à un utilisateur. Elle est donc exécutée une seule fois, puis la requête principale est exécutée à son tour avec les résultats de la précédente.</p>

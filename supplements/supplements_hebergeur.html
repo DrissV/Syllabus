@@ -174,7 +174,7 @@
                     </ul>
                     <h4 id="obligation_passer_https">L'obligation de passer par HTTPS :</h4>
                     <p>Une fois votre site disponible en HTTPS, il est intéressant d'imposer à vos visiteurs d'utiliser cette communication sécurisée. Pour cela, il est possible de rediriger toute demande faite en HTTP vers la même en HTTPS. Cela se réalise avec les lignes suivantes à positionner dans votre configuration d'Apache soit dans le fichier principal de configuration, soit dans un fichier <span class="html">.htaccess</span> à la racine de votre site :</p>
-<pre class="taille60"><code>RewriteEngine On
+<pre><code>RewriteEngine On
 RewriteCond % {HTTPS} off
 Rewrite (.*) https://%{HTTP_HOST}%{REQUEST_URI} {R=301,L}
 &lt;IfModule mod_headers.c&gt;
@@ -187,19 +187,19 @@ Rewrite (.*) https://%{HTTP_HOST}%{REQUEST_URI} {R=301,L}
                     <p>Lorsqu'un visiteur navigue pour la première fois sur un site, il charge tous les éléments pour afficher une première page internet (page HTML, feuilles de style CSS, scripts JavaScript, images...). Tous ces éléments sont conservés en cache un certain temps. Ainsi, s'il navigue sur une autre page du site, il n'a pas besoin de tous les fichiers, mais seulement de ceux qu'il ne possède pas. Si vpis avez le logo de votre entreprise sur toutes vos pages, une feuille de style, etc. ces éléments ne sont pas téléchargés à nouveau. Si l'internaute revient sur une page déjà visitée, normalement aucune ressource n'est envoyée depuis le serveur, ce qui permet de le soulager et de moins solliciter le réseau.</p>
                     <p>Pour indiquer le temps pendant lequel le navigateur doit utiliser la ressource en cache, plutôt que de le redemander au serveur, il est nécessaire de préciser dans l'en-tête HTTP <span class="html">Cache-Control: max-age=tempsEnSecondes, public</span>. En configurant Apache, il est possible de lui faire intégrer cette information dans ses réponses. Il faut le faire dans le fichier principal de configuration ou dans un fichier <span class="html">.htaccess</span> à la racine du site.</p>
                     <p class="souligne">Syntaxe :</p>
-<pre class="taille60"><code>&lt;filesMatch "filtreFichier"&gt;
+<pre><code>&lt;filesMatch "filtreFichier"&gt;
     Header set Cache-Control "max-age=tempsEnSecondes, public"
 &lt;/filesMatch&gt;</code></pre>
                     <p>La chaîne de caractères <span class="em">filtreFichier</span> est une expression rationnelle PCRE.</p>
                     <p>Il est possible parexemple de conserver en cache les pages, les scripts et les feuilles de style pendant 10 jours (864000 secondes) et les images pendant 1 an (31536000 secondes).</p>
-<pre class="taille60"><code>&lt;filesMatch ".(css|js|html)$"&gt;
+<pre><code>&lt;filesMatch ".(css|js|html)$"&gt;
     Header set Cache-Control "max-age=864000, public"
 &lt;/filesMatch&gt;
 &lt;filesMatch ".(ico|webp|png|gif|svg|avif|jpg)$&gt;
     Header set Cache-Control "max-age=315536000, public"
 &lt;/filesMatch&gt;</code></pre>
                     <p>Pour vérifier le bon fonctionnement, il faut se rendre pour la première fois sur l'une des pages du site et visualiser la réponse à la requête HTTP envoyée dans les outls du développeur.</p>
-<pre class="taille60"><code>HTTP/1.1 200 OK
+<pre><code>HTTP/1.1 200 OK
 Date: Sun, 25 Jul 2021 12:58:29 GMT
 Server: Apache/2.4.43 (Win64) OpenSSL/1.1.1g PHP/7.4.7
 Last-Modified: Sun, 25 Jul 2021 12:58:27 GMT
@@ -212,7 +212,7 @@ Connection: Keep-Alive
 Content-Type: text/html</code></pre>
                     <p>L'en-tête contient bien la ligne <span class="em">Cache-Control</span>.</p>
                     <p>Si nous actualisons la page, nous obtenons un code 304 indiquant que la page est celle récupérée en cache :</p>
-<pre class="taille60"><code>HTTP/1.1 <span class="html">304 Not Modified</span>
+<pre><code>HTTP/1.1 <span class="html">304 Not Modified</span>
 Date: Sun, 25 Jul 2021 13:02:32 GMT
 Server: Apache/2.4.43 (Win64) OpenSSL/1.1.1g PHP/7.4.7
 Last-Modified: Sun, 25 Jul 2021 12:58:27 GMT
@@ -221,17 +221,17 @@ Keep-Alive: timeout=5, max=100
 ETag: "712-5c7f23156590a"
 Cache-Control: max-age=86400, public</code></pre>
                     <p>Lorsque la ressource demandée est en cache, mais qu'elle a expiré, une requête est envoyée au serveur pour savoir si elle est encore vlable, avec comme en-tête :</p>
-<pre class="taille60"><code>If-Modified_Since: datDuFichierEnCache</code></pre>
+<pre><code>If-Modified_Since: datDuFichierEnCache</code></pre>
                     <p>Si la ressource n'a pas changé, le serveur renvoie le code 304 afin que la ressource en cache soit utilisée. Sinon, la nouvelle version de la ressource est envoyée avec un code 200.</p>
                     <h4 id="cache_serveur_web">Le cache du serveur web :</h4>
                     <p>Le serveur Apache peut conserver également le résultat de l'exécution de code PHP pour éviter de les réexécuter à chaque fois. Cela peut être réalisé en configurant Apache avec les lignes suivantes :</p>
-<pre class="taille60"><code>CacheEnable mem répertoireDuCahe
+<pre><code>CacheEnable mem répertoireDuCahe
 MCacheSize tailleDuCacheEnOctets
 MCacheMaxObjectCount nombreDElementsEnCache
 MCacheMinObjectSize tailleMinimale
 MCacheMaxObjectSize tailleMaximale</code></pre>
                     <p class="souligne">Exemple :</p>
-<pre class="taille60"><code>CacheEnable mem /cache
+<pre><code>CacheEnable mem /cache
 MCacheSize 100000000
 MCacheMaxObjectCount 1000
 MCacheMinObjectSize 100
