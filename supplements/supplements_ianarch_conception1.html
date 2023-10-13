@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="author" content="Choquet Olivier & Vandenheede Driss">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Conception 1ère année - IANARCH - Suppléments - e-Syllabus HTML5 et CSS3</title>
+        <!-- une icône dans la barre du navigateur -->
+        <link rel="icon" href="../images/favicon.png" type="image/png">
+        <link rel="stylesheet" href="../style.css">
+    </head>
+    <body>
+        <!-- liens d'évitement -->
+        <ul class="a11y-nav">
+            <li>
+                <a href="#container">Passer directement au contenu</a>
+            </li>
+            <li>
+                <a href="#menu">Accéder au menu secondaire de la page</a>
+            </li>
+            <li>
+                <a href="#aside">Accéder aux liens utiles</a>
+            </li>
+        </ul>
+        <!-- bannière et menu -->
+        <header role="banner">
+            <div class="logoTitle">
+                <h1>Cours d'introduction au Web</h1>
+                <h2>HTML5 et CSS3</h2>
+            </div>
+            <nav role="navigation" aria-label="Menu principal de navigation">
+                <ul>
+                    <li><a href="../index.html">Le cours</a></li>
+                    <li><a href="../internet.html">Internet</a></li>
+                    <li><a href="../html5.html">HTML5</a></li>
+                    <li><a href="../css3.html">CSS3</a></li>
+                    <li><a href="../methodologie.html">Méthodologie</a></li>
+                    <li><a href="../lexique.html">Lexique</a></li>
+                    <li><a href="../supplements.html" class="current">Suppléments</a></li>
+                </ul>
+            </nav>
+        </header>
+        <main id="container" role="main" tabindex="-1">
+            <div id="menu">
+                <nav role="navigation">
+                    <ol>
+                        <li><a href="supplements_ianarch.html">Retour au sommaire</a></li>
+                        <li><a href="#introduction_conception">Introduction</a></li>
+                        <li><a href="#rappels">Rappels</a></li>
+                        <li><a href="#contraintes_integrite">Contraintes d'intégrité</a></li>
+                        <li><a href="#representation_schema">Représentation et schéma</a></li>
+                        <li><a href="#relations">Relations</a></li>
+                        <li><a href="#cle_etrangere_null">Clé étrangère NULL</a></li>
+                        <li><a href="#relations_reflexives">Relations réflexives</a></li>
+                        <li><a href="#table_specialisees">Tables spécialisées</a></li>
+                        <li><a href="#sauvegarde_donnees">Sauvegarde des données</a></li>
+                        <li><a href="#exercices">Exercices</a></li>
+                    </ol>
+                </nav>
+                <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
+                <aside id="aside">
+                    <p>Liens utiles :</p>
+                    <ul>
+                        <li><a href="https://www.youtube.com/c/LeDesignerduWeb/videos">Le Designer du web</a></li>
+                    </ul>
+                </aside>
+            </div>
+            <section id="mainSection">
+                <article id="partie2">
+                    <h1 id="partie_conception">Partie Conception 1ère année :</h1>
+                    <h3 id="introduction_conception">Introduction :</h3>
+                    <p>Nous allons maintenant aborder la seconde partie du cours. L'objectif de celle-ci est de concevoir des bases de données.</p>
+                    <p>Au départ d'un énoncé, nous allons rechercher les entités-clé et les <span class="em">modéliser</span> sous forme d'un <span class="em">schéma</span> appelé <span class="em">Diagramme de Structure de Données (DSD)</span>.</p>
+                    <p>La <span class="em">conception</span> de base de données est une démarche qui permet de réfléchir aux données afin de mémoriser finement l'information. Ceci nous permet :</p>
+                    <ul>
+                        <li>de mettre en évidence chaque entité et ses attributs, de manière à éviter la redondance,</li>
+                        <li>de définir une information unique qui permet d'identifier chaque entité,</li>
+                        <li>de préciser ce que contient chaque attribut, et d'éviter d'y placer des "choses" différentes,</li>
+                        <li>d'établir et de formaliser les relations entre les entités,</li>
+                        <li>de questionner plus précisément la base de données.</li>
+                    </ul>
+                    <p>Nous allons brièvement revoir la démarche que nous avions suivie pendant la première partie du cours pour évoluer d'une base de données contenant une seule table "albums" vers une base de données en contenant quatre : éditeurs, albums, auteurs et participations.</p>
+                    <p>Ceci nous permettra d'introduire les contraintes d'intégrité et de passer en revue les concepts de clé primaire et de clé étrangère.</p>
+                    <p>Nous verrons ensuite, dans le détail, les différents modèles de relations qui peuvent exister entre les tables et nous illusterons le problème de la prise en compte du temps dans les relations.</p>
+                    <p>Nous donnerons, dans la foulée, les consignes pour organiser lisiblement le DSD.</p>
+                    <p>Enfin, nous aborderons les tables spécialisées et les étapes de développement d'une application.</p>
+                    <p>Nous terminerons cette partie du cours en évoquant la problématique de sauvegarde des données. La conception d'une DB exigeant que l'on chasse la redondance au maximum, nous pourrions entrevoir le concept de la normalisation dont on en reparlera dans la troisième partie du cours.</p>
+                    <h3 id="rappels">Rappels :</h3>
+                    <ol>
+                        <li>
+                            <h4 id="bd1_albums">bd1.albums :</h4>
+                            <p>Dans la partie 1 (SQL), nous étions partis d'un exemple pour gérer les données des albums de bandes dessinées.</p>
+                            <p>Nous avions créé une table <span class="em">albums</span> correspondant à l'entité albums; chaque album dispose d'une information unique d'identification : le numéro isbn et les attributs suivants : titre, série, sénariste, coloriste, éditeur, pays d'édition, année d'édition et prix.</p>
+<pre><code>CREATE TABLE bd1.albums
+(
+    isbn CHAR (13) PRIMARY KEY,
+    titre CHARACTER VARYING (50) NOT NULL,
+    serie CHARACTER VARYING (20),
+    scenariste CHARACTER VARYING (20),
+    dessinateur CHARACTER VARYING (20),
+    coloriste CHARACTER VARYING (20),
+    editeur CHARACTER VARYING (20) NOT NULL,
+    pays CHARACTER (1),
+    annee_edition INTEGER,
+    prix DOUBLE PRECISION NOT NULL,
+);</code></pre>
+                            <p>Dans notre notation DSD, cela donne :</p>
+                            <p>Les clés primaires (PRIMARY KEY) sont soulignées. On indique la mention 'PK'.</p>
+                            <p>Les champs obligatoires (NOT NULL) sont indiqués 'NN'.</p>
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">bd1.albums</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="bold">PK</td>
+                                        <td class="bold souligne">isbn</td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td>
+                                            <p>titre NN</p>
+                                            <p>serie</p>
+                                            <p>scenariste</p>
+                                            <p>dessinateur</p>
+                                            <p>coloriste</p>
+                                            <p>editeur NN</p>
+                                            <p>pays</p>
+                                            <p>annee_edition</p>
+                                            <p>prix NN</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Quelles étaient les contraintes de ce modèle ?</p>
+                            <ul>
+                                <li>Le pays d'édition dépend de l'éditeur et non de l'album.</li>
+                                <li>
+                                    <p>Le nom et le pays de l'éditeur sont répétés pour chaque album. Cette répétition peut entraîner les problèmes suivants :</p>
+                                    <ul>
+                                        <li>Risque d'erreur : le nom de l'éditeur n'est pas toujours orthographié de manière correcte, il peut être écrit de manière différente (majuscule/minuscule).</li>
+                                        <li>Il faut modifier le nom dans tous les albums, si la société change de nom,</li>
+                                        <li>Risque d'incohérence : le pays de l'éditeur peut être différent d'un album à l'autre...</li>
+                                    </ul>
+                                </li>
+                                <li>Les mêmes problèmes peuvent se produire pour le nom du scénariste, du dessinateur et du coloriste,</li>
+                                <li>Un album ne peut avoir qu'un seul scénariste, qu'un seul dessinateur, qu'un seul coloriste.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4 id="bd2_albums">bd2.albums :</h4>
+                            <p>Afin de solutionner les deux premiers problèmes (relatifs à l'éditeur), nous avons introduit une seconde entité : éditeurs. Une relation permet ensuite de joindre un éditeur à chaque album.</p>
+                            <p>L'éditeur est identifié par un numéro unique. Il a des attributs nom et pays comme dans la solution bd1.albums auxquels nous avons ajouté un attribut adresse.</p>
+                            <p>Dans la base de données, nous avions ajouté une table <span class="em">editeurs</span> à laquelle faisait référence la table <span class="em">albums</span>.</p>
+                            <p>La nouvelle DB se présentait comme suit :</p>
+                            <p>On indique la mention 'FK' à droite des clés étrangères (FOREIGN KEY).</p>
+                            <img src="../images/niveau2.PNG" alt="DSD du niveau 2">
+                            <p>Cela permet également de mémoriser des informations sur des éditeurs qui n'ont pas (encore) édités d'album.</p>
+                            <p>Le lien entre les deux tables est assuré par une clé étrangère dans <span class="em">albums</span> faisant référence à <span class="em">editeurs</span>.</p>
+                        </li>
+                        <li>
+                            <h4 id="bd3_albums">bd3.albums :</h4>
+                            <p>Ensuite, nous avons affiné le modèle pour résoudre les deux problèmes restants :</p>
+                            <ul>
+                                <li>nom des scénariste, dessinateur et coloriste répété à chaque album,</li>
+                                <li>limitation à un seul scénariste, dessinateur ou coloriste par album.</li>
+                            </ul>
+                            <p>Était-il intéressant de créer trois scénaristes, dessinateurs et coloristes ? Non, cela aurait également introduit une duplication des données. Une même personne pouvant occuper chacun des rôles pour un même album ou pour des albums différents.</p>
+                            <p>Nous avons donc introduit une entité auteurs et créé une table <span class="em">auteurs</span> dans laquelle chaque auteur sera référencé.</p>
+                            <p>Comme un auteur peut participer à plusieurs albums et qu'un album peut avoir plusieurs auteurs, nous avons introduit une table intermédiaire notée ici <span class="em">participations</span>.</p>
+                            <p>La table <span class="em">participations</span> indique quel auteur intervient dans quel album. Il y a 3 types d'intervention possible matérialisée dans le champ <span class="em">participe</span> : '<span class="em">s</span>' pour scénariste, '<span class="em">c</span> pour coloriste et '<span class="em">d</span>' pour dessinateur.</p>
+                            <p>Un tuple de <span class="em">participation</span> est identifié par le numéro de l'auteur, l'ISBN de l'album et le rôle joué par l'auteur dans cet album.</p>
+                            <p>Les 3 champs de participations ne peuvent donc jamais être <span class="em">NULL</span>.</p>
+                            <img src="../images/niveau3.PNG" alt="DSD du niveau 3">
+                            <p>Ce modèle permet donc, comme le second :</p>
+                            <ul>
+                                <li>de mémoriser des informaions propres aux éditeurs, sans devoir les répéter à chaque album édité.</li>
+                                <li>de mémoriser des informations sur des éditeurs qui n'ont pas (encore) édité d'album.</li>
+                            </ul>
+                            <p>Mais, en plus,</p>
+                            <ul>
+                                <li>de mémoriser des informations propres aux auteurs, sans devoir les répéter à chaque album édité.</li>
+                                <li>de mémoriser des informations sur des auteurs qui n'ont pas encore participé à un album.</li>
+                                <li>d'avoir plusieurs scénaristes, dessinateurs ou coloristes pour un même album.</li>
+                            </ul>
+                            <p>Exemple de contenu des tables :</p>
+                            <img src="../images/contenu_tables_niveau_3.PNG" alt="contenu des tables de niveau 3">
+                        </li>
+                    </ol>
+                    <h3 id="contraintes_integrite">Les contraintes d'intégrité :</h3>
+                    <p>Nous avons défini des clés primaires et des clés étrangères dans nos bases de données. Elles assurent la cohérence de la base de données. Nous allons voir par quels mécanismes.</p>
+                    <ol>
+                        <li>
+                            <h4 id="cle_primaire">La clé primaire :</h4>
+                            <p>Une <span class="em">clé primaire</span> doit identifier chaque tuple d'une table de façon non ambiguë. C'est un identifiant <span class="em">unique</span> et <span class="em">non nul</span>. Cette contrainte d'intégrité permet de s'assurer de <span class="em">l'<span class="souligne">unicité</span> d'un enregistrement pour une table</span>.</p>
+                            <p>Lorsqu'une entité dispose naturellement d'un identifiant unique, cet identifiant unique peut êtrechoisi comme clé primaire. Le numéro <span class="em">isbn</span> peut être la clé primaire de la table <span class="em">albums</span>.</p>
+                            <p>Lorsqu'une entité ne dispose d'aucun identifiant unique ou par choix, on choisit un numéro auto incrémenté. Un numéro séquentiel unique est la clé primaire de la table <span class="em">editeurs</span>.</p>
+                            <p>Dans la table participation, la clé primaire est une concaténation de troischamps : <span class="em">isbn</span>, <span class="em">num_auteur</span> et <span class="em">participe</span> qui permettent d'identifier de manière unique la participation d'un auteur à un album via son rôle.</p>
+                        </li>
+                        <li>
+                            <h4 id="cle_etrangere">La clé étrangère :</h4>
+                            <p>L'intégrité référentielle garantit la <span class="em">cohérence des références entre tables</span>.</p>
+                            <p>Pour chaque information d'une table A qui fait référence à une information d'une table B, l'information référencée existe dans la table B.</p>
+                            <p>Les <span class="em">contraintes d'<span class="souligne">intégrité référentielle</span></span> garantissent donc la cohérence de la base de données.</p>
+                            <p>Elles précisent les conditions dans lesquelles peuvent être ajoutés ou supprimés des enregistrements dans une table lorsqu'il existe des relations entre cette table et d'autres tables par l'intermédiaire de <span class="em">clés étrangères</span>.</p>
+                            <p>Cela signifie que :</p>
+                            <ul>
+                                <li>
+                                    <p class="em">Un 'enfant' ne peut référer un 'parent' que s'il existe.</p>
+                                    <ul>
+                                        <li>Le SGBD interdira d'ajouter un album si l'éditeur n'est pas enregistré dans la table <span class="em">editeurs</span>.</li>
+                                        <li>La contrainte interdira d'ajouter une participation si l'auteur et l'album ne sont pas préalablement inscrits dans la base de données.</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p class="em">Un 'parent' ne peut pas être supprimé s'il laisse des 'orphelins'.</p>
+                                    <ul>
+                                        <li>La contrainte interdira l'effacement d'un éditeur, tant que dans la base de données il existera au moins un album se référant à cet éditeur.</li>
+                                        <li>Elle interdira de supprimer un auteur ou un album tant qu'il existera des participations pour cet auteur ou cet album.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <p>Notons également que si la clé primaire est composée de plusieurs champs, il en sera forcément même pour les clés étrangères.</p>
+<pre><code>CREATE TABLE table1
+(
+    cle_partie1 CHAR (4) NOT NULL,
+    cle_partie2 CHAR (3) NOT NULL,
+    ...,
+    PRIMARY KEY (cle_partie1, cle_partie2),
+);
+
+CREATE TABLE table2
+(
+    cle_table2 INTEGER PRIMARY KEY,
+    cle_etrangere_partie1 CHAR (4) NOT NULL,
+    cle_etrangere_partie2 CHAR (3) NOT NULL,
+    ...,
+    FOREIGN KEY (cle_etrangere_partie1, cle_etrangere_partie2) REFERENCES table1 (cle_partie1, cle_partie2),
+);</code></pre>
+                        </li>
+                    </ol>
+                    <h3 id="representation_schema">La représentation d'un schéma :</h3>
+                    <ol>
+                        <li>
+                            <h4 id="conventions_dsd">Conventions :</h4>
+                            <p>Pour représenter un schéma, nous utilisons les conventions suivantes :</p>
+                            <ol>
+                                <li>Utiliser des noms de table entièrement en minuscules.</li>
+                                <li>Utiliser des noms de table au pluriel.</li>
+                                <li>Utiliser des noms de champs entièrement en minuscules.</li>
+                                <li>Utiliser "_" (underscore) pour séparer les mots.</li>
+                                <li>Ne mettre aucun caractère accentué dans les noms de table et de champ.</li>
+                                <li>Souligner la clé primaire et indiquer PK à gauche.</li>
+                                <li>Indiquer le mot-clé FK entre () à côté d'une clé étrangère.</li>
+                                <li>Indiquer NN pour les champs NOT NULL.</li>
+                                <li>Respecter le vocabulaire métier (le vocabulaire de l'énoncé).</li>
+                                <li>Vérifier la cohérence des clés étrangères (FK) et des relations.</li>
+                                <li>Mentionner le mot-clé unique lorsque cela est nécessaire.</li>
+                                <li>Mentionner les énumérés entre {}.</li>
+                            </ol>
+                            <p>Graphiquement, une table est représentée de la sorte :</p>
+                            <img src="../images/conventions_dsd_1.PNG" alt="image n°1 des conventions du DSD">
+                            <ul>
+                                <li>
+                                    <p>Lorsqu'un seul champ compose la clé primaire, il est indiqué uniquement dans l'espace réservé à cet effet.</p>
+                                    <p>Cela correspond au CREATE TABLE :</p>
+<pre><code>CREATE TABLE bd1.albums
+(
+    isbn CHAR (13) <span class="em">PRIMARY KEY</span>,
+    titre CHARACTER VARYING (50) NOT NULL,
+    serie CHARACTER VARYING (20),
+    ...
+);</code></pre>
+                                </li>
+                                <li>
+                                    <p>Lorsque plusieurs champs composent la clé primaire, leur concaténation est indiquée dans l'espace réservé à cet effet et chaque champ est repris avec ses propriétés dans la liste des champs.</p>
+                                    <img src="../images/conventions_dsd_2.PNG" alt="image n°2 des conventions du DSD">
+                                    <p>Cela correspond au CREATE TABLE :</p>
+<pre><code>CREATE TABLE table1
+(
+    cle_partie1 CHAR (4) NOT NULL,
+    cle_partie2 CHAR (3) NOT NULL,
+    ...,
+    <span class="em">PRIMARY KEY (cle_partie1, cle_partie2)</span>,
+);</code></pre>
+                                </li>
+                                <li>
+                                    <p>Lorsqu'un seul champ compose la clé étrangère, le mot-clé FK est indiqué immédiatement derrière ce champ.</p>
+                                    <img src="../images/niveau2.PNG" alt="DSD du niveau 2">
+                                    <p>Cela correspond au CREATE TABLE :</p>
+<pre><code>CREATE TABLE bd3.albums
+(
+    isbn CHAR (14) PRIMARY KEY,
+    titre CHARACTER VARYING (50) NOT NULL,
+    serie CHARACTER VARYING (20),
+    num_editeur INTEGER NOT NULL <span class="em">REFERENCES bd3.editeurs (num)</span>,
+    ...
+);</code></pre>
+                                </li>
+                                <li>
+                                    <p>Lorsque plusieurs champs composent la clé étrangère, chaque champ est repris avec ses propriétés dans la liste des champs et leur concaténation est ensuite indiquée avec le mot-clé FK.</p>
+                                    <img src="../images/conventions_dsd_3.PNG" alt="image n°3 des conventions de DSD">
+                                    <p>Cela correspond au CREATE TABLE :</p>
+<pre><code>CREATE TABLE table1
+(
+    cle_partie1 CHAR (4) NOT NULL,
+    cle_partie2 CHAR (3) NOT NULL,
+    ...,
+    PRIMARY KEY (cle_partie1, cle_partie2),
+);
+
+CREATE TABLE table2
+(
+    cle_table2 INTEGER PRIMARY KEY,
+    etr_partie1 CHAR (4) NOT NULL,
+    etr_partie2 CHAR (3) NOT NULL,
+    ...,
+    <span class="em">FOREIGN KEY (etr_partie1, etr_partie2) REFERENCES table1 (cle_partie1, cle_partie2)</span>,
+);</code></pre>
+                                </li>
+                                <li>
+                                    <p>De la même manière, lorsqu'un champ est unique, le mot-clé <span class="html">unique</span> est indiqué immédiatement après ce champ. Lorsque la concaténation de plusieurs champs est unique, chaque champ est repris avec ses propriétés dans la liste des champs et leur concaténation est ensuite indiquée avec le mot-clé <span class="em">unique</span>. Dans l'exemple ci-dessous, on remarque que le mot-clé <span class="em">unique</span> est combiné avec le mot-clé FK.</p>
+                                    <img src="../images/conventions_dsd_4.PNG" alt="image n°4 des conventions de DSD">
+                                    <p>Cela correspond au CREATE TABLE :</p>
+<pre><code>CREATE TABLE table1
+(
+    cle_partie1 CHAR (4) NOT NULL,
+    cle_partie2 CHAR (3) NOT NULL,
+    ...,
+    PRIMARY KEY (cle_partie1, cle_partie2),
+);
+
+CREATE TABLE table2
+(
+    cle_table2 INTEGER NOT NULL,
+    etr_partie1 CHAR (4) NOT NULL,
+    etr_partie2 CHAR (3) NULL,
+    ...,
+    FOREIGN KEY (etr_partie1, etr_partie2) REFERENCES table1 (cle_partie1, cle_partie2),
+    <span class="em">UNIQUE (etr_partie1, etr_partie2)</span>,
+);</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4 id="organisation_graphique_dsd">L'organisation graphique du DSD :</h4>
+                            <p>Certaines règles simples permettent de structurer le dessin pour qu'il devienne un support fiable à la conception.</p>
+                            <ol>
+                                <li>On placera en haut (à la périphérie) du dessin les entités les plus indépendantes et en bas (au centre) du dessin les entités les plus dépendantes. Généralement, les entités les plus dépendantes sont les plus volumineurses et les plus mouvementées. Souvent on descend vers les tables volumineuses.</li>
+                                <li>On évitera de croiser les relations. Il faut éviter les schémas spaghetti ou jeu de piste.</li>
+                                <li>Pour les schémas très importants, on peut utiliser des couleurs différentes pour mettre en valeur des tables de natures différentes ou utilisées dans différentes applications.</li>
+                                <li>On peut également créer plusieurs schémas en reprenant les tables communes.</li>
+                            </ol>
+                            <img src="../images/organisation_graphique_dsd.PNG" alt="organisation graphique du DSD">
+                        </li>
+                    </ol>
+                    <h3 id="relations">Les relations :</h3>
+                    <ol>
+                        <li>
+                            <h4 id="relation_1_a_0N">Cas classique : relation 1 à 0 : N :</h4>
+                            <p>Un client peut passer plusieurs commandes d'articles. Un client est identifié par un numéro unique de client. Ce numéro peut être fourni par le système(un champ auto incrémenté par le SGBD) par un programme ou encore par l'utilisateur. On ajoutera plusieurs champs : le nom, l'adresse, le numéro de téléphone, ...</p>
+                            <p>Une commande est identifiée par un numéro de commande (clé primaire qui peut être également un numéro séquentiel ou un champ plus complexe...). On ajoutera d'autres champs pour indiquer la date de la commande, l'état (pour le suivi), et un numéro de facture (dans l'hypothèse simpliste où à une commande correspond une seule facture).</p>
+                            <p>Il faut en outre faire le lient avec le client. Plutôt que de répéter les informations du client nécessaires à la commandes, on établira un lien avec la table <span class="em">clients</span> en mémorisant ici le numéro du client concerné. Ce champ était une clé primaire dans la table client, c'est une clef étrangère dans la table commande (FK).</p>
+                            <img src="../images/relation_1_a_0N.PNG" alt="DSD de la relation 1 à 0 : N">
+                            <p>Le symbole <span class="html">-o∊</span> montre une relation 1 : 0-N. Cette relation se lit dans les deux sens :</p>
+                            <ul>
+                                <li>un client a plusieurs commandes. Il peut ne pas en avoir, effectivement le symbole <span class="html">o</span> indique que la relation est facultative.</li>
+                                <li>une commande est associée obligatoirement à un client.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4 id="relation_1_a_1N">Cas de la relation 1 à 1 : N :</h4>
+                            <p>On pourrait dire qu'un client n'est enregistré qu'au moment où il passe une première commande d'articles. Il pourra passer plusieurscommandes d'articles.</p>
+                            <p>Le symbole <span class="html">-∊</span> montre une relation 1 : 1-N. Cette relation se lit dans les deux sens :</p>
+                            <ul>
+                                <li>Un client a au minimum une commande. Il peut avoir plusieurs commandes.</li>
+                                <li>Une commande est associée obligatoirement à un client.</li>
+                            </ul>
+                            <img src="../images/relation_1_a_1N.PNG" alt="DSD de la relation 1 à 1 : N">
+                        </li>
+                        <li>
+                            <h4 id="relation_1_a_01">Cas de la relation 1 à 0 : 1 :</h4>
+                            <p>Une commande peut référencer éventuellement une facture. Pour le moment, la facture est considérée comme un attribut de la commande. Envisagons la nécessité d'en créer une entité à part entière. Nous avons donc deux tables : <span class="em">commandes</span> et <span class="em">factures</span>.</p>
+                            <p>Une commande référence éventuellement une facture. Une facture référence toujours une commande mais on ne retirnt pas cette information.</p>
+                            <p>La relation est donc facultative. Dans la table commandes, la clé étrangère sera donc annotée <span class="em">NULL</span> et graphiquement on ajoutera un petit rond à l'extrémité de l'association.</p>
+                            <p>Le symbole <span class="html">-o</span> montre une relation 1 : 0-1. Cette relation se lit dans les deux sens :</p>
+                            <ul>
+                                <li>une commande référence éventuellement une facture.</li>
+                                <li>une facture référence toujours une commande.</li>
+                            </ul>
+                            <img src="../images/relation_1_a_01_1.PNG" alt="DSD n°1 de la relation 1 à 0 : 1">
+                            <p>Cette relation peut également être représentée par une clé étrangère du côté de la facture :</p>
+                            <img src="../images/relation_1_a_01_2.PNG" alt="DSD n°2 de la relation 1 à 0 : 1">
+                            <p>Afin de s'assurer que deux ou plusieurs commandes ne référencent pas le même numéro de facture, on peut noter une contrainte d'unicité sur le champ facture (noté ici <span class="em">unique</span>.</p>
+                            <img src="../images/relation_1_a_01_3.PNG" alt="DSD n°3 de la relation 1 à 0 : 1">
+                            <p>Et réciproquement,</p>
+                            <img src="../images/relation_1_a_01_4.PNG" alt="DSD n°4 de la relation 1 à 0 : 1">
+                        </li>
+                        <li>
+                            <h4 id="relation_1_a_1">Cas de la relation 1 à 1 :</h4>
+                            <p>Si on considère qu'à chaque commande correspondra nécessairement une facture, il faut ajuster le diagramme afin de relier les tables <span class="em">commandes</span> et <span class="em">factures</span> avec une relation 1 à 1.</p>
+                            <p>Le symbole <span class="html">-</span> montre une relation 1:1. Cette relatin se lit dans les deux sens :</p>
+                            <ul>
+                                <li>une commande référence toujours une facture.</li>
+                                <li>une facture référence toujours une commande.</li>
+                            </ul>
+                            <img src="../images/relation_1_a_1_1.PNG" alt="DSD n°1 de la relation 1 à 1">
+                            <p class="em">Pour que le SGBD puisse facilement garantir la relation 1 à 1, il est conseillé d'utiliser la même clé primaire dans les deux tables, quand c'est possible.</p>
+                            <p>On utilise dans ce cas la clé primaire de la table <span class="em">commandes</span> également comme clé primaire pour la table <span class="em">factures</span>. Dans la table <span class="em">commandes</span>, on n'indique aucun clé étrangère. Une facture ser  identifiée par un numéro de commande.</p>
+                            <img src="../images/relation_1_a_1_2.PNG" alt="DSD n°2 de la relation 1 à 1">
+                            <p>&#8594; Remarquons qu'il serait plus judicieux d'utiliser le numéro de facture qui est un élément idispensable d'une facture en bonne et due forme.</p>
+                            <img src="../images/relation_1_a_1_3.PNG" alt="DSD n°3 de la relation 1 à 1">
+                        </li>
+                        <li>
+                            <h4 id="autres_relations">Autres relations entre deux tables :</h4>
+                            <p>On peut combiner les terminaisons de relations supportées par le SGBD.</p>
+                            <p>Le symbole <span class="html">o-o</span> montre une relation 0-1 : 0-1.Cette relation se lit dans les deux sens :</p>
+                            <ul>
+                                <li>une entité a référence éventuellement une entité b.</li>
+                                <li>une entité b référence éventuellement une entité a.</li>
+                            </ul>
+                            <p>Le symbole <span class="html">o-o∊</span> montre une relation 0-1 : 0-N.</p>
+                            <p>Le symbole <span class="html">o-∊</span> montre une relation 0-1 : 1-N.</p>
+                        </li>
+                        <li>
+                            <h4 id="relation_m_a_n">Cas de la relation M à N :</h4>
+                            <p>Une commande peut porter sur plusieurs articles. Un article peut faire partie de plusieurs commandes.</p>
+                            <p>C'est une relation M à N.</p>
+                            <img src="../images/cle_primaire_concatenee.PNG" alt="">
+                            <p>Le SGBD ne peut pas implémenter cette relation directement mais le fait par le biais de deux relations 1 : N.</p>
+                            <p>Cela exige donc la création d'une nouvelle entité intermédiaire.</p>
+                            <p>Concrètement, on sera obligé de créer une table pour mémoriser le fait que dans une même commande, on rencontre plusieurs articles mais qu'un même article peut, bien entendu, être commandé plusieurs fois.</p>
+                            <img src="../images/relation_M_a_N.PNG" alt="DSD de la relation M à N">  
+                        </li>
+                    </ol>
+                    <h3 id="cle_etrangere_null">Une clé étrangère à NULL :</h3>
+                    <p>La clé étrangère peut être à NULL pendant un certain temps et définie par la suite.</p>
+                    <p>Prenons l'exemple du carnet de rendez-vous d'un cabinet médical. Ce cabinet est composé d'une dizaine de médecins qui ont une grille de rendez-vous qui s'échelonnent toutes les demi-heures. Les médecins prestent seulement certains jours ou demi-jours dans ce cabinet et parfois de façon irrégulière.</p>
+                    <p>La secrétaire encode au départ les disponibilités de chaque médecin et puis fixe les rendez-vous avec les patients sur base de celles-ci.</p>
+                    <p>Évolution de la construction du DSD :</p>
+                    <h4>Étpae 1 : le planning :</h4>
+                    <p>On prévoit les disponibilités de chaque médecin :</p>
+                    <img src="../images/planning_1.PNG" alt="DSD n°1 du planning">
+                    <p>Remarque : vu la convention que nous adoptons (nom d'une table toujours au pluriel), nous préférerons rendez-vous comme nom pour la table.</p>
+                    <h4>Étape 2 : l'introduction des patients :</h4>
+                    <p>Aussi longtemps que la plage du planning n'est pas attribuée à un patient, la clé étrangère <span class="em">num_sis</span> de la table rendez-vous reste à NULL.</p>
+                    <img src="../images/planning_2.PNG" alt="DSD n°2 du planning">
+                    <p>Lorsqu'un patient prend le rendez-vous disponsible, la clé étrangère est indiquée. Il se pourrait que certains rendez-vous ne soient jamais attribués.</p>
+                    <ol>
+                        <li>
+                            <h4 id="influence_temps_cles_etrangeres">Influence du temps sur les clés étrangères :</h4>
+                            <p>Exemple : un grossiste effectue des livraisons à ses clients tout au long du mois en fonction de leurs commandes. À la fin du mois, toutes ces livraisons sont facurées en une seule fois. La facture d'un client regroupe donc toutes les livraisons effectuées à ce client durant le mois.</p>
+                            <img src="../images/influence_temps_cle_etrangere.PNG" alt="DSD de l'influence sur les clés étrangères">
+                            <p>Cet exemple démontre bien <span class="em">l'importance de nommer les relations</span> dans certains cas. Il est une nouvelle illustration d'une clé étrangère de valeur NULL.</p>
+                            <p>Entre les entités clients, il exite deux relations différentes. Celles-ci pourraient être de cardinalité différente (voir plus loin).</p>
+                            <p>On peut noter que certains champs pourraient également servir d'identifiant unique. On peut en faire des index uniques (notés ici <span class="em">idx_unique</span>).</p>
+                            <p>Un <span class="em">index</span> est une propriété d'une colonne de la base de données permettant de l'indexer dans le but d'améliorer l'accès aux données par le SGBD. Tout comme l'index dans un livrequi permet de retrouver plus facilement l'information, l'<span class="em">index unique</span> impose l'unicité de l'indexation; il permet d'identifier chaque tupled'une table de façon non ambiguë.</p>
+                        </li>
+                    </ol>
+                    <h3 id="relations_multiples">Les relations multipkes entre tables :</h3>
+                    <ol>
+                        <li>
+                            <h4 id="relations_M_a_N">Relations M à N :</h4>
+                            <p>Une table donnée peut avoir deux relations M à N avec deux tables différentes (et beaucoup si nécessaire).</p>
+                            <p>Voici un DD qui illustre ce propos :</p>
+                            <img src="../images/relation_multiple_M_a_N.PNG" alt="relation multiple M à N">
+                            <p>La même table <span class="em">cours</span> participe à deux relations M à N différentes.</p>
+                            <ol>
+                                <li><span class="em">resultats</span> donne le résultat pour un cours et un étudiant. (remarque : il serait utile de se demander comment conserver les résultats s'il y a plusieurs sesions possibles).</li>
+                                <li><span class="em">horaires</span> décrit les heures auxquelles se donne un cours dans un local.</li>
+                            </ol>
+                            <h5>Choix des clés primaires :</h5>
+                            <ol>
+                                <li><span class="em">resultats</span> est telle que pour un cours et un étudiant on n'a qu'un seul résultat. La clé primaire est donc formée par la <span class="em">concaténation des deux clés étrangères</span>.</li>
+                                <li>En ce qui concerne <span class="em">horaires</span>, c'est différent; un même cours peut être donné dans un même local à des moments différents. La clé primaire est donc indépendante des clés étrangères.</li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h4 id="relations_1_a_N">Relations 1 à N :</h4>
+                            <h5>Gestion des classes d'une école de l'enseignement secondaire :</h5>
+                            <p>Dans l'enseignement secondaire, les élèves sont regroupés par niveaux d'étude (ou années).</p>
+                            <p>Une classe regroupe plusieurs élèves, en général entre 12 et 25.</p>
+                            <p>Le programme de cours prévoit 32 heures de cours par élève. Outre les cours obligatoires, l'élève doit choisir et s'inscrire à des cours à option. Un cours est organisé pour minimum 8 élèves.</p>
+                            <p>Un professeur donne 19 heures de cours, parfois il peut accepter de donner jusqu'à 4 heures supplémentaires, parfois il doit accepter un temps partiel.</p>
+                            <p>Un cours n'est attribué qu'à un seul professeur.</p>
+                            <p>Parmi les professeurs, on choisit un titulaire de classe. Il arrive qu'un professeur soit titulaire de 2 classes.</p>
+                            <img src="../images/relation_multiple_1_a_N.PNG" alt="DSD de la gestion des classes d'une école de l'enseignement secondaire">
+                            <p>Dans ce diagramme, plusieurs entités ont deux relations différentes entre elles : une classe a un professeur titulaire et un seul mais une classe a plusieurs professeurs qui lui donnent cours. Ces mêmes professeurs donnent cours à d'autre classes.</p>
+                        </li>
+                        <li>
+                            <h4 id="relation_1_a_N_induite">Relation 1 à N induite :</h4>
+                            <p>Si entre les entités <span class="em">clients</span> et <span class="em">commandes</span>, il y a une relation 1 à N et si entre les entités <span class="em">commandes</span> et <span class="em">lignes_commande</span>, il y a aussi une relation 1 à N, il existe alors une relation 1 à N déduite entre <span class="em">clients</span> et <span>lignes_commande</span>. Il est inutile de la dessiner.</p>
+                            <img src="../images/relation_1_a_N_induite.PNG" alt="DSD de la relation 1 à N induite">
+                        </li>
+                    </ol>
+                    <h3 id="relations_reflexives">Les relations réflexives :</h3>
+                    <ol>
+                        <li>
+                            <h4 id="relations_reflexives_hierarchiques">Relations réflexives hiérarchiques :</h4>
+                            <p>Le cas typique de ce genre de relation est la table où l'on désire mémoriser des services d'une institution organisée hiérarchiquement.</p>
+                            <p>La direction comprend, entre autres, un service juridique. Celui-ci se décompose en service juridique du personnel et service juridique commercial ainsi que le contentieux. Le service juridique contentieux gère les conflits et les procès pour la Belgique et l'étranger; deux sous services sont donc créés, etc.</p>
+                            <img src="../images/relations_reflexives_hierarchiques.PNG" alt="relations réflexives hiérarchiques">
+                            <table class="tableBalises">
+                                <caption>Cette hiérarchie sera mémorisée comme suit :</caption>
+                                <thead>
+                                    <tr>
+                                        <th>Code service</th>
+                                        <th>Nom service</th>
+                                        <th>Responsable du service</th>
+                                        <th>Code service supérieur</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>0</td>
+                                        <td>Direction générale</td>
+                                        <td>Dupuis</td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Juridique</td>
+                                        <td>Janssens</td>
+                                        <td>0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>Personnel</td>
+                                        <td>Durand</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>Commercial</td>
+                                        <td>Carlot</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>Contentieux</td>
+                                        <td>Van Camp</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td>Belge</td>
+                                        <td>André</td>
+                                        <td>4</td>
+                                    </tr>
+                                    <tr>
+                                        <td>6</td>
+                                        <td>Etranger</td>
+                                        <td>Michel</td>
+                                        <td>4</td>
+                                    </tr>
+                                    <tr>
+                                        <td>7</td>
+                                        <td>UE</td>
+                                        <td>Van den Berg</td>
+                                        <td>6</td>
+                                    </tr>
+                                    <tr>
+                                        <td>8</td>
+                                        <td>Hors UE</td>
+                                        <td>Lee</td>
+                                        <td>6</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Représentation :</p>
+                            <img src="../images/relations_reflexives_hierarchiques_dsd.PNG" alt="DSD des relations réflexives hiérarchiques">
+                        </li>
+                        <li>
+                            <h4 id="relations_reseau">Relations en réseau (réflexives non hiérarchiques) :</h4>
+                            <p>C'est le cas typique de structure d'assemblage. Une pièce peut être composée de plusieurs pièces et une même pièce peut être un composant de plusieurs pièces.</p>
+                            <p>Représentation :</p>
+                            <img src="../images/relations_reseaux.PNG" alt="relations en réseau">
+                            <p>Par exemple, une foreuse est composée d'un accumulateur, d'un moteur et d'un interrupteur.</p>
+                            <table class="tableBalises">
+                                <caption class="souligne">Pièces :</caption>
+                                <thead>
+                                    <tr>
+                                        <th>no_piece</th>
+                                        <th>nom</th>
+                                        <th>description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>B72</td>
+                                        <td>FACC72</td>
+                                        <td>Foreuse sur Accus 7.2 V modèle Brico</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P72</td>
+                                        <td>PACC72</td>
+                                        <td>Foreuse sur Accus 7.2 V modèle professionnel</td>
+                                    </tr>
+                                    <tr>
+                                        <td>B96</td>
+                                        <td>FACC96</td>
+                                        <td>Foreuse sur Accus 9.6 V modèle Brico</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P96</td>
+                                        <td>PACC96</td>
+                                        <td>Foreuse sur Accus 9.6 V modèle professionnel</td>
+                                    </tr>
+                                    <tr>
+                                        <td>A72</td>
+                                        <td>ACC72</td>
+                                        <td>Accus 7.2V</td>
+                                    </tr>
+                                    <tr>
+                                        <td>A96</td>
+                                        <td>ACC96</td>
+                                        <td>Accus 9.6 V</td>
+                                    </tr>
+                                    <tr>
+                                        <td>M72</td>
+                                        <td>MOT72</td>
+                                        <td>Moteur 7.2 V</td>
+                                    </tr>
+                                    <tr>
+                                        <td>M96</td>
+                                        <td>MOT96</td>
+                                        <td>Moteur 9.6 V</td>
+                                    </tr>
+                                    <tr>
+                                        <td>IP</td>
+                                        <td>INTPROF</td>
+                                        <td>Interrupteur Brico</td>
+                                    </tr>
+                                    <tr>
+                                        <td>IB</td>
+                                        <td>INTPROF</td>
+                                        <td>Interrupteur Brico</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table class="tableBalises">
+                                <caption class="souligne">Composants :</caption>
+                                <thead>
+                                    <tr>
+                                        <th>no_piece_composee</th>
+                                        <th>no_piece_composante</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>B72</td>
+                                        <td>A72</td>
+                                    </tr>
+                                    <tr>
+                                        <td>B72</td>
+                                        <td>IB</td>
+                                    </tr>
+                                    <tr>
+                                        <td>B72</td>
+                                        <td>M72</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P72</td>
+                                        <td>A72</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P72</td>
+                                        <td>IP</td>
+                                    </tr>
+                                    <tr>
+                                        <td>P72</td>
+                                        <td>M72</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Dans cet exemple, on constate qu'entre le modèle bricolage et professionnel, seul l'interrupteur change.</p>
+                        </li>
+                        <li>
+                            <h4 id="parrainage">Exercice proposé : le parrainage :</h4>
+                            <p>On désire mettre en place un système de parrainage des étudiants de 1ère et même de 2ème année par d'autres étudiants plus expérimentés (d'une année supérieure). Un étudiant pourrait demander des explications sur des matières plus difficiles à son parrain.</p>
+                            <p>On souhaite mémoriser qui parraine qui.</p>
+                            <p><span class="em">Première hypothèse :</span> un étudiant (parrain) pourrait parrainer plusieurs autres étudiants (ses filleuls) mais un filleul n'aurait qu'un seul parain.</p>
+                            <p><span class="em">Deuxième hypothèse :</span> un filleul pourrait avoir plusieurs parrains plus ou moins spécialisés suivant les matières en question.</p>
+                            <p>Pour chaque hypothèse, construisez une DB (DSD) et écrivez un SELECT SQL.</p>
+                            <ol>
+                                <li>Qui affiche pour chaque parrain (matricule et nom) le nombrede ses filleuls.</li>
+                                <li>Qui affiche pour chaque parrain (matricule et nom) le matricule et le nom de ses filleuls.</li>
+                            </ol>
+                            <p class="souligne">DSD de la première hypothèse :</p>
+                            <img src="../images/parrainage_1.PNG" alt="DSD de la première hypothèse du parrainage">
+                            <p class="souligne">DSD de la deuxième hypothèse :</p>
+                            <img src="../images/parrainage_2.PNG" alt="DSD de la deuxième hypothèse du parrainage">
+                        </li>
+                    </ol>
+                    <h3 id="tables_specialisees">Les tables spécialisées :</h3>
+                    <p>Partons d'une table décrivant les articles vendus par une société :</p>
+                    <img src="../images/tables_specialisees_1.PNG" alt="DSD n°1 des tables spécialisées">
+                    <p>Le champ <span class="em">type_produit</span> de la table <span class="em">produits</span> contient le char '<span class="em">S</span>' pour savon, '<span class="em">D</span>' pour détergent et '<span class="em">H</span>' pour shampoing.</p>
+                    <p>Les autres champs de cette table sont remplis selon le type de produits :</p>
+                    <ul>
+                        <li>S'il s'agit d'un savon, les champs <span class="em">couleur</span>, <span class="em">texture</span> et <span class="em">parfum</span> seront remplis,</li>
+                        <li>S'il s'agit d'un shampoing, le champ <span class="em">agent_moussant</span> sera rempli,</li>
+                        <li>Enfin, s'il s'agit d'un détergent, le champ <span class="em">agent_detergent</span> sera rempli.</li>
+                    </ul>
+                    <p>Dans le cas d'un savon par exemple, les champs <span class="em">agent_moussant</span> et <span class="em">agent_detergent</span> resteront vides (<span class="em">NULL</span>). En fait, suivant le type de produit, l'enregistrement devrait avoir une structure différente.</p>
+                    <p>Une solution plus claire est de définir 3 tables spécialisées (une par type de produits) en plus de la table générale des produits.</p>
+                    <img src="../images/tables_specialisees_2.PNG" alt="DSD n°2 des tables spécialisées">
+                    <p>Dans cet exemple, un produit est soit un savon, soit un shampoing, soit un détergent. Nous allons donc créer :</p>
+                    <ul>
+                        <li>un tuple dans la table <span class="em">produits</span> pour tous les produits (savons, shampoings et détergents) ET</li>
+                        <li>
+                            <p>un tuple dans la table correspondant au <span class="em">type_produit</span> :</p>
+                            <ul>
+                                <li>Si 'S', dans la table <span class="em">savons</span>;</li>
+                                <li>Si 'D', dans la table <span class="em">detergents</span>;</li>
+                                <li>Si 'H' dans la table <span class="em">shampoings</span>.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>La clé primaire des tables spécialisées est la même que la clé primaire de la table générale.</p>
+                    <p>Cependant, il peut arriver que des clés primaires différentes existent. C'est ce que nous allons voir dans l'exemple suivant.</p>
+                    <p>Au service central d'une université, on décide d'enregistrer toues les membres de l'université dans une seule table <span class="em">personnes</span>, spécialisée en deux tables <span class="em">etudiants</span> et <span class="em">professeurs</span>. Les professeurs sont identifiés par un numéro de matricule tandis que les étudiants sont identifiés par leur numéro d'inscription.</p>
+                    <p>Voici deux manières de représenter cette situation :</p>
+                    <p class="souligne">Solution 1 :</p>
+                    <img src="../images/tables_specialisees_3.PNG" alt="DSD n°3 des tables spécialisées">
+                    <p class="souligne">Solution 2 :</p>
+                    <img src="../images/tables_specialisees_4.PNG" alt="DSD n°4 des tables spécialisées">
+                    <p>Une personne peut être présente dans les deux tables spécialisées. Dans cette université, certains étudiants de doctorat ont déjà des charges académiques et sont donc considérés à la fois comme des étudiants et comme des professeurs.</p>
+                    <h3 id="sauvegarde_donnees">La sauvegarde des données :</h3>
+                    <p>La <span class="em">sauvegarde</span> est l'opération qui consiste à <span class="em">mettre en sécurité</span> les données contennues dans un sytème informatique. Ce terme est proche de deux notions :</p>
+                    <ul>
+                        <li><span class="em">l'enregistrement des données</span>, qui est l'opération d'écriture des données sur un item d'enregistrement durable, tel qu'un disque dur, une clé USB, des bandes magnétiques, etc. (<span class="em">back up</span>)</li>
+                        <li><span class="em">l'archivage</span>, qui consiste à enregistrer des données sur un support à des fins légales ou historiques.</li>
+                    </ul>
+                    <ol>
+                        <li>
+                            <h4 id="backup">Le back up :</h4>
+                            <p>Les copies de <span class="em">sûreté</span> sont utiles principalement à deux choses :</p>
+                            <ul>
+                                <li>La première et la plus évidente est de permettre de <span class="em">restaurer</span> un système informatique dans un état de fonctionnement à la suite d'un incident (perte d'un support de stockage tel que disque dur, bande magnétique, etc., ou de tout ou partie des données qu'il contient).</li>
+                                <li>La seconde, incluse dans la première mais certainement la plus courante, est de <span class="em">faciliter la restauration</span> d'une partie d'un système informatique (un fichier, un groupe de fichiers, un système d'exploitation, une donnée dans un fichier, etc.) à la suite d'une suppression accidentelle ou à une modification non désirée.</li>
+                            </ul>
+                            <p>La technique la plus fréquente est la copie des données sur un support indépendant du système initial (serveur distant, bandes magnétiques...).</p>
+                            <p>L'opération inverse qui consiste à réutiliser des données sauvegardées s'appelle une <span class="em">restauration</span>.</p>
+                        </li>
+                        <li>
+                            <h4 id="archivage">L'archivage :</h4>
+                            <p>L'archivage vise à <span class="em">désengorger</span> des tables de mouvements, souvent volumineuses et rapidement périmées.</p>
+                            <p>Pour des raisons légales ou pour répondre à des demandes de statistiques, les données sont conservées plus longtemps. On stocke alors les données dans une DB séparée ou dans un data warehouse (Big data; business intelligence (informatique décisionnelle)).</p>
+                        </li>
+                    </ol>
+                    <h2 id="exercices">Exercices :</h2>
+                    <ol>
+                        <li>
+                            <h3 id="exercice_1">Théâtre du TRAC :</h3>
+                            <ol type="a">
+                                <li>
+                                    <h4>Partie 1 :</h4>
+                                    <p>Le théâtre du trac organise une douzaine de spectacles chaque saison. Chaque spectacke est identifié par un code mnémonique de 4 caractères et pour chacun, on mémorisera le titre et le prix des places A (proches de scène, les plus chères) et le prix des places B (moins chères). Le prix de ces deux catégories de places varie suivant le spectacle.</p>
+                                    <p>Chaque spectacle est joué un certain nombre de fois dans une saison : ce sont les représentations. Il n'y a qu'une représentation par jour par spectacle. Par représentation, on désire mémoriser le nombre de places vendues en distinguant les places A et B. À la fin de chaque représentation, on enregistra ces nombres. Un certain nombre de places gratuites sont distribués essentiellement aux journalistes. Un invité doit présenter sa carte d'invitation. Après chaque représentation, on comptera le nombre d'invitations.</p>
+                                    <ol type="a">
+                                        <li>On désire connaître le montant des recettes, en distinguant chaque spectacle ainsi que les places A et B. On indiquera également le nombre d'invitations.</li>
+                                        <li>On désire également connaître le montant total des recettes par jour de la semaine (du lundi au dimanche). Une fonction SQL permet d'extraire le jour de la semaine d'une date : <span class="html">date_part(isodow, une_variable_de_type_date)</span>. Cette fonction renvoie 1 pour lundi, 2 pour mardi, etc.</li>
+                                    </ol>
+                                    <p><span class="html">date_part</span> est une fonction qui extrait de l'information dans un attribut de type <span class="html">timestamp</span>. Cette fonction prend deux paramètres : le premier pour préciser le type d'information à extraire (<span class="html">weekday</span>, <span class="html">month</span>, <span class="html">year</span>, <span class="html">hour</span>, <span class="html">minute</span>,...) et le second est l'attribut de type <span class="html">timestamp</span>. Cette fonction renvoie un entier. Supposons une variable <span class="em">une_date = '2001-02-16 20:38:40'</span>, <span class="em">SELECT date_part ('hour', une_date)</span> renvoie 20 ou encore <span class="em">SELECT date_part ('isodow', timestamp '2001-02-16 20:38:40')</span> renvoie 5 (vendredi).</p>
+                                    <p>On vous demande :</p>
+                                    <ul>
+                                        <li>de dessiner le DSD et de spécifier clairement toutes les relations ainsi que les clés primaires et étrangères.</li>
+                                        <li>d'écrire les <span class="em">CREATE TABLE</span>.</li>
+                                        <li>de fournir des exemples de données contenues dans les tables. On désire 3 spectacles et 4 représentations dont deux pour un même spectacle.</li>
+                                        <li>d'écrire les deux queries répondant aux pointsa et b ci-dessus (en fin de saison, toutes ces données sont archivées et le programme de la nouvelle saison est introduite dans la DB).</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <h4>Partie 2 :</h4>
+                                    <p>Très content(e) de votre analyse, le théâtre du trac, vous demande un outil de gestion de ses dépenses. Les dépenses sont réparties par postes : costumes, décors, mise en scène, comédiens, régisseur, etc. Le nombre des postes utilisés peut varier d'un spectacle à l'autre mais la majorité de ces postes sont repris dans chaque spectacle. Voici un exemple de budget : il est valable pour une saison.</p>
+                                    <table class="tableBalises">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <p class="souligne">Spectacle Marivaux :</p>
+                                                    <p>Comédiens 20.000</p>
+                                                    <p>Mise à en scène 2.000</p>
+                                                    <p>Décors 9.500</p>
+                                                    <p>Costumes 1.000</p>
+                                                    <hr>
+                                                    <p>Total 32.500</p>
+                                                </td>
+                                                <td>
+                                                    <p class="souligne">Spectacle Brecht :</p>
+                                                    <p>Comédiens 5.000</p>
+                                                    <p>Mise en scène 2.000</p>
+                                                    <p>Décors 1.500</p>
+                                                    <p>Costumes 1.000</p>
+                                                    <p>Éclairages 1.200</p>
+                                                    <hr>
+                                                    <p>Total 10.700</p>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p>Au début de chaque saison, le programme de la nouvelle saison est mis sur pied. Pour chaque spectacle, le directeur établit un budget, c'est-à-dire une prévision des dépenses, poste par poste. Au cours de la saison, le théâtre reçoit des factures (du costumier, des décorateurs...) paie le metteur en scène, les comédiens. Attention, pour un poste donné d'un spectacle, il peut recevoir plusieurs factures mais une facture ne concerne qu'un seul spectacle. Le directeur enregistre pour chaque dépense à quel spectacle et à quel poste il doit l'attribuer. Une dépense ne peut êre affectée qu'à un poste prévu dans le budget. Dans une première version, un champ dépense sera ajouté, à côté de buget et sera augmenté à chaque ajout de facture.</p>
+                                    <p>À la fin de la saison, le directeur voudrait imprimer le résultat suivant (une présentation moins élégante sera acceptée).</p>
+                                    <table class="tableBalises">
+                                        <thead>
+                                            <tr>
+                                                <th>Spectacle</th>
+                                                <th id="poste">Poste</th>
+                                                <th id="budget">Budget</th>
+                                                <th id="depense">Dépense</th>
+                                                <th id="difference">Différence</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <th rowspan="4" id="marivaux">Spectacle Marivaux</td>
+                                                <td headers="poste marivaux">Comédiens</td>
+                                                <td headers="budget marivaux">20.000</td>
+                                                <td headers="depense marivaux">18.000</td>
+                                                <td headers="difference marivaux">-2.000</td>
+                                            </tr>
+                                            <tr>
+                                                <td headers="poste marivaux">Mise en scène</td>
+                                                <td headers="budget marivaux">2.000</td>
+                                                <td headers="depense marivaux">1.800</td>
+                                                <td headers="difference marivaux">-200</td>
+                                            </tr>
+                                            <tr>
+                                                <td headers="poste marivaux">Décors</td>
+                                                <td headers="budget marivaux">9.500</td>
+                                                <td headers="depense marivaux">12.000</td>
+                                                <td headers="difference marivaux">+2.500</td>
+                                            </tr>
+                                            <tr>
+                                                <td headers="poste marivaux">Costumes</td>
+                                                <td headers="budget marivaux">1.000</td>
+                                                <td headers="depense marivaux">2.000</td>
+                                                <td headers="difference marivaux">+1.000</td>
+                                            </tr>
+                                            <tr>
+                                                <th id="brecht" rowspan="5">Spectacle Brecht</th>
+                                                <td headers="poste brecht">Comédiens</td>
+                                                <td headers="budget brecht">5.000</td>
+                                                <td headers="depense brecht">7.000</td>
+                                                <td headers="difference brecht">+2.000</td>
+                                            </tr>
+                                            <tr>
+                                                <td headers="poste brecht">Mise en scène</td>
+                                                <td headers="budget brecht">2.000</td>
+                                                <td headers="depense brecht">2.000</td>
+                                                <td headers="difference brecht">0</td>
+                                            </tr>
+                                            <tr>
+                                                <td headers="poste brecht">Décors</td>
+                                                <td headers="budget brecht">1.500</td>
+                                                <td headers="depense brecht">1.500</td>
+                                                <td headers="difference brecht">0</td>
+                                            </tr>
+                                            <tr>
+                                                <td headers="poste brecht">Costumes</td>
+                                                <td headers="budget brecht">1.000</td>
+                                                <td headers="depense brecht">800</td>
+                                                <td headers="difference brecht">-200</td>
+                                            </tr>
+                                            <tr>
+                                                <td headers="poste brecht">Éclairages</td>
+                                                <td headers="budget brecht">1.200</td>
+                                                <td headers="depense brecht">1.250</td>
+                                                <td headers="difference brecht">+50</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p>On vous demande d'adapter votre DSD et de résoudre le query qui permet de réaliser le rapport ci-dessus.</p>
+                                </li>
+                                <li>
+                                    <h4>Partie 3 :</h4>
+                                    <p>Le directeur voudrait maintenant pouvoir mémoriser toutes les factures cachées pour le moment derrière l'attribut dépense. Pour chaque facture, on mémorisera son numéro, la date de facturation, la date d'échéance ainsi que le montant de la facture. On enregistre les factures liées à des budgets de dépense prévu pour un poste d'un spectacle.</p>
+                                    <p>On vous demande de modifier le DSD et d'adapter les 3 queries déjà écrits.</p>
+                                    <p>Finalement, écrivez le query qui permet d'afficher la liste des factures reçues (le numéro de la facture, le titre du spectacle, la date de la facture ainsi que le libelle du poste) triées par poste de dépense et puis par date.</p>
+                                </li>
+                                <li>
+                                    <h4>Bonus :</h4>
+                                    <p>Que faut-il changer à votre DSD pour permettre l'encodage de factures non liées à un budget prévu ?</p>
+                                </li>
+                            </ol>
+                            <img src="../images/theatre_du_trac_3.PNG" alt="DSD du théâtre du trac">
+<pre><code>CREATE TABLE postes
+(
+    code_poste INTEGER PRIMARY KEY,
+    libelle VARCHAR (50) NOT NULL
+);
+CREATE TABLE spectacles
+(
+    code_spectacle CHAR (4) PRIMARY KEY,
+    titre VARCHAR (50) NOT NULL,
+    prix_a DOUBLE PRECISION,
+    prix_b DOUBLE PRECISION
+);
+CREATE TABLE representations
+(
+    code_spectacle CHAR (4) NOT NULL REFERENCES spectacles (code_spectacle),
+    date_representation DATE NOT NULL,
+    nbre_places_a INTEGER,
+    nbre_places_b INTEGER,
+    nbre_invitations INTEGER,
+    PRIMARY KEY (code_spectacle, date_representation)
+);
+CREATE TABLE budget_depenses
+(
+    code_spectacle CHAR (4) NOT NULL REFERENCES spectacles (code_spectacle),
+    code_poste INTEGER NOT NULL REFERENCES postes (code_poste),
+    budget DOUBLE PRECISION NOT NULL,
+    depenses DOUBLE PRECISION,
+    PRIMARY KEY (code_spectacle, code_poste)
+);
+CREATE TABLE factures
+(
+    no_facture INTEGER PRIMARY KEY,
+    code_spectacle CHAR (4) NOT NULL,
+    code_poste INTEGER NOT NULL,
+    date_facure DATE NOT NULL,
+    date_echeange DATE NOT NULL,
+    montant DOUBLE PRECISION NOT NULL,
+    FOREIGN KEY (code_spectacle, code_poste) REFERENCES budget_depenses (code_spectacle, code_poste)
+);</code></pre>
+                            <table class="tableBalises">
+                                <caption class="souligne">spectacles :</caption>
+                                <thead>
+                                    <tr>
+                                        <th>code_spectacle</th>
+                                        <th>titre</th>
+                                        <th>prix_a</th>
+                                        <th>prix_b</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>A31C</td>
+                                        <td>Cyranno de Bergerac</td>
+                                        <td>8</td>
+                                        <td>7</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3F-1</td>
+                                        <td>Le malade imaginaire</td>
+                                        <td>8.5</td>
+                                        <td>8</td>
+                                    </tr>
+                                    <tr>
+                                        <td>@B3|</td>
+                                        <td>Le magicien d'Oz</td>
+                                        <td>3.75</td>
+                                        <td>3.01</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table class="tableBalises">
+                                <caption class="souligne">representations :</caption>
+                                <thead>
+                                    <tr>
+                                        <th>code_spectacle</th>
+                                        <th>date_representation</th>
+                                        <th>nbre_places_a</th>
+                                        <th>nbre_places_b</th>
+                                        <th>nbre_invitations</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>A31C</td>
+                                        <td>12/03/2016</td>
+                                        <td>20</td>
+                                        <td>45</td>
+                                        <td>12</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3F-1</td>
+                                        <td>22/04/2016</td>
+                                        <td>30</td>
+                                        <td>47</td>
+                                        <td>10</td>
+                                    </tr>
+                                    <tr>
+                                        <td>@B3|</td>
+                                        <td>12/03/2016</td>
+                                        <td>27</td>
+                                        <td>60</td>
+                                        <td>15</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3F-1</td>
+                                        <td>23/04/2016</td>
+                                        <td>19</td>
+                                        <td>32</td>
+                                        <td>17</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <ol type="a">
+                                <li>
+<pre><code>SELECT SP.code_specyacle, SUM (SP.prix_a * RE.nbre_places_a), SUM (SP.prix_b * RE.nbre_places_b), SUM (RE.nbre_invitations)
+FROM spectacles SP, representations RE
+WHERE SP.code_spectacle = RE.code_spectacle
+GROUP BY SP.code_spectacle;</code></pre>
+                                </li>
+                                <li>
+<pre><code>SELECT date_part('isodow', RE.date_reprsentation) AS "date", SUM (SP.prix_a * RE.nbre_places_a) + SUM ( SP.prix_b * RE.nbre_places_b) AS "montant total"
+FROM spectacles SP, representations RE
+WHERE SP.code_spectacle = RE.code_spectacle
+GROUP BY date;</code></pre>
+                                </li>
+                                <li>
+<pre><code>SELECT SP.titre, PO.libelle, BD.depenses, (BD.budget - BD.depenses) AS "différence"
+FROM spectacles SP, postes PO, budget_depenses BD
+WHERE SP.code_spectacle = BD.code_spectacle AND PO.code_poste = BD.code_poste
+GROUP BY SP.titre, PO.libelle;</code></pre>
+                                </li>
+                                <li>
+<pre><code>SELECT FA.no_facture, SP.titre, FA.date_facture, PO.libelle
+FROM factures FA, spectacles SP, postes PO, budget_depenses BD
+WHERE FA.code_poste = BD.code_poste AND FA.code_spectacle = BD.code_spectacle AND BD.code_poste = PO.code_poste AND BD.code_spectacle = SP.code_spectacle
+ORDER BY PO.libelle, FA.date_facture;</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                           <h3 id="exercice_2">La gestion de projets :</h3>
+                           <p>Une société de software voudrait un outil pour planifier les projets qu'elle doit développer et s'adresser à vous.</p>
+                           <p>Un projet est identifié par un numéro. On mémorise pour chaque projet le titre (ex: filmothèque), le nom du client, une date d'échéance et un montant. Un projet peut aussi être identifié par son titre.</p>
+                           <p class="em">La première phrase du paragraphe précédent nous indique que le numéro du projet peut nous servir de clé primaire.</p>
+                           <p class="em">Comme on peut identifier un projet par son titre, cela signifie qu'il ne peut pas y avoir deux fois le même titre, ce qu'indique la contrainte unique. Cependant, dans la mesure où cela sera une chaîne de caractères de longueur variable, cela ne constituerait pas une clé primaire acceptable.</p>
+                           <p class="em">Remarque : Les champs <span class="html">titre</span> et <span class="html">nom_client</span> doivent d'office être <span class="html">NOT NULL</span>. Pour ce qui est de l'échéance et du montantnt prévu, cela dépend de si on ajoute un projet dans la table dès qu'il y a une demande d'un client (avant estimation du temps nécessaire et du montant) ou après que le client a accepté le contrat. Comme on n'a pas de champ indiquant si le projet a été annulé ou non, on part plutôt de la deuxième hypothèse. Cependant, la première est aussi acceptable. Cependant, il faut être cohérent et soit les deux peuvent être null, soit aucun des deux.</p>
+                           <p>La société se compose d'une vingtaine d'analystes-programmeurs. Pour chacun d'eux, on mémorise son matricule, son nom, son prénom, son GSM et son email. Cette dernière information doit également permettre de retrouver les analystes-programmeurs. Le GSM et l'email peuvent être modifiés.</p>
+                           <p class="em">Un matricule est, par définition, un identifiant et ayant un format précis (nombre fixe de caractères). Il peut donc servir de clé primaire.</p>
+                           <p class="em">Même si on aurait tendance à dire qu'un numéro de GSM ne correspond qu'à une seule personne et donc qu'il ne peut pas y avoir de doublon, rien, dans l'énoncé, n'indique que c'est le cas.</p>
+                           <p class="em">L'email doit être unique car il doit permettre d'identifier un analyste-programmeur. Il ne peut toutefois pas servir de clé primaire car il est modifiable.</p>
+                           <p class="em">Remarque : S'agissant des informations des analystes-programmeurs de la société, elles sont toutes connues (GSM et email pouvant être fournis par la société).</p>
+                           <p>En début de projet, une découpe en composants est effectuée. Chaque composant a un descriptif et passe par une série d'étapes succcessives : l'étape d'analyse (<span class="em">A</span>), l'étape de conception (<span class="em">C</span>), l'étape de programmation (<span class="em">P</span>), l'étape de tests (<span class="em">T</span>) et l'étape de maintenance (<span class="em">M</span>). Chaque composant est sous la responsabilité d'un seul analyste-programmeur. Chaque composant comprendra également un temps présumé qui sera fonction de la difficulté de celui-ci et l'expérience de l'analyste-programmeur qui en est responsable. Pour chaque composant, on pourra également préciser une date de début et une date de fin des tests.</p>
+                           <p class="em">L'étape ne peut prendre que certaines valeurs (qui ne varient pas dans le temps). C'est pourquoi on trouve ici une énumération. Comme les valeurs sont des caractères (on a choisi de mettre uniquement la première lettre de l'étape mais on aurait pu mettre les noms complets), il ne faut pas oublier de les mettre entre '...'.</p>
+                           <ol>
+                            <li class="em">Un projet peut être découpé en plusieurs composants mais un composant appartient à un seul projet (ce qu'indique le <span class="html">NN</span> pour la clé étrangère et la relation <span class="html">1:N</span>). Un projet peut ne pas encore avoir de composant si la découpe n'a pas encore été faite.</li>
+                            <li class="em">Un composant est attribué à un seul analyste-programmeur (le responsable) mais un analyste-programmeur peut avoir la responsabilité de plusieurs composant (éventuellement 0 si un analyste-programmeur vient d'être engagé a déjà été ajouté dans la base de données).</li>
+                           </ol>
+                           <p class="em">Remarques :</p>
+                           <ul>
+                            <li class="em">La dernière phrase du paragraphe nous indique que les champs <span class="em">date_debut_test</span> et <span class="em">date_fin_test</span> n'ont pas nécessairement une valeur et doivent, par conséquent, pouvoir être null. Les autres champs ne peuvent pas être null. D'autre part, la présence d'une énumération ou d'une clé étrangèrene signifie pas que le champ ne peut pas être null. Il faut encore bien ajouter la contrainte <span class="html">NN</span>, si nécessaire, pour ces champs-là.</li>
+                            <li class="em">Quand il n'y a pas de champs pouvant constituer la clé primaire, on doit en ajouter un. Par convention, on le nomme <span class="html">id_...</span> On évite d'utiliser le mot "<span class="html">numero</span>" ou "<span class="html">code</span>" si l'entité ne possède pas (selon la demande) ce type de champ.</li>
+                           </ul>
+                           <p>À la fin de chaque journée, chaque analyste-programmeur note son emploi du temps, c'est-à-dire le temps qu'il a consacré à chacun des composants dont il est responsable. Un analyste-programmeur ne peut consacrer du temps qu'à un composant répertorié : il n'y a pas de composant détaché d'un projet (du style "boire du café"). Quand un analyste-programmeur a terminé une des étapes de développpement d'un composant, il le fait passer à l'étape suivante. Quand l'étape d'analyse est finie, le composant passe l'étape de conception; une fois cette dernière terminée, le composant passe à l'étape de programmation. Enfin, quand les tests sont achevés, le composant passe à l'étape de maintenance.</p>
+                           <ul>
+                            <li class="em">Les informations étant entrées en fin de journée, elles sont toutes connues.</li>
+                            <li class="em">Pour la clé primaire, si on suppose qu'on ne peut entrer qu'une durée par composant par jour, on pourrait utiliser une PK concaténér (id_composant, date_emploi_du_temps). Par contre, s'il veut encoder deux emplois du temps pour un même jour pour un composant pour montrer qu'il y a travaillé à deux momentsdifférents, alors aucun champ ne peut constituer la clé primaire.</li>
+                            <li class="em">La partie concernant le passage d'un composant d'une étape à l'autre ne peut se traduire dans un DSD. C'est une information qui sera plutôt destinée au programmeur lorsqu'il devra développer l'application.</li>
+                           </ul>
+                           <ul>
+                            <li>Réaliser le diagramme de structure de données de l'application.</li>
+                            <li>Fournissez des exemples de données contenues dans les tables (au moins deux projets, trois analystes,...).</li>
+                            <li>
+                                <p>Écrivez les requêtes permettant de répondre ci-dessous :</p>
+                                <ol type="a">
+                                    <li>Pour chaque projet et pour chaque composant, donnez le nombre d'heures prévues et le nombre d'heures déjà réalisées et l'étape en cours.</li>
+                                    <li>Donnez, pour chaque analyste-programmeur, son nom, son matricule et le nombre d'heures travaillées durant le mois de janvier 2016.</li>
+                                    <li>Donnez, pour chaque projet, son numéro, son titre, le nombre de composants qu'il comporte et le nombre de composants qui sont à l'étape maintenance.</li>
+                                </ol>
+                            </li>
+                           </ul>
+                           <p>BONUS : Parfois un analyste-programmeur consacre du temps à un projet mais ce temps n'entre en compte dans aucun composant de celui-ci. Comment adapter le DSD pour répondre à ce problème ?</p>
+                           <img src="../images/gestion_projets_1.PNG" alt="DSD de la gestion de projets">
+                           <p class="souligne">Exemple de données :</p>
+                           <p class="em">Remarque : on a mis des données uniquement pour les colonnes utiles pour les requêtes. De plus, on a choisi des valeurs permettant d'illustrer ces mêmes requêtes et non des valeurs réalistes.</p>
+                           <table class="tableBalises">
+                            <caption class="souligne">projets :</caption>
+                            <thead>
+                                <tr>
+                                    <th>num_projet</th>
+                                    <th>titre</th>
+                                    <th>echeance</th>
+                                    <th>montant_prevu</th>
+                                    <th>nom_client</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Bibliothèque</td>
+                                    <td>2020-10-31</td>
+                                    <td>...</td>
+                                    <td>...</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>Gestion d'une école</td>
+                                    <td>2021-04-21</td>
+                                    <td>...</td>
+                                    <td>...</td>
+                                </tr>
+                            </tbody>
+                           </table>
+                           <table class="tableBalises">
+                            <caption class="souligne">analystes_programmeurs :</caption>
+                            <thead>
+                                <tr>
+                                    <th>matricule</th>
+                                    <th>nom</th>
+                                    <th>prenom</th>
+                                    <th>gsm</th>
+                                    <th>email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1969061445</td>
+                                    <td>Dupont</td>
+                                    <td>...</td>
+                                    <td>...</td>
+                                    <td>...</td>
+                                </tr>
+                                <tr>
+                                    <td>1981042125</td>
+                                    <td>Peeters</td>
+                                    <td>...</td>
+                                    <td>...</td>
+                                    <td>...</td>
+                                </tr>
+                                <tr>
+                                    <td>1964030214</td>
+                                    <td>Vandeuren</td>
+                                    <td>...</td>
+                                    <td>...</td>
+                                    <td>...</td>
+                                </tr>
+                            </tbody>
+                           </table>
+                           <table class="tableBalises">
+                            <caption class="souligne">composants :</caption>
+                            <thead>
+                                <tr>
+                                    <th>id_composant</th>
+                                    <th>num_projet</th>
+                                    <th>responsable</th>
+                                    <th>descriptif</th>
+                                    <th>etape</th>
+                                    <th>temps_presume</th>
+                                    <th>...</th>
+                                    <th>...</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>2</td>
+                                    <td>1969061445</td>
+                                    <td>Gestion des livres</td>
+                                    <td>P</td>
+                                    <td>30</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>5</td>
+                                    <td>1981042125</td>
+                                    <td>Module comptable</td>
+                                    <td>A</td>
+                                    <td>80</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>1964030214</td>
+                                    <td>Abonnements</td>
+                                    <td>A</td>
+                                    <td>20</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>5</td>
+                                    <td>1969061445</td>
+                                    <td>Gestion des étudiants</td>
+                                    <td>M</td>
+                                    <td>15</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>5</td>
+                                    <td>1969061445</td>
+                                    <td>Gestion du personnel</td>
+                                    <td>P</td>
+                                    <td>50</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>5</td>
+                                    <td>1981042125</td>
+                                    <td>Module délibération</td>
+                                    <td>C</td>
+                                    <td>30</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                           </table>
+                           <table class="tableBalises">
+                            <caption class="souligne">emploi_du_temps :</caption>
+                            <thead>
+                                <tr>
+                                    <th>id_emploi_du_temps</th>
+                                    <th>id_composant</th>
+                                    <th>date_emploi_du_temps</th>
+                                    <th>duree</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>4</td>
+                                    <td>2015-12-28</td>
+                                    <td>7</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>4</td>
+                                    <td>2016-01-05</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>6</td>
+                                    <td>2016-01-05</td>
+                                    <td>3</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>1</td>
+                                    <td>2016-01-05</td>
+                                    <td>5</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>3</td>
+                                    <td>2016-02-25</td>
+                                    <td>6</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>4</td>
+                                    <td>2016-02-25</td>
+                                    <td>7</td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td>6</td>
+                                    <td>2016-02-25</td>
+                                    <td>4</td>
+                                </tr>
+                            </tbody>
+                           </table>
+                           <p class="em">Remarque : Lorsqu'on donne des données, il faut veiller à la cohérence. Par exemple :</p>
+                           <ul>
+                            <li class="em">Dans la table <span class="html">composants</span>, les numéros de projet indiqués doivent être dans la table <span class="html">projets</span> et les matricules des responsables doivent être dans la table <span class="html">analystes_programmeurs</span>.</li>
+                            <li class="em">Il ne peut y avoir deux fois le même titre dans la table <span class="html">projets</span>, ni deux fois le même email dans la table <span class="html">analystes_programmeurs</span>.</li>
+                            <li class="em">Si une donnée est requise (<span class="html">NN</span>), il faut lui mettre une valeur.</li>
+                            <li class="em">...</li>
+                           </ul>
+                           <ol type="a">
+                            <li>
+                                <p>En considérant les données précédentes, voici l'affichage attendu (en omettant certaines clonnes de la table <span class="em">projets</span> et de la table <span class="em">composants</span> pour ne pas surcharger) :</p>
+                                <table class="tableBalises">
+                                    <thead>
+                                        <tr>
+                                            <th>num_projet</th>
+                                            <th>titre</th>
+                                            <th>id_composant</th>
+                                            <th>descriptif</th>
+                                            <th>temps_presume</th>
+                                            <th>temps presté</th>
+                                            <th>etape</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>2</td>
+                                            <td>Bibliothèque</td>
+                                            <td>1</td>
+                                            <td>Gestion des livres</td>
+                                            <td>30</td>
+                                            <td>5</td>
+                                            <td>P</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2</td>
+                                            <td>Bibliothèque</td>
+                                            <td>3</td>
+                                            <td>Abonnements</td>
+                                            <td>20</td>
+                                            <td>6</td>
+                                            <td>A</td>
+                                        </tr>
+                                        <tr>
+                                            <td>5</td>
+                                            <td>Gestion d'une école</td>
+                                            <td>4</td>
+                                            <td>Gestion des étudiants</td>
+                                            <td>15</td>
+                                            <td>18</td>
+                                            <td>M</td>
+                                        </tr>
+                                        <tr>
+                                            <td>5</td>
+                                            <td>Gestion d'une école</td>
+                                            <td>6</td>
+                                            <td>Module délibération</td>
+                                            <td>30</td>
+                                            <td>7</td>
+                                            <td>C</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p>Pour obtenir la valeur située dans la colonne temps presté, on a dû faire la somme des emplois du temps correspondant à ce composant. Les autres colonnes proviennent toutes des tables <span class="em">projets</span> et <span class="em">composants</span>. Cela donne la requête :</p>
+<pre><code>SELECT P.num_projet, P.titre, C.id_composant, C.descriptif, C.temps_presume, SUM (E.duree) AS "temps presté", C.etape
+FROM projets P, composants C, emplois_du_temps E
+WHERE P.num_projet = C.num_projet
+AND C.id_composant = E.id_composant
+GROUP BY P.num_projet, P.titre, C.id_composant, C.descriptif, C.temps_presume, C.etape
+ORDER BY 1;</code></pre>
+                                <p>Remarques :</p>
+                                <ul>
+                                    <li>Les composants pour lesquels il n'y a pas encore d'emploi du temps n'appraîtront pas dans le résultat. Ceci est dû à la jointure avec la table <span class="em">emplois_du_temps</span>. Il ne faut pas essayer de régler ce problème.</li>
+                                    <li>On a utilisé <span class="em">ORDER BY</span> afin que les composants d'un même projet apparaissent regroupés (pour avoir un affichage par projet).</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <p>Cette requête est similaire à la précédente mais il faut calculer les durées totales par analyste-programmeur et ne considérer que les emplois du temps de janvier 2016.</p>
+<pre><code>SELECT A.nom, A.matricule, SUM (E.duree)
+FROM emplois_du_temps E, analystes_programmeurs A, composants C
+WHERE A.matrice = C.responsable
+AND C.id_composant = E.id_composant
+AND date_part ('month', E.date_emploi_du_temps) = 1
+AND date_part ('year', E.date_emploi_du_temps) = 2016
+GROUP BY A.nom, A.matricule;</code></pre>
+                                <p>Autres manières de ne prendre que les emplois du temps de janvier 2016 :</p>
+                                <ul>
+                                    <li class="html">E.date_emploi_du_temps &gt;= '2016-01-01' AND E.date_emploi_du_temps &lt;= '2016-01-31'</li>
+                                    <li class="html">E.date_emploi_du_temps BETWEEN '2016-01-01' AND '2016-01-31'</li>
+                                    <li>...</li>
+                                </ul>
+                            </li>
+                            <li>
+<pre><code>SELECT P.num_projet, P.titre, COUNT (C1.*) AS "nombre de composants", COUNT (C2.*) AS "nombre de composants en maintenance"
+FROM projets P, composants C1, composants C2
+WHERE P.num_projet = C1.num_projet AND C2.etape = 'M'
+GROUP BY p.num_projet, P.titre;</code></pre>
+                            </li>
+                           </ol>
+                           <p>Remarque : Dans toutes ces requêtes, il y a une fonction agrégée et des colonnes en dehors de celle-ci. Il ne faut pas oublier de mettre le <span class="html">GROUP BY</span> dans lequel il faut reprendre toutes les colonnes apparaissant en dehors de la fonction agrégée.</p>
+                        </li>
+                        <li>
+                            <h3 id="exercice_3">La superette :</h3>
+                            <p>Dessinez le diagramme de structure de données pour le problème suivant :</p>
+                            <p>Une petite superette indépendante veut informatiser la gestion de ses ventes et de son stock.</p>
+                            <p>Les membres du personnel occupent indifféremment les postes de réassortisseurs ou de caissiers. Il y a trois caisses enregistreuses qui sont ouvertes en fonction des besoins (en cas d'affluence, les trois caisses ouvertes).</p>
+                            <p>Chaque employé a un nom, un prénom et un code personnel. Chaque caisse a une marque et une date de dernier entretien.</p>
+                            <p>Chaque caissier introduit son code personnel lors de l'ouverture de la caisse ou lorsqu'il remplace une autre personne. Il ferme sa session lorsqu'il quitte la caisse. Une caisse qui n'est pas "occupée" par un membre du personnel n'est donc pas capable d'enregistrer une vente.</p>
+                            <p>Lors d'une vente, le client reçoit un ticket reprenant un numéro de ticket (auto-incrémenté), la date, le nom de caissier qui occpe la caisse et la liste des articles (avec pour chacn une brève description, la quantité vendue et le prix) et enfin le montant total du tiket et le type de paiement (liquide ou bancontact). Vous trouverez des exemplaires de tickets en fin d'énoncé.</p>
+                            <p>Chaque article a un code à barres unique, une description et un prix unitaire.</p>
+                            <p>À chaque vente, la vente de chaque article vendu sera décrémenté de la quantité vendue. Quand un caissier enregistre les articles d'un client à la caisse, rien ne garantitque les articles défilent dans un ordre quelconque. Dans cette "liste" le même article peut revenir plusieurs fois.</p>
+                            <p>Certains clients ont une carte de fidélité. Ces cartes sont nominatives et seul le propriétaire peut l'utiliser. Lors de son passage à la caisse, le client montre sa carte, la caissière enregistre le numéro de la carte. Le montant total du ticket sera ajouté à un total des achats cumulés du client. Lorsque ce montant atteint 500€, le client reçoit un bon de 5€. On mémorise le nombre de bons distribués à chaque client (pour envoyer des publicités aux clients les plus fidèles). Tous les clients n'ont pas de carte (il faut la demander). Pour un client sans carte, on n'enregistre pas sa référence "client".</p>
+                            <p>Le but de l'application est de connaître rapidement le chiffre d'affaires global, le chiffre d'affaires par article, la situation du stock ou plus précisément les articles pour lesquels le stock est descendu sous le seuil de la sécurité.</p>
+                            <p>On vous demande :</p>
+                            <ol type="a">
+                                <li>réaliser le DSD (diagramme de structure de données);</li>
+                                <li>écrire les requêtes donnant le chiffre d'affaires total et le chiffre d'affaires total par article;</li>
+                                <li>écrire la requête donnant le nombre et le montant des paiements en espèces;</li>
+                                <li>écrire les <span class="html">CREATE TABLE</span>.</li>
+                            </ol>
+                            <p><img src="../images/superette_1.PNG" alt="exemples de tickets de la superette"></p>
+                            <p><img src="../images/superette_2.PNG" alt="DSD de la superette"></p>
+                            <ol type="a">
+                                <li>
+<pre><code>SELECT SUM (T.total)
+FROM tickets T;</code></pre>
+                                </li>
+                                <li>
+<pre><code>SELECT A.code_barre, A.description, SUM (L.quantite * L.prix)
+FROM lignes_tickets L, articles A
+WHERE L.code_barre = A.code_barre
+GROUP BY A.code_barre, A.description;</code></pre>
+                                </li>
+                                <li>
+<pre><code>SELECT COUNT (T.*) AS "nombre", SUM (T.total) AS "montant total"
+FROM tickets T
+WHERE T.moyen_paiement = 'L';</code></pre>
+                                </li>
+                                <li>
+<pre><code>CREATE TABLE employes
+(
+    code_perso INTEGER PRIMARY KEY,
+    nom VARCHAR (50) NOT NULL,
+    prenom VARCHAR (50) NOT NULL
+);
+CREATE TABLE caisses
+(
+    code_caisse INTEGER PRIMARY KEY,
+    marque VARCHAR (50) NOT NULL,
+    date_entretien DATE
+);
+CREATE TABLE occupations
+(
+    num_occupation INTEGER PRIMARY KEY,
+    code_perso INTEGER NOT NULL REFERENCES employes (code_perso),
+    code_caisse INTEGER NOT NULL REFERENCES caisses (code_caisse),
+    date_debut DATE NOT NULL,
+    date_fin DATE
+);
+CREATE TABLE clients
+(
+    num_client INTEGER PRIMARY KEY,
+    nom VARCHAR (50) NOT NULL,
+    prenom VARCHAR (50) NOT NNULL,
+    adresse VARCHAR (50) NOT NULL,
+    total_cumule INTEGER NOT NULL,
+    nb_bons INTEGER NOT NULL,
+    titre VARCHAR (3) NOT NULL CHECK (titre IN ('Mr', 'Mme'))
+);
+CREATE TABLE tickets
+(
+    num_ticket INTEGER PRIMARY KEY,
+    date_vente DATE NOT NULL,
+    total DOUBLE PRECISION NOT NULL,
+    moyen_paiement CHAR (1) NOT NULL CHECK (moyen_paiement IN ('L', 'B')),
+    num_client INTEGER REFERENCES clients (num_client),
+    num_occupation INTEGER NOT NULL REFERENCES occupations (num_occupation)
+);
+CREATE TABLE articles
+(
+    code_barre VARCHAR (50) PRIMARY KEY,
+    description VARCHAR (255) NOT NULL,
+    prix DOUBLE PRECISION,
+    stock INTEGER NOT NULL
+);
+CREATE TABLE lignes_tickets
+(
+    code_barre VARCHAR (50) NOT NULL REFERENCES articles (code_barre),
+    quantite INTEGER NOT NULL,
+    num_ligne INTEGER NOT NULL,
+    prix DOUBLE PRECISION NOT NULL,
+    num_ticket INTEGER NOT NULL REFERENCES tickets (num_ticket),
+    PRIMARY KEY (num_ticket, num_ligne)
+);</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3 id="exercice_4">Europlastics :</h3>
+                            <p>EuroPlastics fabrique de gadgets publicitaires (porte-clefs, petits jouets pour enfants...). Elle ne fabrique que sur commande. Elle n'a aucun stock de produits finis, excepté ce qui doit être livré aux clients.</p>
+                            <p>Chaque client a un numéro, un nom et une adresse. Chaque article a une description et un prix; nous ne prenons pas en compte ses autres propriétés dans cet exercice.</p>
+                            <p>L'atelier comprend plusieurs machines de 1 à 8. Pour chacune d'elles, on connaît sa marque et sa date d'achat. On doit pouvoir enregistrer la date de son dernier entretien. Chaque machine est spécialisée dans la fabrication d'un certain nombre d'articles du catalogue. Cependant, un article est susceptible d'être fabriqué sur différentes machines mais le temps de fabrication varie selon la machine. Par exemple, l'article SMURF ("porte-clef Stroumpf") est fabriqué soit sur la machine 1 en 30 secondes soit sur la machine 8 en 45 secondes.</p>
+                            <p class="em">On a une relation <span class="html">M : N</span> entre les tables <span class="html">machines</span> et<span class="html">articles</span>. En effet, un article peut être fabriqué sur différentes machines et une machine peut fabriquer différents articles. Il faut donc une table intermédiaire qui gardera, en plus, le temps de fabrication de l'article sur la machine.</p>
+                            <p class="em">Pour une machine et un article, il ne peut exister qu'un temps de fabrication. Par exemple, si on a un tuple qui indique qu'il faut 30 secondes pour fabriquer l'article "SMURF" sur la machine n° 1, on ne peut pas avoir un autre tuple indiquant qu'il faut 45 seondes pour fabriquer l'article "SMURF" sur la machine n°1. C'est pour cette raison qu'on a choisi de mettre une clé primaire concaténée avec les colonnes <span class="html">num_machine</span> et <span class="html">reference_article</span> dans la table <span class="html">temps_fabrication</span>. Cela permet d'être certain que, pour une machine et un article donnés, il y aura au maximum un temps de fabrication.</p>
+                            <p>Les clients passent des commandes. Chaque commande reprend les informations suivantes : date de la commande, date d'échéance (date promise de livraison), la référence du client. Une commande peut concerner plusieurs articles différents. Une même commande ne peut contenir deux lignes qui concernent le même article. Pour chaque article commandé, on enregistre la quantité désirée par le client.</p>
+                            <ul>
+                                <li class="em">Une commande ne possède aucun chap pouvant constituer la clé primaire. On a donc ajouté la colonne <span class="html">id_commande</span>.</li>
+                                <li class="em">On a choisi de garder le montant total de la commande même si ce n'est pas une obligation car on peut le retrouver grâce au prix des articles. Le montant de la commande devra de toute façon être calculé lorsque le client passe la commande et, en le gardant, cela éviter de devoir le recalculer plus tard si on en a à nouveau besoin.</li>
+                                <li class="em">Dans la table <span class="html">lignes_de_commande</span>, c'est l'exemple d'occupations des machines donné à la fin de l'énoncé qui a permis de déduire l'existence d'un numéro pour la ligne.</li>
+                                <li class="em">Comme on ne peut pas avoir deux lignes pour le même article, on a ajouté la contrainte d'unicité sur la concaténation des champs <span class="html">id_commande</span>, <span class="html">reference_article</span>.</li>
+                                <li class="em">On garde le prix unitaire de l'article dans la table <span class="html">lignes_de_commande</span> car le prix de l'article qui se trouve dans la table <span class="html">article</span> va varier avec le temps. Or, si le prix d'un article augmente entre le moment où un client passe la commande et le moment où il est livré, il ne faut pas que le prix augmente pour ce client, il faut aussi s'assurer du pouvoir toujours calculer son chiffre d'affaire correct et donc de garder le prix réellement payé et non le prix actuel.</li>
+                            </ul>
+                            <p>Lorsque la commande a été enregistrée, il faudra effectuer chaque ligne de cette commande dans le planning. Cette opération est effectuée après l'enregistrement de la commande, en ajoutant à la ligne de commande les informations suivantes : date et heure de fabrication, et n° de machine. Lors de l'affectation, il fautévidemment vérifier que la machine puisse fabriquer l'article précisé et que la plage horaire de la machine affectée à cet article soit libre.</p>
+                            <p>Une ligne de commande sera mprs de la commande dans l'état <span class="em">E(nregistrée)</span>; elle passera à l'état <span class="em">P(lanifiée)</span> lorsque les informations du planning auront été remplies (date de fabrication, heure et n° de machine); elle passera à l'état "<span class="em">Clôturée</span>" lorsqu'elle sera achevée.</p>
+                            <p>Lorsque toutes les lignes d'une commande sont fabriquées, il faut faire passer la commande à l'état "<span class="em">Réalisée</span>".</p>
+                            <p>Pour aider la personne qui s'occupe du planning de la production, il faudrait lui fournir des listes (avec date et heure d'édition) : liste des lignes de commande non afféctées au planning, liste des occupations des machines, liste des commandes prêtes à être expédiées aux clients, etc.</p>
+                            <p>Voici le dessin de la liste d'occupation des machines. Ne seront repris dans cette liste que les lignes à l'état <span class="em">P</span>.</p>
+                            <table class="tableBalises">
+                                <caption class="souligne">Occupation des machines :</caption>
+                                <thead>
+                                    <tr>
+                                        <th id="machine">Machine</th>
+                                        <th id="num_ligne_commande">N° Ligne COM</th>
+                                        <th id="reference_article">Référence Article</th>
+                                        <th id="nom_client">Nom-client</th>
+                                        <th id="echeance">Échéance</th>
+                                        <th id="qte">Qté</th>
+                                        <th id="date_debut">Date-heure Début</th>
+                                        <th id="date_fin">Date-heure Fin</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td id="machine_1" headers="machine" rowspan="3">1</td>
+                                        <td headers="machine_1 num_ligne_commande">118</td>
+                                        <td headers="machine_1 reference_article">SMURF</td>
+                                        <td headers="machine_1 nom_client">Moreau</td>
+                                        <td headers="machine_1 echeance">25/6/2003</td>
+                                        <td headers="machine_1 qte">20</td>
+                                        <td headers="machine_1 date_debut">12/5/03 12h00</td>
+                                        <td headers="machine_1 date_fin">12/5/03 12h17</td>
+                                    </tr>
+                                    <tr>
+                                        <td headers="machine_1 num_ligne_commande">128</td>
+                                        <td headers="machine_1 reference_article">TIGRE</td>
+                                        <td headers="machine_1 nom_client">ESSO</td>
+                                        <td headers="machine_1 echeance">28/6/2003</td>
+                                        <td headers="machine_1 qte">250</td>
+                                        <td headers="machine_1 date_debut">12/5/03 13h00</td>
+                                        <td headers="machine_1 date_fin">12/5/03 15h00</td>
+                                    </tr>
+                                    <tr>
+                                        <td headers="machine_1" colspan="7">Nombre d'articles : 270</td>
+                                    </tr>
+                                    <tr>
+                                        <td id="machine_2" rowspan="3">2</td>
+                                        <td headers="machine_2 num_ligne_commande">117</td>
+                                        <td headers="machine_2 reference_article">SPIROU</td>
+                                        <td headers="machine_2 nom_client">Moreau</td>
+                                        <td headers="machine_2 echeance">24/6/2003</td>
+                                        <td headers="machine_2 qte">30</td>
+                                        <td headers="machine_2 date_debut">13/5/03 12h00</td>
+                                        <td headers="machine_2 date_fin">13/5/03 12h55</td>
+                                    </tr>
+                                    <tr>
+                                        <td headers="machine_2 num_ligne_commande">129</td>
+                                        <td headers="machine_2 reference_article">LION</td>
+                                        <td headers="machine_2 nom_client">TEXACO</td>
+                                        <td headers="machine_2 echeance">26/6/2003</td>
+                                        <td headers="machine_2 qte">450</td>
+                                        <td headers="machine_2 date_debut">13/5/03 14h00</td>
+                                        <td headers="machine_2 date_fin">13/5/03 18h00</td>
+                                    </tr>
+                                    <tr>
+                                        <td headers="machine_2" colspan="7">Nombre d'articles : 480</td>
+                                    </tr>
+                                    <tr>
+                                        <td rowspan="4" id="machine_3">3</td>
+                                        <td headers="machine_3 num_ligne_commande">116</td>
+                                        <td headers="machine_3 reference_article">HUITRE</td>
+                                        <td headers="machine_3 nom_client">OSTENDE</td>
+                                        <td headers="machine_3 echeance">20/6/2003</td>
+                                        <td headers="machine_3 qte">20</td>
+                                        <td headers="machine_3 date_debut">12/5/03 12h00</td>
+                                        <td headers="machine_3 date_fin">12/5/03 12h25</td>
+                                    </tr>
+                                    <tr>
+                                        <td headers="machine_3 num_ligne_commande">130</td>
+                                        <td headers="machine_3 reference_article">STYLO</td>
+                                        <td headers="machine_3 nom_client">NIAS</td>
+                                        <td headers="machine_3 echeance">21/6/2003</td>
+                                        <td headers="machine_3 qte">250</td>
+                                        <td headers="machine_3 date_debut">12/5/03 13h00</td>
+                                        <td headers="machine_3 date_fin">12/5/03 15h00</td>
+                                    </tr>
+                                    <tr>
+                                        <td headers="machine_3 num_ligne_commande">78</td>
+                                        <td headers="machine_3 reference_article">SPIROU</td>
+                                        <td headers="machine_3 nom_client">pax</td>
+                                        <td headers="machine_3 echeance">18/5/2003</td>
+                                        <td headers="machine_3 qte">100</td>
+                                        <td headers="machine_3 date_debut">13/5/03 8h00</td>
+                                        <td headers="machine_3 date_fin">13/5/03 10h10</td>
+                                    </tr>
+                                    <tr>
+                                        <td headers="machine_3" colspan="7">Nombre d'articles : 370</td>
+                                    </tr>
+                                    <tr>
+                                        <td rowspan="3" id="machine_4">4</td>
+                                        <td headers="machine_4 num_ligne_commande">115</td>
+                                        <td headers="machine_4 reference_article">PCLEF</td>
+                                        <td headers="machine_4 nom_client">BMW</td>
+                                        <td headers="machine_4 echeance">25/6/2003</td>
+                                        <td headers="machine_4 qte">20</td>
+                                        <td headers="machine_4 date_debut">12/5/03 12h00</td>
+                                        <td headers="machine_4 date_fin">12/5/03 12h17</td>
+                                    </tr>
+                                    <tr>
+                                        <td headers="machine_4 num_ligne_commande">134</td>
+                                        <td headers="machine_4 reference_article">PSTAR</td>
+                                        <td headers="machine_4 nom_client">MERCEDES</td>
+                                        <td headers="machine_4 echeance">22/6/2003</td>
+                                        <td headers="machine_4 qte">250</td>
+                                        <td headers="machine_4 date_debut">12/5/03 13h00</td>
+                                        <td headers="machine_4 date_fin">12/5/03 15h00</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="7" headers="machine_4">Nombre d'articles : 270</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Vous devez :</p>
+                            <ul>
+                                <li>Dessiner le diagramme de structure de données.</li>
+                                <li>Donner le contenu des tables correspondant aux données ci-dessus.</li>
+                                <li>Écrire le(s) SELECT(s) SQL nécessaire(s) pour établie la liste "Occupation des machines" (sans les sommes représentant le nombre d'articles et le nombre total d'articles).</li>
+                            </ul>
+                            <img src="../images/europlastics_2.PNG" alt="DSD d'Europlastics">
+                            <ul>
+                                <li>Lorsque la ligne est à l'état enregistrée (<span class="em">etat = 'E'</span>), la machine est la plage horaire de fabrication ne sont pas encore connues. C'est pourquoi ces champs peuvent être null.</li>
+                                <li>Le fait que la FK <span class="em">num_machine</span> est à null signifie que la ligne peut ne pasêtre associée à une machine. C'est cohérent avec la requête utilisée qui indique bien qu'une ligne de commande est attribuée à 0 ou une machine.</li>
+                            </ul>
+                            <p>Pour avoir le résultat de l'occupation des machines, on voit que ce qui est affiché sont des colonnes des tables <span class="em">lignes_de_commande</span> (n° de machine, n° ligne, référence de l'article, quantité, date de début de fabrication, date de fin de fabrication), <span class="em">commandes</span> (date d'échéance) et <span class="em">clients</span> (nom du client). Il n'y a aucun calcul effectué. On peut sortir ce tableau en faisant le <span class="em">SELECT</span> ci-dessous (dans lequel nous n'avons pas mis les alias pour changer les noms de colonnes) :</p>
+<pre><code>SELECT L.num_machine, L.num_ligne, L.reference_article, CL.nom, CMD.date_echeance, L.quantite, L.date_debut_fabrication, L.date_fin_fabrication
+FROM lignes_de_commandes L, commandes CMD, clients CL
+WHERE L.id_commande = CMD.id_commande AND CMD.num_client = CL.num_client AND L.etat = 'P'
+ORDER BY L.num_machine;</code></pre>
+                            <p>Il est inutile de mettre un <span class="em">DISTINCT</span> car on a sélectionné la clé primaire de la table <span class="em">lignes_de_commande</span>. Or, comme une ligne de commandes n'appartient qu'à une et une seule commande et qu'une commande n'a qu'un et un seul client, celle-ci ne sera jamais dédoublée avec ce <span class="em">SELECT</span>.</p>
+                        </li>
+                        <li>
+                            <h3 id="exercice_5">Le cabinet d'avocats :</h3>
+                            <p>On vous demande d'informatiser la gestion d'un cabinet d'avocats. Un tel cabinet rassemble plusieurs avocats qui mettent en commun des ressources et des compétences pour être plus efficaces et plus rentables. Plusieurs secrétaires travaillent dans le cabinet et assurent les nombreuses tâches administratives : classement, prises de rendez-vous, courrier, etc.</p>
+                            <p>Chaque affaire (plainte, procès, mise en demeure...) d'un des clients du cabinet et donne lui à la constitution d'un dossier. Un dossier est toujours supervisé par un seul avocat. Il arrive fréquemment qu'un client ait plusieurs dossiers en cours. À l'ouverture d'un dossier, la date d'ouverture du dossier est enregistrée. Le client doit déposer une provision, qui dépend de la complexité de l'affaire ainsi que des montants en jeu. Le paiement de cette provision doit également être enregistré. Le plus souvent, un dossier a un titre et contient une brève description de l'affaire.</p>
+                            <p>Certains dossiers sont "Pro Deo"; on considérera dans le cadre de cet exercice qu'il s'agit de dossiers non rémunérés (le client reçoit donc les services d'un avocat gratuitement). Les autres sont rémunérés en fonction des tâches exécutées; chaque tâche est tarifiée. Par exemple, les photocopies sont trarifiées à 0,25€ la page, la rédaction d'une lettre à 50€ la page, une consultation à 50€ la demi-heure etc.</p>
+                            <p>Pour chaque dossier, il y a une série de tâches à effectuer. Une tâche concerne toujours le dossier d'un client. Elle peut parfois être introduite sans que soit précisée la personne qui va la prendre en charge. Chaque fois qu'une tâche est effectuée, la personne qui l'a exécutée note ce qu'elle a fait : une secrétaire qui a effectué 50 photocopies notera le <span class="em">no_dossier</span>, la date et l'heure, son propre code (abréviation de son nom), le code de la tâche ("PHOT" pour les photocopies) et la quantité (50). La personne peut parfois rajouter un commentaire concernant son intervention.</p>
+                            <p>Pour les tâches de type rendez-vous, on a besoin d'informations complémentaires : un rendez-vous d'une demi-heure le 25 mai 2004 à 14h30 dans le cadre du dossier harcèlement de Madame Spears oblige à introduire des informations sur le lieu, l'interlocuteur rencontré et le sujet de l'entretien.</p>
+                            <p>Certaines tâches sont à faire dans le futur mais sont déjà introduites dans le système : lorsque la tâche a été effectuée, la personne notera le temps effectivement consacré à celle-ci et notera que la tpache a été effectuée.</p>
+                            <p>On vous demande de réaliser une application dont les objectifs sont les suivants :</p>
+                            <ul>
+                                <li><span class="em">Un classement efficace des informations.</span> Cela prmet de retrouver une information urgente sur un dossier en cas d'absence prolongée d'un avocat.</li>
+                                <li><span class="em">L'agenda des membres du personnel du cabinet d'avocats.</span> Les avocats ou les secrétaires consultent chaque jour la DB pour connaître ce qu'ils ont à préparer pour les jours suivants.</li>
+                                <li><span class="em">La facturation.</span> Toutes ces tâches passées et effectuées serviront de base à la facturation. Cette facturation sera préparée et envoyée chaque mois. Le client du cabinet recevra une facture par dossier ouvert. Chaque tâche effectuée durant le mois sera clairement reprise dans la facture. Les dossiers "Pro Deo" ne seront pas facturés mais on gardera une trace de tout ce qui a été réalisé pour chacun d'eux. Notez qu'il faut s'assurer qu'une tâche n'est bien facturée qu'une seule fois.</li>
+                            </ul>
+                            <p class="souligne">Exemple de facture mensuelle (à titre d'information sur le contenu de celles-ci) :</p>
+                            <img src="../images/cabinet_avocats_1.png" alt="Facture du cabinet d'avocats">
+                            <p>On vous demande :</p>
+                            <ul>
+                                <li>
+                                    <p>Le diagramme de structure de données :</p>
+                                    <ol type="a">
+                                        <li>Les personnes (avocat et secrétaire) seront décrites à l'aide de leur nom, prénom, adresse, gsm, email et n° de registre national.</li>
+                                        <li>Les clients sont identifiés par un numéro unique auto-incrémenté. Il sont décrits à l'aide de leur nom, prénom, adresse, gsm et email.</li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <p>La rédaction des queries suivants :</p>
+                                    <ol type="a">
+                                        <li>L'édition des lignes des factures du mois de janvier 2016.</li>
+                                        <li>L'édition du montant à payer pour chaque facture du mois de janvier 2016. La fonction SQL permettant d'extraire le mois d'un champ est <span class="html">date_part ('month', nom_variable_de_type_date)</span>.</li>
+                                    </ol>
+                                </li>
+                            </ul>
+                            <img src="../images/cabinet_avocats_2.PNG" alt="DSD du cabinet d'avocats">
+                            <ol type="a">
+                                <li>
+<pre><code>SELECT F.num_facture, D.num_dossier, D.num_client, F.date_facture, P.nom
+FROM factures F, dossiers D, personnes P
+WHERE F.num_dossier = D.num_dossier AND D.num_perso = P.num_perso AND date_part ('month', F.date_facture) = 1 AND date_part ('year', F.date_facture) = 2016;</code></pre>
+                                </li>
+                                <li>
+<pre><code>SELECT F.num_facture, F.montant_total
+FROM factures F
+WHERE date_part ('month', F.date_facture) = 1 AND date_depart ('year', date_facture) = 2016;</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3 id="exercice_6">Grantano :</h3>
+                            <img src="../images/grantano_1.PNG" alt="logo de Grantano">
+                            <p>Une chaîne de magasins de chaussures souhaite informatiser son business afin de réaliser une application en ligne de vente de chaussures. Cette application a pour but de gérer les stocks de chaussures ainsi que les commandes.</p>
+                            <p>out d'abord, les chaussurs ont été chacune catégorisées. Les catégories ont été établies mais peuvent  encore évoluer. Ci-dessous, vous trouvez un premier tableau (résumé) des catégories. Chaque catégorie peut être sous-divisée en sous-catégories.</p>
+                            <img src="../images/grantano_2.PNG" alt="diagramme de hiérarchie des chaussures de Grantano">
+                            <p>Dans la catégorie <span class="em">Hommes - Tongs</span>, on trouve par exemple les paires de chaussures suivantes :</p>
+                            <ul>
+                                <li>TONG SUPERBE DE LE COQ SPORTIF</li>
+                                <li>TONG SUPERBE DE GAASTRA</li>
+                            </ul>
+                            <p>Une paire de chaussures appartient à une seule catégorie.</p>
+                            <p>Une paire de chaussures possède un libellé comme celui mentionné ci-dessus <span class="em">TONG SUPERBE DE LE COQ SPORTIF</span>. Il se peut que plusieurs paires de chaussures portent le même libellé.</p>
+                            <p>Un descriptif permet, si nécessaire, d'en savoir plus sur la chaussure.</p>
+                            <p>La paire de chaussures possèdent également un prix et une couleur. On enregistre si la paire est noire (<span class="html">N</span>), brune (<span class="html">BR</span>), bleue (<span class="html">BE</span>), blanche (<span class="html">BL</span>), colorée (<span class="html">CO</span>). Pardois, ces prix changent, par exemple en été les bottines sont moisn chères et les tongs plus chères.</p>
+                            <p>Il s'agit de gérer des commandes en ligne de chaussures. Les commandes sont effectuées par des clients pour lesquels on ne retient que le nom (inutile de créer une table <span class="em">clients</span>). On retient pour chaque commande la date à laquelle elle est passée ainsi qu'un numéro unique.</p>
+                            <p>Dans une commande, on peut retrouver plusieurs paires de chaussures. Par exemple, une paire de Ting pour Monsieur et une paire d'escarpin pour Madame.</p>
+                            <img src="../images/grantano_3.PNG" alt="commande de 1 tong et 1 escarpin chez Grantano">
+                            <p>Remarquez que lorsqu'un client passe commande, il doit mentionner les pointures de chaussures désirées. On vous demande de gérer le stock des paires de chaussures disponibles. Parfois, il arrive qu'une paire de chaussures soit indisponible dans une certaine pointure. Un code-barre unique identifie chaque pointure d'une paire de chaussures.</p>
+                            <p>Un client peut également décider d'acheter 2 paires d'<span class="em">ESCARPIN LINEA LORESI</span> en pointure 38 :</p>
+                            <img src="../images/grantano_4.PNG" alt="commande de 1 tong et 2 escarpins chez Grantano">
+                            <p>L'application doit permettre, d'avoir une vision claire du stock de chaussures !</p>
+                            <p>On ne connaît pas à l'avance toutes les pointures. C'est-à-dire qu'on doit pouvoir ajouter des pointures par exemple 38,5 etc.</p>
+                            <p>On vous demande de :</p>
+                            <ol type="a">
+                                <li>Réaliser le diagramme de structure de données.</li>
+                                <li>Écrire la requête qui permet de lister les chaussures (identifant + libelle, descriptif) qui ne sont pas disponibles (remarque : on doit prendre les chaussures qui ne sont pas repris dans les stocks ainsi que les chaussures pour lesquelles les quantités en stock de chaque pointure sont à zéro).</li>
+                                <li>Écrire la requête qui donne, pour chaque couple de catégories ayant le même libellé, leurs "identifiant" et le libellé.</li>
+                                <li>Écrire la requête qui permet de trouver la liste des chaussures qui ont déjà été venues à un prix suprérieur au prix actuel.</li>
+                            </ol>
+                            <img src="../images/grantano_5.PNG" alt="DSD de Grantano">
+                            <ol type="a">
+                                <li>
+<pre><code>SELECT C.num_chaussure, C.libelle, C.descriptif
+FROM chaussures C
+WHERE C.num_chaussure NOT IN (SELECT P.chaussure FROM pointures PP WHERE p.stock &gt; 0);</code></pre>
+                                </li>
+                                <li>
+<pre><code>SELECT CA1.num_categorie, CA2.num_categorie, CA1.libelle
+FROM categories CA1, categories CA2
+WHERE CA1.libelle = CA2.libelle AND CA2.categorie &lt; CA1.num_categorie;</code></pre>
+                                </li>
+                                <li>
+<pre><code>SELECT DISTINCT C.*
+FROM chaussures C, pointures P, lignes_commandes L
+WHERE C.num_chaussure = P.chaussure AND L.pointure = P.code_barre AND C.prix &lt; L.prix_unitaire;</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3 id="exercice_7">RecetteBook :</h3>
+                            <p>L'objectif de cette application est de permettre le partage de recettes entre amis et la gestion de commentaires à propos de ces recettes.</p>
+                            <p>L'idée émane d'un groupe d'ams qui, à court d'idées certains soirs de la semaine, voudrait disposer d'un grand nombre de recettes dans lequel ils pourraient choisir celle qui leur conviendrait ce soir-là.</p>
+                            <p>Pour chacun des amis, il serait nécessaire de connaître son nom, son prénom et son e-mail. Chaque e-mail doit être unique et il est nécessaire de pouvoir le changer facilement.</p>
+                            <p>Pour chaque recette, le créateur, l'un des amis, introduirait le nom de celle-ci, une description de sa préparation, un temps de préparation et un temps de cuisson ainsi que le nombre de personnes pour lesquelles la recette est prévue. Cette dernière information est facultative (si non présente on considère que la recette est prévue pour 4 personnes).</p>
+                            <p>Il est important de garder la trace du créateur de la recette.</p>
+                            <p>Chaque recette comprend la liste des ingrédients nécessaires et leur quantité. De plus, une recette peut être composée de plusieurs autres recettes.</p>
+                            <p>Par exemple, pour faire de la <span class="em">sauce Béchamel</span>, il faut les ingrédients suivants :</p>
+                            <ul>
+                                <li>50 grammes de beurre</li>
+                                <li>50 grammes de farine</li>
+                                <li>1/2 litre de lait tiède</li>
+                                <li>1 pincée de sel</li>
+                                <li>1/2 pincée de poivre</li>
+                                <li>Noix de muscade (facultative)</li>
+                            </ul>
+                            <p>Pour chaque ingrédient composant la recette, il est important de noter la quantité et l'unité dans laquelle elle est exprimée.</p>
+                            <p>Une recette peut également être composée de plusieurs autres recettes.</p>
+                            <p>Par exemple, pour faire de la <span class="em">Lasagne pour 8 personnes</span>, il faut pouvoir utiliser les recettes suivantes :</p>
+                            <ul>
+                                <li>Recette de la sauce Béchamel - 2x</li>
+                                <li>Recette de la sauce Bolognaise - 1x</li>
+                                <li>1kg de feuilles de pâte séchées</li>
+                                <li>200 gr de gruyère râpé</li>
+                            </ul>
+                            <p>Pour chaque recette composant la recette principale, il faut noter la quantité nécessaire.</p>
+                            <p>Enfin, chaque ami peut ajouter un (<span class="em">et un seul</span>) commentaire à une recette.</p>
+                            <p>On vous demande de :</p>
+                            <ol type="a">
+                                <li>Réaliser le diagramme de structure de données.</li>
+                                <li>Écrire la requête qui donne la liste des recettes pour 4 personnes ayant un temps total (préparation + cuisson) inférieur à 60 minutes et utilisant des asperges comme ingrédient. Pour chaque recette, donnez son identifiant, son nom, la préparation et le temps total.</li>
+                                <li>Écrire la requête qui donne la liste des amis qui ont publiés plusieurs recettes. Pour chaque ami, donnez son identifiant, son nom et son prénom ainsi que le nombre de recettes qu'il a publiées.</li>
+                                <li>Écrire la requête qui liste les recettes (identifiant, nom) qui n'ont aucune autre recette dans leur composition.</li>
+                            </ol>
+                            <img src="../images/recettebook_1.PNG" alt="DSD de RecetteBook">
+                            <ol type="a">
+                                <li>
+<pre><code>SELECT R.num_recette, R.nom, R.description, (R.temps.prepa - R.temps_cuisson) AS "temps total"
+FROM recetes R, lignes_ingredients LI, ingredients I
+WHERE LI.num_recette = R.num_recette AND LI.num_ingredient = I.num_ingredient AND lower (I.nom) = 'asperge' AND (nbre_gens IS NULL OR nbre_gens = 4)
+GROUP BY R.num_recette, R.nom, R.description
+HAVING "temps total" &lt; 60;</code></pre>
+                                </li>
+                                <li>
+<pre><code>SELECT A.num_ami, A.nom, A.prenom, COUNT (R.*)
+FROM amis A, recettes R
+WHERE R.createur = A.num_ami
+GROUP BY A.num_ami, A.nom, A.prenom;</code></pre>
+                                </li>
+                                <li>
+<pre><code>SELECT R.num_rectte, R.nom
+FROM recettes R
+WHERE R.num_recette NOT IN (SELECT LR.recette_composite FROM lignes_recettes LR);</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3 id="exercice_8">Le distributeur de livres et DVD :</h3>
+                            <p>IPL-Loisirs, un distributeur de livres et de DVDs, désire informatiser la gestion de sesmembres et des achats réalisés par ceux-ci. Celui-ci fait appel à vos compétences d'analyste de données pour établir le design des données.</p>
+                            <p>IPL-Loisirs offre la possibilité à ses membres d'acheter des nouveautés en livres et DVDs (dans des boutiques ou sur internet) à un prix moins cheer que dans le commerce habituel et variant en fonction de l'ancienneté du membre. En contrepartie, un membre s'engage à effectuer au moins un achat par période. Dans le cas où un membre n'aura pas effectué d'achat dans une période donnée, il devra obligatoirement acheter le livre sélectionné pour cette période, ce dernier lui étant automatiquement envoyé. Il est donc important de pouvoir retrouver les achats effectués par un membre dans une période donnée.</p>
+                            <p>Lors de l'inscription, le nouveau memebre doit fournir les informations suivantes : son nom, son prénm et son adresse. S'il s'inscrit par internet, il doit également fournir un login et un mot de passe. Une fois inscrit, un membre se voit attribuer un numéro d'identification.</p>
+                            <ul>
+                                <li class="em">Comme le nom,le prénom et l'adresse doivent être fournis au moment de l'inscription, ils ne peuvent pas être null. Contrairement au login et mot de passe qui, eux, ne sont connus que pour les membres s'étant inscrits via internet.</li>
+                                <li class="em">Dans le deuxième paragraphe, il est inqué que les prix des livres et des DVDs vaient en fonction de l'ancienneté du membre. Il faut donc garder une information permettant de trouver cette ancienneté. C'est pour cela qu'on a également gardé la date d'inscription à partir de laquelle on peut calculer son ancienneté. Il n'aurait pas été approprié de garder simplement une colonne ancienneté car il n'aurait pas été possible de savoir quand la mettre à jour.</li>
+                                <li class="em">Le login étant ce qui permettra au membre de s'identifier sur le site, il doit être unique. Cela n'est pas incompatible avec le fait qu'il peut être null. Il pourra quand même y avoir plusieurs membres n'ayant pas de login.</li>
+                            </ul>
+                            <p>Pour chaque produit (livre ou dvd) vendu par le distributeur, il faut retenir sa référence, son prix de base et son titre. Pour chaquelivre, on connaît aussi son auteur, son nombre de pages et un résumé est parfois fourni. Pour un DVD, on connaît sa durée, son genre et l'année de sa sortie.</p>
+                            <p class="em">Ici, la structure de l'enregistrement dépend du type de produit, on a défini deux tables spécialisées en plus de la table <span class="html">produits</span> qui reprend la partie commune de la structure. La colonne <span class="html">type</span> n'est pas indispensable mais elle permet de ne pas devoir utiliser deux tables afin de savoir s'il s'agit d'un livre ou d'un DVD.</p>
+                            <p>À chaque période correspond une date de début, une date de fin et un livre qui est la sélection liée à cete période. On ne peut pas sélectionner deux fois le même livre pour des périodes différentes.</p>
+                            <p class="em">Un livre peut être choisi comme sélection du mois au maximum une fois. Le fait de mettre la contrainte unique sur le camp "<span class="html">selection</span>" garantit cela.</p>
+                            <p>Pour chaque achat, il faut retenir le membre qui l'a effectué, la période pendant laquelle il a été effectuée, le détail des produits achetés et le type de paiement parmi les suivants : en liquide, par Bancontact, par virement ou par carte de crédit. Une fois que le paiement aura été effectué, il faut aussi garder la date du paiement.</p>
+                            <p><img src="../images/distributeur_livres_DVD_1.PNG" alt="achat n°1"></p>
+                            <p><img src="../images/distributeur_livres_DVD_2.PNG" alt="achat n°2"></p>
+                            <p>On vous demande :</p>
+                            <ol>
+                                <li>
+                                    <p>De réaliser le diagramme de structure de données.</p>
+                                    <img src="../images/distributeur_livres_DVD_3.PNG" alt="DSD du distributeur de livres et de DVDs">
+                                    <ul>
+                                        <li class="em">Le paiement peut se faire après l'achat. Par conséquent, la date de paiement pourrait se situer en dehors de la période où l'achat a été réalisé et ne peut donc pas servir à retrouver la périoe de l'achat.</li>
+                                        <li class="em">On aurait éventuellement pu garder la date d'achat pour retrouver la période de l'achat mais la requête à faire pour retrouver la période dans ce cas aurait été plus difficile et sans doute moins efficace.</li>
+                                        <li class="em">Un achat peut contenir 1 ou plusieurs produits et un produit peut être acheté 0, 1 ou plusieurs fois. C'est une relation <span class="html">M : N</span> qui nécessite une table intermédiaire. Dans cette table, on a ajouté le prix unitaire et la quantité comme montré l'exemple. On est obligé de garder le prix unitaire car le prix payé lors de l'achat ne correspond pas nécessairement au prix de base (le prix payé dépend de l'ancienneté et, de plus, les prix des produits varient avec le temps).</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>D'écrire les requêtes suivantes :</p>
+                                    <ol type="a">
+                                        <li>
+                                            <p>Donner la liste des livres (référence, titre, auteur) ayant déjà été sélectionnés pour une période.</p>
+                                            <p class="em">Il suffit de prendre les livres dont l'identifiant se situe dans la table <span class="html">periodes</span>. Les informations dont on a besoin se situent dans les tables <span class="html">produits</span> et <span class="html">livres</span>. Comme l'identifiant du livre se trouve au plus une fois dans la table <span class="html">periodes</span>, il est inutile de mettre de <span class="html">DISTINCT</span>.</p>
+<pre><code>SELECT L.reference, P.titre, L.auteur
+FROM livres L, produits P, periodes PER
+WHERE L.reference = P.reference AND L.reference = PER.selection;</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Donner, pour chaque achat, le nom et le numéro du membre l'ayant effectué, la période pendant laquelle il a été effectué, la date du paiement et le montant total de l'achat. Classez le tout par période et, pour les achats effectués lors d'une même période, classez-les par numéro de client.</p>
+                                            <ul>
+                                                <li class="em">Comme le montant total de l'achat n'a pas été gardé dans la table <span class="html">achats</span>, il faut le recalculer. Pour cela, il faut faire la somme des prix des produits achetés. On trouve les informations à ce sujet dans la table <span class="html">details_achat</span>. Il ne faut pas oublier de prendre en compte la quantité achetée lors du cal c'est-à-dire que le montant correspondant à un détail est égal à <span class="html">quantite * prix_unitaire</span>.</li>
+                                                <li class="em">Comme on a une fonction agrégée et d'autres colonne, il ne faut pas oublier de mettre un <span class="html">GROUP BY</span> reprenant au moins toutes les colonnes affichées qui ne se trouvent pas dans la fonction agrégée.</li>
+                                                <li class="em">Pour classer les achats dans l'ordre voulu, il faut utiliser un <span class="html">ORDER BY</span>. Pour rappel, l'<span class="html">ORDER BY</span> se situe toujours en dernier dans une requête.</li>
+                                            </ul>
+<pre><code>SELECT A.id_achat, M.nom, M.num_membre, P.id_periode, P.date_debut, P.date_fin, A.date_paiement, SUM (D.prix_unitaire * D.quantite) AS "montant total"
+FROM membres M, periodes P, achats A, details_achat D
+WHERE M.num_membre = A.num_membre AND P.id_periode = A.id_periode AND A.id_achat = D.id_achat
+GROUP BY A.id_achat, M.nom, M.id_membre, P.id_periode, P.date_periode, P.date_debut, P.date_fin, A.date_paiement
+ORDER BY P.id_periode, M.num_membre;</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Donner la liste des membres (numéro "nom") n'ayant effectué aucun achat lors de la période du 12/12/2016 au 11/03/2017.</p>
+                                            <ul>
+                                                <li class="em">Ici, il faut trouver les membres pour lesquels il n'y a pas de tuple dans la table <span class="html">achats</span> correspondant à la période donnée. On ne peut pas le faire par jointure puisqu'on cherche précisément ceux qui seront éliminés lorsqu'on fait la jointure. On est obligé de passer par un sous-select qui va nous donner les identiants des membres qui ont bien effectué un achat dans la période demande. Ensuite,on va prendre tous les membres dont l'identifiant n'est pas parmi ceux (<span class="html">NOT IN</span>) renvoyés par le sous-select.</li>
+                                                <li class="em">Il est inutile de mettre un <span class="html">DISTINCT</span> puisqu'on ne prend que la table <span class="html">membres</span> dans le <span class="html">FROM</span> "principal" et que la clé primaire de cette table est prise dans le <span class="html">SELECT</span>.</li>
+                                                <li class="em">Il n'est pas utile de mettre un <span class="html">DISTINCT</span> dans le sous-select car le résultat ne sert que pour faire des comparaisons.</li>
+                                            </ul>
+<pre><code>SELECT m.num_membre, M.nom
+FROM membres M
+WHERE m.num_membre NOT IN (SELECT A.num_membre
+FROM achats A, periodes P
+WHERE A.id_periode = P.id_periode AND P.date_debut = '12/12/2016' AND P.date_fin = '11/03/2017');</code></pre>
+                                        </li>
+                                    </ol>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                </article>
+            <!-- fin de section -->
+            </section>
+        </main>
+        <footer role="contentinfo">
+            <div>
+                <address>
+                    Professeurs :
+                    <a class="mail" href="mailto:olivier.choquet@vinci.be">Choquet Olivier</a>
+                    <a class="mail" href="mailto:driss.vandenheede.techinfo@gmail.com">Vandenheede Driss</a>
+                </address>
+            </div>
+            <div>
+                <p>Si vous détectez une erreur, une faute d'orthographe, n'hésitez pas à envoyer un mail aux adresses juste à côté avec le nom de la page et l'erreur détectée.</p>
+            </div>
+            <div id="version">
+                <p>Syllabus HTML</p>
+                <p>Version 5.0</p>
+            </div>
+        </footer>
+    </body>
+</html>
