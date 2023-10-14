@@ -1415,7 +1415,7 @@ class WidgetContainer extends Compnent {
     public void update() {
         if (myComponents != null) {
             Iterator&lt;Component&gt; list = myComponents.iterator();
-            while(list.hashNext())
+            while(list.hasNext())
                 list.next().update();
         }
     }
@@ -1843,7 +1843,7 @@ public class TestIterator {
 
         ListIterator myList = aList.listIterator();
 
-        while (myList.hashNext()) {
+        while (myList.hasNext()) {
             Object listItem = myList.next();
             if (listItem.equals("cat")) {
                 myList.set("katze");
@@ -8619,6 +8619,1179 @@ public class BufferedReader extends Reader {
 	}
 
 }</code></pre>
+                        </li>
+                        <li>
+                            <h3>Semaine 5 :</h3>
+                            <p>L'IPL fait appel à vos services pour développer une application de streaming annexe à ecampus : SpotIPLy. Dans un premier temps, on ne désire implémenter qu'une classe Album qui garde le plus d'information possible sur les albums disponibles en écoute. Seuls le titre de l'albul et le nom de l'artiste sont obligatoires. Les autres renseignements proposés sont le label de la marque de disque, le producteur, le pays de l'artiste, la version (ex. DeLuxe Edition, Japonese Edition, ...), le genre, l'année de parution et, s'il s'agit d'un album remastérisé, l'année de parution originale, le débit en qualité standard et le débit en mode abonné.</p>
+                            <p>Comme on le voit, plusieurs solutions s'offrent à nous pour créer un album :</p>
+                            <ol type="a">
+                                <li>
+                                    <p>Définir un unique constructeur qui accepte des valeurs null pour tous les champs sauf le titre et l'artiste : désavantage : il faut préciser des valeurs pour tous les autres champs, ne fut-ce que null.</p>
+                                </li>
+                                <li>
+                                    <p>Définir une série de constructeur "téléscopiques" en classant les champs dans l'ordre décroissant de fréquence d'utilisation :</p>
+<pre><code>Album(String titre, String artiste);
+Album(String titre, String artiste, int annee);
+Album(String titre, String artiste, int annee, String genre);</code></pre>
+                                    <p>Il est en effet difficile de définir des constructeurs différents ayant le même nombre de paramètre vu que les types de ceux-ci sont trop souvent les mêmes.</p>
+                                    <ul>
+                                        <li>
+                                            <p>Désavantages : similaire à la solution précédente. On doit bien souvent préciser la valeur de champs qu'on ne veut pas initialiser.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>Utiliser le pattern JavaBeans : un constructeur sans paramètre et des getters et setteurs pour les autres champs.</p>
+                                    <ul>
+                                        <li>
+                                            <p>Désavantages : il ne permet pas l'immuabilité (pas de champs final par exemple).</p>
+                                        </li>
+                                    </ul>
+                                    <p>De plus la construction se fait en différents appels. L'objet constuit peut donc être dans un état inconsistant à un moment donné.</p>
+                                </li>
+                            </ol>
+                            <p>Le problème est lié au langage qui, contrairement à d'autres (Ada, Python) ne permet pas (encore) de définir des paramètres nommés optionnels.</p>
+                            <p>Dans un tel cas, la bonne manière de faire est de définir une classe <span class="html">public static Builder</span> interne à la classe à construire (ici <span class="em">Album</span>).</p>
+                            <ol>
+                                <li>
+                                    <p>La classe <span class="em">Album</span> a :</p>
+                                    <ul>
+                                        <li>
+                                            <p>un seul constructeur <span class="em">private</span> prenant un <span class="em">Builder</span> en paramètre, tous ses champs final.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>Cette classe <span class="em">Builder</span> a :</p>
+                                    <ul>
+                                        <li>
+                                            <p>les mêmes champs que la classe qu'elle doit construire (ici <span class="em">Album</span>).</p>
+                                        </li>
+                                        <li>
+                                            <p>un constructeur reprenant uniquement les champs obligatoires,</p>
+                                        </li>
+                                        <li>
+                                            <p>des méthodes (sorte de setters) portant le nom des autres champs mais qui renvoient le builder,</p>
+                                        </li>
+                                        <li>
+                                            <p>une méthode <span class="html">public build()</span> qui appelle le constructeur <span class="em">private</span> d'<span class="em">Album</span>.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ol>
+                            <p>Un album est donc construit par exemple comme suit :</p>
+<pre><code>Album lonerism = new Album.Builder("Lonerism", "Tame Impala").pays("Australie").annee(2012).genre("indie rock").build();
+Album orange = new Album.Builder("channel ORANGE", "Frank Ocean").annee(2012).genre("R&B").build();
+Album visions = new Album.Builder("Visions", "Grimes").annee(2 012).label("4AD").genre("Electronic").build();</code></pre>
+<pre><code>public class Album {
+
+    private final String titreAlbum;
+	private final String nomArtiste;
+	private final String labelMarqueDisque;
+	private final String producteur;
+	private final String paysArtiste;
+	private final String version;
+	private final String genre;
+	private final int anneeParution;
+	private final boolean remasterise;
+	private final int anneeParutionOriginale;
+	private final int debitStandard;
+	private final int debitAbonne;
+
+	private Album(AlbumBuilder builder) {
+		this.titreAlbum = builder.titreAlbum;
+		this.nomArtiste = builder.nomArtiste;
+		this.labelMarqueDisque = builder.labelMarqueDisque;
+		this.producteur = builder.producteur;
+		this.paysArtiste = builder.paysArtiste;
+		this.version = builder.version;
+		this.genre = builder.genre;
+		this.anneeParution = builder.anneeParution;
+		this.remasterise = builder.remasterise;
+		this.anneeParutionOriginale = builder.anneeParutionOriginale;
+		this.debitStandard = builder.debitStandard;
+		this.debitAbonne = builder.debitAbonne;
+	}
+	
+	public String getTitreAlbum() {
+		return titreAlbum;
+	}
+
+	public String getNomArtiste() {
+		return nomArtiste;
+	}
+
+	public String getLabelMarqueDisque() {
+		return labelMarqueDisque;
+	}
+
+	public String getProducteur() {
+		return producteur;
+	}
+
+	public String getPaysArtiste() {
+		return paysArtiste;
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	public String getGenre() {
+		return genre;
+	}
+
+	public int getAnneeParution() {
+		return anneeParution;
+	}
+
+	public boolean isRemasterise() {
+		return remasterise;
+	}
+
+	public int getAnneeParutionOriginale() {
+		return anneeParutionOriginale;
+	}
+	
+	public int getDebitStandard() {
+		return debitStandard;
+	}
+	
+	public int getDebitAbonne() {
+		return debitAbonne;
+	}
+
+	public static class AlbumBuilder {
+		private final String titreAlbum;
+		private final String nomArtiste;
+		private String labelMarqueDisque;
+		private String producteur;
+		private String paysArtiste;
+		private String version;
+		private String genre;
+		private int anneeParution;
+		private boolean remasterise;
+		private int anneeParutionOriginale;
+		private int debitStandard;
+		private int debitAbonne;
+
+		public AlbumBuilder(String titreAlbum, String nomArtiste) {
+			this.titreAlbum = titreAlbum;
+			this.nomArtiste = nomArtiste;
+		}
+
+		public AlbumBuilder labelMarqueDisque(String labelMarqueDisque) {
+			this.labelMarqueDisque = labelMarqueDisque;
+			return this;
+		}
+
+		public AlbumBuilder producteur(String producteur) {
+			this.producteur = producteur;
+			return this;
+		}
+
+		public AlbumBuilder paysArtiste(String paysArtiste) {
+			this.paysArtiste = paysArtiste;
+			return this;
+		}
+
+		public AlbumBuilder version(String version) {
+			this.version = version;
+			return this;
+		}
+		
+		public AlbumBuilder genre(String genre) {
+			this.genre = genre;
+			return this;
+		}
+		
+		public AlbumBuilder anneeParution(int anneeParution) {
+			this.anneeParution = anneeParution;
+			return this;
+		}
+		
+		public AlbumBuilder remasterise(boolean remasterise) {
+			this.remasterise = remasterise;
+			return this;
+		}
+		
+		public AlbumBuilder anneeParutionOriginale(int anneeParutionOriginale) {
+			this.anneeParutionOriginale = anneeParutionOriginale;
+			return this;
+		}
+		
+		public AlbumBuilder debitStandard(int debitStandard) {
+			this.debitStandard = debitStandard;
+			return this;
+		}
+		
+		public AlbumBuilder debitAbonne(int debitAbonne) {
+			this.debitAbonne = debitAbonne;
+			return this;
+		}
+		
+		public Album build() {
+			return new Album(this);
+		}
+	}
+
+}</code></pre>
+<pre><code>public class Main {
+
+	public static void main(String[] args) {
+		Album lonerism = new Album.AlbumBuilder("Lonerism", "Tame Impala").paysArtiste("Australie").anneeParution(2012).genre("indie rock").build(); 
+		Album orange = new Album.AlbumBuilder("channel ORANGE", "Frank Ocean").anneeParution(2012).genre("R&B").build();
+		Album visions = new Album.AlbumBuilder("Visions", "Grimes").anneeParution(2012).labelMarqueDisque("4AD").genre("Electronic").build();
+		System.out.println(orange.getTitreAlbum());
+	}
+	
+}</code></pre>
+                        </li>
+                        <li>
+                            <h3>Semaine 6 :</h3>
+                            <p>Une autre fonction de notre machine à café est la sélection de la boisson. La technique consiste à choisir une boisson de base (Moka, Dessert ou Décaféiné) et d'y ajouter éventuellement du lait, du sucre et/ou de la crème fraîche. Un programme utilisant cette sélection pourra être :</p>
+<pre><code>public class Main {
+    public static void main(String[] args) {
+        Boisson b = new Lait(new Sucre(new Decafeine()));
+        System.out.println(b + " au prix de " + b.prix() + " euros.");
+        b = new Sucre(new Creme(new Dessert()));
+        System.out.println(b + " au prix de " + b.prix() + " euros.");
+    }
+}</code></pre>
+                            <p>Ce programme donnera en sortie :</p>
+<pre><code>Café décaféiné sucré au lait au prix de 0.55 euros.
+Café dessert crème sucré au prix de 0.57 euros.</code></pre>
+                            <p>Les classes sont implémentées comme suit :</p>
+                            <p>Boisson.java :</p>
+<pre><code>public interface Boisson {
+    String getNom();
+    double prix();
+}</code></pre>
+                            <p>Cafe.java :</p>
+<pre><code>public abstract class Cafe implements Boisson {
+    private String nom;
+    public Cafe(String nom) {
+        this.nom = nom;
+    }
+    public String getNom() {
+        return nom;
+    }
+    public abstract double prix();
+    public String toString() {
+        return "Café " + getNom();
+    }
+}</code></pre>
+                            <p>Dessert.java :</p>
+<pre><code>public class Dessert extends Cafe {
+    public Dessert() {
+        super("dessert");
+    }
+    public double prix() {
+        return 0.37;
+    }
+}</code></pre>
+                            <p>Moka.java :</p>
+<pre><code>public class Moka extends Cafe {
+    public Moka() {
+        super("moka");
+    }
+    public double prix() {
+        return 0.35;
+    }
+}</code></pre>
+                            <p>Decafeine.java :</p>
+<pre><code>public class Decafeine extends Cafe {
+    public Decafeine() {
+        super("décaféiné");
+    }
+    public double prix() {
+        return 0.40;
+    }
+}</code></pre>
+                            <p>Additif.java :</p>
+<pre><code>public abstract class Additif implements Boisson {
+    private Boisson boisson;
+    public Additif(Boisson boisson) {
+        if (boisson == null) throw new IllegalArgumentException();
+        this.boisson = boisson;
+    }
+    public String getNom() {
+        return boisson.getNom();
+    }
+    public double prix() {
+        return boisson.prix();
+    }
+    public String toString() {
+        return boisson.toString();
+    }
+}</code></pre>
+                            <p>Creme.java :</p>
+<pre><code>public class Creme extends Additif {
+    public Creme(Boisson boisson) {
+        super(boisson);
+    }
+    public double prix() {
+        return 0.15 + super.prix();
+    }
+    public String toString() {
+        return super.toString() + " crème";
+    }
+}</code></pre>
+                        <p>Lait.java :</p>
+<pre><code>public class Lait extends Additif {
+    public Lait(Boisson boisson) {
+        super(boisson);
+    }
+    public double prix() {
+        return 0.10 + super.prix();
+    }
+    public String toString() {
+        return super.toString() + " au lait";
+    }
+}</code></pre>
+                        <p>Sucre.java :</p>
+<pre><code>public class Sucre extends Additif {
+    public Sucre(Boisson boisson) {
+        super(boisson);
+    }
+    public double prix() {
+        return 0.05 + super.prix();
+    }
+    public String toString() {
+        return super.toString() + " sucré";
+    }
+}</code></pre>
+                        </li>
+                        <li>
+                            <h3>Semaine 7 :</h3>
+                            <p>Une structure de liste pouvant contenir des sous-listes peut être représentée sous forme parenthésée mais aussi sous forme d'arbre général. Par exemple la liste :</p>
+<pre><code>( 1 2 ( 6 ( 13 14 15 ) 7 8 ) 3 4 5 ( 9 10 11 ( 16 17 ( 20 ) 18 ) 12 ( 19 )))</code></pre>
+                            <p>correspond à l'arbre :</p>
+                            <img src="../images/exercice6B_design_patterns_1.png" alt="">
+                            <p>Le programme suivant construit l'arbre à partir de la chaîne située dans le fichier question.txt. Ensuite il demande différents traitements sur cet arbre : d'abord reconstruire la chaîne de départ à partir de l'arbre ensuite calculer certaines statistiques : nombre de valeurs, nombre de groupe de parenthèses, somme des valeurs et moyenne de celles-ci. Enfin, il affiche le contenu de chaque groupe. La sortie est la suivante :</p>
+<pre><code>( 1 2 ( 6 ( 13 14 15 ) 7 8 ) 3 4 5 ( 9 10 11 ( 16 17 ( 20 ) 18 ) 12 ( 19 ) ) )
+nombre de valeurs : 20
+nombre de groupes : 7
+somme des valeurs : 210
+moyenne des valeurs : 10.5</code></pre>
+                            <img src="../images/exercice6B_design_patterns_2.png" alt="">
+                            <p>Voici le code complet de ce programme. Pour chacun d'eux, indiquez son nom et faites un tableau de correspondance entre les noms des participants théoriques (tels que vu au cours) et les noms des classes dans le code donné. Si le cours théorique propose des noms pour certaines méthodes, indiquez également la correspondance à ce niveau, en indiquant le nom théorique de la méthode et, en regard, le nom employé ici.</p>
+                            <p>Partie.java :</p>
+<pre><code>public interface Partie {
+    void demande(Traitement traitement);
+    int getNiveau();
+}</code></pre>
+                            <p>Valeur.java :</p>
+<pre><code>public class Valeur implements Partie {
+    private int nombre;
+    private int niveau = 0;
+    public Valeur(int nombre, int niveau) {
+        this.nombre = nombre;
+        this.niveau = niveau;
+    }
+    public void demande(Traitement traitement) {
+        traitement.traiteValeur(this);
+    }
+    public int getValeur() {
+        return nombre;
+    }
+    public int getNiveau() {
+        return niveau;
+    }
+}</code></pre>
+                            <p>Groupe.java :</p>
+<pre><code>import java.util.Collections;
+import java.util.Iterator;
+import java.util.Vector;
+
+public class Groupe implements Partie {
+    private static int dernier = 0;
+    private Vector parties = new Vector();
+    private int niveau;
+    private String nom;
+    private int numero;
+    public Groupe(String nom, int niveau) {
+        this.nom = nom;
+        this.niveau = niveau;
+        numero = dernier++;
+    }
+    public void add(Partie nouveau) {
+        parties.add(nouveau);
+    }
+    public Iterator getParties() {
+        return Collections.unmodifiableList(parties).iterator();
+    }
+    public int getNiveau() {
+        return niveau;
+    }
+    public String getNom() {
+        return nom;
+    }
+    public int getNumero() {
+        return numero;
+    }
+    public void demande(Traitement traitement) {
+        traitement.traiteGroupe(this);
+    }
+}</code></pre>
+                            <p>Fabriquant.java :</p>
+<pre><code>public class Fabriquant {
+    private Pile pile = new PileImpl();
+    private Partie resultat;
+    private int niveau = 0;
+    char c = 'a';
+    public void construireGroupe() {
+        if (!pile.estVide()) {
+            Groupe sommet = (Groupe) pile.pop();
+            Groupe nouveau = new Groupe(String.valueOf(c++), ++niveau);
+            sommet.add(nouveau);
+            pile.push(sommet);
+            pile.push(nouveau);
+        } else {
+            Groupe nouveau = new Groupe(String.valueOf(c++), 0);
+            pile.push(nouveau);
+            if (resultat == null) {
+                resultat = nouveau;
+            } else {
+                throw new RuntimeException(); // fichier malformé
+            }
+        }
+    }
+    public void fermerGroupe() {
+        pile.pop(); niveau--;
+    }
+    public void construireValeur(int nombre) {
+        Valeur number = new Valeur(nombre, niveau + 1);
+        if (!pule.estVide()) {
+            Groupe sommet = (Groupe) pile.pop();
+            sommet.add(number);
+            pile.push(sommet);
+        } else resultat = number;
+    }
+    public Partie getResultat() {
+        return resultat;
+    }
+}</code></pre>
+                            <p>Lecteur.java :</p>
+<pre><code>import java.io.*;
+
+public class Lecteur {
+    private PushbackReader buffer;
+    private Fabriquant fabriquant = new Fabriquant();
+
+    public Lecteur(String fichier) throws FileNotFoundException {
+        buffer = new PushbackReader(new BufferedReader(new FileReader(fichier)));
+    }
+    public Partie construire() throws IOException {
+        int car;
+        while ((car = buffer.read()) != -1) {
+            if (car == '(') {
+                fabriquant.construireGroupe();
+            } else if (car == ')') {
+                fabriquant.fermerGroupe();
+            } else if (Character.isDigit((char) car)) {
+                int nombre = 0;
+                do {
+                    nombre *= 10;
+                    nombre += Character.digit((char) car, 10);
+                    if ((car = buffer.read()) == -1) break;
+                } while(Character.isDigit((char) car));
+                if (car != -1) buffer.unread(car);
+                fabriquant.construireValeur(nombre);
+            }
+        }
+        return fabriquant.getResultat();
+    }
+}</code></pre>
+                            <p>Traitement.java :</p>
+<pre><code>public interface Traitement {
+    void traiteValeur(Valeur unique);
+    void traiteGroupe(Groupe plusieurs);
+}</code></pre>
+                            <p>Listeur.java :</p>
+<pre><code>import java.util.Iterator;
+
+public class Listeur implements Traitement {
+    public void traiteValeur(Valeur valeur) {
+        System.out.print(valeur.getValeur + " ");
+    }
+    public void traiteGroupe(Groupe groupe) {
+        System.out.print("( ");
+        Iterator it = groupe.getParties();
+        while (it.hasNext()) {
+            Partie p = (Partie) it.next(); p.demande(this);
+        }
+        System.out.print(") ");
+    }
+}</code></pre>
+                            <p>Totaliseur.java :</p>
+<pre><code>import java.util.Iterator;
+public class Totaliseur implements Traitement {
+    private int nombreDeValeurs = 0;
+    private int nombreDeGroupes = 0;
+    private int sommeDesValeurs = 0;
+    public void traiteValeur(Valeur valeur) {
+        nombreDeValeurs++;
+        sommeDesValeurs += valeur.getValeur();
+    }
+    public void traiteGroupe(Groupe groupe) {
+        nombreDeGroupes++;
+        Iterator it = groupes.getParties();
+        while (it.hasNext()) {
+            Partie p = (Partie) it.next();
+            p.demande(this);
+        }
+    }
+    public int getNombreDeGroupes() {
+        return nombreDeGroupes;
+    }
+    public int getNombreDeValeurs() {
+        return nombreDeValeurs;
+    }
+    public int getSommeDesValeurs() {
+        return sommeDesValeurs;
+    }
+}</code></pre>
+                            <p>ListeurNom.java :</p>
+<pre><code>import java.util.Iterator;
+import java.util.Vector;
+
+public class ListeurNom implements Traitement {
+    private Vector lesNoms = new Vector();
+    private int enCours = -1;
+    public void traiteValeur(Valeur valeur) {
+        String val = valeur.getValeur() + " ";
+        if (enCours == -1) {
+            lesNoms.add(val);
+        } else {
+            String s = (String) lesNoms.get(enCours);
+            lesNoms.set(enCours, s + val);
+        }
+    }
+    public void traiteGroupe(Groupe groupe) {
+        if (enCours != -1) {
+            String s = (String) lesNoms.get(enCours);
+            lesNoms.set(enCours, s + groupe.getNom() + " ");
+        }
+        int exEnCours = enCours;
+        enCours = groupe.getNumero();
+        lesNoms.setSize(enCours + 1);
+        lesNoms.set(enCours, groupe.getNom() + ": ");
+        Iterator it = groupe.getParties();
+        while (it.hasNext()) {
+            Partie p = (Partie) it.next();
+            p.demande(this);
+        }
+        enCours = exEnCours;
+    }
+    public Iterator getLesNoms() {
+        return lesNoms.iterator();
+    }
+}</code></pre>
+                            <p>Pile.java :</p>
+<pre><code>public interface Pile {
+    boolean estVide();
+    void push(Object n);
+    Object pop();
+    Object sommet();
+    int taille();
+    String toString();
+}</code></pre>
+                            <p>PileImpl.java :</p>
+<pre><code>public class PileImpl implements Pile {
+    private NoeudPile tete;
+    private int taille;
+    public PileImpl() {
+        this.tete = null;
+    }
+    public void push(Object element) {
+        this.tete = new NoeudPile(element, tete);
+        this.taille++;
+    }
+    public Object pop() {
+        Object resultat = sommet();
+        this.tete = this.tete.getSuivant();
+        this.taille--;
+        return resultat;
+    }
+    public Object sommet() {
+        return this.tete.getElement();
+    }
+    public boolean estVide() {
+        return this.tete == null;
+    }
+    public int taille() {
+        return this.taille;
+    }
+    public String toString() {
+        NoeudPile courant = this.tete;
+        String resultat = "";
+        while (courant != null) {
+            resultat += courant.getElement() + " ";
+            courant = courant.getSuivant();
+        }
+        return resultat;
+    }
+    class NoeudPile {
+        private Object element;
+        private NoeudPile suivant;
+        public NoeudPile(Object element) {
+            this(element, null);
+        }
+        public NoeudPile(Object element, NoeudPile suivant) {
+            setElement(element);
+            setSuivant(suivant);
+        }
+        public void setElement(Object elem) {
+            this.element = elem;
+        }
+        public void setSuivant(NoeudPile suiv) {
+            this.suivant = suiv;
+        }
+        public Object getElement() {
+            return this.element;
+        }
+        public NoeudPile getSuivant() {
+            return this.suivant;
+        }
+    }
+}</code></pre>
+                            <p>Donnons enfin un exemple de programme principal illustrant l'usage de ces classes :</p>
+                            <p>Main.java :</p>
+<pre><code>import java.io.IOException;
+import java.util.Iterator;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        Lecteur lecteur = new Lecteur("question.txt");
+        Partie partie = lecteur.construire();
+        Listeur listeur = new Listeur();
+        Totaliseur total = new Totaliserur();
+        partie.demande(listeur);
+        System.out.println();
+        System.out.println();
+        partie.demande(total);
+        System.out.println("nombre de valeurs : " + total.getNombreDeValeurs());
+        System.out.println("nombre de groupes : " + total.getNombreDeGroupes());
+        System.out.println("somme des valeurs : " + total.getSommeDesValeurs());
+        System.out.println("moyenne des valeurs : "+ total.getSommeDesValeurs() / (double) total.getNombreDeValeurs());
+        System.out.println();
+        ListeurNom listeurNom = new ListeurNom();
+        partie.demande(listeurNom);
+        Iterator iterateur = listeurNom.getLesNoms();
+        while (iterateur.hasNext()) {
+            String s = (String) iterateur.next();
+            System.out.println();
+        }
+        System.out.println();
+    }
+}</code></pre>
+                        </li>
+                        <li>
+                            <h3>Semaine 8 :</h3>
+                            <p>Le code suivant a été développé en implémentant expressément cinq patterns. Attention, implémenter n'est pas la même chose qu'utiliser un pattern déjà existant en Java. Quels sont ces cinq patterns ? Indiquer la correspondance entre la théorie et le code fourni. Il peut être utile de dessiner un diagramme de classe simplifié (sans attributs si méthodes).</p>
+                            <p>ConstantesJeu.java :</p>
+<pre><code>package vie;
+
+public interface ConstantesJeu {
+    int NBR_LIGNES = 40; // Nombre de lignes de cellules dans le jeu
+    int NBR_COLONNES = 40; // Nombre de colonnes dans le jeu
+    int PAD_EN_LARGEUR = 50; // Largeur en pixels du pad autour du jeu
+    int PAD_EN_HAUTEUR = 100; // Hauteur en pixels du pad autour du jeu
+    int LARGEUR_GRILLE = 400; // Largeur en pixels de la grille
+    int HAUTEUR_GRILLE = 400; // Hauteur en pixels de la grille
+}</code></pre>
+                            <p>JeuDeLaVieGUI.java :</p>
+<pre><code>package vie;
+
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+
+public class JeuDeLaVieGUI extends JFrame implements ConstantesJeu, Espion {
+    
+    private final static Color COULEUR_VIVANT_PAR_DEFAUT = Color.RED;
+    private final static Color COULEUR_MORT_PAR_DEFAUT = Color.BLACK;
+    private JeuDeLaVie jeu;
+    private JeuDeLaViePanel vue;
+    private JPanel contentPane;
+    private JButton boutonAvance;
+
+    public JeuDeLaVieGUI(String titre, JeuDeLaVie jeu) {
+        this(titre, jeu, COULEUR_VIVANT_PAR_DEFAUT, COULEUR_MORT_PAR_DEFAUT);
+    }
+
+    public JeuDeLaVieGUI(String titre, JeuDeLaVie jeu, Color couleurVie, Color couleurMort) {
+        super(titre);
+        this.jeu = jeu;
+        vue = new JeuDeLaViePanel(jeu, couleurVie, couleurMort);
+        boutonAvance = new JButton("Avance");
+        contentPane = new JPanel();
+        jeu.attacher(this);
+        initialiser();
+    }
+
+    // Construit le GUI et permet au bouton "Avance" de passer à la
+    // génération suivante.
+    private void initialiser() {
+        this.setSize(vue.getWidth() + PAD_EN_LARGEUR, vue.getHeight() + PAD_EN_HAUTEUR);
+        contentPane.setLayout(new FlowLayout());
+        contentPane.add(vue);
+        contentPane.add(boutonAvance);
+        this.setContentPane(contentPane);
+        this.setVisible(true);
+        boutonAvance.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                jeu.avancer();
+            }
+        });
+        this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+    }
+
+    // Redessine pour afficher les changements.
+    public void utiliserRenseignements() {
+        repaint();
+    }
+}</code></pre>
+                            <p>JeuDeLaViePanel.java :</p>
+<pre><code>package vie;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+
+public class JeuDeLaViePanel extends JPanel implements ConstantesJeu {
+	
+	private JeuDeLaVie jeu;
+	private int hauteurCellule;
+	private int largeurCellule;
+	private Color couleurVie;
+	private Color couleurMort;
+
+	public JeuDeLaViePanel(JeuDeLaVie jeu, Color couleurVie, Color couleurMort) {
+		this.jeu = jeu;
+		this.largeurCellule = LARGEUR_GRILLE / jeu.getColonnes();
+		this.hauteurCellule = HAUTEUR_GRILLE / jeu.getLignes();
+		this.couleurVie = couleurVie;
+		this.couleurMort = couleurMort;
+		initialiser();
+	}
+
+	private void initialiser() {
+		this.setSize(LARGEUR_GRILLE, HAUTEUR_GRILLE);
+		this.setPreferredSize(this.getSize());
+		this.setBackground(couleurMort);
+		this.setBorder(BorderFactory.createLineBorder(Color.black));
+		// Ajouter un listener sur la souris afin de mettre
+		// la cellule où se trouve la souris on ou off.
+		this.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				jeu.toggle(e.getPoint().y / hauteurCellule, e.getPoint().x / largeurCellule);
+			}
+		});
+	}
+
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		dessinerGrille(g);
+		dessineVie(g);
+	}
+
+	// Dessine les lignes de la grille.
+	private void dessinerGrille(Graphics g) {
+		g.setColor(couleurVie);
+		for (int i = 0; i &lt;= jeu.getLignes(); i++) {
+			g.drawLine(0, i * hauteurCellule, LARGEUR_GRILLE, i * hauteurCellule);
+		}
+		for (int i = 0; i &lt;= jeu.getColonnes(); i++) {
+			g.drawLine(i * largeurCellule, 0, i * largeurCellule, HAUTEUR_GRILLE);
+		}
+	}
+
+	// Dessine toutes les cellules en vie.
+	private void dessineVie(Graphics g) {
+		g.setColor(couleurVie);
+		for (int i = 0; i &lt; jeu.getLignes(); i++) {
+			for (int j = 0; j &lt; jeu.getColonnes(); j++) {
+				if (jeu.estVivante(i, j)) {
+					g.fillRect(j * largeurCellule, i * hauteurCellule, largeurCellule, hauteurCellule);
+				}
+			}
+		}
+	}
+}</code></pre>
+                            <p>Espion.java :</p>
+<pre><code>package vie;
+public interface Espion {
+    void utiliserRenseignements();
+}</code></pre>
+                            <p>JeuDeLaVie.java :</p>
+<pre><code>package vie;
+    
+import java.util.*;
+
+/** Cette classe implémente le jeu de la vie */
+public class JeuDeLaVie {
+    private int lignes;
+    private int colonnes;
+    private Cellule grille[][];
+    private List&lt;Espion&gt; espions;
+    private Parcourir parcourt;
+
+    public JeuDeLaVie(int lignes, int colonnes, Parcourir parcourt) {
+        this.lignes = lignes;
+        this.colonnes = colonnes;
+        this.parcourt = parcourt;
+        grille = new Cellule[lignes][colonnes];
+        espions = new ArrayList&lt;Espion&gt;();
+        for (int i = 0; i &lt; lignes; i++) {
+            for (int j = 0; j &lt; colonnes; j++) {
+                grille[i][j] = new Cellule(i, j);
+            }
+        }
+    }
+
+    protected void effacerGrille(Cellule[][] g) {
+        for (int i = 0; i &lt; lignes; i++) {
+            for (int j = 0; j &lt; colonnes; j++) {
+                g[i][j] = new Cellule(i, j);
+            }
+        }
+    }
+
+    public int getLignes() {
+        return lignes;
+    }
+
+    public int getColonnes() {
+        return colonnes;
+    }
+
+    public boolean estVivante(int li, int co) {
+        return grille[li][co].estVivante();
+    }
+
+    public Cellule cellulleEn(int li, int co) {
+        return grille[li][co];
+    }
+
+    // Inverse le statut de la cellule de position li,co
+    public void toggle(int li, int co) {
+        grille[li][co].toggle();
+        prevenirEspions();
+    }
+
+    // Cette méthode implemente les règles du Jeu de la Vie.
+    // Pour chaque cellule,
+    // on trouve le nombre de voisins et on rend la cellule vivante selon
+    // les r§gles définies dans le parcourt
+    public void avancer() {
+        ArrayListélt;Activite&gt; activites = new ArrayList&lt;Activite&gt;();
+        for (int i = 0; i &lt; lignes; i++)
+            for (int j = 0; j &lt; colonnes; j++)
+                grille[i][j].generer(this, activites, parcourt);
+        for (Activite activite : activites)
+            activite.activer();
+        prevenirEspions();
+    }
+
+    // Ajoute un espion.
+    public void attacher(Espion espion) {
+        if (espion == null)
+            return;
+        this.espions.add(espion);
+    }
+
+    // Supprime un espion.
+    public void detacher(Espion espion) {
+        this.espions.remove(espion);
+    }
+
+    // Informe tous les espions de tenir compte des renseignements obtenus.
+    public void prevenirEspions() {
+        for (Espion espion : espions)
+            espion.utiliserRenseignements();
+    }
+}</code></pre>
+                            <p>Cellule.java :</p>
+<pre><code>package vie;
+
+import java.util.*;
+
+public class Cellule {
+    private int ligne;
+    private int colonne;
+    private Situation situation;
+
+    public Cellule(int ligne, int colonne) {
+        this.ligne = ligne;
+        this.colonne = colonne;
+        this.situation = EstMorte.getInstance();
+    }
+
+    public void vit() {
+        situation = situation.vit();
+    }
+
+    public void meurt() {
+        situation = situation.meurt();
+    }
+
+    public boolean estVivante() {
+        return situation.estVivante();
+    }
+
+    public void toggle() {
+        situation = situation.toggle();
+    }
+
+    public void ajouterAuxVoisinsVivants(List&lt;Situation&gt; voisinsVivants) {
+        situation.ajouterAuxVoisinsVivants(voisinsVivants);
+    }
+
+    // Compte le nombre de voisins vivants de cette cellule ci dans le jeu
+    public int nombreDeVoisins(JeuDeLaVie jeu) {
+        int x = 0;
+        int y = ligne - 1;
+        List&lt;Situation&gt; voisinsVivants = new ArrayList&lt;Situation&gt;();
+        if (y &lt; 0) {
+            y = jeu.getLignes() - 1;
+        }
+        for (int liCpt = 1; liCpt &lt;= 3; liCpt++) {
+            x = colonne - 1;
+            if (x &lt; 0) {
+                x = jeu.getColonnes() - 1;
+            }
+            for (int coCpt = 1; coCpt &lt;= 3; coCpt++) {
+                if (x != colonne || y != ligne) {
+                    jeu.cellulleEn(y, x).ajouterAuxVoisinsVivants(voisinsVivants);
+                }
+                x = (x + 1) % jeu.getColonnes();
+            }
+            y = (y + 1) % jeu.getLignes();
+        }
+        return voisinsVivants.size();
+    }
+
+    public void generer(JeuDeLaVie jeu, List&lt;Activite&gt; activites, Parcourir parcourt) {
+        situation.generer(this, jeu, activites, parcourt);
+    }
+}</code></pre>
+                            <p>Situation.java :</p>
+<pre><code>package vie;
+    
+import java.util.List;
+
+public abstract class Situation {
+    public abstract Situation vit();
+
+    public abstract Situation meurt();
+
+    public abstract Situation toggle();
+
+    public abstract boolean estVivante();
+
+    public abstract void ajouterAuxVoisinsVivants(List<Situation> voisinsVivants);
+
+    public abstract void generer(Cellule cellule, JeuDeLaVie jeu, List<Activite> activites, Parcourir visiteur);
+}</code></pre>
+                            <p>EstVivante.java :</p>
+<pre><code>package vie;
+
+import java.util.List;
+
+public class EstVivante extends Situation {
+    private static EstVivante instance = null;
+
+    private EstVivante() {
+    }
+
+    public static EstVivante getInstance() {
+        if (instance == null)
+            instance = new EstVivante();
+        return instance;
+    }
+
+    public Situation vit() {
+        return this;
+    }
+
+    public Situation meurt() {
+        return EstMorte.getInstance();
+    }
+
+    public boolean estVivante() {
+        return true;
+    }
+
+    public Situation toggle() {
+        return meurt();
+    }
+
+    public void ajouterAuxVoisinsVivants(List&lt;Situation&gt; voisinsVivants) {
+        voisinsVivants.add(this);
+    }
+
+    public void generer(Cellule cellule, JeuDeLaVie jeu, List&lt;Activite&gt; activites, Parcourir parcourt) {
+        parcourt.parcourtCelluleVivante(cellule, jeu, activites);
+    }
+}</code></pre>
+                            <p>EstMorte.java :</p>
+<pre><code>package vie;
+
+import java.util.List;
+
+public class EstMorte extends Situation {
+    private static EstMorte instance = null;
+
+    private EstMorte() {
+    }
+
+    public static EstMorte getInstance() {
+        if (instance == null)
+            instance = new EstMorte();
+        return instance;
+    }
+
+    public Situation vit() {
+        return EstVivante.getInstance();
+    }
+
+    public Situation meurt() {
+        return this;
+    }
+
+    public boolean estVivante() {
+        return false;
+    }
+
+    public Situation toggle() {
+        return vit();
+    }
+
+    public void ajouterAuxVoisinsVivants(List&lt;Situation&gt; voisinsVivants) { // ne pas s'ajouter : on est mort
+    }
+
+    public void generer(Cellule cellule, JeuDeLaVie jeu, List&lt;Activite&gt; activites, Parcourir parcourt) {
+        parcourt.parcourtCelluleMorte(cellule, jeu, activites);
+    }
+}</code></pre>
+                            <p>Activite.java :</p>
+<pre><code>package vie;
+
+public abstract class Activite {
+    private Cellule cellule;
+
+    public Activite(Cellule cellule) {
+        this.cellule = cellule;
+    }
+
+    // Envoyer la requête sauvée (vit ou meurt) à la cellule.
+    public abstract void activer();
+
+    public Cellule getCellule() {
+        return cellule;
+    }
+}</code></pre>
+                            <p>Vit.java :</p>
+<pre><code>package vie;
+
+public class Vit extends Activite {
+    public Vit(Cellule cellule) {
+        super(cellule);
+    }
+
+    public void activer() {
+        getCellule().vit();
+    }
+}</code></pre>
+                            <p>Meurt.java :</p>
+<pre><code>package vie;
+
+public class Meurt extends Activite {
+    public Meurt(Cellule cellule) {
+        super(cellule);
+    }
+
+    public void activer() {
+        getCellule().meurt();
+    }
+}</code></pre>
+                            <p>Parcourir.java :</p>
+<pre><code>package vie;
+
+import java.util.*;
+
+public abstract class Parcourir {
+    public abstract void parcourtCelluleVivante(Cellule cellule, JeuDeLaVie jeu, List&lt;Activite&gt; activites);
+
+    public abstract void parcourtCelluleMorte(Cellule cellule, JeuDeLaVie jeu, List&lt;Activite&gt; activites);
+}</code></pre>
+                            <p>ParcourtNormal.java :</p>
+<pre><code>package seance6;
+
+import java.util.List;
+
+public class ParcourtNormal extends Parcourir {
+    // Une cellule devient vivante si :
+    // soit elle était vivante et a 2 ou 3 voisins vivants // soit elle était morte
+    // et a exactement 3
+    // voisins vivants.
+    // Dans les autres cas la cellule meurt ou reste morte.
+    public void parcourtCelluleVivante(Cellule cellule, JeuDeLaVie jeu, List&lt;Activite&gt; activites) {
+        int n = cellule.nombreDeVoisins(jeu);
+        if (n != 2 && n != 3) {
+            activites.add(new Meurt(cellule));
+        }
+    }
+
+    public void parcourtCelluleMorte(Cellule cellule, JeuDeLaVie jeu, List&lt;Activite&gt; activites) {
+        int n = cellule.nombreDeVoisins(jeu);
+        if (n == 3) {
+            activites.add(new Vit(cellule));
+        }
+    }
+}</code></pre>
+                            <p>ParcourtFort.java :</p>
+<pre><code>package vie;
+
+import java.util.List;
+
+public class ParcourtFort extends Parcourir {
+    public void parcourtCelluleVivante(Cellule cellule, JeuDeLaVie jeu, List&lt;Activite&gt; activites) {
+        int n = cellule.nombreDeVoisins(jeu);
+        if (n != 2 && n != 3) {
+            activites.add(new Meurt(cellule));
+        }
+    }
+
+    public void parcourtCelluleMorte(Cellule cellule, JeuDeLaVie jeu, List&lt;Activite&gt; activites) {
+        int n = cellule.nombreDeVoisins(jeu);
+        if (n == 3 || n == 2) {
+            activites.add(new Vit(cellule));
+        }
+    }
+}</code></pre>
+                            <p>Enfin un programme principal met ceci en oeuvre :</p>
+                            <p>Principale.java :</p>
+<pre><code>package vie;
+
+import java.awt.*;
+
+public class Principale implements ConstantesJeu {
+    public static void main(String[] args) {
+        Parcourir parcourt = new ParcourtNormal();
+        // Parcourir parcourt = new ParcourtFort();
+        JeuDeLaVie jeu = new JeuDeLaVie(NBR_LIGNES, NBR_COLONNES, parcourt);
+        JeuDeLaVieGUI vie = new JeuDeLaVieGUI("Le Jeu de la Vie", jeu, Color.red, Color.black);
+    }
+}</code></pre>
+                        </li>
+                        <li>
+                            <h3>Semaine 9 :</h3>
                         </li>
                     </ol>
                 </article>
