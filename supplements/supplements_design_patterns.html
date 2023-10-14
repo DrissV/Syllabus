@@ -7269,6 +7269,1359 @@ false
                         </dd>
                     </dl>
                 </article>
+                <article>
+                    <h2 id="exercices">Exercices :</h2>
+                    <ol>
+                        <li>
+                            <h3>Semaine 1 :</h3>
+                            <p>Vous venez d'être engagé par la société LeRobert qui est spécialisée dans l'analyse de texte. Elle vous demande d'écrire un programme qui lira le fichier texte dont le nom est passé en paramètre et calculera certaines statistiques dessus : le nombre de lignes, le nombre de mots, le nombre de palindromes et le nombre de lignes contenant le mot Belgique. Le premier jet du programme donne donc :</p>
+<pre><code>import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class AnalyseurDeTexte {
+    public static void main(String[] args) throws IOException {
+        BufferedReader lecteurAvecBuffer = null;
+        String ligne;
+        int nbrMots = 0, nbrLignes = 0, nbrPalindromes = 0, nbrBelgique = 0;
+        try {
+            lecteurAvecBuffer = new BufferedReader(new FileReader(args[0]));
+        } catch (FileNotFoundException e) {
+            System.out.println("Erreur d'ouverture");
+        }
+        while ((ligne = lecteurAvecBuffer.readLine()) != null) {
+            nbrLignes++;
+            if (ligne.contains("Belgique")) {
+                nbrBelgique++;
+            }
+            for (String mot : ligne.trim().split(" ")) {
+                nbrMots++;
+                StringBuffer temp = new StringBuffer(mot);
+                if (mot.equals(temp.reverse().toString())) {
+                    nbrPalindromes++;
+                }
+            }
+        }
+        lecteurAvecBuffer.close();
+        System.out.println("Il y avait " + nbrLignes + " lignes.";)
+        System.out.println("Il y avait " + nbrMots + " mots.";)
+        System.out.println("Il y avait " + nbrPalindromes + " palindromes.";)
+        System.out.println("Il y avait " + nbrBelgique + " lignes contenant Belgique.";)
+    }
+}</code></pre>
+                            <p>Content de l'efficacité avec laquelle vous venez de rédiger ce programme, votre employeur demande immédiatement d'étendre les analyses des phrases : il veut le comptage des lignes contenant une certaine expression régulière, il veut le comptage des lignes contenant une certaine expression régulière, il veut une analyse du nombre de fois que chaque mot apparaît dans le texte, et vous voyez dans ses yeux qu'il a encore plein d'autres idées derrière la tête... De plus suivant les cas, seules certaines statistiques seront utiles et il ne faut pas perdre de temps à calculer les autres. Il faut donc trouver une architecture logicielle permettant de facilement créer de nouvelles statistiques en ayant un minimum de travail à accomplir pour les ajouter ou les supprimer.</p>
+                            <ol type="a">
+                                <li>
+                                    <p>Quel pattern allez-vous utiliser ? <span class="em html">Observer</span></p>
+                                </li>
+                                <li>
+                                    <p>Donnez la correspondance entre les noms des classes utilisées dans la théorie et celle utilisées dans le code que vous écrirez.</p>
+                                </li>
+                                <li>
+                                    <p>Réalisez la solution.</p>
+<pre><code>public interface Observer {
+
+    void update(String ligne);
+    void imprimer();
+
+}</code></pre>
+<pre><code>public class LigneObserver implements Observer {
+
+	private int cpt;
+	
+	@Override
+	public void update(String ligne) {
+		cpt++;
+	}
+	
+	@Override
+	public void imprimer() {
+		System.out.println("Il y avait " + cpt + " lignes.");
+	}
+
+}</code></pre>
+<pre><code>public class MotObserver implements Observer {
+
+	private int cpt;
+	
+	public void update(String mot) {
+		cpt++;
+	}
+	
+	public void imprimer() {
+		System.out.println("Il y avait " + cpt + " mots.");	
+	}
+
+}</code></pre>
+<pre><code>public class PalindromeObserver implements Observer {
+	
+	private int cpt;
+	
+	public void update(String palindrome) {
+		cpt++;
+	}
+	
+	public void imprimer() {
+		System.out.println("Il y avait " + cpt + " palindromes.");
+	}
+
+}</code></pre>
+<pre><code>public class BelgiqueObserver implements Observer {
+	
+	private int cpt;
+	
+	@Override
+	public void update(String ligne) {
+		cpt++;
+	}
+	
+	public void imprimer() {
+		System.out.println("Il y avait " + cpt + " lignes contenant le mot Belgique.");
+	}
+
+}</code></pre>
+<pre><code>public interface Subject {
+
+	void addObserver (Observer o);
+	void removeObserver (Observer o);
+	void notifyObservers ();
+	
+}</code></pre>
+<pre><code>import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SubjectConcret implements Subject {
+
+	private List<Observer> observers;
+	private String ligne;
+	private BufferedReader lecteurAvecBuffer = null;
+
+	public SubjectConcret() {
+		this.observers = new ArrayList<>();
+	}
+
+	public void notifyObservers() {
+		for (Observer o : observers) {
+			o.imprimer();
+		}
+	}
+
+	public void addObserver(Observer o) {
+		observers.add(o);
+	}
+
+	public void removeObserver(Observer o) {
+		observers.remove(o);
+	}
+
+	public void readFile(String file) throws IOException {
+		try {
+			lecteurAvecBuffer = new BufferedReader(new FileReader("Hello.txt"));
+		} catch (FileNotFoundException e) {
+			System.out.println("Erreur d'ouverture");
+		}
+		while ((ligne = lecteurAvecBuffer.readLine()) != null) {
+			Observer ligneObserver = (LigneObserver) observers.get(0);
+			ligneObserver.update(ligne);
+			if (ligne.contains("Belgique")) {
+				Observer belgiqueObserver = (BelgiqueObserver) observers.get(1);
+				belgiqueObserver.update(ligne);
+			}
+			for (String mot : ligne.trim().split(" ")) {
+				Observer motObserver = (MotObserver) observers.get(2);
+				motObserver.update(mot);
+				StringBuffer temp = new StringBuffer(mot);
+				String palindrome = temp.reverse().toString();
+				System.out.println("mot = " + mot + ", palindrome = " + palindrome);
+				if (mot.equals(palindrome)) {
+					Observer palindromeObserver = observers.get(3);
+					palindromeObserver.update(palindrome);
+				}
+			}
+		}
+		lecteurAvecBuffer.close();
+		notifyObservers();
+	}
+
+}</code></pre>
+<pre><code>import java.io.IOException;
+
+public class Main {
+
+	public static void main(String[] args) throws IOException {
+		SubjectConcret subject = new SubjectConcret();
+		subject.addObserver(new LigneObserver());
+		subject.addObserver(new BelgiqueObserver());
+		subject.addObserver(new MotObserver());
+		subject.addObserver(new PalindromeObserver());
+		subject.readFile("Hello.txt");
+	}
+}</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Semaine 2 :</h3>
+                            <ol>
+                                <li>
+                                    <p>On désire écrire un petit logiciel permettant de lister les mots présents dans un fichier et répondant à une certaine condition. Une approche naïve a produit les programmes suivants :</p>
+                                    <p>Le premier permet de lister les mots commençant par '<span class="em">t</span>' :</p>
+<pre><code>import java.io.*;
+import java.util.*;
+
+public class ListerMots1 { // mal foutu
+    private String fichier;
+
+    public ListerMots1(String fichier) {
+        this.fichier = fichier;
+    }
+
+    public void imprimerSiCommenceParT() throws IOException {
+        BufferedReader input = new BufferedReader(new FileReader(this.fichier));
+        String buffer = null;
+        while ((buffer = input.readLine()) != null) {
+            StringTokenizer mots = new StringTokenizer(buffer, " \t.;(){}\"'*=!/\\");
+            while (mots.hasMoreTokens()) {
+                String mot = mots.nextToken();
+                if (mot.chatAt(0) == 't')
+                    System.out.println(mot);
+            }
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        if (args.length == 0) {
+            System.out.println("Usage : java ListerMots1 fichier");
+            System.exit(1);
+        }
+        new ListerMots1(args[0]).imprimerSiCommenceParT();
+    }
+}</code></pre>
+                                    <p>Un deuxième programme permet de lister les mots d'une longueur précisée :</p>
+<pre><code>import java.io*;
+import java.util.*;
+
+public class ListerMots2 { // mal foutu
+    private String fichier;
+
+    public ListerMots2(String fichier) {
+        this.fichier = fichier;
+    }
+
+    public void imprimerSiDeLongueur(int longueur) throws IOException {
+        BufferedReader input = new BufferedReader(new FileReader(this.fichier));
+        String buffer = null;
+        while ((buffer = input.readLine()) != null) {
+            StringTokenizer mots = new StringTokenizer(buffer, " \t.;(){}\"'*=!/\\");
+            while (mots.hasMoreTokens()) {
+                String mot = mots.nextToken();
+                if (mot.length == longueur)
+                    System.out.println(mot);
+            }
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        if (args.length == 0) {
+            System.out.println("Usage : java ListerMots2 fichier");
+            System.exit(1);
+        }
+        new ListerMots2(args[0]).imprimerSiDeLongueur(5);
+    }
+}</code></pre>
+                                    <p>Un troisième permet de lister les palindromes :</p>
+<pre><code>import java.io*;
+import java.util.StringTokenizer;
+
+public class ListerMots3 { // mal foutu
+    
+    private String fichier;
+
+    public ListerMots3(String fichier) {
+        this.fichier = fichier;
+    }
+
+    public void imprimerPalindromes() throws IOException {
+        BufferedReader input = new BufferedReader(new FileReader(this.fichier));
+        String buffer = null;
+        while ((buffer = input.readLine()) != null) {
+            StringTokenizer mots = new StringTokenizer(buffer, " \t.;(){}\"'*=!/\\");
+            while (mots.hasMoreTokens()) {
+                String mot = mots.nextToken();
+                if (estPalindrome(mot))
+                    System.out.println(mot);
+            }
+        }
+    }
+
+    public boolean estPalindrome(String mot) {
+        if (mot == null)
+            return false;
+        StringBuffer stringbuffer = new StringBuffer(mot);
+        return mot.equals(stringbuffer.reverse().toString());
+    }
+
+    public static void main(String[] args) throws IOException {
+        if (args.length == 0) {
+            System.out.println("Usage : java ListerMots3 fichier");
+            System.exit(1);
+        }
+        new ListerMots3(args[0]).imprimerPalindromes();
+    }
+}</code></pre>
+                                    <p>On vous demande de modifier ces programmes afin de n'écrire qu'une seule fois le programme de base et de pouvoir choisir la condition que doivent vérifier les mots listés. On généralisera aussi le premier programme afin de lister les mots commençant par n'importe quelle chaîne de caractères. Quel pattern utiliserez-vous pour cela ? <span class="em html">Strategy</span></p>
+<pre><code>public interface Strategy {
+
+	boolean traiterMot (String s);
+	
+}</code></pre>
+<pre><code>public class CommencePar implements Strategy {
+	
+	private char c;
+	
+	public CommencePar(char c) {
+		this.c = c;
+	}
+	
+	@Override
+	public boolean traiterMot(String s) {
+		return s.charAt(0) == this.c;
+	}
+	
+}</code></pre>
+<pre><code>public class LongueurDe implements Strategy {
+
+	private int longueur;
+	
+	public LongueurDe(int longueur) {
+		this.longueur = longueur;
+	}
+	
+	@Override
+	public boolean traiterMot(String s) {
+		return s.length()  == this.longueur;
+	}
+	
+}</code></pre>
+<pre><code>import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.StringTokenizer;
+
+public class ListerMots {
+
+    private String fichier;
+
+    public ListerMots(String file) {
+        this.fichier = file;
+    }
+
+    void imprimerSi(Strategy s) throws IOException {
+        BufferedReader input = new BufferedReader(new FileReader(this.fichier));
+        String buffer = null;
+        while ((buffer = input.readLine()) != null) {
+            StringTokenizer mots = new StringTokenizer(buffer, " \t.;(){}\"'*=:!/\\");
+            while (mots.hasMoreTokens()) {
+                String mot = mots.nextToken();
+                if (s.traiterMot(mot)) {
+                    System.out.println(mot);
+                }
+            }
+        }
+        input.close();
+    }
+
+}</code></pre>
+<pre><code>import java.io.IOException;
+
+public class Main {
+
+    public static void main(String[] args) throws IOException {
+        Strategy strat1 = new CommencePar('t');
+        Strategy strat2 = new LongueurDe(4);
+        ListerMots listeMots = new ListerMots("Hello.txt");
+    }
+
+}</code></pre>
+                                </li>
+                                <li>
+                                    <p>Jusqu'ici notre application n'a implémenté que des sélections primitives. On désire à présent combiner plusieurs sélections.</p>
+                                    <ol type="a">
+                                        <li>
+                                            <p>Écrivez une classe <span class="em">And</span> qui permet de combiner deux sélections selon la règle</p>
+                                            <p>sélection : sélection AND sélection</p>
+<pre><code>public class And implements Strategy {
+
+	private Strategy s1;
+	private Strategy s2;
+
+	public And(Strategy s1, Strategy s2) {
+		this.s1 = s1;
+		this.s2 = s2;
+	}
+	
+	public boolean traiterMot(String s) {
+		return s1.traiterMot(s) && s2.traiterMot(s); 
+	}
+
+}</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Écrivez de même une classe <span class="em">Or</span> et une classe <span class="em">Not</span> en respectant les règles :</p>
+                                            <p>sélection : sélection OR sélection</p>
+                                            <p>sélection : NOT sélection</p>
+<pre><code>public class Or implements Strategy {
+
+	private Strategy s1;
+	private Strategy s2;
+
+	public Or(Strategy s1, Strategy s2) {
+		this.s1 = s1;
+		this.s2 = s2;
+	}
+
+	public boolean traiterMot(String s) {
+		return s1.traiterMot(s) || s2.traiterMot(s);
+	}
+
+}</code></pre>
+<pre><code>public class Not {
+
+    private Strategy s1;
+
+    public Not(Strategy s1) {
+        this.s1 = s1;
+    }
+    
+    public boolean traiterMot(String s) {
+        return !s1.traiterMot(s); 
+    }
+}</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Quel pattern est utilisé dans cette construction ? <span class="em html">Strategy</span></p>
+                                        </li>
+                                        <li>
+                                            <p>Donnez la correspondance entre les noms des classes utilisées dans la théorie et celles utilisées dans le code que vous écrirez.</p>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <ol type="a">
+                                        <li>
+                                            <p>Écrivez à présent une classe <span class="em">Et</span> qui combine un nombre quelconque de sélections pour ne sélectionner que les mots qui satisfassent à toutes. Écrivez semblablement une classe <span class="em">Ou</span>.</p>
+<pre><code>public class Et {
+
+	private Strategy[] strats;
+
+	public Et(Strategy... strats) {
+		this.strats = strats;
+	}
+	
+	public boolean traiterMot(String s) {
+		for (Strategy strat : strats) {
+			if (!strat.traiterMot(s)) {
+				return false;
+			}
+		}
+		return true; 
+	}
+	
+}</code></pre>
+<pre><code>public class Ou {
+
+	private Strategy[] strats;
+	
+	public Ou(Strategy... strats) {
+		this.strats = strats;
+	}
+	
+	public boolean traiterMot(String s) {
+		for (Strategy strat : strats) {
+			if (strat.traiterMot(s)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+}</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Quel pattern est utilisé dans cette construction ? <span class="em html">Interpreter</span></p>
+                                        </li>
+                                        <li>
+                                            <p>Donnez la correspondance entre les noms des classes utilisées dans la théorie et celles utilisées dans votre code.</p>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <p>On voudrait à présent que, si l'utilisateur le désire, il puisse connaître le nombre de mots sélectionnés. Il est clair qu'on ne va pas écrire une sous-classe de chaque classe de sélection pour arriver au résultat. Un pattern permet de le faire en n'écrivant qu'une seule classe : la classe <span class="em">Compteur</span>.</p>
+                                    <ol type="a">
+                                        <li>
+                                            <p>Écrivez cette classe.</p>
+<pre><code>public class Compteur  implements Strategy {
+
+	private int cpt = 0;
+	private Strategy strat;
+	
+	public Compteur(Strategy strat) {
+		this.strat = strat;
+	}
+	
+	
+	public int getCpt() {
+		return cpt;
+	}
+	
+	@Override
+	public boolean traiterMot(String s) {
+		boolean b = strat.traiterMot(s);
+		if (b) {
+			cpt++;
+		}
+		return b;
+	}
+		
+}</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Quel pattern avez-vous utilisé pour résoudre ce problème ? <span class="em html">Decorator</span></p>
+                                        </li>
+                                        <li>
+                                            <p>Donnez la correspondance entre les noms des classes utilisées dans la théorie et celles utilisées dans votre code.</p>
+                                        </li>
+                                    </ol>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Semaine 3 :</h3>
+                            <ol>
+                                <li>
+                                    <p>Implémentation :</p>
+                                    <p>Soient les classes DVD, Livre, MagasinDeDVD et MagasinDeLivre.</p>
+<pre><code>public class DVD {
+    public static final double PRIX = 19.99;
+	private String name;
+	private int anneeDeParution;
+	private double prix;
+	public DVD(String name, int anneeDeParution) {
+		this.name = name;
+		this.anneeDeParution = anneeDeParution;
+		this.prix = PRIX;
+	}
+	public String getName() {
+		return name;
+	}
+	public int getAnneeDeParution() {
+		return anneeDeParution;
+	}
+	public double getPrix() {
+		return prix;
+	}
+	public void setPrix(double prix) {
+		this.prix = prix;
+	}
+	
+}</code></pre>
+<pre><code>public class Livre {
+	public static final double PRIX = 14.99;
+	private String name;
+	private int anneeDeParution;
+	private double prix;
+	public Livre(String name, int anneeDeParution) {
+		this.name = name;
+		this.anneeDeParution = anneeDeParution;
+		this.prix = PRIX;
+	}
+	public String getName() {
+		return name;
+	}
+	public int getAnneeDeParution() {
+		return anneeDeParution;
+	}
+	public double getPrix() {
+		return prix;
+	}
+	public void setPrix(double prix) {
+		this.prix = prix;
+	}
+	
+}</code></pre>
+<pre><code>import java.util.HashMap;
+import java.util.Map;
+
+public class MagasinDeDVD {
+	private Map&lt;String,DVD&gt; bac = new HashMap&lt;String,DVD&gt;();
+	public void ajouterDVD(String name, int anneeDeParution) {
+		DVD dvd = new DVD(name, anneeDeParution);
+		bac.put(name, dvd);
+	}
+	public DVD retourneDVD(String name) {
+		return bac.get(name);
+	}
+}</code></pre>
+<pre><code>import java.util.HashMap;
+import java.util.Map;
+
+public class MagasinDeLivre {
+    private Map&lt;String,Livre&gt; etagere = new HashMap&lt;String,Livre&gt;();
+    public void ajouterLivre(String name, int anneeDeParution) {
+        Livre livre=new Livre(name, anneeDeParution);
+        etagere.put(name, livre);
+    }
+    public Livre retourneLivre(String name) {
+        return etagere.get(name);
+    }
+}</code></pre>
+                                    <ol type="a">
+                                        <li>
+                                            <p>Refactorez le code afin qu'il implémente le pattern Factory Method. Écrivez un main qui instancie un magasin de DVD et y ajoute 3 DVDs, puis qui instancie un magasin de Livre et y ajoute 4 livres.</p>
+<pre><code>public interface Product {
+
+	String getName();
+	int getAnneeDeParution();
+	double getPrix();
+	void setPrix(double prix);
+
+}</code></pre>
+<pre><code>public class DVD implements Product {
+	
+	public static final double PRIX = 19.99;
+	private String name;
+	private int anneeDeParution;
+	private double prix;
+
+	public DVD(String name, int anneeDeParution) {
+		this.name = name;
+		this.anneeDeParution = anneeDeParution;
+		this.prix = PRIX;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public int getAnneeDeParution() {
+		return anneeDeParution;
+	}
+
+	public double getPrix() {
+		return prix;
+	}
+
+	public void setPrix(double prix) {
+		this.prix = prix;
+	}
+
+}</code></pre>
+<pre><code>public class Livre implements Product {
+	
+	public static final double PRIX = 14.99;
+	private String name;
+	private int anneeDeParution;
+	private double prix;
+
+	public Livre(String name, int anneeDeParution) {
+		this.name = name;
+		this.anneeDeParution = anneeDeParution;
+		this.prix = PRIX;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public int getAnneeDeParution() {
+		return anneeDeParution;
+	}
+
+	public double getPrix() {
+		return prix;
+	}
+
+	public void setPrix(double prix) {
+		this.prix = prix;
+	}
+
+}</code></pre>
+<pre><code>import java.util.HashMap;
+import java.util.Map;
+
+public abstract class Magasin {
+
+    private Map&lt;String, Product&gt; bac = new HashMap&lt;String, Product&gt;();
+
+    public void ajouterProduct(String name, int anneeDeParution) {
+        Product product = createProduct(name, anneeDeParution);
+        bac.put(name, product);
+    }
+
+    public Product retourneProduct(String name) {
+        return bac.get(name);
+    }
+    
+    public abstract Product createProduct(String name, int anneeDeParution);
+}</code></pre>
+<pre><code>public class MagasinDeDVD extends Magasin {
+
+	@Override
+	public Product createProduct(String name, int anneeDeParution) {
+		return new DVD(name, anneeDeParution);
+	}
+	
+}</code></pre>
+<pre><code>import java.util.HashMap;
+import java.util.Map;
+
+public class MagasinDeLivre extends Magasin {
+
+    @Override
+    public Product createProduct(String name, int anneeDeParution) {
+        return new Livre(name, anneeDeParution);
+    }
+
+}</code></pre>
+<pre><code>public class Main {
+
+	public static void main(String[] args) {
+		MagasinDeDVD md = new MagasinDeDVD();
+		MagasinDeLivre ml = new MagasinDeLivre();
+	}
+	
+}</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Dans une autre projet, refactorez le code afin qu'il implémente le pattern Abstract Factory. Écrivez un main qui instancie un magasin de DVD et y ajoute 4 DVDs, puis qui instancie un magasin de Livre et y ajoute 3 livres.</p>
+<pre><code>public interface Product {
+
+	String getName();
+	int getAnneeDeParution();
+	double getPrix();
+	void setPrix(double prix);
+
+}</code></pre>
+<pre><code>public interface ProductAbsFact {
+
+	Product createProduct(String name, int anneeDeParution);
+
+}</code></pre>
+<pre><code>public class DVD implements Product {
+	
+	public static final double PRIX = 19.99;
+	private String name;
+	private int anneeDeParution;
+	private double prix;
+
+	public DVD(String name, int anneeDeParution) {
+		this.name = name;
+		this.anneeDeParution = anneeDeParution;
+		this.prix = PRIX;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public int getAnneeDeParution() {
+		return anneeDeParution;
+	}
+
+	public double getPrix() {
+		return prix;
+	}
+
+	public void setPrix(double prix) {
+		this.prix = prix;
+	}
+
+}</code></pre>
+<pre><code>public class Livre implements Product {
+	
+	public static final double PRIX = 14.99;
+	private String name;
+	private int anneeDeParution;
+	private double prix;
+
+	public Livre(String name, int anneeDeParution) {
+		this.name = name;
+		this.anneeDeParution = anneeDeParution;
+		this.prix = PRIX;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public int getAnneeDeParution() {
+		return anneeDeParution;
+	}
+
+	public double getPrix() {
+		return prix;
+	}
+
+	public void setPrix(double prix) {
+		this.prix = prix;
+	}
+
+}</code></pre>
+<pre><code>import java.util.HashMap;
+import java.util.Map;
+
+public class MagasinDeProduitAbstractFactory {
+
+    private ProductAbsFact absFact;
+    private Map&lt;String, Product&gt; bac = new HashMap&lt;String, Product&gt;();
+
+    public MagasinDeProduitAbstractFactory(ProductAbsFact absFact) {
+        this.absFact = absFact;
+    }
+
+    public void ajouterProduct(String name, int anneeDeParution) {
+        Product product = absFact.createProduct(name, anneeDeParution);
+        bac.put(name, product);
+    }
+
+    public Product retourneProduct(String name) {
+        return bac.get(name);
+    }
+}</code></pre>
+<pre><code>public class MagasinDeDVD implements ProductAbsFact {
+
+	@Override
+	public Product createProduct(String name, int anneeDeParution) {
+		return new DVD(name, anneeDeParution);
+	}
+
+}</code></pre>
+<pre><code>public class MagasinDeLivre implements ProductAbsFact {
+
+	@Override
+	public Product createProduct(String name, int anneeDeParution) {
+		return new Livre(name, anneeDeParution);
+	}
+
+}</code></pre>
+<pre><code>public class Main {
+
+	public static void main(String args) {
+		MagasinDeDVD md = new MagasinDeDVD();
+		MagasinDeLivre ml = new MagasinDeLivre();
+	}
+	
+}</code></pre>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <p>Reconnaissance (question de septembre 2016) :</p>
+                                    <p>Pour écrire le code source du langage Java, les développeurs ont utilisé intensivement les patterns.</p>
+                                    <p>Dans les deux codes proposés suivants issus des librairies Java, identifiez un pattern utilisé. Donnez la correspondance entre les noms des classes utilisées dans la théorie et celle du code.</p>
+                                    <p>Pour plus d'informations à propos de ces codes, n'hésitez pas à consulter l'API Java. Le code suivant provient de la classe java.lang.Integer.</p>
+                                    <ol type="a">
+                                        <li>
+<pre><code>public static Integer valueOf(int i) {
+    final int offset = 128;
+    if (i &gt;= -128 && i &lt;= 127) { // must cache
+        return IntegerCache.cache[i + offset];
+    }
+    return new Integer(i);
+}
+
+private static class IntegerCache {
+    private IntegerCache() {}
+
+    static final Integer cache[] = new Integer[-(-128) + 127 + 1];
+
+    static {
+        for (int i = 0; i &lt; cache.length; i++)
+            cache[i] = new Integer(i - 128);
+    }
+}</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Le code suivant provient des classes java.io.Reader et java.io.BufferedReader.</p>
+<pre><code>public abstract class Reader implements Readable, Closeable {
+
+    public int read() throws IOException {
+        char[] cb = new char[1];
+        if (read(cb, 0, 1) == -1)
+            return -1;
+        else
+            return cb[0];
+    }
+
+    abstract public int read(char[] cbuf, int off, int len) throws IOException;
+}
+
+public class BufferedReader extends Reader {
+    public int read(char[] cbuf, int off, int len) throws IOException {
+        synchronized(lock) {
+            ensureOpen();
+            if ((off &lt; 0) || (off &gt; cbuf.length) || (len &lt; 0) || ((off + len) &gt; cbuf.length) || ((off + len) &lt; 0)) {
+                throw new IndexOutOfBoundsException();
+            } else if (len == 0) {
+                return 0;
+            }
+
+            int n = read1(cbuf, off, len);
+            if (n &lt;= 0)
+                return n;
+            while ((n &lt; len) && in.ready()) {
+                int n1 = read1(cbuf, off + n, len - n);
+                if (n1 &lt;= 0)
+                    break;
+                n += n1;
+            }
+            return n;
+        }
+    }
+}</code></pre>
+                                        </li>
+                                    </ol>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Semaine 4 :</h3>
+                            <p>L'application Machine à café qui vous est fournie aurait un avantage à utiliser le pattern State. Modifiez cette application afin de répondre à ce souhait.</p>
+                            <p>Voici le code qui vous est fourni :</p>
+<pre><code>public class Piece {
+	private String nom;
+	private int valeur; // en cents
+	
+	public static final Piece vingtCents = new Piece("20 cents", 20);
+	public static final Piece cinquanteCents = new Piece("50 cents", 50);
+	public static final Piece unEuro = new Piece("1 Euro", 100);
+	public static final Piece deuxEuros = new Piece("2 Euros", 200);
+	
+	
+	private Piece(String nom, int valeur) {
+		this.nom = nom;
+		this.valeur = valeur;
+	}
+
+	public String getNom() {
+		return nom;
+	}
+
+	public int getValeur() {
+		return valeur;
+	}
+
+	@Override
+	public String toString() {
+		return nom;
+	}
+		
+}</code></pre>
+<pre><code>public class ToucheBoisson {
+	private String type;
+	private boolean auLait;
+	private boolean sucre;
+	private int prix; // en cents
+	
+	public static final ToucheBoisson cafeNoir = new ToucheBoisson("Café", false, false, 50);
+	public static final ToucheBoisson cafeAuLait = new ToucheBoisson("Café", true, false, 70);
+	public static final ToucheBoisson cafeNoirSucre = new ToucheBoisson("Café", false, true, 70);
+	public static final ToucheBoisson cafeAuLaitSucre = new ToucheBoisson("Café", true, true, 90);
+	
+	public static final ToucheBoisson expresso = new ToucheBoisson("Expresso", false, false, 100);
+	public static final ToucheBoisson expressoAuLait = new ToucheBoisson("Expresso", true, false, 120);
+	public static final ToucheBoisson expressoSucre = new ToucheBoisson("Expresso", false, true, 120);
+	public static final ToucheBoisson expressoAuLaitSucre = new ToucheBoisson("Expresso", true, true, 140);
+	
+	public static final ToucheBoisson decaNoir = new ToucheBoisson("Café décaféiné", false, false, 50);
+	public static final ToucheBoisson decaAuLait = new ToucheBoisson("Café décaféiné", true, false, 70);
+	public static final ToucheBoisson decaNoirSucre = new ToucheBoisson("Café décaféiné", false, true, 70);
+	public static final ToucheBoisson decaAuLaitSucre = new ToucheBoisson("Café décaféiné", true, true, 90);
+	
+	public static final ToucheBoisson choco = new ToucheBoisson("Chocolat chaud", false, false, 70);
+	public static final ToucheBoisson chocoAuLait = new ToucheBoisson("Chocolat chaud", true, false, 90);
+	public static final ToucheBoisson chocoSucre = new ToucheBoisson("Chocolat chaud", false, true, 90);
+	public static final ToucheBoisson chocoAuLaitSucre = new ToucheBoisson("Chocolat chaud", true, true, 110);
+
+	public static final ToucheBoisson cappuccino = new ToucheBoisson("Cappuccino", false, false, 120);
+	public static final ToucheBoisson viennois = new ToucheBoisson("Café Viennois", false, false, 120);
+	public static final ToucheBoisson laitRusse = new ToucheBoisson("Lait russe", false, false, 100);
+	public static final ToucheBoisson chocafe = new ToucheBoisson("Choco-Café", false, false, 120);
+	
+	public static final ToucheBoisson lait = new ToucheBoisson("Lait chaud", false, false, 70);
+	public static final ToucheBoisson eau = new ToucheBoisson("Eau chaud", false, false, 0);
+	
+	
+	private ToucheBoisson(String type, boolean lait, boolean sucre, int prix) {
+		this.type = type;
+		auLait = lait;
+		sucre = sucre;
+		this.prix = prix;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public boolean auLait() {
+		return auLait;
+	}
+
+	public boolean estSucre() {
+		return sucre;
+	}
+
+	public int getPrix() {
+		return prix;
+	}
+
+	@Override
+	public String toString() {
+		return type + (auLait() ? " au lait" : "") + (estSucre() ? " sucré" : "");
+	}
+		
+}</code></pre>
+<pre><code>public class MachineACafe {
+	public final int idle = 0;
+	public final int collecte = 1;
+	public final int pasAssez = 2;
+	
+	private int montantEnCours = 0;
+	private int etatCourant = idle;
+	private ToucheBoisson boisson = null;
+	
+	public void afficherMontant() {
+		System.out.println(montantEnCours + " cents disponibles");
+	}
+	
+	public void afficherRetour() {
+		System.out.println(montantEnCours + " cents rendus");
+	}
+	
+	public void afficherPasAssez(ToucheBoisson toucheBoisson) {
+		System.out.println("Vous n'avez pas introduit un montant suffisant pour un " + toucheBoisson);
+		System.out.println("Il manque encore " + (toucheBoisson.getPrix() - montantEnCours) + " cents");
+	}
+
+	public void afficherBoisson(ToucheBoisson toucheBoisson) {
+		System.out.println("Voici un " + toucheBoisson);
+		
+	}
+
+	public void entrerMonnaie(Piece piece) {
+		montantEnCours += piece.getValeur();
+		afficherMontant();
+		if (etatCourant != pasAssez)
+			etatCourant = collecte;
+		else if (boisson.getPrix() > montantEnCours) {
+				afficherPasAssez(boisson);
+		} else {
+			montantEnCours -= boisson.getPrix();
+			afficherBoisson(boisson);
+			boisson = null;
+			afficherMontant();
+			if (montantEnCours == 0)
+				etatCourant =  idle;
+			else
+				etatCourant =  collecte;
+		}
+	}
+	
+	public void selectionnerBoisson(ToucheBoisson toucheBoisson) {
+		if (etatCourant == pasAssez)
+			throw new IllegalStateException();
+		if (etatCourant == idle) {
+			afficherPasAssez(toucheBoisson);
+			return;			
+		}
+		if (toucheBoisson.getPrix() > montantEnCours) {
+			boisson = toucheBoisson;
+			afficherPasAssez(boisson);
+			boisson = toucheBoisson;
+			etatCourant =  pasAssez;
+			return;
+		}
+		montantEnCours -= toucheBoisson.getPrix();
+		afficherBoisson(toucheBoisson);
+		afficherMontant();
+		if (montantEnCours == 0)
+			etatCourant = idle;
+		else
+			etatCourant = collecte;
+	}
+	
+	public void rendreMonnaie() {
+		if (etatCourant != idle) {
+			afficherRetour();
+			montantEnCours = 0;
+			boisson = null;
+		}
+		etatCourant = idle;
+	}
+
+}</code></pre>
+<pre><code>public class MainMachine {
+	public static void main(String[] args) {
+		MachineACafe mq = new MachineACafe();
+		mq.selectionnerBoisson(ToucheBoisson.decaNoir);
+		mq.entrerMonnaie(Piece.cinquanteCents);
+		mq.selectionnerBoisson(ToucheBoisson.decaNoir);
+		mq.entrerMonnaie(Piece.vingtCents);
+		mq.selectionnerBoisson(ToucheBoisson.chocoAuLaitSucre);
+		try {
+			mq.selectionnerBoisson(ToucheBoisson.cafeNoir);
+		} catch (IllegalStateException e) {
+			System.out.println("Teet");
+		}
+		mq.entrerMonnaie(Piece.cinquanteCents);
+		mq.entrerMonnaie(Piece.cinquanteCents);
+		mq.rendreMonnaie();
+	}
+
+}</code></pre>
+                            <p>Dans le diagramme d'état suivant prix est le prix de la boisson sélectionnée et montantEnCOurs, la quantité de monnaie introduite dans la machine.</p>
+                            <p>Dans l'état collecte, quand on sélectionne une boisson et que le prix est inférieur au montantEnCours, la boisson est servie et le montantEnCours diminue. On peut alors éventuellement sélectionner une deuxième boisson.</p>
+                            <p>On arrive à l'état pasAssez si on sélectionne une boisson dans l'état collecte et qu'il n'y a pas assez de monnaie dans la machine pour se payer cette boisson.</p>
+                            <p>Dans l'état pasAssez, on ne peut pas sélectionner d'autre boisson. On doit ajouter de la monnaie jusqu'à atteindre le prix voulu. À ce moment, la boisson est servie par la machine. On peut aussi annuler la sélection, en demandant de rendre la monnaie.</p>
+                            <img src="../images/exercice1_semaine4_design_patterns.png" alt="">
+<pre><code>public class Piece {
+	
+	private String nom;
+	private int valeur; // en cents
+	
+	public static final Piece vingtCents = new Piece("20 cents", 20);
+	public static final Piece cinquanteCents = new Piece("50 cents", 50);
+	public static final Piece unEuro = new Piece("1 Euro", 100);
+	public static final Piece deuxEuros = new Piece("2 Euros", 200);
+	
+	private Piece(String nom, int valeur) {
+		this.nom = nom;
+		this.valeur = valeur;
+	}
+
+	public String getNom() {
+		return nom;
+	}
+
+	public int getValeur() {
+		return valeur;
+	}
+
+	@Override
+	public String toString() {
+		return nom;
+	}
+		
+}</code></pre>
+<pre><code>public class ToucheBoisson {
+	private String type;
+	private boolean auLait;
+	private boolean sucre;
+	private int prix; // en cents
+	
+	public static final ToucheBoisson cafeNoir = new ToucheBoisson("Café", false, false, 50);
+	public static final ToucheBoisson cafeAuLait = new ToucheBoisson("Café", true, false, 70);
+	public static final ToucheBoisson cafeNoirSucre = new ToucheBoisson("Café", false, true, 70);
+	public static final ToucheBoisson cafeAuLaitSucre = new ToucheBoisson("Café", true, true, 90);
+	
+	public static final ToucheBoisson expresso = new ToucheBoisson("Expresso", false, false, 100);
+	public static final ToucheBoisson expressoAuLait = new ToucheBoisson("Expresso", true, false, 120);
+	public static final ToucheBoisson expressoSucre = new ToucheBoisson("Expresso", false, true, 120);
+	public static final ToucheBoisson expressoAuLaitSucre = new ToucheBoisson("Expresso", true, true, 140);
+	
+	public static final ToucheBoisson decaNoir = new ToucheBoisson("Café décaféiné", false, false, 50);
+	public static final ToucheBoisson decaAuLait = new ToucheBoisson("Café décaféiné", true, false, 70);
+	public static final ToucheBoisson decaNoirSucre = new ToucheBoisson("Café décaféiné", false, true, 70);
+	public static final ToucheBoisson decaAuLaitSucre = new ToucheBoisson("Café décaféiné", true, true, 90);
+	
+	public static final ToucheBoisson choco = new ToucheBoisson("Chocolat chaud", false, false, 70);
+	public static final ToucheBoisson chocoAuLait = new ToucheBoisson("Chocolat chaud", true, false, 90);
+	public static final ToucheBoisson chocoSucre = new ToucheBoisson("Chocolat chaud", false, true, 90);
+	public static final ToucheBoisson chocoAuLaitSucre = new ToucheBoisson("Chocolat chaud", true, true, 110);
+
+	public static final ToucheBoisson cappuccino = new ToucheBoisson("Cappuccino", false, false, 120);
+	public static final ToucheBoisson viennois = new ToucheBoisson("Café Viennois", false, false, 120);
+	public static final ToucheBoisson laitRusse = new ToucheBoisson("Lait russe", false, false, 100);
+	public static final ToucheBoisson chocafe = new ToucheBoisson("Choco-Café", false, false, 120);
+	
+	public static final ToucheBoisson lait = new ToucheBoisson("Lait chaud", false, false, 70);
+	public static final ToucheBoisson eau = new ToucheBoisson("Eau chaud", false, false, 0);
+	
+	
+	private ToucheBoisson(String type, boolean lait, boolean sucre, int prix) {
+		this.type = type;
+		auLait = lait;
+		sucre = sucre;
+		this.prix = prix;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public boolean auLait() {
+		return auLait;
+	}
+
+	public boolean estSucre() {
+		return sucre;
+	}
+
+	public int getPrix() {
+		return prix;
+	}
+
+	@Override
+	public String toString() {
+		return type + (auLait() ? " au lait" : "") + (estSucre() ? " sucré" : "");
+	}
+		
+}</code></pre>
+<pre><code>public class MachineACafe {
+
+	private enum State {
+		INACTIF {
+			@Override
+			public void entrerMonnaie(Piece piece, MachineACafe parent) {
+				parent.etatCourant = State.COLLECTE;
+			}
+
+			@Override
+			public void selectionnerBoisson(ToucheBoisson toucheBoisson, MachineACafe parent) {
+				parent.afficherBoisson(toucheBoisson);
+			}
+
+			@Override
+			public void rendreMonnaie(MachineACafe parent) {
+			}
+		},
+		COLLECTE {
+			@Override
+			public void entrerMonnaie(Piece piece, MachineACafe parent) {
+			}
+
+			@Override
+			public void selectionnerBoisson(ToucheBoisson toucheBoisson, MachineACafe parent) {
+				if (toucheBoisson.getPrix() > parent.montantEnCours) {
+					parent.boisson = toucheBoisson;
+					parent.afficherPasAssez(parent.boisson);
+					parent.boisson = toucheBoisson;
+					parent.etatCourant = State.PASASSEZ;
+					return;
+				}
+				parent.montantEnCours -= toucheBoisson.getPrix();
+				parent.afficherBoisson(toucheBoisson);
+				parent.afficherMontant();
+				if (parent.montantEnCours == 0) {
+					parent.etatCourant = State.INACTIF;
+				} else {
+					parent.etatCourant = State.COLLECTE;
+				}
+
+			}
+
+		},
+		PASASSEZ {
+			@Override
+			public void entrerMonnaie(Piece piece, MachineACafe parent) {
+				if (parent.boisson.getPrix() > parent.montantEnCours) {
+					parent.afficherPasAssez(parent.boisson);
+				} else {
+					parent.montantEnCours -= parent.boisson.getPrix();
+					parent.afficherBoisson(parent.boisson);
+					parent.boisson = null;
+					parent.afficherMontant();
+					if (parent.montantEnCours == 0) {
+						parent.etatCourant = State.INACTIF;
+					} else {
+						parent.etatCourant = State.COLLECTE;
+					}
+				}
+			}
+
+			@Override
+			public void selectionnerBoisson(ToucheBoisson toucheBoisson, MachineACafe parent) {
+				throw new IllegalStateException();
+			}
+
+		};
+		public abstract void entrerMonnaie(Piece piece, MachineACafe parent);
+
+		public abstract void selectionnerBoisson(ToucheBoisson toucheBoisson, MachineACafe parent);
+
+		public void rendreMonnaie(MachineACafe parent) {
+			parent.afficherRetour();
+			parent.montantEnCours = 0;
+			parent.boisson = null;
+			parent.etatCourant = State.INACTIF;
+		}
+	}
+
+	private int montantEnCours = 0;
+	private State etatCourant = State.INACTIF;
+	private ToucheBoisson boisson = null;
+
+	public void afficherMontant() {
+		System.out.println(montantEnCours + " cents disponibles");
+	}
+
+	public void afficherRetour() {
+		System.out.println(montantEnCours + " cents rendus");
+	}
+
+	public void afficherPasAssez(ToucheBoisson toucheBoisson) {
+		System.out.println("Vous n'avez pas introduit un montant suffisant pour un " + toucheBoisson);
+		System.out.println("Il manque encore " + (toucheBoisson.getPrix() - montantEnCours) + " cents");
+	}
+
+	public void afficherBoisson(ToucheBoisson toucheBoisson) {
+		System.out.println("Voici un " + toucheBoisson);
+
+	}
+
+	public void entrerMonnaie(Piece piece) {
+		montantEnCours += piece.getValeur();
+		afficherMontant();
+		etatCourant.entrerMonnaie(piece, this);
+	}
+
+	public void selectionnerBoisson(ToucheBoisson toucheBoisson) {
+		etatCourant.selectionnerBoisson(toucheBoisson, this);
+	}
+
+	public void rendreMonnaie() {
+		etatCourant.rendreMonnaie(this);
+	}
+
+}</code></pre>
+<pre><code>public class MainMachine {
+	
+	public static void main(String[] args) {
+		MachineACafe mq = new MachineACafe();
+		mq.selectionnerBoisson(ToucheBoisson.decaNoir);
+		mq.entrerMonnaie(Piece.cinquanteCents);
+		mq.selectionnerBoisson(ToucheBoisson.decaNoir);
+		mq.entrerMonnaie(Piece.vingtCents);
+		mq.selectionnerBoisson(ToucheBoisson.chocoAuLaitSucre);
+		try {
+			mq.selectionnerBoisson(ToucheBoisson.cafeNoir);
+		} catch (IllegalStateException e) {
+			System.out.println("Teet");
+		}
+		mq.entrerMonnaie(Piece.cinquanteCents);
+		mq.entrerMonnaie(Piece.cinquanteCents);
+		mq.rendreMonnaie();
+	}
+
+}</code></pre>
+                        </li>
+                    </ol>
+                </article>
             <!-- fin de section -->
             </section>
         </main>
