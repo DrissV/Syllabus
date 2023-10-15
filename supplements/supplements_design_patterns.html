@@ -9792,6 +9792,608 @@ public class Principale implements ConstantesJeu {
                         </li>
                         <li>
                             <h3>Semaine 9 :</h3>
+                            <p>Question examen 2014 : Réalisation de patterns :</p>
+                            <p>Vous allez réaliser une partie d'un moteur de combat entre des robots. Chaque robot est caractérisé par :</p>
+                            <ul>
+                                <li>
+                                    <p>Des points de vie. Quand il n'y en a plus, le robot explose et le combat se termine. Par défaut, les robots ont 100 points de vie.</p>
+                                </li>
+                                <li>
+                                    <p>La puissance d'un cannon. Chaque fois que le robot tire, c'est la puissance de ce canon moins les défenses de l'adversaire qui est supprimé des points de vie du robit adverse. Par défaut, le canon a une puissance de 1.</p>
+                                </li>
+                                <li>
+                                    <p>La puissance d'un bouclier. Ce dernier enlève une valeur figée des dégâts infligés. Par défaut, le bouclier a une puissance de 1.</p>
+                                </li>
+                                <li>
+                                    <p>Une fréquence de tire. Plus la valeur est élevée, plus le robot prendra du temps pour tirer. Par exemple, une fréquence deux fois plus petite permet à un robot de tirer deux fois plus souvent. Par défaut, la fréquence de tir est de 100.</p>
+                                </li>
+                            </ul>
+                            <p>Deux fichiers vous sont fournis :</p>
+                            <ul>
+                                <li>
+                                    <p>PatternRobots.java : vous devez uniquement modifier le main de ce fichier, pas les autres méthodes.</p>
+                                </li>
+                                <li>
+                                    <p>Robot.java : vous ne devez rien changer à ce fichier. Lisez bien par contre la documentation des méthodes.</p>
+                                </li>
+                            </ul>
+                            <p>Il faut un mécanisme permettant de configurer les valeurs par défaut uniquement à la construction du robot. Une fois construit, ces valeurs sont immuables. De plus, il faut offrir la possibilité de ne redéfinir que les valeurs que l'on souhaite, en utilisant les valeurs par défaut au sinon. Quel pattern allez-vous utiliser ?</p>
+                            <p>De plus, le jet permettra d'obtenir des améliorations permettant de changer le comportement du robot. Une de ces améliorations permettra de multiplier par deux les dégâts du canon, une autre de multiplier par deux la puissance de bouclier, une autre encore de diminuer par deux la valeur des points de vie perdus, etc... Vous devez donc trouver un mécanisme permettant de reconfigurer à volonté le comportement des robots tout en gardant l'immuabilité des attributs. Quel pattern allez-vous utiliser ?</p>
+                            <p>Finalement, il serait pratique d'avoir un mécanisme permettant d'obtenir des robots préconfigurés. Par exemple, obtenir un robot "pic-vert" qui a peu de puissance d'attaque et de défense, mais tire très fréquemment. Un autre, la "grosse berta" qui par contre est très lent, mais fait beaucoup de dégâts à chaque tir, ou encore un autre, le "tank" qui est lent, fait peu de dégâts, mais a beaucoup de points de vie et reçoit très peu de dégâts. Créez un tel mécanisme en le remplissant des 3 exemples indiqués ici. Quel(s) pattern(s) allez-vous tiliser ?</p>
+<pre><code>public interface Robot {
+
+	int getCanon(); // retourne la puissance du canon
+
+	int getShield(); // retourne la puissance du bouclier
+
+	int getFreq(); // retourne la fréquence de tir
+
+	String getName(); // retourne le nom du robot
+
+	int diffLife(int i); // change les points de vie du robot et retourne la nouvelle valeur de ces
+						 // points de vie.
+	// Si le paramètre est négatif, le robot perd de la vie.
+	// Si le paramètre est positif, le robot est soigné.
+	// Si le paramètre est zéro, la méthode agit comme un getter sur les points de
+	// vie.
+}</code></pre>
+<pre><code>public class RobotImpl implements Robot {
+
+    private int pointsDeVie;
+    private final int canon;
+    private final int shield;
+    private final int freq;
+    private final String name;
+
+    private RobotImpl(RobotBipBip builder) {
+        this.pointsDeVie = builder.pointsDeVie;
+        this.canon = builder.canon;
+        this.freq = builder.freq;
+        this.name = builder.name;
+        this.shield = builder.shield;
+    }
+
+    @Override
+    public int getCanon() {
+        return canon;
+    }
+
+    @Override
+    public int getShield() {
+        return shield;
+    }
+
+    @Override
+    public int getFreq() {
+        return freq;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public int diffLife(int i) {
+        return pointsDeVie += i;
+    }
+
+    public static class RobotBipBip {
+
+        private int pointsDeVie = 100;
+        private int canon = 1;
+        private int shield = 1;
+        private int freq = 100;
+        private final String name;
+
+        public RobotBipBip(String name) {
+            this.name = name;
+        }
+
+        public RobotBipBip canon(int canon) {
+            this.canon = canon;
+            return this;
+        }
+
+        public RobotBipBip shield(int shield) {
+            this.shield = shield;
+            return this;
+        }
+
+        public RobotBipBip freq(int freq) {
+            this.freq = freq;
+            return this;
+        }
+
+        public RobotImpl build() {
+            return new RobotImpl(this);
+        }
+
+        public RobotBipBip pointsDeVie(int pointsDeVie) {
+            this.pointsDeVie = pointsDeVie;
+            return this;
+        }
+    }
+
+}</code></pre>
+<pre><code>public abstract class Amelioration implements Robot {
+
+    private Robot robot;
+    
+    public Amelioration(Robot robot) {
+        if (robot == null) {
+            throw new IllegalArgumentException();
+        }
+        this.robot = robot;
+    }
+    
+    @Override
+    public int getCanon() {
+        return robot.getCanon();
+    }
+
+    @Override
+    public int getShield() {
+        return robot.getShield();
+    }
+
+    @Override
+    public int getFreq() {
+        return robot.getFreq();
+    }
+
+    @Override
+    public String getName() {
+        return robot.getName();
+    }
+
+    @Override
+    public int diffLife(int i) {
+        return robot.diffLife(i);
+    }
+
+}</code></pre>
+<pre><code>public class Bouclier extends Amelioration {
+
+    public Bouclier(Robot robot) {
+        super(robot);
+    }
+
+    @Override
+    public int getShield() {
+        return super.getShield() * 2;
+    }
+    
+}</code></pre>
+<pre><code>public class Canon extends Amelioration {
+
+	public Canon(Robot robot) {
+		super(robot);
+	}
+
+	@Override
+	public int getCanon() {
+		return super.getCanon() * 2;
+	}
+	
+}</code></pre>
+<pre><code>public class DiffPV extends Amelioration {
+
+	public DiffPV(Robot robot) {
+		super(robot);
+	}
+	
+	@Override
+	public int diffLife(int i) {
+		return super.diffLife(i / 2);
+	}
+	
+}</code></pre>
+<pre><code>public class PatternRobots {
+
+	public static void fight(Robot robot1, Robot robot2) {
+		int tick1 = robot1.getFreq();
+		int tick2 = robot2.getFreq();
+		while (robot2.diffLife(0) &gt; 0 && robot1.diffLife(0) &gt; 0) {
+			int tick = Math.min(tick1, tick2);
+			tick1 -= tick;
+			tick2 -= tick;
+			if (tick1 == 0) { // robot 1 feu
+				tick1 = shoot(robot1, robot2);
+			}
+			if (tick2 == 0) { // robot 2 feu
+				tick2 = shoot(robot2, robot1);
+			}
+		}
+	}
+
+	private static int shoot(Robot robot1, Robot robot2) {
+		int dmg = Math.max(0, robot1.getCanon() - robot2.getShield());
+		int lost = robot2.diffLife(0) - robot2.diffLife(-dmg);
+		System.out.println(robot1.getName() + " shoots for " + lost);
+		if (robot2.diffLife(0) &lt;= 0) {
+			System.out.println("Kabooom " + robot2.getName());
+		}
+		return robot1.getFreq();
+	}
+
+	public static void main(String[] args) {
+		Robot robot1 = new Canon (new RobotImpl.RobotBipBip("robot1").canon(10).freq(100).shield(2).build());
+				// un robot avec un canon de 10, un bouclier de 2, une fréquence de tir de 100 et qui a reçu une amélioration de canon multipliant la puissance de ce dernier par 2.
+		Robot robot2 = new DiffPV(new Bouclier(new RobotImpl.RobotBipBip("robot2").canon(9).shield(3).freq(90).build()));
+				// un robot avec un canon de 9, un bouclier de 3, une fréquence de tir de 90 et qui a reçu une amélioration de bouclier multipliant ce dernier par 2 et une amélioration de mitigation des dégâts qui réduit les points de vie perdus par 2.
+		fight(robot1, robot2);
+	}
+}</code></pre>
+                        </li>
+                        <li>
+                            <h3>Semaine 10 :</h3>
+                            <p>Un restaurant accepte les paiements en espèce ou par carte de crédit. Les cartes de crédits acceptées sont American Express, Diners Club International, Discover, EuroCard/MasterCard et Visa. Il fait appel à vous pour développer un système permettant de reconnaître une carte à partir de son numéro et de valider ce numéro (uniquement d'aprs les règles indiquées plus bas - la validation du dernier chiffre (check digit), rglée par la norme ISO 2894/AINSI 4.13, implémentée par l'algorithme de Luhn n'est pas importante pour l'exercice). Si la validation réussit, votre système crée un objet de la classe appropriée (AmEx, DinnersClub, Discover, MasterCard ou Visa) afin de pouvoir exporter les paiements vers le logiciel de la société de crédit qui gère ces paiements.</p>
+                            <p>On sait que :</p>
+                            <ul>
+                                <li>
+                                    <p>Une carte American Express commence par 34 ou 37 et comporte 15 chiffres.</p>
+                                </li>
+                                <li>
+                                    <p>Une carte Dinners Club International commence par 36 et comporte 14 chiffres.</p>
+                                </li>
+                                <li>
+                                    <p>Une carte Discover commence par 6011 ou 65 et comporte 16 chiffres.</p>
+                                </li>
+                                <li>
+                                    <p>Une carte EuroCard/MasterCard commence par un nombre entre 51 et 55 inclus et comporte 16 chiggres.</p>
+                                </li>
+                                <li>
+                                    <p>Une carte Visa commence par 4 et comporte 16 chiffres.</p>
+                                </li>
+                                <li>
+                                    <p>On ne vous demande pas de vérifier que les numéros de carte sont constitués entièrement de chiffres.</p>
+                                </li>
+                                <li>
+                                    <p>Le code fourni continient la classe abstraite CarteDeCredit, les sous-classes AmEx, DinnersClub, Discover, MasterCard et Visa ainsi que le canevas de la classe abstraite Generateur et un programme principal permettant de tester votre application. Ce dernier lit les informations de diverses cartes de crédit dans un fichier fournit. Les titulaires sont soit inconnus soit des professeurs de la section informatique. Ces derniers ont des cartes valides tandis que les autres ne le sont pas. Un fichier sortie.txt vous montre ce à quoi vous devez arriver.</p>
+                                </li>
+                            </ul>
+                            <p>On vous demande d'implémenter ce problème en utilisant (au moins) deux patterns. Précisez sur ce questionnaire aux endroits prévu à cet effet les patterns que vous avez utilisés.</p>
+                            <p>Indications :</p>
+                            <ul>
+                                <li>
+                                    <p>Vous êtes confrontés essentiellement à deux problèmes :</p>
+                                    <ul>
+                                        <li>
+                                            <p>L'un consiste à déterminer à quel type de carte on a affaire et à valider le numéro de celle-ci.</p>
+                                        </li>
+                                        <li>
+                                            <p>L'autre consiste à créer un objet de la bonne sous-classe de CarteDeCredit.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>On vous conseille de tâcher de déterminer le type de carte d'après le premier chiffre. Ceci est possible presque dans tous les cas. Pour les autres on s'intéresse aussi au deuxième chiffre.</p>
+                                </li>
+                            </ul>
+<pre><code>package domaine;
+
+import java.util.Calendar;
+
+public abstract class CarteDeCredit {
+    String nom;
+    String numero;
+    Calendar dateExpiration;
+
+    public CarteDeCredit(String numero, Calendar dateExpiration, String nom) {
+        this.numero = numero;
+        this.dateExpiration = dateExpiration;
+        this.nom = nom;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+
+    public String getNumero() {
+        return numero;
+    }
+
+    public Calendar getDateExpiration() {
+        return dateExpiration;
+    }
+
+    public abstract String getType();
+}</code></pre>
+<pre><code>package domaine;
+
+import java.util.Calendar;
+
+public class AmEx extends CarteDeCredit {
+
+    public AmEx(String numero, Calendar dateExpiration, String nom) {
+        super(numero, dateExpiration, nom);
+    }
+
+    @Override
+    public String getType() {
+        return "America Express";
+    }
+
+}</code></pre>
+<pre><code>package domaine;
+
+import java.util.Calendar;
+
+public class DinersClub extends CarteDeCredit {
+
+    public DinersClub(String numero, Calendar dateExpiration, String nom) {
+        super(numero, dateExpiration, nom);
+    }
+
+    @Override
+    public String getType() {
+        return "Diners Club";
+    }
+
+}</code></pre>
+<pre><code>package domaine;
+
+import java.util.Calendar;
+
+public class Discover extends CarteDeCredit {
+
+    public Discover(String numero, Calendar dateExpiration, String nom) {
+        super(numero, dateExpiration, nom);
+    }
+
+    @Override
+    public String getType() {
+        return "Discover";
+    }
+
+}</code></pre>
+<pre><code>package domaine;
+
+import java.util.Calendar;
+
+public class MasterCard extends CarteDeCredit {
+
+    public MasterCard(String numero, Calendar dateExpiration, String nom) {
+        super(numero, dateExpiration, nom);
+    }
+
+    @Override
+    public String getType() {
+        return "MasterCard";
+    }
+
+}</code></pre>
+<pre><code>package domaine;
+
+import java.util.Calendar;
+
+public class Visa extends CarteDeCredit {
+
+    public Visa(String numero, Calendar dateExpiration, String nom) {
+        super(numero, dateExpiration, nom);
+    }
+
+    @Override
+    public String getType() {
+        return "Visa";
+    }
+
+}</code></pre>
+<pre><code>package validation;
+
+import java.util.Calendar;
+
+import domaine.CarteDeCredit;
+
+public abstract class Generateur {
+
+    private Generateur succ;
+
+    public Generateur(Generateur succ) {
+        this.succ = succ;
+    }
+
+    public abstract boolean valider(String numero);
+
+    public CarteDeCredit creerCarte(String numero, Calendar dateExpiration, String nom) {
+        if (succ == null) {
+            return null;
+        }
+        return succ.creerCarte(numero, dateExpiration, nom);
+    }
+}</code></pre>
+<pre><code>package validation;
+
+import java.util.Calendar;
+
+import domaine.AmEx;
+import domaine.CarteDeCredit;
+
+public class GenAmEx extends Generateur {
+
+    public GenAmEx(Generateur succ) {
+        super(succ);
+    }
+
+    @Override
+    public boolean valider(String numero) {
+        return numero.length() == 15 && (numero.startsWith("34") || numero.startsWith("37"));
+    }
+
+    @Override
+    public CarteDeCredit creerCarte(String numero, Calendar dateExpiration, String nom) {
+        if (valider(numero)) {
+            return new AmEx(numero, dateExpiration, nom);
+        }
+        return super.creerCarte(numero, dateExpiration, nom);
+    }
+
+}</code></pre>
+<pre><code>package validation;
+
+import java.util.Calendar;
+
+import domaine.CarteDeCredit;
+import domaine.DinersClub;
+
+public class GenDinersClub extends Generateur {
+
+    public GenDinersClub(Generateur succ) {
+        super(succ);
+    }
+
+    @Override
+    public boolean valider(String numero) {
+        return numero.length() == 14 && numero.startsWith("36");
+    }
+
+    @Override
+    public CarteDeCredit creerCarte(String numero, Calendar dateExpiration, String nom) {
+        if (valider(numero)) {
+            return new DinersClub(numero, dateExpiration, nom);
+        }
+        return super.creerCarte(numero, dateExpiration, nom);
+    }
+
+}</code></pre>
+<pre><code>package validation;
+
+import java.util.Calendar;
+
+import domaine.CarteDeCredit;
+import domaine.Discover;
+
+public class GenDiscover extends Generateur {
+
+    public GenDiscover(Generateur succ) {
+        super(succ);
+    }
+
+    @Override
+    public boolean valider(String numero) {
+        return numero.length() == 16 && (numero.startsWith("6011") || numero.startsWith("65"));
+    }
+
+    @Override
+    public CarteDeCredit creerCarte(String numero, Calendar dateExpiration, String nom) {
+        if (valider(numero)) {
+            return new Discover(numero, dateExpiration, nom);
+        }
+        return super.creerCarte(numero, dateExpiration, nom);
+    }
+}</code></pre>
+<pre><code>package validation;
+
+import java.util.Calendar;
+
+import domaine.CarteDeCredit;
+import domaine.MasterCard;
+
+public class GenMasterCard extends Generateur {
+
+    public GenMasterCard(Generateur succ) {
+        super(succ);
+    }
+
+    @Override
+    public boolean valider(String numero) {
+        return numero.length() == 16 && (numero.startsWith("51") || numero.startsWith("52") || numero.startsWith("53") || numero.startsWith("54") || numero.startsWith("55"));
+    }
+
+    @Override
+    public CarteDeCredit creerCarte(String numero, Calendar dateExpiration, String nom) {
+        if (valider(numero)) {
+            return new MasterCard(numero, dateExpiration, nom);
+        }
+        return super.creerCarte(numero, dateExpiration, nom);
+    }
+
+}</code></pre>
+<pre><code>package validation;
+
+import java.util.Calendar;
+
+import domaine.CarteDeCredit;
+import domaine.Visa;
+
+public class GenVisa extends Generateur {
+
+    public GenVisa(Generateur succ) {
+        super(succ);
+    }
+
+    @Override
+    public boolean valider(String numero) {
+        return numero.startsWith("4") && numero.length() == 16;
+    }
+
+    @Override
+    public CarteDeCredit creerCarte(String numero, Calendar dateExpiration, String nom) {
+        if (valider(numero)) {
+            return new Visa(numero, dateExpiration, nom);
+        }
+        return super.creerCarte(numero, dateExpiration, nom);
+    }
+
+}</code></pre>
+<pre><code>package client;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Scanner;
+
+import domaine.CarteDeCredit;
+import validation.GenAmEx;
+import validation.GenDinersClub;
+import validation.GenDiscover;
+import validation.GenMasterCard;
+import validation.GenVisa;
+import validation.Generateur;
+
+public class MainClient {
+
+    public static void main(String[] args) throws IOException {
+        File file = new File("cc.txt");
+        Generateur generateur = new GenVisa(new GenAmEx(new GenDinersClub(new GenDiscover(new GenMasterCard(null)))));
+        try {
+            Scanner fichier = new Scanner(file);
+            while (fichier.hasNextLine()) {
+                try {
+                    String ligne = fichier.nextLine();
+                    String[] parts = ligne.split(",");
+                    SimpleDateFormat sdf = new SimpleDateFormat("MM/yy");
+                    Calendar dateExpiration = new GregorianCalendar();
+                    dateExpiration.setTime(sdf.parse(parts[1]));
+                    CarteDeCredit carteDeCredit = generateur.creerCarte(parts[0], dateExpiration, parts[2]);
+                    if (carteDeCredit == null)
+                        System.out.println("Numéro de carte invalide " + parts[0]);
+                    else {
+                        System.out.println(
+                                "La carte " + carteDeCredit.getNumero() + " est une carte " + carteDeCredit.getType());
+                        System.out.println("Elle expire le " + sdf.format(dateExpiration.getTime()));
+                        System.out.println("Son titulaire est " + carteDeCredit.getNom());
+                    }
+                    System.out.println("-----------------------------------------------------------");
+                } catch (ParseException e) {
+                    System.out.println("Mauvaise date d'expiration");
+                    e.printStackTrace();
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Le fichier " + file.getCanonicalPath() + " est introuvable");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                        </li>
+                        <li>
+                            <h3>Semaine 11 :</h3>
                         </li>
                     </ol>
                 </article>
