@@ -10394,6 +10394,879 @@ public class MainClient {
                         </li>
                         <li>
                             <h3>Semaine 11 :</h3>
+                            <p>Un salon de thé propose à ses clients un choix de différents parfums : de Earl Grey, Darjeeling, ... à Verveine ou Menthe. Pour gérer les commandes des clients, ils utilisaient des classes <span class="em">Parfum</span> pour les différents thés et <span class="em">Table</span> pour les emplacements au sein du salon. Ils ont vite constatés que leur logiciel créait énormément de petits objets tels que la table qui avait commandé et les parfums désirés, avec du code tel que <span class="html">new Parfum("Camomille").servirThe(3, new Table(7));</span></p>
+                            <p>Ils ont donc décidé de créer des classes supplémentaires <span class="em">Carte</span> et <span class="em">Salle</span> et de réutiliser des objets prédéfinis. Après tout, la carte n'est pas souvent modifiée et il est très rare que l'on ajoute ou supprime des tables.</p>
+                            <p>Quel pattern utilisez-vous dans cette solution ? Quelle est la correspondance entre les classes de cette application et les classes théoriques ? Même question pour les méthodes.</p>
+                            <p>Le design arrêté est le suivant :</p>
+                            <ul>
+                                <li>
+                                    <p>L'interface <span class="em">CommandeThe</span> déclare la méthode <span class="html">void servirThe(int quantite, Parfum parfum, Table table)</span>.</p>
+                                </li>
+                                <li>
+                                    <p>La classe <span class="em">Parfum</span> stocke le nom du parfum (<span class="html">String parfum</span>) et son prix (<span class="html">double prix</span>). Le constructeur initialise les champs dans cet ordre. La classe se termine par la définition des getters correspondant aux champs.</p>
+                                </li>
+                                <li>
+                                    <p>Afin de définir et de réutiliser les parfums, une classe <span class="em">Carte</span> est créée. Elle stocke une <span class="html">Map</span> de parfums dont les clés dont les noms de ceux-ci. De plus elle définit les méthodes <span class="html">ajouterParfum(Parfum parfum)</span>, <span class="html">void supprimerParfum(Pafum parfum)</span> et <span class="html">Parfum getParfum(String parfum)</span>.</p>
+                                </li>
+                                <li>
+                                    <p>La classe <span class="em">Table</span> garde le numéro de table et le nombre de places de cette table. Elle définit un constructeur et les deux getters.</p>
+                                </li>
+                                <li>
+                                    <p>La classe <span class="em">Salle</span> garde un tableau de <span class="em">Table</span> organisé comme suit : à l'indice correspondant au numéro de la table. Elle définit une méthode d'initialisation qui prend en argument un objet de type <span class="html">Properties</span>.</p>
+                                </li>
+                                <li>
+                                    <p>La classe <span class="em">SalonDeThe</span> :</p>
+                                    <ul>
+                                        <li>
+                                            <p>Implémente l'interface <span class="em">CommandeThe</span>.</p>
+                                        </li>
+                                        <li>
+                                            <p>Stocke dans la <span class="em">Map chiffre</span>, le chiffre d'affaire réalisé pour chaque table.</p>
+                                        </li>
+                                        <li>
+                                            <p>Elle garde également une <span class="em">Carte</span> et une <span class="em">Salle</span>.</p>
+                                        </li>
+                                        <li>
+                                            <p>Son constructeur prend en paramètre la <span class="em">Carte</span>, la <span class="em">Salle</span> ainsi que deux strings correspondants à des noms de fichiers .properties :</p>
+                                            <ul>
+                                                <li>
+                                                    <p>Le premier liste les parfums à la carte sous la forme <span class="em">nom=prix</span>.</p>
+                                                </li>
+                                                <li>
+                                                    <p>Le second correspond aux tables de la <span class="em">Salle</span> et ne contient que la seule propriété table avec comme valeur la liste des nombres de places de chaque table placés dans l'ordre des numéros des tables.</p>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <p>Elle définit également une méthode <span class="html">void prendreCommande(String parfum, int quantite, int numeroDeTable)</span>. Cette méthode recherche le parfum et la table avant d'appeler la méthode <span class="em">servirThe</span>. Elle met également à jour le <span class="em">chiffre</span>. Au cas où le parfum ou la table ne serait pas trouvé, elle lance une exception appropriée (<span class="em">ParfumInexistantException</span> ou <span class="em">TableInexistanteException</span>).</p>
+                                        </li>
+                                        <li>
+                                            <p>La méthode <span class="em">servirThe</span> peut ici se contenter de faire un <span class="html">System.out.println</span>. Plus généralement, elle pourrait par exemple notifier les observateurs liés à une interface graphique chargée de simuler le service à l'aide d'une animation.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>La classe principale <span class="em">MainThe</span> définit la méthode main suivante (par exemple, <span class="em">prendreCommande</span> et <span class="em">chiffre</span> doivent y être remplacé par des appels de méthodes sur le salon de thé que cette méthode définit) :</p>
+<pre><code>public static void main(String[] args) {
+    try {
+        prendreCommande("Thé vert", 2, 5);
+    } catch (ParfumInexistantException e) {
+        System.out.println("Le parfum demandé n'existe pas");
+    } catch (TableInexistanteException e) {
+        System.out.println("Numéro de table incorrect");
+    }
+    try {
+        prendreCommande("Camomille", 1, 1);
+    } catch (ParfumInexistantException e) {
+        System.out.println("Le parfum demandé n'existe pas");
+    } catch (TableInexistanteException e) {
+        System.out.println("Numéro de table incorrect");
+    }
+    try {
+        prendreCommande("Menthe", 1, 1);
+    } catch (ParfumInexistantException e) {
+        System.out.println("Le parfum demandé n'existe pas");
+    } catch (TableInexistanteException e) {
+        System.out.println("Numéro de table incorrect");
+    }
+    try {
+        prendreCommande("Earl Grey", 1, 1);
+    } catch (ParfumInexistantException e) {
+        System.out.println("Le parfum demandé n'existe pas");
+    } catch (TableInexistanteException e) {
+        System.out.println("Numéro de table incorrect");
+    }
+    for (Table table : chiffre.keySet()) {
+        System.out.println("Table " + table.getNumeroDeTable() + " : " + chiffres.get(table) + " €");
+    }
+}</code></pre>
+                                </li>
+                            </ul>
+<pre><code>public class Parfum {
+
+    private String parfum;
+    private double prix;
+
+    public Parfum(String parfum, double prix) {
+        this.parfum = parfum;
+        this.prix = prix;
+    }
+
+    public String getParfum() {
+        return parfum;
+    }
+
+    public double getPrix() {
+        return prix;
+    }
+    
+}</code></pre>
+<pre><code>public class ParfumInexistantException extends RuntimeException {
+
+	private static final long serialVersionUID = 1L;
+
+}</code></pre>
+<pre><code>public class Table {
+
+	private int numeroTable;
+	private int nbPlaces;
+	
+	public Table(int numeroTable, int nbPlaces) {
+		this.numeroTable = numeroTable;
+		this.nbPlaces = nbPlaces;
+	}
+
+	public int getNumeroTable() {
+		return numeroTable;
+	}
+
+	public int getNbPlaces() {
+		return nbPlaces;
+	}
+	
+}</code></pre>
+<pre><code>public class TableInexistanteException extends RuntimeException {
+
+	private static final long serialVersionUID = 1L;
+
+}</code></pre>
+<pre><code>public class Salle {
+	
+	private Table[] tables;
+	private int nbrTables;
+	
+	public Salle() {
+		tables = new Table[100];
+		nbrTables = 0;
+	}
+	
+	public void ajouterTable(int nbPlaces) {
+		tables[nbrTables] = new Table(nbrTables, nbPlaces);
+		nbrTables++;
+	}
+	
+	public Table getTable(int numeroTable) {
+		return tables[numeroTable];
+	}
+	
+}</code></pre>
+<pre><code>import java.util.HashMap;
+import java.util.Map;
+
+public class Carte {
+
+    private Map&lt;String, Parfum&gt; parfums;
+
+    public Carte() {
+        this.parfums = new HashMap&lt;String, Parfum&gt;();
+    }
+
+    public void ajouterParfum(Parfum parfum) {
+        parfums.put(parfum.getParfum(), parfum);
+    }
+
+    public void supprimerParfum(Parfum parfum) {
+        parfums.remove(parfum.getParfum());
+    }
+    
+    public Parfum getParfum(String parfum) {
+        return parfums.get(parfum);
+    }
+    
+}</code></pre>
+<pre><code>public interface CommandeThe {
+	
+	void servirThe (int quantite, Parfum parfum, Table table);
+	
+}</code></pre>
+<pre><code>import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
+import java.util.Map.Entry;
+
+public class SalonDeThe implements CommandeThe {
+
+    private Map&lt;Table, Double&gt; chiffre = new HashMap&lt;Table, Double&gt;();
+    private Carte carte;
+    private Salle salle;
+
+    public SalonDeThe(Carte carte, Salle salle, String carteProperties, String sallesProperties) {
+        Properties props = new Properties();
+        try {
+            props.load(new FileInputStream(carteProperties));
+            for (Entry&lt;Object, Object&gt; s : props.entrySet()) {
+                carte.ajouterParfum(new Parfum((String) s.getKey(), new Double((String) s.getValue())));
+            }
+            props.load(new FileInputStream(sallesProperties));
+            String tables = props.getProperty("tables");
+            StringTokenizer placesDisponibles = new StringTokenizer(tables, ",");
+            while (placesDisponibles.hasMoreTokens()) {
+                salle.ajouterTable(new Integer(placesDisponibles.nextToken()));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Map&lt;Table, Double&gt; getChiffre() {
+        return Collections.unmodifiableMap(chiffre);
+    }
+
+    public void prendreCommande(String parfum, int quantite, int table) {
+        Parfum p = this.carte.getParfum(parfum);
+        if (p == null) {
+            throw new ParfumInexistantException();
+        }
+        Table t = this.salle.getTable(table);
+        if (t == null) {
+            throw new TableInexistanteException();
+        }
+        double aPayer = p.getPrix() * quantite;
+        Double prix = chiffre.get(t);
+        if (prix == null) {
+            chiffre.put(t, aPayer);
+        } else {
+            chiffre.put(t, prix + aPayer);
+        }
+        servirThe(quantite, p, t);
+    }
+
+    @Override
+    public void servirThe(int quantite, Parfum parfum, Table table) {
+        System.out.println(quantite + " parfum(s) " + parfum.getParfum() + " pour la table " + table.getNumeroTable());
+    }
+
+}</code></pre>
+<pre><code>import java.util.HashMap;
+import java.util.Map;
+
+class MainThe {
+
+    private Map&lt;Table, Double&gt; chiffre = new HashMap&lt;Table, Double&gt;();
+    private Carte carte;
+    private Salle salle;
+    private SalonDeThe salon;
+
+    public MainThe() {
+        // assemblage des objets
+
+        // étape un: instanciation
+        this.carte = new Carte();
+        this.salle = new Salle();
+        this.salon = new SalonDeThe(carte, salle, "carte.properties", "salon.properties");
+    }
+
+    public Map&lt;Table, Double&gt; getChiffre() {
+        return chiffre;
+    }
+
+    private void prendreCommande(String parfum, int quantite, int table) {
+        salon.prendreCommande(parfum, quantite, table);
+    }
+
+    public static void main(String[] args) {
+        MainThe mt = new MainThe();
+        try {
+            mt.prendreCommande("Thé vert", 2, 5);
+        } catch (ParfumInexistantException e) {
+            System.out.println("Le parfum demadé n'existe pas");
+        } catch (TableInexistanteException e) {
+            System.out.println("Le numéro de table indiqué est incorrect");
+        }
+        try {
+            mt.prendreCommande("Camomille", 1, 1);
+        } catch (ParfumInexistantException e) {
+            System.out.println("Le parfum demadé n'existe pas");
+        } catch (TableInexistanteException e) {
+            System.out.println("Le numéro de table indiqué est incorrect");
+        }
+        try {
+            mt.prendreCommande("Menthe", 1, 1);
+        } catch (ParfumInexistantException e) {
+            System.out.println("Le parfum demadé n'existe pas");
+        } catch (TableInexistanteException e) {
+            System.out.println("Le numéro de table indiqué est incorrect");
+        }
+        try {
+            mt.prendreCommande("Earl Grey", 1, 1);
+        } catch (ParfumInexistantException e) {
+            System.out.println("Le parfum demadé n'existe pas");
+        } catch (TableInexistanteException e) {
+            System.out.println("Le numéro de table indiqué est incorrect");
+        }
+
+        for (Table table : mt.getChiffre().keySet()) {
+            System.out.println("Table " + table.getNumeroTable() + " : " + mt.getChiffre().get(table) + " €");
+        }
+    }
+
+}</code></pre>
+                        </li>
+                        <li>
+                            <h3>Semaine 12 :</h3>
+                            <p>Question 1 :</p>
+                            <p>Vous venez de rejoindre l'équipe de développement du programme IPLCommander, un puissant gestionnaire de fichiers écrit en Java.</p>
+                            <ul>
+                                <li>
+                                    <p>L'interface core.Fichier décrit les opérations principales de notre programme : lister le contenu d'un répertoire, lire/écrire/effacer un fichier.</p>
+                                </li>
+                                <li>
+                                    <p>La classe core.FichierImpl implémente cette interface, en restreignant l'accès à un répertoire particulier qui servira de racine aux chemins gérés par la classe.</p>
+                                </li>
+                                <li>
+                                    <p>La classe gui.GUI gère l'interface homme-machine. Elle utilise Swing pour offrir une interface simpliste.</p>
+                                </li>
+                                <li>
+                                    <p>La classe gui.IPLCommander est le programme principal : instancie un FichierImpl et le GUI qui l'utilise puis rend la fenêtre visible.</p>
+                                </li>
+                            </ul>
+                            <p>Le programme fonctionne bien, mais votre client suspecte que certains utilisateurs l'utilisent mal. Il souhaiterait donc avoir la capacité de facilement configurer une version qui loggerait toutes les actions entreprises par les utilisateurs (par exemple via System.out.println). Quel pattern va vous aider à réaliser cela ? Implémentez-le.</p>
+                            <p>Grâce aux logs, votre client détecte le problème : certains utilisateurs modifient les fichiers alors qu'ils ne devraient pas pouvoir le faire. Votre client vous demande d'implémenter un système permettant de facilement bloquer la lecture et/ou la modification et/ou l'effacement des fichiers. Quel pattern va vous aider à réaliser cela ? Implémentez-le.</p>
+                            <p>Finalement, votre client souhaiterait que tout le monde travaille avec les fichiers configurés sur son serveur plutôt qu'avec les fichiers locaux. Pour permettre cet usage à distance, vous avez :</p>
+                            <ul>
+                                <li>
+                                    <p>La classe APIServlet qui implémente une servlet supportant des requêtes HTTP POST et qui appellent les fonctionnalités de core.Fichier. Consultez le code pour voir comment y envoyer une requête (les paramètres attendus, l'encodage souhaité, etc).</p>
+                                </li>
+                                <li>
+                                    <p>La classe WebServer qui démarre un serveur Jetty avec cette servlet.</p>
+                                </li>
+                                <li>
+                                    <p>La classe HTTPUtils qui simplifie l'émission d'une requête.</p>
+                                    <p>Les classes fournies nativement par Java pour effectuer des requêtes Web ne sont pas des plus simples à utiliser. Vous trouverez sur la plateforme pédagogique du cours la classe HTTPUtils. Vous y trouverez notamment :</p>
+<pre><code>String utils.HTTPUtils.performPostCall(String url, Map&lt;String,String&gt; params)</code></pre>
+                                    <ul>
+                                        <li>
+                                            <p>Envoie l'équivalent d'un appel Ajax à l'URL url.</p>
+                                        </li>
+                                        <li>
+                                            <p>Un utils.HTTPUtils.HTTPException si le code HTTP &lt;&gt; 200; getMessage() donne la réponse renvoyée et getHTTPStatus() le code HTTP.</p>
+                                        </li>
+                                        <li>
+                                            <p>Un utils.HTTPUtils.HTTPNetworkException si l'url est mal formée ou qu'il y a un problème avec le réseau; getCause() renvoie l'exception qui a réellement été jetée.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Il y a aussi performGetCall qui est similaire.</p>
+                                    <p>Attention : ces méthodes sont synchrones, elles bloquent en attendant la réponse. À vous de rendre ces appels asynchrones à l'aide d'une AsyncTask.</p>
+                                </li>
+                            </ul>
+                            <p>Cette tâche relève du "<a href="https://en.wikipedia.org/wiki/Distributed_computing" target="_blank">Distributed computing</a>". Les patrons que nous avons vus ne recouvrent pas les architectures multi-processus qui communiquent via un réseau. Cependant, si on généralise un de ces patrons, on peut bel et bien proposer une solution pour cet exercice. Quel est ce patron ? implémentez-le.</p>
+<pre><code>package core;
+
+import java.io.IOException;
+
+public interface Fichier {
+
+    String[] liste(String repertoire) throws IOException;
+
+    byte[] charge(String chemin) throws IOException;
+
+    void sauve(String chemin, byte[] donnees) throws IOException;
+
+    void efface(String chemin) throws IOException;
+
+}</code></pre>
+<pre><code>package core;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+
+// cette classe doit rester finale et inchangée !
+public final class FichierImpl implements Fichier {
+
+    private File root;
+
+    public FichierImpl(String racine) {
+        root = new File(racine);
+    }
+
+    @Override
+    public String[] liste(String repertoire) throws IOException {
+        File sub = new File(root, repertoire);
+        if (!sub.getAbsolutePath().startsWith(root.getAbsolutePath()))
+            throw new IOException("Chemin invalide");
+        ArrayList&lt;String&gt; ret = new ArrayList&lt;String&gt;();
+        for (File f : sub.listFiles()) {
+            if (f.isDirectory()) {
+                ret.add(f.getName() + "/");
+            } else {
+                ret.add(f.getName());
+            }
+        }
+        return ret.toArray(new String[ret.size()]);
+    }
+
+    @Override
+    public byte[] charge(String chemin) throws IOException {
+        File sub = new File(root, chemin);
+        if (!sub.getAbsolutePath().startsWith(root.getAbsolutePath())) {
+            throw new IOException("Chemin invalide");
+        }
+        return Files.readAllBytes(sub.toPath());
+    }
+
+    @Override
+    public void sauve(String chemin, byte[] donnees) throws IOException {
+        File sub = new File(root, chemin);
+        if (!sub.getAbsolutePath().startsWith(root.getAbsolutePath())) {
+            throw new IOException("Chemin invalide");
+        }
+        Files.write(sub.toPath(), donnees, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    @Override
+    public void efface(String chemin) throws IOException {
+        File sub = new File(root, chemin);
+        if (!sub.getAbsolutePath().startsWith(root.getAbsolutePath())) {
+            throw new IOException("Chemin invalide");
+        }
+        Files.delete(sub.toPath());
+    }
+}</code></pre>
+<pre><code>package gui;
+
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+
+import core.Fichier;
+
+public class GUI extends JFrame implements ActionListener {
+
+    private Fichier racine;
+    private String path = "";
+    private DefaultListModel&lt;String&gt; listModel;
+    private JList&lt;String&gt; list;
+    private JLabel pathLabel;
+
+    public GUI(Fichier racine) throws IOException {
+        this.racine = racine;
+        setTitle("IPLCommander");
+        setSize(800, 600);
+
+        JPanel main = new JPanel(new BorderLayout());
+
+        listModel = new DefaultListModel&lt;String&gt;();
+        list = new JList&lt;String&gt;(listModel);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        main.add(new JScrollPane(list), BorderLayout.CENTER);
+
+        JPanel buttons = new JPanel(new FlowLayout());
+
+        JButton but = new JButton("..");
+        but.addActionListener(this);
+        buttons.add(but);
+        but = new JButton("Aller...");
+        but.addActionListener(this);
+        buttons.add(but);
+        but = new JButton("Sauver...");
+        but.addActionListener(this);
+        buttons.add(but);
+        but = new JButton("Charger...");
+        but.addActionListener(this);
+        buttons.add(but);
+        but = new JButton("Effacer...");
+        but.addActionListener(this);
+        buttons.add(but);
+
+        pathLabel = new JLabel();
+        buttons.add(pathLabel);
+
+        main.add(buttons, BorderLayout.SOUTH);
+
+        setContentPane(main);
+
+        loadPath();
+
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+    private void loadPath() throws IOException {
+        listModel.clear();
+        for (String f : racine.liste(path)) {
+            listModel.addElement(f);
+        }
+        pathLabel.setText(path);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        int idx;
+        String npath;
+        String item;
+        JFileChooser fc;
+        switch (((JButton) e.getSource()).getText()) {
+        case "..":
+            idx = path.lastIndexOf("/");
+            if (idx &lt; 0)
+                return;
+            npath = path.substring(0, idx);
+            try {
+                racine.liste(npath);
+                path = npath;
+                loadPath();
+            } catch (IOException exp) {
+            }
+            break;
+        case "Aller...":
+            idx = list.getSelectedIndex();
+            if (idx &lt; 0)
+                return;
+            item = listModel.getElementAt(idx);
+            if (!item.endsWith("/"))
+                return;
+            path = path + "/" + item.substring(0, item.length() - 1);
+            try {
+                loadPath();
+            } catch (IOException exp) {
+            }
+            break;
+        case "Sauver...":
+            idx = list.getSelectedIndex();
+            if (idx &lt; 0)
+                return;
+            item = listModel.getElementAt(idx);
+            if (item.endsWith("/"))
+                return;
+            npath = path + "/" + item;
+            fc = new JFileChooser();
+            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fc.showSaveDialog(this);
+            if (fc.getSelectedFile() == null)
+                return;
+            try {
+                byte[] buffer = racine.charge(npath);
+                Files.write(fc.getSelectedFile().toPath(), buffer, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            } catch (IOException exp) {
+            }
+            break;
+        case "Charger...":
+            fc = new JFileChooser();
+            fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fc.showOpenDialog(this);
+            if (fc.getSelectedFile() == null)
+                return;
+            try {
+                byte[] buffer = Files.readAllBytes(fc.getSelectedFile().toPath());
+                racine.sauve(path + "/" + fc.getSelectedFile().getName(), buffer);
+                loadPath();
+            } catch (IOException exp) {
+            }
+            break;
+        case "Effacer...":
+            idx = list.getSelectedIndex();
+            if (idx &lt; 0)
+                return;
+            item = listModel.getElementAt(idx);
+            if (item.endsWith("/"))
+                return;
+            npath = path + "/" + item;
+            try {
+                racine.efface(npath);
+                loadPath();
+            } catch (IOException exp) {
+            }
+            break;
+        }
+
+    }
+}</code></pre>
+<pre><code>package gui;
+
+import java.io.IOException;
+
+import javax.swing.JFrame;
+
+import core.Fichier;
+import core.FichierImpl;
+
+public class IPLCommander {
+
+    public static void main(String[] args) throws IOException {
+        Fichier racine = new FichierImpl("rep");
+        JFrame gui = new GUI(racine);
+        gui.setVisible(true);
+    }
+
+}</code></pre>
+<pre><code>package remote;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import core.Fichier;
+
+public class APIServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1L;
+    private Fichier fichier;
+
+    public APIServlet(Fichier fichier) {
+        this.fichier = fichier;
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String action = req.getParameter("action");
+        resp.setCharacterEncoding("utf-8");
+        String chemin;
+        try {
+            switch (action) {
+            case "liste":
+                chemin = req.getParameter("chemin");
+                String[] all = fichier.liste(chemin);
+                resp.setContentType("text/plain");
+                resp.getOutputStream().write(String.join("\n", all).getBytes(StandardCharsets.UTF_8));
+                break;
+            case "charge":
+                chemin = req.getParameter("chemin");
+                resp.setContentType("text/plain");
+                resp.getOutputStream().write(Base64.getEncoder().encode(fichier.charge(chemin)));
+                break;
+            case "sauve":
+                chemin = req.getParameter("chemin");
+                String donnees = req.getParameter("donnees");
+                byte[] bytes = Base64.getDecoder().decode(donnees);
+                fichier.sauve(chemin, bytes);
+                break;
+            case "efface":
+                chemin = req.getParameter("chemin");
+                fichier.efface(chemin);
+                break;
+            }
+        } catch (Exception e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.setContentType("text/plain");
+            StringWriter strOut = new StringWriter();
+            e.printStackTrace(new PrintWriter(strOut));
+            String msg = strOut.toString();
+            byte[] msgBytes = msg.getBytes("UTF-8");
+            resp.setContentLength(msgBytes.length);
+            resp.getOutputStream().write(msgBytes);
+        }
+    }
+}</code></pre>
+<pre><code>package remote;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
+
+/**
+    * Created by GROLAUX on 20/04/2016.
+    */
+public class HTTPUtils {
+
+    public static class HTTPException extends RuntimeException {
+
+        private static final long serialVersionUID = 1L;
+        private int code;
+
+        HTTPException(int code, String message) {
+            super(message);
+            this.code = code;
+        }
+
+        public int getHTTPStatus() {
+            return code;
+        }
+
+    }
+
+    public static class HTTPNetworkException extends RuntimeException {
+
+        private static final long serialVersionUID = 1L;
+
+        HTTPNetworkException(Throwable parent) {
+            super(parent);
+        }
+
+    }
+
+    private HTTPUtils() {
+    }
+
+    public static String performGetCall(String requestURL) {
+        return performGetCall(requestURL, null);
+    }
+
+    public static String performGetCall(String requestURL, Map&lt;String, String&gt; requestParams) {
+        HttpURLConnection conn = null;
+        try {
+            if (requestParams != null) {
+                requestURL = requestURL + "?" + getPostDataString(requestParams);
+            }
+            URL url = new URL(requestURL);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout(15000);
+            conn.setConnectTimeout(15000);
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                StringBuilder sb = new StringBuilder();
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                String read;
+                while ((read = br.readLine()) != null) {
+                    sb.append(read);
+                }
+                br.close();
+                return sb.toString();
+            } else {
+                StringBuilder sb = new StringBuilder();
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "UTF-8"));
+                String read;
+                while ((read = br.readLine()) != null) {
+                    sb.append(read);
+                }
+                br.close();
+                throw new HTTPException(responseCode, sb.toString());
+            }
+        } catch (Exception e) {
+            throw new HTTPNetworkException(e);
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+    public static String performPostCall(String requestURL) {
+        return performPostCall(requestURL, null);
+    }
+
+    public static String performPostCall(String requestURL, Map&lt;String, String&gt; requestParams) {
+
+        URL url;
+        HttpURLConnection conn = null;
+        try {
+            url = new URL(requestURL);
+
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout(15000);
+            conn.setConnectTimeout(15000);
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            OutputStream os = conn.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+            if (requestParams != null) {
+                writer.write(getPostDataString(requestParams));
+            }
+            writer.flush();
+            writer.close();
+            os.close();
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                StringBuilder sb = new StringBuilder();
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                String read;
+                String sep = "";
+                while ((read = br.readLine()) != null) {
+                    sb.append(sep);
+                    sb.append(read);
+                    sep = "\n";
+                }
+                br.close();
+                return sb.toString();
+            } else {
+                StringBuilder sb = new StringBuilder();
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "UTF-8"));
+                String read;
+                String sep = "";
+                while ((read = br.readLine()) != null) {
+                    sb.append(sep);
+                    sb.append(read);
+                    sep = "\n";
+                }
+                br.close();
+                throw new HTTPException(responseCode, sb.toString());
+            }
+        } catch (Exception e) {
+            throw new HTTPNetworkException(e);
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+    private static String getPostDataString(Map&lt;String, String&gt; params) throws UnsupportedEncodingException {
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry&lt;String, String&gt; entry : params.entrySet()) {
+            if (first) {
+                first = false;
+            } else {
+                result.append("&");
+            }
+            result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+        }
+        return result.toString();
+    }
+    
+}</code></pre>
+<pre><code>package remote;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.webapp.WebAppContext;
+
+import core.FichierImpl;
+
+public class WebService {
+    
+    public WebService(String rep) throws Exception {
+        Server server = new Server(8080);
+        WebAppContext context = new WebAppContext();
+        context.setResourceBase("www");
+        context.addServlet(new ServletHolder(new APIServlet(new FichierImpl(rep))), "/");
+        server.setHandler(context);
+        server.start();
+    }
+
+    public static void main(String[] args) throws Exception {
+        new WebService("rep");
+    }
+}</code></pre>
                         </li>
                     </ol>
                 </article>
