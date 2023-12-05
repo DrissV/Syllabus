@@ -93,16 +93,21 @@ document.addEventListener("DOMContentLoaded", function () {
         updateButtons();
     });
 
-    fetch("catalogue.json")
-        .then(response => response.json())
-        .then(data => {
-            imageList = data;
-            totalPages = Math.ceil(imageList.length / itemsPerPage); // Affecter totalPages ici
-            showPage(currentPage);
-            updateButtons();
-            updateSelectOptions();
-        })
-        .catch(error => {
-            console.error("Erreur lors de la récupération de la liste d'images", error);
-        });
+    function loadJSON(jsonFileName) {
+        fetch(jsonFileName)
+            .then(response => response.json())
+            .then(data => {
+                imageList = data;
+                totalPages = Math.ceil(imageList.length / itemsPerPage); // Affecter totalPages ici
+                showPage(currentPage);
+                updateButtons();
+                updateSelectOptions();
+            })
+            .catch(error => {
+                console.error("Erreur lors de la récupération de la liste d'images", error);
+            });
+    }
+
+    // Charge le fichier JSON par défaut
+    loadJSON("catalogue.json");
 });
