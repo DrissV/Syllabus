@@ -71,6 +71,7 @@
                         <li><a href="#facade">Facade</a></li>
                         <li><a href="#interpreter">Interpreter</a></li>
                         <li><a href="#exercices">Exercices</a></li>
+                        <li><a href="#recapitulatif">Récapitulatif</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -11270,6 +11271,428 @@ public class WebService {
 }</code></pre>
                         </li>
                     </ol>
+                </article>
+                <article>
+                    <h2 id="recapitulatif">Récapitulatif :</h2>
+                    <p>Il y a différents types de design patterns : structurels (Flyweight, Decorator, Adapter, Proxy, Composite, Facade), créationnels (Builder, Factory Method, Abstract Factory, Prototype, Singleton) et comportementaux (Chain of Responsibility, Observer, Command, State, Interpreter, Strategy, Iterator, Template Method; Visitor).</p>
+                    <ol type="A">
+                        <li>
+                            <h3>Patterns Structurels :</h3>
+                            <ol>
+                                <li>
+                                    <h4>Flyweight :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Permettre la réutilisation d'objets dont on aura besoin plusieurs fois. On peut y parvenir en initialisant tous les objets réutilisables au début du programme et en créant et/ou utilisant une structure de données. Une fois la structure créée, on va y placer les objets réutilisables, ce qui nous permettra de les retrouver via une clef/valeur.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>On tient un restaurant qui a 10 plats et &#177; 200 clients.</p>
+                                    <h6>Programme sans flyweight :</h6>
+                                    <p>On instancie un nouveau plat par client.</p>
+                                    <p>Ce qui nous donnera 2000 (ou +) d'objets de type plat (ne parlons même pas de objets ingrédients qui créent le plat...).</p>
+                                    <h6>Programme avec flyweight :</h6>
+                                    <p>On instancie au début du programme les plats et une structure de données adéquate (ex. une map). On place les objets de type plat dans la structure, ce qui nous permettra de les récupérer via leurs clefs.</p>
+                                    <p>Ce qui permet lorsqu'un client nous demande un plat, d'aller chercher dans la map le bon plat et de lui offrir l'objet réutilisable.</p>
+                                    <h6>Gain :</h6>
+                                    <p>On passe de 2000 (ou +) objets de type plat en mémoire à 10.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/flyweight_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Decorator :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Rajouter une couche d'information à un objet, sans devoir toucher la classe qui crée l'objet de base.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Restaurant de pizza avec 4 pizzas et 4 extra.</p>
+                                    <h6>Exemple sans Decorator :</h6>
+                                    <p>On devrait créer une classe abstraite pizza et 4 classes pour les types de pizza et 16 classes supplémentaires pour imaginer qu'on n'ajoute qu'un extra par pizza et encore plus si on voudrait pouvoir ajouter un nombre infini d'extra. Conclusion : Catastrophe sans décorateur.</p>
+                                    <h6>Exemple avec Decorator :</h6>
+                                    <p>On crée une classe abstraite pizza, 4 classes pour les types de pizza et 4 ckasses qui extends la classe pizza (une par extra possible) et qui ajoutent par exemple au prix de la pizza le prix de l'extra.</p>
+<pre><code>public class Main {
+    Pizza pz = new Margarita();
+    // Si le choix du topping = extra mozza
+    pz = new PizzaExtraMozza(pz);
+    System.out.println("Ta pizza : " + pz.toString());
+}</code></pre>
+                                    <p>Grâce à ce pattern, on n'aura que 5 classes au lieu d'un nombre infini.</p>
+                                    <h6>hain :</h6>
+                                    <p>Mémoire / Nb de classes.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/decorator_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Adapter :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Permet de convertir l'interface d'une classe en une interfacer que le client attend.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Des pizzas et des focaccias.</p>
+                                    <h6>Exemple sans Adapter :</h6>
+                                    <p>On a écrit une interface qui correspond &#177; à l'interface nécessaire pour créer la focaccia demandée par le client. Sans Adapter, on va créer une intercace pour chaque possibilité de demande du client.</p>
+                                    <h6>Exemple avec Adapter :</h6>
+                                    <p>On utilise l'interface pizza pour créer une focaccia.</p>
+                                    <h6>Gain :</h6>
+                                    <p>Mémoire / Moins de duplication de code.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/adapter_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Proxy :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Permet de rajouter une couche de sécurité/information avant de donner accès à une fonctionnalité d'une autre classe dont le proxy instancie un objet.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Cuisine du restaurant.</p>
+                                    <h6>Exemple sans Proxy :</h6>
+                                    <p>La classe Main peut accéder directement à l'objet Cuisine et peut donc utiliser <span class="em">allumerLeFeu()</span> même si l'utilisateur du programme n'est pas qualifié !</p>
+                                    <p>CATASTROPHE, le restaurant brûle. (Imaginons un programme qui permet de delete les fichiers Système et c'est un lambda qui se connecte :X).</p>
+                                    <h6>Exemple avec Proxy :</h6>
+                                    <p>On crée une classe intermédiaire ProxyCuisine, qui va juste regarder si c'est bien le cuisto qui accède au programme. Si oui, alors <span class="em">allumerLeFeu()</span>. Sinon, <span class="em">System.out.println("Pas touche gamin")</span>. (On pourrait laisser faire mais sauver dans un fichier qui accède à la cuisine ;)).</p>
+                                    <h6>Gain :</h6>
+                                    <p>Sécurité / Contrôle d'accès.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/proxy_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Composite :</h4>
+                                    <h5>utilité :</h5>
+                                    <p>Permettre d'avoir la même interface pour deux classes différentes qui traitent sur les mêmes objets et qui ont au moins une méthode similaire. Une classe qui est l'objet et une classe qui a une structure de données qui contient plusieurs de ces objets.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Une méga-ultra-pizza et des pizzas.</p>
+                                    <h6>Exemple sans Composite :</h6>
+                                    <p>On crée une interface pizza, une classe par pizza (implements interface) et une classe mega-ultra-pizza qui contient une Map de pizzas.</p>
+                                    <p>Dans la classe Main, on va utiliser l'itérateur de la Map pour récupérer chaque objet pour ensuite utiliser la méthode (ex: <span class="em">afficherIngredients()</span>.) de l'interface Pizza.</p>
+                                    <h6>Exemple avec Composite :</h6>
+                                    <p>Une interface Pizza, une classe par genre de pizzas (qui implements interface), une classe mega-ultra-pizza (qui implements interface et contient une structure de dibbées qui contient des Pizzas).</p>
+                                    <p>Ici, on pourra utiliser la méthode <span class="em">afficherIngredients()</span> de la classe Four pour afficher par Objets dans la structure, les ingrédients.</p>
+                                    <h6>Gain :</h6>
+                                    <p>Mémoire / Rapidité.</p>
+                                    <h5>UML :</h5>
+                                    <p>Erreur dans l'UML, <span class="em">add</span>, <span class="em">remove</span>, <span class="em">getChild</span> ne sont PAS dans l'interface.</p>
+                                    <img src="../images/composite_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Facade :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Permet de cacher toute la complexité d'un programme en montrant qu'une classe qui utilise toutes les classes qu'on a créées et rend l'utilisation de celles-ci facile "user-friendly".</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Restaurant, faire une pizza.</p>
+                                    <h6>Exemple sans Facade :</h6>
+                                    <p>Ajouter de la sauce tomate, sans Facade, le client devrait faire appel à :</p>
+<pre><code>pelerTomates();
+ecraserTomates();
+mixerSauce();
+appliquerSauceCalmementSurPate();</code></pre>
+                                    <h6>Exemple avec Facade :</h6>
+<pre><code>public class FacadeFairePizza {
+    ...
+    ajouterSaceTomate() {
+        tomate.pelerTomates();
+        tomate.ecraserTomates();
+        sauce.mixerSaucce(tomate);
+        pz.appliquerSauceCalmementSurPate(sauce);
+    }
+
+}</code></pre>
+                                    <p>Dans le Main, on appelle <span class="em">FacadeFairePizza</span> et c'est devenu EASY de faire une pizza, TOP !</p>
+                                    <h6>Gain :</h6>
+                                    <p>Programme facile à l'utilisation pour le client / Compréhension plus facile des utilités de chaque "groupe" de classe.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/facade_uml.png" alt="">
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>patterns créationnels :</h3>
+                            <ol>
+                                <li>
+                                    <h4>Builder :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Permet de créer un objet au fur et à mesure.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Création d'une tour de gaming.</p>
+                                    <h6>Exemple sans Builder :</h6>
+                                    <p>On crée i,e cmasse par tour de gaming qu'il est possibble de créer (1000000 de classes).</p>
+                                    <h6>Exemple avec Builder :</h6>
+                                    <p>On a un objet Tour qui, à l'initialisation, a chacune de ses valeurs à NULL. Au fur et à mesure que nos parties HW commandées arrivent (Oui, Alibaba c'est LENT). On pourra rajouter à la valeur correspondante dans notre tour (par ex. carte Mère (<span class="em">setCM()</span>)).</p>
+                                    <h6>Gain :</h6>
+                                    <p>Possibilités de création/Mémoire (!!!!!!!)</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/builder_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Factory Method :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Créer un objet sans accéder à classe Concrete.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Mon client me demande une Margarita.</p>
+                                    <h6>Exemple sans FM :</h6>
+                                    <p>Dans la classe qui demande : <span class="em">new Margarita()</span>.</p>
+                                    <h6>Exemple avec FM :</h6>
+<pre><code>public class Client {
+    Factory mf = new MargaritaFactory();
+    System.out.println("Tiens ta pizza chef : " + mf.creerPizza());
+}
+
+public abstract class Factory {
+    void qqchose();
+    abstract Pizza creerPizza();
+}
+
+public class MargaritaFactory extends Factory {
+    Pizza creerPizza() {
+        return new Margarita();
+    }
+}</code></pre>
+                                    <h6>Gain :</h6>
+                                    <h5>UML :</h5>
+                                    <img src="../images/factory_method_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Abstract Factory :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Créer des objets de la même famille / qui se ressemble sans savoir le produit Concret.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Restaurant italien, client demande une pâte avec une couche de tomate dessus, il s'en fout si c'est une pizza ou une focaccia, il s'en fout car il a juste faim.</p>
+                                    <h6>Exemple sans AF :</h6>
+                                    <p>/</p>
+                                    <h6>Exemple avec AF :</h6>
+                                    <p>Client va demander à mon AbstractFactory de créer une pâte avec de la sauce tomate dessus, elle va renvoyer soit un objet de type FocacciaTomate soit PizzaSauceTomate, toute façon le client s'en fout et ça répond à la demande du client.</p>
+                                    <h6>Gain :</h6>
+                                    <p>Le client ne doit pas s'interroger sur quel type de fleur il a reçu... Il s'en fout.</p>
+                                    <h5>UML :</h5>
+                                    <p>Manque des flèches de la ConcreteFactory vers la ConcreteProduct.</p>
+                                    <img src="../images/abstract_factory_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Prototype :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Au lieu de réinstancier à chaque fois un objet, on va copier cet objet le nombre de fois dont on a besoin et juste modifier les valeurs qui doivent changer. En gardant ce qui doit être inchangé.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Plats très ressemblants dans un restaurant.</p>
+                                    <h6>Exemple sans prototype :</h6>
+                                    <p>Pour chaque plat demandé, je vais réinstancier chaque objet nécessaire à création de mon plat, même si j'ai utilisé les mêmes objets lors de la création de mon autre plat.</p>
+                                    <h6>Exemple avec prototype :</h6>
+                                    <p>Un plat qui est exactement que le play2, la seule différence étant qu'il y a la sauce qui change. Au lieu d'instancier deux objets (contenant des objets qu'il faut instancier), on va faire une copie du premier objet (qu'on aura instancié) et juste modifier l'objet sauce contenu dans ce plat, au lieu de devoir réinstancier l'objet viande etc. etc.</p>
+                                    <p>// Singleton récurif XXL ?</p>
+                                    <h6>Gain :</h6>
+                                    <p>Rapidité / Mémoire.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/prototype_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Singleton :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Permet d'avoir une seule instance d'un objet. Si l'objet existe déjà on envoie une référence vers celui-ci. Sinon on instancie l'objet et on envoie la référence.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    Un même plat dans un restaurant qui est redemandé souvent.
+                                    <h6>Exemple sans Singleton :</h6>
+                                    <p>Pour chaque plat, je fais un <span class="em">new Plat()</span>. Je recrée des objets qui sont les mêmes.</p>
+                                    <h6>Exemple avec Singleton :</h6>
+                                    <p>Au lieu de recréer à chaque fois un nouveau plat, qui est en fait le même qu'un autre client a déjà commandé, je vais renvoyer la référence vers ce plat donné au premier client, pour au final n'avoir initialisé qu'une fois le plat.</p>
+                                    <h6>Gain :</h6>
+                                    <p>Rapidité / Mémoire.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/singleton_uml.png" alt="">
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Patterns comportementaux :</h3>
+                            <ol>
+                                <li>
+                                    <h4>Chain of Responsibility :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Diviser pour mieux régner. Au lieu d'avoir une classe qui s'occupe de faire chaque test, on va diviser les tests en plusieurs classes pour ne pas devoir charger en mémoire chaque test.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>L'inscription d'un étudiant à l'IPL. On a plusieurs porfs avec plusieurs capacités pour le traitement d'une inscription. On a plusieurs profs avec plusieurs capacités pour le traitement d'une inscription. Le traitement d'un élève normal peut être traité par le secrétariat. Un élève boursier, c'est trop compliqué donc c'est monsieur Damas qui s'en occupe, ...</p>
+                                    <h6>Exemple avec COR :</h6>
+                                    <p>Une classe par "personne" (test) ce qui permet de charger en mémoire qui les tests nécessaires pour le traitement.</p>
+<pre><code>public abstract class Handler {
+    protected Handler m_suivant;
+    public void setSuivant(Handler suivant) {
+        m_suivant = suivant;
+    }
+    abstract void handleRequest(requete);
+}
+
+public class ConcreteHandler1 extends Handler {
+    void handleRequest(requete) {
+        if (jeSaisPasTraiter)
+            super.handleRequest(requete);
+        System.out.println("toto");
+    }
+}</code></pre>
+                                    <h6>Gain :</h6>
+                                    <p>Place mémoire.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/chain_of_responsibility_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Observer :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Permet lors d'un changement d'état de le dire aux classes intéressées pour qu'elles aussi prennent en compte ce changement.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Restaurant, changement de recette.</p>
+                                    <h6>Exemple sans Observer :</h6>
+                                    <p>Le cuisinier décide d'utiliser plus de tomates dans sa sauce, si le livreur de tomates n'est pas tenu au courant, après une semaine le cuisinier n'aura plus assez de tomates pour faire sa nouvelle sauce... Le restaurant va faire faillite.</p>
+                                    <h6>Exemple avec Observer :</h6>
+                                    <p>Quand le cuisinier décide de changer une variable, le livreur est directement "notifié" de ce changement et peut donc changer ses variables en fonction de cette notification. Le restaurant continue de fonctionner... (Monde idéal).</p>
+                                    <h6>Gain :</h6>
+                                    <p>Réactivité du code, moins de dépendance de personnes réelles.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/observer_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Command :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Permettre l'exécution d'une fonction en découpant qui envoie la demande et qui reçoit l'exécution.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <ol>
+                                        <li>
+                                            <p>Le client du restaurant demande une pizza au programme.</p>
+                                        </li>
+                                        <li>
+                                            <p>Le programme envoie au caissier la demande, va vérifier si c'est bien payé. Si c'est bien payé, il sélectionne la ConcreteCommand qui permet de créer la pizza et envoie au cuisinier la demande (qui contient l'action à exécuter).</p>
+                                        </li>
+                                        <li>
+                                            <p>L'action du cuisinier dépendra alors de la méthode du ConcreteCommand reçue.</p>
+                                        </li>
+                                    </ol>
+                                    <h6>Exemple sans Command :</h6>
+                                    <p>/</p>
+                                    <h6>Exemple avec Command :</h6>
+<pre><code>Client = Client
+Invoker = cuisinier
+Command:execute()  executeDemande(){}
+ConcreteCommand:execute() = executeDemande(){System.out.println("creerPizza");}
+ConcreteCommand:execute() = executeDemande(){System.out.println("Demande €");}
+Receiver = Cuisinier
+Receiver:action() = action(){executeDemande("?");}</code></pre>
+                                    <h6>Gain :</h6>
+                                    <p>Vérification de la possibilité de la demande.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/command_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>State :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Changer de méthode utilisée en fonction de l'état d'un objet.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Un bébé fait du bruit dans le restaurant, une cliente demande de faire taire le bébé.</p>
+                                    <h6>Exemple sans State :</h6>
+                                    <p>20000 classes différentes.</p>
+                                    <h6>Exemple avec State :</h6>
+<pre><code>State : handle()
+ConcreteState1 : Pleure
+ConcreteState2 : DorsEtRonfle
+ConcreteState3 : Ris
+Pleure : handle(){System.out.println("Douche froide");}
+DorsEtRonfle : handle(){System.out.println("Petite claque correc'");}
+Ris : handle(){System.out.println("Petite claque à la femme qui est en venue se plaindre");}</code></pre>
+                                    <h6>Gain :</h6>
+                                    <p>Facilité de programmation.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/state_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Interpreter :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Permettre de traduire un langage ou une expression vers quelque chose de compréhensible.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>Mon restaurant italien, un italien me sort une phrase italienne, mais moi je ne pige rien, je suis français.</p>
+                                    <h6>Exemple :</h6>
+                                    <p>Le client (moi) reçoit la phrase italienne, le contexte c'est toute la grammaire (vocabulaire italien du programme) et tout ce dont l'interpréteur a besoin. Le client va envoyer la phrase entière à l'interpréteur, celui-ci va voir si c'est un mot (Terminal) ou une phrase (NonTerminal). Si c'est une phrase, il la découpe, garde un mot, le traduit et le stocke, jusqu'à qu'il n'y ait plus qu'une expression terminake, puis renvoie au client la traduction finie (totale stockée).</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/interpreter_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Strategy :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Pouvoir changer comment fonctionne une méthode d'une classe en fonction d'une donnée quelconque.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>J'ai ma cuisine et je savoir préparer italien/russe/français.</p>
+                                    <h6>Exemple sans Strategy :</h6>
+                                    <p>Je crée une interface et une classe CuisineConcrete avec trois méthodes preparationFr/preparationRu/preparationIt.</p>
+                                    <h6>Exemple avec Strategy :</h6>
+                                    <p>Une interface cuisine, une classe CuisineConcrete avec une méthode <span class="em">preparation</span> et un objet Cuisto qui contiendra LUI la bonne méthde.</p>
+<pre><code>public class CuisineConcrete {
+    Cuisto monCuisto;
+    // Constructeur décidera du cuisto
+    public function preparation() {
+        this.monCuisto.preparation();
+    }
+}</code></pre>
+                                    <h6>Gain :</h6>
+                                    <p>Moins de programmation, modulable.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/strategy_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Iterator :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Pouvoir "itérer" sur plusieurs objets contenus dans une structure.</p>
+                                    <h5>Exemple :</h5>
+                                    <p>Itérer sur chaque objet d'une map.</p>
+                                    <p>Tant qu'il y a un suivant dans ma structure avec ma fonction <span class="em">next()</span>...</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/interpreter_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Template Method :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>On crée un algorithme de base qui fonctionne et qui pourra être élaborer par les classes Concrete qui se basent dessus.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contetxte :</h6>
+                                    <p>On a la recette (l'algo) pour créer une pizza hawaïenne, notre chef à sa propre recette basée sur cette recette et le concurrent d'en face aussi ! Cooment coder pour qu'ils se basent dessus.</p>
+                                    <h6>Exemple avec TM :</h6>
+                                    <p>On crée une classe abstraite qui contient la recette de base dans la <span class="em">templateMethod()</span> et une méthode <span class="em">subMethod()</span> qui sera redéfinie dans la classe concrète pour ajouter des bouts à la recette (algorithme).</p>
+                                    <h6>Gain :</h6>
+                                    <p>Moins de classes.</p>
+                                    <h5>UML :</h5>
+                                    <img src="../images/template_method_uml.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Visitor :</h4>
+                                    <h5>Utilité :</h5>
+                                    <p>Permet de faire des manipulations compliquées à l'aide des fonctionnalités basiques offertes par l'interface Element.</p>
+                                    <p class="em">Souvent visiteur sur composite.</p>
+                                    <h5>Exemple :</h5>
+                                    <h6>Contexte :</h6>
+                                    <p>J'ai mon restaurant et je veux compter le nombre de tomates utilisées en tout tyê de pizza.</p>
+                                    <h6>Exemple sans Visitor :</h6>
+                                    <p>Je rajoute un <span class="em">nbTomates</span> à mes classes concrètes, je rajoute une méthode <span class="em">get</span> à toutes mes classes pour ce nombre et dans mon client, je fais la somme à chaque fois que j'appelle une pizza... Faudra aller voir chaque référence de pizza, modifier tout le code. <span class="em">NOT OK.</span></p>
+                                    <h6>Exemple avec Visitor :</h6>
+                                    <p>
+                                        On va rajouter une seule méthode à chaque Element : <span class="em">accept</span> qui reçoit le visiteur en paramètre.
+                                        <p>
+                                            Dans la méthode <span class="em">accept</span>, on va appeler les méthodes publiques du visiteur pour pouvoir compter par exemple facilement le nombre de tomates. Ou encore d'autres fonctionnaliés... Augmenter le nombre de méthodes = facile avec visiteur.
+                                            <h6>Gain :</h6>
+                                            <p>Rajout de fonctionnalités complexes facilement.</p>
+                                            <h5>UML :</h5>
+                                            <img src="../images/visitor_uml.png" alt="">
+                                        </p>
+                                    </p>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                    <p>Voici les astuces pour découvrir toutes les références d'un objet :</p>
+                    <img src="../images/astuces_design_patterns.png" alt="">
+                    <img src="../images/astuces_design_patterns_1.png" alt="">
                 </article>
             <!-- fin de section -->
             </section>
