@@ -65,6 +65,7 @@
                         <li><a href="#explications_technologies_.NET">Explications sur les technologies .NET</a></li>
                         <li><a href="#poo">La programmation orientée objet</a></li>
                         <li><a href="#linq">LINQ</a></li>
+                        <li><a href="#linq_to_objects">LINQ To Objects</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1628,6 +1629,116 @@ class Program
         Console.ReadLine();
     }
 }</code></pre>
+                </article>
+                <article>
+                    <h2 id="linq_to_objects">LINQ To Objects :</h2>
+                    <h3>Introduction à LINQ To Objects :</h3>
+                    <p><span class="em">LINQ To Objects</span> fait référence à l'utilisation directe de requêtes LINQ, avec n'importe quelle collection "IEnumerable" et "IEnumerable&lt;T&gt;" telles que "List&lt;T&gt;", "Array" ou "Dictionary&lt;Tkey, Tvalue&gt;" définies par l'utilisateur ou retournées par une API du Framework .NET.</p>
+                    <p>Auparavant, nous devions écrire des boucles complexes pour spécifier comment récupérer des données d'une collection. Maintenant grâce à LINQ, nous pourrons écrire du code déclaratif qui décrira exactement ce que nous voudrons.</p>
+                    <p>Ces requêtes offrent trois principaux avantages par rapport aux boucles :</p>
+                    <ul>
+                        <li>
+                            <p>Elles sont plus concises et lisibles.</p>
+                        </li>
+                        <li>
+                            <p>Elles fournissent des fonctions puissantes de filtrage, de classement et de regroupement avec un minimum de code.</p>
+                        </li>
+                        <li>
+                            <p>Elles peuvent être appliquées à d'autres sources de données avec peu ou pas de changement.</p>
+                        </li>
+                    </ul>
+                    <p>En gros, plus l'opération sur les données à d'autres sources de données avec peu ou pas de changement.</p>
+<pre><code>IEnumerable&lt;Contact&gt; QueryResult = from Contact c in Contacts
+                                                    where c.Email.Substring(0, c.Email.IndexOf('@')).Length == (c.Nom.Length + c.Prenom.Length + 1)
+                                                    orderby c.Prenom, c.Nom
+                                                    select c;</code></pre>
+                    <h3>LINQ &#8594; Query ou pas ! :</h3>
+                    <p><span class="em">LINQ</span> étant l'abréviation de "<span class="em">Language Integrated Query</span>", nous pourrions penser qu'il se limite à l'interrogation de données. Mais en réalité, son utilisation peut aller bien au-delà.</p>
+<pre><code>string[] ValuesAsStrings = { "110", "987", "205", "341" };
+int[] ints = ValuesAsStrings.Select(s =&gt; Int32.Parse(s)).ToArray();
+
+foreach (int i in ints)
+{
+    Console.WriteLine(i);
+}
+
+Console.ReadLine();</code></pre>
+                    <p class="em">La conversion de ce tableau de "string" en "int" pourrait être plus simple ?</p>
+                    <h3>IEnumerable&lt;T&gt; et séquence :</h3>
+                    <p>Cette interface a été implémentée par les tableaux et les classes de collections génériques de C# 2.0. Elle permet, de par son fonctionnement, d'énumérer les éléments d'une collection.</p>
+                    <p>Une séquence est un terme logique d'une collection implémentant l'interface "IEnumerable&lt;T&gt;". En d'autres termes, si nous avions une variable de type "IEnumerable&lt;string&gt;", nous pourrons dire que nous avons une séquence de "string".</p>
+                    <p>Nous allons voir, par la suite que la plupart des "Opérateurs de requête standard" sont prototypées de façon à retourner une séquence (IEnumerable&lt;T&gt;).</p>
+                    <h3>Opérateurs de requête standard :</h3>
+                    <p>Les "opérateurs de requête standard" sont les méthodes qui composent le modèle LINQ.</p>
+                    <p>Ka plupart de ses méthodes fonctionnent sur des séquences et fournissent des fonctions de requête, notamment le filtrage (Where), la projection (Select), l'agrégation (Sum), le tri (Orderby), etc.</p>
+                    <p>Elles sont définies, dans la classe "Enumerable", comme méthodes d'extension à l'interface "IEnumerable", cela implique qu'elles peuvent être appelées sur n'importe quelle collection générique comme méthode d'instance.</p>
+                    <p>Ces opérateurs sont regroupés par fonctionnalité :</p>
+                    <ul>
+                        <li>
+                            <p>Agrégation</p>
+                        </li>
+                        <li>
+                            <p>Concaténation</p>
+                        </li>
+                        <li>
+                            <p>Conversion</p>
+                        </li>
+                        <li>
+                            <p>Égalité</p>
+                        </li>
+                        <li>
+                            <p>Élément</p>
+                        </li>
+                        <li>
+                            <p>Ensemble</p>
+                        </li>
+                        <li>
+                            <p>Filtrage</p>
+                        </li>
+                        <li>
+                            <p>Génération</p>
+                        </li>
+                        <li>
+                            <p>Jointure</p>
+                        </li>
+                        <li>
+                            <p>Partitionnement</p>
+                        </li>
+                        <li>
+                            <p>Projection</p>
+                        </li>
+                        <li>
+                            <p>Quantificateur</p>
+                        </li>
+                        <li>
+                            <p>Regroupement</p>
+                        </li>
+                        <li>
+                            <p>Tri</p>
+                        </li>
+                    </ul>
+                    <p class="em">En annexe, vous trouverez la liste complète de ces opérateurs (.NET 3.5) par ordre alphabérique.</p>
+                    <h3>Modes d'exécutions :</h3>
+                    <p>Les opérateurs de requêtes standard se divisent en 2 modes d'exécution : immédiat et différé.</p>
+                    <p>L'exécution immédiate signifie que la source de données est lue et que l'opérateur est effectuée au point où la requête est déclarée dans le code. Ce mode d'exécution vise tous les opérateurs de requête standard qui retournent un résultat unique et non énumérable comme les opérateurs d'agrégation, d'élément, etc.</p>
+                    <p>L'exécution différée signifie que l'opération n'est pas effectuée au point où la requête est déclarée dans le code mais qu'elle le sera uniquement que lorsque la variable de requête est énumérée (boucle foreach par exemple).</p>
+                    <p>Cela signifie que les résultats de l'exécution de la requête dépendent du contenu de la source de données lorsque la requête est exécutée plutôt que lorsqu'elle est définie. Si la variable de requête est énumérée plusieurs fois, les résultats peuvent s'avérer différents chaque fois. Presque tous les opérateurs de requête standard dont le type de retour est IEnumerable&lt;T&gt; s'exécutent de manière différée.</p>
+                    <h3>Support de l'expression de requête :</h3>
+                    <p>Certains des opérateurs de requêtes standard, les plus courants, possèdent une syntaxe de mots clé du langage C# qui leur permet d'être appelés dans le cadre d'une expression de requête.</p>
+                    <p>Par défaut, pour utiliser LINQ, nous devrions appeler ces opérateurs qui sont des méthodes. L'expression de requête nous offre une forme plus lisible que son équivalent fondé sur des méthodes.</p>
+                    <p>Les clausses de requêtes sont traduites en appels de méthodes lors de la compilation.</p>
+<pre><code>IEnumerable&lt;Contact&gt; QueryResult = from Contact c in Contacts
+                                                    where c.Email.Substring(0, c.Email.IndexOf('@')).Length == (c.Nom.Length + c.Prenom.Length + 1)
+                                                    orderby c.Prenom,c.Nom
+                                                    select c;</code></pre>
+<pre><code>IEnumerable&lt;Contact&gt; QueryResult = Contacts
+                                                    .Where(c =&gt; c.Email.Substring(0, c.Email.IndexOf('@')).Length == (c.Nom.Length + c.Prenom.Length + 1))
+                                                    .OrderBy(c =&gt; c.Prenom)
+                                                    .ThenBy(c =&gt; c.Nom);</code></pre>
+                    <p>Une expression de requête doit commencer par une clause "from" et doit se terminer par une clause "select" ou "group". Entre la première clause from et la dernière clause select ou group, elle peut contenir une ou plusieurs clauses facultatives : where, orderby, join, let et même d'autres clauses from supplémentaires.</p>
+                    <p>Nous pourrons également utiliser le mot clé "into" pour que le résultat d'une clause "join" ou "group" puisse servir de source pour des clauses de requête supplémentaires dans la même expression de requête.</p>
+                    <h3>Support de l'expression de requête :</h3>
+                    <p>Liste des Opérateurs supportant l'expression de requête en C# :</p>
                 </article>
             <!-- fin de section -->
             </section>
