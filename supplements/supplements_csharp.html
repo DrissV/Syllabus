@@ -1772,8 +1772,527 @@ Console.ReadLine();</code></pre>
                                 <td>Cast</td>
                                 <td>'from <span class="em">int</span> n in numbers' explicitement typé</td>
                             </tr>
+                            <tr>
+                                <td>GroupBy</td>
+                                <td>'group ... by' ou 'group ... by ... into ...'</td>
+                            </tr>
+                            <tr>
+                                <td>GroupJoin</td>
+                                <td>'join ... in ... on ... equals ... into ...'</td>
+                            </tr>
+                            <tr>
+                                <td>Join</td>
+                                <td>'join ... in ... on ... equals ...'</td>
+                            </tr>
+                            <tr>
+                                <td>OrderBy</td>
+                                <td>'order by ...'</td>
+                            </tr>
+                            <tr>
+                                <td>OrderByDescending</td>
+                                <td>'orderby ... descending'</td>
+                            </tr>
+                            <tr>
+                                <td>Select</td>
+                                <td>'select'</td>
+                            </tr>
+                            <tr>
+                                <td>SelectMany</td>
+                                <td>Plusieurs clauses 'from'</td>
+                            </tr>
+                            <tr>
+                                <td>ThenBy</td>
+                                <td>'orderby ..., ...'</td>
+                            </tr>
+                            <tr>
+                                <td>ThenByDescending</td>
+                                <td>'orderby ..., ... descending'</td>
+                            </tr>
+                            <tr>
+                                <td>Where</td>
+                                <td>'where'</td>
+                            </tr>
                         </tbody>
                     </table>
+                    <h3>Les opérateurs courants :</h3>
+                    <p>Nous allons à présent faire le tour des opérateurs les plus souvent utilisés en LINQ. Les exemples qui vont suivre seront exécutés sur une liste générique de "Contact".</p>
+<pre><code>public class Contact
+{
+    public string Nom { get; set; }
+    public string Prenom { get; set; }
+    public string Email { get; set; }
+    public int AnneeDeNaissance { get; set; }
+}
+
+List&lt;Contact&gt; Contacts = new List&lt;Contact&gt;();
+Contacts.AddRange(new Contact[] {
+    new Contact() { Nom = "Person", Prenom="Michael", Email="michael.person@cognitic.be", AnneeDeNaissance = 1982 },
+    new Contact() { Nom = "Morre", Prenom="Thierry", Email="thierry.morre@cognitic.be", AnneeDeNaissance = 1974 },
+    new Contact() { Nom = "Dupuis", Prenom="Thierry", Email="thierry.depuis@cognitic.be", AnneeDeNaissance = 1988 },
+    new Contact() { Nom = "Faulkner", Prenom="Stéphane", Email="stephane.faulkner@cognitic.be", AnneeDeNaissance = 1969 },
+    new Contact() { Nom = "Selleck", Prenom="Tom", Email="tom.selleck@imdb.com", AnneeDeNaissance = 1945 },
+    new Contact() { Nom = "Anderson", Prenom="Richard Dean", Email="richard.dean.anderson@imdb.com", AnneeDeNaissance = 1950 },
+    new Contact() { Nom = "Bullock", Prenom="Sandra", Email="sandra.bullock@imdb.com", AnneeDeNaissance = 1964 },
+    new Contact() { Nom = "Peppard", Prenom="George", Email="peppard.george@ateam.com", AnneeDeNaissance = 1928 },
+    new Contact() { Nom = "Estevez", Prenom="Emilio", Email="emilio.estevez@breakfirstclub.com", AnneeDeNaissance = 1962 },
+    new Contact() { Nom = "Moore", Prenom="Demo", Email="demi.moore@imdb.com", AnneeDeNaissance = 1962 },
+    new Contact() { Nom = "Willis", Prenom="Bruce", Email="bruce.willis@diehard.com", AnneeDeNaissance = 1955 },
+
+});</code></pre>
+                    <p>Voici les opérateurs que nous allons voir :</p>
+                    <ul>
+                        <li>
+                            <p>Opérateurs "Cast&lt;T&gt;" & "OfType&lt;T&gt;"</p>
+                        </li>
+                        <li>
+                            <p>Opérateur "Where"</p>
+                        </li>
+                        <li>
+                            <p>Opérateur "Select"</p>
+                        </li>
+                        <li>
+                            <p>Opérateur "Distinct"</p>
+                        </li>
+                        <li>
+                            <p>Opérateur "SingleOrDefault"</p>
+                        </li>
+                        <li>
+                            <p>Opérateur "FirstOrDefault"</p>
+                        </li>
+                        <li>
+                            <p>Opéreateurs "OrderBy[Descending]"</p>
+                        </li>
+                        <li>
+                            <p>Opérateurs "ThenBy[Descending]"</p>
+                        </li>
+                        <li>
+                            <p>Opérateurs "Count" & "LongCount"</p>
+                        </li>
+                        <li>
+                            <p>Opérateurs "Min" & "Max"</p>
+                        </li>
+                        <li>
+                            <p>Opérateurs "Sum" & "Average"</p>
+                        </li>
+                        <li>
+                            <p>Opérateur "GroupBy"</p>
+                        </li>
+                        <li>
+                            <p>Opérateur "Join"</p>
+                        </li>
+                        <li>
+                            <p>Opérateur "GroupJoin"</p>
+                        </li>
+                    </ul>
+                    <p class="html">Dans certains cas, les oéprateurs ont des surcharges. Pour ne pas rallonger inutilement ce cours, je me contenterai des prototypes de base.</p>
+                    <p class="html">Vous trouverez l'ensemble des surcharges sur le site "MSDN" ou dans la classe "Enumerable".</p>
+                    <p class="em">J'ajouterai la requête sous forme d'"expression de requête", lorsque l'opérateur supportera cette syntaxe.</p>
+                    <h3>Opérateurs "Cast&lt;T&gt;" & "TypeOf&lt;T&gt;" :</h3>
+                    <p>La grande majorité des opérateurs de requête LINQ ne peut être utilisée que sur des collections qui implémentent l'interface "IEnumerable&lt;T&gt;"/ Or, aucune des collections présente dans l'espace de nom "System.Collections", telles que Array, ArrayList ou HashTable, n'implémentent cette interface."</p>
+                    <p>Mais alors comment utiliser LINQ avec ces collections ?</p>
+                    <p>En regardant de plus près la classe "Enumerable" qui implémente les méthodes d'extension de LINQ. Nous retrouvons deux méthodes qui ne sont pas des méthodes d'extension sur l'interface "IEnumerable&lt;T&gt;" mais sur "IEnumerable".</p>
+                    <p>Ces deux opérateurs sont là pour transformer une collection "IEnumerable" en une séquence "IEnumerable&lt;T&gt;".</p>
+                    <p>Cependant, ces opérateurs sont quelque pei différents l'un de l'autre.</p>
+                    <h4>Cast&lt;T&gt; :</h4>
+<pre><code>public static IEnumerable&lt;TResult&gt; Cast&lt;TResult&gt;(this IEnumerable source);</code></pre>
+                    <p>Cet oéprateur va tenter de convertir tous les éléments de la collection en une séquence de type 'T'. Si celle-ci n'y parvient pas, elle lèvera une exception.</p>
+<pre><code>// Transforme List&lt;Contact&gt; (IEnumerable&lt;T&gt;) en ArrayList (IEnumerable)
+ArrayList MyArrayList = new ArrayList(Contacts.ToArray());
+
+IEnumerable&lt;Contact&gt; Result = MyArrayList.Cast&lt;Contact&gt;();</code></pre>
+                    <p>Cet opérateur supporte la syntaxe d'expresion de requête. En spécifiant explicitement le type à utiliser.</p>
+<pre><code>// Transforme List&lt;Contact&gt; (IEnumerable&lt;T&gt;) en ArrayList (IEnumerable)
+ArrayList MyArrayList = new ArrayList(Contacts.ToArray());
+
+IEnumerable&lt;Contact&gt; Result = from Contact c in MyArrayList
+                                    select c;</code></pre>
+                    <h4>OfType&lt;T&gt; :</h4>
+<pre><code>public static IEnumerable&lt;TResult&gt; OfType&lt;TResult&gt;(this IEnumerable source);</code></pre>
+                    <p>Cet opérateur, quant à lui, va filtrer en fonction de leur capacité à être castées dans le type spécifié.</p>
+<pre><code>// Transforme List&lt;Contact&gt; (IEnumerable&lt;T&gt;) en ArrayList (IEnumerable)
+ArrayList MyArrayList = new ArrayList(Contacts.ToArray());
+
+IEnumerable&lt;Contact&gt; Result = MyArrayList.OfType&lt;Contact&gt;();</code></pre>
+                    <p>Cet opératue n'étant pas supporter par l'expression de requête, voici comment spécifier que l'on utilise "OfType&lt;T&gt;" plutôt que "Cast&lt;T&gt;".</p>
+<pre><code>// Transforme List&lt;Contact&gt; (IEnumerable&lt;T&gt;) en ArrayList (IEnumerable)
+ArrayList MyArrayList = new ArrayList(Contacts.ToArray());
+
+// Attention 2 requêtes LINQ imbriquées
+IEnumerable&lt;Contact&gt; Result = from c in MyArrayList.OfType&lt;Contact&gt;()
+                                    select c;</code></pre>
+                    <h4>Préférons "OfType&lt;T&gt;" à "Cast&lt;T&gt;" :</h4>
+                    <p>Bien que ces deux opérateurs soient utilisables sur une collection héritée (System.Collection), "Cast&lt;T&gt;" nécessite que tous les éléments aient le type attendu.</p>
+                    <p>Pour éviter de générer des excceptions en cas d'incompatibilité de types, préférons-lui l'opérateur "OfType&lt;T&gt;". Par son intermédiaire, seuls les objets pouvant être castés dans le type attendu seront stockés dans la séquence.</p>
+                    <p>Les autres seront purement et simplement ignoré.</p>
+                    <h3>Opérateur "Where" :</h3>
+<pre><code>public static IEnumerable&lt;TSource&gt; Where&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source, Func&lt;TSource, bool&gt; predicate);</code></pre>
+                    <p>L'opérateur "Where" est utilisé pour filtrer une séquence.</p>
+                    <p class="em">Cet opérateur utilise le "delegate" générique "Func&lt;T, bool&gt;" vu dans le chapitre précédent.</p>
+<pre><code>IEnumerable&lt;Contact&gt; QueryResult = Contacts.Where(c =&gt; c.AnneeDeNaissance &gt;= 1950);
+
+foreach (Contact c in QueryResult)
+{
+    Console.WriteLine("{0} {1} : {2}", c.Nom, c.Prenom, c.AnneeDeNaissance);
+}</code></pre>
+                    <h4>Expression de requête :</h4>
+<pre><code>IEnumerable&lt;Contact&gt; QueryResult = from c in Contacts
+                                                    where c.AnneeDeNaissance &gt;= 1950
+                                                    select c;
+
+foreach (Contact c in QueryResult)
+{
+    Console.WriteLine("{0} {1} : {2}", c.Nom, c.Prenom, c.AnneeDeNaissance);
+}</code></pre>
+                    <h3>Opérateur "Select" :</h3>
+<pre><code>public static IEnumerable&lt;TR&gt; Select&lt;T, TR&gt;(this IEnumerable&lt;T&gt; source, Func&lt;T, TR&gt; selector);</code></pre>
+                    <p>L'opérateur "Select" est utilisé pour retourner une séquence d'éléments sélectionnés dans la séquence d'entrée ou à partir d'une portion de la séquence d'entrée.</p>
+                    <p>Dans les requêtes LINQ basées sur les appels de méthodes, l'opérateur "Select" est facultatif et sert principalement à sélectionner une portion, en termes de Propriétés, des objets en entrée et de créer de nouveaux types d'objets (types anomymes).</p>
+                    <p>Dans les expressions de requête, que l'on crée un type anonyme ou non, celui-ci est obligatoire.</p>
+<pre><code>// Sélectionne tous les contacts et retourne une séquence de type "Contact"
+IEnumerable&lt;Contact&gt; QueryResult = from c in Contacts
+                                         select c;</code></pre>
+                    <h4>Création d'un type anonyme :</h4>
+                    <p>Pour créer un type anonyme, nous devons joindre à notre select le mot clé "new".</p>
+<pre><code>var QueryResult = Contacts.Select(c =&gt; new { Nom = c.Nom, Courriel = c.Email });
+
+foreach (var c in QueryResult)
+{
+    Console.WriteLine("{0} : {1}", c.Nom, c.Courriel);
+}</code></pre>
+                    <h4>Expresion de requête :</h4>
+<pre><code>var QueryResult = from c in Contacts
+                             select new { Nom = c.Nom, Courriel = c.Email };
+
+foreach (var c in QueryResult)
+{
+    Console.WriteLine("{0} : {1}", c.Nom, c.Courriel);
+}</code></pre>
+                    <p class="em">Création à la volée de propriétés.</p>
+                    <h3>Opérateur "Distinct" :</h3>
+<pre><code>public static IEnumerable&lt;T&gt; Distinct&lt;T&gt;§(this IEnumerable&lt;T&gt; source);</code></pre>
+                    <p>L'opérateur "Ditinct" permet de supprimer les doublons dans une séquence.</p>
+<pre><code>var QueryResult = Contacts.Select(c =&gt; new { Prenom = c.Prenom }).Distinct();
+
+foreach (var c in QueryResult)
+{
+    Console.WriteLine("{0}", c.Prenom);
+}</code></pre>
+                    <h4>Utilisation avec une expression de requête :</h4>
+<pre><code>var QueryResult = (from c in Contacts
+                             select new { Prenom = c.Prenom }).Distinct();
+                            
+foreach (var c in QueryResult)
+{
+    Console.WriteLine("{0}", c.Prenom);
+}</code></pre>
+                    <p class="html">Le distinct se fait sur la valeur de l'ensemble des propriétés.</p>
+                    <h3>Opérateur "SingleOrDefault" :</h3>
+                    <p>L'opérateur "SingleOrDefault" retourne un élément unique d'une séquence de type 'T', si la valeur est introuvable, il retourne la valeur de "default(T)".</p>
+<pre><code>Contact QueryResult = Contacts
+    .Where(c =&gt; c.Prenom.Equals("Thierry") && c.Nom.Equals("Morre"))
+    .SingleOrDefault();
+
+Console.WriteLine("{0} {1}", QueryResult.Nom, QueryResult.Prenom);</code></pre>
+                    <h4>Utilisation avec une expression de requête :</h4>
+<pre><code>Contact QueryResult = (from c in Contacts
+                                 where c.Prenom.Equals("Thierry") && c.Nom.Equals("Morre")
+                                 select c).SingleOrDefault();
+
+Console.WriteLine("{0} {1}", QueryResult.Nom, QueryResult.Prenom);</code></pre>
+                    <p>Cependant, si la requête retourne plus d'un élément, l'opérateur "SingleOrDefault" lèvera une exception.</p>
+                    <p class="em">Dans ce cas de figure et afin d'éviter l'erreur, il est conseillé d'utiliser "FirstOrDefault".</p>
+                    <h3>Opérateur "FirstOrDefault" :</h3>
+<pre><code>public static TSource FirstOrDefault&lt;TSource&gt;(this Ienumerable&lt;TSource&gt; source);</code></pre>
+                    <p>L'opérateur "FirstOrDefault" retourne le premier élément d'une séquence de type 'T' ou la valeur de "default(T)" dans le cas ou aucune valeur ne serait trouvée.</p>
+<pre><code>Contact QueryResult = Contacts
+    .Where(c =&gt; c.Prenom.Equals("Thierry"))
+    .FirstOrDefault();
+
+if (QueryResult != null)
+    Console.WriteLine("{0} {1}", QueryResult.Nom, QueryResult.Prenom);</code></pre>
+                    <h3>Opérateurs "Opérateurs "OrderBy[Descending]" :</h3>
+<pre><code>public static IOrderedEnumerable&lt;T&gt; OrderBy&lt;T, TKey&gt;(this IEnumerable&lt;T&gt; source, Func&lt;T, TKey&gt; keySelector);
+public static IOrderedEnumerable&lt;T&gt; OrderByDescending&lt;T, TKey&gt;(this IEnumerable&lt;T&gt; source, Func&lt;T, TKey&gt; keySelector);</code></pre>
+                    <p>L'opérateur "OrderBy" trie par ordre croissant les éléments d'une séquence sur base d'une clé (propriété). Pour un ordre décroissant, nous devrions utiliser "OrderByDescending". Si nous sous souhaitons trier sur base de plusieurs clés, ces opérateurs doivent être les premiers à être utiliser.</p>
+<pre><code>IEnumerable&lt;Contact&gt; QueryResult = Contacts.OrderBy(c =&gt; c.AnneeDeNaissance);
+
+foreach (Contact c in QueryResult)
+{
+    Console.WriteLine("{0} {1}", c.Nom, c.AnneeDeNaissance);
+}</code></pre>
+                    <h4>Expression de requête :</h4>
+<pre><code>IEnumerable&lt;T&gt; QueryResult = from c in Contacts
+                                              orderby c.AnneeDeNaissance
+                                              select c;
+
+foreach (Contact c in QueryResult)
+{
+    Console.WriteLine("{0} {1}", c.Nom, c.AnneeDeNaissance);
+}</code></pre>
+                    <h3>Opérateurs "ThenBy[Descending]" :</h3>
+<pre><code>public static IOrderedEnumerable&lt;T&gt; ThenBy&lt;T, TKey&gt;(this IOrderedEnumerable&lt;T&gt; source, Func&lt;T, TKey&gt; keySelector);
+public static IOrderedEnumerable&lt;T&gt; ThenByDescending&lt;T, TKey&gt;(this IOrderedEnumerable&lt;T&gt; source, Func&lt;T, TKey&gt; keySelector);</code></pre>
+                    <p>Les opérateurs "ThenBy" (Croissant) et "ThenByDescending" (Décroissant) permet de trier une séquence sur plusieurs clés (propriétés). Nous pouvons avoir autant de clé "ThenBy" ou "ThenByDescending" que nous voulons. Cependant, ceux-ci ne sont utilisables que si un des opérateurs "OrderBy" ou "OrderByDescending' a été déclaré en premier lieu.</p>
+<pre><code>IEnumerable&lt;Contact&gt; QueryResult = Contacts
+    .OrderBy(c =&gt; c.AnneeDeNaissance)
+    .ThenByDescending(c =&gt; c.Nom);
+
+foreach (Contact c in QueryResult)
+{
+    Console.WriteLine("{0} {1}", c.Nom, c.AnneeDeNaissance);
+}</code></pre>
+                    <h4>Expression de requête :</h4>
+<pre><code>IEnumerable&lt;Contact&gt; QueryResult = from c in Contacts
+                                                    orderby c.AnneeDeNaissance, c.Nom descending
+                                                    select c;
+
+foreach (Contact c in QueryResult)
+{
+    Console.WriteLine("{0} {1}", c.Nom, c.AnneeDeNaissance);
+}</code></pre>
+                    <h3>Opérateurs "Count" & "LongCount" :</h3>
+<pre><code>public static int Count&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source);
+public static int Count&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source, Func&lt;TSource, bool&gt; predicate);
+public static long LongCount&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source);
+public static long LongCount&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source, Func&lt;TSource, bool&gt; predicate);</code></pre>
+                    <p>Ces deux opérateurs comptent le nombre d'éléments dans une collection. Leur différence se situe dans leur type de retour. Ceux-ci peuvent être accompagné d'une expression booléenne qui va permettre de filtrer le nombre d'éléments à compter.</p>
+<pre><code>int[] ints = new int[] { 5, 4, 7, 52, 36, 59, 24, 1 };
+// Retourne le nombre de l'ensemble des éléments
+Console.WriteLine(string.Format("Nombre total : {0}", ints.Count()));
+// retourne le nombre des éléments pairs
+Console.WriteLine(string.Format("Nombre d'éléments pairs : {0}", ints.Count(i =&gt; i % 2 == 0)));</code></pre>
+                    <h3>Opérateurs "Min" & "Max" :</h3>
+                    <p>Comme l'indique leurs noms, les opérateurs "Min" et "Max" retournent respectivement la valeur minimale et maximale d'une collection.</p>
+<pre><code>int[] ints = new int[] { 5, 4, 7, 52, 36, 59, 24, 1 };
+// retourne la plus petite valeur
+Console.WriteLine(string.Format("Minimum : {0}", ints.Min()));
+// Retourne la plus grande valeur
+Console.WriteLine(string.Format("Maximum : {0}", ints.Max()));
+// Retourne l'année de naissance du contact le plus vieux
+int AnneeDeNaissance = Contacts.Min(c =&gt; c.AnneeDeNaissance);
+Console.WriteLine("Le contatct le plus vieux est né en {0}", AnneeDeNaissance);</code></pre>
+                    <p class="html">Voir les différentes surcharges dans la classe "Enumerable".</p>
+                    <h3>Opérateurs "Sum" & "Average" :</h3>
+                    <p>Les opérateurs "Sum" et "Average" retournent respectivement la somme et la moyenne d'une collection.</p>
+<pre><code>int[] ints = new int[] { 5, 4, 7, 52, 36, 59, 24, 1 };
+// Retourne la somme
+Console.WriteLine(string.Format("Somme : {0}", ints.Sum()));
+// Retourne la moyenne
+Console.WriteLine(string.Format("Moyenne : {0}", ints.Average(i =&gt; (float)i)));
+// Retourne l'âge moyen des contacts
+Console.WriteLine("L'âge moyen de nos contacts est de {0} ans", DateTime.Now.Year - (int)Contacts.Average(c =&gt; c.AnneeDeNaissance));</code></pre>
+                    <h3>Opérateur "GroupBy" :</h3>
+<pre><code>public static IEnumerable&lt,IGrouping&lt;TKey, TSource&gt; GroupBy&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; source, Func&lt;TSource, TKey&gt; keySelector);</code></pre>
+                    <p>L'opérateur "GroupBy" est un peu différent des autres, par défaut celui-ci travaille avec l'interface "IGrouping&lt;TKey, TElement&gt;" qui hérite de "IEnumerable&lt;T&gt;" et intégrant une propriété "Key".</p>
+<pre><code>public interface IGrouping&lt;out TKey, out TElement&gt; : IEnumerable&lt;TElement&gt;,, IEnumerable
+{
+    TKey Key { get; }
+}</code></pre>
+                    <p>Ce qui donne ceci :</p>
+<pre><code>IEnumerable&lt;IGrouping&lt;string, Contact&gt;&gt; QueryResult = Contacts
+    .GroupBy(c =&gt; c.Email.Substring(c.Email.IndexOf('@') + 1));
+
+foreach (IGrouping&lt;string, Contact&gt; g in QueryResult)
+{
+    Console.WriteLine("{0} : {1}", g.Key, g.Count());
+    foreach (Contact c in g)
+    {
+        Console.WriteLine("{0}", c.Email);
+    }
+    Console.WriteLine();
+}</code></pre>
+                    <p class="html">Il existe plusieurs surcharges, ici c'est la plus utilisée qui est vue.</p>
+                    <p>De plus, dans le cadre de l'expression régulière, "GroupBy" ne peut être utilisé avec l'opérateur "Select" excepté dans le cadre du "group ... by ... into ...".</p>
+                    <h4>Expression de requête :</h4>
+<pre><code></code>IEnumerable&lt;IGrouping&lt;string, Contact&gt;&gt; QueryResult = from c in Contacts
+                                                                                    group c by c.Email.Substring(c.Email.IndexOf('@') + 1);
+                                                            
+foreach (IGrouping&lt;string, Contact&gt; g in QueryResult)
+{
+    Console.WriteLine("{0} : {1}", g.Key, g.Count());
+    foreach (Contact c in g)
+    {
+        Console.WriteLine("{0}", c.Email);
+    }
+    Console.WriteLine();
+}</pre>
+                    <p class="em">Notons l'absence de l'opérateur "Select" dans la requête.</p>
+                    <p>Dans ce cas, comment utiliser l'opérateur "GroupBy" avec les types anonymes ?</p>
+<pre><code>var QueryResult = Contacts
+    .Select(c =&gt; new { Email = c.Email, FullName = string.Format("{0} {1}", c.Nom, c.Prenom) })
+    .GroupBy(c =&gt; c.Email.Substring(c.Email.indexOf('@') + 1));
+
+foreach (var group in QueryResult)
+{
+    Console.WriteLine("{0} : {1}", group.Key, group.Count());
+    foreach (var element in QueryResult)
+    {
+        Console.WriteLine("{0}", element.FullName);
+    }
+    Console.ReadLine();
+}</code></pre>
+                    <p class="em">En utilisant l'opérateur "Select" avant le "GroupBy"...</p>
+                    <h4>Expression de requête :</h4>
+<pre><code>var QueryResult = from c2 in (from c in Contacts
+                                        select new { Email = c.Email, FullName = string.Format("{0} {1}", c.Nom, c.Prenom) })
+                             group c2 by c2.Email.Substring(c2.Email.indexOf('@') + 1);
+
+foreach (var group in QueryResult)
+{
+    Console.WriteLine("{0} : {1}", group.Key, group.Count());
+    foreach (var element in QueryResult)
+    {
+        Console.WriteLine("{0}", element.FullName);
+    }
+    Console.ReadLine();
+}</code></pre>
+                    <p class="em">... qui se traduira par une sous-requête dans l'expression de requête.</p>
+                    <h3>Opérateur "Join" :</h3>
+                    <p>L'opérateur "Join" est utile pour associer des séquences différentes sur base de valeurs pouvant être comparée pour définir une égalité.</p>
+                    <p>La jointure est une opération importante dans les requêtes qui ciblent les sources de données dont les relations ne peuvent pas être suivies directement. Dans la programmation orientée objet, cela pourrait signifier <span class="em">une corrélation entre objets qui n'est pas modélisée</span>.</p>
+                    <p class="html">Cette corrélation est fortement utilisée en "LINQ To SQL" & "LINQ To Entities".</p>
+                    <p>Quand on parle de jointures, il y en a trois qui reviennent régulièrement :</p>
+                    <img src="../images/join_linq.png" alt="">
+                    <p>Croisée (Cross Join), Interne (Inner Join), Externe (Outer Join - Left, Right & full). Celles-ci peuvent peuvent être basées sur une équalité "Equi Join" et ou non "Non Equi Join".</p>
+                    <p>L'opérateur "Join" en LINQ ne reprend qu'une seule forme de jointure ("Inner Join" basée sur une égalité). Cependant, nous allons voir comment réaliser les autres jointures en utilisant LINQ.</p>
+                    <p>Pour les "Cross Join" ou les "Non Equi Join", nous ne pourrons pas utiliser l'opérateur "Join". Cependant, nous pourrons contourner le problème par l'utilisation de plusieurs clauses "from" et l'utilisation de clauses "where".</p>
+                    <p>Afin de comprendre les jointures en LINQ, nous allons ajouter une nouvelle classe "RDV" et de nouvelles données (Liste "RendezVous") à notre environnement.</p>
+<pre><code>public class RDV
+{
+    public string Email { get; set; }
+    public DateTime Date { get; set; }
+}</code></pre>
+<pre><code>List&lt;RDV&gt; RendezVous = new List&lt;RDV&gt;();
+RendezVous.AddRange(new RDV[] {
+    new RDV() { Email = "stephane.faulkner@cognitic.be", Date = new DateTime(2012, 5, 12) },
+    new RDV() { Email = "peppard.george@ateam.com", Date = new DateTime(2011, 8, 14) },
+    new RDV() { Email = "bruce.willis@diehard.com", Date = new DateTime(2012, 6, 19) },
+    new RDV() { Email = "bruce.willis@diehard.com", Date = new DateTime(2012, 6, 20) },
+    new RDV() { Email = "michael.person@cognitic.be", Date = new DateTime(2012, 4, 19) },
+});</code></pre>
+<pre><code>public static IEnumerable&lt;TResult&gt; Join&lt;TOuter, TInner, TKey, TResult&gt;(this IEnumerable&lt;TOuter&gt; outer, IEnumerable&lt;TInner&gt; inner, Func&lt;TOuter, TKey&gt; outerKeySelector, Func&lt;TInner, TKey&gt; innerKeySelector, Func&lt;TOuter, TInner, TResult&gt; resultSelector);</code></pre>
+                    <h4>Inner Join :</h4>
+                    <p>Obtenir l'email, le nom, le prénom du contact et la date de tous les rendez-vous.</p>
+<pre><code>var QueryResult = Contacts.Join(RendezVous,
+                                           c =&gt; c.Email,
+                                           rdv =&gt; rdv.Email,
+                                           (c, rdv) =&gt; new {
+                                            Email = c.Email,
+                                            Nom = c.Nom,
+                                            Prenom = c.Prenom,
+                                            DateRDV = rdv.Date});
+
+foreach (var jointure in QueryResult)
+{
+    Console.WriteLine("{0} {1} : {2}", jointure.Nom, jointure.Prenom, jointure.DateRDV);
+}</code></pre>
+                    <h5>Expression de requête :</h5>
+<pre><code>var QueryResult = from c in Contacts
+                             join rdv in RendezVous on c.Email equals rdv.Email
+                             select new {
+                                Email = c.Email,
+                                Prenom = c.Prenom,
+                                DateRDV = rdv.Date
+                             };
+
+foreach (var jointure in QueryResult)
+{
+    Console.WriteLine("{0} {1} : {2}", jointure.Nom, jointure.Prenom, jointure.DateRDV);
+}</code></pre>
+                    <p>L'utilisation des types anonymes n'est pas obligatoire dans le cadre des jointures, son emploi résulte en effet de ce que nous allons sélectionner.</p>
+                    <p>Exemple : Obtenir les contacts ayant pris rendez-vous.</p>
+<pre><code>IEnumerable&lt;Contact&gt; QueryResult = Contacts.Join(RendezVous,
+                                                                 c =&gt; c.Email,
+                                                                 rdv =&gt; rdv.Email,
+                                                                 (c, rdv) =&gt; c);</code></pre>
+                    <h4>Expression de requête :</h4>
+<pre><code>IEnumerable&lt;Contact&gt; QueryResult = from c in Contacts
+                                                    join rdv in RendezVous on c.Email equals rdv.Email
+                                                    select c;</code></pre>
+                    <p class="em">Nous obtenons bien une séquence de Contacts.</p>
+                    <h3>Opérateur "GroupJoin" :</h3>
+<pre><code>public static IEnumerable&lt;TResult&gt; GroupJoin&lt;TOuter, TInner, TKey, TResult&gt;(this IEnumerable&lt;TOuter&gt; outer, IEnumerable&lt;TInner&gt; inner, Func&lt;TOuter, TKey&gt; outerKeySelector, Func&lt;TInner, TKey&gt; innerKeySelector, Func&lt;TOuter, IEnumerable&lt;TInner&gt;, TResult&gt; resultSelector);</code></pre>
+                    <p>L'opérateur "GroupJoin" travaille de manière comparable à l'opérateur "Join, à ceci près que l'opérateur "Join" ne passe qu'un seul élémént de la séquence interne à la fonction "resultSelector".</p>
+                    <p>Cela signifie que si plusieurs éléments de la séquence intérieur (inner) correspondent à un élément de la séquence extérieur (outer), nous aurons plusieurs lignes dans notre "result set".</p>
+                    <p>L'opérateur "GroupJoin" va, quant à lui, produire une structure de donnée hiérarchique. Il va associé pour chaque élément de la séquence extérieur les éléments de la séquence intérieure qui le concerne.</p>
+                    <p>Si aucun élément de la séquence intérieur n'existe, il retournera une séquence vide.</p>
+                    <p>Il s'apparente donc à une Jointure externe gauche ("Left Join").</p>
+                    <p>Exemple :</p>
+                    <p>Pour tous contacts, obtenir les noms, prénoms et date de rendez-vous éventuels.</p>
+<pre><code>var QueryResult = Contacts.GroupJoin(RendezVous,
+                                                c =&gt; c.Email,
+                                                rdv =&gt; rdv.Email,
+                                                (c, rdvs) =&gt; new {
+                                                    Email = c.Email,
+                                                    Prenom = c.Prenom,
+                                                    RendezVous = rdvs
+                                                });
+
+foreach (var jointure in QueryResult)
+{
+    Console.WriteLine("{0} {1} :", jointure.Nom, jointure.Prenom);
+    if (jointure.RendezVous.Cont() &gt; 0)
+    {
+        foreach (RDV rdv in jointure.RendezVous)
+        {
+            Console.WriteLine("{0}", rdv.Date);
+        }
+    }
+    else
+    {
+        Console.WriteLine("Aucun");
+    }
+    Console.WriteLine();
+}</code></pre>
+                    <h4>Expression de requête :</h4>
+                    <p>Dans le cadre de l'expression de requêtes, nous devons ajouter l'expression "into" à notre jointure.</p>
+<pre><code>var QueryResult = from c in Contacts
+                             join rdv in RendezVous on c.EDmail equals rdv.Email into grdvs
+                             select new { Nom = c.Nom, Prenom = c.Prenom, RendezVous = grdvs };
+
+foreach (var jointure in QueryResult)
+{
+    Console.WriteLine("{0} {1} :", jointure.Nom, jointure.Prenom);
+    if (jointure.RendezVous.Cont() &gt; 0)
+    {
+        foreach (RDV rdv in jointure.RendezVous)
+        {
+            Console.WriteLine("{0}", rdv.Date);
+        }
+    }
+    else
+    {
+        Console.WriteLine("Aucun");
+    }
+    Console.WriteLine();
+}</code></pre>
+                    <h3>Utilisation de clés composites :</h3>
+                    <p>Dans le cadre de jointures, nous sommes parfois amené à gérer les clés étrangères utilisant plusieurs champs (clé composite) et "LINQ" n'échappe à la règle. Afin de résoudre ce "problème" nous devrons utiliser les classes anonymes.</p>
+<pre><code>var QueryResult = from c in Contacts
+                             join rdv in RendezVous on new { c.ID, c.Email } equals new { rdv.ID, rdv.Email }
+                            select new { c.Nom, c.Prenom, rdv.Date };
+
+var QueryResult2 = Contacts.Join(RendezVous,
+                                c =&gt; new { c.ID, c.Email },
+                                rdv =&gt; new { rdv.ID, rdv.Email },
+                                (c, rdv) =&gt; new { c.Nom, c.Prenom, rdv.Date });
+
+foreach (var r in QueryResult)
+{
+    Console.WriteLine("{0} - {1} - {2}", r.Nom, r.Prenom, r.Date.ToShortDateString());
+}</code></pre>
+                    <h3>Multiple clause "from" :</h3>
+                    <p>Nous venons de voir que les jointures en "LINQ" sont des jointures internes basées sur une égalité. Comment, dans ce cas, faire une jointure croisée ("Cross Join") ou une "Non Equi Join" ?</p>
+                    <p>Elles ne sont possibles que dans le cadre des expressions de requêtes en utilisant plusieurs clauses "from".</p>
+                    <h4>Exemple de "Cross Join" :</h4>
+<pre><code>var QueryResult = from c in Contacts
+                             from rdv in RendezVous
+                             select new { c.Nom, c.Prenom, rdv.Date };
+
+foreach (var r in QueryResult)
+{
+    Console.WriteLine("{0} - {1} - {2}", r.Nom, r.Prenom, r.Date.ToShortDateString());
+}</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
