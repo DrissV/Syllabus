@@ -1423,7 +1423,7 @@ get { return _dateDeNaissance; }
                     </ul>
                     <p>Le package est une organisation physique et logique et le namespace est une organisation logique.</p>
                     <p>C# utilise un mécanisme d'annotations qui est notamment utilisé pour la sérialisation. Les annotations sont placées entre []. Par exemple : [Serializable].</p>
-                    <p>Les interfaces commencent par un "I" (ex : IList, IDictionnary).</p>
+                    <p>Les interfaces commencent par un "I" (ex : IList, IDictionnary). <span class="em">Implements</span> et <span class="em">Extends</span> se traduisent tous les deux par le caractère "<span class="em">:</span>".</p>
                     <p>Les collections disposent d'une classe de base qui correspond au nom de l'interface sans le "I" (ex : List, Dictionnary, ...).</p>
                     <p>Lors l'héritage en Java, toutes les méthodes sont "virtual", c'est-à-dire qu'elles peuvent être redéfinies dans les classes enfants et que le type de l'objet est recherché à l'exécution.</p>
                     <p>Lors de l'héritage en C#, par défaut les méthodes ne sont pas "virtual", c'est-à-dire que le type de l'objet à l'exécution sera la classe la plus haute dans la hiérarchie.</p>
@@ -2049,7 +2049,7 @@ Console.WriteLine("{0} {1}", QueryResult.Nom, QueryResult.Prenom);</code></pre>
 
 if (QueryResult != null)
     Console.WriteLine("{0} {1}", QueryResult.Nom, QueryResult.Prenom);</code></pre>
-                    <h3>Opérateurs "Opérateurs "OrderBy[Descending]" :</h3>
+                    <h3>Opérateurs "OrderBy[Descending]" :</h3>
 <pre><code>public static IOrderedEnumerable&lt;T&gt; OrderBy&lt;T, TKey&gt;(this IEnumerable&lt;T&gt; source, Func&lt;T, TKey&gt; keySelector);
 public static IOrderedEnumerable&lt;T&gt; OrderByDescending&lt;T, TKey&gt;(this IEnumerable&lt;T&gt; source, Func&lt;T, TKey&gt; keySelector);</code></pre>
                     <p>L'opérateur "OrderBy" trie par ordre croissant les éléments d'une séquence sur base d'une clé (propriété). Pour un ordre décroissant, nous devrions utiliser "OrderByDescending". Si nous sous souhaitons trier sur base de plusieurs clés, ces opérateurs doivent être les premiers à être utiliser.</p>
@@ -2333,6 +2333,222 @@ foreach (var r in QueryResult)
     Console.WriteLine("{0} - {1} - {2}", r.Nom, r.Prenom, r.Date.ToShortDateString());
 }</code></pre>
                 </article>
+                <article>
+                    <h2 id="linq_to_entities">LINQ Providers :</h2>
+                    <p>Dans LINQ, le concept de "<span class="html">DataContext</span>" est souvent associé aux fournisseurs LINQ, qui sont des implémentations spécifiques de LUNQ pour différentes sources de données. Un "<span class="html">DataContext</span>" est une classe qui représente la connexion à la source de données et fournit un moyen de récupérer et de manipuler les données.</p>
+                    <img src="../images/linq_providers.gif" alt="">
+                    <p>Chaque fournisseur LINQ a sa propre implémentation de "<span class="html">DataContext</span>" qui est spécifique à la source de données qu'il cible. je vais expliquer cela en relation avec deux fournisseurs LINQ populaires : LINQ To SQL et LINQ To Entities.</p>
+                    <h3>LINQ To SQL :</h3>
+                    <p>Dans LINQ To SQL, le "<span class="em">DataContext</span>" est une classe générée automatiquement par le concepteur LINQ To SQL dans Visual Studio. Cette classe est spécifique à une base de données SQL Server particulière. Elle contient des propriétés pour accéder aux tables de la base de données sous forme de séquences d'objets, et elle gère également le suivi des modifications et l'envoi des modifications à la base de données.</p>
+                    <h3>LINQ To Entities (Entity Framework) :</h3>
+                    <p>Dans LINQ To Entities, qui fait partie du framework Entity Framework, le concept équivalent au "<span class="em">DataContext</span>" est généralement représenté par la classe "<span class="em">DbContext</span>". La classe "<span class="em">DbContext</span>" est responsable de la connexion à la base de données, du suivi des entités, et de la gestion des opérations CRUD (Create, Read, Update, Delete).</p>
+<pre><code>// crate the ObjectContext
+NorthwindEntities context = new NorthwindEntities();
+
+// retrieve customer LAZY K
+Customer cust = (from c in context.Customers
+                where c.CustoùerID == "LAZY K"
+                select c).Single&lt;Customer&gt;();
+
+// Update the contact name
+cust.ContactName = "Ned Plimpton";
+
+// save the changes
+try {
+    context.SaveChanges();
+} catch (OptimisticConcurrencyException) {
+    context.Refresh(RefreshMode.ClientWIns, context.Customers);
+    context.SaveChanges();
+}</code></pre>
+                    <p>En résumé, le "<span class="em">DataContext</span>" (ou "<span class="em">DbContext</span>" dans le cas d'Entity Framework) est une composante clé des fournisseurs LINQ. Il facilite l'accès à la source de données, la manipulation des données et la gestion des transactions, offrant ainsi une abstraction orientée objet pour interagir avec la bse de données.</p>
+                    <p>On peut installer Entity Framework avac la commande suivante :</p>
+<pre><code>Install-Package EntityFramework</code></pre>
+                    <p>On peut configurer une chaîne de connexion dans le fichier de configration de votre application ("<span class="em">app.config</span>" ou "<span class="em">web.config</span>").</p>
+<pre><code>&lt;connectionStrings&gt;
+    &lt;add name="MaConnexion" connectionString="votre_chaine_de_connexion" providerName="System.Data.EntityClient" /&gt;
+&lt;/connectionStrings&gt;</code></pre>
+                    <p>Cette chaîne de connexion doit spécifier le type de base de données que vous utilisez et les détails de connexion. Comme par exemple :</p>
+<pre><code>&lt;connectionStrings&gt;
+    &lt;add name="MaConnexion" 
+         connectionString="Server=nom_du_serveur;Database=nom_de_la_base_de_donnees;User Id=nom_utilisateur;Password=mot_de_passe;" 
+         providerName="MySql.Data.MySqlClient" /&gt;
+&lt;/connectionStrings&gt;</code></pre>
+                    <p>POCO (Plain Old CLR Objects) fait référence à des objets simples sans dépendance à une infrastructure particulière, ce qui permet une plus grande flexibilité.</p>
+                    <p>Les collections générées par "<span class="html">DbSet</span>" dans Entity Framework représentent les ensembles d'entités associées à une table dans la base données. Vous pouvez utiliser ces collections pour effectuer des oéprations CRUD sans avoir à manipuler explicitement les requêtes SQL.</p>
+                    <ul>
+                        <li>
+                            <p>context.Customers.Remove(cust)</p>
+                        </li>
+                        <li>
+                            <p>context.Customers.Add(cust)</p>
+                        </li>
+                        <li>
+                            <p>cust.name = "mise à jour du nom"</p>
+                        </li>
+                    </ul>
+                    <p>Les clefs étrangères créent des associations. Les clefs étrangères créent des propriétés de navigation.</p>
+                    <h4>Opérations : Insert objets associés :</h4>
+<pre><code>// create the new order
+// Clef étrangère
+Order ord = new Order
+{
+    CustomerID = "LAWN",
+    ...
+    ShipCountry = "USA"
+};
+
+// attach the order to the customer
+cust.Orders.Add(ord);
+
+// add the new Customer
+context.Customers.AddObject(cust);
+
+// save the changes
+// L'objet or sera persisté.
+context.SaveChanges();</code></pre>
+                    <p>Dans l'autre sens :</p>
+<pre><code>// create the new order
+Order ord = new Order
+{
+    CustomerID = "LAWN",
+    ...
+    ShipCountry = "USA"
+};
+
+// attach the customer to the order
+ord.Customer = cust;
+
+// add the new Customer
+context.Orders.AddObject(ord);
+
+// save the changes
+// L'objet cust sera persisté.
+context.SaveChanges();</code></pre>
+                    <h4>Opérations : Requêtes :</h4>
+<pre><code>// create the ObjectContext
+NorthwindEntities context = new NorthwindEntities();
+
+IQueryable&lt;Customer&gt; custs = from c in context.Customers
+                                   where c.City = "London"
+                                   select c;
+                                
+foreach (Customer cust in custs) {
+    Console.WriteLine("Customer: {0}", cust.CompanyName);
+}</code></pre>
+                    <p><span class="em">IQueryable</span> étend <span class="em">IEnumerable</span> &#8594; avantage performance filtre effectué côté base de données.</p>
+                    <h4>Lazy Loading : par défaut :</h4>
+<pre><code>// create the ObjectContext
+NorthwindEntities context = new NorthwindEntities();
+
+IQueryable&lt;Customer&gt; custs = from c in context.Customers
+                                   where c.Country == "UK" && c.City == "London"
+                                   orderby c.CustomerID
+                                   select c;
+                                
+foreach (Customer cust in custs) {
+    Console.WriteLine("{0} - {1}", cust.CompanyName, cust.ContactName);
+    Order firstOrder = cust.Orders.First();
+    Console.WriteLine(" {0}", firstOrder.OrderID);
+}</code></pre>
+                    <p>On va chercher les Orders à ce moment-là via un query.</p>
+                    <p>On a un query par tour de boucle !</p>
+                    <p>Le lazy loading est une technique dans laquelle les données associées à une entité ne sont chargées depuis la base de données que lorsque vous accédez explicitement à ces données.</p>
+                    <h4>Eager Loading :</h4>
+<pre><code>IQueryable custs = from c in context.Customers.Include("Orders")
+                              where c.Country == "UK" && c.City == "London"
+                              orderby c.CustomerID
+                              select c;
+
+foreach (Customer cust in custs) {
+    Console.WriteLine("{0} - {1}", cust.CompanyName, cust.ContactName);
+    Order firstOrder = cust.Orders.First();
+    Console.WriteLine(" {0}", firstOrder.OrderID);
+}</code></pre>
+                    <p>Les orders sont tout de suite chargés en mémoire.</p>
+                    <p>Pas de query à chaque tour de boucle !</p>
+                    <p>L'eager loading consiste à charger immédiatement toutes les données associées à une entité au moment où l'entité principale est chargée.</p>
+                    <h4>Opérations : update :</h4>
+<pre><code>Employee emp = (from e in context.Employees
+                          where e.EmployeeID == 9
+                          select e).Single&lt;Employee&gt;();
+                        
+// Now we will assign the new employee to the order.
+order.Employee = emp;
+
+context.SaveChanges();</code></pre>
+                    <h4>Opérations : update sur association :</h4>
+<pre><code>Order order = (from o in context.Orders
+                         where o.EmployeeID == 5
+                         orderby o.orderDate descending
+                         select o).First&lt;Order&gt;();
+
+Employee emp = (from e in context.Employees
+                          where e.EmployeeID == 9
+                          select e).Single&lt;Employee&gt;();
+  
+// Now we will assign the new employee to the order.
+order.Employee = emp;
+
+context.SaveChanges();</code></pre>
+                    <h4>Opérations : delete (via DbSet) :</h4>
+<pre><code>// get the order details for order 10248
+IQueryable&lt;Order_Detail&gt; ods = from o in context.Order_Details
+                                     where o.OrderID == 10248
+                                    select o;
+
+// delete the first order detail
+context.Order_Details.DelegateObject(obj.First());
+
+// save the changes
+context.SaveChanges();</code></pre>
+                    <p><span class="html">DeleteObject</span> est une ancienne méthode utilisée en Entity Framework 4 et 5. En Entity Framework 6, il y a la méthode <span class="html">Remove</span>.</p>
+                    <h4>delete et objets associés :</h4>
+                    <p>Delete d'une commande (Order) :</p>
+                    <ul>
+                        <li>
+                            <p>Si le détail d'une commande n'est pas détruit (order_details) &#8594; risque de violation de clé étrangère.</p>
+                        </li>
+                        <li>
+                            <p>Solution 1 : delete manuel &#8594; suppression du détail de la commande avant de supprimer la commande.</p>
+                        </li>
+                        <li>
+                            <p>Solution 2 : delete cascade &#8594; à configurer dans le model.</p>
+                        </li>
+                    </ul>
+                    <h4>Optimistic lock :</h4>
+                    <p>Par défaut, la stratégie "optimistic lock" est appliquée.</p>
+                    <h4>Pattern Repository :</h4>
+                    <p>Le modèle de conception Repository est un motif de conception (design pattern) fréquemment utilisé pour abstraire la logique d'accès aux données. Ce motif  est particulièrement utile dans le contexte des applications C# et de l'accès aux bases de données.</p>
+                    <p>Il permet la séparation de la couche DATA et BUSINESS et permet d'éviter le code redondant.</p>
+<pre><code>public interface IRepository&lt;T&gt;
+{
+    void Insert(T entity);
+    void Delete(T entity);
+    IQueryable&lt;T&gt; SearchFor(Expression&lt;Func&lt;T, bool&gt;&gt; predicate);
+    // insertOrUpdate
+    bool Save(T entity, Expression&lt;Func&lt;T, bool&gt;&gt; predicate);
+    IQueryable&lt;T&gt; GetAll();
+    T GetById(int id);
+}</code></pre>
+                    <p>L'interface <span class="em">IRepository&lt;T&gt;</span> définit génrélament les opérations CRUD de base pour une entité spécifique <span class="em">T</span>. Elle fournit un contrat standard que les classes concrètes implémentent pour interagir avec une source de données (par exemple, une base de données).</p>
+<pre><code>public class BaseRepository&lt;TEntity&gt; : IRepository&lt;TEntity&gt; where TEntity : class
+{
+    private readonly DbContext _dbContext;
+
+    public BaseRepository(DbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public void Insert(TEntity entity) {
+        // ...
+    }
+}</code></pre>
+                    <p>Avec la généricité, il y a quelques changements. Comme par exemple :</p>
+<pre><code>_dbContext.CouseSet.Add(course);
+&#8594;
+_dbContext.Set&lt;TEntity&gt;().Add(entity);</code></pre>
+                </article>
             <!-- fin de section -->
             </section>
         </main>
@@ -2352,7 +2568,7 @@ foreach (var r in QueryResult)
                 <p>Version 5.0</p>
             </div>
         </footer>
-        <script src="pre.js"></script>
+        <script src="../pre.js"></script>
     </body>
 
 </html>
