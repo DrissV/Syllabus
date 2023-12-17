@@ -58,6 +58,8 @@
                         <li><a href="#cron">Cron</a></li>
                         <li><a href="#seance_1">Séance 1</a></li>
                         <li><a href="#seance_2">Séance 2</a></li>
+                        <li><a href="#nfs">NFS</a></li>
+                        <li><a href="#samba">Samba</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -324,6 +326,517 @@ systemctl restart apache2</code></pre>
                     <h3>Configuration :</h3>
                     <h4>Modules :</h4>
                     <p>Apache dispose de nombreux modules. Nous n'en ferons pas l'inventaire ici. Nous nous contenterons d'en citer 3, très utilisés : <span class="em">rewrite (frameworks MVC)</span>, <span class="em">proxy_http</span>, <span class="em">ssl</span>.</p>
+                    <p>Pour activer un module, il suffit d'utiliser la commande "<span class="html">a2enmod</span>" (apache2 enable module). Il existe la commande réciproque "<span class="html">a2dismod</span>". N'oubliez pas de redémarrer le service apache2 après activation du module.</p>
+<pre><code>a2enmod &lt;&lt;module&gt;&gt;</code></pre>
+                    <h4>Configuration PHP :</h4>
+                    <p>Apache peut être configuré pour servor des pages PHP. Il suffit d'installer PHP ainsi que le module PHP pour apache et de redémarer le service apache2.</p>
+<pre><code>apt-get install php5 php5-mysql libapache2-mod-php5</code></pre>
+                    <p>Attention, au moment où j'ai eu ce cours à l'école, on était à la version 5 de PHP. Donc, vous devrez peut-être modifier la commande ci-dessus en remplaçant la version 5 par la version actuelle de PHP.</p>
+                    <h4>Virtualhosts :</h4>
+                    <p>Les virtualhosts permettent de déployer plusieurs sites Web sur un même serveur (même adresse IP). La distinction se fait en général sur le nom du site, Apache doit en effet savoir suivant l'url quel site il doit présenter.</p>
+                    <p>L'ajouter d'un vhost se fait en créant un fichier dans <span class="em">/etc/apache2/sites-available/"monsite.conf"</span> et puis d'y insérer :</p>
+<pre><code>&lt;VirtualHost *:80&gt;
+    ServerName monsite.be
+
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/htdocs/monsite
+    ErrorLog ${APACHE_LOG_DIR}/monsite_error.log
+    CustomLog ${APACHE_LOG_DIR}/monsite_access.log combined
+
+    &lt;Directory /var/www/htdocs/monsite&gt;
+    Require all granted
+    AllowOverride All
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;</code></pre>
+                    <h5>Directives :</h5>
+                    <p>La directive "ServerName" est nécessaire pour qu'Apache fasse une distinction sur le nom du site. Toute URL comportant "monsite.be" utilisera ce vhost.</p>
+                    <p>La directive "ServerAdmin" permet de préciser le responsable du site.</p>
+                    <p>La directive "DocumentRoot" permet de préciser l'endroit où se trouve l'arborescence du site.</p>
+                    <p>Les directives "ErrorLog" et "CustomLog" permettent de préciser où les logs seront stockés.</p>
+                    <p>On peut ensuite apliquer des règles/restrictions sur le site via la directive "Directory". Ici, on autorise tout le monde à voir le site "Require all granted" et on autorise les utilisateurs à redéfnir ces règles "AllowOverride All". Ceeci permet par exemple de définir des .htaccess.</p>
+                    <p>La directive "Require" peut autoriser ou interdire des adresses IPs, des utilisateurs, ...</p>
+                    <p>Exemples :</p>
+<pre><code># n'autoriser l'accès au site que depuis localhost
+require ip localhost
+# accès uniquement au site pour l'utilisateur admin
+# pas de redéfinition possible (pas de .htaccess)
+AllowOverride None</code></pre>
+                    <p>Pour activer le vhost, il suffit d'utiliser la commande "<span class="html">a2ensite</span>" (apache2 enable site). Il existe la commande réciproque "<span class="html">a2dissite</span>". Ne pas oublier de redémarrer le service apache2 après activation.</p>
+<pre><code>a2ensite monsite</code></pre>
+                    <h4>Reverse proxy :</h4>
+                    <p>Un proxy inverse est un serveur frontal, c'est-à-dire un serveur exposé sur Internet et par lequel toutes les requêtes passeront. Ce serveur ne traitera pas le requêtes mais se contentera de les rediriger vers d'autres serveurs internes à l'entreprise. Les intérêts de ce mécanisme sont multiples. Vu qu'il n'y a qu'un seul point d'accès, la sécurité est plus facile à gérer. Cela permet également de mettre en oeuvre du "load balancing" entre des serveurs internes. C'est également un moyen simple de rendre disponible un serveur interne sur le Web (pas besoin de configuration réseau).</p>
+                    <p>Pour mettre en place un reverse proxy, il faut activer le modime apache "proxy_http" et "proxy".</p>
+<pre><code>a2enmod proxy proxy_http</code></pre>
+                    <p>Ensuite, dans le fichier VirtualHost :</p>
+<pre><code>&lt;VirtualHost *:80&gt;
+    ServerName siteReverseProxy
+
+    ServerAdmin webmaster@localhost
+
+    ProxyPass / http://www.example.com/
+    ProxyPassReverse / http:/www.example.com
+    
+    ErrorLog ${APACHE_LOG_DIR}/siteReverse_error.log
+    CustomLog ${APACHE_LOG_DIR}/siteReverse_access.log combined
+&lt;/VirtualHost&gt;</code></pre>
+                    <h3>Sécurité :</h3>
+                    <p>Un serveur Web doit être sécurisé en particulier les échanges entre le client et le serveur doivent être cryptés. Ceci se fait aisément grâce au paquet openssl. Le port par défaut pour les communications HTTPS est le 443.</p>
+                    <h4>Installation :</h4>
+<pre><code>apt-get install openssl
+a2enmod ssl
+systemctl restart apache2</code></pre>
+                    <h4>Création d'un certificat auto-signé :</h4>
+                    <p>La commande openssl permet de ccréer un certificat ainsi qu'une clé associée à ce certificat.</p>
+<pre><code>openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/apache2/ssl/apache.key -out /etc/apache.crt</code></pre>
+                    <p>Ici, la clé et le certificat seront déposés dans le répertoire <span class="em">/etc/apache2/ssl</span> créé au préalable.</p>
+                    <p>Le VirtualHost sera modifié de la sorte :</p>
+<pre><code>&lt;VirtualHost *:443&gt;
+    ServerName monsite.be
+
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/ww/htdocs/monsite
+    ErrorLog ${APACHE_LOG_DIR}/monsite_error.log
+    CustomLog ${APACHE_LOG_DIR}/monsite_access.log combined
+
+    SSLEngine on
+    SSLCertificateKeyFile /etc/apache2/server.key
+
+    &lt;Directory /var/www/htdocs/monsite&gt;
+    Require all granted
+    AllowOverride All
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;</code></pre>
+                    <h4>Let's encrypt :</h4>
+                    <p>Let's encrypt est une autorité de certification libre, gratuite et automatisée. Ceci permet d'obtenir un certificat valide pour son site Web sans trop d'effort. Cependant, la machine servant le site Web doit être "publiquement" accessible ainsi que le nom du domaine. Cela veut dire qu'en test ce procédé n'est pas applicable.</p>
+                    <p><a href="https://letsencrypt.org/" target="_blank">https://letsencrypt.org/</a></p>
+                </article>
+                <article>
+                    <h2 id="mysql">Fiche 7 : MySQL :</h2>
+                    <h3>MySQL :</h3>
+<pre><code>apt-get install mysql-server mysql-client</code></pre>
+                    <p>Il faudra donner un mot de passe sûr au compte root de MySQL.</p>
+<pre><code>mysql -u utilisateur -p base_exportee &lt; base_exportee.sql</code></pre>
+                    <p>Injecter un fichier SQL.</p>
+                    <h3>PHPMyAdmin :</h3>
+<pre><code>apt-get install phpmyadmin</code></pre>
+                    <p>Testez ensuite phpmyadmin &#8594; <a href="http://adresseip/phpmyadmin" target="_blank">http://adresseip/phpmyadmin</a>.</p>
+                </article>
+                <article>
+                    <h2 id="cron">Fiche 8 : Planification de tâches :</h2>
+                    <p>Un administrateur système a régulièrement besoin d'outils pour exécuter des tâches récurrentes (mises à jour quotidiennes, backup quotidien, ...). Différents outils existe sous Linux pour réaliser ceci.</p>
+                    <h3>Cron :</h3>
+                    <p>Cron est un démon capable d'exécuter des tâches planifiées et récurrentes. Chaque utilisateur possède une "crontab", c'est-à-dire une table reprenant les commandes que l'utilisateur souhaite exécuter et à quel moement.</p>
+                    <h4>Utilisation :</h4>
+                    <p>Pour édier sa propre crontab :</p>
+<pre><code>crontab -e</code></pre>
+                    <p>Le format de la crontab est le suivant :</p>
+<pre><code>#Format
+#min heure jourDuMosis mois jourSemaine commande</code></pre>
+                    <p><span class="em">*</span> peut être utilisé à la place d'une valeur iniquée qu'il s'agit de toutes les valeurs.</p>
+                    <p>Des raccourcis fréquemment utilisés existent pour les cinq premières colonnes :</p>
+                    <ol>
+                        <li>
+                            <p>@yearly</p>
+                        </li>
+                        <li>
+                            <p>@monthly</p>
+                        </li>
+                        <li>
+                            <p>@weekly</p>
+                        </li>
+                        <li>
+                            <p>@ldaily</p>
+                        </li>
+                        <li>
+                            <p>@bhourly</p>
+                        </li>
+                        <li>
+                            <p>@reboot</p>
+                        </li>
+                    </ol>
+                    <p>La sortie standard et d'erreurs de la commande utilisée dans la crontab peut être redirigée et envoyée vers un fichier de log.</p>
+<pre><code>@reboot apt-get update &gt;&gt; /var/log/update.log</code></pre>
+                    <p>Il est à noter qeue si la machine n'est pas allumée au moment où la tâche a été planifiée, celle-ci ne sera jamais exécutée.</p>
+                    <h3>AT :</h3>
+                    <p>La commande <span class="html">at</span> permet l'exécution d'une commande à un moment ultérieur. Celle-ci sera exécutée dès que l'horloge atteindra l'heure donnée. Si la machine n'est pas en ligne à ce moment, la commande sera réalisée dès que celle-ci sera en ligne.</p>
+<pre><code>at 10:00 2017-12-31 apt-get update</code></pre>
+                </article>
+                <article>
+                    <h2 id="seance_1">Séance 1 :</h2>
+                    <h3>Préliminaires :</h3>
+                    <p>Pour ce cours, vous pouvez utiliser VirtualBox pour créer votre propre machine virtuelle Debian 8.5 ou utiliser la machine virtuelle Debian 8.5 de l'école. Si vous voulez utiliser VirtualBox, référez-vous à la fiche 1.</p>
+                    <h3>Exercice 1 :</h3>
+                    <ol>
+                        <li>
+                            <p>Faites un instantané (si vous travaillez sur votre machine).</p>
+                            <img src="../images/instantane_machine_virtuelle.png" alt="">
+                        </li>
+                        <li>
+                            <p>Connectez-vous à votre serveur (machine virtuelle Debian) via le protocole telnet avec l'aide de Putty et avec votre nom d'utilisateur (lambin &#8594; azerty ou compte créé lors de l'installation &#8594; "votreprenom").</p>
+                            <ol>
+                                <li>
+                                    <p>Vous ne pourrez pas vous connecter avec le compte root.</p>
+                                </li>
+                                <li>
+                                    <p>Une fois connecté &#8594; passez en root (mdp: azerty).</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Afin d'optimiser le temps de téléchargement des paquets, adaptez la configuration de l'outil APT pour qu'il utilise le site miroir qu'il utilise le site miroir ftp.belnet.be.</p>
+                            <ol>
+                                <li>
+                                    <p>Le dépôt des mises à jour de sécurité (security.debian.org) ne doit pas être changé.</p>
+<pre><code>/etc/sources.list
+remplacer ftp.be.debian.org par ftp.belnet.be</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Mettez à jour votre système.</p>
+<pre><code>apt-get update && apt-get upgrade</code></pre>
+                        </li>
+                        <li>
+                            <p>Mettez en place les mises à jour de sécurité automatiques.</p>
+<pre><code>apt-get install unattended-upgrades apt-listchanges</code></pre>
+                        </li>
+                        <li>
+                            <p>Installez Vim et Midnight Commander sur votre serveur.</p>
+<pre><code>apt-get install vim mc</code></pre>
+                        </li>
+                        <li>
+                            <p>Installez SSH sur votre serveur.</p>
+<pre><code>apt-get install ssh</code></pre>
+                        </li>
+                        <li>
+                            <p>Connectez-vous à votre serveur via SSH.</p>
+                        </li>
+                        <li>
+                            <p>Faites un instantané (si vous travaillez sur votre machine).</p>
+                        </li>
+                        <li>
+                            <p>Supprimez l'usage des connexions telnet.</p>
+                            <ol>
+                                <li>
+                                    <p>Comment faire et comment s'en assurer ?</p>
+<pre><code>apt-get remove telnetd
+# pour s'assurer que le service telnet a bien été suprimé et ne tourne plus
+netstat -taupe</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Créez trois comptes utilisateurs : admin, ip et superuser. (Lisez bien les exigences ci-dessous avant de vous lancer et notez les mots de passe que vous employez pour ces comptes !!!).</p>
+                            <ol>
+                                <li>
+                                    <p>Définissez une politique de sécurité des mots de passe et appliquez-la.</p>
+                                </li>
+                                <li>
+                                    <p>Les profils des utilisateurs (home directories) sont privés (politique de confidentialité).</p>
+<pre><code>Voir DIR_MODE /etc/adduser.conf &#8594; privé &#8594; 0700</code></pre>
+                                </li>
+                                <li>
+                                    <p>Tous les utilisateurs créés devront avoir automatiquement le fichier CharteUtilisation.txt (récupérable sur Moodle) dans leur home directory.</p>
+<pre><code>Tout fichier placé dans /etc/skel sera copié dans la home directory de l'utilisateur lors de l'appel à adduser.</code></pre>
+                                </li>
+                                <li>
+                                    <p>Proposez une configuration par défaut pour vim (set number, ...) ou nano pour tous les utilisateurs que vous créez.</p>
+<pre><code>Placer un fichier .vimrc dans /etc/skel contenant par exemple set number</code></pre>
+                                </li>
+                                <li>
+                                    <p>Quelle est la différence entre "adduser" et "useradd" ? Quelle commande fau-il préconiser ?</p>
+<pre><code>adduser appelle useradd mais propose des services en plus (voir ci-dessus et /etc/adduser.conf). adduser est donc une surcouche de useradd.</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Faites en sorte que seul le compte admin et superuser puisse se connecter en SSH.</p>
+<pre><code>/etc/ssh/sshd_config
+AllowUsers admin superuser</code></pre>
+                        </li>
+                        <li>
+                            <p>Faites un instantané (si vous travaillez sur votre machine).</p>
+                        </li>
+                        <li>
+                            <p>Faites en sorte que le compte admin soit le nouveau compte administrateur (le nouveau "root").</p>
+<pre><code>apt-get install sudo
+# ajouter le compte admin au groupe sudo
+adduser admin sudo</code></pre>
+                        </li>
+                        <li>
+                            <p>Verouillez le compte root.</p>
+<pre><code>sudo passwd -l root</code></pre>
+                        </li>
+                        <li>
+                            <p>Créez deux comptes : getuser1 et getuser2 qui pourront uniquement ajouter des utilisateurs.</p>
+<pre><code>/etc/sudoers
+# getusers est un groupe dans lequel aura été placé getuser1 et getuser2
+%getusers ALL=NOPASSWD: /usr/sbin/adduser</code></pre>
+                        </li>
+                        <li>
+                            <p>Lisez cet article : <a href="http://www.bbc.com/news/technology-40875534" target="_blank">http://www.bbc.com/news/technology-40875534</a></p>
+                        </li>
+                        <li>
+                            <p>Créez un script interactif qui permettra de créer un utilisateur de type "getuser" ou "normal". Le script demandera également s'il faut un accès SSH. Ce script doit faciliter l'application de votre politique de sécurité des mots de passe ainsi que votre politique de confidentialité des profils utilisateurs (ceux-ci doivent être privés).</p>
+                        </li>
+                        <li>
+                            <p>Bonus : Créez un script pour contrôler l'activité du compte admin.</p>
+                            <ol>
+                                <li>
+                                    <p>Commencez par réfléchir à ce qu'il est utile de contrôler !</p>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="seance_2">Séance 2 :</h2>
+                    <h3>Préliminaires :</h3>
+                    <p>Pour ce cours, vous pouvez utiliser VirtualBox pour créer votre propre machine virtuelle Debian 8.5 ou utiliser la machine virtuelle Debian 8.5 de l'école. Si vous voulez utiliser VirtualBox, référez-vous à la fiche 1.</p>
+                    <h3>Exercice 1 : Apache début :</h3>
+                    <p>Nous allons créer un serveur LAMP (Linux Apache MySQL PHP) de production avec deux sites Web. Le site <a href="http://sitehtml/" target="_blank">http://sitehtml/</a> renverra vers une page HTML contenant "coucou" et <a href="http://sitePHP/" target="_blank">http://sitePHP/</a> renverra vers le site des bonnes nouvelles. Vous trouverez ce site dans les ressources sur Moodle.</p>
+                    <ol>
+                        <li>
+                            <p>Installez un serveur apache2.</p>
+<pre><code>apt-get install apache2 apache2-doc</code></pre>
+                        </li>
+                        <li>
+                            <p>Configurez apache2 que <a href="http://sitehtml/" target="_blank">http://sitehtml/</a> renvoie vers une page HTML contenant "coucou".</p>
+                            <ol>
+                                <li>
+                                    <p>Gardez à l'esprit que toute URL va être envoyée à un serveur DNS pour traduction ! <a href="http://sitehtml/" target="_blank">http://sitehtml/</a> doit renvoyer l'adresse IP de votre serveur. Comment réaliser cela sans toucher à la configuration DNS ? Rappelez-vous du processus de résolution des noms DNS !</p>
+<pre><code>#/etc/apache2/sites-available/siteHTML.conf
+&lt;VirtualHost *:80&gt;
+    ServerName siteHTML
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/siteHTML
+    ErrorLog ${APACHE_LOG_DIR}/monsite_error.log
+    CustomLog ${APACHE_LOG_DIR}/monsite_access.log combined
+    &lt;Directory /var/www/siteHTML&gt;
+        Require all granted
+        AllowOverride All
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;</code></pre>
+<pre><code>a2ensite siteHTML</code></pre>
+<pre><code>/etc/hosts
+127.0.0.1 siteHTML</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Installer Lynx (un navigateur Web en mode texte).</p>
+<pre><code>apt-get install lynx</code></pre>
+                        </li>
+                        <li>
+                            <p>Tester le site HTML sur votre machine Debian avec Lynx.</p>
+<pre><code>lynx siteHTML</code></pre>
+                        </li>
+                        <li>
+                            <p>Tester ensuite sur votre machine hôte (si vous travaillez avec VirtualBox).</p>
+<pre><code># rediriger le port 8080 vers 80 dans VBOX
+Firefox &#8594; http://siteHTML:8080</code></pre>
+                        </li>
+                        <li>
+                            <p>Configurez apache2 pour <a href="http://sitePHP/" target="_blank">http://sitePHP/</a> que renvoie vers le site des bonnes nouvelles de Mr Collinet.</p>
+                            <ol>
+                                <li>
+                                    <p>Vous trouverez sur Moodle un zip avec le site et fichier sql permettant de créer la base de données.</p>
+<pre><code>Copie des fichiers du site + fichier SQL &#8594; SCP &#8594; WinSCP, CyberDuck</code></pre>
+                                </li>
+                                <li>
+                                    <p>Installez MySQL et PHPMyAdmin !</p>
+<pre><code>apt-get install mysql-server phpmyadmin</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>BONUS : Faites en sorte que le site PHP soit le site par défaut c'est-à-dire que <a href="http://localhost/" target="_blank">http://localhost/</a> poointe vers le site PHP. Faites une recherche sur Internet.</p>
+                        </li>
+                    </ol>
+                    <h3>Exercice 2 : jetty/apache reverse proxy :</h3>
+                    <ol>
+                        <li>
+                            <p>Créez un utilisateur jetty.</p>
+                        </li>
+                        <li>
+                            <p>Copiez dans la home directory de jetty les fichiers du  siteJetty.</p>
+                            <ol>
+                                <li>
+                                    <p>Attention l'utilisateur jetty doit avoir des droits suffisants sur ces fichiers !</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Mettez en place un reverse &#8594; les requêtes pour "siteJetty" seront envoyées sur <a href="http://localhost:8080/" target="_blank">http://localhost:8080/</a>.</p>
+<pre><code>a2enmod proxy proxy_http</code></pre>
+<pre><code>&lt;VirtualHost*:80&gt;
+    ServerName siteJetty
+    ServerAdmin webmaster@localhost
+    ProxyPass / http://localhost:8080/
+    ProxyPassReverse / http://localhost:8080/
+    ErrorLog ${APACHE_LOG_DIR}/monsite_error.log
+    CustomLog ${APACHE_LOG_DIR}/monsite_access combined
+&lt;/VirtualHost&gt;</code></pre>
+                        </li>
+                        <li>
+                            <p>Installez Java 8. Ajoutez les backports dans APT pour pouvoir installer Java 8.</p>
+<pre><code>de http://ftp.debian.org/debian jessie-backports main
+apt-get update
+apt-get install openjdk-8-jdk -t jessie-backports</code></pre>
+                            <p>Remarquez l'utilisation du "<span class="html">-t jessie-backports</span>" pour installer des paquets "backports".</p>
+                        </li>
+                        <li>
+                            <p>Tester l'installation (dans la home directory de jetty) :</p>
+                            <ol>
+                                <li>
+                                    <p>Lancez <span class="html">java -jar NoDbRunTest.jar &</span> (le <span class="html">&</span> pour une exécution en arrière plan et conserver l'accès à la ligne de commande).</p>
+                                </li>
+                                <li>
+<pre><code>lynx siteJetty</code></pre>
+                                </li>
+                                <li>
+                                    <p>Comprenez bien le mécanisme. On lance via "<span class="html">java -jar NoDbRunTest.jar</span>" un serveur Jetty qui tourne par défaut sur le port 8080 et dans lequel le site est installé. On accède au site Jetty via Apache configuré en reverse proxy (Apache redirige les requêtes <a href="http://siteJetty/" target="_blank">http://siteJetty/</a> vers <a href="http://localhost:8080" target="_blank">http://localhost:8080</a>).</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>BONUS : Automatisez le lancement et faites en sorte que les logs soient stockés de manière standard.</p>
+                        </li>
+                    </ol>
+                    <h3>Exercice 3 : sécurisation Apache :</h3>
+                    <ol>
+                        <li>
+                            <p>Sécurisez le site "siteHTML" avec un certificat auto-signé.</p>
+<pre><code>apt-get install openssl
+a2enmod ssl
+systemctl restart apache2</code></pre>
+<pre><code>openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/apache2/ssl/apache.key -out /etc/apache2/ssl/apache.crt</code></pre>
+<pre><code>&lt;VirtualHost *:443&gt;
+    ServerName siteHTML
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/htdocs/monsite
+    ErrorLog ${APACHE_LOG_DIR}/monsite_error.log
+    CustomLog ${APACHE_LOG_DIR}/monsite_access.log combined
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/apache.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/apache.key
+    &lt;Directory /var/www/siteHTML&gt;
+        Require all granted
+        AllowOverride All
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;</code></pre>
+                        </li>
+                        <li>
+                            <p>Tester votre installation.</p>
+                            <ol>
+                                <li>
+<pre><code>lynx https://siteHTML</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <p>Bonus : Faites une redirection http to https. Vous avez sans doute remarquez que si vous interrogez le siteHTML en HTTP au lieu d'HTTPS, vous avez un message d'erreur. Lorsque l'utilisateur tape <a href="http://siteHTML/" target="_blank">http://siteHTML/</a>.</p>
+                            <ol>
+                                <li>
+                                    <p>Faites une recherche sur Internet.</p>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="nfs">Admin Linux fiche : NFS :</h2>
+                    <p>NFS est un système de fichiers en réseau permettant de partager des données. Il permet aux clients d'avoir accès à un réseau. Nous allons voir ici comment rendre accessibles différents répertoires, publics et privés, via le protocole NFS.</p>
+                    <ol>
+                        <li>
+                            <h3>Installation :</h3>
+                            <ol>
+                                <li>
+                                    <h4>Du côté serveur :</h4>
+                                    <p>Avant de pouvoir commencer à partager des fichiers, il faut installer le module nous permettant de partagerles dossiers aux clients.</p>
+<pre><code>apt-get install nfs-ernel-server nfs-common</code></pre>
+                                    <p><span class="em">nfs-kernel-server</span> permet la gestion du serveur tandis que <span class="em">nfs-commmon</span> prend en charge les données partagées entre la machine serveur et la machine client.</p>
+                                    <p>Après avoir défini vos partages dans le fichier <span class="em">/etc/exports</span> il suffit de relancer le service nfs :</p>
+<pre><code>sudo service nfs-kernel-server restart</code></pre>
+                                    <p>Cette commande ne coupe pas les transferts en cours si la nouvelle configuration permet toujours leur accès au serveur. Vous pouvez donc la lancer plus ou moins à n'importe quel moment.</p>
+                                    <p>Pour vérifier que l'export a bien eu lieu, taper sur le serveur NFS la commande :</p>
+<pre><code>showmount -e</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Du côté client :</h4>
+                                    <p>Du côté client, il faut installer le module <span class="em">nfs-common</span> et <span class="em">portmap</span>.</p>
+<pre><code>apt-get install nfs-common portmap</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Configuration :</h3>
+                            <ol>
+                                <li>
+                                    <h4>Du côté serveur :</h4>
+                                    <p>Les 3 fichiers de configuration à modifier du côté serveur permettant le partage de fichiers sont <span class="em">/etc/exports</span>, <span class="em">/etc/hosts.allow</span>, <span class="em">/etc/hosts.deny</span>. On peut modifier que <span class="em">/etc/exports</span> pour partager des fichiers mais cela rendra le serveur très fragile aux attaques.</p>
+                                    <p><span class="em">/etc/hosts.allow</span> et <span class="em">/etc/hosts.deny</span> spécifient qui a accès au serveur et qui ne l'a pas.</p>
+                                    <p><span class="em">/etc/exports</span> est compsé de ligne d'entrée indiquant quel dossier est partagé et à quel machine.</p>
+<pre><code>/Dossier/APartager/ ip_master(rw,sync) i^_trusty(rw,sync)</code></pre>
+                                    <p>Master et trusty correspondant aux machines à laquelle le dossier est partagé, pour plus de précision il est conseillé d'utiliser les IP des machines. <span class="em">Rw</span> et <span class="em">no_root_squash</span> sont des options qui décrivent l'accès qu'à l'utilisateur au fichier, les plus importantes sont :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">-ro</span> : read only.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">-rw</span> : read write, l'utilisateur peut modifier le fichier.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">-sync</span> : l'accès au partage nfs se fasse de manière synchrone.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Pour rendre les lignes de configurations effectives, il faut redémarrer le <span class="em">nfs-kernel-server</span> avec la commande :</p>
+<pre><code>nfs-kernel-server restart</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Du côté client :</h4>
+                                    <p>Il y a deux moyens de monter les fichiers chez le client : on peut le faire manuellement avec <span class="html">mount</span> ou installer un module qui le fait automatiquement (<span class="em">autofs</span>).</p>
+                                    <p>Côté client version manuelle :</p>
+                                    <p>Disons que nous avons un dossier home disponible sur le serveur NFS et qu'on voudrait le monter chez un client. On rentrera dans le terminal une ligne de code de ce genre :</p>
+<pre><code>mount -t nfs -o ro,soft,intr adresse_serveur:/home client/ usrXX/nfs_public</code></pre>
+                                    <p>Le dossier <span class="em">nfs_public</span> doit être créé préalablement.</p>
+                                    <p><span class="em">-t</span> signifie qu'on va spécifier le type de filesystem.</p>
+                                    <p><span class="em">-intr</span> : Le processus de montage.</p>
+                                    <p><span class="em">-soft</span> : va tenter de se connecter pendant un temps défini et en cas d'échec renvoie une erreur.</p>
+                                    <p><span class="em">-hard</span> : va tenter de se connecter et ne s'arrêtera pas tant qu'il n'aura pas réussi.</p>
+                                    <p>Le dossier dans lequel on va partager le dossier du serveur doit être créé avec le montage.</p>
+                                    <p>On peut démonter le dossier partagé chez le client en utilisant la commande <span class="html">umount</span>.</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Monter les fichiers automatiquement avec autofs :</h3>
+                            <p>Autofs est un programme qui monte automatiquement les dossiers, il resout les problèmes du montage manuel ou munt_fstab tel que les dossiers restent montés et prennent de la ressource même lorsqu'ils ne sont pas utilisés ou encore que sans wifi l'auto-montage ne s'exécute pas.</p>
+                            <p>Installation &#8594; <span class="html">apt-get install autofs</span></p>
+                            <p>Fichiers à configurer :</p>
+                            <ol>
+                                <li>
+                                    <h4>/etc/auto.master :</h4>
+                                    <p><span class="em">auto.master</span> est le fichier dans lequel il faut déclarer le répertoire parent de montage et le type de système de fichier.</p>
+                                    <p>Une ligne de configuration doit être écrite souss ce format :</p>
+<pre><code>/&lt;point_de_montage_parent&gt; /etc/auto.&lt;type&gt; --ghost,--timeout=30</code></pre>
+                                    <p>où <span class="em">point_de_montage_parent</span> est le dossier dans lequel on va monter les fichiers reçus du serveur nfs.</p>
+                                    <p><span class="em">type</span> : le type de système de fichier qu'il s'agit.</p>
+                                    <p><span class="em">--ghost</span> : créer des dossiers vides pour chaque point de montage.</p>
+                                    <p><span class="em">--timeout</span> : indique le temps d'attente avant de démonter les fichiers.</p>
+                                    <p>exemple :<span class="em">/net /etc/auto.nfs --ghost,--timeout=30</span></p>
+                                </li>
+                                <li>
+                                    <h4>Solution au problème posé :</h4>
+                                    <p>Le problème posé par le professeur était de partager à plusieurs utilisateurs un dossier public en read-only et que chaque utilisateur connecté au serveur ait son dossier privé seulement accessible à l'utilisateur lui-même.</p>
+                                    <h5>Du côté client :</h5>
+                                    <p>Nous avons créer des utilisateurs sur la machine client avec adduser et chaque utilisateur créé à un UID qui va permettre de le reconnaître sur la machine serveur.</p>
+                                    <h5>Du côté serveur :</h5>
+                                    <p>Nous avons aussi créer des utilisateurs qui ont un UID correspondant à ceux créés du côté client.</p>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
