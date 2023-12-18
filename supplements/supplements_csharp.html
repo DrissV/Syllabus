@@ -66,6 +66,7 @@
                         <li><a href="#poo">La programmation orientée objet</a></li>
                         <li><a href="#linq">LINQ</a></li>
                         <li><a href="#linq_to_objects">LINQ To Objects</a></li>
+                        <li><a href="#intro_blazor">Introduction à Blazor</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -2548,6 +2549,280 @@ context.SaveChanges();</code></pre>
 <pre><code>_dbContext.CouseSet.Add(course);
 &#8594;
 _dbContext.Set&lt;TEntity&gt;().Add(entity);</code></pre>
+                </article>
+                <article>
+                    <h2 id="intro_blazor">Introduction à Blazor :</h2>
+                    <h3>Qu'est-ce que Blazor ?</h3>
+                    <p>Blazor est une technologie Microsoft basée sur ASP.NET Core permettant de réaliser des applications Web dynamique.</p>
+                    <p>Il rentre en concurrence directe avec des frameworks JavaScript comme Angular, Vue ou encore React.</p>
+                    <p>Il nous permet d'écrire du C# de bout en bout, même pour réagir aux événements web !</p>
+                    <h3>Blazor Server VS WebAssembly :</h3>
+                    <h4>Blazor Server :</h4>
+                    <img src="../images/blazor_server.png" alt="">
+                    <p>Le code s'exécute sur le serveur.</p>
+                    <p>Les événements sont envoyés par un pont SignalR.</p>
+                    <h4>Blazor Client (ou WebAssembly) :</h4>
+                    <img src="../images/blazor_webassembly.png" alt="">
+                    <p>Le code et un runtime .NET sont téléchargés sur le poste client.</p>
+                    <p>Tout fonctionne dans le navigateur en contexte WebAssembly.</p>
+                    <h4>Serveur ou Client ?</h4>
+                    <p>Pas de réponse universelle !</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Server</th>
+                                <th>WebAssembly</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <ul>
+                                        <li>
+                                            <p>Client léger</p>
+                                        </li>
+                                        <li>
+                                            <p>Sollicitation du serveur</p>
+                                        </li>
+                                        <li>
+                                            <p>Code sécurisé</p>
+                                        </li>
+                                        <li>
+                                            <p>Outils 100% adaptés</p>
+                                        </li>
+                                        <li>
+                                            <p>API totale</p>
+                                        </li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    <ul>
+                                        <li>
+                                            <p>100% chez le client</p>
+                                        </li>
+                                        <li>
+                                            <p>Mode déconnecté</p>
+                                        </li>
+                                        <li>
+                                            <p>Hébergement simplifié</p>
+                                        </li>
+                                        <li>
+                                            <p>Autre technologie d'API</p>
+                                        </li>
+                                        <li>
+                                            <p>Beaucoup d'utilisateurs</p>
+                                        </li>
+                                        <li>
+                                            <p>Possibilité de PWA</p>
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Création d'un premier projet en Blazor :</h3>
+                    <p>La plupart des développeurs C# développent avec Visual Studio 2022. Quand on clique sur "Créer un projet", on sélectionne "Application Blazor".</p>
+                    <p>Après avoir entrer un nom de projet, on doit sélectionner la version de .NET (moi, j'ai mis .NET 8). On doit choisir entre "Application serveur Blazor" et "Blazor WebAssembly App".</p>
+                    <p>Il faut bien décocher le "HTTPS".</p>
+                    <p>On peut faire la même chose en ligne de commande. Donc, dans le dossier "MyApp", on peut lancer une invite de commandes (Powershell ou Shell) et exécuter la commande suivante :</p>
+<pre><code>dotnet --version</code></pre>
+                    <p>Ctte commande permet d'afficher la version du runtime et non du SDK. Ensuite, on crée le projet "Blazor Server App" sans le "HTTPS" avec la commande suivante :</p>
+<pre><code>dotnet new blazorserver --no-https</code></pre>
+                    <h3>Présentation des fichiers :</h3>
+                    <p>Pour lancer le projet en lignes de commandes, il faut entrer cette instruction :</p>
+<pre><code>dotnet run</code></pre>
+                    <p><span class="em">Program.cs</span> est une application Console qui va lancer un serveur qui va répondre aux requêtes HTTP.</p>
+                    <h3>Le routeur Blazor :</h3>
+                    <p>Dans le fichier <span class="em">_Imports.razor</span>, on va définir toutes les instructions <span class="html">using</span> en préfixant bien par un '@'. C'est la même chose que le fichier <span class="em">_Imports.cs</span> dans ASP.NET Core.</p>
+                    <p><span class="html">@page "/"</span> : ça permet de dire que ce fichier sera exécuter sur l'url "/".</p>
+                    <h3>Qu'est-ce qu'un composant Blazor ?</h3>
+                    <p>Le Layout se trouve dans le dossier "Shared" qui est un dossier contenant des composants visibles pour tous les autres composants.</p>
+                    <h3>Les parmètres de route :</h3>
+                    <p>On peut rajouter une deuxième instruction "<span class="html">@page</span>". Comme par exemple : @page "/counter/{value:int}". On doit rajouter l'annotation <span class="em">[Parameter]</span> à la propriété "<span class="em">public int Value { get =&gt; currentCount; set =&gt; currentCount = value; }</span>.</p>
+                    <p>Donc, le fichier Counter.razor devient :</p>
+<pre><code>@page "/counter"
+@page "/counter/{value:int}"
+
+&lt;h1&gt;Counter&lt;/h1&gt;
+
+&lt;p&gt;Current count : @currentCount&lt;/p&gt;
+
+&lt;button class="btn btn-primary" @onclick="IncrementCount"&gt;Click me&lt;/button&gt;
+
+@code {
+    private int currentCount = 0;
+
+    [Parameter]
+    public int Value { get =&gt; currentCount; set =&gt; currentCount = value; }
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}</code></pre>
+                    <h3>Séparation de la vue du code :</h3>
+                    <p>Certains développeurs, comme moi, préfèrent avoir deux fichiers : le comportement et la vue. On peut utiliser le concept de classes partielles. On va créér une nouvelle classe "Counter.razor.cs".</p>
+                    <p>Pour que ça fonctionne correctement, dans cette nouvelle classe, il faut rajouter le mot-clé "<span class="html">partial</span>" dans le nom de la classe.</p>
+                    <p>Ensuite, on doit copier tout ce qu'il y a dans le "<span class="html">@code</span>" dans la nouvelle classe.</p>
+                    <p>Voici le code dans le fichier "Counter.razor" :</p>
+<pre><code>@page "/counter"
+@page "/counter/{value:int}"
+
+&lt;h1&gt;Counter&lt;/h1&gt;
+
+&lt;p&gt;Current count : @currentCount&lt;/p&gt;
+
+&lt;button class="btn btn-primary" @onclick="IncrementCount"&gt;Click me&lt;/button&gt;</code></pre>
+                    <p>Dans le fichier "Counter.razor.cs", voici le code :</p>
+<pre><code>using Microsoft.AspNetCore.Components;
+using System;
+using System.Collections.generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace MyApp.Pages
+{
+
+    public partial class Counter
+    {
+        private int currentCount = 0;
+
+        [Parameter]
+        public int Value { get =&gt; currentCount; set =&gt; currentCount = value; }
+
+        private void IncrementCount()
+        {
+            currentCount++;
+        }
+    }
+}</code></pre>
+                    <p>Moi, au lieu d'avoir une classe partielle, je prèfère avoir une notion d'héritage avec une classe "CounterBase" qui hérite de "ComponentBase". Donc, le fichier "Counter.razor.cs" devient :</p>
+<pre><code>using Microsoft.AspNetCore.Components;
+using System;
+using System.Collections.generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace MyApp.Pages
+{
+
+    public class CounterBase : ComponentBase
+    {
+        protected int currentCount = 0;
+
+        [Parameter]
+        public int Value { get =&gt; currentCount; set =&gt; currentCount = value; }
+
+        protected void IncrementCount()
+        {
+            currentCount++;
+        }
+    }
+}</code></pre>
+                    <p>Dans le fichier "Counter.razor", on devra ajouter l'instruction "<span class="html">@inherits</span>" pour préciser que la classe partielle qui représente ce composant Blazor hérite de ma classe "CounterBase" que j'ai créée.</p>
+<pre><code>@page "/counter"
+@page "/counter/{value:int}"
+@inherits CounterBase
+
+&lt;h1&gt;Counter&lt;/h1&gt;
+
+&lt;p&gt;Current count : @currentCount&lt;/p&gt;
+
+&lt;button class="btn btn-primary" @onclick="IncrementCount"&gt;Click me&lt;/button&gt;</code></pre>
+                    <h3>Premier exercice :</h3>
+                    <p>On instancie tout notre jeu du nombre mystère dans la fonction <span class="html">protected override void OnInitialized() =&gt; base.OnInitialized();</span></p>
+                    <p>Pour les nombres aléatoires, on utilise la classe <span class="html">Random</span>. Comme par exemple, <span class="em">var random = new Random();</span></p>
+                    <p>Créons un projet "NombreMagique" sans "HTTPS". Sur le dossier "Pages", créons un nouveau composant Razor "NombreMagique".</p>
+                    <p>Pas oublié de rajouter un nouveau lien dans la barre de navigation.</p>
+                    <p>Dans le fichier "NombreMagique.razor.cs", voici le code :</p>
+<pre><code>using Microsoft.AspNetCore.Components;
+using System;
+using System.Collections.generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace NombreMagique.Pages
+{
+
+    public class NombreMagiqueBase : ComponentBase
+    {
+        protected const int NbLifesMax = 5;
+        protected const int NbMax = 20;
+
+        protected int value;
+
+        protected int nbMagique;
+        protected int nbRemainingLifes;
+        protected bool? gameWon;
+
+        protected override void OnInitialized()
+        {
+            ReinitGame();
+            base.OnInitialized();
+        }
+
+        protected void ReinitGame()
+        {
+            var random = new Random();
+
+            nbMagique = random.Next(NbMax);
+            nbRemainingLifes = NbLifesMax;
+            gameWon = null;
+            value = 0;
+        }
+
+        protected void TestNumber()
+        {
+            if (value == nbMagique)
+            {
+                gameWon = true;
+            }
+            else
+            {
+                nbRemainingLifes--;
+                if (nbRemainingLifes == 0)
+                {
+                    gameWon = false;
+                }
+            }
+        }
+    }
+}</code></pre>
+                    <p>Dans le fichier "NombreMagique.razor", on écrit :</p>
+<pre><code>@inherits NombreMagiqueBase
+
+
+@page "/nombre"
+
+&lt;h3&gt;Nombre magique&lt;/h3&gt;
+@if (gameWon.HasValue)
+{
+    if (gameWon.Value)
+    {
+        &lt;h2&gt;Gagn&eacute;!&lt;/h2&gt;
+    }
+    else
+    {
+        &lt;h2&gt;Perdu&lt;/h2&gt;
+    }
+    &lt;button class="btn btn-primary" onclick="() =&gt; ReinitGame()"&gt;Rejouer&lt;/button&gt;
+}
+else {
+    &lt;div&gt;
+        &lt;h4&gt;Devinez le nombre compris entre 0 et @NbMax&lt;/h4&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+        &lt;input type="number" @bind="value"&gt;
+        &lt;button class="btn btn-primary" @onclick="() =&gt; TestNumber()"&gt;Tester&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+        @for (int i = 0; i &lt; nbRemainingLifes; i++)
+        {
+            &lt;span&gt;&hearts;&nbsp;&lt;/span&gt;
+        }
+    &lt;/div&gt;
+}</code></pre>
+                    <p>Dans le dossier "Properties", il faut supprimer le "profiles" de "IISExpress" du fichier "lauchSettings.json", ainsi que le "listSettings".</p>
                 </article>
             <!-- fin de section -->
             </section>

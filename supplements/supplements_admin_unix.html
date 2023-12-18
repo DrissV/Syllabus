@@ -59,7 +59,6 @@
                         <li><a href="#seance_1">Séance 1</a></li>
                         <li><a href="#seance_2">Séance 2</a></li>
                         <li><a href="#nfs">NFS</a></li>
-                        <li><a href="#samba">Samba</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -746,7 +745,7 @@ systemctl restart apache2</code></pre>
                 </article>
                 <article>
                     <h2 id="nfs">Admin Linux fiche : NFS :</h2>
-                    <p>NFS est un système de fichiers en réseau permettant de partager des données. Il permet aux clients d'avoir accès à un réseau. Nous allons voir ici comment rendre accessibles différents répertoires, publics et privés, via le protocole NFS.</p>
+                    <p>NFS (Network File System) est un système de fichiers en réseau permettant de partager des données. Il permet aux clients d'avoir accès à un réseau. Nous allons voir ici comment rendre accessibles différents répertoires, publics et privés, via le protocole NFS.</p>
                     <ol>
                         <li>
                             <h3>Installation :</h3>
@@ -755,7 +754,7 @@ systemctl restart apache2</code></pre>
                                     <h4>Du côté serveur :</h4>
                                     <p>Avant de pouvoir commencer à partager des fichiers, il faut installer le module nous permettant de partagerles dossiers aux clients.</p>
 <pre><code>apt-get install nfs-ernel-server nfs-common</code></pre>
-                                    <p><span class="em">nfs-kernel-server</span> permet la gestion du serveur tandis que <span class="em">nfs-commmon</span> prend en charge les données partagées entre la machine serveur et la machine client.</p>
+                                    <p><span class="em">nfs-kernel-server</span> permet la gestion du serveur tandis que <span class="em">nfs-common</span> prend en charge les données partagées entre la machine serveur et la machine client.</p>
                                     <p>Après avoir défini vos partages dans le fichier <span class="em">/etc/exports</span> il suffit de relancer le service nfs :</p>
 <pre><code>sudo service nfs-kernel-server restart</code></pre>
                                     <p>Cette commande ne coupe pas les transferts en cours si la nouvelle configuration permet toujours leur accès au serveur. Vous pouvez donc la lancer plus ou moins à n'importe quel moment.</p>
@@ -826,15 +825,98 @@ systemctl restart apache2</code></pre>
                                     <p><span class="em">--timeout</span> : indique le temps d'attente avant de démonter les fichiers.</p>
                                     <p>exemple :<span class="em">/net /etc/auto.nfs --ghost,--timeout=30</span></p>
                                 </li>
-                                <li>
-                                    <h4>Solution au problème posé :</h4>
-                                    <p>Le problème posé par le professeur était de partager à plusieurs utilisateurs un dossier public en read-only et que chaque utilisateur connecté au serveur ait son dossier privé seulement accessible à l'utilisateur lui-même.</p>
-                                    <h5>Du côté client :</h5>
-                                    <p>Nous avons créer des utilisateurs sur la machine client avec adduser et chaque utilisateur créé à un UID qui va permettre de le reconnaître sur la machine serveur.</p>
-                                    <h5>Du côté serveur :</h5>
-                                    <p>Nous avons aussi créer des utilisateurs qui ont un UID correspondant à ceux créés du côté client.</p>
-                                </li>
                             </ol>
+                        </li>
+                        <li>
+                            <h3>Solution au problème posé :</h3>
+                            <p>Le problème posé par le professeur était de partager à plusieurs utilisateurs un dossier public en read-only et que chaque utilisateur connecté au serveur ait son dossier privé seulement accessible à l'utilisateur lui-même.</p>
+                            <h4>Du côté client :</h4>
+                            <p>Nous avons créer des utilisateurs sur la machine client avec adduser et chaque utilisateur créé à un UID qui va permettre de le reconnaître sur la machine serveur.</p>
+                            <p>On crée des dossiers pour chaque client sur la machine et on mount pour chaque client son dossier privé.</p>
+<pre><code>#!/bin/bash
+
+
+if [ -z $1 ]
+then
+    echo "Usage : $0 [nbr_clients]"
+    exit 1
+fi
+
+if [ ! -e /nfs ]
+then
+    mkdir /nfs
+fi
+
+for i in `seq 1 $1`
+do
+    if [ ! -e /nfs/priv_client$i ]
+    then
+        mkdir /nfs/priv_client$i
+    fi
+
+    mount -t nfs -o rw,soft,intr "192.168.0.1:/home/client$i" "/nfs/priv_client$i"
+
+done
+
+if [ !-e /nfs/public_nfs ]
+then
+    mkdir /nfs/public_nfs
+fi
+
+mount -t nfs -o ro,soft,intr 192.168.0.1:/home/public_nfs /nfs/public_nfs</code></pre>
+                            <h4>Du côté serveur :</h4>
+                            <p>Nous avons aussi créer des utilisateurs qui ont un UID correspondant à ceux créés du côté client.</p>
+                            <p>Script qui crée un dossier public et qui met un fichier dedans, on ajoute ensuite une ligne de configuration dans <span class="em">/etc/exports</span> qui partage le dossier en read only à l'IP de la machine client.</p>
+                            <p>Ensuite, le script ajoutera une ligne de configuration, pour chaque utilisateur de la machine client, dans <span class="em">/etc/exports</span> qui partagera le dossier de l'utilisateur créé sur le serveur qui a un UID correspondant à celui sur le client en rw.</p>
+                            <p>Et pour finir nous rajoutons dans <span class="em">/etc/hosts.deny</span> et <span class="em">/etc/hosts.allow</span> des lignes de configurations qui vont donner l'accès à seulement l'IP de la machine cliente.</p>
+<pre><code>#!/bin/bash
+# Ne fonctionne pas quand on est en réseau interne car pas de DNS
+# apt-get install -y portmap nfs-common nfs-kernel-server
+
+if [ -z $1 ] || [ -z $2 ]
+then
+    echo "Usage : $0 [nbr_clients] [ip_client]"
+    exit 1
+fi
+
+nbr_clients=$1
+ip_client=$2
+
+for i in `seq 1 $nbr_clients`
+do
+    # Il faut avoir créer les comptes clients sur le serveur au pr&alable
+    # /home/client$i correspond au home directory
+    echo "/home/clien$i $ip_client(rw,sync)" | sudo tee --append /etc/exports 2&gt; /dev/null
+done
+
+if [ ! -e "/home/public_nfs" ]
+then
+    sudo mkdir /home/public_nfs
+    sudo echo "salut ce rep est public !" | sudo tee /home/public_nfs/read
+fi
+
+sudo echo "/home/public_nfs $ip_client(ro,sync)" | sudo tee --append /etc/exports 2&gt; /dev/null
+
+sudo echo "portmap : ALL | sudo tee -append /etc/hosts.deny 2&gt; /dev/null
+
+sudo echo "nfs : ALL" | sudo tee --append /etc/hosts.deny 2&gt; /dev/null
+
+sudo echo "mountd : ALL" | sudo tee --append /etc/hosts.deny 2&gt; /dev/null
+
+sudo echo "portmap : $ip_client" | sudo tee --append /etc/hosts.allow 2&gt; /dev/null
+
+sudo echo "nfsd : $ip_client" | sudo tee --append /etc/hosts.allow 2&gt; /dev/null
+
+sudo echo "mountd : $îpclient" | sudo tee --append /etc/hosts.allow 2&gt; /dev/null
+
+sudo /etc/init.d/nfs-kernel-server restart</code></pre>
+                        </li>
+                        <li>
+                            <h3>NFS VS SAMBA :</h3>
+                            <p>Comme dit plus haut, NFS est surtout utilisé dans le monde Unix et permet le partage de dossier. Samba, lui, est utilisé afin d'interconnecter le monde Windows au monde Unix.</p>
+                            <p>La différence est que NFS ne nécessite pas d'un utilisateur et d'un mot de passe mais bien juste sur base d'une identification d'hôte et non pas d'utilisateur.</p>
+                            <p>NFS devient dès lors très complexe si on doit bien séparer les dossiers par rapport au home/utilisateurs et l'utilisation de Samba devient plus efficace.</p>
+                            <p>Par contre s'il s'agit de logiciels, CD-ROM ou encores des mises à jour, il est plus simple d'utiliser NFS qui reste très simple d'utilisation dans ces cas-ci.</p>
                         </li>
                     </ol>
                 </article>
