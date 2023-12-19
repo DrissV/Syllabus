@@ -2371,9 +2371,7 @@ try {
 &lt;/connectionStrings&gt;</code></pre>
                     <p>Cette chaîne de connexion doit spécifier le type de base de données que vous utilisez et les détails de connexion. Comme par exemple :</p>
 <pre><code>&lt;connectionStrings&gt;
-    &lt;add name="MaConnexion" 
-         connectionString="Server=nom_du_serveur;Database=nom_de_la_base_de_donnees;User Id=nom_utilisateur;Password=mot_de_passe;" 
-         providerName="MySql.Data.MySqlClient" /&gt;
+    &lt;add name="MaConnexion"  connectionString="Server=nom_du_serveur;Database=nom_de_la_base_de_donnees;User Id=nom_utilisateur;Password=mot_de_passe;" providerName="MySql.Data.MySqlClient" /&gt;
 &lt;/connectionStrings&gt;</code></pre>
                     <p>POCO (Plain Old CLR Objects) fait référence à des objets simples sans dépendance à une infrastructure particulière, ce qui permet une plus grande flexibilité.</p>
                     <p>Les collections générées par "<span class="html">DbSet</span>" dans Entity Framework représentent les ensembles d'entités associées à une table dans la base données. Vous pouvez utiliser ces collections pour effectuer des oéprations CRUD sans avoir à manipuler explicitement les requêtes SQL.</p>
@@ -2485,8 +2483,8 @@ context.SaveChanges();</code></pre>
                          select o).First&lt;Order&gt;();
 
 Employee emp = (from e in context.Employees
-                          where e.EmployeeID == 9
-                          select e).Single&lt;Employee&gt;();
+               where e.EmployeeID == 9
+               select e).Single&lt;Employee&gt;();
   
 // Now we will assign the new employee to the order.
 order.Employee = emp;
@@ -2824,6 +2822,42 @@ else {
     &lt;/div&gt;
 }</code></pre>
                     <p>Dans le dossier "Properties", il faut supprimer le "profiles" de "IISExpress" du fichier "lauchSettings.json", ainsi que le "listSettings".</p>
+                    <p>Dans Blazork, "<span class="html">@blind</span>" et "<span class="html">@blind-Value</span>" sont deux façons d'effectuer la liaison de données bidirectionnelle. Cependant, il existe quelques différences subtiles entre les deux.</p>
+                    <ol>
+                        <li>
+                            <p>@blind :</p>
+                            <ul>
+                                <li>
+                                    <p>"<span class="em">@bind</span>" est une syntaxe concise qui combine la liaison en lecture seule ("<span class="em">@bind="propriete"</span>") et la liaison en écriture ("<span class="em">@oninput="e =&gt; propriete = e.Value")</span>).</p>
+                                </li>
+                                <li>
+                                    <p>Il est souvent utilisé dans des éléments d'entrée de formulaire tels que "<span class="em">&lt;input&gt;</span>", "<span class="em">&lt;select&gt;</span>" et "<span class="em">&lt;textarea&gt;</span>".</p>
+                                </li>
+                                <li>
+                                    <p>La syntaxe "<span class="em">@bind</span> se charge à la fois de la mise à jour de la valeur de la propriété lorsqu'un utilisateur interagit avec l'élement d'entrée lorsque la propriété change dans le code.</p>
+                                </li>
+                            </ul>
+                            <p>Exemple :</p>
+<pre><code>&lt;input type="text" @bind="Nom" /&gt;</code></pre>
+                        </li>
+                        <li>
+                            <p>@bind-Value :</p>
+                            <ul>
+                                <li>
+                                    <p>"<span class="em">@bind-Value</span>" est utilisé dans des contextes où vous souhaitez explicitement la propriété liée de l'élément.</p>
+                                </li>
+                                <li>
+                                    <p>Il est souvent utilisé avec des composants personnalisés où la propriété à lier peut être déterminée dynamiquement.</p>
+                                </li>
+                                <li>
+                                    <p>Vous devez spécifier la propriété explicitement, par exemple, <span class="em">@bind-Value="model.Nom"</span>.</p>
+                                </li>
+                            </ul>
+                            <p>Exemple :</p>
+<pre><code>&lt;MonComposant @bind-Value="model.Nom /&gt;</code></pre>
+                        </li>
+                    </ol>
+                    <p>En résumé, <span class="em">@bind</span> est plsu concis et pratique pour les cas d'utilisation courants où vous liez directement une propriété à la valeur d'un élément d'entrée, tandis que <span class="em">@blind-Value</span> offre une flexibilité accrue en permettant de spécifier explicitement la propriété liée à la valeur. Vous pouvez choisir celui qui convient le mieux à votre scénario d'utilisation.</p>
                 </article>
                 <article>
                     <h2 id="entity_framework_blazor">Entity Framework dans Blazor :</h2>
@@ -3042,6 +3076,10 @@ namespace MyApplication.Migrations
         migrationBuilder.DropTable(name: "Orders");
     }
 }</code></pre>
+                    <p>Pour ajouter une contrainte d'unicité (unique en SQL) sur la propriété "Name", il faut rajouter, dans la partie "constraints" des migrations, la ligne suivante :</p>
+<pre><code>table.UniqueConstraint("UQ_VotreTable_Name", x =&gt; x.Name);</code></pre>
+                    <p>Pour ajouter une contrainte précisant les valeurs spécifiques que peut prendre une propriété (par exemple : la propriété "Sexe" peut prendre "M", "F" ou "X" comme valeur), rajoutez toujours dans "constraints" la ligne suivante :</p>
+<pre><code>table.CheckConstraint("CK_VotreTable_Sexe", "Sexe IN ('M', 'F', 'X')");</code></pre>
                     <h3>Créer un service pour interagir avec le contexte (CRUD) :</h3>
                     <p>Dans le projet, on crée un nouveau répertoire "Services" et créons la classe "CustomerService.cs" dedans.</p>
 <pre><code>using MyApplication.Data;
