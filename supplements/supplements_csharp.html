@@ -67,6 +67,7 @@
                         <li><a href="#linq">LINQ</a></li>
                         <li><a href="#linq_to_objects">LINQ To Objects</a></li>
                         <li><a href="#intro_blazor">Introduction à Blazor</a></li>
+                        <li><a href="#entity_framework_blazor">Entity Framework dans Blazor</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -2818,11 +2819,332 @@ else {
     &lt;div&gt;
         @for (int i = 0; i &lt; nbRemainingLifes; i++)
         {
-            &lt;span&gt;&hearts;&nbsp;&lt;/span&gt;
+            &lt;span&gt;&amp;hearts;&amp;nbsp;&lt;/span&gt;
         }
     &lt;/div&gt;
 }</code></pre>
                     <p>Dans le dossier "Properties", il faut supprimer le "profiles" de "IISExpress" du fichier "lauchSettings.json", ainsi que le "listSettings".</p>
+                </article>
+                <article>
+                    <h2 id="entity_framework_blazor">Entity Framework dans Blazor :</h2>
+                    <h3>Configuration :</h3>
+                    <p>Avant de faire quoi que ce soit, il faut télécharger et installer les logiciels suivants : <a href="https://www.microsoft.com/fr-be/sql-server/sql-server-downloads" target="_blank">SQL Server</a> et <a href="https://learn.microsoft.com/fr-fr/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16#download-ssms" target="_blank">SQL Server Management Studio (SSMS)</a>.</p>
+                    <p>Dans SSMS, il faut se connecter au SQL Server local installé précédemment. Ensuite, il suffit créer une nouvelle base de données (par exemple : "MyApplicationDb").</p>
+                    <p>Ensuite, Dans Visual Studio 2022, en ouvrant la fenêtre de l'explorateur de serveurs, il faut "ajouter une connexion" et remplir les champs "Souce de données" par "Microsoft SQL Server (SqlClient)", "Nom du serveur" par ".\" et "Sélectionner ou entrer un nom de base de données" par "MyApplicationDb".</p>
+                    <p>Enfin, dans la solution, en gérant les paquets NuGet, on va vérifier si les paquets "<span class="em">Micosft.EntityFrameworkCore</span>", "<span class="em">Microsoft.EntityFrameworkCore.Tools</span>" et "<span class="em">Micosft.EntityFrameworkCore.SqlServer</span>" sont bien installés, sinon on installe ceux qui manquent en sélectionnant bien la dernière version stable.</p>
+                    <p>Dans le projet, créez un nouveau dossier "Data" s'il n'existe pas et dedans créez une nouvelle classe "<span class="em">MyDbContext</span>" :</p>
+<pre><code>using Micorsoft.EntityFrameworkCore;
+
+namespace MyApplication.Data
+{
+
+    public class MyDbContext : DbContext
+    {
+
+        public MyDbContext(DbContextOptions&lt;MyDbContext&gt; options) : base(options)
+        {
+
+        }
+
+    }
+
+}</code></pre>
+                    <p>Dans appsettings.json, il faut rajouter la "ConnectionStrings" qu'on trouve dans les propriétés de la connexion qu'on a créée précédemment :</p>
+<pre><code>{
+    "ConnectionStrings": {
+      "Default": "Data Source=.\\;Initial Catalog=MyApplicationDb;Integrated Security=True;Encrypt=False"
+    },
+    "Logging": {
+      "LogLevel": {
+        "Default": "Information",
+        "Microsoft.AspNetCore": "Warning"
+      }
+    },
+    "AllowedHosts": "*"
+}</code></pre>
+                    <p>Enfin, dans le programme principal, qui a normalement pour nom "Program.cs", il faut rajouter quelques lignes :</p>
+<pre><code>using MyApplication.Components;
+using MyApplication.Data;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("Default") ?? throw new NullReferenceException("No connection string in config !");
+// Add services to the container.
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+
+builder.Services.AddDbContextFactory&lt;MyDbContext&gt;((DbContextOptionsBuilder options) => options.UseSqlServer(connectionString));
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+}
+
+app.UseStaticFiles();
+app.UseAntiforgery();
+
+app.MapRazorComponents&lt;App&gt;().AddInteractiveServerRenderMode();
+
+app.Run();</code></pre>
+                    <h3>Création des entitiés :</h3>
+                    <p>Dans le dossier "Data", créez un dossier "Models" et créez un nouvelle classe (par exemple : "Customer.cs") :</p>
+<pre><code>using System.ComponentModel.DataAnnotations;
+
+namespace MyApplication.Data.Models
+{
+    public class Customer
+    {
+        [Key]
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Age { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+}</code></pre>
+                    <p>Ensuite, dans notre DbContext, on peut créez des <span class="html">DbSet</span> :</p>
+<pre><code>using MyAplication.Data.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace MyApplication.Data
+{
+
+    public class MyDbContext : DbContext
+    {
+
+        public MyDbContext(DbContextOptions&lt;MyDbContext&gt; options) : base(options)
+        {
+
+        }
+
+        public DbSet&lt;Customer&gt; Customers { get; set; }
+    }
+
+}</code></pre>
+                    <h3>Les migrations :</h3>
+                    <p>D'après l'article sur <a href="https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/?tabs=dotnet-core-cli" target="_blank">la vue d'ensemble des migrtions</a> :</p>
+                    <blockquote>
+                        <p>Dans la pratique, les modèles de données des projets évoluent au fur et à mesure que des fonctionnalités sont implémentées : de nouvelles entités et propriétés sont ajoutées et supprimées, et les schémas de la base de données doivent être modifiés en conséquence pour rester synchronisés avec l'application. La fonctionnalité de migration dans Entity Framework Core permet de mettre à jour de manière incrémentielle le schéma de la base de données pour qu'il reste synchronisé avec le moèle de données de l'application tout en conservant les données existantes dans la base de données.</p>
+                        <p>Dans les grandes lignes, les mogrations fonctionnent de la façon suivante :</p>
+                        <ul>
+                            <li>
+                                <p>Lors de l'introduction d'une modification du modèle de données, le développeur utilise des outils Entity Framework Core afin d'ajouter une migration correspondante décrivant les mises à jour nécessiares pour préserver la synchronisation du schéma de la base de données. Entity Framework Core compare le modèle actuel à un instantané de l'ancien modèle pour déterminer les différences et génère des fichiers sources de migration. Ces fichiers peuvent, comme n'importe quel fichier source, faire l'objet d'un suivi dans le contrôle de code source du projet.</p>
+                            </li>
+                            <li>
+                                <p>Une fois générée, la nouvelle migration peut être appliquée à une base de données de différentes façons. Entity Framework Core enregistre toutes les migrations appliquées dans une table d'historique spéciale, ce qui lui permet de savoir quelles migrations ont été appliquées.</p>
+                            </li>
+                        </ul>
+                    </blockquote>
+                    <p>Dans l'onglet "Outils", sélectionnez "Gestionnaire de package NuGet" et ensuite "Console du Gestionnaire de package".</p>
+                    <p>Tapez la commande suivante :</p>
+<pre><code>Add-Migration "added_customer_table"</code></pre>
+                    <p>Entity Framework Core créera un répertoiire nommé "<span class="em">Migrations</span> dans votre projet et générera des fichiers. Il est judicieux d'inspecter précisément les fichiers en question, et éventuellement de les modifier, mais nous allons nous en passer pour l'instant.</p>
+                    <p>Voici le fichier généré par la commande pour les customers :</p>
+<pre><code>using System;
+using Micorsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace MyApplication.Migrations
+{
+
+    public partial class added_customer_table : Migration
+    {
+        
+        protected override void Up(migrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "Customers",
+                columns: table =&gt; new
+                {
+                    Id = table.Column&lt;int&gt;(type: "int", nullable: false)
+                         .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column&lt;string&gt;(type: "nvarchar(max)", nullable: false),
+                    Age = table.Column&lt;int&gt;(type: "int", nullable: false),
+                    CreatedDate = table.Column&lt;DateTime&gt;(type: "datetime2", nullable: false) 
+                },
+                constraints: table =&gt;
+                {
+                    table.PrimaryKey("PK_Customers", x =&gt; x.Id);
+                });
+        }
+    }
+
+    protected override Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropTable(name: "Customers");
+    }
+}</code></pre>
+                    <p>Une fois la migration créée, il faut mettre à jour la base de données avec la commande :</p>
+<pre><code>Update-Database</code></pre>
+                    <p>S'il y a pas eu d'erreurs, on devrait retrouver deux tables dans notre base de données : la table par défaut "<span class="em">dbo._EFMigrationHistory</span> et la table "dbo.Customers".</p>
+                    <h3>Les relations :</h3>
+                    <p>On va créer une nouvelle classe dans "Models" : "Order.cs".</p>
+<pre><code>using System.ComponentModel.DataAnnotations;
+
+    namespace MyApplication.Data.Models
+    {
+        public class Order
+        {
+            [Key]
+            public int Id { get; set; }
+            public string ItemDescription { get; set; }
+            public int Quantity { get; set; }
+
+            public Customer Customer { get; set; }
+        }
+    }</code></pre>
+                    <p>Dans le DbContext, pas oublier de rajouter un nouveau <span class="em">DbSet</span>, d'ajouter une nouvelle migration "Add_Orders_Table" et de mettre à jour la base de données.</p>
+<pre><code>using System;
+using Micorsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace MyApplication.Migrations
+{
+
+    public partial class Added_Orders_Table : Migration
+    {
+        
+        protected override void Up(migrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "Orders",
+                columns: table =&gt; new
+                {
+                    Id = table.Column&lt;int&gt;(type: "int", nullable: false)
+                            .Annotation("SqlServer:Identity", "1, 1"),
+                    ItemDescription = table.Column&lt;string&gt;(type: "nvarchar(max)", nullable: false),
+                    Quantity = table.Column&lt;int&gt;(type: "int", nullable: false),
+                    CustomerId = table.Column&lt;int&gt;(type: "int", nullable: false) 
+                },
+                constraints: table =&gt;
+                {
+                    table.PrimaryKey("PK_Orders", x =&gt; x.Id);
+                    table.ForeignKey(
+                        name: "FK_Orders_Customers_customerId",
+                        column: x =&gt; x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+            
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_customerId",
+                table: "Orders",
+                column: "CustomerId");
+        }
+    }
+
+    protected override Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropTable(name: "Orders");
+    }
+}</code></pre>
+                    <h3>Créer un service pour interagir avec le contexte (CRUD) :</h3>
+                    <p>Dans le projet, on crée un nouveau répertoire "Services" et créons la classe "CustomerService.cs" dedans.</p>
+<pre><code>using MyApplication.Data;
+using MyApplication.Data.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace MyApplication.Service
+{
+
+    public class CustomerService
+    {
+        private IDbContextFactory&lt;MyDbContext&gt; _dbContextFactory;
+
+        public CustomerService(IDbContextFactory&lt;MyDbContext&gt; dbContextFactory)
+        {
+            _dbContextFactory = dbContextFactory;
+        }
+
+        public void AddCustomer(Customer customer)
+        {
+            using (var context = _dbContext.CreateDbContext())
+            {
+                context.Customers.Add(customer);
+                context.SaveChanges();
+            }
+        }
+
+        public Customer GetCustomerByName(string name)
+        {
+            using (var context = _dbContextFactory.CreateDbContext())
+            {
+                var customer = context.SingleOrDefault(x =&gt; x.Name == name);
+                return customer;
+            }
+        }
+
+        public void UpdateCustomerByName(string name, int age)
+        {
+            var customer = GetCustomerByName(name);
+            if (customer == null)
+            {
+                throw new Exception("Customer does not exist. Cannot update");
+            }
+            customer.Age = age;
+            using (var context = _dbContextFactory.CreateDbContext())
+            {
+                context.Update(customer);
+                context.SaveChanges();
+            }
+        }
+
+        public void RemoveCustomerByName(string name)
+        {
+            var customer = GetCustomerByName(name);
+            if (customer == null)
+            {
+                throw new Exception("Customer does not exist. Cannot delete");
+            }
+
+            using (var context = _dbContextFactory.CreateDbContext())
+            {
+                context.Remove(customer);
+                context.SaveChanges();
+            }
+        }
+
+    }
+}</code></pre>
+                    <p>Dans le "Program.cs", n'oubliez pas de rajouter les lignes suivantes à la bonne place avant l'ajout du DbContextFactory :</p>
+<pre><code>using MyApplication.Services;
+builder.Services.AddTransient&lt;CustomerService&gt;();</code></pre>
+                    <p>Dans le fichier "Index.razor" du dossier "Pages", on va créer un formulaire pour insérer un nouveau "Customer" dans la base de données :</p>
+<pre><code>@page "/"
+@using MyApplication.Services
+@using MyAplication.Data.Models
+@inject CustomerService customerService;
+
+&lt;PageTitle&gt;Index&lt;/PageTitle&gt;
+
+&lt;h1&gt;Hello, world!&lt;/h1&gt;
+
+Welcome to your new app.
+
+&lt;SurveyPrompt Title="How is Blazor working for you?" /&gt;
+
+&lt;EditForm Model="@customer" OnValidSubmit="HandleSubmit"&gt;
+    &lt;label for="NameInput"&gt;Name&lt;/label&gt;
+    &lt;InputText id="NameInput" @bind-Value="@customer.Name"&gt;&lt;/InputText&gt;
+    &lt;label for="AgeInput"&gt;Age&lt;/label&gt;
+    &lt;InputNumber id="AgeInput" @bind-Value="@customer.Age"&gt;&lt;/InputNumber&gt;
+    &lt;button type="submit" class="btn btn-primary"&gt;Create&lt;/button&gt;
+&lt;/EditForm&gt;
+
+@code {
+    Customer customer = new Customer();
+
+    public void HandleSubmit(EditContext editContext)
+    {
+        var newCustomer = (Customer)editContext.Model;
+        newCustomer.CreatedDate = DateTime.Now;
+        customerService.AddCustomer(newCustomer);
+    }
+}</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
