@@ -2972,7 +2972,7 @@ namespace MyApplication.Data
                     </blockquote>
                     <p>Dans l'onglet "Outils", sélectionnez "Gestionnaire de package NuGet" et ensuite "Console du Gestionnaire de package".</p>
                     <p>Tapez la commande suivante :</p>
-<pre><code>Add-Migration "added_customer_table"</code></pre>
+<pre><code>Add-Migration "Added_Customer_Table"</code></pre>
                     <p>Entity Framework Core créera un répertoire nommé "<span class="em">Migrations</span>" dans votre projet et générera des fichiers. Il est judicieux d'inspecter précisément les fichiers en question, et éventuellement de les modifier, mais nous allons nous en passer pour l'instant.</p>
                     <p>Voici le fichier généré par la commande pour les customers :</p>
 <pre><code>using System;
@@ -2983,7 +2983,7 @@ using Micorsoft.EntityFrameworkCore.Migrations;
 namespace MyApplication.Migrations
 {
 
-    public partial class added_customer_table : Migration
+    public partial class Added_Customer_Table : Migration
     {
         
         protected override void Up(migrationBuilder migrationBuilder)
@@ -3029,7 +3029,7 @@ namespace MyApplication.Migrations
             public Customer Customer { get; set; }
         }
     }</code></pre>
-                    <p>Dans le DbContext, pas oublier de rajouter un nouveau <span class="em">DbSet</span>, d'ajouter une nouvelle migration "Add_Orders_Table" et de mettre à jour la base de données.</p>
+                    <p>Dans le DbContext, pas oublier de rajouter un nouveau <span class="em">DbSet</span>, d'ajouter une nouvelle migration "Added_Orders_Table" et de mettre à jour la base de données.</p>
 <pre><code>using System;
 using Micorsoft.EntityFrameworkCore.Migrations;
 
@@ -3111,7 +3111,7 @@ namespace MyApplication.Service
         {
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                var customer = context.SingleOrDefault(x =&gt; x.Name == name);
+                var customer = context.Customers.SingleOrDefault(x =&gt; x.Name == name);
                 return customer;
             }
         }
@@ -3126,7 +3126,7 @@ namespace MyApplication.Service
             customer.Age = age;
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                context.Update(customer);
+                context.Customers.Update(customer);
                 context.SaveChanges();
             }
         }
@@ -3141,7 +3141,7 @@ namespace MyApplication.Service
 
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                context.Remove(customer);
+                context.Customers.Remove(customer);
                 context.SaveChanges();
             }
         }
