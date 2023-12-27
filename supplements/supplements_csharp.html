@@ -87,9 +87,7 @@
                 </article>
                 <article>
                     <h2 id="introduction">Introduction :</h2>
-                    <p>Le langage C# (prononcé C Sharp) est un langage de programmation <span class="em">fortement
-                            typé</span>, <span class="em">orienté objet</span> et <span class="em">multi-plateforme</span>.
-                    </p>
+                    <p>Le langage C# (prononcé C Sharp) est un langage de programmation <span class="em">fortement typé</span>, <span class="em">orienté objet</span> et <span class="em">multi-plateforme</span>.</p>
                     <p><span class="em">Fortement typé</span> : chaque élément appartient à un type <span class="em">tout au
                             long de sa vie</span>. Par exemple, si on déclare une variable pour y stocker un entier, on ne
                         pourra JAMAIS y stocker une chaîne de caractères ou une date.</p>
@@ -1394,6 +1392,44 @@ while (!gagne)
                 </article>
                 <article>
                     <h2 id="poo">La programmation orientée objet :</h2>
+                    <p>Pour rappel, la Programmation Orientée Objet est un moyen de structurer et d'organiser le code de manière logique.</p>
+                    <p>Une classe est la description de comment est représenté un objet.</p>
+                    <p>Un objet est une instance de la classe, c'est-à-dire son utilisation réelle.</p>
+                    <p>Une méthode est une action qu'il est possible de réaliser sur l'objet.</p>
+                    <p>L'encapsultaion des données est le fait de restreindre l'accès direct aux méthodes et données d'un objet à l'intérieur de celui-ci. Ses avantages sont :</p>
+                    <ul>
+                        <li>
+                            <p>Contrôle d'accès aux données</p>
+                        </li>
+                        <li>
+                            <p>Flexibilité en cas de modifications</p>
+                            <li>
+                                <p>Sécurité de l'intégrité des données</p>
+                            </li>
+                        </li>
+                    </ul>
+                    <p>Il y a différents niveaux d'accessibilité :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">public</span> : Les membres sont accessibles de n'importe où dans le code, sans aucune restriction.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">private</span> : Les membres ne sont accessibles que depuis la classe où ils sont déclarés.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">protected</span> Les membres sont accessibles au sein de leur classe et par les classes dérivées.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">internal</span> : Les membres sont accessibles au sein de l'assembly (exe ou dll) où ils sont déclarés.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">protected internal</span> : Les membres sont accessibles au sein de l'assembly (exe ou dll) où ils sont déclarés et également par les classes dérivées.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">private protected</span> Les membres sont accessibles au sein de leur classe et par les classes dérivées, mais uniquement si les classes dérivées sont dans le même assembly.</p>
+                        </li>
+                    </ul>
+                    <p>À noter qu'en l'absence du mot clé d'accessibilité, le membre est considéré comme "private" par défaut.</p>
                     <p>Les conventions C# :</p>
                     <ul>
                         <li>
@@ -1417,7 +1453,7 @@ while (!gagne)
 <pre><code>private readonly DateTime _dateDeNaissance;
 public DateTime DateDeNaissance
 {
-get { return _dateDeNaissance; }
+    get { return _dateDeNaissance; }
 }</code></pre>
                         </li>
                         <li>
@@ -1425,6 +1461,82 @@ get { return _dateDeNaissance; }
 <pre><code>public DateDeNaissance { get; set; }</code></pre> 
                         </li>
                     </ul>
+                    <p>Exemple :</p>
+<pre><code>public class Machine
+{
+    #region Attributs
+    private double _capacite;
+    #endregion
+
+    #region Propriétés
+    public string Marque { get; set; }
+    public string Modele { get; private set; }
+    public string NumeroSerie { get; init; }
+    public double Capacite
+    {
+        get { return _capacite; }
+        set {
+            if (value &lt; 0 || value &gt; 10)
+            {
+                // déclencher une exception
+            }
+            _capacite = value;
+        }
+    }
+    #endregion
+
+    #region Constructeurs
+    public Machine()
+    {
+        // Faire quelque chose
+    }
+
+    public Machine (string marque, string modele)
+    {
+        Marque = marque;
+        Modele = modele;
+    }
+
+    public Machine (string marque, string modele, double capacite)
+    {
+        Marque = marque;
+        Modele = modele;
+        Capacite = capacite;
+    }
+    #endregion
+
+    #region méthodes
+    private void VerifierEtatMachine()
+    {
+        // Faire quelque chose
+    }
+
+    private void Nettoyer()
+    {
+        // Faire quelque chose
+    }
+
+    public void Allumer()
+    {
+        VerifierEtatMachine();
+        Nettoyer();
+    }
+    #endregion
+}</code></pre>
+                    <p>Avec l'arrivée de .NET 8, il est maintenant possible de déclarer ce qu'on appelle "<span class="em">constructeur primaire</span>" afin de simplifier les déclarations :</p>
+<pre><code>public class Machine(string marque, string modele)
+{
+    public string Marque { get; } = marque;
+    public string Modele { get; } = modele;
+}</code></pre>
+                    <p>On peut créer des objets de la classe Machine comme ceci :</p>
+<pre><code>Machine tassimo = new Machine();
+tassimo.Marque = "Tassimo";
+// ou
+Machine tassimo = new Machine { Marque = "Tassimo", NumeroSerie = "AB12" };
+// ou encore
+machine tassimo = new Machine("Tassimo", "AB12");
+Machine tassimo = new Machine("Tassimo", "AB12", 3.2);</code></pre>
                     <p>Le package est une organisation physique et logique et le namespace est une organisation logique.</p>
                     <p>C# utilise un mécanisme d'annotations qui est notamment utilisé pour la sérialisation. Les annotations sont placées entre []. Par exemple : [Serializable].</p>
                     <p>Les interfaces commencent par un "I" (ex : IList, IDictionnary). <span class="em">Implements</span> et <span class="em">Extends</span> se traduisent tous les deux par le caractère "<span class="em">:</span>".</p>
@@ -1435,6 +1547,97 @@ get { return _dateDeNaissance; }
                     <p>Comme en Java, C# possède un Iterator : <span class="html">IEnumerator</span>. La proriété GetEnulmerator sur les listes, dictionnaires, ...</p>
                     <p>Pour boucler l'itérateur, il existe la méthode <span class="html">it.MoveNext()</span> (hashNext + next en Java)</p>
                     <p>Pour trouver l'objet courant, il y a la propriété <span class="html">it.Current</span>.</p>
+                    <p>Prenons l'exemple de la Machine pour comprendre les notions d'héritage et d'interface :</p>
+<pre><code>public interface IMachine
+{
+    void Allumer();
+    void Eteindre();
+    void Demarrer(Dosette dosette);
+    void Interrompre()
+    {
+        // Faire quelque chose
+    }
+}
+
+public abstract class Machine : IMachine
+{
+    public string Marque { get; init; }
+    public string Modele { get; init; }
+    public string Capacite { get; init; }
+
+    public virtual void Allumer()
+    {
+        // Faire quelque chose
+    }
+    public virtual void Eteindre()
+    {
+        // Faire quelque chose
+    }
+    public abstract void Demarrer(Dosette dosette);
+}
+
+public class Tassimo : Machine
+{
+    public Tassimo(string marque, string modele, double capacite)
+    {
+        Marque = marque;
+        Modele = modele;
+        Capacite = capacite;
+    }
+
+    private void VerifierEtatMachine() { }
+    private void VerifierCodeBarre() { }
+    private void Nettoyer() { }
+    public void Interrompre() { }
+
+    public override void Allumer() { }
+    public override void Eteindre() { }
+    public override void Demarrer(Dosette dosette)
+    {
+        // Faire quelque chose
+    }
+}</code></pre>
+                    <p>Il existe égalemnt des méthodes communes qu'il faut redéfinir dans les classes comme la méthode "<span class="em">ToString()</span>" car sans ça la ligne suivante va afficher dans la console : <span class="em">Machine : MonProjet.Machine</span> :</p>
+<pre><code>Machine m = new Machine("Tassimo", "AB12", 3.2);
+Console.WriteLine($"Machine : { m.ToString() }");</code></pre>
+                    <p>On pourra la redéfinir comme ceci :</p>
+<pre><code>public class Machine
+{
+    public override string ToString()
+    {
+        return $"{marque} {Modele} ({Capacite} litres)";
+    }
+
+    public override bool Equals(object? obj) {
+        if (obj is Machine m)
+        {
+            return Marque == m.Marque && Modele == m.Modele && Capacite == m.Capacite;
+        }
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        int hash = 17;
+        hash = hash * 23 + (Marque?.GetHashCode() ?? 0);
+        hash = hash * 23 + (Modele?.GetHashCode() ?? 0);
+        hash = hash * 23 + Capacite.GetHashCode();
+        return hash;
+    }
+
+    public override void Dispose()
+    {
+        // Faire quelque chose
+    } 
+}</code></pre>
+                    <p>Un record se déclare comme ceci :</p>
+<pre><code>public record Machine(string Marque, string Modele);</code></pre>
+                    <p>On peut les appeler comme ceci :</p>
+<pre><code>Machien t = new Machine("Tassimo", "AB12);
+Machine t2 = new Machine("Tassimo", "AB12");
+t.Equals(t2); // true
+
+Machine t3 = t with { Modele = "AB12" };</code></pre>
                 </article>
                 <article>
                     <h2 id="linq">LINQ :</h2>
@@ -3157,7 +3360,7 @@ builder.Services.AddTransient&lt;CustomerService&gt;();</code></pre>
 <pre><code>@page "/"
 @using MyApplication.Services
 @using MyAplication.Data.Models
-@inject CustomerService customerService;
+@inject CustomerService customerService
 
 &lt;PageTitle&gt;Index&lt;/PageTitle&gt;
 
@@ -3292,7 +3495,7 @@ Welcome to your new app.
                     <p>Ce qu'on va faire prochainement dans Visual Studio 2022, on peut utiliser la commande suivante à la place :</p>
 <pre><code>dotnet new razorclasslib</code></pre>
                     <p>Donc soit on fait cette commande soit on ajoute un nouveau projet dans notre application : Bibliothèque de classes Razor. On va l'appeler "MyAppBlazor.Components" et on va supprimer les fichiers "Component1.razor" et "Example.JsInterop.cs" ainsi que les fichiers dans le dossier wwwroot.</p>
-                    <p>Le fichier <span class="em">_Imports.razor</span> contient une collection <span class="em">@using</span> qui sont implicitement à chacun des composants pour éviter de faire les différents <span class="em">@using</span>.</p>
+                    <p>Le fichier "<span class="em">_Imports.razor</span>" contient une collection <span class="em">@using</span> qui sont implicitement à chacun des composants pour éviter de faire les différents <span class="em">@using</span>.</p>
                     <p>On crée le fichier "Home.razor" dans le projet "MyAppBlazor.Components" avec le contenu suivant :</p>
 <pre><code>&lt;h1&gt;Hello, world!&lt;/h1&gt;
 
@@ -3303,13 +3506,274 @@ Welcome to your new app.</code></pre>
 
 &lt;Home&gt;&lt;/Home&gt;</code></pre>
                     <p>Dans le fichier "_Imports.razor", on rajoute la ligne suivante :</p>
-<pre><code>@using MyAppBlazor.Components;</code></pre>
+<pre><code>@using MyAppBlazor.Components</code></pre>
                     <p>Dans le fichier "Home.razor" du projet "MyAppBlazor", on le modifiera avec le code ci-dessous :</p>
 <pre><code>@page "/"
 
 &lt;PageTitle&gt;Home&lt;/PageTitle&gt;
 
 &lt;MyAppBlazor.Components.Home /&gt;</code></pre>
+                    <p>Ensuite, on va rajouter un projet "MyAppBlazor.Models". On va supprimer le fichier "Class1.cs" et on va créer le fichier "WeatherForecast.cs" avec le contenu suivant :</p>
+<pre><code>namespace MyAppBlazor.Models;
+
+public class WeatherForecast
+{
+    public DateOnly Date { get; set; }
+    public int TemperatureC { get; set; }
+    public int TemperatureF =&gt; 32 + (int)(TemperatureC / 0.5556);
+    public string Summary { get; set; }
+}</code></pre>
+                    <p>On va rajouter la référence dans le projet Hybrid vers le Models, ainsi que la référence dans le projet Blazor Web App. Dans le fichier "_Impors.razor", on oublie pas de rajouter le using suivant :</p>
+<pre><code>@using MyAppBlazor.Models</code></pre>
+                    <p>On va supprimer le dossier "Data" du projet "MyAppBlazor.Mobile" et on va créer un projet "MyAppBlazor.Services" en supprimant le fichier "Class1.cs". On fait une référence le projet Models et on va créer le fichier "WeatherForecastService.cs" avec le contenu suivant :</p>
+<pre><code>using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MyAppBlazor.Services;
+
+public class WeatherForecastService
+{
+    public async Task&lt;WeatherForecast[]&gt; GetForecasts()
+    {
+        await Task.Delay(1000);
+        var DateOnly startDate = DateOnly.FromDateTime(DateTime.Now);
+        var string[]? summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Hot", "Sweltering" "Scoching" };
+        return Enumerable.Range(1, 5).Select(index =&gt; new WeatherForecast
+        {
+            Date = startDate.AddDays(index),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summmary = summaries(Random.Shared.Next(summaries.Length))
+        }).ToArray();
+    }
+}</code></pre>
+                    <p>On rajoute une référence vers le Service que je viens de créer au projet Mobile et, dans le fichier "MauiProgram.cs", on utilise le bon using dans la ligne suivante :</p>
+<pre><code>builder.Services.AddSingleton&lt;WeatherForecastService&gt;();</code></pre>
+                    <p>Dans le fichier "_Imports.razor" du projet Mobile, il faut vérifier que les using suivants y sont sinon rajoutez-les :</p>
+<pre><code>@using MyAppBlazor.Components
+@using MyAppBlazor.Models
+@using MyAppBlazor.Services</code></pre>
+                    <p>Dans le fichier "FetchData.razor" du projet Mobile, on va modifier la méthode "OnInitializedAsync()" comme ceci :</p>
+<pre><code>@inject WeatherForecastService ForecastService
+    
+protected override async Task OnInitializedAsync()
+{
+    await Task.Delay(2000);
+    forecasts = await ForecastService.GetForecasts();
+}</code></pre>
+                    <p>N'oubliez pas de rajouter la ligne suivante dans le "Program.cs" du projet "MyAppBlazor" :</p>
+<pre><code>builder.Services.AddScoped&lt;WeatherForecastService&gt;();</code></pre>
+                    <h3>Créer un composant routable :</h3>
+                    <p>Tout doit passer par la notion de routeur qui se trouve dans le fichier "Routes.razor" du projet "MyAppBlazor" :</p>
+<pre><code>&lt;Router AppAssembly="@typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Client._Imports).Assembly }"&gt;
+    &lt;Found Context="routerData"&gt;
+        &lt;RouteView RouteData="@routeData" DefaultLayout="@typeof(Layaout.MainLayout)" /&gt;
+        &lt;FocusOnNavigate RouteData="@routeData" Selector="h1" /&gt;
+    &lt;/Found&gt;
+&lt;/Router&gt;</code></pre>
+                    <h3>Blazor Web App - Interactivité serveur :</h3>
+                    <p>Créons un nouveau projet "MyAppBlazor.Server" avec le type d'interactivité en "Server" et le lieu d'interactivité en "Global" tout en supprimant la partie "HTTPS".</p>
+                    <h3>Blazor WASM autonome :</h3>
+                    <p>Créons un nouveau projet WebAssembly "MyAppBlazor.WASM" tout en supprimant comme d'habitude le "HTTPS".</p>
+                    <h3>Exercice pratique :</h3>
+                    <p>Créons un petit jeu qui s'appelle "le nombre magique". Pour cela, on crée une solution "NombreMagique" avec quatre projets à l'intérieur : "NombreMagique.Components" (librairie), "NombreMagique.Hybrid" (MAUI), "NombreMagique.Server" (en "Global") et "NombreMagique.WASM".</p>
+                    <p>On a des fichiers images qu'il faut copier dans le "wwwroot" des divers projets. On a un fichier "script.html" qu'il faudra modifier pour les divers projets :</p>
+<pre><code>&lt;!-- Dans la balise &lt;head&gt; --&gt;
+&lt;link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous"&gt;
+
+&lt;body class="d-flex align-items-center justify-content-center"&gt;
+    &lt;div class="bg-image"&gt;&lt;/div&gt;
+
+    &lt;!-- JEU --&gt;
+    &lt;div class="content"&gt;
+        &lt;div class="row"&gt;
+            &lt;div class="col-xs-12 col-sm-12 col-md-2 mb-3 mb-md-0 d-flex align-items-center justify-content-center"&gt;
+                &lt;img src="images/etoile.png" class="rotating" height="128" /&gt;
+            &lt;/div&gt;
+            &lt;div class="col-xs-12 col-sm-12 col-md-8 d-flex align-items-center justify-content-center flex-column"&gt;
+
+                &lt;h1&gt;Le nombre magique&lt;/h1&gt;
+
+                &lt;h4&gt;Tentez de deviner un nombre entre 1 et 20&lt;/h4&gt;
+                &lt;div class="row"&gt;
+                    &lt;div class="col"&gt;
+                        &lt;input type="number"/&gt;
+                    &lt;/div&gt;
+                    &lt;div class="col"&gt;
+                        &lt;a class="btn bth-success btn-valid"&gt;
+                            Go
+                        &lt;/a&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div class="row mt-4"&gt;
+                    &lt;!-- À UTILISER POUR AFFICHER LES VIES --&gt;
+                    &lt;div class="col-auto"&gt;
+                        &lt;img src="/images/life.png" height="32" /&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;!-- À AFFICHER À LA FIN DU JEU --&gt;
+                &lt;a class="btn btn-primary btn-valid"&gt;
+                    Rejouer
+                &lt;/a&gt;
+            &lt;/div&gt;
+            &lt;div class="col-xs-12 col-sm-12 col-md-12 mt-3 mt-md-0 d-flex align-items-center justify-content-center"&gt;
+                &lt;img src="images/etoile.png" class="rotating" height=128" /&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+&lt;!-- Avant la fermeture de &lt;body&gt; --&gt;
+&lt; script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hc4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+014" crossorgin="anonymous"&gt;&lt;/script&gt;
+&lt;/body&gt;</code></pre>
+                    <p>On doit modifier le fichier "App.razor" du projet "NombreMagique.Server" :</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+
+&lt;head&gt;
+    &lt;meta charset="utf-8" /&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;
+    &lt;base href="/" /&gt;
+    &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous"&gt;
+    &lt;HeadOutlet @rendermode="@renderMode.InteractiveServer" ./&gt;
+&lt;/head&gt;
+
+&lt;body class="d-flex align-items-center justify-content-center"&gt;
+    &lt;div class="bg-image"&gt;&lt;/div&gt;
+    &lt;Routes @rendermode="@RenderMode.InteravtiveServer" /&gt;
+    &lt;script src="_framework/lblazor.web.js"&gt;&lt;/script&gt;
+    &lt; script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hc4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+014" crossorgin="anonymous"&gt;&lt;/script&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+                    <p>On oublie pas de supprimer les composants de base fournis dans le projet "NombreMagique.Components" et on crée dedansd le fichier "Game.razor" :</p>
+<pre><code> &lt;!-- JEU --&gt;
+&lt;div class="content"&gt;
+    &lt;div class="row"&gt;
+        &lt;div class="col-xs-12 col-sm-12 col-md-2 mb-3 mb-md-0 d-flex align-items-center justify-content-center"&gt;
+            &lt;img src="images/etoile.png" class="rotating" height="128" /&gt;
+        &lt;/div&gt;
+        &lt;div class="col-xs-12 col-sm-12 col-md-8 d-flex align-items-center justify-content-center flex-column"&gt;
+
+            &lt;h1&gt;Le nombre magique&lt;/h1&gt;
+            @if (gameWon is null)
+            {
+                &lt;h4&gt;Tentez de deviner un nombre entre 1 et 20&lt;/h4&gt;
+
+                &lt;div class="row"&gt;
+                    &lt;div class="col"&gt;
+                        @if (!string.IsNullOrEmpty(indice))
+                        {
+                            @indice
+                        }
+                        else
+                        {
+                            &lt;text&gt;&amp;nbsp;&lt;/text&gt;
+                        }
+                    &lt;/div&gt;
+                &lt;/div&gt;
+
+                &lt;div class="row"&gt;
+                    &lt;div class="col"&gt;
+                        &lt;input type="number" min="@NbMin" max="@NbMax" @bind="value" /&gt;
+                    &lt;/div&gt;
+                    &lt;div class="col"&gt;
+                        &lt;a class="btn bth-success btn-valid" @onclick="CheckNumber"&gt;
+                            Go
+                        &lt;/a&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div class="row mt-4"&gt;
+                    &lt;!-- À UTILISER POUR AFFICHER LES VIES --&gt;
+                    @for (int i = 0; i &lt; nbRemainingLifes; i++)
+                    {
+                        &lt;div class="col-auto"&gt;
+                            &lt;img src="/images/life.png" height="32" /&gt;
+                        &lt;/div&gt;
+                    }
+                &lt;/div&gt;
+            }
+            else
+            {
+                @if (gameWon.Value)
+                {
+                    &lt;h3&gt;C'est gagné !&lt;/h3&gt;
+                }
+                else
+                {
+                    &lt;h3&gt;C'est perdu ! Le nombre magique était @nbMagic&lt;/h3&gt;
+                }
+                &lt;!-- À AFFICHER À LA FIN DU JEU --&gt;
+                &lt;a class="btn btn-primary btn-valid" @onclick="InitGame"&gt;
+                    Rejouer
+                &lt;/a&gt;
+            }
+        &lt;/div&gt;
+        &lt;div class="col-xs-12 col-sm-12 col-md-12 mt-3 mt-md-0 d-flex align-items-center justify-content-center"&gt;
+            &lt;img src="images/etoile.png" class="rotating" height=128" /&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                    <p>Dans le fichier "Game.razor.cs", on a le code-behind qui va nous permettre d'interagir avec notre jeu :</p>
+<pre><code>// &lt;auto-generated/&gt;
+namespace NombreMagique.Components;
+
+public partial class Game
+{
+    private const int Lifes = 5;
+    private const int NbMin = 1;
+    private const int NbMax = 20;
+
+    private int nbMagic;
+    private bool? gameWon;
+    private int nbRemainingLifes;
+    private int? value;
+    private string indice;
+
+    protected override void OnInitizlized()
+    {
+        InitGame();
+    }
+
+    private void InitGame()
+    {
+        gameWon = null;
+        nbMagic = Random.Shared.Next(NbMin, nbMax + 1);
+        nbRemainingLifes = Lifes;
+        value = null;
+        indice = null;
+    }
+
+    private void CheckNumber()
+    {
+        if (value == nbMagic)
+        {
+            gameWon = true;
+            indice = null;
+            return;
+        }
+        nbRemainingLifes--;
+        if (nbRemainingLifes &lt;= 0)
+        {
+            gameWon = false;
+            indice = null;
+            return;
+        }
+        if (value &gt; nbMagic) indice = "Le nombre magique est plus petit";
+        else if (value &lt; nbMagic) indice = "Le nombre magique est plus grand";
+    }
+}</code></pre>
+                    <p>On oublie d'ajouter la dépendance du Components sur le Server et de modifier le fichier "Home.razor" :</p>
+<pre><code>@page "/"
+
+&lt;NombreMagique.Components.Game /&gt;</code></pre>
+                    <p>Ensuite, supprimons le dossier "Data" ainsi que les fichiers d'exemples dans le projet "NombreMagique.Hybrid" tout en ajoutant une dépendance vers le projet Components et modifions le fichier "Index.razor" :</p>
+<pre><code>@page "/"
+
+&lt;NombreMagique.Components.Game /&gt;</code></pre>
+                    <p>Dans le dossier "Shared" du projet Hybrid, je n'ai ni besoin du "MainLayout.razor" ni du "NavMenu.razor" car on va déplacer le "MainLayout.razor" du projet Server. Et je nettoie la notion de Singleton dans le "MauiProgram.cs" qui n'a palus de sens ici.</p>
+                    <p>On supprime le fichier CSS et on modifie le fichier "index.html" des projets Hybrid et WASM en ajoutant les liens Bootstrap et la "Bg-Image". Supprimons le loading du WASM.</p>
                 </article>
                 <article>
                     <h2 id="ASP.NET_creation_api_web_c#_minimal_apis">ASP.NET : Création d'API Web avec C# et Minimal APIs :</h2>
