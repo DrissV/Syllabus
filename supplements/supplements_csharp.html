@@ -218,7 +218,30 @@
                     </ul>
                     <p>Le commentaire commence par <span class="em">//</span> comme dans l'exemple ci-dessous :</p>
 <pre><code>// See https://aka.ms/new-console-template for more information</code></pre>
-                    <p>Le commentaire permet d'écrire du texte libre à côté du code source (pour donner une indication quelconque).</p>
+                    <p>Le commentaire permet d'écrire du texte libre à côté du code source (pour donner une indication quelconque). Il existe une autre syntaxe pour le commentaire : celui sur plusieurs lignes :</p>
+<pre><code>/* Mon commentaire
+sur plusieurs
+lignes */</code></pre>
+                    <p>Il est bon usage d'ajouter au dessus des méthodes un "<span class="em">summary</span>" qui précise les informations de la méthode comme ce qu'elle fait, les paramètres qui sont associés et éventuellement un paramètre de retour. Il peut aussi arriver qu'on lui précise les erreurs qui peuvent être remontées, etc. :</p>
+<pre><code>///&lt;summary&gt;Méthode qui permet de dire bonjour&lt;/summary&gt;
+/// &lt;param name="civilite"&gt;Civilité de la personne (M, MME, ...)&lt;/param&gt;
+/// &lt;param name="message"&gt;Message à ajouter au bonjour&lt;/param&gt;
+void DireBonjour(string civilite, string message)
+{
+    // Mon commentaire sur une ligne
+    string result = civilite switch
+    {
+        "M" =&gt; "Monsieur"
+        "MME" =&gt; "Madamade"
+        "..." =&gt; ""
+    }
+    /* Mon commentaire
+    sur plusieurs
+    lignes */
+    Console.WriteLine($"Bonjour {result}, {message}");
+}</code></pre>
+                    <p>L'avantage du summary est quand quelqu'un va utiliser votre méthode, même vous, Visual Studio va automatiquement afficher ses informations.</p>
+                    <p>Enfin, les régions vont permettre d'entourer un bloc de code logique et de le replier pour plus de lisibilité. Donc, on tape <span class="html">#region</span> suivi du nom que l'on souhaite lui donnée et on termine avec <span class="html">#endregion</span>.</p>
                     <p>Exercice : Écrire l'instruction C#, à la ligne de la première, permettant d'afficher "J'apprends le C#" :</p>
 <pre><code>Console.WriteLine("J'apprends le C#");</code></pre>
                     <p>En C#, le placement des accolades pour définir le corps des fonctions (méthodes) est une une question de style de codage. Il existe deux approches principales : avec les accolades à la ligne ou sur la même ligne que la déclaration de la fonction.</p>
@@ -3027,10 +3050,10 @@ else {
     &lt;/div&gt;
 }</code></pre>
                     <p>Dans le dossier "Properties", il faut supprimer le "profiles" de "IISExpress" du fichier "lauchSettings.json", ainsi que le "listSettings".</p>
-                    <p>Dans Blazork, "<span class="html">@blind</span>" et "<span class="html">@blind-Value</span>" sont deux façons d'effectuer la liaison de données bidirectionnelle. Cependant, il existe quelques différences subtiles entre les deux.</p>
+                    <p>Dans Blazor, "<span class="html">@bind</span>" et "<span class="html">@bind-Value</span>" sont deux façons d'effectuer la liaison de données bidirectionnelle. Cependant, il existe quelques différences subtiles entre les deux.</p>
                     <ol>
                         <li>
-                            <p>@blind :</p>
+                            <p>@bind :</p>
                             <ul>
                                 <li>
                                     <p>"<span class="em">@bind</span>" est une syntaxe concise qui combine la liaison en lecture seule ("<span class="em">@bind="propriete"</span>") et la liaison en écriture ("<span class="em">@oninput="e =&gt; propriete = e.Value")</span>).</p>
@@ -3062,7 +3085,7 @@ else {
 <pre><code>&lt;MonComposant @bind-Value="model.Nom /&gt;</code></pre>
                         </li>
                     </ol>
-                    <p>En résumé, <span class="em">@bind</span> est plsu concis et pratique pour les cas d'utilisation courants où vous liez directement une propriété à la valeur d'un élément d'entrée, tandis que <span class="em">@blind-Value</span> offre une flexibilité accrue en permettant de spécifier explicitement la propriété liée à la valeur. Vous pouvez choisir celui qui convient le mieux à votre scénario d'utilisation.</p>
+                    <p>En résumé, <span class="em">@bind</span> est plsu concis et pratique pour les cas d'utilisation courants où vous liez directement une propriété à la valeur d'un élément d'entrée, tandis que <span class="em">@bind-Value</span> offre une flexibilité accrue en permettant de spécifier explicitement la propriété liée à la valeur. Vous pouvez choisir celui qui convient le mieux à votre scénario d'utilisation.</p>
                 </article>
                 <article>
                     <h2 id="entity_framework_blazor">Entity Framework dans Blazor :</h2>
@@ -3777,6 +3800,336 @@ public partial class Game
                 </article>
                 <article>
                     <h2 id="ASP.NET_creation_api_web_c#_minimal_apis">ASP.NET : Création d'API Web avec C# et Minimal APIs :</h2>
+                    <h3>Prérequis :</h3>
+                    <ul>
+                        <li>
+                            <p>Connaître les fondamentaux du langage C#</p>
+                        </li>
+                        <li>
+                            <p>Avoir installé le SDK .NET 6+</p>
+                        </li>
+                        <li>
+                            <p>Avoir un environnement de développement (Visual Studio Code, Visual Studio, Rider, etc.)</p>
+                        </li>
+                        <li>
+                            <p>Être motivé !</p>
+                        </li>
+                    </ul>
+                    <h3>Introduction :</h3>
+                    <p>API veut dire Application Porgammong Interface.</p>
+                    <p>Le rôle d'une API est d'exposer du comportement métier à d'autres applications.</p>
+                    <p>La communication d'une API peut se faire :</p>
+                    <ul>
+                        <li>
+                            <p>En XML</p>
+                        </li>
+                        <li>
+                            <p>En JSON (recommandé)</p>
+                        </li>
+                        <li>
+                            <p>En gRPC (ultra performant)</p>
+                        </li>
+                    </ul>
+                    <p>En .NET, il est possible de faire des APIs de deux façons :</p>
+                    <ul>
+                        <li>
+                            <p>Avec les minimals APIs (plus rapide & performant)</p>
+                        </li>
+                        <li>
+                            <p>Avec le pattern MVC</p>
+                        </li>
+                    </ul>
+                    <p>Dans ce cours, nous verrons les deux façons de procéder, de telle sorte que vous puissiez faire votre choix, mais nous mettrons le focus sur la partie minimal APIs, car c'est l'approche moderne recommandée.</p>
+                    <h3>REST :</h3>
+                    <p>Les APIs respectent la philosophie REST (Representational State Transfer).</p>
+                    <p>On va utiliser des verbes HTTP pour indiquer l'intention :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">GET</span> &#8594; lecture</p>
+                        </li>
+                        <li>
+                            <p><span class="html">POST</span> &#8594; création</p>
+                        </li>
+                        <li>
+                            <p><span class="html">PUT/PATCH</span> &#8594; mise à jour</p>
+                        </li>
+                        <li>
+                            <p><span class="html">DELETE</span> &#8594; suppression</p>
+                        </li>
+                    </ul>
+                    <p>On va utiliser les codes HTTP pour indiquer le résultat :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">2xx</span> &#8594; résultat positif</p>
+                        </li>
+                        <li>
+                            <p><span class="html">3xx</span> &#8594; ressource déplacée</p>
+                        </li>
+                        <li>
+                            <p><span class="html">4xx</span> &#8594; erreur dans la requête</p>
+                        </li>
+                        <li>
+                            <p><span class="html">5xx</span> &#8594; erreur sur le serveur</p>
+                        </li>
+                    </ul>
+                    <h3>Création du projet :</h3>
+                    <p>Dans PowerShell, on lance la commande suivante pour créer un projet Console que j'ai nommé "MinimalApis" :</p>
+<pre><code>dotnet new console</code></pre>
+                    <p>On va modifier le fichier "MinimalApis.csproj" :</p>
+<pre><code>&lt;Project Sdk="Microsoft.NET.Sdk.Web"&gt;
+
+    &lt;PropertyGroup&gt;
+        &lt;OutputType&gt;Exe&lt;/OutputType&gt;
+        &lt;TargetFramework&gt;net8.0&lt;/TargetFramework&gt;
+        &lt;ImplicitUsings&gt;enable&lt;ImplicitUsings&gt;
+        &lt;Nullable&gt;enable&lt;/Nullable&gt;
+    &lt;/PropertyGroup&gt;
+
+&lt;/Project&gt;</code></pre>
+                    <p>On va recharger les projets et modifier le fichier "Program.cs" :</p>
+<pre><code>var builder = WebApplication.CreateBuilder();
+
+var app = builder.Build();
+
+app.MapGet("/hello", () =&gt; "Hello World !");
+
+app.Run();</code></pre>
+                    <p>Quand on lance le projet et qu'on accède à l'URL "/hello", la page va afficher "Hello World !".</p>
+                    <h3>Les autres verbes HTTP :</h3>
+                    <p>Il existe également les méthodes <span class="html">MapDelete()</span>, <span class="html">MapPost()</span>, <span class="html">MapPut()</span> et <span class="html">MapPatch()</span>.</p>
+                    <p>Pour utiliser plusieurs verbes HTTP pour une seule URL, on utilisera la méthode <span class="html">MapMehods()</span> :</p>
+<pre><code>app.MapMethods("/methods", new[] { "GET", "POST" }, () =&gt; "Hello methods");</code></pre>
+                    <p>Pour faire des requêtes via une URL, on va installer le logiciel "Postman". On va désactiver la certification SSL.</p>
+                    <h3>Gestion des objets et des routes :</h3>
+                    <p>On va créer un nouveau record "Article" :</p>
+<pre><code>namespace MinimalApis
+{
+    public record Article(int Id, string Title);
+}</code></pre>
+                    <p>On peut envoyer un nouvel article en GET via l'url "/article" avec la ligne suivante : </p>
+<pre><code>app.MapGet("/article", () =&gt; new Article(1, "Marteau"));</code></pre>
+                    <p>Pour récupérer l'article avec un tel id en GET, on doit faire :</p>
+<pre><code>app.MapGet("/articles/{id}", (int id) =&gt; new Article(id, "Marteau"));</code></pre>
+                    <h3>Gestion des résultats :</h3>
+                    <p>On va créer une liste d'articles pour chercher le bon article selon l'id :</p>
+<pre><code>var list = List&lt;Article&gt;
+{
+    new Article(1, "Marteau"),
+    new Article(2, "Scie")
+};
+
+aap.MapGet("/articles/{id:int}", (int id) =&gt;
+{
+    var article = list.Find(a =&gt; a.Id == id);
+    if (article is not null) return Results.Ok(article);
+
+    return Results.notFound();
+});</code></pre>
+                    <h3>Gestion de paramètres entrants (route, requête, etc.) :</h3>
+                    <p>On peut utiliser l'annotation <span class="html">FromRoute</span> pour bien préciser que le paramètre de la lambda est lié au paramètre dans la route :</p>
+<pre><code>app.MapGet("/personne/{nom}", (
+    [FromRoute(Name = "nom")] string nomPersonne,
+    [FromQuery(Name = "prenom")] string? prenomPersonne,
+    [FromHeader(Name = "Accept-Encoding")] string encoding) =&gt; Results.Ok($"{nomPersonne} {prenomPersonne} {encoding}"));</code></pre>
+                    <p>L'annotation <span class="html">FromQuery</span> permet de donner un nom plus explicite pour le paramètre de l'URL.</p>
+                    <p>L'annotation <span class="html">FromHeader</span> permet de récupérer une valeur depuis le Header de la réponse HTTP.</p>
+                    <h3>Gestion des paramètres spéciaux :</h3>
+                    <p>Créons une nouvelle classe "Personne" :</p>
+<pre><code>namespace MinimalApis
+{
+    public class Personne
+    {
+        public string Nom { get; set; }
+        public string Prenom { get; set; }
+
+        public static bool TryParse(string value, out Personne? person)
+        {
+            try
+            {
+                var data = value.Split(' ');
+                person = new Personne
+                {
+                    Nom = data[0],
+                    Prenom = data[1]
+                };
+                return true;
+            }
+            catch (Exception)
+            {
+                person = null;
+                return false;
+            }
+        }
+
+        public static async ValueTask&lt;Personne&gt; BindAsync(HttpContext context, ParameterInfo parameterInfo)
+        {
+            try
+            {
+                using var streamReader = new StreamReader(context.Request.Body);
+                var body = await streamReader.readToEndAsync();
+                var data = body.Split(' ');
+                var person = new Personne
+                {
+                    Nom = data[0],
+                    Prenom = data[1]
+                };
+                return person;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+    }
+}</code></pre>
+                    <p>Dans le "Program.cs", on peut envoyer en GET la personne :</p>
+<pre><code>app.MapGet("/personne/identite", (Personne p) =&gt; Results.Ok(p)); <span class="em">// appelle la méthode TryParse()</span>
+
+app.MapPost("/personne/identite", (Personne p) =&gt; Results.Ok(p)); <span class="em">// appelle la méthide BindAsync()</span></code></pre>
+                    <h3>Gestion des services :</h3>
+                    <p>On va créer une classe "ArticleService" :</p>
+<pre><code>namespace MinimalApis
+{
+    public class ArticleService
+    {
+        private List&lt;Article&gt; list = new List&lt;Article&gt;
+        {
+            new Article(1, "Marteau"),
+            new Article(2, "Scie")
+        };
+
+        public List&lt;Article&gt; GetAll() =&gt; list;
+
+        public Article Add(string title)
+        {
+            var article = new Article(list.Max(a =&gt; a.Id) + 1, title);
+            list.Add(article);
+            return article;
+        }
+    }
+}</code></pre>
+                    <p>On va ajouter ce service en Singleton dans le builder du programme principal :</p>
+<pre><code>builder.Services.AddSingleton&lt;ArticleService&gt;();
+
+app.MapPost("/articles", (Article a, ArticleService service) =&gt;
+{
+    var result = service.Add(a.Title);
+    return Results.Ok(result);
+});</code></pre>
+                    <p>On peut également utiliser l'annotation "<span class="html">FromServices</span>".</p>
+                    <h3>Exercice pratique :</h3>
+                    <p>le but du TP est de réaliser un exercice en totale autonomie de A à Z.</p>
+                    <p>Ce TP vous fera implémenter une API de gestion des tâches (TodoList).</p>
+                    <p>Pour réaliser ce TP dans les meilleures conditions, voici quelques instructions destinées à vous guider :</p>
+                    <ol>
+                        <li>
+                            <p>Créer un projet</p>
+                        </li>
+                        <li>
+                            <p>Créer un record pour héberger les données d'un Todo (titre, startDate, endDate)</p>
+                        </li>
+                        <li>
+                            <p>Créer un service pour gérer les Todo (singleton)</p>
+                        </li>
+                    </ol>
+                    <p>Dans PowerShell, on commence par la commande :</p>
+<pre><code>dotnet new console -n TodoListApi</code></pre>
+                    <p>On passe par le Sdk.Web et on crée le builder. On crée une classe Model "Todo" :</p>
+<pre><code>namespace TodoListApi
+{
+    public record Todo(int Id, string Title, DateTime StartDate, DateTime? EndTime = null);
+}</code></pre>
+                    <p>Ensuite, on va créer le "TodoService" :</p>
+<pre><code>namespace TodoListApi
+{
+    public class TodoService
+    {
+        private List&lt;Todo&gt; list = new();
+
+        public List&lt;Todo&gt; GetAll() =&gt; list;
+
+        public Todo? GetById(int id) =&gt; list.Find(t =&gt; t.Id = id);
+
+        public bool Delete(int id)
+        {
+            var todo = GetById(id);
+            if (todo is not null)
+            {
+                list.Remove(todo);
+                return true;
+            }
+            return false;
+        }
+
+        public Todo Add(string title)
+        {
+            var id = list.Count &gt; 0 ? list.Max(t =&gt; t.Id) + 1 : 1;
+            var todo = new Todo(
+                id,
+                title,
+                DateTime.Now
+            );
+            list.Add(todo);
+            return todo;
+        }
+
+        public void Update(int id, Todo item)
+        {
+            Delete(id);
+            list.Add(new Todo(id, item.Title, item.StartDate, item.EndDate));
+        }
+    }
+}</code></pre>
+                    <p>Modifions le fichier "Program.cs" :</p>
+<pre><code>using Microsoft.AspNetCore.Mvc;
+using TodoListApi;
+
+var builder = WebApplication.CreateBuilder();
+
+builder.Services.AddSingleton&lt;TodoService&gt;();
+
+var app = builder.Build();
+
+app.MapGet("todos", ([FromServices] TodoService service) =&gt;
+{
+    return Results.Ok(service.GetAll());
+});
+
+app.MapGet("todos/{id:int}", ([FromRoute] int id, [FromServices] TodoService service) =&gt;
+{
+    var toto = service.GetById(id);
+
+    if (todo is null) return Results.NotFound();
+    return Results.Ok(todo);
+});
+
+app.MapGet("todos/active", ([FromServices] TodoService service) =&gt;
+{
+    return Results.Ok(service.GetAll().Where(t =&gt; t.EndDate is null));
+});
+
+app.MapPost("todos", ([FromBody] string todo, [FromServices] TodoService service) =&gt;
+{
+    return Results.Ok(service.Add(todo));
+});
+
+app.MapDelete("todos/{id:int}", ([FromRoute] int id, [FromServices] TodoService service) =&gt;
+{
+    var result = service.Delete(id);
+    if (result)
+    {
+        return Results.NoContent();
+    }
+    return Results.NotFound();
+});
+
+app.MapUpdate("todos/{id:int}", ([FromRoute] int id, [FromBody] Todo item, [FromServices] TodoService service) =&gt;
+{
+    service.Update(id, item);
+    return Results.NoContent();
+});
+
+app.Run();</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
