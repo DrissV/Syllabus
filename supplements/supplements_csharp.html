@@ -64,6 +64,7 @@
                         <li><a href="#conclusion_1">Conclusion n° 1</a></li>
                         <li><a href="#explications_technologies_.NET">Explications sur les technologies .NET</a></li>
                         <li><a href="#poo">La programmation orientée objet</a></li>
+                        <li><a href="#asynchronisme">L'asynchronisme</a></li>
                         <li><a href="#linq">LINQ</a></li>
                         <li><a href="#linq_to_objects">LINQ To Objects</a></li>
                         <li><a href="#intro_blazor">Introduction à Blazor</a></li>
@@ -83,7 +84,8 @@
             <section id="mainSection">
                 <article>
                     <h1>Le langage C# et le framework .NET :</h1>
-                    <p>D'après Christophe Mommer, développeur C# ayant écrit des livres dessus : <q>Un développeur C#/.NET n'st pas expert sur toutes les technologies .NET !</q>.</p>
+                    <p>D'après Christophe Mommer, développeur C# ayant écrit des livres dessus et fait diverses formations : <q>Un développeur C#/.NET n'st pas expert sur toutes les technologies .NET !</q>.</p>
+                    <p>Ce cours est un mélange entre les cours de C# et .NET que j'ai eu à l'école, <a href="https://www.youtube.com/@HTSCoding" target="_blank">les formations gratuites sur le sujet trouvées sur YouTube dont celles de Christopher Mommer</a> et <a href="https://www.hts-learning.com/shop" target="_blank">les formations payantes de Christopher Mommer</a>.</p>
                 </article>
                 <article>
                     <h2 id="introduction">Introduction :</h2>
@@ -223,7 +225,7 @@
 sur plusieurs
 lignes */</code></pre>
                     <p>Il est bon usage d'ajouter au dessus des méthodes un "<span class="em">summary</span>" qui précise les informations de la méthode comme ce qu'elle fait, les paramètres qui sont associés et éventuellement un paramètre de retour. Il peut aussi arriver qu'on lui précise les erreurs qui peuvent être remontées, etc. :</p>
-<pre><code>///&lt;summary&gt;Méthode qui permet de dire bonjour&lt;/summary&gt;
+<pre><code>/// &lt;summary&gt;Méthode qui permet de dire bonjour&lt;/summary&gt;
 /// &lt;param name="civilite"&gt;Civilité de la personne (M, MME, ...)&lt;/param&gt;
 /// &lt;param name="message"&gt;Message à ajouter au bonjour&lt;/param&gt;
 void DireBonjour(string civilite, string message)
@@ -968,7 +970,43 @@ else
                 <article>
                     <h2 id="tableaux_listes">Les tableaux et les listes :</h2>
                     <p>Une collection est un ensemble de valeurs réunies.</p>
-                    <p>Il existe un grand nombre de collections C#.</p>
+                    <p>Il existe un grand nombre de collections C#. On distingue les collections génériques et non génériques. Les collections génériques sont typées alors que les non génériques , donc on peut mettre un string et un int dans une collection non générique.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Non génériques</th>
+                                <th>Génériques</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ArrayList</td>
+                                <td>List&lt;T&gt;</td>
+                                <td>Permet de stocker des éléments comme un tableau dynamique, où les éléments ont un index.</td>
+                            </tr>
+                            <tr>
+                                <td>Hashtable</td>
+                                <td>Dictionary&lt;TKey,TValue&gt;</td>
+                                <td>Permet de stocker des éléments sous forme de clé-valeur.</td>
+                            </tr>
+                            <tr>
+                                <td>SortedList</td>
+                                <td>SortedList&lt;TKey,TValue&gt;</td>
+                                <td>Permet de stocker des éléments sous forme de clé-valeur, triée par défaut sur la clé.</td>
+                            </tr>
+                            <tr>
+                                <td>Stack</td>
+                                <td>Stack&lt;T&gt;</td>
+                                <td>Permet de stocker des éléments selon le principe LIFO (dernier ajouté, premier de la liste).</td>
+                            </tr>
+                            <tr>
+                                <td>Queue</td>
+                                <td>Queue&lt;T&gt;</td>
+                                <td>Permet de stocker des éléments selon le principe FIFO (premier ajouté, premier de la liste).</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     <p>La première collection qu'on va étudier est la plus simple : le tableau.</p>
                     <p>Un tableau est un ensemble défini d'avance d'éléments du même type, c'est-à-dire qu'on ne pourra pas avoir un tableau qui mélange des chaînes de caractères et des entiers.</p>
                     <p>La syntaxe pour déclarer un tableau est d'utiliser des crochets ("[" et "]") après le type :</p>
@@ -1029,6 +1067,63 @@ string toto = tableauDeStrings[0];</code></pre>
                     <p>La liste peut s'utiliser comme un tableau à l'aide des index (en mettant le chiffre dans les croches après le nom de la variable).</p>
 <pre><code>string valeurListe = chaines[0];</code></pre>
                     <p>Attention, comme le tableau, accéder à un index invalide provoquera un plantage du programme.</p>
+                    <p>En gros, ArrayList et List permettent de stocker des éléments comme un tableau dynamique, où les éléments ont un index.</p>
+                    <p>Hashtable et Dictionary permettent de stocker des éléments sous forme de clé-valeur.</p>
+<pre><code>Dictionary&lt;string,string&gt; col1 = new Dictionary&lt;string,string&gt;();
+
+// Ajouter des éléments
+col1.Add("A", "Ligne 1");
+col1.Add("B", "Ligne 2");
+col1.Add("C", "Ligne 3");
+
+// Supprimer des éléments
+col1.Remove("B");
+
+// Récupérer un élément
+Console.WriteLine(col1["C"]);
+
+// Parcours de la collection
+foreach (DictionaryEntry item in col1)
+{
+    Console.WriteLine($"Clé : {item.Key}, Valeur : {item.Value}");
+}</code></pre>
+                    <p>Stack permet de stocker des éléments selon le principe LIFO (dernier ajouté, premier de la liste). C'est ce que l'on appelle une pile.</p>
+<pre><code>Stack&lt;string&gt; col1 = new Stack&lt;string&gt;();
+
+// Ajouter des éléments
+col1.Push("Ligne 1");
+col1.Push("Ligne 2");
+col1.Push("Ligne 3");
+
+// Récupérer l'objet en haut de la pile
+object elem = col1.Peek(); // Ligne 3
+// récupérer l'objet en haut de la pile et le supprime
+object elem = col1.Pop(); // Ligne 3
+
+// Parcours de la collection
+foreach (string item in col1)
+{
+    Console.WriteLine(item);
+}</code></pre>
+                    <p>À l'inverse de la Stack, on retrouve la Queue qui permet de stocker des éléments selon le principe FIFO (premier ajouté, premier de la liste).</p>
+<pre><code>Stack&lt;string&gt; col1 = new Stack&lt;string&gt;();
+
+// Ajouter des éléments
+col1.Enqueue("Ligne 1");
+col1.Enqueue("Ligne 2");
+col1.Enqueue("Ligne 3");
+
+// Récupérer l'objet en haut de la pile
+object elem = col1.Peek(); // Ligne 1
+// récupérer l'objet en haut de la pile et le supprime
+object elem = col1.Dequeue(); // Ligne 1
+
+// Parcours de la collection
+foreach (string item in col1)
+{
+    Console.WriteLine(item);
+}</code></pre>
+                    <p>Les avantages des types génériques sont : la réutilisabilité, la sécurité de type et la performance.</p>
                 </article>
                 <article>
                     <h2 id="boucles">Les boucles :</h2>
@@ -1663,6 +1758,56 @@ t.Equals(t2); // true
 Machine t3 = t with { Modele = "AB12" };</code></pre>
                 </article>
                 <article>
+                    <h2 id="asynchronisme">L'asynchronisme :</h2>
+                    <p>Pour faire de l'asynchronisme en C#, comme dans plusieurs autres langages de programmation, on va s'appuyer principalement sur deux mots clés : <span class="html">async</span> et <span class="html">await</span>.</p>
+                    <p>L'asynchronisme est un concept essentiel permettant d'améliorer les performances en permettant à une application penfant l'attente de tâches longues sans bloquer le thread principal.</p>
+                    <p>Le mot-clé <span class="em">async</span> permet de déclarer une méthode comme asynchrone. Une méthode asynchrone retourne généralement une <span class="html">Task</span> ou une <span class="html">Task&lt;TResult&gt;</span>, indiquant que son exécution peut être effectuée de manière asynchrone.</p>
+<pre><code>public async Task&lt;int&gt; GetNumberAsync()
+{
+    // Implémentation asynchrone
+}</code></pre>
+                    <p>L'utilisation du mot-clé <span class="em">await</span> est associée à l'appel des méthodes asynchrones. Il permet de suspendre l'exécution de la méthode jusqu'à ce que la tâche soit complétée.</p>
+<pre><code>int number = await GetNumberAsync();
+Console.WriteLine(number); // Cette ligne s'exécute après la complétion de GetNumberAsync</code></pre>
+                    <p>La classe <span class="em">Task</span> représente une unité de travail asynchrone qui peut être exécutée et gérée de manière indépendante.</p>
+                    <p>Pour créer une tâche en C#, on peut utiliser la syntaxe suivante :</p>
+<pre><code>Task tache = new Task(() =&gt;
+{
+    // Code pour une opération longue
+});
+
+await tache.Start();</code></pre>
+                    <p>Une approche plus concise est d'utiliser la méthode <span class="em">Task.Run</span> pour créer et exécuter une tâcje simultanément :</p>
+<pre><code>Task&lt;int&gt; tache2 = Task.Run(() =&gt;
+{
+    // Code pour une opération longue
+    return 123;
+});
+
+int result = await tache2;</code></pre>
+                    <p>Il est possible de paralléliser les tâches et attendre qu'elles soient toutes exécutées pour passer à la suite. Pour cela, la méthode <span class="em">Task.WhenAll</span> est utile :</p>
+<pre><code>Task tache1 = Task.Run(() =&gt;
+{
+    Console.WriteLine("Début de tâche 1");
+    Thread.Sleep(3000); // Attends 3 secondes
+    Console.WriteLine("Fin de tâche 1");
+});
+
+Task tache2 : Task.Run(() =&gt;
+{
+    Console.WriteLine("Début de tâche 2");
+    Thread.Sleep(500); // Attends 0,5 secondes
+    Console.WriteLine("Milieu de tâche 2");
+    Thread.Sleep(500); // Attends 0,5 secondes
+    Console.WriteLine("Fin de tâche 2");
+});
+
+Console.WriteLine("Avant l'exécution");
+await Task.WhenAll(tache1, tache2);
+Console.WriteLine("Après l'exécution");</code></pre>
+                </article>
+                <article>
+                    <p>Cette approche parallèle peut améliorer les performanceslors de l'exécution des tâches indépendantes les unes des autres.</p>
                     <h2 id="linq">LINQ :</h2>
                     <h3>Introduction à LINQ :</h3>
                     <p>LINQ (<span class="em">Langauage Integrated Query</span>) est une innovation de la version 3.5 du .NET Framework qui permet de rapprocher le monde des objets et le monde des données.</p>
@@ -1764,8 +1909,10 @@ Machine t3 = t with { Modele = "AB12" };</code></pre>
    }
 }</code></pre>
                     <p class="em">Dans l'exemple, nous lirons "x conduit à x fois x".</p>
-                    <p>Le côté gauche de l'expression spécifie les paramètres en entrée (le cas échéant) et le côté droit contient le bloc d'expression ou d'instructions.</p>
+                    <p>Le côté gauche de l'expression spécifie les paramètres en entrée (le cas échéant) et le côté droit contient le bloc d'expression ou d'instructions.</p> 
                     <p>Une expression LAMBDA avec une expression sur le côté est appelée "<span class="em">lambda-expression</span>.</p>
+                    <p>Le premier avantage d'une expression lambda permet d'écrire du code plus concis. Ce code définit un comportement qui est localisé uniquement là où il est utilisé.</p>
+                    <p>Elles sont flexibles car elles sont utilisées dans pas mal de contextes comme les opérations de filtrage, de tri, dans les événements, etc.</p>
                     <p>Les "lambda-expression" sont utilisées dans la construction d'arborescences d'expression, elle retourne le résultat de l'expression et prend la forme suivante : (Paramètres d'entrée) =&gt; expression.</p>
                     <p>Les parenthèses sont facultatives uniquement dans le cas où nous n'avons qu'un seul paramètre.</p>
                     <p>Dans le cas contraire, elles sont obligatoires :</p>
@@ -1867,6 +2014,24 @@ Machine t3 = t with { Modele = "AB12" };</code></pre>
         Console.ReadLine();
     }
 }</code></pre>
+                    <p>La différence entre <span class="em">Func</span> et <span class="em">Action</span> est que Func possède au moins un type de retour et que Action ne retourne rien. Ils ont tous les deux un maximum de 16 paramères d'entrée.</p>
+<pre><code>public int GetCleINSEE(long numero
+{
+    return (int)(97 - (num %97));
+}
+
+Func&lt;long, int&gt; GetCleINSEE = new Func&lt;long, int&gt;(n =&gt; (int)(97 - (n % 97)));
+
+int cle = GetCleINSEE(1720579191241); // cle = 38;
+
+public static void Bonjour (string message)
+{
+    Console.WriteLine("Bonjour, " + message);
+}
+
+Action&lt;string&gt; SayHello = new Action&lt;string&gt;(msg =&gt; Console.WriteLine("Bonjour, " + msg));
+
+SayHello("Driss"); // Affiche "Bonjour, Driss"</code></pre>
                     <h3>Les méthodes d'extension :</h3>
                     <p>Lorsque LINQ est arrivé, il a apporté bon nombre de nouvelles fonctionnalités aux objets du Framework .NET. Les plus communes sont les "opérateurs de requêtes standard LINQ" qui ajoute des fonctionnalités de requête aux types "IEnumerable" et "IEnumerable&lt;&gt;".</p>
                     <p>Ces types d'objets ont donc vu leur nombre de fonctionnalités augmenté mais "Microsoft" n'a pas modifié leur type d'origine. Ils ont utilisé le principe de méthodes d'extension.</p>
