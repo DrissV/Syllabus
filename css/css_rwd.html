@@ -288,7 +288,10 @@
                             <p><span class="em">Images réactives</span> : Appliquez la classe "<span class="html">img-fluid</span> pour rendre vos images réactives, s'ajustant automatiquement à la taille de leur conteneur.</p>
 <pre><code>&lt;img src="image.jpg class="img-fluid" alt="Image réactive"&gt;</code></pre>
                             <p>Pour la balise <span class="html">&lt;figure&gt;</span>, voici un exemple Bootstrap :</p>
-<pre><code></code></pre>
+<pre><code>&lt;figure class="figure"&gt;
+    &lt;img src="..." class="figure-img img-fluid rounded" alt="..."&gt;
+    &lt;figcaption class="figure-caption text-end"&gt;Une description pour l'image ci-dessus.&lt;/figcaption&gt;
+&lt;/figure&gt;</code></pre>
                         </li>
                         <li>
                             <p><span class="em">Formulaire</span> : Utilisez les classes "<span class="html">form-label</span>", "<span class="html">form-control</span>", et d'autres pour styliser vos formulaires. Exemple :</p>
@@ -297,12 +300,36 @@
                             <p>Pour les formulaires, il y a les classes <span class="html">.form-label</span> pour les balises <span class="em">&lt;label&gt;</span>, <span class="html">.form-control</span> pour les balises <span class="em">&lt;input&gt;</span> qui ne sont pas des types <span class="em">radio</span>, <span class="em">range</span> ou <span class="em">checkbox</span>.</p>
                             <p>Pour les types radios ou checkbox, on a les classes <span class="html">.form-check-label</span> pour les labels et <span class="html">.form-check-input</span> pour les inputs.</p>
                             <p>Pour les types range, la classe <span class="html">.form-range</span> fait le travail.</p>
-                            <p>Dans un formulaire, on peut rajouter des messages de validation pour dire si les critères requis pour le champ est valide ou pas en utilisant les classes <span class="html">.valid-feedback</span> pour dire que le champ est valide et <span class="html">.invalid-feedback</span> pour dire que le champ est invalide.</p>
+                            <p>Dans un formulaire, on peut rajouter des messages de validation pour dire si les critères requis pour le champ est valide ou pas en utilisant les classes <span class="html">.valid-feedback</span> pour dire que le champ est valide et <span class="html">.invalid-feedback</span> pour dire que le champ est invalide. Il faut pas oublier d'ajouter l'attribut booléen <span class="html">novalidate</span> dans la balise <span class="em">&lt;form&gt;</span>.</p>
+                            <p>La validation HTML du formualire est appliquée via les deux pseudo-classes CSS, <span class="html">:invalid</span> et <span class="html">:valid</span>. Elle s'applique aux éléments <span class="em">&lt;input&gt;</span>, <span class="em">&lt;select&gt;</span>, et <span class="em">&lt;textarea&gt;</span>. Bootstrap limite les styles <span class="em">:invalid</span> et <span class="em">:valid</span> à la classe parente <span class="html">.was-validated</span>, génralemnt appliquée au <span class="em">&lt;form&gt;</span>. Sinon, tout champ sans valeur apparaît comme invalide lors du chargement de la page. De cette manière, vous pouvez choisir quand les activer (généralement après une tentative de soumission du formulaire). Pour réinitialiser l'apparence du formulaire (par exemple, en cas de soumissions de formulaire dynamiques via Ajax), supprimez à nouveau la classe <span class="em">.was-validated</span> du <span class="em">&lt;form&gt;</span> après la soumission.</p>
+                            <p>Pour désactiver la soumission du formulaire en cas de champs invalides, il faut rajouter le code ci-dessous dans notre propre code JavaScript :</p>
+<pre><code>// Exemple de script JavaScript de démarrage pour désactiver la soumission du formulaire en cas de champs invalides
+(() => {
+    'use strict';
+
+    // Récupérer tous les formulaires auxquels nous voulons appliquer des styles de validation Bootstrap personnalisés
+    const forms = document.querySelectorAll('.needs-validation');
+
+    // Les parcourir et empêcher la soumission
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            // Empêcher la soumission si le formulaire n'est pas valide
+            if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+            }
+
+            // Ajouter la classe 'was-validated' pour appliquer les styles de validation
+            form.classList.add('was-validated');
+        }, false);
+    })
+})();</code></pre>
                         </li>
                         <li>
                             <p><span class="em">Composants interactifs</span> : Bootstrap propose des classes pour des éléments tels que les carrousels, les modales, les onglets, la navbar, etc. Explorez la documentation pour les intégrer facilement dans votre projet.</p>
                         </li>
                     </ul>
+                    <p>On utilise les classes <span class="html">.g-*</span> pour contrôler les espacements horizontaux et verticaux de la grille. Ces classes permettent de définir la marge (margin) entre les éléments de la grille.</p>
                     <p class="em">Information : Ces classes Bootstrap sont conçues pour simplifier le développement en fournissant des styles cohérents et des fonctionnalités interactives. Explorez la documentation de Bootstrap et utilisez ces classes de manière judicieuse pour accélérer le processus de création de votre site tout en maintenant une apprence professionnelle.</p>
                     <h4>Conclusion :</h4>
                     <p>En résumé, ce cours a exploré les éléments essentiels du Responsive Web Design (RWD) et a mis en lumière l'utilité du framework CSS Bootstrap pour simplifier le processus de développement. À mesure que la diversité des appareils utlisés pour naviguer sur le web continue de croître, le RWD devient une nécessité incontournable pour garantir une expérience utilisateur optimale.</p>
@@ -333,7 +360,10 @@
         &lt;script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"&gt;&lt;/script&gt;
     &lt;/body&gt;
 &lt;/html&gt;</code></pre>
-                    <p>Il se traduit sans Bootstrap comme ceci :</p>
+                    <p>La classe <span class="html">d-flex</span> en Bootstrap est utilisée pour appliquer la propriété CSS <span class="em">display : flex;</span> à un élément. Cette classe transforme l'élément en un conteneur flex, ce qui signifie que ses enfants directs deviennent des éléments flexibles et suivent les règles du modèle de boîte flexible.</p>
+                    <p>Cependant, la classe <span class="em">d-flex</span> elle-même ne crée pas un conteneur Bootstrap au sens de la grille. Elle ne donne pas l'élément les styles spécifiques aux conteneurs de la grille Bootstrap, tels que la gestion des marges, la largeur fixe, etc. La classe <span class="em">d-flex</span> se concentre uniquement sur la mise en place de boîte flexible.</p>
+                    <p>Par défaut, la classe <span class="em">d-flex</span> applique la propriété CSS <span class="html">flex-direction: row;</span>, ce qui signifie que les éléments sont disposés en ligne, côte à côte. Si vous voulez une disposition en colonne, il faut utiliser la classe <span class="html">flex-column</span>, cela signifie que les enfants directs de l'élément avec cette classe sont empilés verticalement plutôt qu'en ligne.</p>
+                    <p>Le code ci-dessus se traduit sans Bootstrap comme ceci :</p>
 <pre><code>&lt;!DOCTYPE html&gt;
     &lt;html lang="fr"&gt;
         &lt;head&gt;
@@ -367,8 +397,7 @@
             &lt;footer id="footer" role="contentinfo"&gt;
                 &lt;p&gt;Test Footer&lt;/p&gt;
             &lt;/footer&gt;
-    
-            &lt;script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"&gt;&lt;/script&gt;
+
         &lt;/body&gt;
     &lt;/html&gt;</code></pre>
                     <p>En conclusion, maîtriser le Responsive Web Design et l'utilisation de Bootstrap ouvre la voie à des sites web modernes, adaptables et esthétiquement cohérents sur une variété de dispositifs. Continuez à explorer, expérimenter et appliquer ces concepts dans vos projets pour garantir des expériences utilisateur exceptionnelles et en phase avec les exigences actuelles du web. Bonne continuation dans votre parcours de développement web !</p>                    
