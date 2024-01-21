@@ -4421,6 +4421,110 @@ app.Run();</code></pre>
     public string Prenom { get; set; }
     public virtual ICollection&lt;FilmUtilisateur&gt; ListeFilms { get; set; }
 }</code></pre>
+                    <p>En .NET Core, les classes <span class="html">identityUser</span> et <span class="html">IdentityRole</span> font partie du système d'authentification ASP.NET Core Identity, qui est utilisé pour gérer les fonctionnalités d'authentification, d'autorisation et de gestion des utilisateurs dans une application.</p>
+                    <p><span class="html">IdentityUser</span> est la classe de base pour représenter un utilisateur dans le système d'authentification. Elle est définie dans l'espace de noms <span class="em">Microsoft.AspNetCore.Identity</span>. Ses propriétés principales sont :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">Id</span> : La clé primaire de l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p class="html">UserName</p>
+                             : Le nom d'utilisateur de l'utilisateur.
+                        </li>
+                        <li>
+                            <p><span class="html">NormalizedUserName</span> : Le nom d'utilisateur normalisé, généralement en majuscules, utilisé pour les opérations de recherche.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Email</span> : L'adresse e-mail de l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">NormalizedEmail</span> : L'adresse e-mail normalisée, généralement en majuscules, utilisée pour les opérations de recherche.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">EmailConfirmed</span> : Indique si l'adresse e-mail de l'utilisateur a été confirmée.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">PasswordHash</span> : Le hachage du mot de passe de l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">SecurityStamp</span> : Un jeton de sécurité utilisé pour régénérer les identités externes liées à cet utilisateur en cas de changement de mot de passe ou de tout autre événeemnt de sécurité.</p>
+                        </li>
+                    </ul>
+                    <p><span class="html">IdentityRole</span> est la classe de base pour représenter un rôle dans le système d'authentification. Elle est également définie dans l'espace de noms <span class="em">Microsoft.AspNetCore.Identity</span>. Ses propriétés principales sont :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">Id</span> : La clé primaire du rôle.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Name</span> : Le nom du rôle.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">NormalizedName</span> : Le nom du rôle normalisé, généralement en majuscules, utilisé pour les opérations de recherche.</p>
+                        </li>
+                    </ul>
+                    <p>En plus des classes de base <span class="em">IdentityUser&lt;TKey&gt;</span> et <span class="em">IdentityRole&lt;TKey&gt;</span>, ASP.NET Core Identity fournit d'autres classes liées à la gestion des utilisateurs et des rôles. Voici quelques-unes de ces classes :</p>
+                    <ol>
+                        <li>
+                            <p><span class="html">IdentityRoleClaim&lt;TKey&gt;</span> : Représente une revendication (claim) associée à un rôle.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">IdentityUserClaim&lt;TKey&gt;</span> : Représente une revendication (claim) associée à un utilisateur.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">IdentityUserLogin&gt;TKey&gt;</span> : Représente une connexion externe (comme une connexion avec un compte Google ou Facebook) associée à un utilisateur.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">IdentityUserToken&lt;TKey&gt;</span> : Représente un jeton associé à un utilisateur (par exemple, un jeton de réinitialisation de mot de passe).</p>
+                        </li>
+                        <li>
+                            <p><span class="html">IdentityUserRole&lt;TKey&gt;</span> : Représente la relation entre les utilisateurs et les rôles. Elle a généralement une clé étrangère pour l'utilisateur (<span class="em">UserId</span>) et une clé étrangère pour le rôle (<span class="em">RoleId</span>).</p>
+                        </li>
+                        <li>
+                            <p><span class="html">IdnetityUserLogin&lt;TKey&gt;</span> : Représente une connexion externe associée à un utilisateur.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">IdentityUserToken&lt;TKey&gt;</span> : Représente un jeton de sécurité associé à un utilisateur.</p>
+                        </li>
+                    </ol>
+                    <p>Ces classes sont paramétrées par la clé primaire (<span class="html">TKey</span>) utilisée dans votre application. Par défaut, cette clé est de type <span class="html">string</span> pour les identifiants, mais elle peut être personnalisée en fonction de vos besoins.</p>
+                    <p>Voici un exemple simplifié de certaines de ces classes et de leurs propriétés :</p>
+<pre><code>public class IdentityRoleClaim&lt;TKey&gt;
+{
+    public TKey Id { get; set; }
+    public TKey RoleId { get; set; }
+    public string ClaimType { get; set; }
+    public string ClaimValue { get; set; }
+}
+
+public class IdentityUserClaim&lt;TKey&gt;
+{
+    public TKey Id { get; set; }
+    public TKey UserId { get; set; }
+    public string ClaimType { get; set; }
+    public string ClaimValue { get; set; }
+}
+
+public class IdentityUserLogin&lt;TKey&gt;
+{
+    public TKey LoginProvider { get; set; }
+    public TKey ProviderKey { get; set; }
+    public string ProviderDisplayName { get; set; }
+    public TKey UserId { get; set; }
+}
+
+public class IdentityUserRole&lt;TKey&gt;
+{
+    public TKey UserId { get; set; }
+    public TKey RoleId { get; set; }
+}
+
+public class IdentityUserToken&lt;TKey&gt;
+{
+    public TKey UserId { get; set; }
+    public string LoginProvider { get; set; }
+    public string Name { get; set; }
+    public string Value { get; set; }
+}</code></pre>
                     <h3>Modification du contexte DbContext :</h3>
                     <p>On doit ajouter les objets DbSet pour vos classes Film et FilmUtilisateur dans la classe ApplicationDbContext :</p>
 <pre><code>public DbSet&lt;Film&gt; Films { get; set; }
@@ -4445,6 +4549,96 @@ public DbSet&lt;FilmUtilisateur&gt; FilmsUtilisateur { get; set; }</code></pre>
     options.SignIn.RequireConfirmedAccount = true;
 }).AddEntityFrameworkStores&lt;ApplicationDbContext&gt;().AddDefaultTokenProviders();</code></pre>
                     <p>Remarquez le changement de IdentityUser à Utilisateur dans la configuration du service Identity. Cette modication permettra à .NET Identity d'utiliser votre classe Utilisateur pour tous les processus et services Identity; comme la configuration de UserMangaer et SignINManager.</p>
+                    <p>ASP.NET Core Identity offre de nombreuses options de configuration pour personnaliser son comportement. Voici quelques-unes des options disponibles dans <span class="html">IdentityOptions</span> que vous pouvez configurer dans votre fichier <span class="em">Program.cs</span> :</p>
+<pre><code>// Cofiguration des options Identity dans ConfigureServices
+builder.Services.Configure&lt;IdnetityOptions&gt;(options =&gt;
+{
+    // Options relatives aux mots de passe
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowcase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredLength = 8;
+
+    // Options de verrouillage de compte
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // Options de connexion
+    options.SignIn.RequireConfirmedEmail = false;
+    options.SignIn.RequireConfirmedPhoneNumber = false;
+    options.SignIn.RequireConfirmedAccount = false;
+
+    // Options de l'utilisateur
+    options.User.RequireUniqueEmail = true;
+
+    // Autres options ...
+});
+
+// COnfiguration d'ASP.NET Core Identity
+builder.Services.AddIdentity&lt;Utilisateur, IdentityRole&gt;().AddEntityFrameworkStores&lt;ApplicationDbContext&gt;().AddDefaultTokenProviders();</code></pre>
+                    <p>L'utilisation de <span class="em">builder.Services.Configure&lt;IdentityOptions&gt;</span> configure les options d'Identity, et ensuite, <span class="em">builder.Services.AddIdentity</span> utilise ces options configurées.</p>
+                    <p>Voici quelques explications sur certaines de ces options :</p>
+                    <ul>
+                        <li>
+                            <p class="em">Options relatives aux mots de passe :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">RequireDigit</span> : Spécifie si le mot de passe doit contenir au moins un chiffre.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">RequireLowercase</span> : Spécifie si le mot de passe doit contenir au moins une lettre minuscule.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">RequireUppercase</span> : Spécifie si le mot de passe doit contenir au moins une lettre majuscule.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">RequireNonAlphanumeric</span> : Spécifie si le mot de passe doit contenir au moins un caractère spécial.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">RequiredLength</span> : Spécifie la longueur minimale du mot de passe.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p class="em">Options de verrouillage de compte :</p>
+                            <ul>
+                                <li>
+                                    <p class="html">DefaultLockoutTimeSpan</p>
+                                     La durée pendant laquelle un utilisateur est verrouillé après avoir dépassé le nombre maximum de tentatives de connexion infructueuses.
+                                </li>
+                                <li>
+                                    <p><span class="html">MaxFailedAccessAtempts</span> : Le nombre maximale de tentatives de connexion infructeuses avant que le compte ne soit verrouillé.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">AllowedForNewUsers</span> : Indique si le verrouillage est activé pour les nouveaux utilisateurs.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p class="em">Options de connexion :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">RequireConfirmedEmail</span> : Spécifie si un compte doit être confirmé par e-mail pour être connecté.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">RequireConfirmedPhoneNumber</span> : Spécifie si un compte doit être confirmé par numéro de téléphone pour être connecté.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">RequireConfirmedAccount</span> : Spécifie si un compte doit être confirmé pour être connecté.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p class="em">Options de l'utilisateur :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">RequireUniqueEmail</span> : Spécifie si les adresses e-mail doivent être uniques entre les utilisateurs.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
                     <p>La deuxième modification doit intervenir dans <span class="em">Views &gt; Shared &gt; _LoginPartial.cshtml</span>. Les trois premières lignes de code de ce fichier sont les suivantes :</p>
 <pre><code>@using Microsoft.AspNetCore.Identity
 @inject SignInManager&lt;IdentityUser&gt; SignInManager
