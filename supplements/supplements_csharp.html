@@ -3263,7 +3263,7 @@ else {
                     <h3>Configuration :</h3>
                     <p>Avant de faire quoi que ce soit, il faut télécharger et installer les logiciels suivants : <a href="https://www.microsoft.com/fr-be/sql-server/sql-server-downloads" target="_blank">SQL Server</a> et <a href="https://learn.microsoft.com/fr-fr/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16#download-ssms" target="_blank">SQL Server Management Studio (SSMS)</a>.</p>
                     <p>Dans SSMS, il faut se connecter au SQL Server local installé précédemment. Ensuite, il suffit créer une nouvelle base de données (par exemple : "MyApplicationDb").</p>
-                    <p>Ensuite, Dans Visual Studio 2022, en ouvrant la fenêtre de l'explorateur de serveurs, il faut "ajouter une connexion" et remplir les champs "Souce de données" par "Microsoft SQL Server (SqlClient)", "Nom du serveur" par ".\" et "Sélectionner ou entrer un nom de base de données" par "MyApplicationDb".</p>
+                    <p>Ensuite, dans Visual Studio 2022, en ouvrant la fenêtre de l'explorateur de serveurs, il faut "ajouter une connexion" et remplir les champs "Souce de données" par "Microsoft SQL Server (SqlClient)", "Nom du serveur" par ".\" et "Sélectionner ou entrer un nom de base de données" par "MyApplicationDb".</p>
                     <p>Enfin, dans la solution, en gérant les paquets NuGet, on va vérifier si les paquets "<span class="em">Micosft.EntityFrameworkCore</span>", "<span class="em">Microsoft.EntityFrameworkCore.Tools</span>" et "<span class="em">Micosft.EntityFrameworkCore.SqlServer</span>" sont bien installés, sinon on installe ceux qui manquent en sélectionnant bien la dernière version stable.</p>
                     <p>Dans le projet, créez un nouveau dossier "Data" s'il n'existe pas et dedans créez une nouvelle classe "<span class="em">MyDbContext</span>" :</p>
 <pre><code>using Micorsoft.EntityFrameworkCore;
@@ -4384,8 +4384,8 @@ app.Run();</code></pre>
     public string Titre { get; set; }
     public int Annee { get; set; }
 }</code></pre>
-                    <p>Passons à l'entité Utilisateur. Celle-ci est un peu plus délicate. Puisque le projet comprend des comptes d'utilisateur individuels, des objets de compte d'utilisateur sont déjà intégrés dans le projet grâce à ASP.NET Identity. Ils sont créés à l'aide d'une classe appelée Idnetity User, qui se trouve dans le package Microsoft.AspNetCore.Identity. La classe IdentityUser contient toutes les informations importantes permettant de sécuriser les connexions des utilisateurs, telles que le nom d'utilisateur, l'adresse e-mail, le mot de passe, le numéro de téléphone, etc. Cependant, elle ne contient pas de champs pour les informations personnelles telles que le nom ou le prénom, l'adresse, la ville, l'État, etc. Heureusement, il s'agit d'une classe que vous pouvez <span class="em">étendre</span> à une autre classe de votre conception qui peut contenir tous les champs supplémentaires que vous souhaitez ajouter.</p>
-                    <p>Il y a un autre point que je tiens à mentionner avant d'ajouter cette classe. ASP.NET Idnetity possède déjà un appel appelé User et qui est réservé à l'accès au compte de l'utilisateur connecté. Par conséquent, il ne faut pas nommer votre classe d'entité utilisateur User. Appelons-la plutôt Utilisateur. AJoutez donc une autre classe au dossier Data, appelez-la Utilisateur, puis intégrez-y les éléments suivants :</p>
+                    <p>Passons à l'entité Utilisateur. Celle-ci est un peu plus délicate. Puisque le projet comprend des comptes d'utilisateur individuels, des objets de compte d'utilisateur sont déjà intégrés dans le projet grâce à ASP.NET Identity. Ils sont créés à l'aide d'une classe appelée Identity User, qui se trouve dans le package Microsoft.AspNetCore.Identity. La classe IdentityUser contient toutes les informations importantes permettant de sécuriser les connexions des utilisateurs, telles que le nom d'utilisateur, l'adresse e-mail, le mot de passe, le numéro de téléphone, etc. Cependant, elle ne contient pas de champs pour les informations personnelles telles que le nom ou le prénom, l'adresse, la ville, l'État, etc. Heureusement, il s'agit d'une classe que vous pouvez <span class="em">étendre</span> à une autre classe de votre conception qui peut contenir tous les champs supplémentaires que vous souhaitez ajouter.</p>
+                    <p>Il y a un autre point que je tiens à mentionner avant d'ajouter cette classe. ASP.NET Identity possède déjà un appel appelé User et qui est réservé à l'accès au compte de l'utilisateur connecté. Par conséquent, il ne faut pas nommer votre classe d'entité utilisateur User. Appelons-la plutôt Utilisateur. AJoutez donc une autre classe au dossier Data, appelez-la Utilisateur, puis intégrez-y les éléments suivants :</p>
                     <ol>
                         <li>
                             <p>La classe doit étendre Microsoft.AspNetCore.Identity.IdentityUser.</p>
@@ -4400,6 +4400,49 @@ app.Run();</code></pre>
                             <p>Elle doit contenur au moins une propriété Prenom de type chaîne de caractères.</p>
                         </li>
                     </ol>
+                    <p>En gros, l'utilisation de <span class="html">base()</span> dans C# est similaire à <span class="html">this()</span> en Java, dans le sens où elle appelle le constructeur de la classe de base.</p>
+                    <p>En C#, <span class="em">base()</span> est utilisé dans le contexte d'un constructeur pour appeler le constructeur de la classe de base. Cela peut être utile lorsqe vous avez une hiérarchie de classes et que vous souhaitez exécuter le constructeur de la classe de base avant d'initialiser les membres de la classe dérivée.</p>
+                    <p>En Java, <span class="em">this()</span> est utilisé pour appeler un autre constructeur dans la même classe comme en C#, généralement avec des paramètres différents, tandis que <span class="html">super()</span> est utilisé pour appeler le constructeur de la classe parente. Les concepts sont similaires, bien que la syntaxe diffère légèrement.</p>
+                    <p>Voici un exemple en C# :</p>
+<pre><code>public class BaseClass
+{
+    public BaseClass()
+    {
+        // Initialisation de la classe de base
+    }
+}
+
+public class DerivedClass : BaseClass
+{
+    private int myValue;
+
+    // Premier constructeur
+    public DerivedClass() : this(42) // Appelle le deuxième constructeur avec la valeur par défaut 42
+    {
+    }
+
+    // Deuxième constructeur avec un paramètre
+    public DerivedClass(int value) : base()
+    {
+        // Initialisation de la classe dérivée après avoir appelé le constructeur de la classe de base
+        myValue = value;
+        // Autres initialisations nécessaires
+    }
+}</code></pre>
+                    <p>Voici un exemple en Java :</p>
+<pre><code>public class BaseClass {
+    public BaseClass() {
+        // Initialisation de la classe de base
+    }
+}
+
+public class DerivedClass extends BaseClass
+{
+    public DerivedClass() {
+        super(); // Appel du constructeur de la classe de base
+        // Initialisation de la classe dérivée
+    }
+}</code></pre>
                     <p>La classe FilmUtilisateur possède la clé primaire composite dont nous avons fait mention plus haut. Cette clé est composée de deux propriétés  IdUtilisateur et IdFilm. La propriété IdUtilisateur correspond à la propriété Id de la classe Utilisateur, qu'elle a héritée de IdentityUser. La classe IdFilm correpsond à la propriété Id de la classe Film. On a également besoin de deux autres propriétés utilisant le mot clé <span class="html">virtual</span> qui représentent la relation entre l'objet FilmUtilisateur et les objets Utilisateur et Film :</p>
 <pre><code>public class FilmUtilisateur
 {
@@ -4421,15 +4464,14 @@ app.Run();</code></pre>
     public string Prenom { get; set; }
     public virtual ICollection&lt;FilmUtilisateur&gt; ListeFilms { get; set; }
 }</code></pre>
-                    <p>En .NET Core, les classes <span class="html">identityUser</span> et <span class="html">IdentityRole</span> font partie du système d'authentification ASP.NET Core Identity, qui est utilisé pour gérer les fonctionnalités d'authentification, d'autorisation et de gestion des utilisateurs dans une application.</p>
+                    <p>En .NET Core, les classes <span class="html">IdentityUser</span> et <span class="html">IdentityRole</span> font partie du système d'authentification ASP.NET Core Identity, qui est utilisé pour gérer les fonctionnalités d'authentification, d'autorisation et de gestion des utilisateurs dans une application.</p>
                     <p><span class="html">IdentityUser</span> est la classe de base pour représenter un utilisateur dans le système d'authentification. Elle est définie dans l'espace de noms <span class="em">Microsoft.AspNetCore.Identity</span>. Ses propriétés principales sont :</p>
                     <ul>
                         <li>
                             <p><span class="html">Id</span> : La clé primaire de l'utilisateur.</p>
                         </li>
                         <li>
-                            <p class="html">UserName</p>
-                             : Le nom d'utilisateur de l'utilisateur.
+                            <p><span class="html">UserName</span>: Le nom d'utilisateur de l'utilisateur.</p>
                         </li>
                         <li>
                             <p><span class="html">NormalizedUserName</span> : Le nom d'utilisateur normalisé, généralement en majuscules, utilisé pour les opérations de recherche.</p>
@@ -4449,6 +4491,27 @@ app.Run();</code></pre>
                         <li>
                             <p><span class="html">SecurityStamp</span> : Un jeton de sécurité utilisé pour régénérer les identités externes liées à cet utilisateur en cas de changement de mot de passe ou de tout autre événeemnt de sécurité.</p>
                         </li>
+                        <li>
+                            <p><span class="html">ConcurrencyStamp</span> : Un jeton de concurrence utilisé pour gérer les conflits de mise à jour concurrente.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">PhoneNumber</span> : Le numéro de téléphone de l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">PhoneNumberConfirmed</span> : Indique si le numéro de téléphone de l'utilisateur a été confirmé.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">TwoFactorEnabled</span> : Indique si l'authentification à deux facteurs est activée pour l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">LockoutEnd</span> : La date et l'heure de la fin de la période de verrouillage de l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">LockoutEnabled</span> : Indique si le verrouillage de l'utilisateur est activé.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">AccessfailedCount</span> : Nombre de tentatives d'accès infructueuses.</p>
+                        </li>
                     </ul>
                     <p><span class="html">IdentityRole</span> est la classe de base pour représenter un rôle dans le système d'authentification. Elle est également définie dans l'espace de noms <span class="em">Microsoft.AspNetCore.Identity</span>. Ses propriétés principales sont :</p>
                     <ul>
@@ -4460,6 +4523,9 @@ app.Run();</code></pre>
                         </li>
                         <li>
                             <p><span class="html">NormalizedName</span> : Le nom du rôle normalisé, généralement en majuscules, utilisé pour les opérations de recherche.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">ConcurrencyStamp</span> : Un jeton de concurrence utilisé pour gérer les conflits de mise à jour concurrente.</p>
                         </li>
                     </ul>
                     <p>En plus des classes de base <span class="em">IdentityUser&lt;TKey&gt;</span> et <span class="em">IdentityRole&lt;TKey&gt;</span>, ASP.NET Core Identity fournit d'autres classes liées à la gestion des utilisateurs et des rôles. Voici quelques-unes de ces classes :</p>
@@ -4480,7 +4546,7 @@ app.Run();</code></pre>
                             <p><span class="html">IdentityUserRole&lt;TKey&gt;</span> : Représente la relation entre les utilisateurs et les rôles. Elle a généralement une clé étrangère pour l'utilisateur (<span class="em">UserId</span>) et une clé étrangère pour le rôle (<span class="em">RoleId</span>).</p>
                         </li>
                         <li>
-                            <p><span class="html">IdnetityUserLogin&lt;TKey&gt;</span> : Représente une connexion externe associée à un utilisateur.</p>
+                            <p><span class="html">IdentityUserLogin&lt;TKey&gt;</span> : Représente une connexion externe associée à un utilisateur.</p>
                         </li>
                         <li>
                             <p><span class="html">IdentityUserToken&lt;TKey&gt;</span> : Représente un jeton de sécurité associé à un utilisateur.</p>
@@ -4530,6 +4596,39 @@ public class IdentityUserToken&lt;TKey&gt;
 <pre><code>public DbSet&lt;Film&gt; Films { get; set; }
 public DbSet&lt;FilmUtilisateur&gt; FilmsUtilisateur { get; set; }</code></pre>
                     <p>Remarquez que nous n'avons pas ajouté d'objet DbSet pour la classe Utilisateur. Cela est dû au fait qu'il existe déjà une table AspNetUsers dans la base de données. Puisque nous avons créé la classe Utilisateur qui hérite de la classe IdentityUser, tout ce que vous ajoutez à Utilisateur sera automatiquement traduit dans la table AspNetUsers de la base de données.</p>
+                    <p>Voici quelques-unes des proproétés DbSet les plus couramment utilisées dans <span class="html">IdentityDbContext&lt;TUser&gt:</span> :</p>
+                    <ul>
+                        <li>
+                            <p class="em">Users :</p>
+<pre><code>public DbSet&lt;TUser&gt; Users { get; set; }</code></pre>
+                            <p>Cette propriété représente la table des utilisateurs dans la base de données.</p>
+                        </li>
+                        <li>
+                            <p class="em">Roles :</p>
+<pre><code>public DbSet&lt;TRole&gt; Roles { get; set; }</code></pre>
+                            <p>Cette propriété représente la table des rôles dans la base de données.</p>
+                        </li>
+                        <li>
+                            <p class="em">UserClaims :</p>
+<pre><code>public DbSet&lt;TUserClaim&gt; UserClaims { get; set; }</code></pre>
+                            <p>Cette propriété représente la table des revendications (claims) des utilisateurs.</p>
+                        </li>
+                        <li>
+                            <p class="em">UserLogins :</p>
+<pre><code>public DbSet&lt;TUserLogin&gt; UserLogins { get; set; }</code></pre>
+                            <p>Cette propriété représente la table des informations de connexion des utilisateurs, comme les fournisseurs extenes.</p>
+                        </li>
+                        <li>
+                            <p class="em">UserTokens :</p>
+<pre><code>public DbSet&lt;TUserToken&gt; UserTokens { get; set; }</code></pre>
+                            <p>Cette propriété représente la table des jetons associés aux utilisateurs, généralement utilisés pour les opérations liées à la récupération de mot de passe.</p>
+                        </li>
+                        <li>
+                            <p class="em">UserRoles :</p>
+<pre><code>public DbSet&lt;TUserRole&gt; UserRoles { get; set; }</code></pre>
+                            <p>Cette propriété représente la table de liaison entre les utilisateurs et les rôles; indiquant quels utilisateurs appartiennent à quels rôles.</p>
+                        </li>
+                    </ul>
                     <p>La dernière modification est un peu plus délicate. Dans la version actuelle d'ASP.NET Core, il n'est pas possible de migrer automatiquement des objets ayant des relations many-to-many. Heureusement, ASP.NET inclut l'<span class="em">API Fluent</span>. Cette API vous permet de donner à Entity Framework des instructions précises pour créer ou modifier la base de données. Pour ce faire, vous devez remplacer une méthode de votre classe ApplicationDbContext, appelée OnModelCreating, qui est héritée de IdentityDbContext. Vous pouvez le faire n'importe où en dessous du constructeur, dans la classe application DbContext :</p>
 <pre><code>protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
@@ -4551,11 +4650,11 @@ public DbSet&lt;FilmUtilisateur&gt; FilmsUtilisateur { get; set; }</code></pre>
                     <p>Remarquez le changement de IdentityUser à Utilisateur dans la configuration du service Identity. Cette modication permettra à .NET Identity d'utiliser votre classe Utilisateur pour tous les processus et services Identity; comme la configuration de UserMangaer et SignINManager.</p>
                     <p>ASP.NET Core Identity offre de nombreuses options de configuration pour personnaliser son comportement. Voici quelques-unes des options disponibles dans <span class="html">IdentityOptions</span> que vous pouvez configurer dans votre fichier <span class="em">Program.cs</span> :</p>
 <pre><code>// Cofiguration des options Identity dans ConfigureServices
-builder.Services.Configure&lt;IdnetityOptions&gt;(options =&gt;
+builder.Services.Configure&lt;IdentityOptions&gt;(options =&gt;
 {
     // Options relatives aux mots de passe
     options.Password.RequireDigit = true;
-    options.Password.RequireLowcase = true;
+    options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequiredLength = 8;
@@ -4576,7 +4675,7 @@ builder.Services.Configure&lt;IdnetityOptions&gt;(options =&gt;
     // Autres options ...
 });
 
-// COnfiguration d'ASP.NET Core Identity
+// Configuration d'ASP.NET Core Identity
 builder.Services.AddIdentity&lt;Utilisateur, IdentityRole&gt;().AddEntityFrameworkStores&lt;ApplicationDbContext&gt;().AddDefaultTokenProviders();</code></pre>
                     <p>L'utilisation de <span class="em">builder.Services.Configure&lt;IdentityOptions&gt;</span> configure les options d'Identity, et ensuite, <span class="em">builder.Services.AddIdentity</span> utilise ces options configurées.</p>
                     <p>Voici quelques explications sur certaines de ces options :</p>
@@ -4626,7 +4725,7 @@ builder.Services.AddIdentity&lt;Utilisateur, IdentityRole&gt;().AddEntityFramewo
                                     <p><span class="html">RequireConfirmedPhoneNumber</span> : Spécifie si un compte doit être confirmé par numéro de téléphone pour être connecté.</p>
                                 </li>
                                 <li>
-                                    <p><span class="em">RequireConfirmedAccount</span> : Spécifie si un compte doit être confirmé pour être connecté.</p>
+                                    <p><span class="html">RequireConfirmedAccount</span> : Spécifie si un compte doit être confirmé pour être connecté.</p>
                                 </li>
                             </ul>
                         </li>
