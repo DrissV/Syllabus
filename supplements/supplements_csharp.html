@@ -4443,6 +4443,7 @@ public class DerivedClass extends BaseClass
         // Initialisation de la classe dérivée
     }
 }</code></pre>
+                    <p>L'opérateur <span class="html">??=</span> est disponible à partir de C# 8.0. Il effectue une opération d'affectation uniquement si l'opérande de gauche est null. Il peut être utilisé pour simplifier l'affectation conditionnelle. Par exemple, <span class="em">x ??= y</span> signifie que, si <span class="em">x</span> est null, on lui attribue la valeur de <span class="em">y</span>.</p>
                     <p>La classe FilmUtilisateur possède la clé primaire composite dont nous avons fait mention plus haut. Cette clé est composée de deux propriétés  IdUtilisateur et IdFilm. La propriété IdUtilisateur correspond à la propriété Id de la classe Utilisateur, qu'elle a héritée de IdentityUser. La classe IdFilm correpsond à la propriété Id de la classe Film. On a également besoin de deux autres propriétés utilisant le mot clé <span class="html">virtual</span> qui représentent la relation entre l'objet FilmUtilisateur et les objets Utilisateur et Film :</p>
 <pre><code>public class FilmUtilisateur
 {
@@ -4738,6 +4739,37 @@ builder.Services.AddIdentity&lt;Utilisateur, IdentityRole&gt;().AddEntityFramewo
                             </ul>
                         </li>
                     </ul>
+                    <p>Le cookie d'application dans ASP.NET Core Identity offre plusieurs options que vous pouvez configurer selon vos besoins. Voici quelques-unes des options couramment utilisées :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">ExpireTimeSpan</span> : La durée de vie du cookie d'authentification. Par exemple, <span class="em">options.ExpireTimeSpan = TimeSpan.FromDays(1);</span> définirait le cookie pour expirer après un jour.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">LoginPath</span> : Le chemin où les utilisateurs seront redirigés s'ils tentent d'accéder à une ressource nécessitant une authentification sans être connectés. Par exemple, <span class="em">options.LoginPath = "/Account/Login";</span> définirait le chemin de connexion à "Account/Login".</p>
+                        </li>
+                        <li>
+                            <p><span class="html">LogoutPath</span> : Le chemin où les utilisateurs seront redirigés après avoir été déconnectés. Par exemple, <span class="em">options.LogoutPath = "/Account/Logout";</span> définirait le chemin de déconnexion à "Account/Logout".</p>
+                        </li>
+                        <li>
+                            <p><span class="html">ReturnUrlParameter</span> : Le nom du paramètre sans l'URL qui stocke l'URL à laquelle l'utilisateur doit être redirigé après une connexion réussie. Par exemple, <span class="em">options.ReturnUrlParameter = "returnUrl";</span> utiliserait "returnUrl" comme paramètre.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">CookieName</span> : Le nom du cookie d'authentification. Par défaut, c'est ".AspNetCore.ApplicationCookie", mais vous pouvez le personnaliser avec <span class="em">options.CookieName = "MonCookie";</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">SlidingExpiration</span> : Si <span class="em">true</span>, la durée de vie du cookie est prolongée lors de chaque demande réussie. Si <span class="em">false</span>, le cookie expirera après la période définie par <span class="em">ExpireTimeSpan</span>, même si l'utilisateur est actif.</p>
+                        </li>
+                    </ul>
+                    <p>Voici un exemple de configuration avec quelques-unes de ces options :</p>
+<pre><code>builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.ExpireTimeSpan = TimeSpan.FromDays(1);
+    options.LoginPath = "/login";
+    options.LogoutPath = "/logout";
+    options.ReturnUrlParameter = "returnUrl";
+    options.CookieName = "MonCookie";
+    options.SlidingExpiration = true;
+});</code></pre>
                     <p>La deuxième modification doit intervenir dans <span class="em">Views &gt; Shared &gt; _LoginPartial.cshtml</span>. Les trois premières lignes de code de ce fichier sont les suivantes :</p>
 <pre><code>@using Microsoft.AspNetCore.Identity
 @inject SignInManager&lt;IdentityUser&gt; SignInManager
