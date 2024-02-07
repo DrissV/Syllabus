@@ -920,7 +920,382 @@ var trouve, continue : BOOLEAN ;</code></pre>
                             <p>Le type Comp (Computational) est un entier de 64 bits qui contient les valeurs intégrales comprises entre -9 223 372 036 854 775 808 et 9 223 372 036 854 775 807 (-2<sup>63</sup> à 2<sup>63</sup>-1).</p>
                             <p>Le type Currency est un type de données à virgule fixe recommandé pour les calculs monétaires. Il est stocké en tant qu'entier scalaire de 64 bits avec les quatre chiffres les moins significatifs représentant implicitement qutre décimales. L'intervalle de valeurs de Currency est compris entre -922 337 203 685 477,5808 et 922 337 203 685 477,5807. Combinés avec d'autres types réels dans des affectations et des expressions, les valeurs de type Currency sont automatiquement graduées en divisant ou en multipliant par 10 000. Puisque les nombres stockés au format Currency sont des représentations exactes, les opérations sur les valeurs Currency ne sont pas sujettes à des erreurs d'arrondi.</p>
                             <p><span class="em">Remarque :</span> Le type Real48 qui correspond à l'ancien type Real est fourni pour assurer une compatibilité avec les versions précédentes de Pascal. Comme son format de stockage n'est pas natif dans la gamme CPU d'Intel, les opérations sur des valeurs de ce type sont plus lentes que d'autres types de calcul en virgule flottante. Les types Single, Double et Extended correspondent aux formats natifs des processeurs Intel Pentium, de précision simple, double et étendue.</p>
-                            <p>Mathématiquement, le type réel comporte un nombre infini de valeurs.</p>
+                            <p>Mathématiquement, le type réel comporte un nombre infini de valeurs. Dans tout ordinateur, cependant, une information de type réel est codée sur un nombre limité de bits. Entre deux valeurs de type réel, il n'existe pas toujours une valeur de type réel. L'arithmétique utilisée avec des valeurs de type réel peut conduire à des résultats légèrement faussés en raison des erreurs d'arrondi. Si les types entiers sont des types exacts, les types réels sont par essence des approximations ... et peuvent donc introduire des problèmes de précision et de portabilité. Les nombres réels sont représentés en notation à virgule flottante? Ils se composent d'une partie fractionnaire (la mantisse) que multiplie un exposant. Le nombre de chiffres significatifs de la mantisse et l'intervalle de valeurs possibles pour l'exposant déterminent l'intervalle et la précision du type réel.</p>
+                            <p class="em">Remarque : Toutes les opérations arithmétiques sur des valeurs de type réel sont exécytées avec l'intervalle et la précision du type EXTENDED. Cette plus grande précision permet de réduire les erreurs d'arrondi, et la largeur de l'intervalle permet de réduire les risques de dépassements de capacité positifs et négatifs.</p>
+                            <h4>Comparaison de réels :</h4>
+                            <p>Du fait que les valeurs de type réel sont des approximations, les résultats de comparaisons de valeurs de types réels différents ne sont pas toujours conformes à l'attente.</p>
+<pre><code>//...
+var
+    x : Single ;
+    y : Double ;
+    r : Real ;
+
+begin
+    x := 1 / 3 ;
+    y := 1 /3 ;
+    writeln(x : y) ;    // FALSE
+    r := 1 / 3 ;
+    writeln(r = 1 / 3) ;    // FALSE
+    // ...
+end.</code></pre>
+                            <p>Le premier writeln affichera FALSE. Cette "inexactitude" vient de ce que la précision de x est de 7 à 8 chiffres, alors que celle de y est de 15 à 16 chiffres. Ainsi, lorsque ces deux valeurs sont converties en type extended, elles ne coïncident que sur 7 ou 8 chiffres. De la même manière, le deuxième writeln affichera FALSE puisque le résultat de 1/3 est calculé avec 20 chiffres significatifs.</p>
+<pre><code>//...
+var
+    s : Single ; d : Double ; e : extended ;
+begin
+    s := 1 / 3 ; d := 1 / 3 ; e := 1 / 3 ;
+    writeln(s : 20 : 17) ;  // 0.33333334326744080
+    writeln(d : 20 : 17) ;  // 0.33333333333333331
+    writeln(e : 20 : 17) ;  // 0.33333333333333333
+    //...
+end.</code></pre>
+                            <h4>Opérations :</h4>
+                            <p>Un certain nombre d'opérateurs arithmétiques binaires correspondent aux types réels.</p>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Opérateurs</th>
+                                        <th>Opérations</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>+</td>
+                                        <td>addition réelle</td>
+                                    </tr>
+                                    <tr>
+                                        <td>-</td>
+                                        <td>soustraction réelle</td>
+                                    </tr>
+                                    <tr>
+                                        <td>*</td>
+                                        <td>multiplication réelle</td>
+                                    </tr>
+                                    <tr>
+                                        <td>/</td>
+                                        <td>division réelle</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="em">Il est à remarquer que pour l'addition, la soustraction et la multiplication réelle, il suffit qu'un des opérandes soit de type réel (l'autre pouvant être de type entier).</p>
+                            <p class="em">Pour la division réelle (/), il est même permis que les deux opérandes soient de type entier; le résultat est évidemment toujours de type réel. Rappelons que le dénominateur doit être différent de zéro.</p>
+                            <p>Comme pour le type entier, il existe deux opérateurs arithmétiques unaires : l'opérateur identité de signe (+) et l'opérateur inversion de signe (-).</p>
+                            <p>-(-8.3) est équivalent à +8.3 ou 8.3.</p>
+                            <p>Les opérateurs relationnels (= &lt;&gt; &lt; &lt;= &gt;= &gt;) s'appliquent également avec des opérandes de type réel; le type du résultat est évidemment booléen. Signalons pour terminer qu'un des opérandes peut être de type entier et l'autre d'un type réel.</p>
+                        </li>
+                        <li>
+                            <h3>Types scalaires prédéclarés :</h3>
+                            <ol>
+                                <li>
+                                    <h4>Types entiers :</h4>
+                                    <p>Pascal Objet distingue sept types fondamentaux (<span class="em">ne dépendant ni du processeur, ni du système d'exploitation</span>). Chacun d'eux représente un sous-ensemble particulier de valeurs entières.</p>
+                                    <table class="tableBalises">
+                                        <thead>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Intervalle</th>
+                                                <th>Format (en bits)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>SHORTINT</td>
+                                                <td>-128 .. +127</td>
+                                                <td>8 (signé)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>SMALLINT</td>
+                                                <td>-32768 .. 32767</td>
+                                                <td>16 (signé)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>LONGINT</td>
+                                                <td>-2147483648 .. 2147483647</td>
+                                                <td>32 (signé)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>INT64</td>
+                                                <td>-2<sup>63</sup> .. 2<sup>63</sup>-1</td>
+                                                <td>64 (signé)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>BYTE</td>
+                                                <td>0 .. 255</td>
+                                                <td>8 (non signé)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>WORD</td>
+                                                <td>0 .. 65535</td>
+                                                <td>16 (non signé)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>LONGWORD</td>
+                                                <td>0 .. 4294967295</td>
+                                                <td>32 (non signé)</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p>Les types entiers génériques sont <span class="html">Integer</span> et <span class="html">Cardinal</span>. L'intervalle et le format sont ceux qui permettent les calculs entiers les plus rapides en tenant compte du processeur et du système d'exploitation sous-jacent.</p>
+                                    <table class="tableBalises">
+                                        <thead>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Intervalle</th>
+                                                <th>Format</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>INTEGER</td>
+                                                <td>-32768 .. 32767</td>
+                                                <td>16-bits signé</td>
+                                            </tr>
+                                            <tr>
+                                                <td>CARDINAL</td>
+                                                <td>0 .. 65535</td>
+                                                <td>16-bits non signé</td>
+                                            </tr>
+                                            <tr>
+                                                <td>INTEGER</td>
+                                                <td>-2147483648 .. 214743647</td>
+                                                <td>32-bits signé</td>
+                                            </tr>
+                                            <tr>
+                                                <td>CARDINAL</td>
+                                                <td>0 .. 4294967295</td>
+                                                <td>32-bits non signé</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p>Les propriétés de l'arithmétique ordinaire ne s'appliquent que dans la mesure où le résultat de l'opération reste dans le domaine, c'est-à-dore qu'il n'y ait pas de <span class="em">dépassement de capacité</span>. Cette restriction mise à part, toute opération sur des données entières est exacte.</p>
+                                    <p>Les opérateurs suivants s'appliquent à des opérandes de type entier et produisent un résultat entier.</p>
+                                    <table class="tableBalises">
+                                        <thead>
+                                            <tr>
+                                                <th>Opérateurs</th>
+                                                <th>Opérations</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>+</td>
+                                                <td>addition entière</td>
+                                            </tr>
+                                            <tr>
+                                                <td>-</td>
+                                                <td>soustraction entière</td>
+                                            </tr>
+                                            <tr>
+                                                <td>*</td>
+                                                <td>multiplication entière</td>
+                                            </tr>
+                                            <tr>
+                                                <td>DIV</td>
+                                                <td>division entière</td>
+                                            </tr>
+                                            <tr>
+                                                <td>MOD</td>
+                                                <td>modulo (reste de la division entière)</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p>Les opérateurs DIV et MOD exigent que le second opérande soit différent de zéro.</p>
+                                    <p>Les opérateur relationnels (= &lt;&gt; &lt; &lt;= &gt;= &gt;) s'appliquent également avec des opérandes de type entier; le type du résultat est évidemment booléen.</p>
+                                    <p>Il existe également des opérations logiques qui s'appliquent à des entiers pour donner des entiers. Ces "entiers" doivent cependant s'interpréter comme des <span class="em">chaînes de bits</span>.</p>
+                                    <p>Les opérations <span class="em">I shl J</span> et <span class="em">I shr J</span> décalent la valeur I de J bits vers la gauche pour shl, et vers la droite pour shr. Le résultat est du même type entier que I.</p>
+                                    <table class="tableBalises">
+                                        <thead>
+                                            <tr>
+                                                <th>Opérateur</th>
+                                                <th>Opération</th>
+                                                <th>Types des opérandes</th>
+                                                <th>Type du résultat</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>not</td>
+                                                <td>négation binaire</td>
+                                                <td>entier</td>
+                                                <td>entier</td>
+                                            </tr>
+                                            <tr>
+                                                <td>and</td>
+                                                <td>et binaire</td>
+                                                <td>entier</td>
+                                                <td>entier</td>
+                                            </tr>
+                                            <tr>
+                                                <td>or</td>
+                                                <td>ou binaire</td>
+                                                <td>entier</td>
+                                                <td>entier</td>
+                                            </tr>
+                                            <tr>
+                                                <td>xor</td>
+                                                <td>ou exclusif binaire</td>
+                                                <td>entier</td>
+                                                <td>entier</td>
+                                            </tr>
+                                            <tr>
+                                                <td>shl</td>
+                                                <td>décalage à gauche binaire</td>
+                                                <td>entier</td>
+                                                <td>entier</td>
+                                            </tr>
+                                            <tr>
+                                                <td>shr</td>
+                                                <td>décalage à droite binaire</td>
+                                                <td>entier</td>
+                                                <td>entier</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+<pre><code>program TestBin;
+{$APPTYPE CONSOLE}
+
+const ZERO : Cardinal = 0 ;
+var  masque , x : Cardinal ;
+
+begin
+        write('valeur positive : ') ;
+        readLn(x) ;
+
+        masque := not(not ZERO shr 1) ;
+        repeat
+                if (x and masque) &lt;&gt; ZERO
+                    then write('1')
+                    else write('0')
+                {fi} ;
+                masque := masque shr 1
+        until masque = ZERO ;
+        writeLn   ;
+        readLn
+end.</code></pre>
+                                    <img src="../images/TestBin.png" alt="">
+                                </li>
+                                <li>
+                                    <h4>Type CHAR :</h4>
+                                    <p>Le type CHAR comprend l'ensemble des caractères disponibles. Malheureusement il n'existe pas d'ensemble de caractères qui soit accepté par tous les ordinateurs. La définition du Pascal standard ne donne donc que des conventions générales.</p>
+                                    <p>Ainsi, l'ordre des caractères doit préserver l'ordre alphabétique des lettres et l'ordre numérique des chiffres : <span class="em">'a' &lt; 'b'</span> et <span class="em">'0' &lt; '9'</span>.</p>
+                                    <p>Les valeurs de type CHAR sont pourvues d'un nombre ordinal qui est un entier non négatif et qui traduit le rang de chaque caractère. L'implémentation qui est la nôtre a été décrite au chapitre 3. Le caract!re 'A' y possède le numéro d'ordre 65, 'B' 66, ... 'a' 95 et 'b' 96 ...</p>
+                                    <p>Les opérateurs relationnels s'appliquent à des opérandes de type CHAR. Dans notre environnement, l'expression (<span class="em">'A' &lt; 'a'</span>) a la valeur TRUE.</p>
+                                    <p>Toutes ces propriétés nous rappellent bien que le type de caracyère générique.</p>
+                                    <p>Les types de caractères fondamentaux sont AnsiChar et WideChar.</p>
+                                    <p>Les valeurs du type AnsiChar sont les caractères (en octets), rangés dans l'ordre du jeu de caractères ANSI étendu.</p>
+                                    <p>Les valeurs du type WideChar sont les caractères (en mots), rangés dans l'ordre du jeu Unicode. Les 256 premiers caractères du jeu Unicode correspondent aux caractères ANSI.</p>
+                                </li>
+                                <li>
+                                    <h4>Type BOOLEAN :</h4>
+                                    <p>Une valeur booléenne est une des valeurs logiques "vrai" ou "faux" que l'on notera par les identificateurs de constantes prédéfinis TRUE et FALSE.</p>
+                                    <p>Les opérateurs booléens sont :</p>
+                                    <ul>
+                                        <li>
+                                            <p>la conjonction logique (AND)</p>
+                                        </li>
+                                        <li>
+                                            <p>la disjonction logique (OR)</p>
+                                        </li>
+                                        <li>
+                                            <p>la négation (NOT)</p>
+                                        </li>
+                                        <li>
+                                            <p>le Pascal Objet ajoute l'opérateur XOR qui correspond au <span class="em">ou exclusif logique</span>.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Ces opérateurs "opèrent" entre variables, constantes et expressions de types booléens.</p>
+                                    <h5>Opérations booléennes :</h5>
+                                    <table class="tableBalises">
+                                        <thead>
+                                            <tr>
+                                                <th>Opérateur</th>
+                                                <th>Opération</th>
+                                                <th>Type des opérandes</th>
+                                                <th>Type du résultat</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>not (unaire)</td>
+                                                <td>négation logique</td>
+                                                <td>booléen</td>
+                                                <td>booléen</td>
+                                            </tr>
+                                            <tr>
+                                                <td>and</td>
+                                                <td>et logique</td>
+                                                <td>booléen</td>
+                                                <td>booléen</td>
+                                            </tr>
+                                            <tr>
+                                                <td>or</td>
+                                                <td>ou logique</td>
+                                                <td>booléen</td>
+                                                <td>booléen</td>
+                                            </tr>
+                                            <tr>
+                                                <td>xor</td>
+                                                <td>ou exclusif logique</td>
+                                                <td>booléen</td>
+                                                <td>booléen</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p>Si p et q sont des variables booléennes, on a :</p>
+                                    <table class="tableBalises">
+                                        <thead>
+                                            <tr>
+                                                <th>p</th>
+                                                <th>q</th>
+                                                <th>p AND q</th>
+                                                <th>p OR q</th>
+                                                <th>p XOR q</th>
+                                                <th>NOT p</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>TRUE</td>
+                                                <td>TRUE</td>
+                                                <td>TRUE</td>
+                                                <td>TRUE</td>
+                                                <td>FALSE</td>
+                                                <td>FALSE</td>
+                                            </tr>
+                                            <tr>
+                                                <td>TRUE</td>
+                                                <td>FALSE</td>
+                                                <td>FALSE</td>
+                                                <td>TRUE</td>
+                                                <td>TRUE</td>
+                                                <td>FALSE</td>
+                                            </tr>
+                                            <tr>
+                                                <td>FALSE</td>
+                                                <td>TRUE</td>
+                                                <td>FALSE</td>
+                                                <td>TRUE</td>
+                                                <td>TRUE</td>
+                                                <td>TRUE</td>
+                                            </tr>
+                                            <tr>
+                                                <td>FALSE</td>
+                                                <td>FALSE</td>
+                                                <td>FALSE</td>
+                                                <td>FALSE</td>
+                                                <td>FALSE</td>
+                                                <td>TRUE</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p>Les autres fonctions logiques (il y en a seize en tout !) peuvent être construites grâce aux opérateurs de relation.</p>
+                                    <h5>Lois de de Morgan :</h5>
+                                    <p>Les lois de de Morgan sont souvent très utiles si l'on désire, par exemple, passer d'une condition de continuation à la condition de terminaison inverse.</p>
+                                    <p>NOT (p OR q) = NOT p AND NOT q</p>
+                                    <p>NOT (p AND q) = NOT p OR NOT q</p>
+                                    <p>Exemple : le complémentaire de l'expression booléenne <span class="em">(x &gt;= 15) OR (y &lt; 4)</span> est <span class="em">(x &lt; 15) AND (y &gt;= 4)</span>.</p>
+                                </li>
+                            </ol>
                         </li>
                     </ol>
                 </article>
