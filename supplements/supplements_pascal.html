@@ -53,6 +53,7 @@
                         <li><a href="#entete_partie_declaration">En-tête et partie déclaration</a></li>
                         <li><a href="#partie_instruction">Partie instruction</a></li>
                         <li><a href="#types">Types</a></li>
+                        <li><a href="#instructions_structurees">Instructions structurées</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1390,8 +1391,7 @@ ch := GRAM ;    // ch := TChoix(2) ;</code></pre>
                                     <p>Un type de données peuvent être défini comme un intervalle d'un autre type scalaire déjà défini. Cette définition donne la plus petite et la plus grande valeur de l'intervalle. La première constante spécifie la borne inférieure et ne dois pas être plus grande que la deuxième constante, la borne supérieure (ces deux constantes sont du même type scalaire).</p>
                                     <p>Un type intervalle conserve toutes les priorités du type scalaire associé; il n'y a aucun moyen de restreindre l'ensemble des opérations du type de base ! Il n'est restreint que dans l'échelle de ses valeurs; c'est pourquoi on peut parler de <span class="em">sous-type</span>.</p>
                                     <p>Exemples :</p>
-<pre><code>
-type TJour = (LU,MA,ME,JE,VE,SA,DI) ;
+<pre><code>type TJour = (LU,MA,ME,JE,VE,SA,DI) ;
      THeure = 0..60 ;
      TMajuscule = 'A'..'Z' ;
      Travail = LU..VE ;</code></pre>
@@ -1548,6 +1548,151 @@ end.</code></pre>
                                     <img src="../images/regles_priorites_Pascal.png" alt="">
                                 </li>
                             </ul>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="instructions_structurees">Instructions structurées :</h2>
+                    <p class="em">Nous allons au cours de ce chapitre étudier deux nouvelles instructions structurées : l'instruction "FOR" qui est une répétitive et l'instruction "CASE" qui est une conditionnelle particulière.</p>
+                    <ul>
+                        <li>
+                            <p>L'instruction IF dans le choix entre deux éventualités selon la valeur booléenne d'une expression. L'instruction CASE, ou instruction de sélection, permet de choisir entre n éventualités selon la valeur discrète d'une expression appelée expression de sélection. Cette instruction permettra donc à votre programme d'effectuer - sous certaines conditions - un choix parmi plusieurs possibilités sans devoir employer des quantités d'instructions IF.</p>
+                        </li>
+                        <li>
+                            <p>L'instruction FOR s'utilisera lorsque l'on désirera lorsque l'on désirera un certain traitement un nombre précis de fois.</p>
+                        </li>
+                    </ul>
+                    <p>Ces deux instructions ont en commun le fait qu'elles sont à la fois limitées et puissantes.</p>
+                    <p>Une autre caractéristique commune est le fait qu'elles ne sont pas "standardisées". D'un langage algorithmique à l'autre et même parfois d'une implémentation à l'autre d'un même langage, des variantes significatives existent.</p>
+                    <p>Proposer dans ce cas une forme générale de ces instructions en L.D.A est difficile. Tout au plus, pouvons-nous proposer une traduction L.D.A des instructions "CASE" et "FOR" Pascal !</p>
+                    <p>Par exemple :</p>
+<pre><code>cas où (expression de sélection) vaut
+    v1 : traitement1
+    v2 : traitement2
+    ... : ...
+    autres cas : traitementN
+fincas
+
+pour Vc allant de Vi à Vf par pas de +1 faire
+    traitement
+fpour</code></pre>
+                    <p>Avant de passer à l'étude détaillée de ces deux instructions, il peut être intéressant de signaler qu'il existe dans certains langages une instruction de sélection généralisée sans sélecteur que l'on nomme choix multiple.</p>
+                    <p>La forme L.D.A du choix multiple pourrait être la suivante :</p>
+<pre><code>cas où
+        condition1 : traitement1
+        condition2 : traitement2
+        ...
+        autre cas : traitementN
+fincas</code></pre>
+                    <p>Dans un choix multiple, les conditions sont mutuellement exclusives. Cette instruction peut être facilement simulée en Pascal :</p>
+<pre><code>if expr1
+    then instruction1
+    else
+        if expr2
+            then instruction2
+            else
+                if expr3
+                    then instruction3
+                    else instructionN</code></pre>
+                    <p>Pour éviter une cascade inutile de tests, on a tout intérêt à ordonner les tests dans le sens des probabilités décroissantes. Il n'y a, de plus, aucune raison d'imbriquer les instructions...</p>
+<pre><code>if expr1 then instruction1
+else if expr2   then instruction2
+else if expr3   then instruction3
+else    instructionN</code></pre>
+                    <ol>
+                        <li>
+                            <h3>Instruction CASE :</h3>
+                            <p>L'instruction CASE est utilisée pour choisir une action parmi plusieurs suivant la valeur d'une expression.</p>
+                            <p>Syntaxe :</p>
+                            <img src="../images/instruction_CASE_Pascal.png" alt="">
+                            <p>Exemples :</p>
+<pre><code>...
+case abs(k) of
+    0 : p := 0 ;
+    1..5,7 : begin
+                p := m - 1
+                m := 0
+             end ;
+    else{case} p := m + 1
+end{case}
+...</code></pre>
+<pre><code>case caract of
+    'a', 'e', 'i', 'o', 'u', 'y' : writeln('voyelle minuscule') ;
+    'A', 'E', 'I', 'O', 'U', 'Y' : writeln('voyelle majuscule') ;
+    'b'..'d', 'f'..'h', 'j'..'n', 'p'..'t', 'v'..'x', 'z' : writeln('consonnes minuscules') ;
+    'B'..'D', 'F'..'H', 'J'..'N', 'P'..'T', 'V'..'X', 'Z' : writeln('consonnes majuscules') ;
+    '0'..'9' : writeln('chiffres')
+    else{case} writeln('autres caractères ...')
+end{case} ;
+...</code></pre>
+                            <h4>Sémantique :</h4>
+                            <p>L'exécution de cette instruction conditionnelle commence par celle de l'expression de sélection qui produit une valeur V d'un type scalaire. Le choix de la liste de choix qui contient cette valeur V parmi les sélecteurs de sa liste de sélecteurs est sélectionné et l'action correspondante est exécutée.</p>
+                            <p>Les sélecteurs sont aussi appelés étiquettes de cas ou encore constantes de cas; ces sélecteurs sont en effet des constantes.</p>
+                            <p>Ils doivent être <span class="em">uniques</span> et d'un type scalaire compatible avec le type de l'expression de sélection. <span class="em">Dans les réalisations anciennes, Pascal Objet imposait que l'expression de sélection soit d'un type scalaire dont les bornes étaient comprises entre certaines valeurs (-32768 et 32767).</span></p>
+                            <p>Que se passe-t-il si aucun des sélecteurs ne correspond à la valeur de sélection ?</p>
+                            <ul>
+                                <li>
+                                    <p>Si la partie ELSE (autre choix) est présente, l'instruction correspondante est exécutée,</p>
+                                </li>
+                                <li>
+                                    <p>sinon aucune instruction n'est exécutée et le traitement se poursuit par l'exécution de l'instruction (si elle existe) qui suit l'instruction CASE.</p>
+                                </li>
+                            </ul>
+                            <p class="em">Remarques :</p>
+                            <ul>
+                                <li>
+                                    <p class="em">En Pascal, l'instruction case possède cependant certains défauts. En absence d'une clause else, le fait qu'aucune des constantes de cas ne soit égale à la valeur de l'expression de sélection devrait constituer une ereeur.</p>
+                                </li>
+                                <li>
+                                    <p class="em">Autre remarque qui est une constation : le else d'une instruction case peut être précédé d'un point-virgule (;) et le délimiteur final d'une construction case est le mot réservé end (auquel ne correspond aucun begin !).</p>
+                                </li>
+                                <li>
+                                    <p class="em">Pour les différencier de leurs autres utilisations, il peut être utile d'ajouter un commentaire à ces mots réservés (cfr exemple ci-dessus else{case} et end{case}).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h3>Instruction FOR :</h3>
+                            <p>L'instruction for indique qu'une instruction (le corps de la répétitive) doit être exécutée un nombre précis de fois, pendant qu'une variable de contrôle progresse au sein d'une intervalle de valeurs discrètes.</p>
+                            <p>La variable de contrôle progresse donc entre deux valeurs fixées : la valeur initiale et la valeur finale, et cette progression est soit ascendante (TO), soit descendante (DOWNTO).</p>
+                            <p>Syntaxe :</p>
+                            <img src="../images/instruction_FOR_Pascal.png" alt="">
+                            <p>L'emploi du mot réservé to provoque l'incrémentation d'une unité à la fois de la variable de contrôle à chaque tour de boucle, alors que l'emploi de downto en provoque la décrémentation.</p>
+                            <p>L'instruction n'est pas exécutée si, en utilisant la clause to, la valeur initiale est strictement supérieure à la valeur finale ou si, en utilisant la clause downto, la valeur initiale est strictement inférieure à la valeur finale.</p>
+                            <p>La variable de contrôle est une variable (<span class="em">déclarée dans le bloc contenant l'instruction for</span>) de type scalaire et les valeurs initiales et finales sont des expressions de type compatible avec la variable de contrôle.</p>
+                            <p>L'instruction suivante provoquera l'affichage des valeurs de 1 à 10 :</p>
+<pre><code>for compteur := 1 to 10 do write(compteur:4)</code></pre>
+                            <p>Celle-ci lit n entiers et effectue leur somme :</p>
+<pre><code>somme := 0 ;
+for compteur := 1 to n do
+    begin
+        readln(nbre) ;
+        somme := somme + nbre
+    end ;
+...</code></pre>
+                            <p>Voici, comme dernier exemple un programme dont l'exécution provoquera l'affichage des jours de la semaine.</p>
+<pre><code>program AfficherJourSemaine ;
+{$APPTYPE CONSOLE}
+
+type TJour = (LU,MA,ME,JE,VE,SA,DI) ;
+
+var j : TJour ;
+
+begin
+    for j := LU TO DI DO
+    case j of
+        LU : writeln('lundi') ;
+        MA : writeln('mardi') ;
+        ME : writeln('mercredi') ;
+        JE : writeln('jeudi') ;
+        VE : writeln('vendredi') ;
+        SA : writeln('samedi');
+        DI : writeln('dimanche')
+    end{case}  ;
+
+    readLn
+end.</code></pre>
+                            <p></p>
                         </li>
                     </ol>
                 </article>
