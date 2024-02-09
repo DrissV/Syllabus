@@ -55,6 +55,7 @@
                         <li><a href="#types">Types</a></li>
                         <li><a href="#instructions_structurees">Instructions structurées</a></li>
                         <li><a href="#type_string">Type string (chaînes courtes)</a></li>
+                        <li><a href="#fonctions_procedures">Fonctions et procédures</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -2071,9 +2072,413 @@ end.</code></pre>
                             <p>Routines de gestion de chaînes (de type Pascal).</p>
                             <p><span class="em">Unité :</span>System</p>
                             <p class="em">Déclaration :</p>
-<pre><code>function Copy(S:String,Index,Count:Integer):String;</code></pre>
+<pre><code>function Copy(S:String;Index,Count:Integer):String;</code></pre>
                             <p class="em">Description :</p>
                             <p>La fonction Copy renvoie une sous-chaîne d'une chaîne.</p>
+                            <p>S est une expression de type chaîne. Index et Count sont des expressions entières. Copy renvoie une chaîne de Count caractères en commençant à S[Index].</p>
+                            <p>Si Index est plus grand que la longueur de S, Copy renvoie une chaîne vide.</p>
+                            <p>Si Count spécifie davantage de caractères qu'il y en a de disponibles, seuls les caractères de S[Index] jusqu'à la fin de S sont renvoyés.</p>
+                            <p>Exemple :</p>
+<pre><code>var S: string;
+begin
+    S := 'ABCDEF';
+    S := Copy(S, 2, 3);	{ 'BCD' }
+end;</code></pre>
+<pre><code>function _copy(ch : String;p,n : Byte) : String ;
+var   k,lg : Byte ;
+begin
+        Result := '' ;
+        lg := length(ch) ;
+        if p &lt;= lg then
+        begin
+            if n &gt; lg-p+1 then n := lg-p+1 {fi} ;
+            for k := p to p+n-1 
+            do Result := Result + ch[k] {od}
+        end
+    {fi}
+end ;</code></pre>
+<pre><code>function __copy(ch : String;p,n : Byte) : String ;
+var   k,lg : Byte ;
+begin
+        Result := '' ;
+        lg := length(ch) ;
+        k := 0 ;
+        while (k+p &lt;= lg) and (k &lt; n) do
+            begin
+                Result := Result + ch[k+p] ;
+                inc(k)
+            end
+        {od}
+end ;</code></pre>
+                        </li>
+                        <li>
+                            <h3>Procédure Delete :</h3>
+                            <p>Routines de gestion de chaîne (de type Pascal).</p>
+                            <p><span class="em">Unité :</span> System</p>
+                            <p class="em">Déclaration :</p>
+<pre><code>procedure Delete(var S:string;Index,Count:Integer);</code></pre>
+                            <p class="em">Description :</p>
+                            <p>La procédure Delete supprime une sous-chaîne de Count caractères de la chaîne S en commençant à partir de S[Index].</p>
+                            <p>S est une expression de type chaîne. Index et Count sont des expressions entières.</p>
+                            <p>Si Index est plus grand que la longueur de S, aucun caractère n'est supprimé. Si Count spécifie davantage de caractères qu'il y en a de disponibles après S[Index], Delete supprime le reste de la chaîne.</p>
+                            <p>Exemple :</p>
+<pre><code>var s: string;
+begin
+    s := 'Honest Abe Lincoln';
+    Delete(s,8,4);
+    Canvas.TextOut(10, 10, s); { 'Honest Lincoln' }
+end;</code></pre>
+<pre><code>procedure _delete(var ch : String ; p,n : Byte) ;
+begin
+    ch := CONCAT(copy(ch,1,p-1),copy(ch,p+n,length(ch)-n-p+1))
+end ;</code></pre>
+                        </li>
+                        <li>
+                            <h3>Procédure Insert :</h3>
+                            <p>Routines de gestion de chaînes (de type Pascal).</p>
+                            <p><span class="em">Unité :</span> System</p>
+                            <p class="em">Déclaration :</p>
+<pre><code>procedure Insert(Source:String;var S:String,Index:Integer);</code></pre>
+                            <p class="em">Description :</p>
+                            <p>La procédure Insert fusionne une sous-chaîne dans une chaîne en commençant au point spécifié.</p>
+                            <p>Source est une expression de type chaîne. S est une variable de type chaîne de longueur quelconque et Index une expression entière.</p>
+                            <p>Insert insère Source dans S à la position S[index]. Si la chaîne résultante excède 255 caractères, elle est tronquée après le 255<sup>ème</sup> caractère.</p>
+                            <p class="em">Exemple :</p>
+<pre><code>var
+    S: string;
+begin
+S := 'Honest Lincoln';
+Insert('Abe ', S, 8);      { 'Honest Abe Lincoln' }
+end;</code></pre>
+<pre><code>procedure _insert(ss:String;var ch:String; p:Byte) ;
+begin
+        ch := copy(ch,1,p-1)+ss+copy(ch,p,length(ch)-p+1)
+end ;</code></pre>
+                        </li>
+                        <li>
+                            <h3>Fonction Pos :</h3>
+                            <p>Routines de gestion de chaînes (de type Pascal).</p>
+                            <p><span class="em">Unité : </span>System</p>
+                            <p class="em">Déclaration :</p>
+<pre><code>function Pos(Substr:string;S:string):Byte;</code></pre>
+                            <p class="em">Description :</p>
+                            <p>La fonction Pos recherche une sous-chaîne dans une chaîne.</p>
+                            <p>Substr et S sont des expressions de type chaîne.</p>
+                            <p>Pos recherche Substr dans S et renvoie une valeur entière donnant l'indice du premier caractère de Substr dans S.</p>
+                            <p>Si Substr n'est pas trouvée, Pos renvoie zéro.</p>
+                            <p class="em">Exemple :</p>
+<pre><code>var S: string;
+begin
+    S := '   123.5';
+    { Convertit les espaces en zéros }
+    while Pos(' ', S) &gt; 0 do  S[Pos(' ', S)] := '0';
+end;</code></pre>
+<pre><code>function _pos(ss,ch : String) : Integer ;
+var lgch,lgss,k,ich,iss : Integer ;
+begin
+        lgch := length(ch) ;
+        lgss := length(ss) ;
+        result := 0 ;
+        k := 1 ;
+        while(k + lgss - 1 &lt;= lgch) do
+        begin
+            ich := k ;
+            iss := 1 ;
+            while (is&lt;=lgss)and(ch[ich]=ss[iss]) do
+            begin
+                    inc(ich) ;
+                    inc(iss) ;
+            end ;
+            if iss &gt; lgss then
+            begin
+                Result := k ;
+                break
+            end ;
+            inc(k)
+        end
+end ;</code></pre>
+                        </li>
+                        <li>
+                            <h3>Routines de gestion de chaînes :</h3>
+                            <dl>
+                                <dt>AnsiCompareStr</dt>
+                                <dd>Effectue une comparaison de distinction majuscule/minuscule entre deux chaînes.</dd>
+                                <dt>AnsiCompareText</dt>
+                                <dd>Effectue une comparaison de deux chaînes sans distinction majuscule/miniscules.</dd>
+                                <dt>AnsiLowerCase</dt>
+                                <dd>Convertit des caractères en minuscules.</dd>
+                                <dt>AnsiUpperCase</dt>
+                                <dd>Convertit des caractères en majuscules.</dd>
+                                <dt>CompareStr</dt>
+                                <dd>Réalise une comparaison de deux chaînes en distinguant les minuscules des majuscules.</dd>
+                                <dt>CompareText</dt>
+                                <dd>Réalise une comparaison de deux chaînes en ne distinguant pas les minuscules des majuscules.</dd>
+                                <dt>Concat</dt>
+                                <dd>Concaténation de plusieurs chaînes de caractères.</dd>
+                                <dt>Copy</dt>
+                                <dd>Renvoie une partie d'une chaîne de caractères.</dd>
+                                <dt>Delete</dt>
+                                <dd>Supprime une partie d'une chaîne de caractères.</dd>
+                                <dt>Insert</dt>
+                                <dd>Insère une sous-chaîne dans une chaîne.</dd>
+                                <dt>IntToHex</dt>
+                                <dd>Convertit un entier en valeur hexadécimale.</dd>
+                                <dt>IntToStr</dt>
+                                <dd>Convertit un entier en une chaîne.</dd>
+                                <dt>IsValidIdent</dt>
+                                <dd>Renvoie True (Vrai) si la chaîne donnée est un identificateur valide.</dd>
+                                <dt>Length</dt>
+                                <dd>Renvoie la taille dynamique d'une chaîne.</dd>
+                                <dt>LowerCase</dt>
+                                <dd>Transforme en minuscules la chaîne donnée.</dd>
+                                <dt>Pos</dt>
+                                <dd>Recherche une sous-chaîne dans une chaîne.</dd>
+                                <dt>Str</dt>
+                                <dd>Convertit une valeur numérique en une chaîne.</dd>
+                                <dt>StrToInt</dt>
+                                <dd>Convertit une chaîne en un entier.</dd>
+                                <dt>StrToIntDef</dt>
+                                <dd>Convertit une chaîne en un entier.</dd>
+                                <dt>UpperCase</dt>
+                                <dd>Transforme en majuscule la chaîne donnée.</dd>
+                                <dt>Val</dt>
+                                <dd>Convertit une chaîne en sa représentation numérique.</dd>
+                            </dl>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="fonctions_procedures">Fonctions et procédures :</h2>
+                    <blockquote>
+                        <p>"Si d'un point de vue philosophique les procédures permettent de définir une nouvelle instruction, d'un point de vue pratique elles nous donnent la possibilité d'utiliser la méthode d'analyse descendante (raffinements successifs). On peut ainsi se concentrer d'abord sur ce que l'on doit faire (et le nommer) avant de réfléchir à la façon dont on va le faire. Le Quoi faire ? avant le Comment faire ?, c'est bien cela la philosophie de l'abalyse descendante.</p>
+                        <p>C'est ce que l'on nomme parfois l'abstraction procédurale.</p>
+                        <p>De la même façon, on peut vouloir faire abstraction des détails d'un calcul complexe. D'un point de vue philosophique tout autant que pratique, les fonctions nous permettent de définir de nouveaux opérateurs du langage.</p>
+                        <p>Le mécanisme d'abstraction procédurale est essentiel dans la conception d'un logiciel que l'on veut modulaire et fiable. L'essence même de ce mécanisme réside dans le fait que l'on peut utiliser une procédure ou une fonction sans se soucier de la façon dont elle est implémentée. Cela n'est possible que si nous savons ce que fait la procédure, c'est-à-dire que nous connaissons la syntaxe et la sémantique de son utilisation.</p>
+                        <p>Si cette procédure est prédéfinie, à nous de nous ajuster à ses spécifications; si nous écrivons nous-mêmes la procédure, nous aurons à en déterminer la syntaxe et la sémantique d'appel."</p>
+                    </blockquote>
+                    <p>H. Paul HAIDUK.</p>
+                    <ol>
+                        <li>
+                            <h3>Introduction :</h3>
+                            <p>La résolution d'un problème passe souvent par sa décomposition en sous-problèmes et par la résolution de chacun d'eux.</p>
+                            <p>Cette décomposition d'une tâche complexe en tâches élémentaires est un des concepts fondamentaux de la programmation structurée. On parle alors de développement de programmes par raffinements successifs.</p>
+                            <p>En Pascal, les modules ainsi créés sont des sous-programmes qui sont soit des procédures, soit des fonctions.</p>
+                            <p>Cette modularité de programmes permet :</p>
+                            <ul>
+                                <li>
+                                    <p>une meilleure qualité de programmation</p>
+                                </li>
+                                <li>
+                                    <p>une mise au point aisée</p>
+                                </li>
+                                <li>
+                                    <p>une facilité de maintenance.</p>
+                                </li>
+                            </ul>
+                            <p>Le Pascal, nous le savons, offre un certain nombre d'outils de base qui sont les procédures et fonctions standards : <span class="html">ABS</span>, <span class="html">SUCC</span>, <span class="html">SQR</span>, <span class="html">CHR</span>, <span class="html">COPY</span>, <span class="html">DELETE</span>, <span class="html">POS</span> ...</p>
+                            <p>Une procédure ou une fonction apparaissent comme la définition d'un traitement.</p>
+                            <p>Cependant, une fonction est assimilable à une <span class="em">valeur</span> et une procédure à une <span class="em">instruction</span>.</p>
+                            <p>Ce sont en fait des sous-programmes écrits en langage machine et incorporés au Pascal. Nous ne connaissons de ces outils que les modes d'emploi.</p>
+                            <p>Le langage Pascal permet de créer ses propres fonctions et procédures.</p>
+                        </li>
+                        <li>
+                            <h3>Les fonctions :</h3>
+                            <ol>
+                                <li>
+                                    <h4>Rappel mathématique :</h4>
+                                    <p>En mathématique, l'utilisation d'une fonction f permet d'obtenir la valeur f(x<sub>0</sub>) de la fonction pour une valeur x<sub>0</sub> de la variable.</p>
+                                    <p>Soit la fonction f(x) = x<sup>2</sup> - 2x + 3, nous aurons f(2) = 3, f(5) = 18, ...</p>
+                                </li>
+                                <li>
+                                    <h4>Fonctions en Pascal :</h4>
+                                    <p>En Pascal, une fonction se définit comme une structure de programme autonome dont le but consiste à calculer puis renvoyer une valeur. Le type du résultat à retourner est une valeur qui peut être de tout type sauf d'un type fichier.</p>
+                                    <img src="../images/fonctions_Pascal.png" alt="">
+                                    <p>Considérons le programme suivant dans lequel nous utilisons les fonctions standard <span class="html">sin</span> et <span class="html">upcase</span>. Cette fonction renvoie le sinus de son argulent, qui représente un angle exprimé en radians. Comme la valeur retournée est de type Extended, on dit que la fonction <span class="html">sin</span> est de type Extended. Le programme fait également appel à une autre fonction standard : la fonction <span class="html">upcase</span> qui convertit en majuscule un caractère. Si le caractère passé en argument à la fonction n'appartient pas à l'étendue 'a'..'z', la fonction renvoie la valeur caractère non affectée.</p>
+<pre><code>program sinus;
+{$APPTYPE CONSOLE}
+
+var
+    angle : Extended ;
+    rep  : char ;
+
+begin
+    repeat
+        write('valeur d''un angle en radians : ') ;
+        readLn(angle) ;
+        writeLn('valeur du sinus : ',sin(angle):8:2) ;
+        write('continue O/N : ') ;
+        readLn(rep)
+    until upcase(rep) = 'N' ;
+
+    readLn
+end.</code></pre>
+                                    <p>À chaque répétition, il y a appel de la fonction <span class="em">SIN</span>. Pour chaque valeur de type Extended de l'argument, la fonction <span class="em">SIN</span> retournera la valeur du sinus correspondant.</p>
+                                    <p class="em">Exemple d'exécution :</p>
+<pre><code>valeur d'un angle en radians : 1.57079
+valeur du sinus :     1.00    
+continue O/N ? o
+valeur d'un angle en radians : 3.14159
+valeur du sinus :     0.00
+continue O/N ? o
+valeur d'un angle en radians : 4.71238 
+valeur du sinus :    -1.00
+continue O/N ? n</code></pre>
+                                    <p>La valeur de la variable angle est, dans notre exemple, l'argument (ou le paramètre effectif) de la fonction. L'argument doit être une valeur d'un type réel, il s'agit d'une expression réelle.</p>
+                                    <p>Exemples :</p>
+<pre><code>SIN(1.3)
+SIN(A) 
+SIN(A*PI/2) 
+SIN(ABS(X))</code></pre>
+                                    <p>Comme une fonction dénote une valeur, nous pourrons l'utiliser au sein d'une expression là où nous mettions une valeur.</p>
+<pre><code>y := 3 * SIN(x)   1
+writeln(sin(x))</code></pre>
+                                    <p>Remarquons que dans le programme sinus, il y a appel à 5 sous-programmes :</p>
+                                    <ul>
+                                        <li>
+                                            <p>appel à la procédure d'affichage <span class="em">write</span></p>
+                                        </li>
+                                        <li>
+                                            <p>appel à la procédure d'affichage <span class="em">writeLn</span></p>
+                                        </li>
+                                        <li>
+                                            <p>appel à la fonction </p>
+                                            <span class="em">sin</span>
+                                        </li>
+                                        <li>
+                                            <p>appel à la fonction <span class="em">upcase</span></p>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Déclarations de fonctions :</h3>
+                            <p>Une <span class="em">déclaration (de définition)</span> de fonction définit un sous-programme qui, nous l'avons déjà signalé, effectue un certain traitement avant de renvoyer une valeur.</p>
+                            <img src="../images/declarations_fonctions_Pascal.png" alt="">
+                            <p>Quand vous déclarez une fonction, vous spécifiez son nom, le nombre et le type des paramètres, ainsi que le type de la valeur renvoyée. La simple déclaration d'une fonction qui correspond à son en-tête est parfois appelé son prototype ou sa signature.</p>
+<pre><code>function sin(x : Extended) : Extended ;
+
+function upcase(ch : Char) : Char ;</code></pre>
+                            <p>Pour définir la fonction, il convient de faire suivre son en-tête du corps de la fonction.</p>
+                            <p>Le corps de la fonction est constitué d'un bloc, c'est-à-dire d'une partie déclaration et d'une partie instruction.</p>
+                            <p>Dans la partie déclaration seront déclarés et définis tous les objets locaux à la fonction : il pourra s'agir de constantes, types, variables et ... de procédures et fonctions. <span class="em">Une bonne règle de programmation consiste à déclarer localement au sous-programme tout objet dont il n'est jamais fait usage à l'extérieur.</span></p>
+                            <p>La partie instruction du corps de la fonction contient les instructions qui seront exécutées lors de l'activation de la fonction. Ce bloc doit contenir au moins une instruction pour affecter une valeur à la variable prédéfinie Result qui est propre à chaque fonction et du type de la fonction. Le résultat de la fonction est la dernière valeur affectée à cette variable spéciale. Si aucune instruction n'affecte de valeur à Result, la fonction retourne une valeur indéfinie. (<span class="em">Anciennement, on utilisait le nom de la fonction à la place de Result</span>).</p>
+                        </li>
+                        <li>
+                            <h3>Paramètres formels et Appel de fonction :</h3>
+                            <p>Des valeurs peuvent être passées à des sous-programmes par des paramètres. Ceux-ci fournissent un mécanisme de substitution permettant à la logique d'un sous-programme d'être utilisé avec différentes valeurs initiales, donnant évidemment des résultats différents.</p>
+                            <p>Il existe différentes sortes de paramètres !</p>
+                            <p>Ceux dont il est question ici sont les <span class="em">paramètres valeur</span>.</p>
+                            <p>Une fonction est activée par l'évaluation d'une expression contenant l'appel de la fonction.</p>
+                            <p>Cet appel de fonction se fait en écrivant le nom de la fonction doit être faite. Ces paramètres effectifs représentent des <span class="em">valeurs</span>.</p>
+                            <p>À chaque appel, les paramètres effectifs sont subtitués aux paramètres formels spécifiés dans l'en-tête de la fonction.</p>
+                            <p>L'ordre des paramètres passés est l'ordre d'apparition dans la liste des paramètres formels. Dans ce type de passage, <span class="em">chaque paramètre formel représente une variable locale au sous-programme qui est initialisé à la valeur du paramètre effectif correspondant</span>.</p>
+                            <p>Les types des paramètres formels et des paramètres effectifs doivent - c'est l'évidence - être compatibles.</p>
+                            <p>Le diagramme syntaxique définissant la liste de paramètres formels (<span class="em">paramètres valeur</span>) devient :</p>
+                            <img src="../images/parametres_formels_Pascal.png" alt="">
+                            <p>Exemples :</p>
+                            <p>Si la fonction <span class="html">COPY</span> n'existait pas, il conviendrait de l'écrire nous-même.</p>
+                            <p>À quoi ressemblerait le prototype d'une telle fonction ?</p>
+                            <p>La fonction <span class="html">COPY</span> renvoie une partie d'une chaîne de caractères. Elle renvoie une chaîne constituée de <span class="em">n</span> caractères à partir de la position <span class="em">p</span>.</p>
+                            <img src="../images/parametres_formels_Pascal_1.png" alt="">
+                            <p>L'en-tête de la fonction <span class="html">COPY</span> pourrait être :</p>
+<pre><code>function COPY (ch : string; p,n : integer) : string ;</code></pre>
+                        </li>
+                        <li>
+                            <h3>Paramètres constante :</h3>
+                            <p class="em">(Manuel de référence) :</p>
+                            <p>Un paramètre constante (const) est semblable à une constante locale ou à une variable en lecture seule. Les paramètres constantes sont semblables aux paramètres valeur à cette différence qu'il n'est pas possible d'affecter une valeur à un paramètre constante dans le corps de la routine, <span class="em">ni de le transmettre comme paramètre var à une autre routine</span>.</p>
+                            <p>L'utilisation de <span class="html">const</span> permet au compilateur d'optimiser le code pour les paramètres de type structuré ou chaîne.</p>
+                            <p>Le protocole de la fonction copy peut donc s'écrire :</p>
+<pre><code>function COPY(<span class="html">const</span> ch : string; p,n : integer) : string ;</code></pre>
+                        </li>
+                        <li>
+                            <h3>Exemples de définitions de fonctions :</h3>
+                            <p>En guise d'exercice, nous allons réécrire la fonction upcase ainsi que la fonction uppercase qui renvoie une chaîne en majuscules.</p>
+<pre><code>function uppercase(const S : String) : String ;</code></pre>
+<pre><code>program majuscule;
+{$APPTYPE CONSOLE}
+
+<span class="em">function charMaj(ch : Char) : Char ;
+begin
+    Result := ch ;
+    if (ch &gt;= 'a') and (ch &lt;= 'z') then
+        Result := chr( ord(ch) + ord('A') - ord('a') )
+    {fi}
+end ;
+
+function strMaj(const S : String) : String ;
+var k : Cardinal ;
+begin
+    Resukt := s ;
+    for k := 1 to length(Result) do
+        Result[k] := charMaj(Result[k]) ;
+end ;</span>
+
+var chaine : String ;
+begin
+    repeat
+        write('chaine : ') ;
+        readLn(chaine) ;
+        if chaine = '' then break ;
+        writeLn(strMaj(chaine)) ;
+        writeLn(chaine) ;
+    until False ;
+end .</code></pre>
+                            <p>Le programme majuscule correspond à une boucle généralisée. À chaque répétition, il y a appel à la fonction strMaj avec comme argument (paramètre effectif) la valeur courante de la variable chaîne de type String. La valeur de cette variable <span class="em">chaine</span> ne sera pas modifiée par l'exécution de la routine puisque (sémantiquement) c'est la valeur et non la variable qui est transmise !</p>
+                            <p class="em">Exemple d'exécution d'une répétition... :</p>
+                            <table class="tableBalises">
+                                <tbody>
+                                    <tr>
+                                        <td>...</td>
+                                        <td>...</td>
+                                    </tr>
+                                    <tr>
+                                        <td>write('Chaine :') ; readLn(chaine) ;</td>
+                                        <td>Chaine : <span class="em">aAzZeErRtTyY ! !</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>writeLn(strMaj(chaine)) ;</td>
+                                        <td class="em">AAZZEERRTTYY ! !</td>
+                                    </tr>
+                                    <tr>
+                                        <td>writeLn(chaine) ;</td>
+                                        <td class="em">aAzZeErRtTyY ! !</td>
+                                    </tr>
+                                    <tr>
+                                        <td>...</td>
+                                        <td>...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Pour chaque appel de la fonction strMaj, il y aura un appel à la fonction prédéfinie length et une suite d'appels à la fonction charMaj (en fait, un appel pour chaque caractère de la valeur String).</p>
+                        </li>
+                        <li>
+                            <h3>Problématique de l'usage des routines :</h3>
+                            <p>La structure du programme <span class="em">majuscule</span> reflète (en simplifié) celle de la majorité des programmes. Le programme principal lance successivement un ensemble de sous-programmes, chacun d'eux pouvant lancer ses propres sous-pogrammes...</p>
+                            <p>Ce mécanisme d'exécution revient à suspendre l'exécution du programme en cours. Le processus qui s'exécute se suspend par l'appel explicite d'un sous-programme et permet le lancement du processus associé au sous-programme. Lorsque l'exécution de ce sous-programme est terminée, le programme appelant reprend la main, et continue son exécution là où il l'avait suspendue.</p>
+                            <img src="../images/problematique_usage_routines.png" alt="">
+                            <p>Le concepteur, dans une démarche d'écriture structurée, donne grande importance aux routines. La forme générale de son projet est alors un ensemble de nombreux sous-programmes, chacun étant de taille fort réduite et de fonctionnalité simple, et l'exécution consiste en de nombreux appels de ces sous-programmes.</p>
+                            <p>Le programme principal a un rôle de lanceur. Il réalise certaines initialisations, puis passe la main. Dans tous les cas, c'est par lui qui commence l'exécution et également qu'elle se termine.</p>
+                        </li>
+                        <li>
+                            <h3>Bloc et Portée d'une déclaration :</h3>
+                            <p>Un bloc est composé d'un ensemble de déclarations suivi d'un ensemble d'instructions. Chaque bloc est contenu dans une déclaration de procédure, de fonction, de programme (ou d'unité).</p>
+                            <p>Tous les identificateurs déclarés dans la partie déclaration d'un bloc sont locaux à ce bloc.</p>
+                            <p>Une déclaration introduit un nom (identificateur) dans une portée.</p>
+                            <q class="em">La <span class="html">portée</span> d'une déclaration est la partie du texte du programme où l'association entre le nom de l'objet déclaré et sa desccription est d'application.</q>
+                            <p>On parle aussi parfois du domaine d'application d'une déclaration en lieu et place de la portée d'une déclaration.</p>
+                            <p class="em">La portée d'un identificateur déclaré dans une déclaration de constantes, de types, de variables, de procédures ou de fonctions s'étend de l'endroit de la déclaration jusqu'à la fin du bloc courant, en incluant tous les blocs définis à l'intérieur de ce bloc courant.</p>
+                            <p>Un identificateur déclaré dans un bloc peut être <span class="em">redéclaré</span> dans un bloc plus interne.</p>
+                            <p class="em">Visibilité :</p>
+                            <p><span class="em">Une déclaration est visible</span> dans la partie du texte où on peut l'identifier, c'est-à-dire où le nom déclaré peut être écrit et signifier l'objet décrit. Un identificateur est visible là où sa déclaration est visible.</p>
+                            <p>Une déclaration peut être visible dans toute l'étendue de sa portée mais peut aussi être <span class="em">masquée</span> par d'autres déclarations dont la portée et la visibilité chevauchent celles de la première déclaration.</p>
+                        </li>
+                        <li>
+                            <h3>Durée de vie :</h3>
+                            <p>Les variables et les sous-programmes, contrairement aux types, existent lors de l'exécution du programme <span class="em">&lt; ils occupent une place mémoire</span>.</p>
+                            <q class="em">La durée de vie d'un objet est la période durant laquelle cette mémoire lui est allouée.</q>
+                            <p>La durée de vie d'un objet est dite <span class="em">permanente</span> si cette mémoire lui est allouée pour toute la durée de l'exécution du programme.</p>
                         </li>
                     </ol>
                 </article>
