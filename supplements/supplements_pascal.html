@@ -1959,6 +1959,122 @@ begin
     readln
 end.</code></pre>
                         </li>
+                        <li>
+                            <h3>Quelques fonctions prédéfinies sur les chaînes de caractères :</h3>
+                            <ol>
+                                <li>
+                                    <h4>COPY(&lt;expr.chaîne&gt;,&lt;expr.entière&gt;,&lt;expr.entière&gt;) :</h4>
+                                    <p>Exemple : <span class="em">chaine := COPY(ch,p,n)</span></p>
+                                    <p>La fonction <span class="html">COPY</span> renvoie une chaîne contenant <span class="em">n</span> caractères de <span class="em">ch</span> à partir de la position <span class="em">p</span>. Si <span class="em">p</span> est supérieur à la longueur de <span class="em">ch</span>, une chaîne vide est renvoyée et si <span class="em">n</span> indique un nombre de caractères qui dépasse la fin de la chaîne <span class="em">ch</span>, seuls les caractères inclus dans la chaîne sont renvoyés.</p>
+<pre><code>program test_copy; 
+{$APPTYPE CONSOLE}
+
+var ch1,ch2,ch3,ch4:string;
+begin
+    ch1:='ABCDEFGH'    ;
+    ch2:=COPY(ch1,2,3) ;
+    ch3:=COPY(ch1,6,5) ;
+    ch4:=COPY(ch1,10,4);
+    writeLn(ch2);		{BCD}
+    writeLn(ch3);		{FGH}
+    writeLn(ch4);		{chaîne vide}
+
+    readLn
+end.</code></pre>
+                                </li>
+                                <li>
+                                    <h4>CONCAT(&lt;expr.chaîne&gt;,&lt;expr.chaîne&gt;,...) :</h4>
+                                    <p>Exemple : <span class="em">chaine := CONCAT(ch1,ch2,ch3)</span></p>
+                                    <p>La fonction <span class="html">CONCAT</span> renvoie une chaîne de <span class="em">ch1</span>, <span class="em">ch2</span>, <span class="em">ch3</span>. Si sa longueur dépasse 255 caractères, elle est tronquée après le 255<sup>ème</sup> caractères.</p>
+                                    <p><span class="em">CONCAT('AB','CDE','F')</span> retourne <span class="em">'ABCDEF'</span>.</p>
+                                    <p class="em">Remarque : Pascal propose également l'opérateur + pour traduire l'opération de concaténation. Le type du résultat est le type chaîne de caractères et les types opérandes peuvent être chaîne de caractères ou caractère.</p>
+                                    <p class="em">L'expression <span class="html">'AB'+'CDE'+'F'</span> a également la valeur <span class="html">'ABCDEF'</span>.</p>
+                                </li>
+                                <li>
+                                    <h4>LENGTH(&lt;expr.chaîne&gt;) :</h4>
+                                    <p>Exemple : <span class="em">longueur := LENGTH(ch)</span></p>
+                                    <p>La fonction <span class="html">LENGTH</span> renvoie un entier représentant la longueur effective de la chaîne <span class="em">ch</span>.</p>
+                                    <p class="em">Remarque : Le premier octet d'une chaîne contient - indirectement - la longueur courante de la chaîne; elle contient en fait le caractère dont le rang est égal à la longueur courante. Si <span class="html">ch := 'ABCDE'</span> alors <span class="html">ORD(ch[0])</span> est égal à la valeur 5.</p>
+                                </li>
+                                <li>
+                                    <h4>POS(&lt;expr.chaîne&gt;,&lt;expr.chaîne&gt;) :</h4>
+                                    <p>Exemple : <span class="em">position := POS(ss,ch)</span></p>
+                                    <p>La fonction <span class="html">POS</span> renvoie un entier (BYTE) représentant la position du premier caractère de <span class="em">ss</span> dans <span class="em">ch</span>.</p>
+                                    <p>Si <span class="em">ss</span>n'est pas trouvé, la valeur renvoyée par <span class="em">POS</span> est 0. Cette fonction recherche donc la première occurence d'une sous-chaîne dans une chaîne.</p>
+                                    <p>Exemple : <span class="em">POS('SITI', 'POSITION')</span> retourne <span class="em">3</span> et <span class="em">POS('ST', 'POSITION')</span> retourne <span class="em">0</span>.</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Quelques procédures prédéfinies sur les chaînes de caractères :</h3>
+                            <ol>
+                                <li>
+                                    <h4>DELETE(&lt;variable chaîne&gt;,&lt;expr.entière&gt;,&lt;expr.entière&gt;) :</h4>
+                                    <p>Exemple : <span class="em">DELETE(VarStr,p,n)</span></p>
+                                    <p>La procédure <span class="html">DELETE</span> supprime <span class="em">n</span> caractères à la valeur de la variable <span class="em">VarStr</span> à partir de la position <span class="em">p</span>.</p>
+                                    <p>Si <span class="em">p</span> est supérieur à la longueur de la chaîne <span class="em">VarStr</span>, aucun caractère n'est supprimé. Si <span class="em">n</span> indique plus de caractères qu'il n'en reste à partir de <span class="em">p</span>, seule la fin de la chaîne correspondant à <span class="em">VarStr</span> est effacée.</p>
+<pre><code>program  test_delete ; 
+{$APPTYPE CONSOLE}
+
+var ch : string[10] ;
+begin
+    ch := 'ABCDEFGH' ;
+    delete(ch,20,3) ;
+    writeln(ch) ;			{ABCDEFGH}
+    delete(ch,6,10) ;
+    writeln(ch) ;           {ABCDE}
+    delete(ch,2,2) ;
+    writeln(ch)  ;			{ADE}
+
+    readLn
+end.</code></pre>
+                                </li>
+                                <li>
+                                    <h4>INSERT(&lt;expr.chaîne&gt;,&lt;variable chaîne&gt;,&lt;expr.entière&gt;) :</h4>
+                                    <p>Exemple : <span class="em">INSERT(ch,VarStr,p)</span></p>
+                                    <p>La procédure <span class="html">INSERT</span> insère l'expression chaîne <span class="em">ch</span> dans <span class="em">VarStr</span> en position <span class="em">p</span>.</p>
+                                    <p>Lorsque <span class="em">p</span> est supérieure à la longueur courante de <span class="em">Varstr</span>, <span class="em">ch</span> est concaténée à <span class="em">VarStr</span>.</p>
+                                    <p>Si la somme de la longueur de l'expression chaîne et de la longueur courante de la variable chaîne dépasse la longueur maximale de cette dernière, il y a évidemment "troncature" après insertion.</p>
+<pre><code>program test_insert ; 
+{$APPTYPE CONSOLE}
+
+var ch : string[15] ;
+
+begin
+    ch := 'ABCDE' ;
+    insert('fghijk',ch,10) ;
+    writeln(ch) ;                    	{ABCDEfghijk}
+    insert('xyz',ch,3) ;
+    writeln(ch) ;                    	{ABxyzCDEfghijk}
+    insert('mnopq',ch,7) ;
+    writeln(ch) ;                     {ABxyzCmnopqDEfg}
+
+    readLn
+end.</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Str et val :</h4>
+<pre><code>STR (&lt;expr.numérique [:expr.entière [:expr.entière]]&gt;;&lt;variable chaîne&gt;)</code></pre>
+                                    <p>Exemple : <span class="em">STE(NombreReel:taille:NbreDec,VarStr)</span></p>
+                                    <p>La procédure <span class="html">STR</span>convertit NombreReel en une chaîne de caractères en respectant les paramètres de formatage <span class="em">taille</span> et <span class="em">NbreDec</span>.</p>
+                                    <p>L'expression numérique à convertir est une expression de type entier ou réel. L'effet est identique à un appel à la procédure standard write pourvues des mêmes paramètres, excepté que la chaîne résultante est chargée dans <span class="em">VarStr</span> au lieu d'être écrite dans un fichier texte.</p>
+<pre><code>VAL (&lt;expr.chaîne&gt;,&lt;variable num.&gt;,&lt;variable entière&gt;)</code></pre>
+                                    <p>Exemple : <span class="em">VAL(s,N,erreur)</span></p>
+                                    <p>La procédure <span class="html">VAL</span> convertit une chaîne de caractères représentant une quantité en une valeur numérique. Plus précisément, si <span class="em">s</span> est une expression de type chaîne et N une variable d'un type entier ou réel, alors <span class="em">VAL</span> convertit - si possible - <span class="em">s</span> en une valeur numérique et charge le résultat dans <span class="em">N</span>.</p>
+                                    <p>Si vous désirez convertir une chaîne qui représente une quantité entière, nous vous conseillons de déclarer <span class="em">N</span> de type longint, d'effectuer le contrôle des domaines de validité et enfin d'affecter la valeur entière renvoyée. La variable <span class="em">erreur</span> a la valeur zéro si tout c'est bien passé.</p>
+                                    <p>Remarque : Toutes les fonctions et procédures présentées ici se trouvent dans l'unité System. Il existe également des routines de gestion de chaînes dans l'unité SysUtils.</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Fonction Copy :</h3>
+                            <p>Routines de gestion de chaînes (de type Pascal).</p>
+                            <p><span class="em">Unité :</span>System</p>
+                            <p class="em">Déclaration :</p>
+<pre><code>function Copy(S:String,Index,Count:Integer):String;</code></pre>
+                            <p class="em">Description :</p>
+                            <p>La fonction Copy renvoie une sous-chaîne d'une chaîne.</p>
+                        </li>
                     </ol>
                 </article>
             <!-- fin de section -->
