@@ -54,6 +54,7 @@
                         <li><a href="#partie_instruction">Partie instruction</a></li>
                         <li><a href="#types">Types</a></li>
                         <li><a href="#instructions_structurees">Instructions structurées</a></li>
+                        <li><a href="#type_string">Type string (chaînes courtes)</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1692,7 +1693,271 @@ begin
 
     readLn
 end.</code></pre>
-                            <p></p>
+                            <p>Dans de nombreux ouvrages, on retrouve l'assertion suivant laquelle l'instruction :</p>
+<pre><code>for indice := expr1 to expr2 do instruction</code></pre>
+                            <p>est équivalente aux instructions suivantes :</p>
+<pre><code>indice := expr1 ;
+while indice &lt;= expr2 do
+    begin
+        instruction ;
+        inc(indice)
+    end</code></pre>
+                            <p>Il convient de relativiser cette "équivalence".</p>
+                            <p>La définition du langage Pascal impose certaines restrictions au sujet de l'instruction FOR :</p>
+                            <ul>
+                                <li>
+                                    <p>La valeur de la variable de contrôle ne peut en aucun cas être modifiée dans l'instruction qui correspond au corps de la boucle (<span class="em">Pascal Objet permet la modification de la variable de contrôle dans le corps de la boucle ! Ne profitez pas de ce laxisme coupable !</span>).</p>
+                                </li>
+                                <li>
+                                    <p>La valeur finale est déterminée une seule fois lors de l'entrée dans la boucle for. Ainsi si expr2 correspondait à la valeur d'une certaine variable Vf, la modification de la valeur de Vf dans le corps de la boucle ne changerait pas le nombre de répétitions.</p>
+                                </li>
+                                <li>
+                                    <p>À la sortie (normale) de l'instruction for, la valeur de la variable de contrôle est indéfinie.</p>
+                                </li>
+                            </ul>
+                            <p>Dans le manuel de référence, l'instruction <span class="em">for v:= expr1 to expr2 do Corps</span> est dite équivalente à :</p>
+<pre><code>begin
+    temp1 := expr1 ;
+    temp2 := expr2 ;
+    if temp1 &lt;= temp2 then
+        begin
+            V := temp1 ;
+            Corps ;
+            while V &lt;&gt; temp2 do
+                begin
+                    V := succ(V) ;
+                    Corps
+                end
+        end
+end</code></pre>
+                            <p>temp1 et temp2 sont des variables temporaires du même type que la variable de contrôle V et qui n'apparaissent nulle part ailleurs dans le programme.</p>
+                            <p>Cette équivalence est <span class="em">logique</span> et l'utilisation du for générera un <span class="em">code optimisé</span> !</p>
+                            <p>Application :</p>
+                            <ul>
+                                <li>
+                                    <p>Justifiez cette équivalence.</p>
+                                </li>
+                                <li>
+                                    <p>Réécrire les programmes du chapitre 4 où l'utilisation de l'instruction for est souhaitable.</p>
+                                </li>
+                            </ul>
+                            <p class="em">Remarque : Curieusement, à partir de la version du Pascal Objet qui correspond à Delphi 4, la réalisation du for a changé et l'équivalence présentée ici a disparu du manuel de référence. La valeur non significative de la variable de contrôle est "égale" à succ(temp2) si l'itération a eu lieu !</p>
+                            <p>Exercices :</p>
+<pre><code>program WhileFor;
+{$APPTYPE CONSOLE}
+
+var EXPR1 : Cardinal = 31 ;
+    EXPR2 : Cardinal = 39 ;
+    k : Cardinal ;
+
+begin
+    for k := EXPR1 to EXPR2 do
+        begin
+            write(k:4) ;
+            dec(EXPR2,2)
+        end ;
+    writeLn ; 
+    writeLn(EXPR2) ; 
+    writeLn ;
+
+    EXPR2 := 39 ;
+    k := EXPR1 ;
+    while k &lt;= EXPR2 do
+        begin
+            write(k:4) ;
+            dec(EXPR2,2) ;
+            inc(k)
+        end ;
+    writeLn ; 
+    writeLn(EXPR2) ; 
+    writeLn ;
+    readLn
+end.</code></pre>
+                            <img src="../images/WhileFor_Pascal.png" alt="">
+<pre><code>program breakContinue;
+{$APPTYPE CONSOLE}
+
+var EXPR1 : Cardinal = 1 ;
+    EXPR2 : Cardinal = 9 ;
+    k : Cardinal ;
+
+begin
+    for k := EXPR1 to EXPR2 do
+    begin
+        write(k:4) ;
+        if k = 4 then continue ;
+        write(k:4) ;
+        if k = 7 then break ;
+        write(k:4)
+    end ;
+    writeLn ;
+
+    k := EXPR1 ;
+    while k &lt;= EXPR2 do
+    begin
+        write(k:4) ;
+        if k = 4 then
+        begin
+            inc(k) ;     // sinon vous bouclez !!!
+            continue
+        end  ;
+        write(k:4) ;
+        if k = 7 then break ;
+        write(k:4) ;
+        inc(k)
+    end ;
+    writeLn ;
+
+    readLn
+end.</code></pre>
+                            <img src="../images/breakContinue_Pascal.png" alt="">
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="type_string">Type string (chaînes courtes) :</h2>
+                    <p>Il existe aujourd'hui plusieurs types chaîne.</p>
+                    <p>Sans parler des chaînes à zéro terminal, le Pascal Objet gère les types chaînes prédéfinis suivants (<span class="em">manuel de référence</span>) :</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Longueur maximum</th>
+                                <th>Mémoire nécessaire</th>
+                                <th>Utilisation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ShortString</td>
+                                <td>255 caractères</td>
+                                <td>de 2 à 256 octets</td>
+                                <td>string classique</td>
+                            </tr>
+                            <tr>
+                                <td>AnsiString</td>
+                                <td>~2<sup>31</sup> caractères</td>
+                                <td>de 4 octets à 2 Go</td>
+                                <td>Caractères sur 8 bits</td>
+                            </tr>
+                            <tr>
+                                <td>WideString</td>
+                                <td>~2<sup>30</sup> caractères</td>
+                                <td>de 4 octets à 2 Go</td>
+                                <td>Caractères Unicode;</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Nous nous intéresserons dans ce chapitre au type <span class="em">string classique</span> qui correspond dans les dernières versions du langage aux chaînes courtes (ShortString). <span class="em">Dans l'état par défaut {$H+}, le compilateur interprète <span class="html">string</span> comme désignant AnsiString. Utilisez la directive <span class="html">{$H-}</span> pour que string soit interprété comme désignant ShortString.</span></p>
+                    <p>Nous reviendrons plus tard aux autres types chaînes et, spécialement, aux chaînes longues qui est <q>le type le mieux adapté aux utilisations les plus diverses</q>.</p>
+                    <p>Une valeur de type string ou chaînes de caractères est une séquence de caractères de taille variable. Le nombre réel de caractères dans une chaîne peut varier dynamiquement - au cours de l'exécution -, entre 0 et une limite supérieure définie.</p>
+                    <p>Les constantes chaînes de caractères sont évidemment compatibles avec les types chaînes de caractères.</p>
+                    <ol>
+                        <li>
+                            <h3>Définition d'un type chaîne de caractères :</h3>
+<pre><code>&lt;identificateur&gt; = string [E]</code></pre>
+                            <p>L'entier <span class="em">E</span> spécifiant la taille maximale est une constante entière tel que <span class="em">1 &lt;= E &lt; 255</span>.</p>
+                            <p>Mprsque l'attribut de taille n'est pas déclaré, il vaut 255 par défaut.</p>
+                            <p>Exemple :</p>
+<pre><code>type str20 = STRING[20];
+     str8 = STRING[8]
+     ligne = STRING[80];
+     AnyString = STRING;</code></pre>
+                            <p>Seules les variables possèdent un type string spécifique, pas les valeurs.</p>
+                            <p>Soient les déclarations suivantes :</p>
+<pre><code>var ch1 : str8;
+    ch2 : str20;
+    ch : AnyString;</code></pre>
+                            <p>L'exécution de ces déclarations réservera 9 octets pour <span class="em">ch1</span>, 21 pour <span class="em">ch2</span> et 256 octets pour <span class="em">ch</span>. Une chaîne de caractères occupe en effet un octet de plus que son nombre de caractères maximum. Le premier octet contient le caractère dont le rang équivaut à la longueur courante de la chaîne.</p>
+                            <p>Lors de l'affectation de la valeur d'une expression chaîne à une variable d'un certain type string, si la longueur maximum de la variable chaîne est dépassée, les caractères en trop sont éliminés.</p>
+                            <p>Exemple :</p>
+<pre><code>...
+ch2 := 'BONJOUR MONDE !';
+ch1 := ch2;
+writeln(ch2);   {BONJOUR MONDE !}
+writeln(ch1);   {BONJOUR}</code></pre>
+                            <p class="em">Remarquez :</p>
+                            <ul>
+                                <li>
+                                    <p class="em">que les types chaînes de caractères sont compatibles (puisque ch2 est une valeur chaîne) :</p>
+<pre><code>ch1 := ch2</code></pre>
+                                </li>
+                                <li>
+                                    <p class="em">et que l'on peut écrire une expression chaîne et lire une variable chaîne.</p>
+<pre><code>...
+write('Entre votre nom : ');
+readln(ch);
+writeln('Bonjour ', ch);
+...</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h3>Comment accéder aux éléménts d'une chaîne ?</h3>
+                            <p>Nous n'avons pas encore étudié le type tableau. Signalons néanmoins que le type chaîne peut être assimilé à un type tableau possédant des caractéristiques spéciales.</p>
+                            <p>Une variable d'un type chaîne pourrait être considérée comme une suite, une liste finie de variables char que l'on aurait regroupées sous un nom. Les éléments de cette liste sont rangés en des positions mémoire successives et sont repérés respectivement par un ensemble d'indices consistant en un certain nombre d'entiers consécutifs.</p>
+                            <p>L'expression d'indice (de type BYTE) doit être compris dans l'intervalle 0..E où E est la longueur déclarée de la variable chaîne. Rappelons que le premier caractère d'une variable d'un type chaîne (celui qui correspond à l'indice 0) traduit en fait la longueur courante de la chaîne.</p>
+                            <p>La référence à un élément d'une variable chaîne de caractères est réalisée par une référence à la variable chaîne suivie entre crochets par l'expression d'indice qui indique la position de l'élément au sein de la variable chaîne.</p>
+                            <p>Exemple :</p>
+                            <p>Soit la déclaration :</p>
+<pre><code>var s:string[9];</code></pre>
+                            <p>Après exécution de l'instruction :</p>
+<pre><code>s := 'CHAINES';</code></pre>
+                            <p>nous pouvons représenter la variable s de la manière suivante :</p>
+                            <img src="../images/chaines_caracteres_Pascal_1.png" alt="">
+                            <p><span class="em">writeln(s[2])</span> affichera le caractère '<span class="em">H</span>'.</p>
+<pre><code>Program anagramme  ;
+{$APPTYPE CONSOLE}
+
+var s : string[9]  ;
+    tampon : char  ;
+begin
+    s := 'CHAINES'   ;
+    tampon := s[1]   ;
+    s[1]   := s[6]   ;
+    s[6]   := s[3]   ;
+    s[3]   := s[2]   ;
+    s[2]   := tampon ;
+    writeln (s)	;      {ECHINAS}
+
+    readLn
+end.</code></pre>
+                            <p>Vous ne pouvez cependant pas allonger une chaîne par cette méthode.</p>
+                            <p><span class="em">s[8] := 'E'</span> n'ajoutera pas de 'E' à la fin de 'ECHINAS'.</p>
+                            <p>Pour <span class="em">allonger</span> une chaîne, il faudra utiliser <span class="em">l'opérateur de concaténation (+)</span>.</p>
+                            <p><span class="em">s := s + 'E'</span> ajoutera un 'E' à la fin de 'ECHINAS'.</p>
+                        </li>
+                        <li>
+                            <h3>Comparaison de chaînes :</h3>
+                            <p>Les opérateurs relationnels <span class="em">=</span>, <span class="em">&lt;&gt;</span>, <span class="em">&lt;</span>, <span class="em">&gt;</span>, <span class="em">&gt;=</span>, <span class="em">&lt;=</span> comparent deux chaînes de caractères. "L'ordre entre deux chaînes est déterminé par les relations d'ordre entre les valeurs des caractères situés en même position dans chacune des chaînes". Comme toutes les valeurs chaînes de caractères sont compatibles, toutes les chaînes peuvent être comparées.</p>
+                            <ul>
+                                <li>
+                                    <p>Si les chaînes ne possèdent pas la même longueur, les caractères de la plus longue chaîne qui ne possèdent pas de correspondant sont considérés comme ayant une valeur supérieure.</p>
+                                    <p>Ainsi l'expression <span class="em">'PASCAL' &lt; 'PASCALE'</span> a la valeur true et l'expression <span class="em">'PASCAL ' = 'PASCAL'</span> a la valeur false.</p>
+                                    <p>Il est évident que <span class="em">'XZ' &gt; 'XWXYZ'</span> !</p>
+                                </li>
+                                <li>
+                                    <p>Les chaînes vides ('') correspondent à la plus petite valeur et ne peuvent être égales qu'à d'autres chaînes vides.</p>
+                                </li>
+                                <li>
+                                    <p>Signalons enfin qu'une valeur de type char est considérée comme une valeur chaîne de caractères de longueur 1; nous pouvons donc comparer une valeur de type char à une valeur de type chaîne.</p>
+<pre><code>if s &lt; 'H'
+    then ...</code></pre>
+                                </li>
+                            </ul>
+                            <q class="em">Les fonctions standard high et low acceptent les identificateurs de type chaîne courte et les variables de ces types. High renvoie la longueur maximum du type de chaîne courte alors que low renvoie zéro.</q>
+<pre><code>program lowhighstr;
+{$APPTYPE CONSOLE}
+
+type Str30 = string[30] ;
+var  nom : Str30 ;
+begin
+    nom := 'TinTin' ;
+    writeLn(low(nom)) ;          {0}
+    writeLn(high(STr30)) ;       {30}
+
+    readln
+end.</code></pre>
                         </li>
                     </ol>
                 </article>
