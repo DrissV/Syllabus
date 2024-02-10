@@ -56,6 +56,7 @@
                         <li><a href="#instructions_structurees">Instructions structurées</a></li>
                         <li><a href="#type_string">Type string (chaînes courtes)</a></li>
                         <li><a href="#fonctions_procedures">Fonctions et procédures</a></li>
+                        <li><a href="#tableaux">Tableaux (Array)</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -2519,6 +2520,305 @@ inc(x) ;
                         <li>
                             <h3>Déclaration (de définition) de procédure :</h3>
                             <p>Une déclaration de procédure associe un identificateur à un bloc d'instructions.</p>
+                            <p>L'appel de la procédure se fera par une instruction de procédure; celle-ci spécifie l'identificateur de la procédure, ainsi que les paramètres effectifs, si nécessaire. Quand une procédure est appelée, le contrôle se trouve transféré au début de la procédure. Après avoir exécuté les instructions qui composent le traitement de la procédure, le contrôle retourne automatiquement à l'instruction qui suit l'instruction d'appel de la procédure.</p>
+                            <img src="../images/declaration_procedure_Pascal.png" alt="">
+                            <p class="em">L'en-tête de la procédure est suivi :</p>
+                            <ul>
+                                <li>
+                                    <p class="em">d'une partie déclaration qui déclare les objets locaux;</p>
+                                </li>
+                                <li>
+                                    <p>des instructions comprises entre begin et end, qui spécifient ce qui doit être exécuté lorsqu'il est fait appel à la procédure.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h3>Paramètres variable :</h3>
+                            <p>Répétons-le, un paramètre valeur est simplement une variable locale au sous-programme, qui lors de son activation a été initialisée à la valeur du paramètre effectif correspondant.</p>
+                            <p class="em">Si vous transmettez une variable comme paramètre valeur, la routine en crée une copie et les modifications apportées à la copie sont sans effet sur la variable d'origine et sont perdues quand l'exécution du programme revient à l'appel de la routine.</p>
+                            <p>Un paramètre variable se comporte, lui, comme une sorte d'alias, un autre nom permettant d'accéder au paramètre effectif qui doit être une variable (référence à une variable).</p>
+                            <p class="em">Un paramètre variable dénote une variable !</p>
+                            <p>De ce fait, les modifications apportées aux paramètres dans le corps de la routine sont conservées lorsque l'exécution du programme revient à l'appel de la routine et que le nom du paramètre est hors de portée.</p>
+                            <p>Rappelez-vous qu'un identificateur de variable représente en fait l'adresse symbolique de la case mémoire correspondant à la variable désignée. Le paramètre formel variable est dans la procédure un nouveau nom pour la variable référencée par le paramètre effectif. Ainsi, le paramètre formel et le paramètre effectif font référence à la même case mémoire.</p>
+                            <p>En conséquence, modifier le paramètre formel dans un sous-programme, c'est en fait modifier le paramètre effectif correspondant.</p>
+                            <p>On comprend alors pourquoi cette technique est utilisée pour les paramètres de retour (lorsqu'une valeur doit être renvoyée à l'appelant d'une procédure) et pourquoi paramètres formels et effectifs doivent être de types rigoureusement identiques.</p>
+                            <p>Une liste de paramètres par adresse est précédée du mot réservé var.</p>
+                            <img src="../images/parametres_formels_Pascal.png" alt="">
+                            <p>L'exemple classique suivant bien la différence entre les deux types de paramètres.</p>
+<pre><code>program val_var ; 
+{$APPTYPE CONSOLE}
+
+procedure echange_local( a,b : integer ) ; 
+var x : integer ; 
+begin 
+    x := a ; 
+    a := b ; 
+    b := x 
+end ; 
+
+<span class="em">procedure echange( var a,b : integer ) ;
+var x : integer ; 
+begin 
+    x := a ; 
+    a := b ; 
+    b := x 
+end ;</span>
+    
+var x,y : integer ; 
+    
+begin 
+    x := 1 ; y := 2 ; 
+    writeln(x:8,y:8) ;              {       1       2} 
+    echange_local(x,y) ; 
+    writeln(x:8,y:8) ;              {       1       2}     
+    echange(x,y) ; 
+    writeln(x:8,y:8) ;              {       2       1} 
+
+    readLn     
+end.</code></pre>
+                        </li>
+                        <li>
+                            <h3>Une nouveauté : les paramètres out :</h3>
+                            <p>(Manuel de référence) :</p>
+                            <p class="em">Un paramètre de sortie (out) est transmis par adresse comme un paramètre variable. Mais avec un paramètre out, la valeur initiale de la variable référencée n'est pas prise en compte par la routine à laquelle elle est transmise. Le paramètre out n'est utilisé qu'en sortie; il indique simplement à la routine où placer la valeur en sortie sans spécifier de valeur en entrée.</p>
+                            <p class="em">Soit, par exemple, l'en-tête de procédure suivant :</p>
+<pre><code>procedure ExtraitInfos(out Info: UnTypeEnreg);</code></pre>
+                            <p class="em">Quand vous appelez <span class="html">ExtraitInfos</span>, vous devez lui transmettre une variable de type <span class="html">UnTypeEnreg</span> :</p>
+<pre><code>var MonEnreg: UnTypeEnreg;
+
+...
+ExtraitInfos(MonEnreg);</code></pre>
+                            <p class="em">Mais vous n'utilisez pas <span class="html">MonEnreg</span> pour transmettre des données à la procédure <span class="html">ExtraitInfos</span>; <span class="html">MonEnreg</span> sert simplemeent de conteneur où <span class="html">ExtraitInfos</span> stocke les informations qu'elle génère. L'appel de <span class="html">ExtraitInfos</span> libère immédiatement la mémoire utilisée par <span class="em">MonEnreg</span>, avant que le contrôle du programme ne passe à la procédure.</p>
+                            <p class="em">Les paramètres <span class="html">Out</span> sont fréquememment utilisés avec les modèles d'objets distribués comme <span class="html">COM</span> ou <span class="html">COBRA</span>. De plus, vous devez utiliser des paramètres <span class="html">out</span> pour transmettre une variable non initialisée à une routine.</p>
+                        </li>
+                        <li>
+                            <h2>Transfert de paramètre :</h2>
+                            <p>Les paramètres sont transmis aux procédures et aux fonctions par l'intermédiaire (<span class="em">des registres CPU ou</span>) de la pile, selon la convention d'appel de la routine.</p>
+                            <p>Selon une des conventions possibles, les paramètres sont placés, avant l'appel du sous-programme, dans la pile suivant l'ordre de leur déclaration. Juste avant la fin de son exécution, le sous-programme retire tous les paramètres de la pile.</p>
+                            <p>La structure d'appel d'une routine pourrait être la suivante :</p>
+<pre><code>PUSH		param1
+PUSH		param2
+        …
+PUSH		paramN
+CALL 		routine</code></pre>
+                            <p>Il n'existe que deux sortes de transmission :</p>
+                            <ul>
+                                <li>
+                                    <p>par valeur,</p>
+                                </li>
+                                <li>
+                                    <p>par référence ou adresse.</p>
+                                </li>
+                            </ul>
+                            <p class="html">Lorsqu'un paramètre est transmis par adresse, un pointeur sur l'emplacement en mémoire de la "valeur" à transmettre est placé dans la pile.</p>
+                            <p class="html">Pour une transmission par valeur, c'est la valeur elle-même qui est placée dans la pile.</p>
+                            <p class="em">Les paramètres variables (et de sortie) sont toujours transmis par adresse.</p>
+                            <p class="em">Les paramètres valeurs (et constantes) sont transmis, suivant leur type et leur taille, par adresse ou par valeur.</p>
+                            <p>En général, si le paramètre occupe quelques octets, la valeur est directement placée dans la pile. Sinon, le sous-programme appelé copie la valeur dans une zone de mémoire locale et c'est un pointeur sur cette zone qui est placé dans la pile.</p>
+                            <p><span class="em">L'effcicacité des paramètres constantes</span> par rapport aux paramètres valeurs vient de ce que le compilateur n'a pas à générer de copie des paramètres effectifs à l'entrée dans le sous-programme <span class="em">puisque les paramètres constantes ne sont pas modifiables !</span></p>
+                        </li>
+                        <li>
+                            <h3>Laboratoire d'analyse :</h3>
+                            <p>Comme petit exercice, analysez le programme suivant :</p>
+                            <p class="em">(fonction, procédure et contexte d'appel...)</p>
+<pre><code>program test;
+{$APPTYPE CONSOLE}
+
+procedure NumString(N:Integer;var S:String) ; overload ;
+var V : Integer ;
+begin
+        V := abs(N) ;
+        S := '' ;
+        repeat
+        S := chr(V mod 10 + ord('0')) + S ;
+        V := V div 10
+        until V = 0 ;
+        if N &lt; 0 then S := '-'+ S
+end ;
+
+function NumString(N : Integer) : String ; overload ;
+var V : Integer ;
+begin
+        V := abs(N) ;
+        Result := '' ;
+        repeat
+        Result := chr(V mod 10 + ord('0')) + Result ;
+        V := V div 10
+        until V = 0 ;
+        if N &lt; 0 then REsult := '-'+ Result
+end ;
+
+var str : String ;
+begin
+
+    NumString(-12345,str) ;
+    writeLn(str) ;
+
+    writeLn(NumString(-12345)) ;
+
+    readLn
+end .</code></pre>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="tableaux">Tableaux (Array) :</h2>
+                    <ol>
+                        <li>
+                            <h3>Généralités :</h3>
+                            <p>Lorsqu'un nombre important de variables de même type et surtout associées à une même catégorie d'objet, doit être utilisé dans un programme, il est bien entendu impossible d'envisager d'attribuer un identificateur différent à chaque variable (par exemple le chiffre d'affaires quotidien d'un représentant).</p>
+                            <p>Les tableaux permettent de résoudre cette difficulté.</p>
+                            <p>Un tableau est une manière assez naturelle de ranger des éléments de même type. Il permet de regrouper ceux-ci dans une structure fixe et d'accéder à chaque élément par le biais d'un indice.</p>
+                            <p>On peut considérer une variable tableau comme un tableau de variables.</p>
+                        </li>
+                        <li>
+                            <h3>Définition :</h3>
+                            <p>Un tableau est une structure constituée d'un nombre fixe d'éléments du même type qui est appelé type de base ou type composant.</p>
+                            <p>Il s'agit donc d'une <span class="em">structure homogène</span>.</p>
+                            <p>Nous pouvons construire des tableaux d'entiers, des tableaux de booléens, mais aussi des tableaux de chaînes et pourquoi pas... des tableaux de tableaux !</p>
+                            <p>Un tableau est aussi une structure dite <span class="em">à accès aléatoire</span> : à un instant donné, on peut sélectionner n'importe quel composant. Le temps d'accès à un élément est indépendant de la place qu'occupe cet élément dans la structure.</p>
+                            <p>Pour désigner, pour référencer un composant, on ajoute entre crochets au nom de la variable de type tableau ce qu'on appelle un indice. Cet indice signale la position de l'élément dans le tableau et doit être une valeur du type défini comme le type d'indice du tableau.</p>
+                            <p>Le type de l'indice permet de définir le nombre d'éléments du tableau. En Pascal, les types autorisés pour les indices sont tous les types scalaires.</p>
+                            <p>La définition d'un type de tableau <span class="em">TT</span> spécifie à la fois un type de base <span class="em">TB</span> et un type d'indice <span class="em">TI</span>.</p>
+<pre><code>Type TT = ARRAY[TI] of TB ;</code></pre>
+                            <p>Exemples :</p>
+<pre><code>
+Type Tab1_20Real = ARRAY [1..20] of Real ;
+     Tab0_255Boolean = ARRAY [byte] of Boolean ;
+
+var t1,t2 : Tab1_20Real ;
+t3,t4 : Tab0_255Boolean ;
+
+Type Tetat = (travail,conge,recuperation,in¬defini) ;
+     Tjour = (lun,mar,mer,jeu,ven,sam,dim) ; 
+     Tableau = ARRAY [Tjour] of Tetat ;
+var t : Tableau ;
+...</code></pre>
+                            <p>Notez cependant qu'il peut exister des restrictions qui dépendent de la capacité mémoire et non de la définition du langage.</p>
+<pre><code>type 	TropGros = array [Longint] of Extended ;
+{ erreur  => type de donnée trop grand : dépasse 2Go }</code></pre>
+                            <p class="em">Remarque : Le type des composants d'un tableau peut être lui-même d'un type tableau; nous obtenons ainsi des tableaux de tableaux "ou" tableaux multidimensionnels.</p>
+<pre><code>
+Type Tvecteur = ARRAY [1..3] of Extended ;
+     Tmatrice = ARRAY [1..5] of Tvecteur ;
+var m : Tmatrice ;</code></pre>
+                            <p class="em">Pour référencer l'élément de la matrice correspondant à la i<sup>ème</sup> ligne et à la j<sup>ème</sup> colonne, nous pouvons écrire <span class="html">m[i][j]</span> ou encore <span class="html">m[i,j]</span>.</p>
+                            <p class="em">Nous aurions pu définir le type Tmatrice autrement :</p>
+<pre><code>Type Tmatrice = ARRAY [1..5] of ARRAY [1..3] od Extended ;
+// ou encore
+     Tmatrice = ARRAY[1..5,1..3] of Extended ;</code></pre>
+                            <p class="em">Ces définitions sont cependant moins souples que la première qui permet une assignation tel que : <span class="html">v := m[k]</span> en supposant que <span class="html">v</span> est une variable de type <span class="html">Tvecteur</span>.</p>
+                        </li>
+                        <li>
+                            <h3>Opérations sur les tableaux :</h3>
+                            <p>La seule opération globale sur des tableaux est l'affectation. Celle-ci n'est possible que si les deux tableaux sont rigoureusement de même type.</p>
+                            <p>Supposons les déclarations suivantes :</p>
+<pre><code>type Tab1 = ARRAY [1..5] of integer ;
+     Tab2 = ARRAY [1..5] of integer ;
+var t,t1 : Tab1 ;
+    t2 : Tab2 ;</code></pre>
+                            <p>l'affectation <span class="em">t1 := t</span> est possible alors que l'affectation <span class="em">t1 := t2</span> ne l'est pas car les types <span class="em">tab1</span> et <span class="em">tab2</span> sont distincts !</p>
+                            <ul>
+                                <li>
+                                    <p>Les procédures prédéfinies de lecture et écriture (readln, writeln, ...) ne permettent que de traiter des nombres des chaînes - étant bien entendu qu'il s'agit de variables pour les lectures et d'expressions pour les écritures.</p>
+                                    <p>Il conviendra donc de lire ou d'écrire successivement chaque élément du tableau.</p>
+<pre><code>...
+for k := 1 to 5 do
+    begin
+        write('t[',k,'] = ');
+        readln(t[k])
+    end;
+...</code></pre>
+                                </li>
+                                <li>
+                                    <p>Les opérations réalisables sur un élément de tableaux sont celles réalisables sur le type composant. Ainsi, dans notre exemple, <span class="em">t1[3]</span> est assimilable à une variable entière. Il s'agit d'une <span class="em">extension de la notion de variable</span> : un composant d'une variable de type structuré est une référence à une variable et correspond donc à un emplacement adressable.</p>
+                                    <p>Au niveau représentation en mémoire, un tableau est stocké comme une séquence de variables adjacentes de même type que le type de base du tableau.</p>
+                                    <img src="../images/operations_tableaux_Pascal.png" alt="">
+                                </li>
+                            </ul>
+                            <p>Lorsque les fonctions <span class="html">low</span> et <span class="html">high</span> sont appliquées à un identificateur de type tableau ou une référence d'un type tableau, elles retournent les bornes inférieures et supérieure du type d'indice du tableau.</p>
+<pre><code>program highlow ;
+{$APPTYPE CONSOLE}
+const IndMin = 1 ;
+      IndMax = 10 ;
+type TMajuscule = 'A'..'Z' ;
+     TIndex = IndMin..IndMax ;
+     TabA_ZInt = array[TMajuscule] of Integer ;
+     Tab1_10Int = array[TIndex] of Integer ;
+var M : TabA_ZInt ;
+    L : Tab1_10Int ;
+begin
+    writeln(low(TabA_zInt):8,low(M):8) ;
+    writeln(high(TabA_zInt):8,high(M):8) ;
+    writeln(low(Tab1_10Int):8,low(L):8) ;
+    writeln(high(Tab1_10Int):8,high(L):8) ;
+    readLn
+end.</code></pre>
+                            <img src="../images/highlow_Pascal.png" alt="">
+                            <p>Exemple :</p>
+<pre><code>program testab ;
+{$APPTYPE CONSOLE}
+const IndMin = 1 ;
+      IndMax = 10 ;
+type TMajuscule = 'A'..'Z' ;
+     TIndex = IndMin..IndMax ;
+     Tableau = array[Tindex] of TMajuscule ;
+    
+procedure afficheTableau(const T : Tableau) ;
+var k : TIndex ;
+begin
+    for k := low(T) to high(T) do
+        writeln('T[',k:2,'] = ',T[k]) ;
+    writeln
+end ;
+
+function genereTableau : Tableau ;
+var k : TIndex ;
+begin
+    for k := low(Result) to high(Result) do
+        Result[k] := char(65 + random(26))
+end ;
+
+procedure echange(var x,y : TMajuscule) ;
+var tmp : TMajuscule ;
+begin
+    tmp := x ; x := y ; y : tmp
+end ;
+
+var Tab : Tableau ;
+begin
+    randomize ; tab := genereTableau ;
+    afficheTableau(tab) ;
+    echange(tab[1],tab[10]) ; echange(tab[2], tab[9]) ;
+    afficheTableau(tab) ;
+    readLn
+end.</code></pre>
+                            <img src="../images/testab_Pascal.png" alt="">
+                        </li>
+                        <li>
+                            <h3>Constante typée :</h3>
+                            <p>Pascal Objet autorise la définition de constantes de type tableau sauf celles qui contiennent des éléments de type fichier.</p>
+<pre><code>type TEtat = (actif,passif,attente) ;
+     TabEtat : array [TEtat] of String ;
+const ETATTOSTR : TabEtat = ('actif','passif','attente') ;</code></pre>
+                            <p>La constante tableau <span class="em">ETATTOSTR</span> peut être utilisée pour convertir les valeurs du type énuméré <span class="em">TEtat</span> en leur représentation sous forme de chaîne de caractères.</p>
+<pre><code>type TCarre = array[1..3,1..4] of Integer ;
+const UNCARRE : TCarre = ( (1,2,3,4) , (5,6,7,8) , (9,10,11,12) ) ;</code></pre>
+                            <img src="../images/constante_typee_Pascal.png" alt="">
+<pre><code>procedure afficheCarre(const C:TCarre) ;
+var j,k : Byte ;
+begin
+    for j := 1 to 3 do begin
+        for k := 1 to 4 do
+            write(C[j,k]:4)
+        {od} ;
+    end{do} ;
+    writeln
+end ;</code></pre>
+                        </li>
+                        <li>
+                            <h3>Paramètres tableaux ouverts :</h3>
+                            <p>Les paramètres tableaux ouverts permettent de transmettre à un même sous-programme des tableaux de tailles différentes.</p>
                         </li>
                     </ol>
                 </article>
