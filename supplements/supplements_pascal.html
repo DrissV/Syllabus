@@ -2663,6 +2663,7 @@ end .</code></pre>
                 </article>
                 <article>
                     <h2 id="tableaux">Tableaux (Array) :</h2>
+                    <h3>1<sup>ère</sup> Partie : Les tableaux en Pascal Objet :</h3>
                     <ol>
                         <li>
                             <h3>Généralités :</h3>
@@ -2819,6 +2820,178 @@ end ;</code></pre>
                         <li>
                             <h3>Paramètres tableaux ouverts :</h3>
                             <p>Les paramètres tableaux ouverts permettent de transmettre à un même sous-programme des tableaux de tailles différentes.</p>
+                            <p>Un paramètre formel déclaré avec la syntaxe <span class="html">array of T</span> où T est un identificateur de type est un paramètre tableau ouvert. Le paramètre effectif correspondant doit être une variable de type T (<span class="em">tableau à une dimension</span>) ou un tableau dont les éléments sont de type T.</p>
+                            <p>À l'intérieur du sous-programme, tout se passe comme si le paramètre formel avait été déclaré...</p>
+<pre><code>array [0..N-1] of T</code></pre>
+                            <p>où <span class="em">N</span> est le nombre d'éléments du paramètre effectif. Il y a mise en correspondance entre l'intervalle des indices du paramètre effectif et l'intervalle du paramètre formel, soit l'intervalle <span class="em">0..N-1</span>.</p>
+                            <p>Il existe une restriction : un paramètre tableau ouvert n'est accessible qu'élément par élément. Lorsqu'elle est appliquée à un paramètre tableau ouvert, la fonction <span class="html">low</span> renvoie <span class="em">0</span> et la fonction <span class="html">high</span> renvoie <span class="em">N-1</span>.</p>
+<pre><code>function sommerTabInt(const T : array of Integer):Integer;
+var k : Cardinal ;
+begin
+    Result := 0 ;
+    for k := low(T) to high(T) do inc(Resylt,T[k])
+end ;</code></pre>
+                        </li>
+                        <li>
+                            <h3>Constructeurs de tableaux ouverts (Guide du langage Pascal Objet) :</h3>
+                            <p>Lorsqu'un paramètre formel est un paramètre valeur ou un paramètre constant de type tableau ouvert, le paramètre effectif correspondant dans l'appel du sous-programme peut être un constructeur de tableaux ouverts.</p>
+                            <p>Un constructeur de tableau ouvert est constitué d'une ou plusieurs expressions, séparées par des virgules, et encadrées de crochets. Chaque expression doit être compatible en terme d'affectation avec le type des éléments du paramètre tableau ouvert.</p>
+                            <p>L'utilisation d'un constructeur d'un tableau ouvert revient à créer une variable tableau temporaire et à initialiser ses éléments avec les valeurs fournies par la liste des expressions.</p>
+<pre><code>program Opentab;
+{$APPTYPE CONSOLE}
+
+procedure afficherTabInt(const T : array of Integer) ;
+var k : cardinal ;
+begin
+    for k := low(T) to high(T) do write(T[k]:4) ;
+    writeln
+end ;
+
+function sommerTabInt(const T : array of Integer):Integer;
+var k : Cardinal ;
+begin
+    Result := 0 ;
+    for k := low(T) to high(T) do inc(Result,T[k])
+end ;
+
+var k : Cardinal ;
+begin
+    afficherTabInt([1,2,3,4,5]) ;
+    writeln(sommerTabInt([1,2,3,4,5])) ;
+    afficherTabInt([6,7,8]) ;
+    writeln(sommerTabInt([6,7,8])) ;
+    readLn
+end.</code></pre>
+                            <img src="../images/Opentab_Pascal.png" alt="">
+                        </li>
+                    </ol>
+                    <h3>2<sup>ème</sup> Partie : Algorithmes :</h3>
+                    <ol>
+                        <li>
+                            <h3>Introduction :</h3>
+                            <p>Nous présentons à présent la construction de quelques algorithmes itératifs portant sur les tableaux. Si l'on excepte la recherche dichotomique, nous nous intéresserons ici aux situations où l'on traite les éléments d'un tableau de manière séquentielle. Nous pouvons dès lors interpréter le tableau comme la représentation d'une séquence de longueur fixe et nous ramener à des schémas itératifs déjà étudiés.</p>
+                            <p class="em">Description de l'état dans un parcours séquentiel d'un tableau :</p>
+                            <img src="../images/description_etat_parcours_sequentiel_tableau_Pascal.png" alt="">
+                            <p>À titre d'exemple, nous présentons la fonction maximum qui renvoie la valeur maximum d'un tableau d'entiers. (La construction de l'algorithme est une simple adaptation de ce qui a été étudié précédemment pour les séquences d'entiers.)</p>
+<pre><code>function maximum(const T : array of Integer) : Integer ;
+var k : Cardinal ;
+begin
+    Result := T[0] ;
+    for k := 1 to high(T) do
+        if T[k] &gt; Result
+            then Result := T[k]
+        {fi}
+    {od}
+end ;</code></pre>
+                        </li>
+                        <li>
+                            <h3>Tri :</h3>
+                            <p>On définit le tri comme un processus de rangement d'un ensemble de rangement d'un ensemble donné d'objets dans un certain ordre. En triant un ensemble de données, on facilite les recherches ultérieures sur les membres de cet ensemble.</p>
+                            <p>On classe les méthodes de tri en deux catégories :</p>
+                            <ul>
+                                <li>
+                                    <p>les tris internes (tris de tableaux)</p>
+                                </li>
+                                <li>
+                                    <p>les tris externes (tris de fichiers).</p>
+                                </li>
+                            </ul>
+                            <p>Nous nous intéresserons ici à quelques méthodes de tris internes.</p>
+                            <ol>
+                                <li>
+                                    <h4>Tri par extraction ou par sélection :</h4>
+                                    <p class="em">Principe :</p>
+                                    <ol>
+                                        <li>
+                                            <p>Sélection de l'élément de plus basse clé</p>
+                                        </li>
+                                        <li>
+                                            <p>Échange de cet élément avec le premier élément</p>
+                                        </li>
+                                        <li>
+                                            <p>Répétition de ces opérations avec les n-1 éléments restants, puis avec les n-2, ... jusqu'à ce qu'il ne reste qu'un seul élément : le plus grand.</p>
+                                        </li>
+                                    </ol>
+                                    <p class="em">Simulation :</p>
+                                    <table class="tableBalises">
+                                        <tbody>
+                                            <tr>
+                                                <td></td>
+                                                <td>E</td>
+                                                <td>E</td>
+                                                <td>E</td>
+                                                <td>E</td>
+                                                <td>E</td>
+                                            </tr>
+                                            <tr>
+                                                <td>S</td>
+                                                <td></td>
+                                                <td>I</td>
+                                                <td>I</td>
+                                                <td>I</td>
+                                                <td>I</td>
+                                            </tr>
+                                            <tr>
+                                                <td>I</td>
+                                                <td>I</td>
+                                                <td></td>
+                                                <td>L</td>
+                                                <td>L</td>
+                                                <td>L</td>
+                                            </tr>
+                                            <tr>
+                                                <td>M</td>
+                                                <td>M</td>
+                                                <td>M</td>
+                                                <td></td>
+                                                <td>M</td>
+                                                <td>M</td>
+                                            </tr>
+                                            <tr>
+                                                <td>P</td>
+                                                <td>P</td>
+                                                <td>P</td>
+                                                <td>P</td>
+                                                <td></td>
+                                                <td>P</td>
+                                            </tr>
+                                            <tr>
+                                                <td>L</td>
+                                                <td>L</td>
+                                                <td>M</td>
+                                                <td>P</td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td>E</td>
+                                                <td>S</td>
+                                                <td>S</td>
+                                                <td>S</td>
+                                                <td>S</td>
+                                                <td>S</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p class="em">Algorithme :</p>
+<pre><code>procedure tri_extraction(var T : array of Integer) ;
+var k,j,indMin : Cardinal ;
+begin
+    for k := low(T) to high(T)-1 do begin
+        indMin := k ;
+        for j := k+1 to high(T) do
+            if T[j] &lt; T[indMin] then indMin := j {fi}
+        {od} ;
+        if k &lt;&gt; indMin then echanger(T[indMin],T[k]) {fi}
+    end{do}
+end ;</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Tri par insertion :</h4>
+                                    <p class="em">Principe :</p>
+                                    <p>Conceptuellement, la suite des éléments est divisée en deux suites :</p>
+                                    
+                                </li>
+                            </ol>
                         </li>
                     </ol>
                 </article>
