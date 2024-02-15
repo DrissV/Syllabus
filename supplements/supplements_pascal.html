@@ -3822,6 +3822,90 @@ end.</code></pre>
                                 </li>
                             </ol>
                         </li>
+                        <li>
+                            <h3>Gestion d'une base de données MySQL avec les composants natifs de Lazarus :</h3>
+                            <p>Dans cette partie, vous apprendrez à gérer une base de données MySQL en utilisant les composants natifs de Lazarus (SQLdb).</p>
+                            <p>Trois exemples d'applications, de complexité croissante, vous sont proposés. Ils vont de l'utilisation exclusive de contrôles spécialisés en base de données à celle de contrôles classiques. Quelques petits exercices (facultatifs) vous mettront au défi.</p>
+                            <ol>
+                                <li>
+                                    <h4>Introduction :</h4>
+                                    <p><span class="em">MySQL</span> est un système de gestion de base de données performant très largement utilisé. Il est actuellement la propriété de la société <span class="em">Oracle</span>; sa déclinaison communautraire <span class="em">MariaDB</span>, sous licence GPL, est de plus en plus répandue dans le monde du libre.</p>
+                                    <p>Je vais, sans prétention, vous guider à la réalisation de vos premières applications utilisant une base de données MySQL, sous Lazarus.</p>
+                                    <p>Comme illustration, nous allons simuler ici la gestion d'une petite société de location de voitures.</p>
+                                    <p>Si vous voulez installer rapidement un petit serveur vous permettant de réaliser les applications ci-après, vous pouvez opter pour une solution tout-en-un, par exemple :</p>
+                                    <ul>
+                                        <li>
+                                            <p><a href="https://www.wampserver.com" target="_blank">WAMP sous Windows</a>;</p>
+                                        </li>
+                                        <li>
+                                            <p><a href="https://ubuntu.com/server/docs/lamp-applications" target="_blank">LAMP sous Linux</a>;</p>
+                                        </li>
+                                        <li>
+                                            <p><a href="https://www.apachefriends.org/fr/download.html" target="_blank">XAMP sous MacOS</a>.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <h4>Création de la base de données de test :</h4>
+                                    <p>Avant toute chose, créons la base de données qui servira dans les exemples suivants.</p>
+                                    <p>J'ai pris le parti d'utiliser l'interface de gestion <a href="https://www.phpmyadmin.net/" target="_blank">PHPMyAdmin</a>, qui permet de visualier très facilement le résultat des actions que nous entreprendrons. Pour vous simplifier les choses, vous pouvez coller directement les commandes SQL dans l'onglet <span class="em">SQL de PHPMyAdmin</span>; ce n'est toutefois pas une obligation et vous pouvez aussi exécuter à la main les différentes par le biais de l'interface.</p>
+                                    <ol>
+                                        <li>
+                                            <h5>Création de la base :</h5>
+                                            <p>Commençons donc par créer notre base de données. Dans l'onglet <span class="em">SQL</span>, recopiez ou collez la commande suivante :</p>
+<pre><code>CREATE DATABASE location CHARACTER SET 'utf8';</code></pre>
+                                            <img src="../images/create_database_Lazarus_1.png" alt="">
+                                            <p>Cliquez sur <span class="em">Exécuter</span> et vérifiez que la nouvelle base de données est bien créée :</p>
+                                            <img src="../images/create_database_Lazarus_2.png" alt="">
+                                            <p>Le message de réussiye sur fond vert et l'ajout de l'entrée <span class="em">location</span> dans la colonne de gauche attesetent la réussite de l'opération.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Création d'un utilisateur :</h5>
+                                            <p>Il n'est jamais conseillé de travailler, dans quel système que ce soit, sauf lorsque c'est indispensable, avec des privilèges d'administrateur. C'est le cas avec MySQL et la première chose que nous allons faire est de créer un utilisateur qui aura spécifiquement accès à notre base de données, et à aucune autre.</p>
+<pre><code>CREATE USER 'mysqmdvp'@'%' IDENTITIFIED BY 'passmysqldvp'; GRANT ALL PRIVILEGES ON location.* TO 'mysqldvp'@'%' IDENTITIFIED BY 'passmysqldvp' REQUIRE NONE WITH GRANT OPTION;</code></pre>
+                                            <p>Par cette commande, l'utilisateur <span class="em">mysqldvp</span> a été créé et il a accès à la base de données <span class="em">location</span> et à ses tables moyennant le mot de passe <span class="em">passmysqldvp</span>. Vous pouvez bien sûr définir un autre nom d'utilisateur et un autre mot de passe.</p>
+                                            <p>Si votre serveur MySQL tourne sur votre machine, vous pouvez remplacer <span class="em">'mysqldvp'@'%'</span> par <span class="em">'mysqldvp'@'localhost'</span>.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Création des tables :</h5>
+                                            <p>Dans la liste des bases de données, à gauche, cliquez sur <span class="em">location</span> ou collez la commande suivante dans l'onglet <span class="em">SQL</span> :</p>
+<pre><code>USE location;</code></pre>
+                                            <p>Dans l'onglet <span class="em">SQL</span> de <span class="em">location</span>, nous allons créer des tables dans la base de données.</p>
+                                            <p>Nous avons besoin de trois tables :</p>
+                                            <ul>
+                                                <li>
+                                                    <p>la liste des voitures;</p>
+                                                </li>
+                                                <li>
+                                                    <p>le répertoire des clients;</p>
+                                                </li>
+                                                <li>
+                                                    <p>la liste des locations.</p>
+                                                </li>
+                                            </ul>
+                                            <p>La liste des voitires contiendra les colonnes suivantes :</p>
+                                            <table class="tableBalises">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Nom de colonnes</th>
+                                                        <th>Type</th>
+                                                        <th>Commentaires</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="em">Plaque</td>
+                                                        <td>VARCHAR(12)</td>
+                                                        <td>Plaque d'immatriculation</td>
+                                                    </tr>
+                                                    
+                                                </tbody>
+                                            </table>
+                                        </li>
+                                    </ol>
+                                </li>
+                            </ol>
+                        </li>
                     </ol>
                 </article>
             <!-- fin de section -->
