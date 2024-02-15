@@ -4030,7 +4030,90 @@ end.</code></pre>
                                                 </tbody>
                                             </table>
                                             <p>La plaque d'immatriculation et le numéro client étant uniques, ils sont désignés comme <span class="em">clés primaires</span> dans tables respectives et sont utilisés comme <span class="em">clés étrangères</span> dans la table <span class="em">Locations</span>.</p>
-                                            
+                                            <p>Collez la commande suivante pour créer la table <span class="em">Voitures</span> :</p>
+<pre><code>CREATE TABLE Voitures (
+    Plaque VARCHAR(12) NOT NULL,
+    Marque VARCHAR(20) NOT NULL,
+    Modele VARCHAR(20) NOT NULL,
+    Cylindree SMALLINT NOT NULL,
+    Transmission CHAR(1) NOT NULL,
+    Prix FLOAT NOT NULL,
+    PRIMARY KEY (Plaque)
+);</code></pre>
+                                            <p>Puis celle-ci pour créer le répertoire des clients (table <span class="em">Clients</span>) :</p>
+<pre><code>CREATE TABLE Clients (
+    IdClient SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    Nom VARCHAR(40) NOT NULL,
+    Prenom VARCHAR(40) NOT NULL,
+    CodePostal VARCHAR(10),
+    Localite VARCHAR(50),
+    Rue VARCHAR(80),
+    Numero VARCHAR(10),
+    Telephone VARCHAR(40) NOT NULL,
+    Email VARCHAR(50),
+    PRIMARY KEY (idClient)
+);</code></pre>
+                                            <p>Et enfin pour la table <span class="em">Locations</span> :</p>
+<pre><code>CREATE TABLE Locations (
+    IdLocation SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    IdClient SMALLINT UNSIGNED NOT NULL,
+    Plaque VARCHAR(12) NOT NULL,
+    DateDebut DATETIME NOT NULL,
+    DateFin DATETIME NOT NULL,
+    DateRentree DATETIME,
+    Assurance BOOL NOT NULL,
+    PRIMARY KEY (IdLocation)
+);</code></pre>
+                                            <p>Établissons une relation entre la table <span class="em">Locations</span> et les deux autres tables, par le biais des clés étrangères <span class="em">IdClient</span> (table <span class="em">Clients</span>) et <span class="em">Plaque</span> (table <span class="em">Voitures</span>) :</p>
+<pre><code>ALTER TABLE Locations ADD (
+    CONSTRAINT FK_Locations_Voitures
+    FOREIGN KEY (Plaque)
+    REFERENCES Voitures (Plaque)
+);
+ALTER TABLE Locations ADD (
+    CONSTRAINT FK_Locations_clients
+    FOREIGN KEY (IdClient)
+    REFERENCES Clients(IdClient)
+);</code></pre>
+                                            <p>Dans PHPMyAdmin, allez dans le sous-menu <span class="em">Concepteur</span> du menu <span class="em">Plus</span> de notre base de données <span class="em">location</span>, pour vérifier que les relations sont correctes entre les trois tables :</p>
+                                            <img src="../images/concepteur_Lazarus.png" alt="">
+                                        </li>
+                                        <li>
+                                            <h5>Création des données :</h5>
+                                            <p>Notre base de données est prête à être alimentée. Pour gagner du temps, nous allons y créer par script quelques voitures et quelques clients.</p>
+                                            <p>D'abord une dizaine de voitures :</p>
+<pre><code>INSERT INTO Voitures VALUES('AB-612-BV', 'BMW', '135i Coupé', 3000, 'A', '30.00');
+INSERT INTO Voitures VALUES('AC-811-CK', 'Citroën', 'C3', 1600, 'M', '20.00');
+INSERT INTO Voitures VALUES('BN-101-AR', 'Citroën', 'C3', 1600, 'M', '20.00');
+INSERT INTO Voitures VALUES('AB-555-RB', 'Citroën', 'C3', 1600, 'M', '20.00');
+INSERT INTO Voitures VALUES('BU-435-GH', 'Citroën', 'C4 Coupe 2.0VTS', 2000, 'A', '27.50');
+INSERT INTO Voitures VALUES ('AM-398-ER', 'Daihatsu', 'Sirion', 1300, 'M', '17.25');
+INSERT INTO Voitures VALUES ('CB-135-RK', 'Fiat', '500 1.2 8V Lounge SS', 1200, 'M', '17.00');
+INSERT INTO Voitures VALUES ('AM-400-SU', 'Ford', 'Focus ST', 2000, 'M', '23.00');
+INSERT INTO Voitures VALUES ('AM-436-FD', 'Ford', 'Taurus SHO', 3500, 'A', '36.25');
+INSERT INTO Voitures VALUES ('CU-004-MP', 'Volkswagen', 'New Beetle', 2000, 'M', '27.50');</code></pre>
+                                            <p>Puis quelques clients :</p>
+<pre><code>INSERT INTO Clients VALUES (1, 'Van Steenbrugge', 'Stefaan', 'B2020', 'Antwerpen (Belgique)', 'De Bosschaertstraat', '30', '3222012345', '');
+INSERT INTO Clients VALUES (2, 'Leclercq', 'Jean-Jacques', '68200', 'Mulhouse', 'Avenue Aristide Briand', '37', '33389337878', 'jj.leclercq@monfai.fr');
+INSERT INTO Clients VALUES (3, 'Lamoureux', 'Gabriel', '69008', 'Lyon', 'Rue Professeur Beauvisage', '163', '33472985404', 'gaby.lamoureux@monfai.fr');
+INSERT INTO Clients VALUES (4, 'Loumrhari', 'Mohamed', '55270', 'Varennes-en-Argonne', 'Rue Louis XVI', '12', '33329807101', '');
+INSERT INTO Clients VALUES (5, 'Mispelter', 'Yves', 'CH1002', 'Lausanne (Suisse)', 'Place de la Palud', '2', '41213152555', 'yves.mispelter@myprovider.ch');
+INSERT INTO Clients VALUES (6, 'Zidane', 'Yasmina', '13014', 'Marseille', 'Rue Paul Coxe', '72', '33491095656', 'yasmina.z@monfai.fr');
+INSERT INTO Clients VALUES (7, 'Patulacci', 'Stéphane', '20304', 'Ajaccio', 'Avenue Antoine Serafini', '', '33495515253', '');
+INSERT INTO Clients VALUES (8, 'Matombo Nguza Aniomba', 'Honorine', '13008', 'Marseille', 'Rue du Commandant Rolland', '125', '33491553778', '');
+INSERT INTO Clients VALUES (9, 'Filucco', 'Martial', '59000', 'Lille', '', '', '33320495000', '');</code></pre>
+                                            <p>Nous avons enfin un peu de matière pour commencer les divers exemples suivants.</p>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <h4>Exemple 1 : affichage simple du contenu d'une table :</h4>
+                                    <p>Dans Lazarus, créez un projet de type <span class="em">Application</span>. Dans l'inspecteur d'objets, renommez la fiche principale (<span class="em">Form1</span> par défaut) en <span class="em">MainForm</span>.</p>
+                                    <ol>
+                                        <li>
+                                            <h5>TMySQLConnection :</h5>
+                                            <p>Dans la palette de composants, cherchez l'onglet <span class="em">SQLdb</span>, qui contient une série de composants permettant de se connecter à différents systèmes de bases de données. Parmi ceux-ci figurent une série de <span class="em">connecteurs</span> pour différentes versions de MySQL; ils sont représentés par des petits dauphins.</p>
+                                            <p>Un <span class="em">connecteur</span> va se charger d'assurer la connexion avec le système de bases de données.</p>
                                         </li>
                                     </ol>
                                 </li>
