@@ -4295,7 +4295,54 @@ end.</code></pre>
                                     <p>Notre premier exemple nous a permis de nous familiariser avec les composants nécessaires à la communication avec une base de données MySQL.</p>
                                     <p>Nous allons créer un second projet un peu plus élaboré, qui va nous permettre de sélectionner une des tables, de l'afficher dans un DBGrid et d'en modifier le contenu.</p>
                                     <p>Créez un nouveau projet de type <span class="em">Application</span>.</p>
-                                    
+                                    <p>Dans l'inspecteur d'objets, renommez la fiche principale (<span class="em">Form1</span> par défaut) en <span class="em">MainForm</span>. Agrandissez la taille de la fiche. Déposez-y, tout comme dans le premir exemple, les composants invisibles qui permettent de communiquer avec la base de données :</p>
+                                    <ul>
+                                        <li>
+                                            <p>un connecteur de la bonne version, que vous renommez directement en <span class="em">MySQLConnection</span>;</p>
+                                        </li>
+                                        <li>
+                                            <p>un <span class="em">TSQLTransaction</span>;</p>
+                                        </li>
+                                        <li>
+                                            <p>un <span class="em">TSQLQuery</span>.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Cette fois, les propriétés <span class="em">HostName</span>, <span class="em">DatabaseName</span> et <span class="em">Password</span> de <span class="em">MySQLConnection</span> restent vierges de toute valeur initiale; la propriété <span class="em">Transaction</span> doit être initialisée à <span class="em">SQLTransaction1</span> et la propriété <span class="em">CharSet</span> doit être initialisée à <span class="em">UTF8</span>. La propriété <span class="em">Database</span> de <span class="em">SQLQuery1</span> doit être initialisée à <span class="em">MySQLConnection</span>.</p>
+                                    <ol>
+                                        <li>
+                                            <h5>Mot de passe de connexion :</h5>
+                                            <p>Nous allons faire en sorte que l'utilisateur du programme tape, au début du programme, le mot de passe permettant de se connecter à la base de données. Nous allons faire cela au momement où la fenêtre de l'application reçoit le focus.</p>
+                                            <p>Cliquez, dans l'inspecteur d'objets, sur la fiche elle-même, et allez dans l'onglet <span class="em">Événements</span>. Cliquez sur les trois points en regard de l'événement <span class="em">OnActivate</span>, ce qui aura pour effet de créer dans le code source la méthode événementielle <span class="em">FormActivate</span>.</p>
+                                            <p>Voici le contenu de cette méthode :</p>
+<pre><code>procedure TMainForm.FormActivate(Sender: TObject);
+var
+    LPassword : String;
+begin
+    MySQLConnection.HostName := '192.168.0.1';
+    MySQLConnection.DatabaseName := 'location';
+    MySQLConnection.UserName := 'mysqldvp';
+    if InputQuery('Connexion à la base de données', 'Tapez votre mot de passe :', True, LPassword)
+        then
+        begin
+            MySQLConnection.Password := LPassword;
+            try
+            MySQLConnection.Connected := True;
+            SQLTransaction1.Active := True;
+            except
+            on e: EDatabaseError do
+                begin
+                MessageDlg('Erreur de connexion à la base de données.'#10#13'Le mot de passe est peut-être incorrect ?'#10#10#13'Fin de programme.', mtError, [mbOk], 0);
+                Close;
+                end;
+            end;
+        end
+        else   (* Pas de mot de passe : fin de programme *)
+        Close;
+end;</code></pre>
+                                            <p>Ajoutez également l'unité <span class="em">db</span> à la clause <span class="em">uses</span> (pour <span class="em">EDatabaseError</span>).</p>
+                                            
+                                        </li>
+                                    </ol>
                                 </li>
                             </ol>
                         </li>
