@@ -4149,7 +4149,7 @@ INSERT INTO Clients VALUES (9, 'Filucco', 'Martial', '59000', 'Lille', '', '', '
                                             <h5>Quel connecteur pour MariaDB ?</h5>
                                             <p>Comme cela a été évoqué dans l'introduction, <span class="em">MariaDB</span> est une déclinaison libre de MySQL de plus en plus présente sur le marché des SGBD.</p>
                                             <p>Dans l'onglet <span class="em">SQLdb</span> de la palette de composants, vous ne trouvez que des références aux versions de MySQL, alors quel connecteur choisir lorsque le serveur vous retourne la version 10.1 de MariaDB ? Jusqu'à la 5.5, les numéros de version coïncidaient, ensuite ils divergent :</p>
-                                            <table>
+                                            <table class="tableBalises">
                                                 <thead>
                                                     <tr>
                                                         <th>MySQL</th>
@@ -4176,8 +4176,126 @@ INSERT INTO Clients VALUES (9, 'Filucco', 'Martial', '59000', 'Lille', '', '', '
                                             <h5>TSQLTransaction :</h5>
                                             <p>À présent, nous avons besoin d'un composant qui va s'occuper de la <span class="em">transaction</span> avec la base de données.</p>
                                             <p>Dans l'onglet <span class="em">SQLdb</span>, cliquez sur l'icône <span class="em">TSQLTransaction</span> et déposez un composant à côté de votre connecteur.</p>
+                                            <p>Cliquez sur le premier composant <span class="em">MySQLConnection</span>; dans l'inspecteur d'objets, cherchez la propriété <span class="em">Transaction</span> et choisissez le composant que vous venez d'ajouter dans la liste déroulante des transactions (<span class="em">SQLTransaction1</span>).</p>
+                                            <p>Si vous inspectez les propriétés du composant <span class="em">SQLTransaction</span>, vous pouvez voir que lazarus a automatiquement établi un lien avec le connecteur et avec la base de données.</p>
+                                        </li>
+                                        <li>
+                                            <h5>TSQLQuery :</h5>
+                                            <p>Maintenant, il faut ajouter sur la fiche, à côté des deux premiers composants, un autre composant invisible, <span class="em">TSQLQuery</span> (toujours dans l'onglet <span class="em">SQLdb</span>). Il va relayer les <span class="em">commandes SQL</span> vers la base de données et héberger les données entrantes et sortantes dans un <span class="em">dataset</span>.</p>
+                                            <p>Initialisez la propriété <span class="em">Database</span> de ce nouveau composant en choisissant <span class="em">MySQLConnection</span> dans la liste déroulante.</p>
+                                            <p>Nous disposons à présents de tous les outils nécessaires pour communiquer avec notre base de données.</p>
+                                        </li>
+                                        <li>
+                                            <h5>TDataSource :</h5>
+                                            <p>Nous allons afficher le contenu d'une table, par exemple, celle des voitures. Pour ce faire, nous utiliserons un composant <span class="em">TDBGrid</span>, qui ets un <span class="em">tableau</span> spécialisé dans l'affichage de données issues d'une base de données.</p>
+                                            <p>Ce tableau ne peut fonctionner seul; il doit êtree couplé à un <span class="em">TDataSource</span>, qui va servir d'<span class="em">intermédiaire entre le dataset et les contrôles</span> tels que le DBGrid.</p>
+                                            <p>Cherchez l'onglet <span class="em">DataAccess</span>, cliquez sur le <span class="em">TDataSource</span> (normalement, le tout premier de la série) et déposez-en un exemplaire à côté des trois composants déjà installés (comme eux, il restera invisible).</p>
+                                            <p>Dans l'inspecteur d'objets, sa propriétés <span class="em">DataSet</span> doit être initialisée à <span class="em">SQLQuery1</span> dans la liste déroulande.</p>
+                                        </li>
+                                        <li>
+                                            <h5>TDBGrid :</h5>
+                                            <p>reste le tableau qui, lui, sera bien visible lors de l'exécution de l'application. Dans l'onglet <span class="em">Data Controls</span>, le <span class="em">TDBGrid</span> est l'un des derniers. Déposez-le sur votre fiche et augmentez ses dimensions :</p>
+                                            <img src="../images/TDBGrid_Lazarus.png" alt="">
+                                            <p>La propriété <span class="em">DataSource</span> du DBGrid doit être initialisée à <span class="em">DataSource1</span>, que nous avons déposé sur la fiche juste avant.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Commande d'affichage d'une table :</h5>
+                                            <p>Bien, bien. Ce que nous voulons faire, c'est afficher dans notre tableau le contenu de la table <span class="em">Voitures</span>. La commande SQL que nous devrons exécuter sera :</p>
+<pre><code>SELECT * FROM Voitures;</code></pre>
+                                            <p>Cette commande sera affectée à la propriété <span class="em">SQL.Text</span> du composant <span class="em">SQLQuery1</span>.</p>
+                                            <p>Pour commander l'affichage de la table, ajoutez un simple bouton (de l'onglet <span class="em">Standard</span>). Dans l'inspecteur d'objets, initialisez sa propriété <span class="em">Caption</span> à "Afficher". Dans l'onglet <span class="em">Événements</span> du composant, cliquez sur les trois points en regard de l'événement <span class="em">OnClick</span> - cela créera une méthode évenementielle dans le code source.</p>
+                                            <p class="em">Information : Un double-clic sur la case vide à côté de l'événement a le même résultat.</p>
+                                            <p>Voici le contenu de cette méthode :</p>
+<pre><code>procedure TMainForm.ButtonClick(Sender: TObject);
+begin
+    SQLQuery1.Close;
+    SQLQuery1.SQL.Text := 'SELECT * FROM Voitures;';
+    SQLQuery1.Open;
+end;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>Fermeture propre de l'application :</h5>
+                                            <p>Nous devons également prévoir la déconnexion propre de notre application à la base de données. Sélectionnez la fiche et, dans l'onglet <span class="em">Événements</span> de l'inspecteur d'objets, cliquez sur les trois points en regard d'<span class="em">OnClose</span>.</p>
+                                            <p>Voici le code de la méthode événementielle créée :</p>
+<pre><code>procedure TMainForm.FormClose(Sender: Tobject; var CloseAction: TCloseAction);
+begin
+    SQLQuery1.Close;
+    SQLTransaction1.Active := False;
+    SQLTransaction1.Connected := False;
+end;</code></pre>
+                                            <p>Il est temps de sauvegarder le projet. Nommez-le (par exemple) <span class="em">mysql01</span>, et enregistrez-le dans un répertoire du même nom.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Compilation et exécution :</h5>
+                                            <p>Vérifions à présent que nous avons bien travaillé. Compilez et exécutez votre programme; si vous n'avez pas commis d'erreur, le fait de presser sur le bouton <span class="em">Afficher</span> remplit le DBGrid avec la liste des voitures :</p>
+                                            <img src="../images/compilation_execution_Lazarus.png" alt="">
+                                            <p>Nous notons au passage que la gestion des caractères accentués (notre base de données a été créée avec le jeu de caractères <span class="em">UTF8</span>) n'est pas correcte. Pour y remédier, dans l'inspecteur d'objets, il faut initialiser la propriété <span class="em">CharSet</span> du connecteur <span class="em">MySQLConnection</span> à <span class="em">UTF8</span>.</p>
+                                            <p class="em">Information : On s'attendrait à priori à trouver une liste déroulante avec tous les jeux de caractères disponibkes, mais il n'en est rien : la valeur "UTF8" doit être introduite au clavier.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Code complet de l'exemple 1 :</h5>
+<pre><code>unit Main;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+    Classes, SysUtils, mysql56conn, sqldb, db, FileUtil, Forms, Controls,
+    Graphics, Dialogs, DBGrids, StdCtrls;
+
+type
+
+    { TMainForm }
+
+    TMainForm = class(TForm)
+    Button1: TButton;
+    DataSource1: TDataSource;
+    DBGrid1: TDBGrid;
+    MySQLConnection: TMySQL56Connection;
+    SQLQuery1: TSQLQuery;
+    SQLTransaction1: TSQLTransaction;
+    procedure Button1Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
+    private
+    { private declarations }
+    public
+    { public declarations }
+    end;
+
+var
+    MainForm: TMainForm;
+
+implementation
+
+{$R *.lfm}
+
+{ TMainForm }
+
+procedure TMainForm.Button1Click(Sender: TObject);
+(* Exécution de la requête d'affichage de la table *)
+begin
+    SQLQuery1.Close;
+    SQLQuery1.SQL.Text:= 'SELECT * FROM Voitures;';
+    SQLQuery1.Open;
+end;
+procedure TMainForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+(* Déconnexion propre de la base de données *)
+begin
+    SQLQuery1.Close;
+    SQLTransaction1.Active:= False;
+    MySQLConnection.Connected:= False;
+end;
+end.</code></pre>
                                         </li>
                                     </ol>
+                                </li>
+                                <li>
+                                    <h4>Exemple 2 : édition d'une table au choix :</h4>
+                                    <p>Notre premier exemple nous a permis de nous familiariser avec les composants nécessaires à la communication avec une base de données MySQL.</p>
+                                    <p>Nous allons créer un second projet un peu plus élaboré, qui va nous permettre de sélectionner une des tables, de l'afficher dans un DBGrid et d'en modifier le contenu.</p>
+                                    <p>Créez un nouveau projet de type <span class="em">Application</span>.</p>
+                                    
                                 </li>
                             </ol>
                         </li>
