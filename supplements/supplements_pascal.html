@@ -4323,24 +4323,96 @@ begin
     MySQLConnection.UserName := 'mysqldvp';
     if InputQuery('Connexion à la base de données', 'Tapez votre mot de passe :', True, LPassword)
         then
-        begin
-            MySQLConnection.Password := LPassword;
-            try
-            MySQLConnection.Connected := True;
-            SQLTransaction1.Active := True;
-            except
-            on e: EDatabaseError do
-                begin
-                MessageDlg('Erreur de connexion à la base de données.'#10#13'Le mot de passe est peut-être incorrect ?'#10#10#13'Fin de programme.', mtError, [mbOk], 0);
-                Close;
-                end;
-            end;
-        end
-        else   (* Pas de mot de passe : fin de programme *)
+            begin
+                MySQLConnection.Password := LPassword;
+                try
+                    MySQLConnection.Connected := True;
+                    SQLTransaction1.Active := True;
+                except
+                    on e: EDatabaseError do
+                        begin
+                            MessageDlg('Erreur de connexion à la base de données.'#10#13'Le mot de passe est peut-être incorrect ?'#10#10#13'Fin de programme.', mtError, [mbOk], 0);
+                            Close;
+                        end;
+                    end;
+            end
+    else   (* Pas de mot de passe : fin de programme *)
         Close;
 end;</code></pre>
                                             <p>Ajoutez également l'unité <span class="em">db</span> à la clause <span class="em">uses</span> (pour <span class="em">EDatabaseError</span>).</p>
-                                            
+                                            <p>Détaillons tout cela. Pour commencer, nous initialisons les propriétés <span class="em">HostName</span>, <span class="em">DatabaseName</span> et <span class="em">UserName</span> di connecteur. Le mot de passe est demandé au moyen d'un dialogue <span class="em">InputQuery</span>. Si l'utilisateur annule l'entrée du mot de passe, le programme se ferme sans autre forme de procès; s'il entre un mot de passe erroné, l'exception déclenchée par le connecteur est interceptée dans le bloc <span class="em">try...except</span>, un message d'erreur est affiché et l'application est fermée.</p>
+                                            <p>Avant de réaliser nos premiers tests à ce stade, n'oublions pas de faire en sorte que la connexion à la base de données soit proprement coupée à la fermeture du programme. Comme dans le premier exemple, créez une méthode événementielle pour l'événement <span class="em">OnClose</span> :</p>
+<pre><code>procedure TMainForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+begin
+    SQLQuery1.Close;
+    if SQLTransaction1.Active
+        then
+            SQLTransaction1.Active := False;
+    if MySQLConnection.Connected
+        then
+            MySQLConnection.Connected := False;
+end;</code></pre>
+                                            <p>Enregistrez le projet, en l'appelant <span class="em">mysql02</span> et en l'enregistrant dans un nouveau répertoire du même nom.</p>
+                                            <p>Compilez le programme et exécutez-le depuis l'EDI Lazarus. vous constatez qu'une fenêtre vierge apapraît et qu'immédiatement le dialogue <span class="em">InputQuery</span> vous demande le mot de passe :</p>
+                                            <img src="../images/InputQuery_Lazarus_1.png" alt="">
+                                            <p>Si vous tapez le mot de passe correct ("passmysqldvp", rappelez-vous), la fenêtre de l'application (qui ne contient rien de visible pour l'instant) reste ouverte; si vous cliquez sur <span class="em">Cancel</span>, l'application se ferme et si vous tapez exprès un mot de passe erroné, un message d'erreur apparaît :</p>
+                                            <img src="../images/InputQuery_Lazarus_2.png" alt="">
+                                            <p>Tien, mais ce n'est pas le message d'erreur que nous avons prévu dans la méthode <span class="em">FormActivate</span> ? En effet, mais si vous cliquez sur le bouton <span class="em">Continuer</span>, celui que nous avions prévu apparaît bien :</p>
+                                            <img src="../images/InputQuery_Lazarus_3.png" alt="">
+                                            <p>Pourquoi ? Tout simplement parce que le premier message d'erreur est renvoyé par le débogueur, qui lève le premier l'exception.</p>
+                                            <p>Plutôt que d'exécuter le programme depuis l'EDI, utilisez l'exécutable qui a été créé dans le répertoire <span class="em">mysql02</span>.</p>
+                                            <p>Exécutez-le et faites l'expérience d'entrer un mot de passe erroné : c'est bien le message d'erreur que nous avons prévu qui s'affiche, puisque l'exécution du programme n'est plus encadrée par le débogueur.</p>
+                                            <ol>
+                                                <li>
+                                                    <h6>Affichage de l'erreur renvoyée par le système :</h6>
+                                                    <p>Notre message d'erreur n'est pas très précis, car il apparaît identiquement si le mot de passe est erroné et si, par exemple, le serveur est inaccessible ou la base de données inexistante.</p>
+                                                    <p>Pour pouvoir identifier plus précisément l'erreur qui s'est produite, il faut lever une exception descendante de <span class="em">EDatabaseError : ESQLDatabaseError</span>. Dans les propriétés de ce type d'exception se trouvent un code etdes messages propres à MySQL.</p>
+                                                    <p class="em">Information : Une liste des erreurs possibles est consultable dans la <a href="https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html" target="_blank">référence de MySQL en ligne</a>.</p>
+                                                    <p>Voici une version plus élaborée de notre méthode de login :</p>
+<pre><code>procedure TMainForm.FormActivate(Sender: TObject);
+(* Lecture du mot de passe et connexion à la base de données *)
+var
+    LPassword : String;
+begin
+    (* Données de la connexion *)
+    MySQLConnection.HostName := '192.168.0.1';
+    MySQLConnection.DatabaseName := 'location';
+    MySQLConnection.UserName := 'mysqldvp';
+    (* Lecture du mot de passe *)
+    if InputQuery('Connexion à la base de données', 'Tapez votre mot de passe :', True, LPassword)
+        then
+            begin
+                (* Connexion à la base de données *)
+                MySQLConnection.Password := LPassword;
+                try
+                    MySQLConnection.Connected := True;
+                    SQLTransaction1.Active := True;
+                except
+                    on e: ESQLDatabaseError do
+                        begin   (* Erreur renvoyée par MySQL : fin de programme *)
+                            MessageDlg('Erreur de connexion à la base de données :'#10#10#13 + IntToStr(e.ErrorCode) + ' : ' + e.Message + #10#10#13'Fin de programme.', mtError, [mbOk], 0);
+                            Close;
+                        end;
+                    on e: EDatabaseError do
+                        begin   (* Erreur de connexion : fin de programme *)
+                            MessageDlg('Erreur de connexion à la base de données.'#10#10#13'Fin de programme.', mtError, [mbOk], 0);
+                            Close;
+                        end;
+                end;
+            end
+        else   (* Pas de mot de passe : fin de programme *)
+            Close;
+end;</code></pre>
+                                                    <p>Par exemple, si la base de données n'existe pas :</p>
+                                                    <img src="../images/erreur_systeme_Lazarus.png" alt="">
+                                                    <p>La gestion de l'exception <span class="em">EDatabaseError</span> suit celle de <span class="em">ESQLDatabaseError</span>. Le principe général est de gérer en cascade les exceptions de la plus spécialisée à la moins spécialisée : ainsi, si la connexion au serveur MySQL est possible, les erreurs MySQL seront traitées en priorité (<span class="em">ESQLDatabaseError</span>).</p>
+                                                    <p>Remarque : Vous avez certainement aperçu que les messages d'erreur sont en anglais, la langue par défaut de Lazarus. Pour obtenir les messages en français, je vous renvoie au <a href="http://gilles-vasseur.developpez.com/tutoriels/lazarus-traduction/" target="_blank">tutoriel de Gilles Vasseur sur l'internationalisation d'une application</a>.</p>
+                                                </li>
+                                            </ol>
+                                        </li>
+                                        <li>
+                                            <h5>Récupération de la liste des tables :</h5>
+                                            <p>À présent, nous allons faire en sorte que l'utilisateur puisse choisir une des tables contenues dans la base de données pour en afficher le contenu.</p>
                                         </li>
                                     </ol>
                                 </li>
