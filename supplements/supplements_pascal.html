@@ -4413,6 +4413,75 @@ end;</code></pre>
                                         <li>
                                             <h5>Récupération de la liste des tables :</h5>
                                             <p>À présent, nous allons faire en sorte que l'utilisateur puisse choisir une des tables contenues dans la base de données pour en afficher le contenu.</p>
+                                            <p>Sélectionnez un composant <span class="em">TListBox</span> dans l'onglet <span class="em">Standard</span> et déposez-le en bas et à gauche sur la fiche du projet. Dans l'inspecteur d'objets, renommez sa propriété <span class="em">Name</span> en <span class="em">lbTables</span>.</p>
+                                            <p>Dans l'éditeur de source, allez dans la déclaration du type <span class="em">TMainForm</span> (que Lazarus a automatiquement déclaré ainsi lorsque vous avez appelé <span class="em">MainForm</span> votre fiche principale). Dans la section <span class="em">private</span>, ajoutez cette procédure :</p>
+<pre><code>procedure ShowTables;</code></pre>
+                                            <p>Pressez la combinaison de touches <span class="em">Shift + CTRL + C</span> pour que Lazarus crée la procédure dans la section <span class="em">implementation</span> et complétez cette dernière :</p>
+<pre><code>procedure TMainForm.ShowTables;
+begin
+    SQLQuery1.Close;
+    SQLQuery1.SQL.Text := 'SHOW TABLES;';
+    SQLQuery1.Open;
+    while not SQLQuery1.EOF do
+        begin
+            lbTables.Items.Add(SQLQuery1.Fields[0].AsString);
+            SQLQuery1.Next;
+        end;
+    (* Sélection du premier élément *)
+    if SQLQuery1.RecordCount > 0
+        then
+            lbTables.ItemIndex := 0;
+end;</code></pre>
+                                            <p>Tout d'abord, la commande SQL qui permet de retourner la liste des tables d'une base de données est <span class="html">SHOW TABLES;</span>.</p>
+                                            <p>Cette commande est passée au composant <span class="em">SQLQuery1</span> dans sa propriété <span class="em">SQL.Text</span> (comme nous avions fait dans notre premier exemple) et est exécutée dans la méthode <span class="em">Open</span>. Ensuite, nous bouclons pour que chaque nom de table retourné par la requête soit ajouté dans la listbox <span class="em">lbTables</span>.</p>
+                                            <p>Placez l'appel de cette méthode privée <span class="em">ShowTables</span> dans le bloc <span class="em">try</span> de la méthode événementielle <span class="em">FormActivate</span> de la fiche principale :</p>
+<pre><code>procedure TMainForm.FormActivate(Sender: TObject);
+var
+    LPassword : String;
+begin
+    { . . . }
+    if InputQuery('Connexion à la base de données', 'Tapez votre mot de passe :', True, LPassword)
+        then
+            begin
+                MySQLConnection.Password := LPassword;
+                try
+                    MySQLConnection.Connected := True;
+                    SQLTransaction1.Active := True;
+                    ShowTables;   // ***** AJOUT *****
+                except
+                    { . . . }
+                end;
+            end
+        else   (* Pas de mot de passe : fin de programme *)
+            Close;
+end;</code></pre>
+                                            <p>Vous pouvez faire un test d'exécution à ce stade, pour vérifier que la liste des tables est bien chargée dans la listbox :</p>
+                                            <img src="../images/recuperation_liste_tables_Lazarus.png" alt="">
+                                        </li>
+                                        <li>
+                                            <h5>Affichage du contenu de la table sélectionnée :</h5>
+                                            <p>Comme dans le premier exemple, nous allons afficher le contenu d'une table dans un composant <span class="em">TDBGrid</span>, de l'onglet <span class="em">Data Controls</span>, que vous déposez en haut et à gauche de votre fiche principale, et dont vous agrandissez la largeur jusqu'à la limite droite de la fiche et la hauteur jusquà un peu au-dessus de la listbox.</p>
+                                            <p>L'utilisation du DBGrid nous conduit à ajouter également un composant <span class="em">TDataSource</span>, de l'onglet <span class="em">Data Access</span> :</p>
+                                            <img src="../images/contenu_table_Lazarus_1.png" alt="">
+                                            <p>Toujours comme dans l'exemple 1, la propriété <span class="em">DataSet</span> du <span class="em">TDataSource</span> doit être affectée à <span class="em">SQLQuery1</span>, et la propriété <span class="em">DataSource</span> du <span class="em">TDBGrid</span> à <Span class="em">DataSource1</Span>.</p>
+                                            <p>Dans l'inspecteur d'objets, sélectionnez la listbox <span class="em">lbTables</span>, allez dans l'onglet <span class="em">Événements</span>, trouvez l'élément <span class="em">OnSelectionChange</span> et cliquez sur les trois points en regard de celui-ci pour créer une méthode événementielle qui s'exécutera à chaque changement de choix de table :</p>
+<pre><code>procedure TMainForm.lbTablesSelectionChange(Sender: TObject; User: boolean);
+begin
+    SQLQuery1.Close;
+    SQLQuery1.SQL.Text := 'SELECT * FROM ' + lbTables.GetSelectedText + ';';
+    SQLQuery1.Open;
+end;</code></pre>
+                                            <p>Simplement, la requête <span class="html">SELECT * FROM</span> est complétée par le nom de la table sélectionnée dans la listbox.</p>
+                                            <p>Testez l'application en l'état :</p>
+                                            <img src="../images/contenu_table_Lazarus_2.png" alt="">
+                                            <p>Le fait de sélectionner une autre table charge automatiquement son contenu dans la DBGrid.</p>
+                                            <p class="em">Remarque : Si vous êtes très attentif(ve), vous verrez très fugacement apparaître la liste des tales dans le DBGrid, juste avant que le contenu de la première table s'affiche. C'est dû au fait que le DBGrid, via le DataSource, affiche le contenu du dataset du SQLQuery. Pour éviter cette brève apparition, il aurait fallu ne pas lier le DBGrid au DataSource dans ses propriétés et ajouter cette instruction juste après l'exécution de <span class="html">ShowTables</span> (dans la méthode <span class="html">FormActivate</span>) : <span class="html">DbGrid1.DataSource := DataSource1;</span>.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Permettre de modifier les données :</h5>
+                                            <p>Nous avons laissé un peu de place entre le bord supérieur de la listbox et le bord inférieur du DBGrid pour pouvoir y insérer une barre d'outils de navigation : un composant <span class="em">TDBNavigator</span> (que l'on trouve au début de l'onglet <span class="em">Data Controls</span>). Centrez-le ou donnez-lui la même largeur que le DBGrid :</p>
+                                            <img src="../images/modifier_donnees_Lazarus.png" alt="">
+                                            
                                         </li>
                                     </ol>
                                 </li>
