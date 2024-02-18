@@ -594,7 +594,7 @@ end.</code></pre>
                             <p>Les nombres hexadécimaux sont des entiers et ils doivent être compris entre $00000000 et $FFFFFFFF.</p>
                             <ul>
                                 <li>
-                                    <p>Un nombre entier en notation décimale se compose d'une suite de chiffres éventiellement précédés d'un signe (exemple : 46). En notation hexadécimale, il se compose en plus, des lettres de A à F (ou a à f); il est alors préfixé par le signe $ (exemple : $2E).</p>
+                                    <p>Un nombre entier en notation décimale se compose d'une suite de chiffres éventuellement précédés d'un signe (exemple : 46). En notation hexadécimale, il se compose en plus, des lettres de A à F (ou a à f); il est alors préfixé par le signe $ (exemple : $2E).</p>
                                     <p>Notation décimale :</p>
                                     <img src="../images/notation_decimale_Pascal.png" alt="">
                                     <p>Notation hexadécimale :</p>
@@ -4481,8 +4481,688 @@ end;</code></pre>
                                             <h5>Permettre de modifier les données :</h5>
                                             <p>Nous avons laissé un peu de place entre le bord supérieur de la listbox et le bord inférieur du DBGrid pour pouvoir y insérer une barre d'outils de navigation : un composant <span class="em">TDBNavigator</span> (que l'on trouve au début de l'onglet <span class="em">Data Controls</span>). Centrez-le ou donnez-lui la même largeur que le DBGrid :</p>
                                             <img src="../images/modifier_donnees_Lazarus.png" alt="">
-                                            
+                                            <p>Affectez <span class="em">DataSource1</span> à sa propriété <span class="em">DataSource</span>. Dans l'inspecteur d'objets, vous pouvez choisir quels boutons vous voulez afficher dans le DBNavigator, dans sa propriété <span class="em">VisibleButtons</span>. Décochez notamment le boutton <span class="em">nbRefresh</span>, qui n'a aucune utilité dans notre exemple.</p>
+                                            <p>Exécutez à nouveau l'application et expérimentez la navigation avec les boutons verts, mais aussi l'insertion de lignes, la suppresion, etc. Vous pouvez y aller franchement et tout casser : les modifications que vous faites affectent juste le contenu du DBGrid, mais pas la base de données elle-même. D'ailleurs, si vous changez votre choix de table dans la listbox, vous voyez qu'à chaque réaffichage la table est restaurée dans son étét d'origine.</p>
+                                            <p>La dernière étape va être d'enregistrer les modifications dans la base de données.</p>
+                                            <p class="em">Attention, ne martyrisez pas trop la base de données dans les tests que vous ferez dorénavant, car nous en aurons encore besoin pour la suite.</p>
+                                            <p>Nous allons donc écrire une méthode privée qui va s'occuper de mettre à jour les données des tables dans la base. Cette méthode sera appelée à chaque fois que l'on changera de table dans la listbox, ainsi qu'à la ferneture de l'application.</p>
+                                            <p>Retournez dans l'éditeur de source et ajoutez cette méthode dans la section <span class="em">private</span> de <span class="em">TMainForm</span> :</p>
+<pre><code>procedure CommitChanges;</code></pre>
+                                            <p>Un petit <span class="em">Shift + CTRL + C</span> pour son implémentation :</p>
+<pre><code>procedure TMainForm.CommitChanges;
+begin
+    if SQLTransaction1.Active
+        then
+            try
+                SQLQuery1.ApplyUpdates;
+                SQLTransaction1.Commit;
+            except
+                on e: EDatabaseError do
+                    MessageDlg('Erreur d''enregistrement des modifications', mtError, [mbOk], 0);
+            end;
+end;</code></pre>
+                                            <p>Appelons-la dans la méthode événementielle qui répond au changement de table dans la listbox :</p>
+<pre><code>procedure TMainForm.lbTablesSectionChange(Sender: TObject; User: boolean);
+begin
+    CommitChanges;   // ***** AJOUT *****
+    SQLQuery1.Close;
+    SQLQuery1.SQL.Text := 'SELECT * FROM ' + lbTables.GetSelectedText + ';';
+    SQLQuery1.Open;
+end;</code></pre>
+                                            <p>Et dans la méthode qui répond à la fermeture de la fiche principale :</p>
+<pre><code>procedure TMainForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+begin
+    CommitChanges;   // ***** AJOUT *****
+    SQLQuery1.Close;
+    if SQLTransaction1.Active
+        then
+            SQLTransaction1.Active := False;
+    if MySQLConnection.Connected
+        then
+            MySQLConnection.Connected := False;
+end;</code></pre>
+                                            <p>Testez l'application ainsi modifiée (encore une fois, en y allant mollo pour garder utilisable la base de données). Inspectez le contenu de la base avec phpMyAdmin : vous constaterez que toutes les modifications y ont bien été répercutées.</p>
                                         </li>
+                                        <li>
+                                            <h5>Code complet de l'exemple 2 :</h5>
+<pre><code>unit Main;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+    Classes, SysUtils, mysql56conn, sqldb, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls, Grids, DBGrids, DbCtrls, db;
+
+type
+
+    { TMainForm }
+
+    TMainForm = class(TForm)
+        DataSource1: TDataSource;
+        DBGrid1: TDBGrid;
+        DBNavigator1: TDBNavigator;
+        lbTables: TListBox;
+        MySQLConnection: TMySQL56Connection;
+        SQLQuery1: TSQLQuery;
+        SQLTransaction1: TSQLTransaction;
+        procedure FormActivate(Sender: TObject);
+        procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
+        procedure lbTablesSelectionChange(Sender: TObject; User: boolean);
+    private
+        { private declarations }
+        procedure ShowTables;
+        procedure CommitChanges;
+    public
+        { public declarations }
+    end;
+
+var
+    MainForm: TMainForm;
+
+implementation
+
+{$R *.lfm}
+
+{ TMainForm }
+
+procedure TMainForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+(* Fermeture propre de la connexion avant la fin de programme *)
+begin
+    (* Enregistrement des éventuelles modifications *)
+    CommitChanges;
+    (* Fermeture de la connexion *)
+    SQLQuery1.Close;
+    if SQLTransaction1.Active
+        then
+            SQLTransaction1.Active := False;
+    if MySQLConnection.Connected
+        then
+            MySQLConnection.Connected := False;
+end;
+
+procedure TMainForm.lbTablesSelectionChange(Sender: TObject; User: boolean);
+(* Sélection d'une table dans la listbox *)
+begin
+    (* Enregistrement des éventuelles modifications *)
+    CommitChanges;
+    (* Chargement des données de la table choisie *)
+    SQLQuery1.Close;
+    SQLQuery1.SQL.Text := 'SELECT * FROM ' + lbTables.GetSelectedText + ';';
+    SQLQuery1.Open;
+end;
+
+procedure TMainForm.ShowTables;
+(* Chargement de la liste des tables dans la listbox *)
+begin
+    SQLQuery1.Close;
+    SQLQuery1.SQL.Text := 'SHOW TABLES;';
+    SQLQuery1.Open;
+    while not SQLQuery1.EOF do
+        begin
+            lbTables.Items.Add(SQLQuery1.Fields[0].AsString);
+            SQLQuery1.Next;
+        end;
+    if SQLQuery1.RecordCount &gt; 0
+        then
+            lbTables.ItemIndex := 0;
+end;
+
+procedure TMainForm.CommitChanges;
+(* Enregistrement des modifications *)
+begin
+    if SQLTransaction1.Active
+        then
+            try
+                SQLQuery1.ApplyUpdates;
+                SQLTransaction1.Commit;
+            except
+                on e: EDatabaseError do
+                    begin
+                        MessageDlg('Erreur d''enregistrement des modifications', mtError, [mbOk], 0);
+                    end;
+            end;
+end;
+
+procedure TMainForm.FormActivate(Sender: TObject);
+(* Lecture du mot de passe et connexion à la base de données *)
+var
+    LPassword : String;
+begin
+    (* Données de la connexion *)
+    MySQLConnection.HostName := '192.168.0.1';
+    MySQLConnection.DatabaseName := 'location';
+    MySQLConnection.UserName := 'mysqldvp';
+    (* Lecture du mot de passe *)
+    if InputQuery('Connexion à la base de données', 'Tapez votre mot de passe :', True, LPassword)
+        then
+            begin
+                (* Connexion à la base de données *)
+                MySQLConnection.Password := LPassword;
+                try
+                    MySQLConnection.Connected := True;
+                    SQLTransaction1.Active := True;
+                    ShowTables;
+                except
+                    on e: EDatabaseError do
+                        begin   (* Erreur de connexion : fin de programme *)
+                            MessageDlg('Erreur de connexion à la base de données.'#10#13'Le mot de passe est peut-être incorrect ?'#10#10#13'Fin de programme.', mtError, [mbOk], 0);
+                            Close;
+                        end;
+                    end;
+            end
+            else   (* Pas de mot de passe : fin de programme *)
+                Close;
+end;
+
+end.</code></pre>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <h4>Exemple 3 : une application complète :</h4>
+                                    <p>Nous pourrions déjà arrêter là : vous avez découvert les composants natifs de Lazarus permettant de créer des applications utilisant une base de données et vous pourrez sans trop de difficultés appliquer les principes vus pour MySQL à d'autres systèmes de bases de données. Mais nous allons essayer d'aller un peu plus loin, en découvrant d'autres contrôles spécialisés, en voyant comment modifier les données dans des contrôles classiques (non spécialisés dans les bases de données), et comment regrouper le traitement des données dans une unité d'un type un peu particulier : un <span class="em">DataModule</span>. Nous parlerons également de l'intérêt de centraliser la génération des requêtes SQL dans une <span class="em">interface</span>.</p>
+                                    <ol>
+                                        <li>
+                                            <h5>Création du projet :</h5>
+                                            <p>Commençons par le commencement :</p>
+                                            <ul>
+                                                <li>
+                                                    <p>créez un nouveau projet de type <span class="em">Application</span>;</p>
+                                                </li>
+                                                <li>
+                                                    <p>renommez l'unité <span class="em">Unit1</span> en <span class="em">Main</span>;</p>
+                                                </li>
+                                                <li>
+                                                    <p>renommez la fiche principale en <span class="em">MainForm</span> (qui devient automatiquement de type <span class="em">TMainForm</span>);</p>
+                                                </li>
+                                                <li>
+                                                    <p>changez sa propriété <span class="em">Caption</span> (son titre) en, par exemple, "Location de voitures";</p>
+                                                </li>
+                                                <li>
+                                                    <p>enregistrez le projet sous le nom <span class="em">mysql03</span>, dans un nouveau répertoire du même nom.</p>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <h5>Unité de type DataModule :</h5>
+                                            <p>Les deux premiers exemples étaient de minuscules applications, qui ne sont pas très difficiles à comprendre, ni à déboguer, pour un développeir qui les découvre. Lorsque l'on crée des applications de plus grande ampleur, ces aspects (comprendre et déboguer) prennent toute leur importance et il faut que vous aussi vous vous y retrouviez facilement si vous devez en assurer la maintenance dans le futur.</p>
+                                            <p>Nous allons faire en sorte que tout le traitement en rapport avec la base de données soit regroupé à part, et Lazarus possède un type particulier d'unité adapté à cela : le <span class="em">DataModule</span>. Ce type d'unité est l'endroit idéal pour déposer des composants invisibles, comme ceux que nous avons utilisés précédemment, mais ce n'est pas limitatif.</p>
+                                            <p class="em">Attention, ce manière de faire pourrait aussi faciliter la migration d'une application vers un autre système de gestion de base de données.</p>
+                                            <p>Allez dans le menu <span class="em">Fichier</span>, <span class="em">Nouveau</span>, <span class="em">Module de données</span> et cliquez sur <span class="em">OK</span> pour ajouter une unité DataModule :</p>
+                                            <img src="../images/DataModule_Lazarus_1.png" alt="">
+                                            <p>La nouvelle unité créée présente une fiche similaire à une fiche normale de type <span class="em">TForm</span>. Renommez tout de suite l'unité en <span class="em">DataAccess</span>.</p>
+                                            <p>Depuis l'onglet de composants <span class="em">SQLdb</span>, déposez sur la fiche un composant <span class="em">TMySQLxxConnection</span> correspondant à votre version, et un composant <span class="em">TSQLTransaction</span>. Renommez-les respectivement <span class="em">SQLConnection</span> et <span class="em">SQLTransaction</span>, et assignez <span class="em">SQLConnection</span> à la propriété <span class="em">Database</span> de <span class="em">SQLTransaction</span>. N'oubliez pas d'inscrire <span class="em">UTF8</span> dans la propriété <span class="em">CharSet</span> de <span class="em">SQLConnection</span>.</p>
+                                            <p>Allez dans le menu <span class="em">Projet</span>, <span class="em">Options du projet</span> et cliquez sur l'entrée <span class="em">Fiches</span>. Vous constatez que la fiche principale et le datamodule sont automatiquement créés au démarrage de l'application. C'est très bien ainsi, hormis qu'ils ne sont pas créés dans le bon ordre : vous comprendrez très bite pourquoi le datamodule doit être créé avant la fiche principale. Mettez <span class="em">DataModule1</span> en surbillance et faites-le monter en tête de liste à l'aide de la petite flèche verte à gauche. Tant que vous y êtes, décochez la case <span class="em">Créer automatiquement les nouvelles fiches</span> au bas du dialogue : nous n'aurons pas besoin que toutes les autres fiches de l'application soient créées au démarrage.</p>
+                                            <img src="../images/DataModule_Lazarus_2.png" alt="">
+                                            <p>Cliquez sur <span class="em">OK</span>. Ouvez l'inspecteur de projet, par le biais du menu <span class="Em">Projet</span>, <span class="em">Inspecteur de projet</span> :</p>
+                                            <img src="../images/DataModule_Lazarus_3.png" alt="">
+                                            <p>Le projet est pour l'instant composé d'un programme principal, <span class="em">mysql03.lpr</span>, et de deux unités, <span class="em">main.pas</span> et <span class="em">dataaccess.pas</span>. Double-cliquez sur le programme principal : dans son code source, vous voyez que le datamodule est bien créé avant la fiche principale :</p>
+<pre><code>program mysql03;
+
+{$mode objfpc}{$H+}
+
+uses
+    {$IFDEF UNIX}{$IFDEF UseCThreads}
+    cthreads,
+    {$ENDIF}{$ENDIF}
+    Interfaces, // this includes the LCL widgetset
+    Forms,
+    DataAccess,
+    Main
+        { you can add units after this };
+{$R *.res}
+begin
+    RequireDerivedFormResource:=True;
+    Application.Initialize;
+    Application.CreateForm(TDataModule1, DataModule1);
+    Application.CreateForm(TMainForm, MainForm);
+    Application.Run;
+end.</code></pre>
+                                            <p>Nous avons mentionné, au début de cet exemple, que l'utilisation du datamodule pourrait faciliter la migration de notre application vers un autre système de gestion de base de données, comme SQLite ou PostgreSQL. Alors nous allons jouer le jeu et y regrouper <span class="em">tout ce qui est propre à MySQL</span>.</p>
+                                            <p>Nous allons d'abord y inclure les méthodes de connexion (avec la demande de mot de passe) et de déconnexion que nous avions développées dans l'exemple 2.</p>
+                                            <p>Cliquez sur l'onglet du code source de l'unité <span class="em">DataAccess</span> et ajoutez, dans la section <span class="em">public</span> de la classe <span class="em">TDataModule1</span>, ces deux méthodes :</p>
+<pre><code>function Login : Boolean;
+procedure Logoff;</code></pre>
+                                            <p>Pressez la combinaison de touches <span class="em">Shift + CTRL + C</span>, afin que Lazarus crée les deux méthodes dans la section <span class="em">implementation</span>.</p>
+                                            <p>Recopiez dans la méthode <span class="em">Login</span> le code de connexion contenu dans la méthode <span class="em">FormActivate</span> de l'exemple 2, et dans la méthode <span class="em">Logoff</span> le contenu de la méthode <span class="em">FormClose</span>.</p>
+<pre><code>function TDataModule1.Login: Boolean;
+(* Demande du mot de passe et connexion à la base de données *)
+var
+    LPassword : String;
+begin
+    Result := True;
+    SQLConnection.HostName := '192.168.0.1';
+    SQLConnection.DatabaseName := 'location';
+    SQLConnection.UserName := 'mysqldvp';
+    if InputQuery('Connexion à la base de données', 'Tapez votre mot de passe :', True, LPassword)
+        then
+            begin
+                SQLConnection.Password := LPassword;
+                try
+                    SQLConnection.Connected := True;
+                    SQLTransaction.Active := True;
+                except
+                    on e : ESQLDatabaseError do
+                        begin   (* Erreur renvoyée par MySQL : fin de programme *)
+                            MessageDlg('Erreur de connexion à la base de données :'#10#10#13 + IntToStr(e.ErrorCode) + ' : ' + e.Message + #10#10#13'Fin de programme.', mtError, [mbOk], 0);
+                            Result := False;;
+                        end;
+                    on e : EDatabaseError do
+                        begin   (* Erreur de connexion : fin de programme *)
+                            MessageDlg('Erreur de connexion à la base de données.'#10#10#13'Fin de programme.', mtError, [mbOk], 0);
+                            Result := False;;
+                        end;
+                end;
+            end
+        else
+            Result := False;
+end;
+
+procedure TDataModule1.Logoff;
+(* Déconnexion de la base de données *)
+begin
+    if SQLTransaction.Active
+        then
+            SQLTransaction.Active := False;
+    if SQLConnection.Connected
+        then
+            SQLConnection.Connected := False;
+end;</code></pre>
+                                            <p>Pour que le compilateur trouve la fonction <span class="em">InputQuery</span>, ajoutez l'unité <span class="em">Dialogs</span> à la clause <span class="em">uses</span> du datamodule, et ajoutez l'unité <span class="em">db</span> pour le type <span class="em">EDatabaseError</span>.</p>
+                                            <p>Retournez dans l'unité <span class="em">Main</span> et pressez <span class="em">F12</span> pour afficher la fiche principale. Dans l'inspecteur d'objets, dans l'onglet <span class="em">Événements</span>, descendez sur l'événement <span class="em">OnShow</span> et cliquez sur les trois points correspondants. Cela va créer la méthode <span class="em">TMainForm.FormShow</span> dans la section implémentation. C'est à cet endroit que nous allons appeler la méthode de login que nous avons implémentée dans le datamodule :</p>
+<pre><code>procedure TMainForm.FormShow(Sender: TObject);
+(* Demande de mot de passe *)
+begin
+if DataModule1.Login
+    then
+        begin
+            ShowMessage('Login couronné de succès !');
+        end
+    else
+        Close;
+end;</code></pre>
+                                            <p>Faites la même chose avec l'événement <span class="em">OnClose</span> :</p>
+<pre><code>procedure TMainForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+(* Fermeture propre de la connexion à la base de données *)
+begin
+    DataModule1.Logoff;
+end;</code></pre>
+                                            <p>Il ne faut pas oublier d'ajouter l'unité <span class="em">DataAccess</span> à la clause <span class="em">uses</span> de l'unité <span class="em">Main</span>, sinon le compilateur dira qu'il ne connaît ni <span class="em">Login</span> ni <span class="em">Logoff</span>.</p>
+                                            <p>Vous pouvez compiler et exécuter votre application à ce stade, pour vérifier que la connexion est bien couronnée de succès.</p>
+                                            <p>Bon, il est temps de définir à quoi va ressembler et ce que va faire notre application de gestion de location de voitures.</p>
+                                            <p>Nous aurons une fenêtre principale, qui va contenir la liste des locations :</p>
+                                            <img src="../images/DataModule_Lazarus_4.png" alt="">
+                                            <p>Un dialogue permettra de gérer la liste des voitures disponibles :</p>
+                                            <img src="../images/DataModule_Lazarus_5.png" alt="">
+                                            <p>Un autre, similaire, sera consacré à la liste des clients :</p>
+                                            <img src="../images/DataModule_Lazarus_6.png" alt="">
+                                            <p>Dans un dialogue, on pourra créer une nouvelle location :</p>
+                                            <img src="../images/DataModule_Lazarus_7.png" alt="">
+                                            <p>Ce dialogue servira également à modifier une location existante.</p>
+                                            <p>Pour terminer, nous sortirons une facture à l'aide d'un générateur de rapports.</p>
+                                            <p>Nous avons du pain sur la planche ! Créons tout de suite le dialogue de gestion des voitures.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Utilisation des composants spécialisés :</h5>
+                                            <p>Dans les deux premiers exemples, vous avez déjà découvert les composants <span class="em">TDBGrid</span> et <span class="em">TDBNavigator</span>. Nous allons encore nous en servir, mais nous allons aussi utiliser d'autres composants spécialisés comme <span class="em">TDBEdit</span> et <span class="em">TDBRadioGroup</span>. Si vous parcourez l'onglet <span class="em">Data Controls</span> de la palette, vous trouvez toute une panoplie de composants : mémo, liste déroulante, etc. Avec ceux que nous allons voir ici, vous devriez être à même de les utiliser tous par la suite.</p>
+                                            <p>L'utilisation de tous ces composants spécialisés impose de mettre en service, comme dans les deux premiers exemples, un <span class="em">TSQLQuery</span> et un <span class="em">TDataSource</span>. Et à quel endroit allons-nous les placer ? Dans le datamodule, bien sûr !</p>
+                                            <p class="em">Attentions, nous assignerons un <span class="html">TSQLQuery</span> et, éventuellement, un <span class="html">TDataSource</span> à chaque table de la base de données.</p>
+                                            <p>Cliquez sur l'onglet du code source de l'unité <span class="em">DataAccess</span> puis pressez <span class="em">F12</span>. Sur la fiche <span class="em">DataModule1</span>, déposez donc un exemplaire de chacun de ces deux composants (le <Span class="em">TSQLQuery</Span> depuis l'onglet <span class="em">SQLdb</span> et le <span class="em">TDataSource</span> depuis l'onglet <span class="em">DataAccess</span>). Renommez-les respectivement <span class="em">SQLQueryVoitures</span> et <span class="em">DataSourceVoitures</span>. La propriété <span class="em">Database</span> du premier doit être initialisée à <span class="em">SQLConnection</span> et la propriété <span class="em">DataSet</span> du second à <span class="em">SLQueryVoitures</span>.</p>
+                                            <p>Tant que nous sommes dans l'inspecteur d'objets, nous allons définir les différents champs de la table <span class="em">Voitures</span> dans les propriétés de <span class="Em">SQLQueryVoitures</span>. Repérez la propriété <span class="em">FieldDefs</span> et cliquez sur les trois points en regard. Un dialogue va s'ouvrir, dans lequel vous allez ajouter successivement les champs en cliquant sur le bouton "+" :</p>
+                                            <img src="../images/utilisation_composants_specialises_Lazarus.png" alt="">
+                                            <p>Pour chaque champ, vous allez définir dans l'inspecteur d'objets les propriétés <span class="em">Name</span>, <span class="em">DataType</span> et, éventuellement, <span class="em">Size</span>. Voici la liste de ces propriétés :</p>
+                                            <table class="tableBalises">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Name</th>
+                                                        <th>DataType</th>
+                                                        <th>Size</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>Plaque</td>
+                                                        <td>ftString</td>
+                                                        <td>12</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Marque</td>
+                                                        <td>ftString</td>
+                                                        <td>20</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Modele</td>
+                                                        <td>ftString</td>
+                                                        <td>20</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Cylindree</td>
+                                                        <td>ftInteger</td>
+                                                        <td>0</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Transmission</td>
+                                                        <td>ftFixedChar</td>
+                                                        <td>1</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Prix</td>
+                                                        <td>ftFloat</td>
+                                                        <td>0</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <p>Créons à présent une nouvelle fiche, à l'aide du second bouton de la barre d'outils. Concomitamment, une nouvelle unité est créée : renommez-la <span class="em">Voitures</span> et enregistrez-la sous le nom <span class="em">voitures.pas</span>. Dans l'explorateur d'objets, changez la propriété <span class="em">Name</span> de la fiche en <span class="em">CarForm</span> et indiquez son titre (par exemple, "Liste des voitures") dans la propriété <span class="em">Caption</span>.</p>
+                                            <p>Cliquez sur l'onglet de composants <span class="Em">Data Controls</span> de la palette. Depuis cet onglet, déposez sur la fiche les composants énumérés ci-après.</p>
+                                            <p class="em">Attention, ne faites pas trop vite le lien entre les composants que vous allez déposer et le <span class="html">TDataSource</span> : si vous le faites, Lazarus vous bloquera lorsque vous voudrez assigner aux contrôles les champs de la table <span class="em">Voitures</span>.Donc définissez d'abord toutes les autres propriétés de vos contrôles et finissez par leur propriété <span class="em">DataSource</span>.</p>
+                                        </li>
+                                        <ol>
+                                            <li>
+                                                <h6>TDBGrid :</h6>
+                                                <p>Nommez-le <span class="em">dbgVoitures</span> dans sa propriété <span class="em">Name</span> et dimensionnez-le à 424 pixels de largeur (<span class="em">Width</span>) sur 240 pixels de hauteur (<span class="em">Height</span>). La propriété <span class="em">Scrollbars</span> peut être fixée à <span class="em">ssAutoVertical</span>.</p>
+                                                <p>Cliquez sur les trois points en regard de la propriété <span class="em">Columns</span> : un assistant va vous aider à créer les différentes colonnes du DBGrid. Cliquez chaque fois sur le bouton "+" pour ajouter une colonne et éditez les propriétés de celle-ci dans l'inspecteur d'objets.</p>
+                                                <img src="../images/TDBGrid_Lazarus_1.png" alt="">
+                                                <p>Tous les titres (propriété <span class="em">Title/Alignment</span>) étant centrés (<span class="em">taCenter</span>), voici les propriétés des différentes colonnes à ajouter :</p>
+                                                <table class="tableBalises">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>FieldName</th>
+                                                            <th>Caption</th>
+                                                            <th>Width + MaxSize</th>
+                                                            <th>Alignment</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>Plaque</td>
+                                                            <td>Plaque</td>
+                                                            <td>79</td>
+                                                            <td>taCenter</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Marque</td>
+                                                            <td>Marque</td>
+                                                            <td>80</td>
+                                                            <td>taLeftJustify</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Modele</td>
+                                                            <td>Modèle</td>
+                                                            <td>110</td>
+                                                            <td>taLeftJustify</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Cylindree</td>
+                                                            <td>Cyl.</td>
+                                                            <td>45</td>
+                                                            <td>taCenter</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Transmission</td>
+                                                            <td>Trans.</td>
+                                                            <td>45</td>
+                                                            <td>taCenter</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Prix</td>
+                                                            <td>€/jour</td>
+                                                            <td>45</td>
+                                                            <td>taCenter</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                <p>Pour terminer les réglages, il faut modifier les propriétés suivantes :</p>
+                                                <table class="tableBalises">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Propriété</th>
+                                                            <th>Valeur</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>Options/dgIndicator</td>
+                                                            <td>False</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>FixedCols</td>
+                                                            <td>0</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                <p>Comme nous l'avons mentionné juste avant de commencer le dépôt des composants sur la fiche, nous terminons par la propriété <span class="em">DataSource</span> du DBGrid, que nous assignons à <span class="em">DataModule1.DataSourceVoitures</span>.</p>
+                                                <p class="em">Remarque : Nous pourrions penser que le fait de faire un lien entre un composant de la fiche et un datasource qui se trouve dans un datamodule entraînerait de la part de Lazarus la déclaration de ce datamodule dans la clause <span class="em">uses</span> de l'unité de la fiche. Il n'en est rien : c'est à nous de le faire. Ajoutez donc l'unité <span class="em">DataAccess</span> à la clause <span class="em">uses</span> de l'unité <span class="em">Voitures</span>.</p>
+                                            </li>
+                                            <li>
+                                                <h6>TDBNavigator :</h6>
+                                                <p>Nous restons pour l'instant en terrain connu, car nous allons déposer sur la fiche un composant <span class="em">TDBNavigator</span>. C'est lui qui s'occupera de la navigation dans la table et de toutes les modifications de données.</p>
+                                                <p>Déposez-le à droite du DBGrid, nommez-le <span class="em">dbnVoitures</span> (propriété <span class="em">Name</span>), changez sa propriété <span class="em">Direction</span> à <span class="em">nbdVertical</span> (pour qu'il s'affiche verticalement), réglez sa largeur et sa hauteur pour qu'il vienne se coller le long de la bordure de droite du DBGrid :</p>
+                                                <img src="../images/TDBNavigator_Lazarus.png" alt="">
+                                                <p>Fixez enfin sa propriété <span class="em">DataSource</span> à <span class="em">DataModule1.DataSourceVoitures</span>.</p>
+                                            </li>
+                                            <li>
+                                                <h6>TDBEdit :</h6>
+                                                <p>Nous allons à présent ("enfin", direz-vous peu-être) découvrir un nouveau composant spécialisé : le <span class="em">TDBEdit</span>. Il s'agit, comme son nom l'indique, d'un champ d'édition qui sera lié à un champ d'une table de base de données. Nous allons en déposer plusieurs, en dessous du DBGrid, acoompagnés de classiques <span class="em">TLabels</span> (de l'onglet <span class="em">Standard</span>) :</p>
+                                                <img src="../images/TDBEdit_Lazarus.png" alt="">
+                                                <p>Leurs propriétés respectives <span class="em">Name</span> et <span class="em">Caption</span> (pour les <span class="em">TLabel</span>) seront fixées comme suit :</p>
+                                                <table class="tableBalises">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name (TLabel)</th>
+                                                            <th>Caption (TLabel)</th>
+                                                            <th>Name (TDBEdit)</th>
+                                                            <th>DataField (TDBEdit)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>lblPlaque</td>
+                                                            <td>&amp;Plaque</td>
+                                                            <td>dbePlaque</td>
+                                                            <td>Plaque</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>lblMarque</td>
+                                                            <td>Mar&amp;que</td>
+                                                            <td>dbeMarque</td>
+                                                            <td>Marque</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>lblModele</td>
+                                                            <td>Mo&amp;dèle</td>
+                                                            <td>dbeModele</td>
+                                                            <td>Modele</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>lblCylindree</td>
+                                                            <td>&amp;Cylindrée</td>
+                                                            <td>dbeCylindree</td>
+                                                            <td>Cylindree</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>lblPrix</td>
+                                                            <td>€/&amp;jour</td>
+                                                            <td>dbePrix</td>
+                                                            <td>Prix</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                <p>Élargissez les deux <span class="em">TDBEdit</span> correspondant à la marque et modèle de voiture, pour laisser suffisamment de place au texte qui s'y placera.</p>
+                                                <p>Sélectionnez les cinq <span class="em">TDBEdit</span>, en pressant la touche <span class="em">Shift</span> tout en cliquant sur les compsants, et assignez d'un seul coup <span class="em">DataModule1.DataSourceVoitures</span> à leur propriété <span class="em">DataSource</span>.</p>
+                                            </li>
+                                            <li>
+                                                <h6>TDBRadioGroup :</h6>
+                                                <p>Le champ <span class="em">Transmission</span> de la table <span class="dm">Voitures</span> indique si la voiture est équi^ée d'une transmission automatique ou manuelle; ce champ est destiné à recevoir la valeur "A" ou "M". Très naturellement, nous allons confier cette alternative à deux boutons radio, au sein d'un composant <span class="em">TDBRadioGroup</span>.</p>
+                                                <p>Depuis l'onglet <span class="em">Data Controls</span> (toujours le même), déposez à droite, en dessous du DBGrid, un composant <span class="em">TDBRadioGroup</span>, que vous renommez directement <span class="em">dbrgTransmission</span>. Sa propriété <span class="em">Caption</span> devient "Transmission" et sa taille 90 (<span class="em">Width</span>) par 73 (<span class="em">Height</span>). Fort logiquement, vous assignerez à la propriété <span class="em">DataField</span> le nom de champ <span class="em">Transmission</span>.</p>
+                                                <p>Dans l'inspecteur d'objets, cliquez sur les trois points qui correspondent à la propriété <span class="Em">Items</span> du composant : un assistant va vous permettre d'énumérer les options qui seront proposées dans le groupe de boutons radio. Ce ne sera pas très long, puisque les valeurs possibles sont "A" et "M" :</p>
+                                                <img src="../images/TDBRadioGroup_Lazarus.png" alt="">
+                                                <p>Nous terminons, comme chaque fois, par la propriété <span class="em">DataSource</span> du composant, qui est initialisée elle aussi à <span class="em">DataModule1.DataSourceVoitures</span>.</p>
+                                            </li>
+                                            <li>
+                                                <h6>Finalisation de la fiche :</h6>
+                                                <p>Nous avons terminé le dépôt de tous les composants spécialisés sur la fiche. Nous allons la finaliser et la tester.</p>
+                                                <p>Il reste de place, en bas et à droite de la fiche, pour ajouter deux boutons classiques : le premier, que nous renommerons en <span class="em">btnEnregistrer</span> et dont nous initialiserons la propriété <span class="em">Caption</span> à "&amp;Enregistrer", et le second, que nous appellerons <span class="em">btnAnnuler</span> et dont la propriété <span class="em">Caption</span> sera "A&amp;nnuler". Réglez la taille de la fiche pour obtenir quelque chose de joli :</p>
+                                                <img src="../images/finalisation_fiche_Lazarus.png" alt="">
+                                                <p>Le but de notre fiche sera de permettre à l'utilisateur de modifier le contenu de la table <span class="em">Voitures</span> de la base de données. Dès que notre dialogue s'affichera, toutes les voitures devront être chargées dans le DBGrid. Vous connaissez à présent la requête SQL qui permet de le faire :</p>
+<pre><code>SELECT * FROM Voitures;</code></pre>
+                                                <p>Mais ! Rappelez-vous, nous avons pris le parti, dans cette application, de regrouper toute l'interface avec la base de données dans le datamodule. Nous n'allons donc pas implémenter notre requête dans le code de notre fiche, mais bien dans celui du datamodule.</p>
+                                                <p>Dans l'inspecteur d'objets, sélectionnez la fiche <span class="em">CarForm</span> elle-même, cliquez sur l'onglet <span class="em">Événements</span>, puis sur les trois points en regard de l'événement <span class="em">OnShow</span>. Complétez la méthode créée par Lazarus comme ceci :</p>
+<pre><code>procedure TCarForm.FormShow(Sender: TObject);
+(* Chargement de la liste des voitures *)
+begin
+    DataModule1.ChargementVoitures;
+end;</code></pre>
+                                                <p>Nous confions donc le chargement de la table à une méthode <span class="em">ChargementVoitures</span>, que nous n'avons pas encore écrite dans le datamodule. Nous le ferons juste après.</p>
+                                                <p>Les deux boutons que nous avons ajoutés en dernier vont permettre à l'utilisateur d'enregistrer les modifications, ou bien de quitter le dialogue sans les enregistrer. Nous allons créer une propriété <span class="em">Enregistre</span> (nous aimerions écrire "Enregistré" mais les caractères accentués ne sont pas - pas encore ? - autorisés dans la syntaxe du Pascal) pour notre fiche, de type booléen, qui va permettre de savoir si les données ont bien été enregistrées au moment de fermer le dialogue.</p>
+                                                <p>Créez un champ <span class="em">FEnregistre</span> dans la section <span class="em">strict private</span> de la fiche, ainsi que la propriété dont nous venons de parler et son setter :</p>
+<pre><code>type
+
+    { TCarForm }
+
+    TCarForm = class(TForm)
+        btnEnregistrer: TButton;
+        btnAnnuler: TButton;
+        dbePlaque: TDBEdit;
+        dbeMarque: TDBEdit;
+        dbeModele: TDBEdit;
+        dbeCylindree: TDBEdit;
+        dbePrix: TDBEdit;
+        dbgVoitures: TDBGrid;
+        DBNavigator1: TDBNavigator;
+        dbrgTransmission: TDBRadioGroup;
+        lblPlaque: TLabel;
+        lblMarque: TLabel;
+        lblModele: TLabel;
+        lblCylindree: TLabel;
+        lblPrix: TLabel;
+        procedure FormShow(Sender: TObject);
+        // DÉBUT DE L'AJOUT
+    strict private
+        FEnregistre : Boolean;
+    private
+        procedure SetEnregistre (AValue : Boolean);
+    public
+        property Enregistre : Boolean read FEnregistre write SetEnregistre;
+        // FIN DE L'AJOUT
+    end;</code></pre>
+                                                <p>N'oublions pas d'initialiser cette propriété à <span class="em">False</span> dès l'affichage du dialogue :</p>
+<pre><code>procedure TCarForm.FormShow(Sender: TObject);
+(* Chargement de la liste des voitures *)
+begin
+    // AJOUT :
+    Enregistre := False;
+    // FIN AJOUT
+    DataModule1.ChargementVoitures;
+end;</code></pre>
+                                                <p>Voici le code du setter :</p>
+<pre><code>procedure TCarForm.SetEnregistre (AValue : Boolean);
+(* Setter de la propriété Enregistre *)
+begin
+    if FEnregistre = AValue
+        then
+            Exit;
+    FEnregistre := AValue;
+end;</code></pre>
+                                                <p>Faisons en sorte que l'utilisateur reçoive un message de confirmation, s'il veut fermer le dialogue sans que les données soient enregistrées. Cela se fera en réponse à l'événement <span class="em">OnCloseQuery</span> (cliquez sur les trois points en regard de cet événement, dans l'inspecteur d'objets) :</p>
+<pre><code>procedure TCarForm.FormCloseQuery (Sender : TObject; var CanClose : Boolean);
+(* Demande éventuelle de confirmation de fermeture sans enregistrer *)
+begin
+    if Enregistre
+        then
+            CanClose := True
+        else
+            CanClose := (MessageDlg('Voulez-vous fermer sans enregistrer ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes);
+end;</code></pre>
+                                                <p>Il nous reste juste à implémenter les méthodes qui vont réagir à un clic sur les boutons "Enregistrer" et "Annuler". Cliquez successivement sur les trois points qui correspondent à l'événement <span class="em">OnClick</span> des deux boutons, et complétez les méthodes comme ceci :</p>
+<pre><code>procedure TCarForm.btnEnregistrerClick(Sender: TObject);
+(* Enregistre les modifications dans la base de données *)
+begin
+    Enregistre := DataModule1.SauvegardeVoitures;
+    Close;
+end;
+
+procedure TCarForm.btnAnnulerClick(Sender: TObject);
+(* Ferme la fenêtre sans enregistrer *)
+begin
+    Close;
+end;</code></pre>
+                                                <p>Vous le voyez, nous allons également tout de suite devoir écrire une méthode <span class="em">SauvegardeVoitures</span> dans le datamodule.</p>
+                                            </li>
+                                            <li>
+                                                <h6>Méthodes de chargement et de sauvegarde des onnées dans le datamodule :</h6>
+                                                <p>Allons-y, dans notre datamodule, et créons-y les deux méthodes publiques dont nous avons besoin. Il nous faudra une troisième méthode privée, que nous appelerons <span class="em">Commit</span>, qui sera chargée d'enregistrer toutes les modifications définitivement dans la base de données.</p>
+<pre><code>type
+    { TDataModule1 }
+    TDataModule1 = class(TDataModule)
+      DataSourceVoitures: TDataSource;
+      SQLConnection: TMySQL56Connection;
+      SQLQueryVoitures: TSQLQuery;
+      SQLTransaction: TSQLTransaction;
+    private
+      // AJOUT :
+      function Commit : Boolean;
+      // FIN AJOUT
+    public
+      function Login : Boolean;
+      procedure Logoff;
+      // AJOUT :
+      procedure ChargementVoitures;
+      function SauvegardeVoitures : Boolean;
+      // FIN AJOUT
+    end;</code></pre>
+                                                <p>Après un <span class="em">Shift + CTRL + C</span>, voici le code à implémenter :</p>
+<pre><code>function TDataModule1.Commit: Boolean;
+(* Sauvegarde des changements dans la base de données *)
+begin
+    Result := True;
+    if SQLTransaction.Active
+        then
+            try
+                SQLTransaction.Commit;
+            except
+                on e: ESQLDatabaseError do
+                    begin   (* Erreur renvoyée par MySQL *)
+                    MessageDlg('Erreur n° ' +
+                                IntToStr(e.ErrorCode) + ' : ' + e.Message,
+                                mtError, [mbOk], 0);
+                    Result := False;
+                    end;
+                on e: EDatabaseError do
+                begin   (* Erreur générale *)
+                    MessageDlg('Erreur de sauvegarde des données', mtError, [mbOk], 0);
+                    Result := False;
+                end;
+            end
+        else
+            Result := False;
+end;
+
+procedure TDataModule1.ChargementVoitures;
+(* Chargement des voitures *)
+begin
+    with SQLQueryVoitures do
+        begin
+            Close;
+            SQL.Text := 'SELECT * FROM Voitures;';
+            Open;
+        end;
+end;
+
+function TDataModule1.SauvegardeVoitures: Boolean;
+(* Sauvegarde de la table Voitures *)
+begin
+    SQLQueryVoitures.ApplyUpdates;
+    Result := Commit;
+end;</code></pre>
+                                                <p>Il n'y a rien de nouveau, à ce niveau, par rapport aux deux premiers exemples.</p>
+                                            </li>
+                                            <li>
+                                                <h6>Test de la fiche :</h6>
+                                                <p>Vous êtes sans doute tout excité(e) à l'idée de tester le dialogue de modification des voitures que vous avez créé.</p>
+                                                <p>Retournez dans l'unité de la fiche principale. On pourrait trouver mille et un événements pour afficher le dialogue (un bouton sur la fiche principale, une réponse à un clic de souris sur la fenêtre, etc.). J'ai opté pour un menu.</p>
+                                            </li>
+                                        </ol>
                                     </ol>
                                 </li>
                             </ol>
