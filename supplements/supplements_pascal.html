@@ -5718,7 +5718,175 @@ end;</code></pre>
                                         </li>
                                         <li>
                                             <h5>Utilisation de composants non spécialisés :</h5>
-                                            <p>Créez une nouvelle fiche à l'aide du second bouton de la barre d'outils de Lazarus.</p>
+                                            <p>Créez une nouvelle fiche à l'aide du second bouton de la barre d'outils de Lazarus. Remplacez son nom <span class="em">Form1</span> par <span class="em">NewLeasingForm</span>, ce qui transformera automatiquement son type en <span class="em">TnewLeasingForm</span>. Assignez "Location" à sa propriété <span class="em">Caption</span>. Tant que vous y êtes, donnez-lui comme dimensions 508 pixels (<span class="em">Width</span>) sur 181 pixels (<span class="em">Height</span>).</p>
+                                            <p>Cette fiche constituera le dialogue de création d'une nouvelle location. Comme nous sommes prévoyants, nous créerons la fiche de manière à ce qu'elle puisse facilment être utilisée pour modifier une location existante, dans une classe descendante.</p>
+                                            <p>Enregistrez-la et donnez à la nouvelle unité le nom <span class="em">Locations</span>.</p>
+                                            <p>Nous allons déposer sur la fiche une série de contrôles classiques, c'est-à-dire non spécialisés dans les bases de données.</p>
+                                            <p>À partir du coin supérieur gauche, déposez quatre <span class="em">TLabel</span> l'un en dessous de l'autre :</p>
+                                            <table class="tableBalises">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="em">Name</th>
+                                                        <th class="em">Caption</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>lblClient</td>
+                                                        <td>Client :</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>lblVoiture</td>
+                                                        <td>Voiture :</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>lblDateDebut</td>
+                                                        <td>Date de début :</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>lblDateFin</td>
+                                                        <td>Date de fin :</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <p>En regard de ces quatre labels, déposez les quatre composants suivants :</p>
+                                            <ul>
+                                                <li>
+                                                    <p>deux <span class="em">TComboBox</span> (onglet <span class="em">Standard</span>), respectivement nommés <span class="em">deDateDebut</span> et <span class="em">deDateFin</span>.</p>
+                                                </li>
+                                                <li>
+                                                    <p>deux <span class="em">TDateEdit</span> (onglet <span class="em">Misc</span>), respectivement nommés <span class="em">deDateDebut</span> et <span class="em">deDateFin</span>.</p>
+                                                </li>
+                                            </ul>
+                                            <p>Les deux <span class="em">TComboBox</span> contiendront la liste des clients et des voitures. Les deux <span class="em">TDateEdit</span>, eux, permettront de définir les dates de débit et de fin de location. Fixez leur propriété <span class="em">DateOrder</span> à <span class="em">doDMY</span> et cochez leur propriété <span class="em">DefaultToday</span> : ainsi, par défaut ils contiendront la date du jour.</p>
+                                            <p>À droite des <span class="em">TDateEdit</span>, déposez un <span class="em">TCheckBox</span> (onglet <span class="em">Standard</span>), que vous renommez <span class="em">cbAssurance</span> et dont vous initialisez la propriété <span class="em">Caption</span> à "Assurance +".</p>
+                                            <p>En dessous de cette case à cocher, déposez un autre <span class="em">TLabel</span> nommé <span class="em">lblEstimationPrix</span>, contenant "Estimation du prix (€) :" dans sa propriété <span class="em">Caption</span>, et enfin un <span class="em">TStaticText</span> (de l'onglet <span class="em">Additional</span>), nommé <span class="em">stEstimationPrix</span>, dont vous effacez la propriété <span class="em">Caption</span> et vous fixez la propriété <span class="em">Alignment</span> à <span class="em">taCenter</span>.</p>
+                                            <p>La fiche devrait ressembler à ceci :</p>
+                                            <img src="../images/utilisation_composants_non_specialises_Lazarus_1.png" alt="">
+                                            <p>Dans l'espace libre à droite, nous allons déposer divers contrôles permettant de filtrer les voitures qui se trouveront dans la liste.</p>
+                                            <p>D'abord, au milieu de l'espace vide, un <span class="em">TLabel</span>, nommé <span class="em">lblCylindree</span>, qui affiche "Cylindrée", et dont la propriété <span class="em">FontStyle</span> est initialisée à <span class="em">[fsUnderline]</span> (pour souligner le texte).</p>
+                                            <p>Ensuite, deux <span class="em">TLabel</span> l'un à côté de l'autre, nommés <span class="em">lblCylindreeMin</span> et <span class="em">lblCylindreeMax</span>, dont les propriétés <span class="em">Caption</span> sont respectivement "Min" et "Max". En dessous de ces labels, deux <span class="em">TSpinEdit</span> (onglet <span class="em">Misc</span>), respectivemment nommés <span class="em">seCylindreeMin</span> et <span class="em">seCylindreeMax</span>. Ces deux composants permettront de fixer les limites inférieure et supérieure de cylindrée des voitures de la liste. Il faut définir leurs bornes minimale et maximale (propriétés <span class="em">MinValue</span> et <span class="em">MaxValue</span> : <span class="em">500</span> et <span class="em">9900</span> pour le premier, <span class="em">600</span> et <span class="em">10000</span> pour le second), ainsi que la valeur qui sera incrémentée ou décrémentée à chaque pas, la propriété <span class="em">Increment</span>, que nous fixons à <span class="em">100</span>. Par défaut, nous leur assignons comme valeur de départ <span class="em">1000</span> et <span class="em">2000</span>, dans leur propriété <span class="em">Value</span>. La largeur des deux <span class="em">TSpinEdit</span> sera fixée à 64.</p>
+                                            <p>Nous allons remplir l'espace restant à droite avec un filtre sur la transmission. Dans la palette <span class="em">Standard</span>, sélectionnez un <span class="em">TRadioGroup</span> et déposez-en un sous les <span class="em">TSpinEdit</span>, en adaptant sa largeur et sa hauteur pour occuper l'espace libre tout en restant aligné avec les autres contrôles (autant que ça soit joli, n'est-ce pas !). Renommez-le <span class="em">rgTransmission</span>.</p>
+                                            <p>Nous déposons dans le <span class="em">TRadioGroup</span> trois boutons radio (<span class="em">TRadioButton</span>, de l'onglet <span class="em">Standard</span>), dont Lazarus fera automatiquement un groupe. Les trois boutons sont nommés <span class="em">rbTransmissionX</span>, <span class="em">rbTransmissionM</span> et <span class="em">rbTransmissionA</span>, et leurs propriétés <span class="em">Caption</span> sont assignées à "Les deux", "Manuelle" et "Automatique". Vous devinez aisément que le premier bouton radio ne filtrera pas les voitures sur le critère de la transmission, et que les deux autres filtreront les boîtes manuelles ou automatiques. Si Lazarus ne l'a pas fait automatiquement, cochez la propriété <span class="em">btnEnregistrer</span> et <span class="em">btnAnnuler</span>, avec comme propriété <span class="em">Caption</span> "&amp;Engreistrer" et "A&amp;nnuler".</p>
+                                            <p>Nous avons terminé la conception de notre fiche :</p>
+                                            <img src="../images/utilisation_composants_non_specialises_Lazarus_2.png" alt="">
+                                            <p>Vous avez sûrement hâte d'afficher le nouveau dialogue, même vide. Retournez dans la fiche principale (unité <span class="em">Main</span>), pressez <span class="em">F12</span>, sélectionnez le bouton <span class="em">btnAjouter</span> dans l'inspecteur d'objets, allez dans l'onglet <span class="em">Événements</span> et cliquez sur les trois points pour créer une méthode qui répondra à l'événement <span class="em">OnClick</span>. Ajoutez l'unité <span class="em">Locations</span> à la clause <span class="em">uses</span> de l'unité <span class="em">Main</span>.</p>
+                                            <p>Sans surprise, voici le code d'affichage du dialogue :</p>
+<pre><code>procedure TMainForm.btnAjouterClick (Sender : TObject);
+(* Ajout d'une nouvelle location *)
+var
+    LNewLeasingForm : TNewLeasingForm;   (* Dialogue de collecte des données *)
+begin
+    LNewLeasingForm := TNewLeasingForm.Create(Self);
+    try
+        LNewLeasingForm.ShowModal;
+    finally
+        FreeAndNil(LNewLeasingForm);
+    end;
+    (* Mise à jour de la liste des locations affichée *)
+    DataModule1.ChargementLocations(SQLSyntax SelectionLocationsFiltre(deFiltreDateDebut.Date, deFiltreDateFin.Date,cbFiltreAssurance.Checked, cbFiltreEnCours.Checked));</code></pre>
+                                            <p>Le dialogue ne contient aucun composant orienté bases de données, c'était le but que nous nous étions fixé. Comment alors faire le lien avec la base de données ?</p>
+                                            <ol>
+                                                <li>
+                                                    <h6>Chargemements des clients et des voitures dans des TComboBox :</h6>
+                                                    <p>Pour la liste des clients et des voitures, nous allons utiliser une fonctionnalité bien pratique des comboboxes : à chaque élément de la liste peut être attaché un objet quelconque. Considérons la déclaration de la méthode <span class="em">AddItem</span>, qui est héritée de la classe <span class="em">TCustomComboBox</span> :</p>
+<pre><code>procedure TCustomComboBox.AddItem (
+    const Item: String;
+    AnObject: TObject
+    ); virtual;</code></pre>
+                                                    <p>Le paramètre <span class="em">Item</span> contient la chaîne de caractères à afficher et <span class="em">AnObject</span> sera un objet lié à l'élément, qui pourra contenir des données supplémentaires.</p>
+                                                    <p>Réfléchissons : en plus de son nom, qui va être affiché dans la combobox des clients, de quelles données supplémentaires avons-nous besoin pour un client ? De pas grand-chose, en fait, juste son identificateur, dans la table <span class="em">Clients</span> de la base de données (la clé primaire de la table). Et pour une voiture ? Là, c'est plus compliqué, car il y a différentes caractéristiques d'une voiture qui sont concernées par les filtres de notre boîte de dialogue : la cylindrée et la transmission. Le prix par jour est également requis pour le calcul de l'estimation du coût de la location. Et nous aurons également besoin de l'identificateur de la voiture dans la table <span class="em">Voitures</span>, qui est sa plaque d'immatriculation.</p>
+                                                    <p>Dans l'unité <span class="em">DataAccess</span>, nous créons deux classes <span class="em">TCBClient</span> et <span class="em">TCBVoiture</span> ("CB" faisant référence aux comboboxes auxquelles elles sont destinées) :</p>
+<pre><code>type
+
+    { TCBClient }
+  
+    TCBClient = class
+      (* Données invisibles d'un élément de combobox contenant la liste des clients *)
+      strict private
+        FIdClient : Integer;
+      public
+        property IdClient : Integer read FIdClient;
+        constructor Create (const AIdClient : Integer);
+    end;
+
+    { TCBVoiture }
+    
+    TCBVoiture = class
+      (* Données invisibles d'un élément de combobox contenant la liste des voitures *)
+      strict private
+        FPlaque : String;
+        FCylindree : Integer;
+        FTransmission : Char;
+        FPrix : Real;
+      public
+        property Plaque : String read FPlaque;
+        property Cylindree : Integer read FCylindree;
+        property Transmission : Char read FTransmission;
+        property Prix : Real read FPrix;
+        constructor Create (const APlaque : String;
+                            const ACylindree : Integer;
+                            const ATransmission : Char;
+                            const APrix : Real);
+    end;</code></pre>
+                                                    <p>Voici le code des deux méthodes <span class="em">Create</span> :</p>
+<pre><code>constructor TCBClient.Create (const AIdClient : Integer);
+(* Initialisation des champs *)
+begin
+    FIdClient := AIdClient;
+end;
+constructor TCBVoiture.Create (const APlaque : String;
+                                const ACylindree : Integer;
+                                const ATransmission : Char;
+                                const APrix : Real);
+(* Initialisation des champs *)
+begin
+    FPlaque := APlaque;
+    FCylindree := ACylindree;
+    FTransmission := ATransmission;
+    FPrix := APrix;
+end;</code></pre>
+                                                    <p>Nous confions au datamodule le soin de charger les clients et les voitures dans les comboboxes correspondantes. Dans sa section <span class="em">public</span>, créez les deux méthodes suivantes :</p>
+<pre><code>procedure ChargementCBClients (var ComboBox : TComboBox);
+procedure ChargementCBVoitures (var ComboBox : TComboBox;
+                                const Requete : String);</code></pre>
+                                                    <p>Grâce à la combinaison de touches <span class="em">Shift + CTRL + C</span>, créez leur implémentation et complétez le code comme suit :</p>
+<pre><code>procedure TDataModule1.ChargementCBClients (var ComboBox : TComboBox);
+(* Remplit une combobox avec les noms et prénoms des clients. Chaque élément est constitué d'un texte visible et de données invisibles *)
+var
+    LNomPrenom : String;   (* Texte visible d'un élément *)
+begin
+    ChargementClients(SQLSyntax.SelectionClientsTous);
+    with SQLQueryClients do
+    while not EOF do
+        begin
+        LNomPrenom := FieldByName('Nom').AsString + ' ' + FieldByName('Prenom').AsString;
+        ComboBox.AddItem(LNomPrenom, TCBClient.Create(FieldByName('IdClient').AsInteger));
+        Next;
+        end;
+end;
+
+procedure TDataModule1.ChargementCBVoitures (var ComboBox : TComboBox; const Requete : String);
+(* Charge une combobox avec les voitures correspondant à la requête. Chaque élément est constitué d'un texte visible et de données invisibles *)
+var
+    LVoiture : String;   (* Texte visible d'un élément *)
+begin
+    ComboBox.Clear;
+    ChargementVoitures(Requete);
+    with SQLQueryVoitures do
+    while not EOF do
+        begin
+            LVoiture := '[' + FieldByName('Plaque').AsString + '] ' + FieldByName('Marque').AsString + ' ' + FieldByName('Modele').AsString;
+            ComboBox.AddItem(LVoiture, TCBVoiture.Create(FieldByName('Plaque').AsString, FieldByName('Cylindree').AsInteger, (FieldByName('Transmission').AsString)[1], FieldByName('Prix').AsFloat));
+            Next;
+        end;
+end;</code></pre>
+                                                </li>
+                                                <li>
+                                                    <h6>Requêtes de sélection des voitures et des clients :</h6>
+                                                    <p></p>
+                                                </li>
+                                            </ol>
                                         </li>
                                     </ol>
                                 </li>
