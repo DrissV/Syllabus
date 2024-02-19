@@ -5621,15 +5621,104 @@ end;</code></pre>
                                                     <p>Laissez vide la première colonne, <span class="em">IdLocation</span> : il s'agit d'un index qui sera incrémenté. Dans la liste déroulante du champ <span class="em">IdClient</span>, choisissez l'identificateur d'un client; dans celle du champ <span class="em">Plaque</span>, choisissez l'un des véhicules. Ces deux valeurs font le lien avec les deux autres tables, c'est à ce niveau que s'effectue la jointure. Définissez également une date de début et de fin (choisissez des dates proches d'aujourd'hui, car rappelez-vous, par défaut les filtres sont réglés à un mois dans le passé et un mois dans le futur), et inscrivez 0 ou 1 comme valeur pour le champ <span class="em">Assurance</span> :</p>
                                                     <img src="../images/Chargement_DBGrid_Lazarus_1.png" alt="">
                                                     <p>Cliquez sur le bouton <span class="em">Excuter</span> pour créer la location.</p>
-                                                    <p>
-                                                        Vous pouvez répéter l'opération une ou deux fois, histoire d'avoir quelque chose à afficher dans le DBGrid de l'application.
-                                                        <p>À présent, vous êtes prêt(e) à exécuter votre programme. Allez-y !</p>
-                                                        <img src="../images/Chargement_DBGrid_Lazarus_2.png" alt="">
-                                                        <p>Yes !</p>
-                                                        
-                                                    </p>
+                                                    <p>Vous pouvez répéter l'opération une ou deux fois, histoire d'avoir quelque chose à afficher dans le DBGrid de l'application.</p>
+                                                    <p>À présent, vous êtes prêt(e) à exécuter votre programme. Allez-y !</p>
+                                                    <img src="../images/Chargement_DBGrid_Lazarus_2.png" alt="">
+                                                    <p>Yes !</p>
+                                                    <p>Réfléchissons encore un peu avant d'aller fêter cela. À chaque fois qu'une modification va être apportée à l'un des filtres, il faudra actualiser le contenu du DBGrid. Par conséquent, nous devons exécuter la méthode <span class="em">DataModule1.SelectionLocationsFiltre</span> en réponse à tout événement <span class="em">OnChange</span> d'un filtre.</p>
+                                                    <p>Ce sera vite fait. Sélectionnez successivement les deux <span class="em">TDataEdit</span> et le <span class="em">TCheckBox</span>; dans l'inspecteur d'objets, cliquez sur l'onglet <span class="em">Événements</span> puis sur les trois points correspondant à l'événement <span class="em">OnChange</span>. Complétez les trois méthodes événementielles créées par le même code :</p>
+<pre><code>procedure TMainForm.deFiltreDateDebutChange(Sender: Tobject);
+(* Modification au filtre : mise à jour du contenu du DBGrid *)
+begin
+    DataModule1.ChargementLocations(SQLSyntax.SelectionLocationsFiltre(deFiltreDateDebut.Date, deFiltreDateFin.Date, cbFiltreAssurance.Checked));
+end;
+
+procedure TMainForm.cbFiltreAssuranceChange(Sender: Tobject);
+(* Modification au filtre : mise à jour du contenu du DBGrid *)
+begin
+    DataModule1.ChargementLocations(SQLSyntax.SelectionLocationsFiltre(deFiltreDateDebut.Date, deFiltreDateFin.Date, cbFiltreAssurance.Checked));
+end;
+
+procedure TMainForm.deFiltreDateFinChange(Sender: Tobject);
+(* Modification au filtre : mise à jour du contenu du DBGrid *)
+begin
+    DataModule1.ChargementLocations(SQLSyntax.SelectionLocationsFiltre(deFiltreDateDebut.Date, deFiltreDateFin.Date, cbFiltreAssurance.Checked));
+end;</code></pre>
+                                                </li>
+                                                <li>
+                                                    <h6>Exercice : ajouter un filtre pour n'afficher que les locations en cours :</h6>
+                                                    <p>Je vous propose comme exercice d'ajouter un filtre pour que seules les locations en cours (dont la date de rentrée est vide) s'affichent dans le DBGrid. Utilisez une case à cocher et réfléchissez bien à ce qu'il faut modifier dans la requête SQL.</p>
+                                                    <p class="em">Remarque : Une valeur NULL ne se compare pas comme n'importe quelle valeur. Pour la tester, on peut utiliser la syntaxe <span class="html">Champ IS NULL</span> ou <span class="html">Champ IS NOT NULL</span>.</p>
+                                                    <p>Une proposition de solution se trouve dans le code source complet de l'application.</p>
+                                                </li>
+                                                <li>
+                                                    <h6>Des boutons classiques pour l'ajout, la modification et la suppression :</h6>
+                                                    <p>Nous avons pris le parti de ne pas utiliser de <span class="em">TDBNavigator</span>, et donc d'utiliser le DBGrid comme une listbox classique. Nous allons par conséquent substituer des boutons normaux à ceux du DBNavigator.</p>
+                                                    <p>En dessous des filtres, ajoutez trois composants de type <span class="em">TButton</span> (onglet <span class="em">Standard</span>) :</p>
+                                                    <table class="tableBalises">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Nom (<span class="em">Name</span>)</th>
+                                                                <th>Libellé (<span class="em">Caption</span>)</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>btnAjouter</td>
+                                                                <td>&amp;Nouvelle location</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>btnModifier</td>
+                                                                <td>&amp;Modifier la location</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>btnSupprimer</td>
+                                                                <td>&amp;Supprimer la location</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <p>Afin que le DBGrid se comporte comme une simple listbox, nous devons y désactiver les possibilités d'édition des données et faire en sorte que la sélection porte sur une ligne entière (et non plus sur une seule cellule). Sélectionnez-le et réglez les propriétés suivantes dans l'inspecteur d'objets :</p>
+                                                    <table class="tableBalises">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Propriété</th>
+                                                                <th>Valeur</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>ReadOnly</td>
+                                                                <td>True</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Options / dgDisableDelete</td>
+                                                                <td>True</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Options / dgDisableInsert</td>
+                                                                <td>True</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Options / dgEditing</td>
+                                                                <td>False</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Options / dgRowHighlight</td>
+                                                                <td>True</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Options / dgRowSelect</td>
+                                                                <td>True</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <p>Maintenant, vous pouvez aller faire une pause bien méritée. Rechargez bien vos batteries et ne buvez pas trop, car ce qui va suivre va nécessiter toute votre attention.</p>
                                                 </li>
                                             </ol>
+                                        </li>
+                                        <li>
+                                            <h5>Utilisation de composants non spécialisés :</h5>
+                                            <p>Créez une nouvelle fiche à l'aide du second bouton de la barre d'outils de Lazarus.</p>
                                         </li>
                                     </ol>
                                 </li>
