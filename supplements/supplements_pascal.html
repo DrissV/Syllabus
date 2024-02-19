@@ -5928,6 +5928,118 @@ end;</code></pre>
                                                         </li>
                                                     </ul>
                                                     <p>Dans ces deux unités, il faudra rajouter l'unité <span class="em">SQL</span> dans la clause <span class="em">uses</span>.</p>
+                                                    <p>Allons maintenant implémenter le chargement des deux comboboxes dans notre dialogue <span class="em">TNewLeasingForm</span>. Dans l'éditeur de source, sélectionnez l'onglet <span class="em">Locations</span> et pressez <span class="em">F12</span>. Dans l'inspecteur d'objets, allez dans l'onglet <span class="em">Événements</span> et cliquez sur les trois points correspondant à l'événement <span class="em">OnShow</span>. Lazarus crée une nouvelle méthode <span class="em">FormShow</span>, que vous complétez comme suit :</p>
+<pre><code>procedure TNewLeasingForm.FormShow (Sender: TObject);
+(* Chargement des contrôles *)
+begin
+    (* Listes des clients et des voitures *)
+    DataModule1.ChargementCBClients(cbClients);
+    DataModule1.ChargementCBVoitures(cbVoitures, RequeteSelectionVoituresFiltre);
+end;</code></pre>
+                                                    <p>On voit tout de suite qu'il faudra créer la méthode <span class="em">RequeteSelectionVoituresFiltre</span>; gardons cela deux minutes dans un coin de notre esprit, il faut tout d'abord avoir le réflexe de libérer les objets invisibles qui sont liés aux éléments des comboboxes, à la ferneture du dialogue.</p>
+                                                    <p>Cliquez sur les trois points de l'événement <span class="em">OnClose</span>, puis complétez le code :</p>
+<pre><code>procedure TNewLeasingForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+(* Détruit les objets passés comme paramètres aux comboboxes *)
+var
+    Li : Integer;
+begin
+    for Li := 0 to (cbClients.Items.Count - 1) do
+    TCBClient(cbClients.Items.Objects[Li]).Free;
+    for Li := 0 to (cbVoitures.Items.Count - 1) do
+    TCBVoiture(cbVoitures.Items.Objects[Li]).Free;
+end;</code></pre>
+                                                    <p>Pour compiler, l'unité <span class="em">DataAccess</span> doit être ajoutée à la clause <span class="em">uses</span>.</p>
+                                                    <p>Occupons-nous de cette méthode <span class="em">RequeteSelectionVoituresFiltre</span> dont nous avons postposé la création. Ajoutez cette déclaration dans la section <span class="em">private</span> de la classe <span class="em">TNewLeasingForm</span> :</p>
+<pre><code>function RequeteSelectionVoituresFiltre : String;</code></pre>
+                                                    <p>Voici son implémentation :</p>
+<pre><code>function TNewLeasingForm.RequeteSelectionVoituresFiltre: String;
+(* Construit la requête de sélection des voitures pour la combobox *)
+var
+    LTransmission : String;
+begin
+    if rbTransmissionM.Checked
+        then
+            LTransmission := 'M'
+        else
+            if rbTransmissionA.Checked
+                then
+                    LTransmission := 'A'
+                else
+                    LTransmission := '';
+    Result := SQLSyntax.SelectionVoituresFiltre(seCylindreeMin.Value, seCylindreeMax.Value, LTransmission);
+end;</code></pre>
+                                                    <p>Cette méthode ne construit pas directement la requête SQL, elle définit les paramètres à passer à une méthode de la classe <span class="em">TmySQLSyntax</span>, que nous allons tout de suite créer.</p>
+                                                    <p>Direction l'unité <span class="em">SQL</span> et notre interface <span class="em">ISQLSyntax</span>. Ajoutez-y la déclaration suivante :</p>
+<pre><code>function SelectionVoituresFiltre (
+(* Requête de sélection de voitures avec critères *)
+const ACylindreeMin, ACylindreeMax : Integer;   (* Cylindrées minimale et maximale *)
+const ATransmission : String                    (* Transmission : "A" ou "M" *)
+) : String;</code></pre>
+                                                    <p>Dans la déclaration du type <span class="em">TMySQLSyntax</span>, ajoutez-la aussi :</p>
+<pre><code>function SelectionVoituresFiltre (const ACylindreeMin, ACylindreeMax : Integer; const ATransmission : String) : String;</code></pre>
+                                                    <p>Un petit <span class="em">Shift + CTRL + C</span> puis complétez :</p>
+<pre><code>function TMySQLSyntax.SelectionVoituresFiltre (const ACylindreeMin, ACylindreeMax : Integer; const ATransmission : String) : String;
+(* Requête de sélection de voitures avec critères *)
+begin
+    Result := 'SELECT * FROM Voitures WHERE Cylindree >= ''' + IntToStr(ACylindreeMin) + ''' AND Cylindree <= ''' + IntToStr(ACylindreeMax) + '''';
+    if ATransmission &lt;&gt; ''
+        then
+            Result := Result + ' AND Transmission = ''' + ATransmission + '''';
+    Result := Result + ';';
+end;</code></pre>
+                                                    <p>La requête <span class="html">SELECT</span> construite teste les bornes inférieure et supérieure de la cylindrée et introduit un test sur la transmission uniquement si le paramètre <span class="em">ATransmission</span> n'est pas une chaîne vide.</p>
+                                                </li>
+                                                <li>
+                                                    <h6>Indices des client et voiture courants :</h6>
+                                                    <p>Comme il s'agit d'une nouvelle location, par défaut ce sont les premiers éléments (d'indice 0) des deux comboboxes qui sont sélectionnés lorsque s'affiche le dialogue. Cependant, comme la liste des voitures va être rechargée à chaque fois que les filtres seront modifiés, il faudra garder en mémoire l'indice de la voiture sélectionnée pour la resélectionner après (si elle correspond, bien sûr, toujours aux critères).</p>
+                                                    <p>Ensuite, rappelez-vous que nous avions prévu de concevoir notre fiche de manière à pouvoir servir de parent à une fiche descendante qui permettrait de modifier une location. Par conséquent, à l'affichage de la fiche, le client et la voiture de la location à modifier devront être sélectionnés. Alors autant prévoir tout de suite de gérer, également, l'indice de la personne.</p>
+                                                    <p>La conservation des deux indices se fera dans deux propriétés.</p>
+                                                    <p>Dans la déclaration du type <span class="em">TNewLeasingForm</span> avant la section <span class="em">private</span>, créez une section <span class="em">strict private</span> et déclarez-y les deux champs suivants :</p>
+<pre><code>strict private
+    FIndexClient : Integer;
+    FIndexVoiture : Integer;</code></pre>
+                                                    <p>Dans la section <span class="em">public</span>, créez les deux propriétés suivantes :</p>
+<pre><code>public
+    property IndexClient : Integer read FIndexClient write SetIndexClient;  (* Index du client actuellement sélectionné *)
+property IndexVoiture : Integer read FIndexVoiture write SetIndexVoiture;   (* Index de la voiture actuellement sélectionnée *)</code></pre>
+                                                    <p>Créez leurs setters dans la section <span class="em">private</span> :</p>
+<pre><code>private
+    procedure SetIndexClient (AValue : Integer);
+    procedure SetIndexVoiture (AValue : Integer);</code></pre>
+                                                    <p>Voici le code source des setters :</p>
+<pre><code>procedure TNewLeasingForm.SetIndexClient (AValue : Integer);
+(* Setter de la propriété IndexClient *)
+begin
+    if FIndexClient = AValue
+        then
+            Exit;
+    FIndexClient := AValue;
+end;
+
+procedure TNewLeasingForm.SetIndexVoiture (AValue : Integer);
+(* Setter de la propriété IndexVoiture *)
+begin
+    if FIndexVoiture = AValue
+        then
+            Exit;
+    FIndexVoiture := AValue;
+end;</code></pre>
+                                                    <p>Initialisons les deux propriétés dans la méthode <span class="em">FormShow</span> :</p>
+<pre><code>procedure TNewLeasingForm.FormShow(Sender: TObject);
+(* Chargement des contrôles *)
+begin
+    (* Listes des clients et des voitures *)
+    DataModule1.ChargementCBClients(cbClients);
+    DataModule1.ChargementCBVoitures(cbVoitures, RequeteSelectionVoituresFiltre);
+    // DÉBUT DE L'AJOUT
+    (* Éléments sélectionnés dans les deux comboboxes *)
+    IndexClient := 0;
+    IndexVoiture := 0;
+    cbClients.ItemIndex := IndexClient;
+    cbVoitures.ItemIndex := IndexVoiture;
+    // FIN DE L'AJOUT
+end;</code></pre>
+                                                    <p class="em">Remarque : Nous savons déjà que, dans la fiche ascendante qui permettra de modifier une location, ces deux indices seront initialisés non pas à 0 mais à ceux correspondant au client et à la voiture de la location.</p>
                                                     
                                                 </li>
                                             </ol>
