@@ -5532,11 +5532,11 @@ end;</code></pre>
                                                     <h6>Requête SQL de sélection :</h6>
                                                     <p>Penchons-nous à présent sur la requête SQL qui va nous permettre de charger le DBGrid en tenant compte des filtres.</p>
                                                     <p>Dans l'unité <span class="em">SQL</span>, nous ajoutons une fonction à l'interface <span class="em">ISQLSyntax</span> :</p>
-<pre><code>    function SelectionLocationsFiltre (
-(* Requête de sélection de locations avec critères *)
-const ADateDebut, ADateFin : TDateTime;   (* Dates de début et de fin *)
-const AAssurance : Boolean                (* Avec assurance complémentaire *)
-) : String;</code></pre>
+<pre><code>function SelectionLocationsFiltre (
+    (* Requête de sélection de locations avec critères *)
+    const ADateDebut, ADateFin : TDateTime;   (* Dates de début et de fin *)
+    const AAssurance : Boolean                (* Avec assurance complémentaire *)
+    ) : String;</code></pre>
                                                     <p>Comme prévu, nous passons comme paramètres à la fonction de début et de fin, ainsi que l'option d'affichage de l'assurance complémentaire.</p>
                                                     <p>Ajoutez identiquement cette fonction à la classe <span class="em">TMySQLSyntax</span> qui dérive de l'interface. À l'aide de la combinaison de touches habituelle <span class="em">Shift + CTRL + C</span>, créez l'implémentation de cette fonction et complétez-la comme suit :</p>
 <pre><code>function TMySQLSyntax.SelectionLocationsFiltre (const ADateDebut, ADateFin : TDateTime; const AAssurance : Boolean) : String;
@@ -5559,7 +5559,7 @@ end;</code></pre>
                                                     <p>Une chose importante : il faut que les dates de début et de fin soient incluses dans la requête sous forme de texte, dans un format reconnu par MySQL.</p>
                                                     <p class="em">Remarque : Ce format de date n'a rien à voir avec le format <span class="html">doDMY</span> que nous avons fixé pour les deux <span class="html">TDataEdit</span>.</p>
                                                     <p>Nous allons donc ajouter à l'interface <span class="em">ISQLSyntax</span> une fonction <span class="em">FormatDate</span> qui va retourner une structure de type <span class="em">TFormatSettings</span> utilisable par la fonction de conversion <span class="em">DateToStr</span> :</p>
-<pre><code>    function FormatDate : TFormatSettings;
+<pre><code>function FormatDate : TFormatSettings;
     (* Format de date et le séparateur compatibles avec le SGBD *)</code></pre>
                                                     <p>Si vous avez la curiosité de regarder la déclaration du type <span class="em">TFormatSettings</span>, vous verrez qu'il contient une vingtaine de champs. Seuls deux d'entre eux nous intéressent pour assurer la compatibilité du format de date avec MySQL :</p>
                                                     <ul>
@@ -5583,6 +5583,41 @@ end;</code></pre>
                                                 <li>
                                                     <h6>Chargement du DBGrid :</h6>
                                                     <p>Nous y sommes presque : le DBGrid est prêt, la requête SQL de sélection est écrite, il ne nous reste plus qu'à créer une méthode qui va charger le DBGrid.</p>
+                                                    <p>Pour respecter notre logique, cette méthode se trouvera dans le datamodule. Hop, un clic sur l'onglet <span class="em">DataAccess</span> dans l'éditeur de source !</p>
+                                                    <p>Dans la section <span class="em">public</span> du datamodule, créez la procédure suivante :</p>
+<pre><code>procedure ChargementLocations (const Requete : String);</code></pre>
+                                                    <p>Voici son implémentation :</p>
+<pre><code>procedure TDataModule1.ChargementLocations (const Requete: String);
+(* Charge la table des locations *)
+begin
+    SQLQueryMain.Close;
+    SQLQueryMain.SQL.Text := Requete;
+    SQLQueryMain.Open;
+end;</code></pre>
+                                                    <p>La requête passée comme paramètre sera celle que nous venons de créer.</p>
+                                                    <p>Retournez dans l'unité <span class="em">Main</span> et ajoutez à la méthode <span class="em">FormShow</span> :</p>
+<pre><code>procedure TMainForm.FormShow(Sender: TObject);
+(* Demande de mot de passe *)
+begin
+if DataModule1.Login
+    then
+        begin
+            (* Initialisation de la classe de syntaxe SQL *)
+            SQLSyntax := TMySQLSyntax.Create;
+            (* Initialisation des filtres de dates *)
+            deFiltreDateDebut.Date := IncDay(Today, -30);
+            deFiltreDateFin.Date := IncDay(Today, 30);
+            // DÉBUT DE L'AJOUT
+            (* Chargement de la liste des locations *)
+            DataModule1.ChargementLocations(SQLSyntax.SelectionLocationsFiltre(deFiltreDateDebut.Date, deFiltreDateFin.Date, cbFiltreAssurance.Checked));
+            // FIN DE L'AJOUT
+        end
+    else
+        Close;
+end;</code></pre>
+                                                    <p>De cette manière, dès l'apparition de la fenêtre principale de l'application, s'affichera la liste des locations répondant aux filtres par défaut.</p>
+                                                    <p>Je suis sûr que vous avez envie de tester votre programme. Oui, mais ! Il n'y a encore aucune location dans la base de données, donc le DBGrid sera vide. Faisons donc l'exercice de créer quelques locations directement dans la base, à l'aide de PHPMyAdmin. Ce faisant, nous visualiserons, d'ailleurs, la jointure avec les voitures et les clients.</p>
+                                                    
                                                 </li>
                                             </ol>
                                         </li>
