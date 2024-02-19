@@ -5253,7 +5253,298 @@ end;</code></pre>
 <pre><code>var
     SQLSyntax : TMySQLSyntax;   (* Syntaxe propre à MySQL *)</code></pre>
                                             <p>N'oubliez pas d'ajouter l'unité <span class="em">SQL</span> à la clause <span class="em">uses</span>.</p>
-                                            
+                                            <p>À présent, réfléchissons à l'endroit où nus allons instancier la classe <span class="em">TMySQLSyntax</span>. À quel moment en aurons-nous besoin ? À chaque fois qu'une commande SQL devra être générée, c'est-à-dire à peu près partout dans l'application. Donc le meilleur enroit est de la créer au moment de l'affichage de la fenêtre principale, après le login, puis de la libérer à la fermeture de l'application. Il faut donc modifier les méthodes <span class="em">FormShow</span> et <span class="em">FormClose</span> de la fiche principale (dans l'unité <span class="em">Main</span>) :</p>
+<pre><code>procedure TMainForm.FormShow(Sender: TObject);
+(* Demande de mot de passe *)
+begin
+if DataModule1.Login
+    then
+        begin
+            // DÉBUT DE L'AJOUT
+            (* Initialisation de la classe de syntaxe SQL *)
+            SQLSyntax := TMySQLSyntax.Create;
+            // FIN DE L'AJOUT
+
+            ShowMessage('Login couronné de succès !');
+        end
+    else
+        Close;
+end;
+
+procedure TMainForm.FormClose (Sender : TObject; var CloseAction : TCloseAction);
+(* Fermeture propre de la connexion à la base de données *)
+begin
+    // DÉBUT DE L'AJOUT
+    (* Libération des commandes SQL *)
+    SQLSyntax.Free;
+    // FIN DE L'AJOUT
+    (* Déconnexion *)
+    DataModule1.Logoff;
+end;</code></pre>
+                                            <p>Encore une fois, ajoutez l'unité <span class="em">SQL</span> à la clause <span class="em">uses</span> de l'unité <span class="em">Main</span>.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Utilisation d'un TDBGrid sans TDBNavigator :</h5>
+                                            <p>Nous allons nous occuper de notre fenêtre principale, qui est bien vide pour l'instant. Ele contiendra la liste des locations, mais aussi différents filtres permettant de n'afficher que les locations répondant à différents critères.</p>
+                                            <ol>
+                                                <li>
+                                                    <h6>TDBGrid :</h6>
+                                                    <p>La liste des locations sera contenue dans un DBGrid dont les colonnes seront les suivantes :</p>
+                                                    <ul>
+                                                        <li>
+                                                            <p>les nom et prénom du client;</p>
+                                                        </li>
+                                                        <li>
+                                                            <p>la plaque de la voiture;</p>
+                                                        </li>
+                                                        <li>
+                                                            <p>la marqye de la voiture;</p>
+                                                        </li>
+                                                        <li>
+                                                            <p>son modèle;</p>
+                                                        </li>
+                                                        <li>
+                                                            <p>la date de début de location;</p>
+                                                        </li>
+                                                        <li>
+                                                            <p>la date de fin prévue;</p>
+                                                        </li>
+                                                        <li>
+                                                            <p>la date de rentrée de la voiture à l'issue de la location.</p>
+                                                        </li>
+                                                    </ul>
+                                                    <p>J'ai décidé d'afficher le nom et le prénom du client dans une seule colonne. Pour ce faire, une solution est d'ajouter dans la table <span class="em">Clients</span> un champ supplémentaire. En réalité, nous n'avons pas besoin de créer une colonne qui contiendra en permanence des données : nous allons créer une colonne <span class="em">virtuelle</span>, dont le contenu sera <span class="em">calculé</span> à partir des colonnes <span class="em">Nom</span> et <span class="em">Prénom</span> (qui ne peuvent être nulles, ainsi que nous les avons conçues).</p>
+                                                    <p>Direction le navigateur web et PHPMyAdmin : dans l'onglet <span class="em">SQL</span>, collez la commande suivante :</p>
+<pre><code>ALTER TABLE Clients ADD NomPrenom VARCHAR(81) AS ( CONCAT(Nom,' ',Prenom) ) VIRTUAL;</code></pre>
+                                                    <p>Cette nouvelle colonne <span class="em">NomPrenom</span> ne prendra aucune place dans la base de données, et nous pourrons nous en servir pour afficher ensemble le nom et le prénom de chaque client.</p>
+                                                    <p>Direction le datamodule : cliquez sur l'onglet de l'unité <span class="em">DataAccess</span> et pressez <span class="em">F12</span>.</p>
+                                                    <p>Déposez sur la fiche un nouveau composant <span class="em">TSQLQuery</span> et un nouveau <span class="em">TDataSource</span>, que vous renommez tout de suite respectivement <span class="em">SQLQueryMain</span> et <span class="em">DataSourceMain</span>. Vous connaissez la musique : assignez <span class="em">SQLConnection</span> à la propriété <span class="em">Database</span> du SQLQuery et <span class="em">SQLQueryMain</span> à la propriété <span class="em">DataSet</span> du DataSource.</p>
+                                                    <p>En cliquant sur les trois points en regard de la propriété <span class="em">FieldDefs</span> du SQLQuery, définissez les différents champs à l'aide de l'assistant :</p>
+                                                    <table class="tableBalises">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Name</th>
+                                                                <th>DataType</th>
+                                                                <th>Size</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>IdLocation</td>
+                                                                <td>ftWord</td>
+                                                                <td>0</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>IdClient</td>
+                                                                <td>ftWord</td>
+                                                                <td>0</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Plaque</td>
+                                                                <td>ftString</td>
+                                                                <td>12</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>DateDebut</td>
+                                                                <td>ftDateTime</td>
+                                                                <td>0</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>DateFin</td>
+                                                                <td>ftDateTime</td>
+                                                                <td>0</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>DateRentree</td>
+                                                                <td>ftDateTime</td>
+                                                                <td>0</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Assurance</td>
+                                                                <td>ftSmallInt</td>
+                                                                <td>0</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Plaque_1</td>
+                                                                <td>ftString</td>
+                                                                <td>12</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Marque</td>
+                                                                <td>ftString</td>
+                                                                <td>20</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Modele</td>
+                                                                <td>ftString</td>
+                                                                <td>20</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Cylindree</td>
+                                                                <td>ftInteger</td>
+                                                                <td>0</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Transmission</td>
+                                                                <td>ftFixedChar</td>
+                                                                <td>1</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Prix</td>
+                                                                <td>ftFloat</td>
+                                                                <td>0</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>IdClient_1</td>
+                                                                <td>ftWord</td>
+                                                                <td>0</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Nom</td>
+                                                                <td>ftString</td>
+                                                                <td>40</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Prenom</td>
+                                                                <td>ftString</td>
+                                                                <td>40</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>CodePostal</td>
+                                                                <td>ftString</td>
+                                                                <td>10</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Localite</td>
+                                                                <td>ftString</td>
+                                                                <td>50</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Rue</td>
+                                                                <td>ftString</td>
+                                                                <td>80</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Numero</td>
+                                                                <td>ftString</td>
+                                                                <td>10</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Telephone</td>
+                                                                <td>ftString</td>
+                                                                <td>40</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Email</td>
+                                                                <td>ftString</td>
+                                                                <td>50</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>NomPrenom</td>
+                                                                <td>ftString</td>
+                                                                <td>81</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <p>Êtes-vous surpris(e) par le nombre de champs ? C'est normal : la table <span class="em">Locations</span> fait référence aux tables <span class="em">Voitures</span> et <span class="em">Clients</span>, par ses clés étrangères, et dans toute requête de sélection nous ferons ce que l'on appelle une <span class="em">jointure</span>. Laissez-moi le bénéfice du doute pendant quelques minutes encore.</p>
+                                                    <p>Revenez à la fiche principale, en cliquant sur l'onglet <span class="em">Main</span> et en pressant <span class="em">F12</span>.</p>
+                                                    <p>Élargissez franchement la fiche et déposez-y un composant <span class="em">TDBGrid</span>, que vous renommez <span class="em">dbgMain</span> et dont vous fixez la taille à 784 x 312.</p>
+                                                    <p>À l'aidce de l'assistant de création de colonnes (que vous exécutez en cliquant sur les trois points en regard de la propriété <span class="em">Columns</span>, dans l'inspecteur d'objets), créez les colonnes suivantes :</p>
+                                                    <table class="tableBalises">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Titre (<span class="em">Title</span>)</th>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Taille (<span class="em">Width</span>)</th>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Champ (<span class="em">FieldName</span>)</td>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>Client</td>
+                                                                <td>240</td>
+                                                                <td>NomPrenom</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Plaque</td>
+                                                                <td>80</td>
+                                                                <td>Plaque</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Marque</td>
+                                                                <td>80</td>
+                                                                <td>Marque</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Modèle</td>
+                                                                <td>110</td>
+                                                                <td>Modele</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Début</td>
+                                                                <td>80</td>
+                                                                <td>DateDebut</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Fin</td>
+                                                                <td>80</td>
+                                                                <td>DateFin</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Rentrée</td>
+                                                                <td>80</td>
+                                                                <td>DateRentree</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <p>pour obtenir un affichage correct dans les trois colonnes de dates, assignez à leur propriété <span class="em">DisplayFormat</span> la valeur suivante : "dd"/"mm"/"yyyy".</p>
+                                                    <p>Pour terminer, affectez <span class="em">DataModule1.DataSourceMain</span> à la propriété <span class="em">DataSource</span> du DBGrid.</p>
+                                                </li>
+                                                <li>
+                                                    <h6>Filtres :</h6>
+                                                    <p>Est-il intéressant d'afficher l'entièreté des locations, c'est-à-dire passées, présentes et futures ? Pas tellement, alors nous allons ajouter des <span class="em">filtres</span> sur la fenêtre principale.</p>
+                                                    <p>À droite du DBGrid, déposez deux <span class="em">TLabel</span> (onglet <span class="em">Standard</span>) et deux <span class="em">TDataEdit</span> (onglet <span class="em">Misc</span>) :</p>
+                                                    <img src="../images/filtres_Lazarus.png" alt="">
+                                                    <p>Renommez-les respectivement <span class="em">lblFiltreDateDebut</span> et <span class="em">lblFiltreDateFin</span>, pour les <span class="em">TLabel</span>, et <span class="em">deFiltreDateDebut</span> et <span class="em">deFiltreDateFin</span> pour les <span class="em">TDataEdit</span>. Fixez les propriétés <span class="em">Caption</span> des labels à "Date de début :" et "Date de fin :".</p>
+                                                    <p>Il nous faut fixer le format des deux composants d'édition de date : dans l'inspecteur d'objets, leur propriété <span class="em">DateOrder</span> doit être assignée à <span class="em">doDMY</span>. Vous voyez que le contrôle d'édition lié est automatiquement configuré par Lazarus en "__/___/____", pour permettre d'afficher la date au format "jj/mm/aaaa" auquel nous sommes habitués.</p>
+                                                    <p>Nous allons ajouter un autre filtre, en dessous des deux que nous venons de créer, permettant de n'afficher que les locations pour lesquelles une assurance complémentaire a été contractée par le client. Il s'agira d'une simple case à cocher (composant <span class="em">TCheckBox</span>), que m'on trouve dans l'onglet <span class="em">Standard</span>.</p>
+                                                    <p>Assignez <span class="em">cbFiltreAssurance</span> à sa propriété <span class="em">Name</span> et "Assure complémentaire" à sa propriété <span class="em">Caption</span>.</p>
+                                                    <p>Nous allons faire en sorte qu'au démarrage de l'application, les filtres sur la date de début et la date de fin soient fixés à un mois dans le passé et un mois dans le futur. Dans le code source de l'unité <span class="em">Main</span>, ajoutez ce code à la méthode <span class="em">FormShow</span> :</p>
+<pre><code>procedure TMainForm.FormShow(Sender: TObject);
+(* Demande de mot de passe *)
+begin
+if DataModule1.Login
+    then
+        begin
+            (* Initialisation de la classe de syntaxe SQL *)
+            SQLSyntax := TMySQLSyntax.Create;
+            (* Initialisation des filtres de dates *)
+            // DÉBUT DE L'AJOUT
+            deFiltreDateDebut.Date := IncDay(Today, -30);
+            deFiltreDateFin.Date := IncDay(Today, 30);
+            // FIN DE L'AJOUT
+        end
+    else
+        Close;
+end;</code></pre>
+                                                    <p>Ajoutez également l'unité <span class="em">DateUtils</span> à la clause <span class="em">uses</span> de l'unité.</p>
+                                                </li>
+                                                <li>
+                                                    <h6>Requête SQL de sélection :</h6>
+                                                    <p>Penchons-nous à présent sur la requête SQL qui va nous permettre de charger le DBGrid en tenant compte des filtres.</p>
+                                                    <p>Dans l'unité <span class="em">SQL</span>, nous ajoutons une fonction à l'interface <span class="em">ISQLSyntax</span> :</p>
+<pre><code>    function SelectionLocationsFiltre (
+(* Requête de sélection de locations avec critères *)
+const ADateDebut, ADateFin : TDateTime;   (* Dates de début et de fin *)
+const AAssurance : Boolean                (* Avec assurance complémentaire *)
+) : String;</code></pre>
+                                                    <p>Comme prévu, nous passons comme paramètres à la fonction de début et de fin, ainsi que l'option d'affichage de l'assurance complémentaire.</p>
+                                                    
+                                                </li>
+                                            </ol>
                                         </li>
                                     </ol>
                                 </li>
