@@ -5884,7 +5884,51 @@ end;</code></pre>
                                                 </li>
                                                 <li>
                                                     <h6>Requêtes de sélection des voitures et des clients :</h6>
-                                                    <p></p>
+                                                    <p>Ne compilez pas le projet à ce stade, sous peine d'obtenir des erreurs de compilation. Il faut d'abord ajouter l'unité <span class="em">StdCtrls</span> à la clause <span class="em">uses</span> de l'unité (pour que le compilateur connaisse le type <span class="em">TcomboBox</span>). Ensuite, les méthodes <span class="em">ChargementClients</span> et <span class="em">ChargementVoitures</span>, qui avaient été définies plus tôt, doivent être légèrement modifiées pour accepter comme paramètre une autre requête que <span class="em">SelectionClientsTous</span> et <span class="em">SelectionVoituresToutes</span>.</p>
+                                                    <p>Nous partons du principe que tous les clients seront chargés dans la liste, et que donc une requête <span class="html">SELECT *</span> tout simple sera suffisante pour remplir le <span class="em">TSQLQuery</span> des clients. Par contre, la requête de sélection des voitures devra répondre aux différents filtres de la boîte de dialogue.</p>
+                                                    <p>Dans le datamodule, modifiez la déclaration des méthodes <span class="em">ChargementClients</span> et <span class="em">ChargementVoitures</span> :</p>
+<pre><code>procedure ChargementClients (const Requete : String);
+procedure ChargementVoitures (const Requete : String);</code></pre>
+                                                    <p>Et leur implémentation :</p>
+<pre><code>procedure TDataModule1.ChargementClients (const Requete : String);
+(* Chargement des clients *)
+begin
+    with SQLQueryClients do
+    begin
+        Close;
+        SQL.Text := Requete;
+        Open;
+    end;
+end;
+
+procedure TDataModule1.ChargementVoitures (const Requete : String);
+(* Chargement des voitures *)
+begin
+    with SQLQueryVoitures do
+    begin
+        Close;
+        SQL.Text := Requete;
+        Open;
+    end;
+end;</code></pre>
+                                                    <p>La modification consiste à passer la requête à exécuter comme paramètre, ce qui rend d'usage beaucoup plus général les deux méthodes.</p>
+                                                    <p>Cela signifie que nous devons également modifier les appels antérieurs à ces méthodes :</p>
+                                                    <ul>
+                                                        <li>
+                                                            <p>la méthode <span class="em">TCarForm.FormShow</span> (de l'unité <span class="em">Voitures</span>) :</p>
+<pre><code>procedure TCarForm.FormShow(Sender: TObject);
+(* Chargement de la liste des voitures *)
+begin
+    Enregistre := False;
+    DataModule1.ChargementVoitures(SQLSyntax.SelectionVoituresToutes);
+end;</code></pre>
+                                                        </li>
+                                                        <li>
+                                                            <p>la méthode <span class="em">TCustomerForm.FormShow</span>.</p>
+                                                        </li>
+                                                    </ul>
+                                                    <p>Dans ces deux unités, il faudra rajouter l'unité <span class="em">SQL</span> dans la clause <span class="em">uses</span>.</p>
+                                                    
                                                 </li>
                                             </ol>
                                         </li>
