@@ -6239,8 +6239,180 @@ end;</code></pre>
                                                     <p>Rien de très spécial dans cette reuête, dans laquelle vous remarquez la jointure des tables <span class="em">Voitures</span> et <span class="em">Clients</span> et l'utilisation de la structure <span class="em">FormatDate</span>, qui est, rappelons-le, également déclarée dans l'interface pour définir le format de date propre au système de base de données.</p>
                                                     <p>La nouvelle requête va être utilisée par une fonction qui va compter le nombre d'enregistrements correspondant à la voiture et aux dates de location. Cette fonction est logiquement définie dans le datamodule, et donc prenez la direction de l'unité <span class="em">DataAccess</span>.</p>
                                                     <p>Dans la déclaration du datamodule <span class="em">TDataModule1</span>, ajoutez cette fonction :</p>
-<pre><code>    function VoitureDejaLouee (const APlaque : String; const ADateDebut, ADateFin : TDateTime) : Boolean;</code></pre>
-                                                    
+<pre><code>function VoitureDejaLouee (const APlaque : String; const ADateDebut, ADateFin : TDateTime) : Boolean;</code></pre>
+                                                    <p>Prenons le temps de réfléchir : la requête peut-elle être exécutée par le <span class="em">TSQLQuery</span> correspondant à la table <span class="em">Locations</span>, <span class="em">TSQLQueryMain</span> ? Si nous faisons cela, le <span class="em">TDBGrid</span> de la fenêtre principale, qui contient la liste des locations et qui est lié au <span class="em">SQLQueryMain</span>, va automatiquement être rechargé avec les locations qui répondent à la requête de comptage que nous exécutons. Ce n'est pas ce que nous voulons, ce <span class="em">TDBGrid</span> doit rester inchangé. Voici une autre solution : ajouter un nouveau <span class="em">TSQLQuery</span> au datamodule, que nous appellerons <span class="em">SQLQueryTemp</span> (pour "temporaire"). Je vous laisse faire cela tout(e) seule, vous le faites les yeux fermés à présent !</p>
+                                                    <div class="information">
+                                                        <img src="../images/information.png" alt="Information">
+                                                        <p>Il n'y a pas besoin de composant <span class="html">TDataSource</span>, puisque nous ne travaillons qu'avec des contrôles classiques (seuls les composants spécialisés bases de données le requièrent).</p>
+                                                    </div>
+                                                    <p>Vous avez terminé ? Voici l'implémentation de la fonction <span class="em">VoitureDejaLouee</span> :</p>
+<pre><code>function TDataModule1.VoitureDejaLouee (const APlaque : String; const ADateDebut, ADateFin : TDateTime) : Boolean;
+(* Effectue une requête pour voir si une voiture est louée entre deux dates.
+Le principe est de rechercher les locations de ladite voiture pendant ce laps de temps *)
+begin
+    SQLQueryTemp.Close;
+    SQLQueryTemp.SQL.Text := SQLSyntax.SelectionVoitureLouee(APlaque, ADateFin, ADateDebut);
+    SQLQueryTemp.Open;
+    Result := SQLQueryTemp.RecordCount &gt; 0;
+end;</code></pre>
+                                                    <p>Le principe est d'appliquer la requête de sélection et de tester le nombre d'enregistrements correspondants (donc, de compter combien de fois la voiture est louée, totalement ou partiellement, entre les dates de début et de fin).</p>
+                                                </li>
+                                                <li>
+                                                    <h6>Enregistrement de la location :</h6>
+                                                    <p>Exactement comme nous l'avions fait dans la fiche <span class="em">TCarForm</span> (qui permettait de modifier la table des voitures) - et dans la fiche <span class="em">TCustomerForm</span> si vous aviez fait l'exercice proposé - nous créons un champ <span class="em">FEnregistre</span> dans la section <span class="em">strict private</span>, une propriété <span class="em">Enregistre</span> dans la section <span class="em">public</span> et un setter dans la section <span class="em">private</span> :</p>
+<pre><code> strict private
+    // DÉBUT DE L'AJOUT
+    FEnregistre : Boolean;
+    // FIN DE L'AJOUT
+    FIndexClient : Integer;
+    FIndexVoiture : Integer;
+private
+    // DÉBUT DE L'AJOUT
+    procedure SetEnregistre (AValue : Boolean);
+    // FIN DE L'AJOUT
+    procedure SetIndexClient (AValue : Integer);
+    procedure SetIndexVoiture (AValue : Integer);</code></pre>
+<pre><code>public
+    // DÉBUT DE L'AJOUT
+    property Enregistre : Boolean read FEnregistre write SetEnregistre;
+      (* Indique si les données ont été enregistrées *)
+    // FIN DE L'AJOUT
+    property IndexClient : Integer read FIndexClient write FIndexClient;
+      (* Index du client actuellement sélectionné *)
+    property IndexVoiture : Integer read FIndexVoiture write FIndexVoiture;
+      (* Index de la voiture actuellement sélectionnée *)</code></pre>
+                                                    <p>Cette propriété doit être initialisée dès l'affichage de la fiche, dans la méthode <span class="em">FormShow</span> :</p>
+<pre><code>procedure TNewLeasingForm.FormShow(Sender: TObject);
+(* Chargement des contrôles *)
+begin
+    // DÉBUT DE L'AJOUT
+    Enregistre := False;
+    // FIN DE L'AJOUT
+    (* Listes des clients et des voitures *)
+    // Etc.
+end;</code></pre>
+                                                    <p>N'oublions pas le code du setter :</p>
+<pre><code>procedure TNewLeasingForm.SetEnregistre (AValue : Boolean);
+(* Setter de la propriété Enregistre *)
+begin
+    if FEnregistre = AValue
+        then
+        Exit;
+    FEnregistre := AValue;
+end;</code></pre>
+                                                    <p>Je vous laisse vous occuper de la création des méthodes correspondant aux deux boutons "Enregistrer" et "Annuler". Juste leur création, car nous nous pencherons attentivement sur leur contenu.</p>
+                                                    <p>Créez également une méthode <span class="em">FormCloseQuery</span>, qui sera de la même forme que précédemment :</p>
+<pre><code>procedure TNewLeasingForm.FormCloseQuery(Sender: TObject; var CanClose: boolean);
+(* Message d'avertissement en cas de fermeture sans sauvegarde *)
+begin
+    if Enregistre
+        then
+            CanClose := True
+        else
+            CanClose := (MessageDlg('Voulez-vous fermer sans enregistrer ?', mtConfirmation, [mbYes, mbNo], 0) = mrYes);
+end;</code></pre>
+                                                    <p>Répondons à présent au clic sur le bouton "Enregistrer".</p>
+                                                    <p>Premièrement, avant d'enregistrer nous devons vérifier que la location est possible, grâce à la méthode <span class="em">VoitureDejaLouee</span> que nous avons créée dans le datamodule il y a quelques minutes :</p>
+<pre><code>procedure TUpdateLeasingForm.btnEnregistrerClick(Sender: TObject);
+(* Sauvegarde de la location *)
+begin
+    (* Requête vérifiant que la voiture n'est pas déjà louée aux dates sélectionnées *)
+    if DataModule1.VoitureDejaLouee(LocationAModifier.IdLocation, TCBVoiture(cbVoitures.Items.Objects[cbVoitures.ItemIndex]).Plaque, deDateDebut.Date, deDateFin.Date)
+        then
+            MessageDlg('La voiture est déjà louée pendant cette période', mtError, [mbOk], 0)
+        else
+            begin
+                // Enregistrement
+            end;
+end;</code></pre>
+                                                    <p>L'enregistrement dit de la location va se faire dans le datamodule. Ajoutez-y la méthode suivante, en dessous de celles destinées à la sauvegarde des voitures et des clients :</p>
+<pre><code>function SauvegardeLocations (const Requete : String) : Boolean;</code></pre>
+                                                    <p>Voici son implémentation :</p>
+<pre><code>function TDataModule1.SauvegardeLocations (const Requete : String) : Boolean;
+(* Sauvegarde de la table Locations *)
+begin
+    SQLQueryMain.Close;
+    SQLQueryMain.SQL.Clear;
+    SQLQueryMain.SQL.Add(Requete);
+    SQLQueryMain.ExecSQL;
+    Result := Commit;
+end;</code></pre>
+                                                    <p>Il n'y a plus qu'à construire la requête qui est passée comme paramètre, dans l'unité <span class="em">SQL</span>. Il s'agit d'une requête d'insertion :</p>
+<pre><code>function InsertionLocation (
+    (* Requête d'insertion d'une nouvelle location *)
+    const AIdClient : Integer;                (* Identificateur du client *)
+    const APlaque : String;                   (* Plaque de la voiture *)
+    const ADateDebut, ADateFin : TDateTime;   (* Dates de début et de fin *)
+    const AAssurance: Boolean                 (* Option d'assurance complémentaire *)
+    ) : String;</code></pre>
+                                                    <p>Dont voici l'implémentation :</p>
+<pre><code>function TMySQLSyntax.InsertionLocation (const AIdClient : Integer; const APlaque : String; const ADateDebut, ADateFin : TDateTime; const AAssurance : Boolean) : String;
+(* Requête d'insertion d'une nouvelle location *)
+begin
+    Result := 'INSERT INTO Locations VALUES (NULL, ''' + IntToStr(AIdClient) + ''', ''' + APlaque + ''', ''' +
+                DateToStr(ADateDebut, FormatDate) + ''', ''' +
+                DateToStr(ADateFin, FormatDate) + ''', NULL, ';
+    if AAssurance
+        then
+            Result := Result + '1);'
+        else
+            Result := Result + '0);';
+end;</code></pre>
+                                                    <p>Vous constatez que le client et la voiture sont ajoutés sous la forme des deux clés étrangères <span class="em">IdClient</span> et <span class="em">Plaque</span>.</p>
+                                                    <p>Nous devons encore compléter la méthode <span class="em">TNewLeasingForm.btnEnregistrerClick</span> :</p>
+<pre><code>procedure TNewLeasingForm.btnEnregistrerClick(Sender: TObject);
+(* Sauvegarde de la location *)
+begin
+    (* Requête vérifiant que la voiture n'est pas déjà louée aux dates sélectionnées *)
+    if DataModule1.VoitureDejaLouee(TCBVoiture(cbVoitures.Items.Objects[cbVoitures.ItemIndex]).Plaque, deDateDebut.Date, deDateFin.Date)
+        then
+            MessageDlg('La voiture est déjà louée pendant cette période', mtError, [mbOk], 0)
+        else
+            begin
+                // DÉBUT DE L'AJOUT
+                Enregistre := DataModule1.SauvegardeLocations(SQLSyntax.InsertionLocation(
+                                TCBClient(cbClients.Items.Objects[cbClients.ItemIndex]).IdClient,
+                                TCBVoiture(cbVoitures.Items.Objects[cbVoitures.ItemIndex]).Plaque,
+                                deDateDebut.Date, deDateFin.Date, cbAssurance.Checked));
+                Close;
+                // FIN DE L'AJOUT
+            end;
+end;</code></pre>
+                                                    <p>Une dernière formalité, la réponse au clic sur le boyton "Annuler" :</p>
+<pre><code>procedure TNewLeasingForm.btnAnnulerClick(Sender: TObject);
+(* Fermeture du dialogue *)
+begin
+    Close;
+end;</code></pre>
+                                                    <div class="information">
+                                                        <img src="../images/information.png" alt="Information">
+                                                        <p>Testez la création de nouvelles locations, mais n'oubliez pas qu'elles seront réellement insérées dans la base de données !</p>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <h6>Une classe descendante pour le dialogue de modification de location :</h6>
+                                                    <p>En fait, pour modifier une location existante, il n'y a pas besoin de créer de toutes pièces un nouveau dialogue : quelques modifications au dialogue de création de location suffiront. Nous allons donc créer une classe descendante et redéfinir ou ajouter l'une ou l'autre méthode ou propriété.</p>
+                                                    <p>Faisons le point sur ce que ce dialogue descendant aura de différent par rapport à celui d'origine :</p>
+                                                    <ul>
+                                                        <li>
+                                                            <p>au démarrage, il faudra séelectionner le bon client et la bonne voiture, initialiser les dates de la location et l'option d'assurance;</p>
+                                                        </li>
+                                                        <li>
+                                                            <p>à l'enregistrement, lors de la recherche des locations en cours, il faudra évidemment exclure la location que nous sommes en train de modifier (sinon jamais nous ne pourrons l'enregistrer).</p>
+                                                        </li>
+                                                    </ul>
+                                                    <p>Nous devrons donc redéfinir les méthodes <span class="em">FormShow</span> et <span class="em">btnEnregistrerClick</span>.</p>
+                                                    <p>Allez-y : dans la section <span class="em">type</span> de l'interface de l'unité <span class="em">Locations</span> créez la classe descendante <span class="em">TUpdateLeasingForm</span> :</p>
+<pre><code>  TUpdateLeasingForm = class(TNewLeasingForm)
+    procedure FormShow(Sender: TObject);
+    procedure btnEnregistrerClick(Sender: TObject);
+  end;</code></pre>
+                                                    <ol>
+                                                        <li>
+                                                            <h7>Initialisation des champs :</h7>
+                                                            <p>Comment allons-nous transmettre au dialogue les données de la location à modifier ?</p>
+                                                        </li>
+                                                    </ol>
                                                 </li>
                                             </ol>
                                         </li>
