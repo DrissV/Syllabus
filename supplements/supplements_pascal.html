@@ -6179,6 +6179,67 @@ end;</code></pre>
                                                         <img src="../images/information.png" alt="Information">
                                                         <p>Rappelons-nous qu'à l'affichae du dialogue, les deux dates sont initialisées à la date du jour.</p>
                                                     </div>
+                                                    <p>Dans l'inspecteur d'objets, créez une méthode événementielle pour l'événement <span class="em">OnChange</span> des deux composants <span class="em">deDateDebut</span> et <span class="em">deDateFin</span> (voici une des deux, l'autre étant identique) :</p>
+<pre><code>procedure TNewLeasingForm.deDateDebutChange(Sender: TObject);
+(* Changement de la durée : test des dates et réestimation du prix de la location *)
+begin
+    (* Teste préalablement si la date de fin est postérieure à la date de début *)
+    if (Length(deDateDebut.Text) &gt; 0) and (CompareDate(deDateDebut.Date,deDateFin.Date) &gt; 0)
+        then   (* Erreur : la date de fin devient la date de début *)
+        deDateFin.Date := deDateDebut.Date;
+    EstimationPrix;
+end;</code></pre>
+                                                </li>
+                                                <li>
+                                                    <h6>Réaction aux modifications des filtres :</h6>
+                                                    <p>À présent, nous devons prévoir de recharger la liste des voitures à chaque fois que l'utilisateur modifie un des filtres.</p>
+                                                    <p>Les contrôles dont le changement entraîne la mise à jour de la liste des voitures sont :</p>
+                                                    <ul>
+                                                        <li>
+                                                            <p>les <span class="em">TSpinEdit seCylindreeMin</span> et <span class="em">seCylindreeMax</span>;</p>
+                                                        </li>
+                                                        <li>
+                                                            <p>les cases à cocher contenues dans le groupe de boutons radio <span class="em">rgTransmission</span>.</p>
+                                                        </li>
+                                                    </ul>
+                                                    <p>De façon identique pour les deux premiers contrôles cités, dans l'inspecteur d'objets, allez dans l'onglet <span class="em">Événements</span> et cliquez sur les trois points à côté de l'événement <span class="em">OnChange</span>, puis complétez la méthode événementielle comme suit :</p>
+<pre><code>procedure TNewLeasingForm.seCylindreeMinChange(Sender: TObject);
+(* Modification du filtre sur la cylindrée : rechargement des voitures *)
+begin
+    DataModule1.ChargementCBVoitures(cbVoitures, RequeteSelectionVoituresFiltre);
+    cbVoitures.ItemIndex := IndexVoiture;
+end;</code></pre>
+                                                    <p>Pour le groupe de boutons radio, c'est en regard de l'événement <span class="em">OnChange</span> de chaque bouton qu'il faut cliquer. Le code de la méthode événementielle est le suivant (par exemple, pour le choix de la transmission automatique ("A") :</p>
+<pre><code>procedure TNewLeasingForm.rbTransmissionAChange(Sender: TObject);
+(* Modification du filtre sur la transmission : rechargement des voitures *)
+begin
+    DataModule1.ChargementCBVoitures(cbVoitures, RequeteSelectionVoituresFiltre);
+    cbVoitures.ItemIndex := IndexVoiture;
+end;</code></pre>
+                                                </li>
+                                                <li>
+                                                    <h6>test de disponibilité de la voiture :</h6>
+                                                    <p>Avant d'enregistrer une nouvelle location, il faut évidemment s'assurer que la voiture est bien disponible pendant toute la durée de la période souhaitée ! Comment faire ? En créant une requête qui compte toutes les locations de ladite voiture entre les date de début et de fin. Direction l'unité <span class="em">SQL</span> et l'interface <span class="em">ISQLSyntax</span>, dans laquelle vous ajoutez la méthode suivante :</p>
+<pre><code>function SelectionVoitureLouee (
+    (* Requête de sélection de location correspondant aux critères *)
+    const APlaque : String;                  (* Plaque de la voiture *)
+    const ADateDebut, ADateFin : TDateTime   (* Dates de début et de fin de location *)
+    ) : String;</code></pre>
+                                                    <p>Cette méthode doit obligatoirement figurer dans la déclaration de la classe <span class="em">TMySQLSyntax</span>, et voici son implémentation :</p>
+<pre><code>function TMySQLSyntax.SelectionVoitureLouee (const APlaque : String; const ADateDebut, ADateFin : TDateTime) : String;
+(* Requête de sélection de location correspondant aux critères *)
+begin
+    Result := 'SELECT * FROM Locations' +
+                ' INNER JOIN Voitures ON Locations.Plaque = Voitures.Plaque' +
+                ' INNER JOIN Clients ON Locations.IdClient = Clients.IdClient' +
+                ' WHERE Locations.Plaque = ''' + APlaque + '''' +
+                ' AND (DateDebut &lt;= ''' + DateToStr(ADateDebut, FormatDate) + ''')' +
+                ' AND (DateFin &gt;= ''' + DateToStr(ADateFin, FormatDate) + ''');';
+end;</code></pre>
+                                                    <p>Rien de très spécial dans cette reuête, dans laquelle vous remarquez la jointure des tables <span class="em">Voitures</span> et <span class="em">Clients</span> et l'utilisation de la structure <span class="em">FormatDate</span>, qui est, rappelons-le, également déclarée dans l'interface pour définir le format de date propre au système de base de données.</p>
+                                                    <p>La nouvelle requête va être utilisée par une fonction qui va compter le nombre d'enregistrements correspondant à la voiture et aux dates de location. Cette fonction est logiquement définie dans le datamodule, et donc prenez la direction de l'unité <span class="em">DataAccess</span>.</p>
+                                                    <p>Dans la déclaration du datamodule <span class="em">TDataModule1</span>, ajoutez cette fonction :</p>
+<pre><code>    function VoitureDejaLouee (const APlaque : String; const ADateDebut, ADateFin : TDateTime) : Boolean;</code></pre>
                                                     
                                                 </li>
                                             </ol>
