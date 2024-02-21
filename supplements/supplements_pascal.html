@@ -6436,11 +6436,7 @@ end;</code></pre>
                           const AAssurance : Boolean);
 end;</code></pre>
                                                             <p>Voici le contenu du constructeur <span class="em">Create</span> :</p>
-<pre><code>constructor TLocation.Create (const AIdLocation : Integer;
-                                        const APlaque : String;
-                                        const AIdClient : Integer;
-                                        const ADateDebut, ADateFin : TDateTime;
-                                        const AAssurance : Boolean);
+<pre><code>constructor TLocation.Create (const AIdLocation : Integer; const APlaque : String; const AIdClient : Integer; const ADateDebut, ADateFin : TDateTime; const AAssurance : Boolean);
 (* Initialisation des champs *)
 begin
     FIdLocation := AIdLocation;
@@ -6449,6 +6445,71 @@ begin
     FDateDebut := ADateDebut;
     FDateFin := ADateFin;
     FAssurance := AAssurance;
+end;</code></pre>
+                                                            <p>Lors de l'appel du dialogue de modification, une structure de type <span class="em">TLocation</span>, contenant les données de l'application à modifier, sera transmise au dialogue, dans une propriété que nous allons tout de suite créer.</p>
+                                                            <p>Dans la déclaration du type <span class="em">TUpdateLeasingForm</span>, ajoutez ce qui suit dans les sections <span class="em">strict private</span> et <span class="em">public</span> :</p>
+<pre><code>  TUpdateLeasingForm = class(TNewLeasingForm)
+    procedure FormShow(Sender: TObject);
+    procedure btnEnregistrerClick(Sender: TObject);
+// DÉBUT DE L'AJOUT
+strict private
+    FLocationAModifier : TLocation;
+private
+    procedure SetLocationAModifier (AValue : TLocation);
+public
+    property LocationAModifier : TLocation read FLocationAModifier write SetLocationAModifier;
+        (* Données pour initialiser les contrôles *)
+// FIN DE L'AJOUT
+end;</code></pre>
+                                                            <p>Pressez <span class="em">Shift + CTRL + C</span> pour créer le setter et les deux méthodes dans la section <span class="em">implementation</span>. Commençons par le classique setter :</p>
+<pre><code>procedure TUpdateLeasingForm.SetLocationAModifier (AValue : TLocation);
+(* Setter de la location à modifier *)
+begin
+    if FLocationAModifier = AValue
+        then
+            Exit;
+    FLocationAModifier := AValue;
+end;</code></pre>
+                                                            <p>Penchons-nous ensuite sur <span class="em">FormShow</span>.</p>
+                                                            <p>Tout d'abord, le chargement des comboboxes peut être hérité de la classe parent. La méthode <span class="em">FormShow</span> commencera ainsi :</p>
+<pre><code>inherited FormShow(Sender);</code></pre>
+                                                            <p>C'est après que les comboboxes auront été chargées que nous allons y sélectionner le bon client et la bonne voiture, initialiser les dates de location et cocher l'assurance complémentaire s'il y a lieu. Tout cela se trouve, rappelons-le, dans la propriété <span class="em">LocationAModifier</span>, qui aura été initialisée par la fenêtre parent. Voici le code de la méthode complète :</p>
+<pre><code>procedure TUpdateLeasingForm.FormShow(Sender: TObject);
+(* Initialisation des contrôles *)
+var
+    Li : Integer;        (* Indice dans une combobox *)
+    LTrouve : Boolean;   (* Voiture ou client à modifier trouvé dans sa combobox *)
+begin
+    (* Initialisation par défaut des contrôles *)
+    inherited FormShow(Sender);
+    (* Adaptation des contrôles aux données à modifier *)
+    deDateDebut.Date := LocationAModifier.DateDebut;
+    deDateFin.Date := LocationAModifier.DateFin;
+    if LocationAModifier.Assurance
+        then
+            cbAssurance.Checked := True;
+    LTrouve := False;
+    Li := 0;
+    while (Li &lt; cbClients.Items.Count) and not LTrouve do
+    if TCBClient(cbClients.Items.Objects[Li]).IdClient = LocationAModifier.IdClient
+        then
+            begin
+                cbClients.ItemIndex := Li;
+                LTrouve := True;
+            end
+        else
+            Inc(Li);
+    LTrouve := False;
+    Li := 0;
+    while (Li &lt; cbVoitures.Items.Count) and not LTrouve do
+        if TCBVoiture(cbVoitures.Items.Objects[Li]).Plaque = LocationAModifier.Plaque
+            then
+                begin
+                    cbVoitures.ItemIndex := Li;
+                    LTrouve := True;
+                end
+            else
+                Inc(Li);
 end;</code></pre>
                                                             <p></p>
                                                         </li>
