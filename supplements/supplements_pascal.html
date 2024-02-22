@@ -3562,6 +3562,7 @@ end.</code></pre>
                 </article>
                 <article>
                     <h2 id="lazarus">Lazarus :</h2>
+                    <p>Cette partie du cours est en fait un copier-coller des cours de "<a href="https://alcatiz.developpez.com/tutoriel/lazarus-mysql/" target="_blank">Gestion d'une base de données MySQL avec les composants natifs de Lazarus</a>" et du livre "<a href="https://lazarus.developpez.com/livre/livre-pascal-objet/" target="_blank">J'apprends à PROGRAMMER en Pascal Object Avec l'environnement de développement gratuit Lazarus</a>" de Jean-Luc Gofflot et Gilles Vasseur.</p>
                     <ol>
                         <li>
                             <h3>Introduction :</h3>
@@ -6511,7 +6512,87 @@ begin
             else
                 Inc(Li);
 end;</code></pre>
-                                                            <p></p>
+                                                            <p>Dans l'unité <span class="em">Main</span>, dans la fiche principale de l'application, voyons tout de suite le code d'écution du dialogue <span class="em">TUpdateLeasingForm</span>, et spécialement comment l'objet de type <span class="em">TLcation</span> est initialisé et transmis. Cela se fera dans la méthode qui se répondra à l'événement <span class="em">OnClick</span> du bouton <span class="em">btnModifier</span> :</p>
+<pre><code>procedure TMainForm.btnModifierClick (Sender : TObject);
+(* Modification de la location actuellement sélectionnée *)
+var
+    LUpdateLeasingForm : TUpdateLeasingForm;   (* Dialogue de modification *)
+    LLocationAModifier : TLocation;            (* Données à modifier *)
+begin
+    LUpdateLeasingForm := TUpdateLeasingForm.Create(Self);
+    try
+    (* Récolte des données de l'élément à modifier *)
+    with DataModule1.SQLQueryMain do
+        LLocationAModifier := TLocation.Create(FieldByName('IdLocation').AsInteger, FieldByName('Plaque').AsString, FieldByName('IdClient').AsInteger, FieldByName('DateDebut').AsDateTime, FieldByName('DateFin').AsDateTime, FieldByName('Assurance').AsBoolean);
+    LUpdateLeasingForm.LocationAModifier := LLocationAModifier;
+    (* Exécution du dialogue *)
+    LUpdateLeasingForm.ShowModal;
+    finally
+        FreeAndNil(LUpdateLeasingForm);
+        LLocationAModifier.Free;
+    end;
+    (* Mise à jour de la liste des locations affichée *)
+    DataModule1.ChargementLocations(SQLSyntax.SelectionLocationsFiltre(deFiltreDateDebut.Date, deFiltreDateFin.Date, cbFiltreAssurance.Checked, cbFiltreEnCours.Checked));
+end;</code></pre>
+                                                            <p>Vous voyez que l'initialisation des données de la location à modifier est réalisée avant l'affichage du dialogue (avant <span class="em">ShowModal</span>). Les données sont récupérées dans l'enregistrement actuellement sélectionné dans le SQLQuery principal; les champs sont identifiés à l'aide de la fonction <span class="em">FieldByName</span> et de leur identificateur dans la base de données.</p>
+                                                            <p>L'objet créé est assigné à la propriété <span class="em">LocationAModifier</span> du dialogue, comme annoncé. Après la fermeture du dialogue, nous n'oublions pas de le détruire.</p>
+                                                            <p>Notez également que nous n'avons pas oublié de mettre à jour la liste des locations en cours dans la fiche principale, après l'exécution du dialogue.</p>
+                                                        </li>
+                                                        <li>
+                                                            <h7>Enregistrement de la location modifiée :</h7>
+                                                            <p>Il ne nous reste qu'à apporter des changements à l'enregistrement de la location. Comme nous l'avons dit auparavant, si nous n'excluons pas la location courante de la recherche des locations en cours, jamais nous ne pourrons enregistrer les changements : le message disant que la voiture est déjà louée apparaîtra systématiquement. Pas convaincu(e) ? Faites l'expérience de ne pas redéfinir la méthode <span class="em">btnEnregistrerClick</span> et exécutez le programme. Impossible d'enregistrer !</p>
+                                                            <p>Il nous faut donc compléter la requête SQL qui sélectionne toutes les locations de la voiture entre les dates de début et de fin. Pour l'instant, cette requête est construite ainsi (dans l'unité <span class="em">SQL</span>) :</p>
+<pre><code>function TMySQLSyntax.SelectionVoitureLouee (const APlaque : String; const ADateDebut, ADateFin : TDateTime) : String;
+(* Requête de sélection de location correspondant aux critères *)
+begin
+    Result := 'SELECT * FROM Locations' +
+                ' INNER JOIN Voitures ON Locations.Plaque = Voitures.Plaque' +
+                ' INNER JOIN Clients ON Locations.IdClient = Clients.IdClient' +
+                ' WHERE Locations.Plaque = ''' + APlaque + '''' +
+                ' AND (DateDebut &lt;= ''' + DateToStr(ADateDebut,FormatDate) + ''')' +
+                ' AND (DateFin &gt;= ''' + DateToStr(ADateFin,FormatDate) + ''');';
+end;</code></pre>
+                                                            <p>Il faut ajouter une condition qui teste si le champ <span class="em">IdLocation</span> est différent de celui de la location qui est en train d'être modifiée.</p>
+                                                            <p>Dans l'interface <span class="em">ISQLSyntax</span> et dans la classe <span class="em">TMySQLSyntax</span>, créez une nouvelle version de la méthode <span class="em">selectionVoitureLouee</span> :</p>
+<pre><code>function SelectionVoitureLouee (
+    (* Requête de sélection de location correspondant aux critères, excluant la location courante *)
+    const AIdLocationAExclure : Integer;     (* Identificateur de la location à exclure *)
+    const APlaque : String;                  (* Plaque de la voiture *)
+    const ADateDebut, ADateFin : TDateTime   (* Dates de début et de fin de location *)
+    ) : String;</code></pre>
+                                                            <p>Son implémentation est presque identique à l'ancienne version, on y ajoute la nouvelle condition :</p>
+<pre><code>function TMySQLSyntax.SelectionVoitureLouee (const AIdLocationAExclure : Integer; const APlaque : String; const ADateDebut, ADateFin : TDateTime) : String;
+(* Requête de sélection de location correspondant aux critères, excluant la location courante *)
+begin
+    Result := 'SELECT * FROM Locations' +
+                ' INNER JOIN Voitures ON Locations.Plaque = Voitures.Plaque' +
+                ' INNER JOIN Clients ON Locations.IdClient = Clients.IdClient' +
+                // DÉBUT DE LA NOUVELLE CONDITION
+                ' WHERE Locations.IdLocation != ''' + IntToStr(AIdLocationAExclure) + '''' +
+                // FIN DE LA NOUVELLE CONDITION
+                ' AND Locations.Plaque = ''' + APlaque + '''' +
+                ' AND (DateDebut &lt;= ''' + DateToStr(ADateDebut, FormatDate) + ''')' +
+                ' AND (DateFin &gt;= ''' + DateToStr(ADateFin, FormatDate) + ''');';
+end;</code></pre>
+                                                            <div class="information">
+                                                                <img src="../images/information.png" alt="Information" class="float_left">
+                                                                <p>On utilise l'opérateur "!=" issu du C, qui est plus standard que l'opérateur "&lt;&gt;".</p>
+                                                            </div>
+                                                            <p>Grâce au nombre différent de paramètres, le compilateur ne risque pas de se tromper entre les deux versions de la méthode, même si elles ont le même nom.</p>
+                                                            <p>Même chose dans le datamodule, puisque nous allons créer une nouvelle version de la méthode <span class="em">VoitureDejaLouee</span> :</p>
+<pre><code>function VoitureDejaLouee (const AIdLocationAExclure : Integer; const APlaque : String; const ADateDebut, ADateFin : TDateTime) : Boolean;</code></pre>
+                                                            <p>Dont voici le code source :</p>
+<pre><code>function TDataModule1.VoitureDejaLouee (const AIdLocationAExclure : Integer; const APlaque : String; const ADateDebut, ADateFin : TDateTime) : Boolean;
+(* Effectue une requête pour voir si une voiture est louée entre deux dates.
+    Le principe est de rechercher les locations de ladite voiture pendant ce laps de temps.
+    Version excluant la location en cours de modification *)
+begin
+    SQLQueryTemp.Close;
+    SQLQueryTemp.SQL.Text := SQLSyntax.SelectionVoitureLouee(AIdLocationAExclure, APlaque, ADateFin, ADateDebut);
+    SQLQueryTemp.Open;
+    Result := SQLQueryTemp.RecordCount &gt; 0;
+end;</code></pre>
+                                                            <p>Il nous reste une ultime requête SQL à créer.</p>
                                                         </li>
                                                     </ol>
                                                 </li>
