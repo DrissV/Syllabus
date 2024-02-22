@@ -6592,9 +6592,52 @@ begin
     SQLQueryTemp.Open;
     Result := SQLQueryTemp.RecordCount &gt; 0;
 end;</code></pre>
-                                                            <p>Il nous reste une ultime requête SQL à créer.</p>
+                                                            <p>Il nous reste une ultime requête SQL à créer. Nous avons déjà utilisé les commandes <span class="html">SELECT</span> (pour sélectionner des enregistrements) et <span class="html">INSERT</span> (pour en ajouter de nouveaux); pour la mise à jour d'un enregistrement, nous avons besoin de la requête <span class="html">UPDATE</span>.</p>
+                                                            <p>Dans l'interface <span class="em">ISQLSyntax</span> et dans la classe <span class="em">TMySQLSyntax</span> de l'unité <span class="em">SQL</span>, ajoutez cette méthode :</p>
+<pre><code>function ModificationLocation (
+    (* Requête de modification d'une location *)
+    const AIdLocation : Integer;              (* Identificateur de la location modifiée *)
+    const AIdClient : Integer;                (* Identificateur du client *)
+    const APlaque : String;                   (* Plaque de la voiture *)
+    const ADateDebut, ADateFin : TDateTime;   (* Dates de début et de fin *)
+    const AAssurance: Boolean                 (* Option d'assurance complémentaire *)
+    ) : String;</code></pre>
+                                                            <p>Dont voici son implémentation :</p>
+<pre><code>function TMySQLSyntax.ModificationLocation (const AIdLocation, AIdClient : Integer; const APlaque : String; const ADateDebut, ADateFin : TDateTime; const AAssurance : Boolean) : String;
+(* Requête de modification d'une location *)
+begin
+    Result := 'UPDATE Locations SET Plaque = ''' + APlaque + ''', IdClient = ''' + IntToStr(AIdClient) +
+    ''', DateDebut = ''' + DateToStr(ADateDebut, FormatDate) +
+    ''', DateFin = ''' + DateToStr(ADateFin, FormatDate) + ''', Assurance = ''';
+    if AAssurance
+        then
+            Result := Result + '1'''
+        else
+             Result := Result + '0''';
+    Result := Result + ' WHERE IdLocation = ''' + IntToStr(AIdLocation) + ''';';
+end;</code></pre>
+                                                            <p>Nous avons presque terminé. Voici notre méthode <span class="em">TUpdateLeasingForm.btnEnregistrerClick</span> :</p>
+<pre><code>procedure TUpdateLeasingForm.btnEnregistrerClick(Sender: TObject);
+(* Sauvegarde de la location *)
+begin
+    (* Requête vérifiant que la voiture n'est pas déjà louée aux dates sélectionnées *)
+    if DataModule1.VoitureDejaLouee(LocationAModifier.IdLocation, TCBVoiture(cbVoitures.Items.Objects[cbVoitures.ItemIndex]).Plaque, deDateDebut.Date, deDateFin.Date)
+        then
+            MessageDlg('La voiture est déjà louée pendant cette période', mtError, [mbOk], 0)
+        else
+            begin
+                Enregistre := DataModule1.SauvegardeLocations(SQLSyntax.ModificationLocation(LocationAModifier.IdLocation, TCBClient(cbClients.Items.Objects[cbClients.ItemIndex]).IdClient, TCBVoiture(cbVoitures.Items.Objects[cbVoitures.ItemIndex]).Plaque, deDateDebut.Date, deDateFin.Date, cbAssurance.Checked));
+                Close;
+            end;
+end;</code></pre>
+                                                            <p>L'identificateur <span class="em">IdLocation</span> est issu de la structure <span class="em">LocationAModifier</span>.</p>
                                                         </li>
                                                     </ol>
+                                                </li>
+                                                <li>
+                                                    <h6>Retour d'une voiture louée :</h6>
+                                                    <p>Lorsqu'une voiture louée est restituée, il faut mettre à jour la base de données en ajoutant une date de rentrée à la location.</p>
+                                                    <p></p>
                                                 </li>
                                             </ol>
                                         </li>
