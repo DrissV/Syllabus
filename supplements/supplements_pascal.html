@@ -6637,7 +6637,182 @@ end;</code></pre>
                                                 <li>
                                                     <h6>Retour d'une voiture louée :</h6>
                                                     <p>Lorsqu'une voiture louée est restituée, il faut mettre à jour la base de données en ajoutant une date de rentrée à la location.</p>
-                                                    <p></p>
+                                                    <p>Sur la fiche principale, ajoutez un bouton "&amp;Rentrée de la voiture", nommé <span class="em">btnRentreeVoiture</span>, en dessous du bouton "Supprimer la location". Dans l'inspecteur d'objets, cliquez en regard de l'événement <span class="em">OnClick</span> de ce nouveau bouton, pour créer une procédure événementielle que nous compléterons dans quelques minutes.</p>
+                                                    <div class="information">
+                                                        <img src="../images/information.png" alt="Information" class="float_left">
+                                                        <p>Pour ne pas compliquer l'application, nous considérons que la date de rentrée est la date du jour. Mais vous pouvez, comme exercice, utiliser un dialogue tel que <span class="html">TCalendarDialog</span> pour permettre à l'utilisateur de choisir une date.</p>
+                                                    </div>
+                                                    <p>Comme il s'agit de la mise à jour d'un enregistrement, la commande SQL que nous devons utiliser est <span class="html">UPDATE</span>. Dans l'unité SQL, créez cette nouvelle méthode :</p>
+<pre><code>function ModificationLocation (
+    (* Requête de modification de la date de rentrée d'une voiture *)
+    const AIdLocation : Integer;     (* Identificateur de la location modifiée *)
+    const ADateRentree : TDateTime   (* Dates de début et de fin *)
+    ) : String;</code></pre>
+                                                    <p>Elle se différencie de la méthode de même nom existante par ses paramètres. Voici son contenu :</p>
+<pre><code>function TMySQLSyntax.ModificationLocation (const AIdLocation : Integer; const ADateRentree : TDateTime) : String;
+(* Requête de modification de la date de rentrée d'une voiture *)
+begin
+    Result := 'UPDATE Locations SET DateRentree = ''' + DateToStr(ADateRentree, FormatDate) + ''' WHERE IdLocation = ''' + IntToStr(AIdLocation) + ''';';
+end;</code></pre>
+                                                    <p>Complétons la méthode événementielle <span class="em">TMainForm.btnRentreeVoitureClick</span>, dans l'unité <span class="em">Main</span> :</p>
+<pre><code>procedure TMainForm.btnRentreeVoitureClick (Sender : TObject);
+(* Ajout de la date de rentrée de la voiture *)
+begin
+    DataModule1.SauvegardeLocations(SQLSyntax.ModificationLocation(DataModule1.SQLQueryMain.FieldByName('IdLocation').AsInteger, Today));
+    (* Mise à jour de la liste des locations affichée *)
+    DataModule1.ChargementLocations(SQLSyntax.SelectionLocationsFiltre(deFiltreDateDebut.Date, deFiltreDateFin.Date, cbFiltreAssurance.Checked, cbFiltreEnCours.Checked));
+end;</code></pre>
+                                                    <p>La date du jour est déterminée par la fonction <span class="em">Today</span>, de l'unité <span class="em">DateUtils</span>.</p>
+                                                </li>
+                                                <li>
+                                                    <h6>Exercice : supprimer une location :</h6>
+                                                    <p>Encore un exercice ?!? Oui, vous devriez être capable de gérer la suppression de la location actuellement sélectionnée dans la DBGrid principal (en réponse à un clic sur le bouton <span class="em">btnSupprimer</span>). Une proposition de solution se trouve dans le code source du projet.</p>
+                                                    <p>Je vous explique quand même quelle commande SQL vous devez utiliser : <span class="html">DELETE</span>. Votre requête devra ressembler à ceci :</p>
+<pre><code>DELETE FROM Locations WHERE IdLocation = '1234';</code></pre>
+                                                    <p>Passez votre requête comme paramètre à la méthode <span class="em">TDataModule1.SauvegardeLocations</span>.</p>
+                                                    <p>Si vous ne savez pas comment retrouver l'identificateur de la location sélectionnée, voici un indice :</p>
+<pre><code>DataModule1.SQLQueryMain.FieldByName('IdLocation').AsInteger</code></pre>
+                                                </li>
+                                            </ol>
+                                        </li>
+                                        <li>
+                                            <h5>Toujours plus loin : une facture avec LazReport :</h5>
+                                            <p>Attention, n'attendez pas de la suite beaucoup d'explications sur la création d'états avec LazReport. Le but du jeu esy de montrer l'interaction des composants avec la base de données. Si vous avez besoin d'explications pour démarrer avec LazReport, je vous conseille ce <a href="https://lazarus.developpez.com/cours/lazreport/" target="_blank">tutoriel très clair sur la création d'un état simple, écrit par Jean-Paul Humbert</a>.</p>
+                                            <p>Avant de commencer, prenons le temps de réfléchir. Le but est de créer une facture; il s'agira d'une facture sur une seule location à la fois. Si nous lions les composants de LazReport au SQLQuery de la fiche principale, cela va créer des factures pour toutes les locations présentes dans le DBGrid; la solution est de sélectionner une seule facture dans le SQLQuery temporaire, et donc de lier les composants de LazReport au <span class="em">SQLQueryTemp</span>.</p>
+                                            <ol>
+                                                <li>
+                                                    <h6>Requête de sélection :</h6>
+                                                    <p>Zou, première étape : créer une requête de sélection de la location pour laquelle nous désirons une facture. Dans l'unité <span class="em">SQL</span>, ajoutez la méthode suivante à l'interface <span class="em">ISQLSyntax</span> et à la classe <span class="em">TMySQLSyntax</span> :</p>
+<pre><code>function SelectionLocationsFiltre (
+    (* Requête de sélection d'une location à partir de son identificateur *)
+    const AIdLocation : Integer   (* Identificateur de la location *)
+    ) : String;</code></pre>
+                                                    <p>Son implémentation est relativement simple :</p>
+<pre><code>function TMySQLSyntax.SelectionLocationsFiltre (const AIdLocation : Integer) : String;
+(* Requête de sélection d'une location à partir de son identificateur *)
+begin
+    Result := 'SELECT * FROM Locations' +
+                ' INNER JOIN Voitures ON Locations.Plaque = Voitures.Plaque' +
+                ' INNER JOIN Clients ON Locations.IdClient = Clients.IdClient' +
+                ' WHERE IdLocation = ''' + IntToStr(AIdLocation) + ''';';
+end;</code></pre>
+                                                </li>
+                                                <li>
+                                                    <h6>Composants LazReport :</h6>
+                                                    <p>Seconde étape : ajouter les composants LaeReport. À quel endroit, d'après vous ? Oui, dans le datamodule, avec les autres composants de connexion à la base de données. Direction l'unité <span class="em">DataAccess</span>, pressez <span class="em">F12</span> pour afficher le concepteur.</p>
+                                                    <p>Depuis l'onglet <span class="em">Data Access</span>, déposez un composant <span class="em">TDataSource</span>, que vous renommez <span class="em">DataSourceTemp</span> et que vous liez à <span class="em">SQLQueryTemp</span>. Déposez ensuite, depuis l'onglet <span class="em">LazReport</span> :</p>
+                                                    <ul>
+                                                        <li>
+                                                            <p>un composant <span class="em">TfrDBDataSet</span> (le second sur l'onglet de la palette), dont vous liez la propriété <span class="em">DataSet</span> au <span class="em">SQLQueryTemp</span>;</p>
+                                                        </li>
+                                                        <li>
+                                                            <p>un composant <span class="em">TfrReport</span> (le tout premier), dont vous liez la propriété <span class="em">DataSet</span> au <span class="em">frDBDataSet1</span> que vous venez de déposer.</p>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                                <li>
+                                                    <h6>Conception du rapport :</h6>
+                                                    <p>Il s'agit à prédent de faire la maquette de la facture. Faites un double-clic sur le composant <span class="em">frReport1</span>, une nouvelle fenêtre s'affiche :</p>
+                                                    <img src="../images/conception_rapport_Lazarus_1.png" alt="">
+                                                    <p>C'est le concepteur de rapport de LazReport.</p>
+                                                    <p>Créons une en-tête pour la facture, en cliquant sur le petit rectangle entouré de pointillé dans la colonne de gauche. Cliquez ensuite en haut et à gauche de la page vide : un rectangle pointillé se dépose et LazRapport vous demande de quel type de bande il s'agit. Comme proposé automatiquement, il s'agit du "Titre du rapport" :</p>
+                                                    <img src="../images/conception_rapport_Lazarus_2.png" alt="">
+                                                    <p>Quand vous avez cliqué sur OK, une (horrible) zone hachurée s'est placée en haut de la page :</p>
+                                                    <img src="../images/conception_rapport_Lazarus_3.png" alt="">
+                                                    <p>Cliquez ensuite sur la première icône (rectangulaire) de la colonne de gauche, pour placer une zone de texte dans la zone hachurée. Tout de suite, un dialogue vous permet d'écrire du texte :</p>
+                                                    <img src="../images/conception_rapport_Lazarus_4.png" alt="">
+                                                    <p>Inscrivez "FACTURE". À l'aide des pognées vertes de la zone de texte, centrez le rectangle. Centrez aussi le texte et augmentez la taille de la police, par exemple 22 :</p>
+                                                    <img src="../images/conception_rapport_Lazarus_5.png" alt="">
+                                                    <p>De la même manière, créez une zone hachurée en-dessous de l'en-tête, en choisissant "Données principales" comme type de bande. Un petit dialogue vous demande de sélectionner la source de données : choisissez <span class="em">frDBDataSet1</span>.</p>
+                                                    <img src="../images/conception_rapport_Lazarus_6.png" alt="">
+                                                    <p>À l'aide de la poignée verte inférieure, augmentez la hauteur de la zone hachurée.</p>
+                                                    <ol>
+                                                        <li>
+                                                            <h7>Données statiques :</h7>
+                                                            <p>Ajoutez une zone de texte et mettez-y comme titre (taille 14) "Identité du client :". Pour voir le texte, vous devrez peut-être augmenter la taille du rectangle. En dessous, ajoutez encore une zone dans laquelle vous inscrivez :</p>
+<pre><code>[SQLQueryTemp."NomPrenom"]
+[SQLQueryTemp."Rue"] [SQLQueryTemp."Numero"]
+[SQLQueryTemp."CodePostal"] [SQLQueryTemp."Localite"]</code></pre>
+                                                            <p>La taille du texte peut être fixée à 10 et l'alignement à gauche.</p>
+                                                            <p>Les champs du SQLQUery sont mis entre crochets; c'est leur valeur qui sera affichée. Vous allez toute de suite voir que l'on peut mélanger du texte simple avec les champs.</p>
+                                                            <img src="../images/donnees_statiques_Lazarus.png" alt="">
+                                                            <p>Créez un second titre "Véhicule loué :", puis un cadre sur toute la largeur, contenant :</p>
+<pre><code>[SQLQueryTemp."Marque"] [SQLQueryTemp."Modele"]
+Prix par jour : [SQLQueryTemp."Prix"] €</code></pre>
+                                                            <p>Puis créez de nouveau un titre "Location :", et encore un autre cadre sur toute la largeur :</p>
+<pre><code>Date de début : [SQLQueryTemp."DateDebut"]
+Date de fin prévue : [SQLQueryTemp."DateFin"]
+Rentrée du véhicule : [SQLQueryTemp."DateRentree"]
+Assurance complémentaire : [SQLQueryTemp."Assurance"]</code></pre>
+                                                        </li>
+                                                        <li>
+                                                            <h7>Données calculées :</h7>
+                                                            <p>Passons maintenant au plus important pour notre société de location : le pognon ! Ajoutez un quatrième titre "À payer :", puis un rectangle sur toute la largeur.</p>
+                                                            <p>LazReport possède des fonctions qui permettent de faire des opérations sur des champs de base de données et/ou sur des variables. Malheureusement, il n'existe pas de fonction permettant de calculer le nombre de jours entre les dates de début et de fin de location; nous allons devoir fournir ce nombre.</p>
+                                                            <p>Allez dans le menu <span class="em">Fichier</span> du concepteur et choisissez <span class="em">Liste des variables</span> :</p>
+                                                            <img src="../images/donnees_calculees_Lazarus_1.png" alt="">
+                                                            <p>Cliquez sur le bouton <span class="em">Variables</span>. Dans le dialogue qui suit, inscrivez comme titre "Factures variables" et, à la ligne suivante, <span class="em">commençant par une espace</span>, "Duree" :</p>
+                                                            <img src="../images/donnees_calculees_Lazarus_2.png" alt="">
+                                                            <p>Cliquez deux fois sur <span class="em">OK</span>.</p>
+                                                            <p>Double-cliquez sur le tout dernier rectangle que vous créé sur la largeur de la page, et inscrivez :</p>
+<pre><code>[Duree] jours * [SQLQueryTemp.Prix] € = [[Duree]*[SQLQueryTemp.Prix]] €</code></pre>
+                                                            <p>C'est à notre application de fournir la valeur de la variable <span class="em">Duree</span>, sur demande de LazReport. Fermez le concepteur de rapport en enregistrez la maquette dans le répertoire source de notre application, sous le nom <span class="em">Facture1.lrf</span>. Dans l'inspecteur d'objets de l'unité <span class="em">DataAccess</span>, sur le composant <span class="em">frReport1</span>, cherchez l'événement <span class="em">OnGetValue</span>. Cliquez sur les trois points qui l'accompagnent, pour créer une méthode événementielle <span class="em">frReport1GetValue</span>.</p>
+                                                            <p>Voici son contenu :</p>
+<pre><code>procedure TDataModule1.frReport1GetValue (const ParName : String; var ParValue : Variant);
+(* Calcul de la variable Duree sur demande de LazReport *)
+begin
+    if UpperCase(ParName) = 'DUREE'
+        then
+            if SQLQueryTemp.FieldByName('DateRentree').AsString <> ''
+                then   (* Calcul sur la date de rentrée *)
+                    ParValue := DaysBetween(SQLQueryTemp.FieldByName('DateDebut').AsDateTime, SQLQueryTemp.FieldByName('DateRentree').AsDateTime) + 1
+                else   (* Pas de date de rentrée : calcul sur la date de fin prévue *)
+                    ParValue := DaysBetween(SQLQueryTemp.FieldByName('DateDebut').AsDateTime, SQLQueryTemp.FieldByName('DateFin').AsDateTime) + 1;
+end;</code></pre>
+                                                            <p>Si la date de rentrée de la voiture est vide, le calcul est fait sur la date de fin de location prévue.</p>
+                                                            <p>Ce n'est pas tout : si le client a opté pour l'assurance complémentaire, la somme de 10 € est ajoutée au total. Cette donnée étant un booléen, elle est stockée comme une valeur entière 0 ou 1 dans la base de données. C'est parfait pour nous : la somme à éventuellement ajouter au total sera de 10 multiplié par 0 ou 1. Nous complétons ainsi le contenu de notre rectangle :</p>
+<pre><code>Base : [Duree] jours * [SQLQueryTemp.Prix] € = [[Duree]*[SQLQueryTemp.Prix]] €
+Assurance : [10*[SQLQueryTemp."Assurance"]] €
+Total : [[Duree]*[SQLQueryTemp.Prix]+10*[SQLQueryTemp."Assurance"]] €</code></pre>
+                                                        </li>
+                                                        <li>
+                                                            <h7>Dpnnées automatiques :</h7>
+                                                            <p>Pour terminer, nous allons vite voir comment rajouter la date du jour dans le rapport. Augmentez la hauteur de la zone hachurée de titre (descendez au beoin de la zone hachurée en dessous) et ajoutez un rectangle de texte centré en dessous du titre "FACTURE". Inscrivez dans ce rectangle :</p>
+<pre><code>Date : [DATE]</code></pre>
+                                                            <p>Facile, non ?</p>
+                                                            <p>Voici donc la maquête de facture complète :</p>
+                                                            <img src="../images/donnees_automatiques_Lazarus.png" alt="">
+                                                        </li>
+                                                    </ol>
+                                                </li>
+                                                <li>
+                                                    <h6>Code de création de la facture :</h6>
+                                                    <p>Nous avons voir si nous avons bien travaillé. Sur la fiche principale, en dessous du bouton "rentrée de la voiture", ajoutez un dernier bouton "&amp;Facture", nommé <span class="em">btnFacture</span>. le code de la méthode événementielle qui correspond à <span class="em">OnClick</span> est le suivant :</p>
+<pre><code>procedure TMainForm.btnFactureClick (Sender : TObject);
+(* Création d'une facture *)
+begin
+    DataModule1.CreerFacture;
+end;</code></pre>
+                                                    <p>C'est en effet logiquement dans le datamodule que va figurer le code de création de la facture. Rendez-vous dans l'unité <span class="em">DataAccess</span>.</p>
+                                                    <p>Dans la section <span class="em">public</span> de la déclaration du type <span class="em">TDataModule1</span>, ajoutez cette méthode :</p>
+<pre><code>procedure CreerFacture;</code></pre>
+                                                    <p>La combinaison de touches <span class="em">Shift + CTRL + C</span>, comme d'habitude, crée son implémentation :</p>
+<pre><code>procedure TDataModule1.CreerFacture;
+(* Remplit l'état Facture1 avec les champs de la location sélectionnée *)
+begin
+    (* Sélection de la location à facturer dans le SQLQueryTemp *)
+    SQLQueryTemp.Close;
+    SQLQueryTemp.SQL.Text := SQLSyntax.SelectionLocationsFiltre(SQLQueryMain.FieldByName('IdLocation').AsInteger);
+    SQLQueryTemp.Open;
+    (* Création du rapport *)
+    frReport1.LoadFromFile('Facture1.lrf');
+    frReport1.PrepareReport;
+    frReport1.ShowReport;
+end;</code></pre>
+                                                    <p>La requête de sélection initialise le <span class="em">SQLQueryTemp</span> avec les données de la location à facturer, et ce SQLQuery sert de source de données au rapport.</p>
+                                                    <p>Et voici enfin une facture générée par notre application :</p>
+                                                    <img src="../images/code_creation_facture_Lazarus.png" alt="">
+                                                    <p>Notre application est terminée ! C'est le moment de verser une petite larme, car nous avons bien travaillé. Vous pouvez être fier(e) de vous !</p>
                                                 </li>
                                             </ol>
                                         </li>
