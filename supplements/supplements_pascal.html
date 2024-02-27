@@ -58,6 +58,7 @@
                         <li><a href="#fonctions_procedures">Fonctions et procédures</a></li>
                         <li><a href="#tableaux">Tableaux (Array)</a></li>
                         <li><a href="#lazarus">Lazarus</a></li>
+                        <li><a href="#poo">Programmation Orientée Objet avec Free Pascal/Lazarus</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -6817,6 +6818,193 @@ end;</code></pre>
                                             </ol>
                                         </li>
                                     </ol>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="poo">POO à gogo - Notions fondamentales de Programmation Orientée Objet avec Free Pascal/Lazarus :</h2>
+                    <p>Cette partie est un "copier-coller" du <a href="https://gilles-vasseur.developpez.com/tutoriels/poo-la-programmation-orientee-objet/" target="_blank">cours sur la POO avec Free Pascal/Lazarus de Gilles Vasseur</a>.</p>
+                    <ol>
+                        <li type="I">
+                            <h3>Classes et objets :</h3>
+                            <ol type="A">
+                                <li>
+                                    <h4>La programmation orientée objet :</h4>
+                                    <p>Par le regroupement des uinstructions au sein de modules appelés <span class="em">fonctions et procédures</span>, la <span class="em">programmation structurée</span> a permis une meilleure lisibilité et une maintenance améliorée des programmes. En créant ces éléments plus faciles à comprendre qu'une longue suite d'instructions et de sauts, les projets complexes devenaient maîtrisables.</p>
+                                    <p>La <span class="em">Programmation Orientée Objet</span> (POO) se propose de représenter de manière encore plus rigoureuse et plus efficace les entités et leurs relations en les encapsulant au sein d'<span class="em">objets</span>. Elle renverse d'une certaine façon la perspective en accordant toute leur place aux données alors que la programmation structurée privilégiait les actions.</p>
+                                    <p>Le constat initial est qu'en matière informatique décrire le monde qui nous entoure consiste essentiellement à utiliser des trios de données : <span class="em">entité</span>, <span class="em">attribut</span>, <span class="em">valeur</span>. Par exemple : (ordinateur, système d'exploitation, Windows 10), (ordinateur, système d'exploitation, Linux Mint 17), (chien, race, caniche), (chien, âge, 5), (chien, taille, petite), (cheveux, densité, rare). <span class="em">L'entité</span> décrite est à l'intersection <span class="em">d'attributs</span> variés qui servent à caractériser les différentes entités auxquelles ils se rapportent.</p>
+                                    <p>Ces trios prennent tout leur sens avec des <span class="em">méthodes</span> pôur les manipuler : création, insertion, suppression, modification, etc. Plus encore, les structures qui allieront les <span class="em">attributs</span> et les <span class="em">méthodes</span> pourront interagir afin d'échanger les informations nécessaires à un processus. Il s'agit donc de manipuler des <span class="em">entités</span> en mémoire, chacune d'entre elles se décrivant par un ensemble <span class="em">d'attributs</span> et un ensemble de <span class="em">méthodes</span> portant sur ces attributs (cf. L'orienté onbjet - Bersini Hugues - Eyrolles 2007).</p>
+                                </li>
+                                <li>
+                                    <h4>Les classes :</h4>
+                                    <p>La réunion des attributs et des méthodes pour leur manipulation dans une même structure est le fondement de la POO : cette structure particulière prend le nom de <span class="em">classe</span>. Par une première approximation, vous considérez une classe comme un enregistrement qui posséderait les procédures et les fonctions pour manipuler ses propres données. Vous pouvez aussi voir une classe comme une boîte noire fournissant un certain nombre de fonctionnalités à propos d'une entité aux attributs bien définis. Peu importe ce qu'il se passe dans cette boîte dans la mesure où elle rempli pleinement les tâches pour lesquelles elle a été conçue.</p>
+                                    <p>Imaginez un programme qui créeait des animaux virtuels et qui les animerait. En programmation procédurale classique, vous auriez à coder un certain nombre de fonctions, de procédures et de variables. Ce travail pourrait donner lieu à des déclarations comme celles-ci :</p>
+<pre><code>var
+    V_Nom: string;
+    V_AFaim: Boolean;
+    V_NombreAnimaux: Integer;
+// [...]
+procedure Avancer;
+procedure Manger;
+procedure Boire;
+procedure Dormir;
+function ASoif: Boolean;
+function AFaim: Boolean;
+function ANom : string;
+procedure SetSoif(Valeur: Boolean);
+procedure SetFaim(Valeur: Boolean);
+procdure SetNom(const Valeur: string);</code></pre>
+                                    <p>Les difficultés commenceraient avec l'association entre les routines définies et un animal particulier. Vous pourriez, par exemple, créer un enregistrement représentant l'état d'un animal :</p>
+<pre><code>TEtatAnimal = record
+    FNom: string;
+    FAFaim: Boolean;
+    FASoif: Boolean;
+end;</code></pre>
+                                    <p>Il vous faudrait ensuite regrouper les enregistements dans un tableau et imaginer des techniques pour reconnaître les animaux, fournir leur état et en décrire le comportement. Sans doute que certaines de vos routines auraient besoin d'un nouveau paramètre en entrée capable de distinguer l'animal qui fait appel à elles. Avec des variables globales, des tableaux, des boucles et beaucoup de patience, vous devriez vous en tirer. Cependant, si le projet prend de l'ampleur, les variables globales vont s'accumuler tandis que les interactions entre les procédures et les fonctions vont se complexifier : une erreur se glissera sans doute dans leur intrication et il sera difficile de l'y déceler.</p>
+                                    <p>Dans un tel cas de figure, la POO montre d'emblée son efficacité. Pour résoudre le même problème, il vous faudra déclarer une classe :</p>
+<pre><code>TAnimal = class 
+strict private
+    fNom: string;
+    fASoif: Boolean; 
+    fAFaim: Boolean;
+    procedure SetNom(const AValue: string);
+public
+    procedure Avancer;
+    procedure Manger;
+    procedure Boire;
+    procedure Dormir;
+published
+    property ASoif: Boolean read fASoif write fASoif;
+    property AFaim: Boolean read fAFaim write fAFaim;
+    property Nom: string read fNom write SetNom;
+end;</code></pre>
+                                    <div class="information">
+                                        <img src="../images/information.png" alt="Information" class="float-left">
+                                        <p>Ne vous inquiétez pas si vous ne comprenez pas en détail (voir pas du tout) le contenu de cette structure : il sera étudié plus tard.</p>
+                                    </div>
+                                    <p>À chaque fois qu'une variable sera du type de la classe définie, elle disposer à titre privé des <span class="em">champs</span>, des <span class="em">propriétés</span> et des <span class="em">méthodes</span> proposées par cette classe. Vous n'aurez besoin de rien de plus : chaque animal particulier sera reconnu grâce à la variable dédiée et seules ses caractéristiques seront prises en compte, sans intervention de votre part.</p>
+                                    <p>Par la suite, il s'agira de donner chair à cette classe en renseignant chacun de ses éléments.</p>
+                                </li>
+                                <li>
+                                    <h4>Champs, méthodes et propriétés :</h4>
+                                    <p>Les <span class="em">champs</span> (ou <span class="em">attributs</span>) décrivent la structure de la classe. Par exemple, <span class="em">fASoif</span> est un champ de type booléen de <span class="em">TAnimal</span>.</p>
+                                    <p>Les <span class="em">méthodes</span> (procédures et fonctions) décrivent les opérations qui sont applicables grâce à la classe. Par exemple, <span class="em">Avancer</span> est une méthode de <span class="em">TAnimal</span>.</p>
+                                    <p>Une <span class="em">propriété</span> est avant tout un moyen d'accéder à un champ : ainsi <span class="em">fNom</span> est accessible grâce à la propriété <span class="em">Nom</span>. Les propriétés se servent des mots réservés <span class="em">read</span> et <span class="em">write</span> pour cet accès.</p>
+                                    <p>Trêve de théorie : place à votre première expérimentation des classes !</p>
+                                    <p>[Exemple PO_01]</p>
+                                    <p>Pour avoir accès à la POO avec <span class="em">Free Pascal</span>, vous devez activer l'une des trois options suivantes :</p>
+                                    <ul>
+                                        <li>
+                                            <p>{$mode objfpc};</p>
+                                        </li>
+                                        <li>
+                                            <p>{$mode delphi};</p>
+                                        </li>
+                                        <li>
+                                            <p>{$mode MacPas}.</p>
+                                        </li>
+                                    </ul>
+                                    <div class="information">
+                                        <img src="../images/information.png" alt="Information" class="float-left">
+                                        <p>La prmeière ligne est incluse automatiquement dans le squelette de l'application lorsque vous la créez via <span class="html">Lazarus</span>.</p>
+                                    </div>
+                                    <p>Afin de préparer votre premier travail en relation avec les classes, procédez comme suit :</p>
+                                    <ul>
+                                        <li>
+                                            <p>créez une nouvelle applictaion;</p>
+                                        </li>
+                                        <li>
+                                            <p>avec "Fichier" &#8594; "Nouvelle unité", ajoutez une unité à votre projet;</p>
+                                        </li>
+                                        <li>
+                                            <p>enregistrez les squelettes créés automatiquement par <span class="em">Lazarus</span> sous les noms suivants : <span class="em">project1.lpi</span> sous <span class="em">testPOO01.lpi</span> - <span class="em">unit1.pas</span> sous <span class="em">main.pas</span> - <span class="em">unit2.pas</span> sous <span class="em">animal.pas</span>;</p>
+                                        </li>
+                                        <li>
+                                            <p>rebaptisez la fiche principale en modifiant sa propriété <span class="em">name</span> : appelez-la <span class="em">MainForm</span>, ce qui aura pour conséquence immédiate de transformer aussi le type de la classe de la fiche de <span class="em">TForm1</span> à <span class="em">TMainForm</span>;</p>
+                                        </li>
+                                        <li>
+                                            <p>dans la partie <span class="em">interface</span> de l'unité <span class="em">animal</span>, créez une section <span class="em">type</span> et entre le code de définition de la classe <span class="em">TAnimal</span>;</p>
+                                        </li>
+                                        <li>
+                                            <p>placez le curseur n'importe où dans la définition de la classe puis pressez simultanément sur <span class="em">CTRL + Shift + C</span> : <span class="em">Lazarus</span> va créer instantanément le squelette de toutes les méthodes à définir.</p>
+                                        </li>
+                                    </ul>
+                                    <p>À ce stade, votre unité devrait ressembler à ceci :</p>
+<pre><code>unit animal;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+    Classes, SysUtils;
+
+type
+    { TAnimal }
+
+TAnimal = class
+strict private
+    fNom: string;
+    fASoif: Boolean;
+    fAFaim: Boolean;
+    procedure SetNom(const AValue: string);
+public
+    procedure Avancer;
+    procedure Manger;
+    procedure Boire;
+    procedure Dormir;
+published
+    property ASoif: Boolean read fASoif write fASoif;
+    property AFaim: Boolean read fAFaim write fAFaim;
+    property Nom: string read fNom write SetNom;
+end;
+
+implementation
+
+{ TAnimal }
+
+procedure TAnimal.SetNom(const AValue: string);
+begin
+    if fNom = AValue then Exit;
+    fNom := AValue;
+end;
+
+procedure TAnimal.Avancer;
+begin
+end;
+
+procedure TAnimal.Manger;
+begin
+end;
+
+procedure TAnimal.Boire;
+begin
+end;
+
+procedure TAnimal.Dormir;
+begin
+end;
+
+end.</code></pre>
+                                    <div class="information">
+                                        <img src="../images/information.png" alt="Information" class="float-left">
+                                        <p>Une des méthodes est pré-remplie : il s'agit de <span class="html">SetNom</span> qui détermine la nouvelle valeur de la propriété nom. Ne vous inquiétez pas de son contenu qui, à ce stade, n'est pas utile à votre compréhension.</p>
+                                    </div>
+                                    <p>La déclaration d'une classe se fait donc dans une section <span class="em">type</span> de la partie <span class="em">interface</span> de l'unité. On parle aussi d'<span class="em">interface</span> à son propos, c'est-à-dire, dans ce contexte, à la partie visible de la classe. Il faudra bien sûr définir les comportements (que se passe-t-il dans le programme lorsqu'un animal mange ?) dans la partie <span class="em">implementation</span> de la même unité.</p>
+                                    <div class="important">
+                                        <img src="../images/important.png" alt="Important" class="float-left">
+                                        <p>Pour être plus précis, la déclaration d'une classe doit se faire dans la partie à la portée la plus large d'un programme ou d'une unité, ou dans une autre classe (type imbriqué). Il est interdit de déclarer une classe dans une procédure ou une fonction.</p>
+                                    </div>
+                                    <p>La seule différence entre la définition d'une méthode et celle d'une routine traditionnelle est que son identificateur porte le nom de la classe comme préfixe, suivi d'un point :</p>
+<pre><code>implementation
+// […]
+procedure TAnimal.Avancer;
+begin
+end;</code></pre>
+                                    <p>Complétez à présent votrer programme :</p>
+                                    
                                 </li>
                             </ol>
                         </li>
