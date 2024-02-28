@@ -7108,6 +7108,167 @@ end;</code></pre>
                                     <p>Si vous lancez l'exécution de votre programme à ce stade, la compilation se déroulera normalement et vous pourrez agir sur les boutons radio sans problème. Cependnat, tout clic sur une action à réaliser par l'animal sélectionné provoquera une erreur fatale :</p>
                                     <img src="../images/notion_constructeur_Pascal.png" alt="">
                                     <p>Dans son jargon, <span class="em">Lazarus</span> vous prévient que le programme a rencontré une erreur de type "<span class="em">External: SIGSEGV</span>". Cette erreur survient quand vous rentez d'accéder à des emplacements de mémoire qui ne vous sont pas réservés.</p>
+                                    <p>L'explication de l'erreur est simple : l'objet en tant qu'instance d'une classe ocuupe de la mémoire sur le tas (<span class="em">heap</span>), aussi est-il nécessaire de l'allouer et de la libérer. Vous utiliserez à cette fin un constructeur (<span class="em">constructor</span>) dont celui par défaut est <span class="em">Create</span>, et un destructeur (<span class="em">destructor</span>) qui répond toujours au doux nom de <span class="em">Destroy</span>.</p>
+                                    <div class="information">
+                                        <img src="../images/information.png" alt="Information" class="float_left">
+                                        <p>Lorsque vous déclarez une variable de type classe, vous n'allouez qu'un emplacement sur la pile (<span class="html">stack</span>) qui correspond à la taille d'un pointeur sur un objet. Ce dernier est créé sur le tas (<span class="html">heap</span>)aux dimensions beaucoup plus généreuses.</p>
+                                    </div>
+                                    <p>Comme le monde virtuel est parfois aussi impitoyable que le monde réel, vous donnerez naissance aux animaux et libérerez la place en mémoire qu'ils occupaient quand vous aurez décidé de leur disparition. Autrement dit, il est de votre responsabilité de tout gérer, y compris la propreté de votre arche de Noé !</p>
+                                    <p>L'instanciation de <span class="em">TAnimal</span> prendra cette forme :</p>
+<pre><code>Nemo := TAnimal.Create; // création de l’objet
+// Ici, le travail avec l’animal créé…</code></pre>
+                                    <p>La ligne qui crée l'objet est à examiner avec soin. L'objet n'existant pas avant sa création (un monde impitoyable peut être malgré tout rationnel), vous ne pourriez pas écrire directement une ligne comme :</p>
+<pre><code>MonAnimal.Create; // je crois créer, mais je ne crée rien !</code></pre>
+                                    <p>Le compilateur ne vous alerterait pas parce qu'il penserait que vous voulez faire appel à la méthode <span class="em">Create</span> de l'objet <span class="em">MonAnimal</span>, ce qui est tout à fait légitime à la conception (et à l'exécution si l'objet est déjà créé) : en effet, même s'il est rare d'avoir à le faire, il est possible d'appeler autant de fois que vous le désirez la méthode <span class="em">Create</span>. Dans le cas présent, le problème est que vous essayeriez ainsi d'exécuter une méthode à partir d'un objet <span class="em">MonAnimal</span> qui n'existe pas encore puisque non créé.... Une erreur de violation d'accès serait immédiatement déclenchée à l'exécution, car la mémoire nécessaire à l'objet n'aurait pas été allouée !</p>
+                                    <div class="important">
+                                        <img src="../images/important.png" alt="Important" class="float_left">
+                                        <p>C'est toujours en mentionnant le nom de la classe (ici, <span class="html">TAnimal</span>) que l'on crée un objet.</p>
+                                    </div>
+                                    <p>
+                                        Que vous utilisez 
+                                        <qspan class="em">Create</qspan>
+                                         ou un constructeur spécifique, le fonctionnement de l'instanciation est le suivant :
+                                    </p>
+                                    <ul>
+                                        <li>
+                                            <p>le compilateur réserve de la place sur la pile (<span class="em">stack</span>) pour la variable du type de la classe à instancier : c'est un pointeur;</p>
+                                        </li>
+                                        <li>
+                                            <p>le constructeur de la classe appelle <span class="em">getmem</span> pour réserver la place sur le tas (<span class="em">heap</span>) pour tout l'objet, initialise cette zone de mémoire et renvoie un pointeur vers elle.</p>
+                                        </li>
+                                    </ul>
+                                    <div class="information">
+                                        <img src="../images/information.png" alt="Information" class="float_left">
+                                        <p>La zone mémoire occupée par l'objet étant mise à zéro, il n'est pas nécessaire d'initialiser les champs et les propriétés si vous souhaitez qu'ils prennent leur valeur nulle par défaut : haîne vide, nombre à zéro, pointeur à <span class="html">nil</span>... Cependant, initialiser les champs malgré tout est une bonne habitude qui vous évitera bien des déboires lors de la recherche d'erreurs : le code produit n'en sera pas alourdi et vous aurez une vision directe de la valeur par défaut de vos champs.</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <h4>Le paramètre implicite Self :</h4>
+                                    <p>À partir du moment où un objet a été créé, une variable appelée <span class="em">Self</span> est définie implicitement pour chaque méthode de cet objet. Cette variable renvoie une référence aux données de l'objet. Son utilisation la plus fréquente est de servir de paramètre à une méthode ou à une routine qui a bseoin de cette référence.</p>
+                                    <p>Par exemple, vous pouvez créer un bouton par votre code en lui désignant un parent et un propriétaire ainsi :</p>
+<pre><code>MonButton := TButton.Create(Self); // création avec un propriétaire
+with MonButton do
+begin
+    Height := 10;
+    Left := 10;
+    Top := 10;
+    Width := 100;
+    Caption := 'Ouvrir...';
+    OnClick := @ButtonClick;
+    Parent := Self; // le parent permet l'affichage
+end;</code></pre>
+                                    <p>Dans cet exemple, le bouton est créé en utilisant l'instance en cours (une fiche <span class="em">TForm</span> dans la plupart des cas) représentée par le paramètre implicite <span class="em">Self</span>, ce qui permettra la libération automatique du nouvel objet dès que son propriétaire sera lui-même libéré.</p>
+                                    <div class="important">
+                                        <img src="../images/important.png" alt="Important" class="float_left">
+                                        <p>La LCL de <span class="html">Lazarus</span> définit la classe ancêtre de tous les composants : <span class="html">TComponent</span>. Cette dernière déclare la propriété <span class="html">Owner</span> qui autorise la libération des objets détenus par leur propriétaire de manière automatique dès que ce propriétaire est libéré. Voilà pourquoi, tout à fait exceptionnellement, vous n'avez pas à libérer les objets que sont les composants déposés sur une fiche : ils le sont quand nécessaire par leur propriétaire !</p>
+                                    </div>
+                                    <p>La dernière ligne concernant ce bouton permet de renseigner la propriété <span class="em">Parent</span> indispensable à l'affichage du contrôle : par exemple, la valeur attribuée à la propriété <span class="em">Left</span> n'a de sens que par rapport à un repère qui est justement son parent. Encore une fois, c'esy le paramètre implicite <span class="em">Self</span> qui fournit l'information nécessaire.</p>
+                                    <div class="important">
+                                        <img src="../images/important.png" alt="Important" class="float_left">
+                                        <p>Avec la LCL de <span class="html">Lazarus</span>, quand un contrôle a un parent, toutes ses propriétés prennent effet immédiatement. Il est par conséquent judicieux de les définir avant d'affecter sa propriété <span class="html">Parent</span> pour assurer un effet instantané à une série d'affectations.</p>
+                                    </div>
+                                    <p>Ces initialisations exigent une référence à l'objet au sein duquel est instanciée une seconde classe : c'est <span class="em">Self</span> qui la fournit.</p>
+                                    <p>En général, ce paramètre défini pour chaque méthode est sous-entendu. Ainsi vous pourriez tout à fait définir la méthode <span class="em">SetNom</span> comme ceci :</p>
+<pre><code>procedure TAnimal.SetNom(AValue: string);
+begin
+    if Self.fNom = AValue then
+        Exit;
+    Self.fNom := AValue;
+end;</code></pre>
+                                    <p>Cependant, en alourdissant inutilement l'écriture, vous risqueriez de créer une certaine confusion dans votre code. Ici <span class="em">Self</span> est superflu puisque le champ <span class="em">fNom</span> est sans ambiguïté possible encapsulé dans la classe <span class="em">TAnimal</span>.</p>
+                                </li>
+                                <li>
+                                    <h4>Notion de destucteur :</h4>
+                                    <p>Si l'oubli de créer l'instance d'une classe et son utilisation forcée provoquent une erreur fatale, s'abstenir de libérer l'instance d'une classe via un descteur produira des fuites de mémoire, le système interdisant à d'autres processus d'accéder à des portions de mémoire qu'il pense encore réservées. Par conséquent, tout objet créé doit être détruit à la fin de son utilisation :</p>
+<pre><code>Nemo.Free; // libération des ressources de l’objet</code></pre>
+                                    <div class="important">
+                                        <img src="../images/important.png" alt="Important" class="float_left">
+                                        <p>À propos de destructeur, le lecteur attentif est en droit de se demander pourquoi il est baptisé <span class="em">Destroy</span> alors que la méthode utilisée par la destruction de l'objet est <span class="html">Free</span>. En fait, <span class="html">Free</span> vérifie que l'objet existe avant d'appeler <span class="html">Destroy</span>, évitant ainsi de lever de nouveau une exception pour violation d'accès. Il en découle que l'on définit la méthode <span class="html">Destroy</span>, mais que l'on appelle toujours la méthode <span class="html">Free</span>.</p>
+                                    </div>
+                                    <p>Vous pouvez à présent terminer votre premier programme mettant en oeuvre des classes créées par vos soins :</p>
+                                    <ul>
+                                        <li>
+                                            <p>définissez le gestionnaire <span class="em">OnCreate</span> de la fiche principale :</p>
+<pre><code>procedure TMainForm.FormCreate(Sender: TObject);
+// *** création de la fiche ***
+begin
+    // on crée les instances et on donne un nom à chaque animal créé
+    Nemo := TAnimal.Create;
+    Nemo.Nom := 'Némo';
+    Rantanplan := TAnimal.Create;
+    Rantanplan.Nom := 'Rantanplan';
+    Minette := TAnimal.Create;
+    Minette.Nom := 'Minette';
+    // objet par défaut
+    UnAnimal := Nemo;
+end;</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>de la même manière, définissez le gestionnaire <span class="em">OnDestroy</span> de cette fiche :</p>
+<pre><code>procedure TMainForm.FormDestroy(Sender: TObject);
+// *** destruction de la fiche ***
+begin
+    // on libère toutes les ressources
+    Minette.Free;
+    Rantanplan.Free;
+    Nemo.Free;
+end;</code></pre>
+                                        </li>
+                                    </ul>
+                                    <p>Vous pouvez enfin tester votre application et constater que les animaux ainsi que les actions à effectuer sont reconnus !</p>
+                                </li>
+                                <li>
+                                    <h4>Premiers gains de la POO :</h4>
+                                    <p>Que gagenez-vous à utiliser ce mécanisme apparemment plus lourd que celui auquel contraint la programmation structurée :</p>
+                                    <ul>
+                                        <li>
+                                            <p>en premier lieu, vous disposerez de briques pour la conception de vos propres créations. C'est exactement ce que vous faites quand vous utilisez un composant de <span class="em">Lazarus</span> : une fiche est un objet sur lequel vous déposez d'autres objets comme des étiquettes, des éditeurs, des images, tous des instances de classes prédéfinies. Ces briques préfabriquées font évidemment gagner beaucoup de temps, mais ne sonty pas nées d'une manoeuvre magique !</p>
+                                        </li>
+                                        <li>
+                                            <p>qui plus est, dans la mesure où la manière dont telle ou telle fonctionnalité est réalisée est indifférente, la modification de l'intérieur de la boîte n'influera en rien les autres programmes qui utiliseront la classe en cause (Cette remarque ne vaut évidemment que si la classe a été bien conçue dès le départ ! En particulier, si l'ajout de nouvelles fonctionnalités est toujours possible, en supprimer interdirait toute réelle rétrocompatibilité.) Dans l'exemple sur les animaux, vous pourriez fort bien décider que la méthode <span class="em">Dormir</span> émettre un bip : vous n'auriez qu'une ligne à ajouter au sein de cette méthode pour que tous les animaux bénéficient de ce nouveau comportement;</p>
+                                        </li>
+                                        <li>
+                                            <p>enfin, les données et les méthodes étant regroupées pour résoudre un micro-problème, la lisibilité et la maintenance de votre application s'en trouveront grandement facilitées. Circuler dans un projet de bonne dimension reviendra à examiner les interactions entre les briques dont il est constitué ou à étudier une brique particulière, au lieu de se perdre dans les méandres de bouts de codes entremêlés.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Vous allez voir ci-après que les gains sont bien supérieurs encore. À partir du petit exemple produit, vous pouvez déjà pressentir la puissance de la POO : imaginez avec quelle facilité vous pourriez ajouter un nouvel animal ! De plus, n'êtes-vous pas étonné par ces méthodes <span class="em">Create</span> et <span class="em">Destroy</span> surgies de nulle part ? D'où viennent-elles ? Sachant qu'en Pascal tout se déclare, comment se fait-il que vous ayez pu les utiliser sans avoir eu à les définir ?</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Principes et techniques de la POO :</h3>
+                            <ol type="A">
+                                <li>
+                                    <h4>L'encapsulation :</h4>
+                                    <p>Si vous reprenez l'interface de la classe <span class="em">TAnimal</span>, fort de vos nouvelles connaissances, vous pourriez la commenter ainsi :</p>
+<pre><code>TAnimal = class // c’est bien une classe
+strict private // indique que ce qui suit n’est pas visible à l’extérieur de la classe
+    fNom: string; // un champ de type chaîne
+    fASoif: Boolean; // deux champs booléens
+    fAFaim: Boolean;
+    procedure SetNom(AValue : string); // détermine la valeur d’un champ via une méthode
+public // indique que ce qui suit est visible à l’extérieur de la classe
+    procedure Avancer; // des méthodes…
+    procedure Manger;
+    procedure Boire;
+    procedure Dormir;
+    // les propriétés permettant d’accéder aux champs
+    //  et/ou aux méthodes manipulant ces champs
+    property ASoif: Boolean read fASoif write fASoif;
+    property AFaim: Boolean read fAFaim write SetAFaim;
+    property Nom: string read fNom write SetNom;
+end;</code></pre>
+                                    <p>L'<span class="em">encapsulation</span> est le concept fondamental de la POO. Il s'agit de protéger toutes les données au sein d'une classe : en général, même si <span class="em">Free Pascal</span> laisse la liberté d'une manipulation directe des champs, seul l'accès à travers une méthode ou une propriété devrait être autorisé pour une encapsulation véritable.</p>
+                                    <p>Ainsi, aucun objet extérieur à une instance de la classe <span class="em">TAnimal</span> ne connaîtra l'existence de <span class="em">fAFaim</span> et ne pourra donc y accéder :</p>
+<pre><code>// Erreur : compilation refusée
+MonObjet.AFaimAussi := MonAnimal.fAfaim;
+// OK si ATresSoif est une propriété booléenne modifiable de AutreObjet
+AutreObjet.ATresSoif := MonAnimal.AFaim;</code></pre>                                    
+                                    <p>Paradoxalement, cette contrainte est une bénédiction pour le programmeur qui peut pressentir la fiabilité de la classe qu'il utilise à la bonne encapsulation des données. Peut-être le traitement à l'intérieur de la classe changera-t-il, mais restera cette interface qui rendra inutile la compréhension de la mécanique interne.</p>
+                                </li>
+                                <li>
+                                    <h4>Notion de portée :</h4>
+                                    <p>Le niveau d'encapsulation est déterminé par la <span class="em">portée</span> du champ, de la propriété ou de la méthode. La <span class="em">portée</span> répond à la question : qui est autorisé à voir cet élément et de ce fait à l'utiliser ?</p>
                                     
                                 </li>
                             </ol>
