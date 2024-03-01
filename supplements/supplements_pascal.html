@@ -7297,6 +7297,148 @@ AutreObjet.ATresSoif := MonAnimal.AFaim;</code></pre>
                                     <p>Le niveau d'encapsulation repose sur une règle bien admise qui est de ne montrer que ce qui est strictement nécessaire. Par conséquent, choisissez la pluaprt du temps le niveau d'encapsulation le plus élevé possible pour chaque élément. L'expérience vous aidera à faire les bons choix : l'erreur sera comme souvent formatrice !</p>
                                     <p>Souvenez-vous tout d'abord que vous produisez des boîtes noires dans lesquelles l'utilisateur introduira des données pour en récupérer d'autres ou pour provoquer certains comportements comme un affichage, une impression, etc. Si vous autorisez la modification du coeur de votre classe et que vous la modifiez à votre tour, n'ayant à priopri aucune idée du contexte de mise en oeuvre de votre classe, vous êtes assuré de pertirber les programmes qui l'auront utlisée.</p>
                                     <p>Aidez-vous ensuite de ces quelques repères généraux :</p>
+                                    <ul>
+                                        <li>
+                                            <p>une section <span class="html">strict private</span> abrite des champs et des méthodes qui servent d'outils de base (l'utilisateur de votre classe n'aura jamais besoin de se servir d'eux directement);</p>
+                                        </li>
+                                        <li>
+                                            <p>une section <span class="html">private</span> permet à d'autres classes de la même unité de partager des informations (elle est très fréquente pour des raisons historiques : la section <span class="em">strict private</span> est apparue tardivement);</p>
+                                        </li>
+                                        <li>
+                                            <p>les variantes de <span class="html">protected</span> permettent surtout des rédfinitions de méthodes lors de la création de sous-classes;</p>
+                                        </li>
+                                        <li>
+                                            <p>la section <span class="html">public</span> est la portée par défaut, qui n'a pas besoin de se faire connaître puisqu'elle s'offre à la première sollicitation venue !</p>
+                                        </li>
+                                        <li>
+                                            <p>enfin, <span class="html">published</span> sera un outil précieux lors de l'intégration de composants dans la palette de <span class="em">Lazarus</span>.</p>
+                                        </li>
+                                    </ul>
+                                    <div class="information">
+                                        <img src="../images/information.png" alt="Information" class="float_left">
+                                        <p>La visibilité la plus élevée (<span class="html">public</span> ou <span class="html">published</span>) est toujours moins permissive qu'une variable globale : l'accès aux données ne peut s'effectuer qu'en spécifiant l'objet auquel elles appartiennent. Autrement dit, une forme de contrôle existe toujours à travers cette limitation intentionnelle. C'est dans le même esprit que les variables globales doivent être très peu nombreuses : visibles dans tout le programme, elles sont sources d'erreurs souvent difficiles à détecter et à corriger.</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <h4>L'héritage :</h4>
+                                    <p>Jusqu'à présent, les classes vous ont sans doute semblé de simples enregistrements (<span class="html">record</span>) aux capacités étendues : en plus de proposer une structure de données, elles fournissent les méthodes pour travailler sur ces données. Cependant, la notion de classe est bien plus puissante que ce qu'apporte l'encapsulation : il est aussi possible de dériver des sous-classes d'une classe existante qui hériteront de toutes les fonctionnalités de leur parent. Ce mécanisme s'appelle l'<span class="em">héritage</span>.</p>
+                                    <p>Autrement dit, non seulement la classe dérivée saura exécuter les tâches qui lui sont propres, mais elle saura aussi, sans aucune ligne de code supplémentaire à écrire, exécuter les tâches que maîtrise son ancêtre.</p>
+                                    <div class="information">
+                                        <img src="../images/information.png" alt="Information" class="float_left">
+                                        <p>Une classe donnée ne peut avoir qu'un unique parent, mais autant de descendants que nécessaire. L'ensemble forme une arborescence à la manière d'un arbre généalogique.</p>
+                                    </div>
+                                    <p>Encore plus fort : cet <span class="em">héritage</span> se propage de génération, la nouvelle classe héritant de son parent, de l'ancêtre de son parent, la chaîne s'interrompant qu'à la classe souche. Avec <span class="em">Lazarus</span>, cette classe souche est <span class="em">TObject</span> qui définit les comportements élémentaires que partagent tooutes les classes.</p>
+                                    <p>Ainsi, la déclaration de <span class="em">TAnimal</span> qui commençait par la ligne <span class="em">TAnimal = class</span> est une forme elliptique de <span class="em">TAnimal = class(TObject)</span> qui rend explicite la parenté des deux classes.</p>
+                                    <div class="important">
+                                        <img src="../images/important.png" alt="Important" class="float_left">
+                                        <p>En particulier, vous trouverez dans <span class="html">TObject</span> la solution au problème posé par l'apparente absence de définition de <span class="html">Create</span> et de <span class="html">Destroy</span> dans la classe <span class="html">TAnimal</span> : c'est <span class="html">TObject</span> qui les définit !</p>
+                                    </div>
+                                    <p>[Exemple PO_02]</p>
+                                    <p>Si vous manipuliez la classe <span class="em">TAnimal</span>, vous pourriez avoir à travailler avec un ensemble de chiens et envisager alors de créer un descendant <span class="em">TChien</span> aux propriétés et méthodes étendues.</p>
+                                    <p>En voici une définition possible que vous allez introduire dans l'unité <span class="em">animal</span>, juste en dessous de la classe <span class="em">TAnimal</span> :</p>
+<pre><code>TChien = class(TAnimal)
+strict private
+    fBatard: Boolean;
+    procedure SetBatard(AValue: Boolean);
+public
+    procedure Aboyer;
+    procedure RemuerLaQueue;
+    property Batard: Boolean read fBatard write SetBatard;
+end;</code></pre>
+                                    <p>La première ligne indique que la nouvelle classe descend de la classe <span class="em">TAnimal</span>. Les autres lignes ajoutent des fonctionnalités (<span class="em">Aboyer</span> et <span class="em">RemuerLaQueue</span>) ou déclarent de nouvelles propriétés (<span class="em">Batard</span>). La puissance de l'héritage s'exprimera par le fait qu'un objet de type <span class="em">TChien</span> disposera des éléments que déclare sa classe, mais aussi de tout ce que proposent <span class="em">TAnimal</span> et <span class="em">TObject</span>, dans la limite de la portée qu'elles définissent.</p>
+                                    <p>Comme pour la préparation de sa classe ancêtre, placez le curseur sur une ligne quelconque de l'interface de la classe <span class="em">TChien</span> et pressez <span class="em">CTRL + Shift + C</span>. <span class="em">Lazarus</span> produit aussitôt les squelletes nécessaires aux définitions des nouvelles méthodes :</p>
+<pre><code>  property Nom: string read fNom write SetNom;
+end; // fin de la déclaration de TAnimal
+
+{ TChien }
+
+TChien = class(TAnimal)
+strict private
+    fBatard: Boolean;
+    procedure SetBatard(AValue: Boolean);
+public
+    procedure Aboyer;
+    procedure RemuerLaQueue;
+    property Batard: Boolean read fBatard write SetBatard;
+end;
+
+implementation
+
+uses
+    Dialogs; // pour les boîtes de dialogue
+
+{ TChien }
+
+procedure TChien.SetBatard(AValue: Boolean);
+begin
+end;
+
+procedure TChien.Aboyer;
+begin
+end;
+
+procedure TChien.RemuerLaQueue;
+begin
+end;
+
+{ TAnimal }
+
+procedure TAnimal.SetNom(AValue: string); // […]</code></pre>
+                                    <p>D'ores et déjà, les lignes de code suivantes seront compilées et exécutées sans souci :</p>
+<pre><code>Medor := TChien.Create; // on crée le chien Medor
+Medor.Aboyer; // la méthode Aboyer est exécutée
+Medor.Batard := True; // Medor n’est pas un chien de race
+Medor.Manger; // il a hérité de son parent la capacité Manger
+Medor.Free; // on libère la mémoire allouée</code></pre>
+                                    <p>Comme les nouvelles méthodes ne font rien en l'état, complétez-les comme suit :</p>
+<pre><code>{ TChien }
+procedure TChien.SetBatard(AValue: Boolean);
+begin
+    fBatard := AValue;
+end;
+
+procedure TChien.Aboyer;
+begin
+    MessageDlg(Nom + ' aboie...', mtInformation, [mbOK], 0);
+end;
+
+procedure TChien.RemuerLaQueue;
+begin
+    MessageDlg(Nom + ' remue la queue...', mtInformation, [mbOK], 0);
+end;</code></pre>
+                                    <p>De même, modifiez légèrement l'unité <span class="em">main</span> afin qu'elle prenne en compte cette nouvelle classe avec l'objet <span class="em">Rantanplan</span> :</p>
+<pre><code>//[…]
+procedure rbRantanplanClick(Sender: TObject);
+private
+    { private declarations }
+    Nemo, Minette, UnAnimal : TAnimal;
+    Rantanplan: TChien; // &lt;= changement
+public
+    { public declarations }
+end;
+
+var
+MainForm: TMainForm;
+
+implementation
+
+{$R *.lfm}
+
+{ TMainForm }
+
+procedure TMainForm.FormCreate(Sender: TObject);
+// *** création de la fiche ***
+begin
+    // on crée les instances et on donne un nom à l'animal créé
+    Nemo := TAnimal.Create;
+    Nemo.Nom := 'Némo';
+    Rantanplan := TChien.Create; // &lt;= changement
+    Rantanplan.Nom := 'Rantanplan';
+    Minette := TAnimal.Create;</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Le polymorphisme :</h4>
+                                    <p>Lancez votre programme et essayez différents choix. Vous remarquez que ce programme et celui qui n'avait pas défini <span class="em">TChien</span> se comportent exactement de la même manière !</p>
                                     
                                 </li>
                             </ol>
