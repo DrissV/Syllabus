@@ -7457,7 +7457,75 @@ begin
         3: UnAnimal.Dormir;
     end;
 end;</code></pre>
-                                    <p></p>
+                                    <p>Ce comportement apparemment étrange tient au fait que tout objet de type <span class="em">TChien</span> est aussi de type <span class="em">TAnimal</span>. En héritant de toutes les propriétés et méthodes publiques de son ancêtre, une classe peut légitimement occuper sa place si elle le souhaite : <span class="em">Rantanplan</span> est donc un objet <span class="em">TChien</span> ou un objet <span class="em">TAnimal</span> ou, bien sûr, un objet <span class="em">TObject</span>. C'est ce qu'on appelle le <span class="em">polymorphisme</span>, qui est une conséquence directe de l'héritahe : un objet d'une classe donnée peut prendre la forme de ses ancêtres.</p>
+                                    <p>Grâce au polymorphisme, l'affectation suivante est correcte :</p>
+<pre><code>UnAnimal := Rantanplan;</code></pre>
+                                    <p>L'objet <span class="em">Rantanplan</span> remplit toutes les conditions pour satisfaire la variables <span class="em">UnAnimal</span> : en tant que descendant de <span class="em">TAnimal</span>, il possède toutes les propriétés et méthodes à même de compléter ce qu'on attend <span class="em">UnAnimal</span>.</p>
+                                    <p>La réciproque n'est pas vraie et l'affectation suivante déclenchera dès la compilation une erreur, avec un message "types incompatibles" :</p>
+<pre><code>Rantanplan := UnAnimal;</code></pre>
+                                    <p>En effet, <span class="em">UnAnimal</span> est incapable de renseigner les trois apports de la classe <span class="em">TChien</span> : les méthodes <span class="em">Aboyer</span>, <span class="em">RemuerLaQueue</span> et la propriété <span class="em">Batard</span> resteraient indéterminées. Ce comportement est identique à celui attendu dans le monde réel : vous savez qu'un chien est toujours un animal, mais rien ne vous assure qu'un animal soit forcément un chien !</p>
+                                    <div class="important">
+                                        <img src="../images/important.png" alt="Important" class="float_left">
+                                        <p>Pour les curieux : certains d'entre vous auront remarqué que de nombreux gestionnaires d'événements comme <span class="html">OnClick</span> comprennent un paramètre <span class="html">Sender</span> de <span class="html">TObject</span>. Comme <span class="html">TObject</span> est l'ancêtre de toutes les classes, grâce au polymorphisme, n'importe quel objet est accepté en paramètre. Ces gestionnaires s'adaptent donc à tous les objets qui pourraient faire appel à eux ! Élégant, non ?</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <h4>Les opérateurs Is et As :</h4>
+                                    <p>Évidemment, il serait intéressant d'exploiter les nouvelles caractéristiques de la classe <span class="Em">TChien</span>. Mais comment faire puisque notre objet de type <span class="em">TChien</span> est pris pour un objet de type <span class="em">TAnimal</span> ?</p>
+                                    <p>Il existe heureusement deux opérateurs qui permettent facilement de préciser ce qui est attendu :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="html">is</span> vérifie qu'un objet est bien du type d'une classe déterminée et renvoie une valeur booléenne (<span class="em">True</span> ou <span class="em">False</span>);</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="html">as</span> force un objet à prendre la forme d'une classe déterminée : si cette transformation (appelée <span class="em">transtypage</span>) est impossible du fait de l'incompatibilité des types, une erreur est déclenchée.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Par conséquent, vous pourriez écrire ceci avec <span class="em">is</span> :</p>
+<pre><code>if (Rantanplan is TChien) then // Rantanplan est-il un chien ?
+    Result := 'Il s''agit d''un chien'
+ else
+    Result := 'Ce n''est pas un chien.';
+ // […]
+ Result := (Minette is TChien); // faux
+ Result := (Nemo is TObject); // vrai</code></pre>
+                                    <p>Et ceci avec <span class="em">as</span> :</p>
+<pre><code>(Rantaplan as TChien).Aboyer; // inutile mais correct
+Rantanplan.Aboyer // équivalent du précédent
+(Nemo as TChien).Dormir; // erreur : Nemo n’est pas de type TChien
+(UnAnimal as TChien).Manger; // correct pour Rantaplan mais pas pour les autres</code></pre>
+                                    <p>Le déclenchement possible d'une exception avec <span class="em">as</span> conduit à l'accompagner, dès qu'il y a plusieurs possibilités d'objets à traiter, d'un test préalable avec <span class="em">is</span> :</p>
+<pre><code>if (UnAnimal is TChien) then // l'objet est-il du type voulu ?
+(UnAnimal as TChien).Aboyer; // si oui, transtypage avant d'exécuter la méthode
+ // le transtypage en dur est aussi possible puisque UnAnimal est certainement de type TChien
+ // TChien(UnAnimal). Aboyer est par conséquent correct</code></pre>
+                                    <p>[Exemple PO_03]</p>
+                                    <p>Pour ce qui est du projet en cours, reprenez le programme et modifiez-le ainsi :</p>
+                                    <ul>
+                                        <li>
+                                            <p>ajoutez "Aboyer" à la liste des actions possibles dans le composant <span class="em">lblAction</span> de type <span class="em">TListBox</span> :</p>
+                                            <img src="../images/operateurs_Is_As_Pascal.png" alt="">
+                                        </li>
+                                        <li>
+                                            <p>modifiez la méthode <span class="em">OnClick</span> de <span class="em">lblAction</span> dans l'unité <span class="em">main.pas</span> :</p>
+<pre><code>procedure TmainForm.lbActionClick(Sender: Tobject);
+// *** choix d'une action ***
+begin
+    case lbAction.ItemIndex of
+        0: UnAnimal.Avancer;
+        1: UnAnimal.Manger;
+        2: UnAnimal.Boire;
+        3: UnAnimal.Dormir;
+        4: if (UnAnimal is TChien) then
+                (UnAnimal as TChien).Aboyer
+            else
+                MessageDlg(UnAnimal.Nom + ' ne sait pas aboyer…', mtError, [mbOK], 0);
+    end;
+end;</code></pre>
+                                            <p>La traduction en langage humain de cette modification est presque évidente : si l'objet <span class="em">UnAnimal</span> est du type <span class="em">TChien</span>, alors forcer cet animal à prendre la forme d'un chien et à aboyer, sinon signaler que cet animal ne sait pas aboyer.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Les opérateurs <span class="em">is</span> et <span class="em">as</span> sont les outils indispensables à qui veut profiter au mieux du polymorphisme. Grâce à eux, les objets manipulés adoptent la forme désirée.</p>
                                 </li>
                             </ol>
                         </li>
