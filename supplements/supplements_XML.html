@@ -658,7 +658,95 @@
                         <li>
                             <h3>Définition :</h3>
                             <p>Une Document Type Definition fournit comme son nom l'indique une définition des types du document XML. Une DTD décrit de manière précise quels éléments peut contenir un document XML, dans quel ordre ils peuvent apparaître et quels sont leurs attributs.</p>
-                            <p></p>
+                            <p>Lorsqu'un document XML est <span class="em">bien formé</span>, c'est-à-dire qu'il respecte les règles de formulation, et qu'il respecte également une <span class="em">DTD</span>, on dit que ce document est <span class="em">valide</span>. Une DTD fournit donc une <span class="em">définition de la structure et des règles qu'un document XML doit suivre pour être valide</span>.</p>
+                            <p>Dans une DTD, il y a donc des déclarations d'éléments, d'attributs et d'entités. Il y a également des notations mais ce pont n'est pas abordé dans le cours. Nous nous contentons des définitions d'éléments et d'attributs.</p>
+                        </li>
+                        <li>
+                            <h3>Déclaration de DTD :</h3>
+                            <p>La déclaration d'une DTD peut être effectuée en <span class="em">interne</span>, directement dans la déclaration du type de document, ou alors en <span class="em">externe</span>, dans un fichier séparé dont l'URI est donné dans la décaration du type de document.</p>
+                            <p><span class="html">URI</span> : Uniform Resource Identifier &#859§; String qui permet d'identifier une ressource sur internet</p>
+                            <p><span class="html">URN</span> : Uniform Resource Name &#8596; String correspondant au nom de la ressource</p>
+                            <p><span class="html">URL</span> : Uniform Resource Locator &#8596; String correspondant à l'adresse de la ressource</p>
+                            <img src="../images/URI_URN_URL.png" alt="">
+                            <p>La déclaration d'une DTD qu'elle soit interne ou externe <span class="em">se trouve entre la déclaration XML et la racine du document</span>. Dans un document HTML, la DTD doit être déclarée en première ligne.</p>
+                            <p>La déclaration d'une DTD débute toujours par <span class="html">&lt;!DOCTYPE</span> suivi du nom de l'élément <span class="em">racine</span> du document. Attention, la définition de l'élément racine est propre au document XML, il ne s'agit pas d'une information fournie par une DTD (ni un XML Schema).</p>
+                            <p>Prenons l'exemple d'une page HTML qui renferme égalemnt une déclaration de doctype :</p>
+<pre><code>&lt;!DOCTYPE <span class="em">html</span> ...
+&lt;<span class="em">html</span>&gt;
+&lt;head&gt;...&lt;/head&gt;
+&lt;body&gt;...&lt;/body&gt;
+&lt;/<span class="em">html</span>&gt;</code></pre>
+                            <p><span class="em">html</span> est le nom de l'élément racine du document.</p>
+                            <ol>
+                                <li>
+                                    <h4>Déclarer une DTD interne :</h4>
+                                    <p>Par exemple :</p>
+<pre><code>&lt;?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?&gt;
+&lt;!DOCTYPE voitures [
+    &lt;!ELEMENT voitures (voiture) * &gt;
+    ...
+]&gt;
+&lt;voitures&gt;
+    &lt;voiture&gt;...&lt;/voiture&gt;
+    ...
+&lt;/voitures&gt;</code></pre>
+                                    <p>Remarquez que dans la déclaration XML de l'exemple, l'attribut <span class="html">standalone</span> prend la valeur <span class="em">yes</span> puisqu'aucun DTD externe n'est déclarée. Pour rappel, par défaut, la valeur de <span class="html">standalone</span> est <span class="em">no</span>.</p>
+                                </li>
+                                <li>
+                                    <h4>Déclarer une DTD externe :</h4>
+                                    <p>Dans la déclaration du doctype, on trouve l'URI qui permet d'atteindre le fichier dont l'extension est ".dtd" externe. Dans cette déclaration, avant l'URI, on trouve le mot SYSTEM ou PUBLIC.</p>
+                                    <p>Le mot <span class="html">SYSTEM</span> est utilisé pour signifier que l'URI de la DTD référencée est une URI relative au document XML.</p>
+                                    <p>Par exemple :</p>
+<pre><code>&lt;?xml version="1.0" encoding="ISO-8859-1" standalone="no"?&gt;
+&lt;!DOCTYPE voitures SYSTEM "voitures.dtd"&gt;
+&lt;voitures&gt;
+    &lt;voiture&gt;...&lt;/voiture&gt;
+    ...
+&lt;/voitures&gt;</code></pre>
+                                    <p>Le mot <span class="html">PUBLIC</span> est utilisé pour signifier que la DTD référencée est publique. Dans ce cas, on précise l'idnetificateur public de cette DTD suivi de l'URI qui permet d'y accéder.</p>
+                                    <p>De façon similaire, dans les fichiers HTML, la déclaration de doctype est publique. L'identificateur public qui permet de signifier que le document HTML respecte la norme 4.01 strict est <span class="em">"-//W3C//DTD HTML 4.01//EN"</span> et son URI est <span class="em">"http://www.w3c.org/TR/html4/strict.dtd"</span>.</p>
+                                    <p>Voici un exemple de document HTML qui référence la DTD 4.01 strict :</p>
+<pre><code>&lt;!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3c.org/TR/html4/strict.dtd"&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-1"&gt;
+&lt;title&gt;Le titre de ma page&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+J'écris ici le contenu de ma page...
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                                    <p>Remarquez que les browsers ont des copies locales des DTD validant les documents HTML pour éviter l'explosion des demandes sur <span class="em">http://www.w3c.org</span>.</p>
+                                    <p>Toutes les DTD publiques émises par le W3C sont disponibbles sur le site <a href="http://www.w3.org/QA/2002/04/valid-dtd-list.html" target="_blank">http://www.w3.org/QA/2002/04/valid-dtd-list.html</a>.</p>
+                                </li>
+                                <li>
+                                    <h4>Syntaxe :</h4>
+                                    <p>En résumé, la déclaration d'une DTD peut s'écrire de cinq façons :</p>
+<pre><code>&lt;!DOCTYPE racine [déclarations internes]&gt;
+&lt;!DOCTYPE racine SYSTEM "URI"&gt;
+&lt;!DOCTYPE racine SYSTEM "URI" [déclarations internes]&gt;
+&lt;!DOCTYPE racine PUBLIC "id_public" "URI"&gt;
+&lt;!DOCTYPE racine PUBLIC "id_public" "URI" [déclarations internes]&gt;</code></pre>
+                                    <p>Il est effectivement possible de déclarer à la fois une DTD interne et une DTD externe. Dans un tel cas, c'est l'ensemble des définitions des deux DTD que le document XML doit respecter pour être valide. Si jamais une définition se trouve à la fois en externe et en interne, c'est la définition interne qui sera prioritaire.</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Écrire UN DTD :</h3>
+                            <p>Dans une DTD, on détaille les règles de validation de document XML. Il s'agit d'une énumération de règles de définition pour les éléments, pour les attributs ainsi que pour les entités.</p>
+                            <p>L'ordre dans lequel les règles sont déclarées n'a aucune importance.</p>
+                            <ol>
+                                <li>
+                                    <h4>Déclaration d'élément :</h4>
+                                    <ol>
+                                        <li>
+                                            <h5>&lt;!ELEMENT :</h5>
+                                            <p>Une déclaration d'élment dans une DTD permet de définir un élément et son contenu, c'est-à-dire ce qui se trouve entre sa balise ouvrante et sa balise fermante.</p>
+                                            
+                                        </li>
+                                    </ol>
+                                </li>
+                            </ol>
                         </li>
                     </ol>
                 </article>
