@@ -47,6 +47,7 @@
                     <ol>
                         <li><a href="../supplements.html">Retour au sommaire</a></li>
                         <li><a href="#introduction">Introduction</a></li>
+                        <li><a href="#DTD">Les DTD</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -143,7 +144,7 @@
                             <p><span class="html">XPath</span> : la <span class="em">recherche simple</span> d'information dans les documents XML.</p>
                         </li>
                         <li>
-                            <p><span class="html">XQUery</span> : la <span class="em">recherche avancée</span> d'information dans les documents XML.</p>
+                            <p><span class="html">XQuery</span> : la <span class="em">recherche avancée</span> d'information dans les documents XML.</p>
                         </li>
                     </ol>
                 </article>
@@ -449,11 +450,215 @@
                                             </ol>
                                             <p>Dire que les éléments doivent se correspondre signifie qu'il faut veiller à ce qu'un élément qui commence, dans un élement se termine bien dans ce même élément.</p>
                                             <p>Par exemple, <span class="em">&lt;tag1&gt;&lt;tag2&gt; ... &lt;/tag2&gt; &lt;/tag1&gt;</span> est bien formé car <span class="em">tag2</span> débute et se ferme dans <span class="em">tag1</span>. Mais <span class="em">&lt;tag1&gt;&lt;tag2&gt; ... &lt;/tag1&gt; &lt;/tag2&gt;</span> n'est pas bien formé car <span class="em">tag2</span> se ferme après <span class="em">tag1</span>.</p>
-                                            <p>Remarquez que les règles de formulation sont très permissives. </p>
+                                            <p>Remarquez que les règles de formulation sont très permissives. Des valeurs peuvent flotter, c'est-à-dire se trouver en dehors de balises (sauf de l'élément racine). Effectivement, l'élément <span class="em">&lt;tag1&gt; donnée 1 &lt;tag2&gt; donnée 2 &lt;/tag2&gt; donnée 3 &lt;/tag1&gt;</span> est bien formé pourtant <span class="em">donnée 1</span> et <span class="em">donnée 3</span> ne sont pas dans des éléments précis, elles "flottent" dans l'élément <span class="em">tag1</span>. Ces données seront plus difficilement accessibles dans tout parseur, c'est pourquoi il est vivement recommandé de ne pas faire flotter de donnés.</p>
+                                            <p>Attention, <span class="em">il ne faut pas confondre</span> la notion de document <span class="em">bien formé</span> avec celle de document <span class="em">valide</span>, qui se définit comme un document XML bien formé dont la structure obéit à un modèle (ou schéma) donné par une DTD ou un XML Schema.</p>
                                         </li>
                                     </ol>
                                 </li>
+                                <li>
+                                    <h4>Les données textuelles :</h4>
+                                    <p>Notons au préalablable que les caractères blancs sont l'espace, la tabulation, le retour chariot (carriage return) ou le passage à la ligne (linefeed). La différence entre le retour chariot (\r) et le passage à la ligne (\n) est historique. Elle trouve son origine dans les machines à écrire, à la fin de la ligne écrite on doit faire un retour du chariot pour se positionner en début de ligne et tourner le rouleau d'un cran pour passer à la ligne suivante. En Windows, le passage à la ligne suivante se marque par l'usage d'un retour du chariot et d'un passage à la ligne (\r\n). En Linux, il suffit de faire un passage à la ligne (\n).</p>
+                                    <p>Les <span class="em">données textuelles</span> sont les valeurs qui apparaissent au sein d'un <span class="em">élément</span> ou comme valeur d'un <span class="em">attribut</span>.</p>
+                                    <p>Elles peuvent se composer de <span class="em">caractères blancs</span> et de <span class="em">caractères imprimables</span> du jeu de caractères utilisé dans le document XML exceptés quelques caractères notamment "&lt;" réservé au balisage, "&amp;" pour l'encodage des caractères spéciaux, ...</p>
+                                    <p>Les caractères "&lt;" et "&amp;" doivent donc être codés par une <span class="em">référence de caractères</span> ou par une entité prédéfinie sauf s'ils sont au sein d'une section CDATA (Character Data, c'est-à-dire n'importe quelle chaîne de caractères) ou d'une instruction de traitement.</p>
+                                    <p>" et ' doivent également être codés dans une donnée textuelle.</p>
+                                    <p>Par exemple :</p>
+<pre><code>&lt;dessin_anime&gt;Tom &amp;amp; Jerry&lt;/dessin_anime&gt;</code></pre>
+                                    <ol>
+                                        <li>
+                                            <h5>gestion des caractères blancs :</h5>
+                                            <p>La gestion des caractères blancs est différente pour les éléments et les attributs.</p>
+                                            <ul>
+                                                <li>
+                                                    <p>pour les données textuelles comprises dans la <span class="em">valeur d'un attribut</span>, le parseur effectue une normalisation qui consiste à remplacer les caractères blancs par des espaces.</p>
+                                                </li>
+                                                <li>
+                                                    <p>pour les attributs de type autre que CDATA, le parseur remplace toute suite de caractères blancs par un seul espace et il supprime les caractères blancs en fin ou début de valeur d'attribut.</p>
+                                                </li>
+                                            </ul>
+                                            <p>Les caractères blancs contenus dans une donnée textuelle d'un <span class="em">élément</span> sont par contre par défaut transmis par le parseur à l'application sauf s'il existe une DTD ou un XML Schema indiquant qu'il faut les ignorer. Effectivement, ces caractères ont parfois tout leur sens mais parfois il s'agit simplement d'une question de mise en forme. Le parseur ne peut pas toujours faire la différence entre ceux-ci.</p>
+                                            <p>Prenons un exemple :</p>
+<pre><code>&lt;carnetAnniversaires&gt;
+    &lt;anniversaire&gt, &lt;date&gt;1/4&lt;/date&gt;
+        &lt;qui&gt;Jean-Marc Dupond&lt;/qui&gt;
+        &lt;qui&gt;Mireille de la Fontaine&lt;/qui&gt;
+    &lt;/anniversaire&gt;
+&lt;/carnetAnniversaires&gt;</code></pre>
+                                            <p>Dans cet exemple, les blancs situés entre les balises <span class="em">&lt;qui&gt;</span> et <span class="em">&lt;/qui&gt;</span> doivent toujours être conservés tandis qu'entre les autres balises, les caractères blancs sont là uniquement pour la mise en forme.</p>
+                                        </li>
+                                        <li>
+                                            <h5>&lt;!CDATA[ :</h5>
+                                            <p>Une donnée textuelle peut contenir une ou plusieurs <span class="em">zones de données non structurées</span>, c'est-à-dire <span class="em">zones CDATA</span>. Une zone CDATA est une zone qui ne sera pas interprétée comme du XML mais comme une donnée; les balises qu'elle contient sont ignorées.</p>
+                                            <p>Par exemple :</p>
+<pre><code>&lt;doc&gt;
+<span class="em">&lt;![CDATA[</span>
+    Cette zone non structurée &lt;/p&gt; permet de mettre des &lt;balises&gt; &amp; autres dedans ... &lt; div &lt;ceQueJeVeux&gt; &gt;
+<span class="em">]]&gt;</span>
+&lt;/doc&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>Les références de caractères :</h5>
+                                            <p>S'ils ne sont pas reconnus directement par le type d'encodage (précisé dans l'attribut <span class="html">encoding</span> de ligne de déclaration XML), kes caractères non-imprimables doivent être notés par une <span class="em">référence de caractères</span> constitué du code décimal (ou <span class="em">hexadécimal</span>) de ce caractère dans <span class="em">Unicode</span> précédé de "<span class="em">&amp;#</span> et suivi d'un "<span class="em">;</span>".</p>
+                                            <table class="tableBalises">
+                                                <thead>
+                                                    <tr>
+                                                        <th>caractère</th>
+                                                        <th>référence</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>é</td>
+                                                        <td>&amp;#E9;</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>è</td>
+                                                        <td>&amp;#E8;</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>ê</td>
+                                                        <td>&amp;#EA;</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>ë</td>
+                                                        <td>&amp;#EB;</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>î</td>
+                                                        <td>&amp;#EE;</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>ï</td>
+                                                        <td>&amp;#EF;</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>ô</td>
+                                                        <td>&amp;#F4;</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>ö</td>
+                                                        <td>&amp;#F6;</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>$</td>
+                                                        <td>&amp;#24;</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>²</td>
+                                                        <td>&amp;#B2;</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <p>Exemples :</p>
+<pre><code>&lt;prenom&gt;Am&amp;#E9;lie&lt;/prenom&gt;  (Amélie)
+&lt;nom&gt;No&amp;EB;l&lt;/nom&gt;  (Noël)
+&lt;prix&gt;45&amp;#24;&lt;/prix&gt;   (45$)</code></pre>
+                                            <p>Toutes les références de caractères définies en Unicode est disponible sur <a href="http://www.unicode.org/" target="_blank">http://www.unicode.org/</a>.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Les références d'entité :</h5>
+                                            <p>Un document XML peut contenir des <span class="em">références d'entité</span> constituées du nom d'une entité précédé d'un "<span class="em">&amp;</span>" et suivi d'un "<span class="em">;</span>". Une entité est une unité de stockage qui contient une partie d'un document XML.</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;synopsis&gt;
+    Il était une fois dans une forêt lointaine, une jeune fille (jouée par &amp;princesse;) qui dormait ...
+&lt;/synopsis&gt;</code></pre>
+                                            <p>Dans l'exemple, <span class="em">princesse</span> est une entité référencée. Le parseur remplacera celle-ci par le texte de remplacement correspondant dans la définition de l'entité.</p>
+                                            <p>La définition d'une entité se fait par le biais d'un DTD qui peut être interne au document XML ou externe.</p>
+                                            <p>Dans notre exemple, l'entité peut être référencée en interne comme suit :</p>
+<pre><code>&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+&lt;!DOCTYPE synopsis [
+&lt;!ENTITY princesse "Jennifer Lopez"&gt;
+]&gt;
+&lt;synopsis&gt;
+    Il était une fois dans une forêt lointaine, une jeune fille (jouée par &amp;princesse;) qui dormait ...
+&lt;/synopsis&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>Les entités prédéfinies :</h5>
+                                            <p>Il existe en XML quelques entités prédéfinies pour coder les caractères spéciaux :</p>
+                                            <table class="tableBalises">
+                                                <thead>
+                                                    <tr>
+                                                        <th>caractère</th>
+                                                        <th>référence</th>
+                                                        <th>signification</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>&amp;</td>
+                                                        <td>&amp;amp;</td>
+                                                        <td>ampersand</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>&lt;</td>
+                                                        <td>&amp;lt;</td>
+                                                        <td>less then</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>&gt;</td>
+                                                        <td>&amp;gt;</td>
+                                                        <td>greater then</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>"</td>
+                                                        <td>&amp;quot;</td>
+                                                        <td>quote</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>'</td>
+                                                        <td>&amp;apos;</td>
+                                                        <td>apostophe</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <h4>Les commentaires :</h4>
+                                    <p>En XML, un commentaire se note comme en HTML, car ils reprennent la syntaxe du SGML.</p>
+                                    <p>Ils commencent donc par <span class="em">&lt;!--</span> et se terminent par <span class="em">--&gt;</span>. Ils peuvent être placés à n'importe quel endroit tant qu'ils se trouvent à l'extérieur d'une balise.</p>
+                                    <p>Exemples de commentaires valides :</p>
+<pre><code>&lt;!-- ceci est un commentaire --&gt;
+
+&lt;elt&gt; &lt;!-- ceci est un commentaire --&gt; Un peu de texte &lt;/elt&gt;
+
+&lt;!-- &lt;commentaireCorrect&gt; --&gt;</code></pre>
+                                    <p>En raison de la compatibilité XML/SGML, la chaîne de caractères <span class="em">--</span> est interdite dans un commentaire.</p>
+                                </li>
                             </ol>
+                        </li>
+                        <li>
+                            <h3>Réflexion : choisir entre un élément et un attribut :</h3>
+                            <p>Faut-il utiliser un attribut ou un élément ? C'est une question souvent posée et qui mérite quelques réflexions ...</p>
+                            <p>Il faut savoir avant tout que techniquement parlant, il n'y a pas de réponse à la question. Les applications XML traiteront l'information sans aucun problème avec des performances similaires.</p>
+                            <p>Le choix qu'on pose dépend donc de divers facteurs tels que la lisibilité du document, la facilité d'encodage, également la concision que l'on veut apporter au document.</p>
+                            <p>Voici quelques pistes :</p>
+                            <ul>
+                                <li>
+                                    <p>L'usage d'éléments engendre des documents XML plus volumineux mais offre une meilleure structure et donc une meilleure lisibilité.</p>
+                                </li>
+                                <li>
+                                    <p>Si le séquencement a de l'importance, on privilégiera l'usage d'élément dans lequel l'ordre a toute son importance.</p>
+                                </li>
+                                <li>
+                                    <p>Un attribut ne peut être présent qu'une seule fois au sein d'un élément tandis qu'un élément peut être plusieurs fois présent.</p>
+                                </li>
+                                <li>
+                                    <p>En ce qui concerne les données contenues, un élément peut être vide. Dans un attribut, le contenu peut être une valeur par défaut, ou encore être une énumération de valeurs possibles ou encore imposer l'unicité du contenu dans l'ensemble du document.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="DTD">Les DTD :</h2>
+                    <ol>
+                        <li>
+                            <h3>Définition :</h3>
+                            <p>Une Document Type Definition fournit comme son nom l'indique une définition des types du document XML. Une DTD décrit de manière précise quels éléments peut contenir un document XML, dans quel ordre ils peuvent apparaître et quels sont leurs attributs.</p>
+                            <p></p>
                         </li>
                     </ol>
                 </article>
