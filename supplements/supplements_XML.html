@@ -766,10 +766,12 @@ J'écris ici le contenu de ma page...
                                             <table class="tableBalises">
                                                 <tbody>
                                                     <tr>
-                                                        <td>&lt;!ELEMENT flag EMPTY&gt;</td>
                                                         <td>
-                                                            <p>&lt;flag/&gt;</p>
-                                                            <p>&lt;flag&gt;&lt;/flag&gt;</p>
+<pre><code>&lt;!ELEMENT flag EMPTY&gt;</code></pre>
+                                                        </td>
+                                                        <td>
+<pre><code>&lt;flag/&gt;
+&lt;flag&gt;&lt;/flag&gt;</code></pre>
                                                         </td>
                                                     </tr>
                                                 </tbody>
@@ -782,8 +784,12 @@ J'écris ici le contenu de ma page...
                                             <table class="tableBalises">
                                                 <tbody>
                                                     <tr>
-                                                        <td>&lt;!ELEMENT texte(#PCDATA)&gt;</td>
-                                                        <td>&lt;texte&gt;Des textuelles...&lt;/texte&gt;</td>
+                                                        <td>
+<pre><code>&lt;!ELEMENT texte(#PCDATA)&gt;</code></pre>
+                                                        </td>
+                                                        <td>
+<pre><code>&lt;texte&gt;Des textuelles...&lt;/texte&gt;</code></pre>
+                                                        </td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -792,8 +798,12 @@ J'écris ici le contenu de ma page...
                                             <table class="tableBalises">
                                                 <tbody>
                                                     <tr>
-                                                        <td>&lt;!ELEMENT texte (#PCDATA | flag)*&gt;</td>
-                                                        <td>&lt;texte&gt;Des données &lt;flag/&gt; textuelles... &lt;/texte&gt</td>
+                                                        <td>
+<pre><code>&lt;!ELEMENT texte (#PCDATA | flag)*&gt;</code></pre>
+                                                        </td>
+                                                        <td>
+<pre><code>&lt;texte&gt;Des données &lt;flag/&gt; textuelles... &lt;/texte&gt;</code></pre>
+                                                        </td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -806,13 +816,13 @@ J'écris ici le contenu de ma page...
                                                 <tbody>
                                                     <tr>
                                                         <td>
-                                                            <p>&lt;!ELEMENT tout ANY&gt;</p>
-                                                            <p>Pour autant que flag et texte soient correctement définis, comme ci-dessus.</p>
+<pre><code>&lt;!ELEMENT tout ANY&gt;
+Pour autant que flag et texte soient correctement définis, comme ci-dessus.</code></pre>
                                                         </td>
                                                         <td>
-                                                            <p>&lt;tout&gt;</p>
-                                                            <p>Du texte et des éléments &lt;flag/&gt; ou &lt;texte&gt; avec du contenu textuel &lt;/texte&gt;</p>
-                                                            <p>&lt;/tout&gt;</p>
+<pre><code>&lt;tout&gt;
+Du texte et des éléments &lt;flag/&gt; ou &lt;texte&gt; avec du contenu textuel &lt;/texte&gt;
+&lt;/tout&gt;</code></pre>
                                                         </td>
                                                     </tr>
                                                 </tbody>
@@ -821,6 +831,103 @@ J'écris ici le contenu de ma page...
                                         <li>
                                             <h5>Les formes composées :</h5>
                                             <p>Les formes composées permettent de déclarer des éléments qui contiennent uniquement d'autres éléments et pas de données textuelles.</p>
+                                            <p>Il s'agit de définir quels sont les éléments enfants que peut contenir l'élément en question et l'ordre dans lequel ils doivent apparaître. Kes éléments enfants doivent être correctement déclarés dans le fichier.</p>
+                                            <p>Une forme composée s'indique entre parenthèses. La parenthèse fermante peut être suivie du caractère <span class="em">?</span>, <span class="em">*</span> ou <span class="em">+</span> pour préciser un nombre d'occurences.</p>
+                                            <p>En résumé :</p>
+                                            <table class="tableBalises">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="em">(contenu)?</td>
+                                                        <td>L'élément doit contenir 0 ou 1 fois le contenu.</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="em">(contenu)*</td>
+                                                        <td>L'élément doit contenir 0 ou plusieurs fois le contenu.</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="em">(contenu)+</td>
+                                                        <td>L'élément doit contenir 1 ou plusieurs fois le contenu.</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="em">(contenu)</td>
+                                                        <td>L'élément doit contenir 1 fois le contenu.</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <p>Le contenu spécifié entre parenthèse peut prendre plusieurs formes :</p>
+                                            <ul>
+                                                <li>
+                                                    <p>Soit correspondre exactement à un élément déjà déclaré.</p>
+                                                </li>
+                                                <li>
+                                                    <p>Soit correspondre à une <span class="em">suite</span> d'éléments déjà déclarés séparés par des <span class="em">virgules</span>.</p>
+<pre><code>(element1, element2, ...)</code></pre>
+                                                </li>
+                                                <li>
+                                                    <p>Soit correspondre à un <span class="em">choix</span> entre des éléments déjà déclarés séparés par une <span class="em">barre verticale</span>.</p>
+<pre><code>(element1 | element2 | ...)</code></pre>
+                                                </li>
+                                            </ul>
+                                            <p>Dans les suites et les choix, chaque élément peut être suivi d'un <span class="em">?</span>, <span class="em">*</span> ou <span class="em">+</span> pour préciser un nombre d'occurences.</p>
+                                            <p>Par exemples :</p>
+                                            <table class="tableBalises">
+                                                <tbody>
+                                                    <tr>
+                                                        <td>
+<pre><code>&lt;!ELEMENT personne (nom, prenom+, contact?)&gt;
+
+Sachant que
+&lt;!ELEMENT nom (#PCDATA)&gt;
+&lt;!ELEMENT prenom (#PCDATA)&gt;
+&lt;!ELEMENT contact (#PCDATA)&gt;</code></pre>
+                                                        </td>
+                                                        <td>
+<pre><code>&lt;personne&gt;
+    &lt;nom&gt;Leconte&lt;/nom&gt;
+    &lt;prenom&gt;Emmeline&lt;/prenom&gt;
+    &lt;prenom&gt;Simone&lt;/prenom&gt;
+&lt;/personne&gt;</code></pre>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+<pre><code>&lt;!ELEMENT carnet (personne)*&gt;
+
+Schant que personne est défini ci-dessus</code></pre>
+                                                        </td>
+                                                        <td>
+<pre><code>&lt;carnet&gt;
+    &lt;personne&gt;
+        &lt;nom&gt;Leconte&lt;/nom&gt;
+        &lt;prenom&gt;Emmeline&lt;/prenom&gt;
+        &lt;prenom&gt;Simone&lt;/prenom&gt;
+    &lt;/personne&gt;
+    &lt;personne&gt;
+        &lt;nom&gt;Debacker&lt;/nom&gt;
+        &lt;prenom&gt;Lichel&lt;/prenom&gt;
+    &lt;/personne&gt;
+&lt;/carnet&gt;</code></pre>                                                            
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+<pre><code>&lt;!ELEMENT client (personne | societe)&gt;
+
+Sachat que personne est défini ci-dessus
+&lt,!ELEMNT societe (#PCDATA)&gt;</code></pre>
+                                                        </td>
+                                                        <td>
+<pre><code>&lt;client&gt;
+    &lt;personne&gt;
+        &lt;nom&gt;Leconte&lt;/nom&gt;
+        &lt;prenom&gt;Emmeline&lt;/prenom&gt;
+    &lt;/personne&gt;
+&lt;/client&gt;</code></pre>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <p>Enfin, dans une suite ou un choix, chaque élément peut être lui-même une forme composée.</p>
                                             
                                         </li>
                                     </ol>
