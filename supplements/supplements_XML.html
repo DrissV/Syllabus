@@ -48,6 +48,7 @@
                         <li><a href="../supplements.html">Retour au sommaire</a></li>
                         <li><a href="#introduction">Introduction</a></li>
                         <li><a href="#DTD">Les DTD</a></li>
+                        <li><a href="#XML_Schemas">Les XML Schemas</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -732,7 +733,7 @@ J'écris ici le contenu de ma page...
                             </ol>
                         </li>
                         <li>
-                            <h3>Écrire UN DTD :</h3>
+                            <h3>Écrire une DTD :</h3>
                             <p>Dans une DTD, on détaille les règles de validation de document XML. Il s'agit d'une énumération de règles de définition pour les éléments, pour les attributs ainsi que pour les entités.</p>
                             <p>L'ordre dans lequel les règles sont déclarées n'a aucune importance.</p>
                             <ol>
@@ -904,7 +905,7 @@ Schant que personne est défini ci-dessus</code></pre>
     &lt;/personne&gt;
     &lt;personne&gt;
         &lt;nom&gt;Debacker&lt;/nom&gt;
-        &lt;prenom&gt;Lichel&lt;/prenom&gt;
+        &lt;prenom&gt;Michel&lt;/prenom&gt;
     &lt;/personne&gt;
 &lt;/carnet&gt;</code></pre>                                                            
                                                         </td>
@@ -947,9 +948,225 @@ Sachat que personne est défini ci-dessus
                                         <li>
                                             <h5>&lt;!ATTLIST : </h5>
                                             <p>La déclaration d'attributs permet de définir les attributs que peut ou doit contenir un élément du document.</p>
-                                            
+                                            <p>La déclaration d'attributs pour un élément débute par <span class="html">&lt;!ATTLIST</span> suivi du <span class="em">nom</span> de l'élément pour lequel on déclare les attributs puis la <span class="em">spécification</span> de chacun des attributs que l'on veut déclarér et enfin <span class="em">&gt;</span>. Chaque déclaration d'attributs est séparée par un espace, une tabulation ou un retour à la ligne.</p>
+                                            <p>La spécification d'un attribut débute par son nom, puis son type et enfin une précision sur sa valeur par défaut.</p>
+                                            <p>On peut déclarer tous les attributs d'un élément dans une seule règle ATTLIST ou utiliser une règle ATTLIST par attribut :</p>
+                                            <table class="tableBalises">
+                                                <tbody>
+                                                    <tr>
+                                                        <td>
+<pre><code>&lt;!ATTLIST element
+attr_nom1 TypeAttribut Presence
+attr_nom2 TypeAttribut Presence
+...&gt;</code></pre>
+                                                        </td>
+                                                        <td>
+<pre><code>&lt;!ATTLIST element
+attr_nom1 TypeAttribut Presence ...&gt;
+&lt;!ATTLIST element
+attr_nom2 TypeAttribut Presence ...&gt;</code></pre>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </li>
+                                        <li>
+                                            <h5>Les types d'attribut (TypeAttribut) :</h5>
+                                            <p>Le type d'un attribut peut valoir :</p>
+                                            <dl>
+                                                <dt>CDATA</dt>
+                                                <dd>
+                                                    <p>CDATA, Character Data, représente une chaîne de caractères quelconques.</p>
+                                                </dd>
+                                                <dt>Un choix entre valeurs</dt>
+                                                <dd>
+                                                    <p>Une valeur choisie dans une liste de valeurs possibles, c'est-àdire un énuméré.</p>
+                                                    <p>Par exemple (A|B|C), la valeur de l'attribut doit être une de celles listées : A, B ou C.</p>
+                                                </dd>
+                                                <dt>ID</dt>
+                                                <dd>
+                                                    <p><span class="html">ID</span> permet de définir un identificateur <span class="em">unique</span> un élément du document. Donc chaque <span class="html">ID</span> doit être différent au sein du document !</p>
+                                                </dd>
+                                                <dt>IDREF</dt>
+                                                <dd>
+                                                    <p><span class="html">IDREF</span> permet de définir un attribut dont la valeur doit correspondre à un attribut <span class="html">ID</span> dans un des éléments du document.</p>
+                                                </dd>
+                                                <dt>IDREFS</dt>
+                                                <dd>
+                                                    <p><span class="html">IDREFS</span> pemret de définir un attribut dont la valeur doit correspondre à 1 ou plusieurs <span class="html">ID</span> définis dans le document. Chaque ID doit être séparé par un espace.</p>
+                                                </dd>
+                                                <dt>NMTOKEN</dt>
+                                                <dd>
+                                                    <p><span class="html">NMTOKEN</span> permet de définir un attribut dont la valeur doit être un seul mot (sans caractère blanc).</p>
+                                                </dd>
+                                                <dt>NMTOKENS</dt>
+                                                <dd>
+                                                    <p><span class="html">NMTOKENS</span> permet de définir un attribut dont la valeur doit être plusieurs <span class="html">NMTOKEN</span> séparé par un ou plusieurs caractères blancs.</p>
+                                                </dd>
+                                                <dt>ENTITY et ENTITIES</dt>
+                                                <dd>
+                                                    <p>Un attribut de type <span class="html">ENTITY</span> doit contenir un mot qui doit correspondre à une entité déclarée dans la DTD. Pour le type <span class="html">ENTITIES</span>, il s'agit d'une liste d'entités déclarées séparées par un ou plusieurs caractères blancs.</p>
+                                                </dd>
+                                            </dl>
+                                        </li>
+                                        <li>
+                                            <h5>La présence de l'attribut (Presence) :</h5>
+                                            <p>Après la précision du type de l'attribut, il faut déclarer la valeur par défaut ou son caractère obligatoire.</p>
+                                            <p>Il y a quatre valeurs possibles :</p>
+                                            <dl>
+                                                <dt>#REQUIRED</dt>
+                                                <dd>
+                                                    <p>L'attribut doit avoir une valeur; il n'y a pas de valeur par défaut. L'attribut est donc <span class="em">obligatoire</span>.</p>
+                                                </dd>
+                                                <dt>#IMPLIED</dt>
+                                                <dd>
+                                                    <p>L'attribut peut être ignoré si aucune valeur n'est donné; il n'y a pas de valeur par défaut. L'attribut n'est <span class="em">pas obligatoire</span>.</p>
+                                                </dd>
+                                                <dt>"valeur_par_défaut"</dt>
+                                                <dd>
+                                                    <p>L'attribut n'est <span class="em">pas obligatoire</span> et il possède une <span class="em">valeur par défaut</span>. Lorsque l'attribut n'est pas présent, c'est cette valeur qui sera utilisée par défaut.</p>
+                                                </dd>
+                                                <dt>#FIXED "valeur"</dt>
+                                                <dd>
+                                                    <p>Enfin, il est possible de fixer la valeur d'un attribut quand celui-ci est présent grâce au mot clef #FIXED suivi de ladite valeur. Dans ce cas, l'attribut lorsqu'il est présent ne peut jamais contenir <span class="em">que la valeur précisée</span> entre guillemets.</p>
+                                                    <p>Cette situation peut par exemple se rencontrer lorsque l'on souhaite travailler dans une devise bien précise et que l'on souhaite qu'elle apparaisse dans le document.</p>
+                                                </dd>
+                                            </dl>
+                                        </li>
+                                        <li>
+                                            <h5>Exemples :</h5>
+                                            <table class="tableBalises">
+                                                <tbody>
+                                                    <tr>
+                                                        <td>
+<pre><code>&lt;!ATTLIST personne prenom CDATA #REQUIRED&gt;
+&lt;!ELEMENT personne (#PCDATA)&gt;</code></pre>
+                                                </td>
+                                                <td>
+<pre><code>&lt;personne prenom="Pauline"&gt;
+Ducobu
+&lt;/personne&gt;</code></pre>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+<pre><code>&lt;!ATTLIST personne genre (male|femelle|indetermine) "indetermine"&gt;
+&lt;!ELEMENT personne (#PCDATA)&gt;</code></pre>
+                                                </td>
+                                                <td>
+<pre><code>&lt;personne&gt;
+Ducobu
+&lt;/personne&gt;</code></pre>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+<pre><code>&lt;!ATTLIST personne
+genre (male|femelle) #REQUIRED&gt;
+&lt;!ELEMENT personne (#PCDATA)&gt;</code></pre>
+                                                </td>
+                                                <td>
+<pre><code>&lt;personne genre="male"&gt;
+Ducobu
+&lt;/personne&gt;</code></pre>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+<pre><code>&lt;!ATTLIST personne
+freres IDREFS #IMPLIED
+ident ID #REQUIRED &gt;
+
+&lt;!ELEMENT personne (#PCDATA)&gt;</code></pre>
+                                                        </td>
+                                                        <td>
+<pre><code>&lt;personne ident="_23"&gt;Pauline Ducobu&lt;/personne&gt;
+
+&lt;personne ident="_24" freres="_23"&gt;Robin Ducobu&lt;/personne&gt;</code></pre>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+<pre><code>&lt;!ATTLIST form method CDATA #FIXED "POST"&gt;
+&lt;ELEMENT form (ANY)&gt;
+&lt;!ELEMENT input (EMPTY)&gt;</code></pre>
+                                                </td>
+                                                <td>
+<pre><code>&lt;form method="POST"&gt;
+&lt;input ... /&gt;
+&lt;/form&gt;</code></pre>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </li>
                                     </ol>
+                                </li>
+                                <li>
+                                    <h4>Déclaration d'entité :</h4>
+                                    <p>Il est possible de déclarer des entités dans une DTD de trois manières :</p>
+<pre><code>&lt;!ENTITY nom="texte de remplacement"&gt;
+&lt;!ENTITY nom SYSTEM "URI"&gt;
+&lt;!ENTITY nom PUBLIC "id_public" "URI"&gt;</code></pre>
+                                    <p>La première forme permet de définir un texte de remplacement fourni entre guillemets pour un nom d'entité.</p>
+                                    <p>La seconde forme permet de définir, pour un nom, une URI qui contient la référence relative du fichier qui contient le texte de remplacement.</p>
+                                    <p>La dernière forme permet de définir une entité externe publique. Même principe que la déclaration de doctype public; voir la parrtie "Déclarer une DTD externe".</p>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="XML_Schemas">Les XML Schemas :</h2>
+                    <ol>
+                        <li>
+                            <h3>Introduction :</h3>
+                            <p>La norme XML Schema est une évolution des DTD. Conçu pour pallier les difficiences citées des <span class="html">DTD</span>, elle propose bien plus de fonctionnalités.</p>
+                            <p>Citons quelques uns des atouts des XML Schemas par rapport au DTD :</p>
+                            <ul>
+                                <li>
+                                    <p>Le typage des données :</p>
+                                    <ul>
+                                        <li>
+                                            <p>Il est possible via la définition d'un XML Schema de contraindre les valeurs des attributs ou des éléments. Les données peuvent désormais être des booléens, des entiers, des intervalles de temps, ... Il est même possible de créer de nouveaux types à partir de types existants.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>La notion d'héritage :</p>
+                                    <ul>
+                                        <li>
+                                            <p>Les éléments peuvent hériter du contenu et des attributs d'un autre élément.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>Le support des espaces de noms :</p>
+                                    <ul>
+                                        <li>
+                                            <p>Un espace de noms XML est une recommandation du W3C qui permet d'employer des éléments et des attributs nommés dans une instance XML.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>La gestion des occurences :</p>
+                                    <ul>
+                                        <li>
+                                            <p>Les indicateurs d'occurences des éléments peuvent être tout nombre non négatif (rappel: dans une <span class="html">DTD</span>, on est limité à 0, 1 ou un nombre infini d'occurences pour un élément).</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <p>XML Schema est extrêmement puissant mais hélas très complexe...</p>
+                            <p>Étant donné que XML Schema, c'est du XML, il est possible de valider tout XML Schema grâce à un validateur fournit par le W3C : <a href="http://www.w3.org/2001/03/webdata/xsv" target="_blank">http://www.w3.org/2001/03/webdata/xsv</a>.</p>
+                        </li>
+                        <li>
+                            <h3>Utiliser un XML Schema - xmlns :</h3>
+                            <ol>
+                                <li>
+                                    <h4>Déclarer un XML Schema :</h4>
+                                    <p>Après avoir écrit un XML Schema, il faut le déclarer dans le document XML, tout comme on déclare une DTD. Nous n'allons pas ici entrer dans les détails de la notion d'espace de noms, mais simplement apprendre à valider un document XML d'après un XML Schema. On utilise pour ce faire le préfixe <span class="html">xmlns</span>.</p>
+
                                 </li>
                             </ol>
                         </li>
