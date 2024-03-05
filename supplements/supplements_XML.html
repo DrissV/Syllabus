@@ -1219,7 +1219,179 @@ ident ID #REQUIRED &gt;
                                     <p>Exemple :</p>
 <pre><code>&lt;<span class="em">xs</span>:schema xmlns:<span class="em">xs</span>="http://www.w3.org/2001/XMLSchema"&gt;...&lt;/<span class="em">xs</span>:schema&gt;</code></pre>
                                     <p>En bref, un XML Schema se présente comme suit :</p>
-                                    
+<pre><code>&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+&lt;xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"&gt;
+
+&lt;!-- déclarations d'éléments, d'attributs et de types ici --&gt;
+
+&lt;/xs:schema&gt;</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Les définitions d'éléments et d'attributs :</h4>
+                                    <p>Exactement comme dans une DTD, on définit dans un XML Schema des règles pour les éléments et les attributs.</p>
+                                    <ol>
+                                        <li>
+                                            <h5>xs:element :</h5>
+                                            <p>Pour déclarer un élément, on utilise l'élément <span class="html">xs:element</span> dans lequel on précise dans les attributs le nom de l'élément (<span class="html">name</span>) et son type (<span class="html">type</span>) sauf s'il est anonyme.</p>
+                                        </li>
+                                        <li>
+                                            <h5>xs:attribute :</h5>
+                                            <p>Pour déclarer un attribut, on utilise l'élément <span class="html">xs:attribute</span> dans lequel on précise dans les attributs le nom de l'éléméent (<span class="html">name</span>) et son type (<span class="html">type</span>) sauf s'il est anonyme. Si aucun type n'est précisé dans la déclaration d'un attribut, le type par défaut <span class="html">xs:anySimpleType</span> sera utilisé.</p>
+                                            <dl>
+                                                <dt>use</dt>
+                                                <dd>
+                                                    <p>Pour préciser qu'un attribut est optionnel, obligatoire ou interdit, on précise l'attribut <span class="html">use</span> avec comme valeur <span class="html">optional</span>, <span class="html">required</span> ou <span class="html">prohibited</span>. La valeur par défaut est <span class="html">optional</span>.</p>
+                                                </dd>
+                                            </dl>
+                                        </li>
+                                        <li>
+                                            <h5>default-fixed :</h5>
+                                            <p>Dans la déclaration d'un élément ou d'un attribut, on peut préciser des valeurs par défaut en utilisant l'attribut <span class="html">default</span>.</p>
+                                            <p>On peut également préciser une valeur fixée pour un élément ou un attribut en utilisant <span class="html">fixed</span>.</p>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <h4>Type simple et type complexe :</h4>
+                                    <p>Dans un XML Schema, les éléments peuvent être de type simple ou de type complexe tandis que les attributs sont toujours de type simple.</p>
+                                    <p>Un type simple permet donc de structurer une donnée contenue dans un attribut ou dans un élément qui ne possède pas de sous-élément ni d'attribut tandis qu'un type complexe sert à structurer des éléments qui se compose de sous-éléments ou qui possèdent des attributs.</p>
+                                </li>
+                                <li>
+                                    <h4>Type anonyme :</h4>
+                                    <p>Il est possible de nommer ou pas un type simple ou complexe. Il n'est pas toujours nécessaire de déclarer explicitement un nouveau type et décider de le garder anonyme.</p>
+                                    <p>Dans un tel cas, la déclaration du type se fait directement à l'intérieur la déclaration de l'élément ou de l'attribut :</p>
+<pre><code>&lt;xs:element name="unElementComplexeAnonyme"&gt;
+    &lt;xs:complexType&gt; ... &lt;/xs:complexType&gt;
+&lt;/xs:element&gt;</code></pre>
+                                    <p>OU encore</p>
+<pre><code>&lt;xs:attribute name="unAttributSimpleAnonyme"&gt;
+    &lt;xs:simpleType&gt; ... &lt;/xs:simpleType&gt;
+&lt;/xs:attribute&gt;</code></pre>
+                                    <p>Voici un exemple de définition d'attribut <span class="em">resultat</span> dont la définition du type <span class="em">pourcent</span> est anonyme :</p>
+<pre><code>&lt;xs:attribute name="resultat"&gt;
+    &lt;xs:simpleType&gt;
+        &lt;xs:restriction base="xs:integer"&gt;
+            &lt;xs:minINclusive value="0"/&gt;
+            &lt;xs:maxInclusive value="100"/&gt;
+        &lt;/xs:restriction&gt;
+    &lt;/xs:simpleType&gt;
+&lt;/xs:attribute&gt;</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Type simple :</h4>
+                                    <ol>
+                                        <li>
+                                            <h5>Les types existants :</h5>
+                                            <p>Les types simples sont utilisés pour définir la valeur des attributs ou la valeur des éléments qui ne contiennent que des données textuelles et qui ne possèdent pas d'attributs.</p>
+                                            <p>Voici 3 exemples, deux définitions d'attributs et une définition d'élément :</p>
+<pre><code>&lt;xs:attribute name="nom" type="xs:string"/&gt;
+&lt;xs:attribute name="id" type="xs:decimal"/&gt;
+&lt;xs:element name="date" type="xs:date"/&gt;</code></pre>
+                                            <p>XML Schema propose un grand nombre de types simples prédéfinis. Référez-vous au site du W3C pour l'ensemble des types prédéfinis dans XML Schema : <a href="http://www.w3schools.com/" target="_blank">http://www.w3schools.com/</a>. Le tableau ci-après reprend un sous-ensemble de ceux-ci :</p>
+                                            <table class="tableBalises">
+                                                <thead>
+                                                    <tr>
+                                                        <th>simpleType</th>
+                                                        <th>Exemples</th>
+                                                        <th>Notes</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="html">string</td>
+                                                        <td>Bonjour</td>
+                                                        <td>Chaîne de caractères</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">byte</td>
+                                                        <td>-1 126</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">binary</td>
+                                                        <td>456E789</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">integer</td>
+                                                        <td>-126789 -1 0 1 126789</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">long</td>
+                                                        <td>-1 1267896543213</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">short</td>
+                                                        <td>-1 12678</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">decimal</td>
+                                                        <td>_1.23 0 123.4 1000.00</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">float</td>
+                                                        <td colspan="2">-INF -1E4 -0 0 12.78E-2 12 INF</td>
+                                                        <td>Floating point 32 bits</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">double</td>
+                                                        <td>Floating point 64 bits</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">boolean</td>
+                                                        <td>true false</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">time</td>
+                                                        <td>13:20:00.000 13:20:00.000-05:00</td>
+                                                        <td>13h20 13h20 GMT-5</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">timeInstant</td>
+                                                        <td>1999-05-21T13:20:00.000-05:00</td>
+                                                        <td>31 mai 1999 à 13h20 GMT-5</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">timeDuration</td>
+                                                        <td>P1Y2M3DT10H30M12.35</td>
+                                                        <ts>1 an 2 mois 3 jours 10 heures 30 minutes et 12.3 secondes</ts>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">date</td>
+                                                        <td>1999-05-31</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th colspan="3">Remarque, les types ci-dessous sont réservés aux attributs :</th>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">ID</td>
+                                                        <td>A_123.125.16</td>
+                                                        <td>Identifiant unique (idem DTD)</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">IDREF</td>
+                                                        <td>A-123.125.16</td>
+                                                        <td>Référence d'une valeur d'ID (idem DTD)</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="html">IDREFS</td>
+                                                        <td>A-123.125.16</td>
+                                                        <td>Référence de valeurs d'ID (idem DTD)</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </li><li>
+                                            <h5>xs:simpleType :</h5>
+                                            <p>Il est également permis de définir de nouveaux types simples. L'exemple suivant montre comme on crée un type simple intitulé <span class="em">pourcent</span> :</p>
+                                            
+                                        </li>
+                                    </ol>
                                 </li>
                             </ol>
                         </li>
