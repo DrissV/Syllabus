@@ -1823,6 +1823,81 @@ ident ID #REQUIRED &gt;
                                 <li>
                                     <h4>DOM en JAVA :</h4>
                                     <p>Pour utiliser DOM avec Java, il faut utiliser les classes du package <span class="html">org.w3c.dom</span>.</p>
+                                    <p>En Java, le parseur DOM représente un document XML sous forme d'un arbre dont tous les noeuds appartiennent à une sous-classe de l'interface <span class="html">Node</span>. Dans ce chapitre, nous ne parlerons pas de toutes les interfaces, classes et méthodes disponibles dans ce package. Nous allons parcourir assez vite les points les plus importants. Comme toujours, référez-vous à la javadoc pour plus d'informations.</p>
+                                    <p>Les interfaces les plus utiles pour utiliser DOM en Java sont :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="html">Node</span> : chaque noeud de l'arbre DOM est de ce type.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="html">Element</span> : cette interface héritant de <span class="html">Node</span> définit des méthodes pour manipuler un élément et ses attributs.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="html">Document</span> : cette interface héritant de <span class="html">Node</span> définit les caractéristiques pour un objet qui sera la racine de l'arbre DOM.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <h4>L'obtention d'un arbre DOM :</h4>
+                                    <p>Pour pouvoir obtenir un arbre DOM représentant un document XML, il faut utiliser un parseur qui implémente DOM. Ce dernier va parcourir le document XML et créer l'arbre DOM correspondant. Le but est d'obtenir un objet qui implémente l'interface <span class="html">Document</span> car cet objet est le point d'entrée pour toutes opérations sur l'arbre DOM.</p>
+                                    <p>Le code suivant permet d'obtenir l'arbre DOM pour le fichier <span class="em">carnet.xml</span>.</p>
+<pre><code>import java.io.File;
+import javax.xml.parsers.*;
+import org.w3c.dom.*;
+
+public class DOMParseExample {
+    public static void main(String[] args) {
+        try {
+            File xmlFile = new File("carnet.xml");
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder(),
+            Document doc = dBuilder.parse(xmlFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Parcours d'un arbre DOM :</h4>
+                                    <p>Il ya plusieurs manières de parcourir un arbre DOM. Une manière simple est d'utiliser directement les méthodes disponibles sur l'interface <span class="html">Document</span> (comme dans l'exemple ci-dessous). Ce programme va afficher le titre, le nom et le téléphone des personnes répertoriées dans le document <span class="em">carnet.xml</span>.</p>
+<pre><code>import java.io.File;
+import javax.xml.parsers.*;
+import org.w3c.dom.*;
+
+public class DOMParseExample {
+    public static void main(String[] args) {
+        try {
+            File xmlFile = new File("carnet.xml");
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder(),
+            Document doc = dBuilder.parse(xmlFile);
+            doc.getDocumentElement().normalize();
+            NodeList personnes = doc.getElementsByTagName("personne");
+            for (int i = 0; i &lt; personnes.getLength(); i++) {
+                Node nPersonne m= personnes.item(i);
+                Element ePersonne = (Element) nPersonne;
+                System.out.println(ePersonne.getAttribute("titre") + " " + ePersonne.getElementsByTagName("nom").item[0].getTextContent());
+                Element eContact : (Element) ePersonne.getElementsByTagName("contact").item(0);
+                System.out.println("telephone: " + eContact.getElementsByTagName("tel").item(0).getTextContent());
+                System.out.println("----------------");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                                    <p>Voici un exemple de sortie pour ce programme :</p>
+<pre><code>me Leconte
+telephone: 027644688
+-------------------
+Mr Debacker
+telephone: 027644653
+-------------------</code></pre>
+                                    <p>Il existe d'autres manières plus élaborées de parcourir un arbre DOM via les interfaces <span class="html">DocumentTraversal</span> et <span class="html">TreeWalker</span> (voir javadoc).</p>
+                                </li>
+                                <li>
+                                    <h4>Création d'un arbre DOM :</h4>
                                     
                                 </li>
                             </ol>
