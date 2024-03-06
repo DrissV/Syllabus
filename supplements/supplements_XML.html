@@ -49,6 +49,7 @@
                         <li><a href="#introduction">Introduction</a></li>
                         <li><a href="#DTD">Les DTD</a></li>
                         <li><a href="#XML_Schemas">Les XML Schemas</a></li>
+                        <li><a href="#XML_JAVA">XML et JAVA</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1675,11 +1676,135 @@ ident ID #REQUIRED &gt;
                                             <h5>xs:simpleContent :</h5>
                                             <p><span class="html">xs:simpleContent</span> permet de définir un type complexe dérivé à partir d'un type simple par restriction ou par extension. La différence par rapport à un type simple classique est que le type complexe peut servir à définir des attributs.</p>
                                             <p>Exemple de dérivation par <span class="em">restriction :</span></p>
-                                            
+<pre><code>&lt;xs:complexType name="prix"&gt;
+    &lt;xs:simpleContent&gt;
+        &lt;xs:restriction base:"xs:positiveInteger"&gt;
+            &lt;xs:maxInclusive value="100"/&gt;
+            &lt;xs:attribute name="devise" type="xs:string"/&gt;
+        &lt;/xs:restriction&gt;
+    &lt;/xs:simpleContent&gt;
+&lt;/xs:complexType&gt;</code></pre>
+                                            <p>Dans l'exemple précédent, les éléments de type <span class="em">prix</span> pourront contenir des entiers positifs inférieurs ou égaux à 100, ainsi qu'un attribut optionnel <span class="em">devise</span> (il est optionnel car <span class="em">use</span> n'est pas mentionné dans sa déclaration).</p>
+                                            <p>Exemple de dérivation par <span class="em">extension</span> :</p>
+<pre><code>&lt;xs:complexType name="prix"&gt;
+    &lt;xs:simpleContent&gt;
+        &lt;xs:extension base="xs:positiveInteger"&gt;
+            &lt;xs:attribute name="devise" type="xs:string"/&gt;
+        &lt;/xs:extension&gt;
+    &lt;/xs:simpleContent&gt;
+&lt;/xs:complexType&gt;</code></pre>
+                                            <p>Dans l'exemple précédent, les éléments de type <span class="em">prix</span> pourront contenir des entiers positifs, ainsi qu'un attribut optionnel <span class="em">devise</span> (il est optionnel car <span class="Em">use</span> n'est pas mentionné dans sa déclaration).</p>
+                                            <p>Dans une extension, on ne peut définir que des attributs tandis que par restriction, on peut également restreindre le type simple. Dans ce cas, les restrictions doivent être définies avant les attributs.</p>
+                                        </li>
+                                        <li>
+                                            <h5>xs:complexContent :</h5>
+                                            <p><span class="html">xs:complexContent</span> permet de définir un type complexe dérivé à partir d'un type complexe de base par restriction ou par extension. Ce type se définit de manière similaire au <span class="html">xs:simpleContent</span> si ce n'est qu'on pourra également ajouter des séquences et des choix comme dans un type complexe.</p>
+                                        </li>
+                                        <li>
+                                            <h5>xs:sequence :</h5>
+                                            <p><span class="html">xs:sequence</span> permet de définir une séquence d'éléments.</p>
+                                            <p>L'exemple suivant montre la définition d'un type <span class="em">adresseType</span> qui contient donc une rue suivie d'un numéro suivi d'un code postal et enfin de la ville (<span class="em">l'ordre</span> des éléments a de l'importance !) :</p>
+<pre><code>&lt;xs:complexType name="adresseType"&gt;
+    &lt;xs:sequence&gt;
+        &lt;xs:element name="rue" type="xs:string"/&gt;
+        &lt;xs:element name="numero" type:"xs:positiveInteger"/&gt;
+        &lt;xs:element name="codePostal" type="xs:positiveInteger"/&gt;
+        &lt;xs:element name="ville" type:"xs:string"/&gt;
+    &lt;/xs:sequence&gt;
+&lt;/xs:complexType&gt;</code></pre>
+                                            <p>On peut définir une séquence à l'intérieur d'une autre séquence.</p>
+                                        </li>
+                                        <li>
+                                            <h5>xs:choice :</h5>
+                                            <p><span class="html">xs:choice</span> permet de <span class="em">choisir</span> un élément parmi plusieurs.</p>
+                                            <p>Dans l'exemple ci-après, on définit un type <span class="em">personneType</span> qui est soit un professeur soit un étudiant (l'ordre n'a pas d'importance, il s'agit d'un choix !).</p>
+<pre><code>&lt;xs:complexType name="personneType"&gt;
+    &lt;xs:choice&gt;
+        &lt;xs:element name="professeur" type="xs:string"/&gt;
+        &lt;xs:element name="etudiant" type="xs:string"/&gt;
+    &lt;/xs:choice&gt;
+&lt;/xs:complexType&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>minOccurs - maxOccurs :</h5>
+                                            <p>Les attributs <span class="html">minOccurs</span> et <span class="html">maxOccurs</span> peuvent être utilisés dans une séquence (<span class="html">xs:sequence</span>), dans un choix (<span class="html">xs:choice</span>) et dans un élément (<span class="html">xs:element</span>).</p>
+                                            <p>Par défaut, ces deux attributs valent 1. On peut leur donner une valeur entière ou encore la valeur <span class="html">unbounded</span> qui indique qu'il n'y a pas de limite maximale du nombre d'occurences.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Élément vide :</h5>
+                                            <p>Il n'existe pas dans le langage XML Schema de type prédéfini pour déclarer des éléments vides, similaire au type <span class="html">EMPTY</span> qu'on trouve dans une DTD.</p>
+                                            <p>Pour déclarer qu'un élément doit être vide, il faut utiliser un type complexe qui ne contient aucune déclaration d'élément (mais qui peut contenir des déclarations d'attributs).</p>
+                                            <p>La définition de l'élément prix déclarée ci-dessous ne comporte aucun sous-élément et aucune donnée, il est vide. Il contient par contre deux attributs.</p>
+<pre><code>&lt;xs:element name="prix"&gt;
+    &lt;xs:complexType&gt;
+        &lt;xs:attribute name="montant" type="xs:float"/&gt;
+        &lt;xs:attribute name="devise" type="xs:string"/&gt;
+    &lt;/xs:complexType&gt;
+&lt;/xs:element&gt;</code></pre>
+                                            <p>Exemple :</p>
+<pre><code>&lt;prix montant="25" devise="euro"/&gt;</code></pre>
                                         </li>
                                     </ol>
                                 </li>
+                                <li>
+                                    <h4>Référence d'élément :</h4>
+                                    <p>Lorsq'un élément se compose de sous-éléments, il est souvent utile de les définir une fois et ensuite, de les référencer. Cela permet d'éviter des redéfinitions inutiles.</p>
+                                    <p>Voici un exemple :</p>
+<pre><code>&lt;xs:element name="voiture"&gt;
+    &lt;xs:complexType&gt;
+        &lt;xs:sequence&gt;
+            &lt;xs:element ref="immat"/&gt;
+            &lt;xs:element ref="prix"/&gt;
+        &lt;/xs:sequence&gt;
+    &lt;/xs:complexType&gt;
+&lt;/xs:element&gt;
+
+&lt;xs:element name="immat" type="xs:string"/&gt;
+
+&lt;xs:element name="prix" type="xs:string"/&gt;</code></pre>
+                                    <p>L'élément voiture de l'élément <span class="em">immat</span> suivi du prix. Si je désire définir un autre élément, <span class="em">camion</span> par exemple, dans lequel on précise également l'immatriculation, il suffit de référencer le même élément :</p>
+<pre><code>&lt;xs:element name="camion"&gt;
+    &lt;xs:complexType&gt;
+        &lt;xs:sequence&gt;
+            &lt;xs:element ref="immat"/&gt;
+        &lt;/xs:sequence&gt;
+    &lt;/xs:complexType&gt;
+&lt;/xs:element&gt;</code></pre>
+                                    <p>Les éléments suivants sont valides :</p>
+<pre><code>&lt;voiture&gt;
+    &lt;immat&gt;FKJ256&lt;/immat&gt;
+    &lt;prix&gt;8639&lt;/prix&gt;
+&lt;/voiture&gt;
+&lt;camion&gt;
+    &lt;immat&gt;DFR854&lt;/immat&gt;
+&lt;/camion&gt;</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Les contraintes d'unicité :</h4>
+                                    <p>W3C XML Schema nous fournit plusieurs fonctionnalités s'appuyant sur XPath et permettant de décrire des contraintes d'unicité et des contrôles référentiels.</p>
+                                    <p>Les éléments <span class="html">xs:unique</span>, <span class="html">xs:key</span> et <span class="html">xs:keyref</span> permettent d'imposer des contraintes d'identité à certains sous-éléments ou attributs de l'élément en question.</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="html">xs:unique</span> et <span class="html">xs:key</span> assurent l'unicité à l'aide d'une ou plusieurs valeurs calculées par des expressions XPath.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="html">xs:keyref</span> assure un référencement vers une des clés déjà définies dans d'autre contrainte d'identité.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Dans le cadre de ce cours, nous n'aborderons pas davantage les contraintes d'identité.</p>
+                                </li>
                             </ol>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="XML_JAVA">XML et JAVA :</h2>
+                    <ol>
+                        <li>
+                            <h3>Introduction :</h3>
+                            <p>Si l'on veut pouvoir lire ou manipuler les données d'un document XML dans un langage de programmation tel que Java, il faut utiliser un parseur XML.</p>
+                            <p>Les parseurs XML sont divisés en deux groupes selon l'approche qu'ils utilisent pour traiter le document.</p>
+                            
                         </li>
                     </ol>
                 </article>
