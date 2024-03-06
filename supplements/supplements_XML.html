@@ -1389,6 +1389,191 @@ ident ID #REQUIRED &gt;
                                         </li><li>
                                             <h5>xs:simpleType :</h5>
                                             <p>Il est également permis de définir de nouveaux types simples. L'exemple suivant montre comme on crée un type simple intitulé <span class="em">pourcent</span> :</p>
+<pre><code>&lt;xs:simpleType name="pourcent"&gt;
+    &lt;xs:restriction base="xs:integer"&gt;
+        &lt;xs:minInclusive value="0"/&gt;
+        &lt;xs:maxInclusive value="100"/&gt;
+    &lt;/xs:restriction&gt;
+&lt;/xs:simpleType&gt;</code></pre>
+                                            <p>On peut donc déclarer un attribut par exemple <span class="em">resultat</span> de ce type :</p>
+<pre><code>&lt;xs:attribute name="resultat" type="pourcent"/&gt;</code></pre>
+                                            <p>Il est également possible d'ajouter des restrictions sur un type simple qui permettent par exemple de préciser la valeur minimum ou maximum d'un entier ou encore la longueur maximum d'une chaîne de caractères.</p>
+                                            <p>L'exemple ci-dessous montre la définition d'un type anonyme simple pour un élément âge dont la valeur doit être un entier compris entre 0 et 100 inclus.</p>
+<pre><code>&lt;xs;element name="age"&gt;
+    &lt;xs:simpleType&gt;
+        &lt;xs:restriction base="xs:integer"&gt;
+            &lt;xs:minInclusive value="0"/&gt;
+            &lt;xs:maxInclusive value="100"/&gt;
+        &lt;/xs:restriction&gt;
+    &lt;/xs:simpleType&gt;
+&lt;/xs:element&gt;</code></pre>
+                                            <p>L'exemple ci-dessous montre la définition d'un élément <span class="em">password</span> de type anonyme dont la valeur est une chaîne contenant entre 5 et 8 caractères.</p>
+<pre><code>&lt;xs:element name="password"&gt;
+    &lt;xs:simpleType&gt;
+        &lt;xs:restriction base="xs:string"&gt;
+            &lt;xs:minLength value="5"/&gt;
+            &lt;xs:maxLength value="8"/&gt;
+        &lt;/xs:restriction&gt;
+    &lt;/xs:simpleType&gt;
+&lt;/xs:element&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xs:pattern :</h5>
+                                            <p>L'élément <span class="html">xs:pattern</span> permet d'imposer une restriction sur les valeurs possibles d'un type similaire d'un type simple à l'aide d'une expression régulière. La formulation de ces expressions régulières est similaire au Perl.</p>
+                                            <p>L'élément <span class="em">compte</span> défini ci-après contient la définition d'un type nomm" simple étant une restriction du type string. Les valeurs des comptes doivent être composées des lettres BE suivies de 2 chiffres puis 3 blocs de 4 chiffres.</p>
+<pre><code>&lt;xs:element name="compte"&gt;
+    &lt;xs:simpleType name="numeroSEPAType"&gt;
+        &lt;xs:restriction base="xs:string"&gt;
+            &lt;xs:pattern value="BE\d\d \d{4} \d{4} \d{4}" /&gt;
+        &lt;/xs:restriction&gt;
+    &lt;/xs:simpleType&gt;
+&lt;/xs:element&gt;</code></pre>
+                                            <p>Le tableau ci-dessous reprend des exemples d'expression régulière :</p>
+                                            <table class="tableBalises">
+                                                <thead>
+                                                    <tr>
+                                                        <th>expression</th>
+                                                        <th>signification</th>
+                                                        <th>exemple</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>.</td>
+                                                        <td>
+                                                            <p>. représente n'importe quel caractère.</p>
+                                                            <p>Pour rechercher '.', il faut indiquer '\.'.</p>
+                                                        </td>
+                                                        <td>
+                                                            <p>123.5 &#8594; 123.5, 12345, 123s5, 123-5</p>
+                                                            <p>123\.5 &#8594; 123.5</p>
+                                                            <p>mais pas 1234 ni 123s5</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>?</td>
+                                                        <td>
+                                                            <p>Le caractère précédent ? est optionnel.</p>
+                                                            <p>Pour rechercher '?', il faut indiquer '\?'.</p>
+                                                        </td>
+                                                        <td>
+                                                            <p>123?4 &#8594; 1234, 124</p>
+                                                            <p>les? chats? &#8594; les chats, le chat, le chats, les chat</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>*</td>
+                                                        <td>
+                                                            <p>Le caractère précédent * peut être répété 0 ou plusieurs fois.</p>
+                                                            <p>Pour rechercher '*', il faut indiquer '\*'.</p>
+                                                        </td>
+                                                        <td>
+                                                            <p>12*34 &#8594; 134, 1234, 12234, 122222234, ...</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>+</td>
+                                                        <td>
+                                                            <p>Le caractère précédent + peut être répété 1 ou plusieurs fois.</p>
+                                                            <p>Pour recherche '+', il faut indiquer '\+'.</p>
+                                                        </td>
+                                                        <td>
+                                                            <p>12+45 &#8594; 1245, 12245, 122222245, ... mais pas 1234 ni 145</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>$</td>
+                                                        <td>
+                                                            <p>Le dollar signifie la fin de ligne.</p>
+                                                            <p>Pour rechercher '$', il faut indiquer '\1'.</p>
+                                                        </td>
+                                                        <td>
+                                                            <p>ette$ &#8594; assiette, sonnette, pipette, ...</p>
+                                                            <p>45\$$ &#8594; 45$, 645$, 7894$, ...</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>^</td>
+                                                        <td>
+                                                            <p>Le chapeau signifie le début de ligne.</p>
+                                                            <p>Pour rechercher '^', il faut indiquer '\^'.</p>
+                                                        </td>
+                                                        <td>
+                                                            <p>^bon &#8594; bon, bonne, bonjour, ...</p>
+                                                            <p>^bon$ &#8594; bon</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>\d</td>
+                                                        <td>Tout caractère numérique : 0, 1, 2, 3, 4, 5, 6, 7, 8, 9.</td>
+                                                        <td>\d+ &#8594; 123, 455, 57689943</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>\D</td>
+                                                        <td>Tout caractère sauf numérique.</td>
+                                                        <td>\D* &#8594; rtre, uyt_g, dsfoooo    ooffj, ...</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>\w</td>
+                                                        <td>Word metacharacter : une lettre [a-z] [A-Z] ou lettre accentuée, un chiffre [0-9] ou '_'.</td>
+                                                        <td>\w$ &#8594; e, r, à, à, ...</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>\W</td>
+                                                        <td>Tout caractère sauf lettre [a-z] [A-Z], lettre accentuée, chiffre [0-9] et '_'.</td>
+                                                        <td>\W+ &#8594; :-), (, _+, ...</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>\s</td>
+                                                        <td>Whitespace metacharacter : espace, tabulation, saut de ligne, saut de page, tabulation verticale, ...</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>\S</td>
+                                                        <td>Tout caractère sauf ceux définis par \s</td>
+                                                        <td>\S+ &#8594; :-99HG), df(u, ...)</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>{m, n}</td>
+                                                        <td>Le caractère précédent l'accolade peut être répété entre m fois minimum et n fois maximum.</td>
+                                                        <td>
+                                                            <p>ab{2,4}c &#8594; abbc, abbc ou abbbbc</p>
+                                                            <p>mais pas abc</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>x | y</td>
+                                                        <td>Alternative, soit x soit y.</td>
+                                                        <td>
+                                                            <p>a|b &#8594; a, b</p>
+                                                            <p>(a|b)* &#8594; a, b, bba, bababab, aaaaabbbb, …</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>[]</td>
+                                                        <td>
+                                                            <p>Les chrochets marquent l'occurence de différentes manières :</p>
+                                                            <p>[] signifie une lettre parmi celles entre [].</p>
+                                                            <p>[m-p] signifie une lettre entre m et p.</p>
+                                                            <p>MAIS si le tiret doit être présent, il doit figurer en première ou dernière position.</p>
+                                                            <p>[5-9] signifie chiffre compris entre 5 et 9.</p>
+                                                            <p>Le caractère ^ (accent circonflexe) a un rôle particulier s'il est placé en début d'intervalle; il prend le complémentaire de l'ensemble, il faut le lire "tout caractère sauf ...".</p>
+                                                        </td>
+                                                        <td>
+                                                            <p>b[iou] &#8594; bu, bi ou bo mais pas ba</p>
+                                                            <p>b[b[a-d]c &#8594; bac, bbc, bcc ou bdc mais pas bec</p>
+                                                            <p>[ab][1-4] &#8594; a1, a2, a3, a4, b1, ... mais pas b5</p>
+                                                            <p>[^ao] &#8594; g, u, i, t, ... mais pas a ni o</p>
+                                                            <p>[^a-z] &#8594; 0, 1, ..., 9, A, G, ?, ... mais pas a, ni b, ... ni z</p>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </li>
+                                        <li>
+                                            <h5>xs:enumeration :</h5>
+                                            <p>L'élement <span class="html">xs:enumeration</span> permet d'énumérer toutes les valeurs possibles que pourra prendre un attribut ou un élément.</p>
+                                            <p>Par exemple le type <span class="em">visibilite</span> est une énumération de 4 valeurs possibles :</p>
                                             
                                         </li>
                                     </ol>
