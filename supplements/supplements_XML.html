@@ -50,6 +50,7 @@
                         <li><a href="#DTD">Les DTD</a></li>
                         <li><a href="#XML_Schemas">Les XML Schemas</a></li>
                         <li><a href="#XML_JAVA">XML et JAVA</a></li>
+                        <li><a href="#feuilles_style">Les feuilles de style</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1898,9 +1899,205 @@ telephone: 027644653
                                 </li>
                                 <li>
                                     <h4>Création d'un arbre DOM :</h4>
-                                    
+                                    <p>La méthode <span class="html">newDocument()</span> de la classe <span class="html">DocumentBuilder</span> renvoie une nouvelle instance d'un objet de type <span class="html">Document</span> qui encapsule un arbre DOM vide. Il faut au minimum ajouter un élément racine au document XML. Pour cela, il faut appeler la méthode <span class="html">createElement()</span> de l'objet <span class="html">Document</span>. Il suffit ensuite d'utiliser la méthode <span class="html">appendChild()</span> de l'objet <span class="html">Document</span> en lui fournissant la référence du noeud. Ensuite, il faut rajouter les autres éléments et attributs de la même manière.</p>
+                                    <p>Le programme suivant va créer un arbre DOM et va enregistrer cet arbredans un document XML nommé <span class="em">carnet.xml</span>.</p>
+<pre><code>import java.io.FIle;
+
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.*;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.*;
+
+public class DomCreateExample {
+    public static void main(String[] argv) {
+
+        try {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.newDocument();
+            Element rootElement = doc.createElemnt("carnet");
+            doc.appendChild(rootElement);
+
+            // creation element personne
+            Element personne = doc.createElement("personne");
+            rootElement.appendChild(personne);
+
+            // ajout de l'attribut titre
+            Attr attr = doc.createElement("titre");
+            attr.setValue("Mme");
+            personne.setAttributeNode(attr);
+
+            // ajout element nom et prenom
+            Element nom = doc.createElement("nom");
+            nom.appendChild(doc.createTextNode("Leconte"));
+            personne.appendChild(nom);
+            Element prenom = doc.createElement("prenom");
+            prenom.appendChild(doc.creatteTextNode("Emmeline"));
+            personne.appendChild(prenom);
+
+            // ajout element contact
+            Element contact = doc.createElement("contact");
+            personne.appendChild(contact);
+            Element tel = doc.createElement("tel");
+            tel.appendChild(doc.createTextNode("027644688"));
+            contact.appendChild(tel);
+            Element bureau = doc.createElement("bureau");
+            bureau.appendChild(doc.createTextNode("028"));
+            contact.appendChild(bureau);
+            Element email = doc.createElement("email");
+            email.appendChild(doc.createTextNode("emmeline.leconte&amp;64;ipl.be"));
+            contact.appendChild(email);
+
+            // enregistrer dans un fichier XML
+
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSouce = new DOMSource(doc);
+            StreamResult result = new StreamResult(new File("output.xml"));
+            transformer.transform(source, result);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Avantages et inconvénients :</h4>
+                                    <p>La principale caractéristique de DOM est que la totalité de l'arborescence XML va être chargée en mémoire. L'avantage de cette technique et qu'on peut naviguer vers n'importe quel noeud. Cependant si le fichier XML contient beaucoup de données, cela va couter très cher en mémoire. Tout le document va être chargé même si vous n'avez besoin que d'une toute petite partie du document.</p>
+                                    <p>DOM est conseillé lorsqu'il faut modifier une structure XML et lorsqu'on est face à des données petites. DOM est le seul moyen pour naviguer vers les éléments parents et enfants. Cela rend DOM plus facile à utiliser.</p>
                                 </li>
                             </ol>
+                        </li>
+                        <li>
+                            <h3>SAX :</h3>
+                            <p>SAX a une approche très différente de DOM. SAX lit le document XML de manière linéaire du début jusqu'à la fin mais il ne garde rien en mémoire; il ne crée donc pas d'arbre. À la place, il génère des événements et l'utilisateur peut ajouter des <span class="html">Handler</span> pouvant réagir à certains événements qui l'intéressent. Un <span class="html">Handler</span> va par exemple être appelé quand un élément commence ou se termine.</p>
+                            <ol>
+                                <li>
+                                    <h4>SAX en Java :</h4>
+                                    <p>Pour utiliser SAX avec Java, il faut utiliser les classes du package <span class="html">org.w3c.sax</span>.</p>
+                                    <ol>
+                                        <li>
+                                            <h5>Définition des Handler :</h5>
+                                            <p>Tout <span class="html">Handler</span> devra implémenter l'interface <span class="html">ContentHandler</span>. Cette interface définit un certain nombre de méthodes que le parseur SAX utilisera pour avertir le programme qu'un composant du document XML a été vu.</p>
+                                            <p>Voici quelques exemples de méthodes contenues dans cette interface (pour des informations complètes, référez-vous à la javadoc) :</p>
+                                            <ul>
+                                                <li>
+                                                    <p><span class="html">void startDocument()</span> - appelé au début du document.</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="html">void endDocument()</span> - appelé à la fin du document.</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="html">void startElement(String uri, String localName, String qName, Attributes atts)</span> - appelé au début d'un élément.</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="html">void endDocument(String uri, String localName, String qName)</span> - appelé à la fin d'un élément.</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="html">void characters(char[] ch, int start, int length)</span> - appelé quand des CDATA sont rencontrés.</p>
+                                                </li>
+                                            </ul>
+                                            <p>En général, l'utilisateur va étendre la classe <span class="html">DefaultHandler</span> qui implémente <span class="html">ContentHandler</span>. Cette classe fournit une implémentation par défaut pour réagir à tous les événements.</p>
+                                            <p>Voici un exemple de <span class="html">Handler</span> qui va s'occuper d'afficher le titre, le nom et le téléphone des personnes répertoriées dans le document <span class="em">carnet.xml</span>.</p>
+<pre><code>import org.xml.sax.*;
+import org.xml.sax.helpers.DefaultHandler;
+
+public class SAXHandler extends DefaultHandler {
+    String titre;
+    boolean bNom = false;
+    boolean bTel = false;
+
+    @Override
+    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+        if (qName.equalsIgnoreCase("personne")) {
+            titre = attributes.getValue("titre");
+        } else if (qName.equalsIgnoreCase("nom")) {
+            bNom = true;
+        } else if (qName.equalsIgnoreCase("tel")) {
+            bTel = true;
+        }
+    }
+
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+        if (qName.equalsIgnoreCase("personne")) {
+            System.out.println("-------------------");
+        }
+    }
+
+    @Override
+    public void characters(char ch[], int start, int length) throws SAXException {
+        if (bNom) {
+            System.out.prinln(titre + " " + new String(ch, start, length));
+            bNom = false;
+        } else if (bTel) {
+            System.out.println("telephone: " + new String(ch, start, length));
+            bTel = false;
+        }
+    }
+}</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>Programme principal :</h5>
+                                            <p>Après avoir défini le Handler, la manipulation est très simple. Pour parser un document XML avec SAX, il faut obtenir un parser SAX et lui fournir le Handler défini précédemment comme dans l'exemple ci-dessous.</p>
+<pre><code>import java.io.File;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+public class SAXParseExample {
+    public static void main(String[] args) {
+
+        try {
+            File inputFile = new File("carnet.xml");
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser saxParser = factory.newSAXParser();
+            SAXHandler userhandler = new SAXHandler();
+            saxParser.parse(inputFile; userhandler);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                                            <p>Voici un exemple de sortie pour ce programme :</p>
+<pre><code>Mme Leconte
+telephone: 027644688
+-------------------
+Mr Debacker
+telephone: 027644653
+-------------------</code></pre>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <h4>Avantages et inconvénients :</h4>
+                                    <p>L'utilisation de SAX est conseillée quand :</p>
+                                    <ul>
+                                        <li>
+                                            <p>on peut lire le document XML de manière linéaire de haut en bas.</p>
+                                        </li>
+                                        <li>
+                                            <p>on veut lire un très gros document XML; dans ce cas-là, l'arbre DOM consommerait trop d'espace en mémoire.</p>
+                                        </li>
+                                        <li>
+                                            <p>le problème à résoudre implique une petite partie du document XML.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Le désavantage de SASX est la non-présence d'une structure d'arbre qui permettrait d'obtenir facilement les éléments parents et enfants.</p>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="feuilles_style">Les feuilles de style :</h2>
+                    <ol>
+                        <li>
+                            <h3>CSS pour XML :</h3>
+                            <p>Il est possible d'afficher un document XML dans un navigateur web en l'associant à une feuille de style CSS exactement comme un document HTML. Le W3C a défini une norme de référence à ce sujet : <a href="http://www.w3c.org/TR/xml-stylesheet" target="_blank">http://www.w3c.org/TR/xml-stylesheet</a>.</p>
+                            
                         </li>
                     </ol>
                 </article>
