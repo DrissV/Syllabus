@@ -2239,7 +2239,61 @@ plat {
                                             <p>l'attribut <span class="html">xmlns</span> qui permet la déclaration de l'espace de noms du langage XSLT avec le préfixe <span class="html">xsl</span>.</p>
                                         </li>
                                     </ul>
-                                    
+                                    <p>Enfin, suivent les <span class="em">éléments déclaratifs</span> qui déclarent des informations nécessaires au bon fonctionnement de feuille de style. Par exemple, le type de transformation opérée dans le code XSLT. Dans ce cours, il peut s'agir de HTML ou de XHTML.</p>
+<pre><code>&lt;xsl:output method="html"
+version="html4.01"
+encoding="ISO-8859-1"
+doctype-public="-//W3C//DTD HTML 4.01//EN"
+doctype-system="http://www.w3.org/TR/html4/strict.dtd"/&gt;</code></pre>
+                                    <p>Ou du XML :</p>
+<pre><code>&lt;xsl:output method="xml"&gt;</code></pre>
+                                    <p>Ou encore du texte :</p>
+<pre><code>&lt;xs:output method="text"/&gt;</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Les template rules (règles modèles) :</h4>
+                                    <ol>
+                                        <li>
+                                            <h5>Définition d'un template :</h5>
+                                            <p>Dans les feuilles de style tout repose sur les templates définis entre les balises <span class="html">&lt;xsl:template&gt;</span> et <span class="html">&lt;/xsl:template&gt;</span>. Un <span class="em">template</span> définit un <span class="em">modèle</span> qui est utilisé pour <span class="em">construire</span> une partie du <span class="em">résultat</span>.</p>
+                                            <p>Un template est définit comme suit en XSLT :</p>
+<pre><code>&lt;xsl:template match="pattern"&gt;
+...
+&lt;/xsl:template&gt;</code></pre>
+                                            <p>L'attribut <span class="html">match</span> permet de préciser un <span class="em">pattern</span> (motif). Il s'agit d'une expression qui détermine si le template peut s'appliquer ou non au contexte courant. Le pattern est un chemin d'accès <span class="html">XPath</span> particulier.</p>
+                                            <p>La <span class="em">définition</span> du <span class="em">template</span> se trouve dans l'élément <span class="html">xsl:template</span>. Il contient un mélange d'instructions et de données textuelles (HTML). Les instructions sont les éléments qui sont préfixés par <span class="html">xsl</span>.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Fonctionnement de la feuille de style :</h5>
+                                            <p>Le <span class="em">premier template</span> qu'un document XSLT contient celui associé à la racine du document XML, que l'on note <span class="html">&lt;xsl:template match="/"&gt;</span>. Le pattern "/", précisé dans l'attribut <span class="html">match</span>, indique que ce template s'applique à la racine du document XML.</p>
+                                            <p>Dans un premier temps, le parseur XSLT <span class="em">définit le contexte initial</span> qui correspond à la <span class="em">racine</span> du document XML.</p>
+                                            <p>Ensuite, il va parcourir tous les <span class="em">templates</span> et sélectionner ceux qui peuvent s'appliquer au contexte initial. Parmi les templates sélectionnés, <span class="em">un seul</span> est choisi, selon un mécanisme précis (voir la section suivante nommée "Choix du template le plus adéquat"), et est exécuté.</p>
+                                            <p>Pour <span class="em">exécuter un template</span>, le parseur XSLT procède comme suit :</p>
+                                            <ol>
+                                                <li>
+                                                    <p>Les instructions, préfixées par <span class="html">xsl</span>, sont exécutées.</p>
+                                                </li>
+                                                <li>
+                                                    <p>Les éléments non préfixés sont recopiés tels quels dans le document résultat.</p>
+                                                </li>
+                                                <li>
+                                                    <p>Les données textuelles sont recopiées telles quelles pour autant qu'elles contiennent autre chose que des caractères blancs.</p>
+                                                </li>
+                                                <li>
+                                                    <p>Les commentaires et les instructions de traitement éventuels sont ignorés.</p>
+                                                </li>
+                                            </ol>
+                                            <p>Si le parseur rencontre l'instruction <span class="html">xsl:apply-templates</span>, il sélectionne un ensemble de noeurd définit dans l'attribut <span class="html">select</span> de cette instruction. Cet ensemble de noeuds définit des nouveaux <span class="em">noeuds contextes</span> qui à leur tour sont exécutés par le parseur XSLT. Lors de l'exécution des nouveaux noeuds contextes, l'exécution du template en cours est suspendue.</p>
+                                            <p>Elle reprendra son cours après ce traitement en récupérant le contexte initial.</p>
+                                            <img src="../images/xsl-apply-templates.png" alt="">
+                                        </li>
+                                        <li>
+                                            <h5>Choix du template le plus adéquat :</h5>
+                                            <p>La sélection du template le plus adéquat est déterminée par son <span class="em">pattern</span> (valeur de l'attribut <span class="html">match</span>). Pour rappel, le pattern est une <span class="em">expression XPath</span>.</p>
+                                            <p>De manière simplifiée, le parseur XSLT <span class="em">sélectionne</span> le template dont le pattern donne <span class="em">le plus de détails</span>.</p>
+                                            
+                                        </li>
+                                    </ol>
                                 </li>
                             </ol>
                         </li>
