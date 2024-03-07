@@ -2097,7 +2097,151 @@ telephone: 027644653
                         <li>
                             <h3>CSS pour XML :</h3>
                             <p>Il est possible d'afficher un document XML dans un navigateur web en l'associant à une feuille de style CSS exactement comme un document HTML. Le W3C a défini une norme de référence à ce sujet : <a href="http://www.w3c.org/TR/xml-stylesheet" target="_blank">http://www.w3c.org/TR/xml-stylesheet</a>.</p>
-                            
+                            <p>Le principe est assez simple : il suffit d'associer la feuille de style CSS au document XML grâce à l'instruction de traitement appelée <span class="html">&lt;?xml-stylesheet ?&gt;</span>. Cette instruction de traitement utilise les mêemes attributs que la balise <span class="html">&lt;link rel="stylesheet"...&gt;</span> du langage HTML, à savoir les attributs <span class="html">type</span> et <span class="html">href</span>. Elle est placée dans le prologue du document.</p>
+                            <p>Dans l'attribut <span class="html">type</span>, on spécifie la valeur "<span class="html">text/css</span>" et dans l'attribut <span class="html">href</span>, on mentionne l'URI de la feuille de style CSS.</p>
+                            <p>Voici un exemple de document XML <span class="em">menu.xml</span> associé à une feuille de style <span class="em">menu.css</span>. Remarquez que ce document référence également une DTD <span class="em">menu.dtd</span>.</p>
+                            <p><span class="em">menu.xml</span> :</p>
+<pre><code>&lt;?xml version="1.0" encoding="ISO-8859-1" ?&gt;
+
+<span class="em">&lt;?xml-stylesheet type="text/css" href="menu.css"?&gt;</span>
+
+&lt;!DOCTYPE menu SYSTEM "menu.dtd"&gt;
+    &lt;plat&gt;
+        &lt;nom&gt;Un quartier de pizza&lt;/nom&gt;
+        &lt;prix&gt;3&lt;/prix&gt;
+        &lt;description&gt;Un quart de pizza du jour&lt;/description&gt;
+        &lt;calories&gt;610&lt;/calories&gt;
+    &lt;/plat&gt;
+    &lt;plat&gt;
+        &lt;nom&gt;Une ciabatta chorizo&lt;/nom&gt;
+        &lt;prix&gt;2.89&lt;/prix&gt;
+        &lt;description&gt;Une ciabatta fourrée d'une omelette au chorizo&lt;/description&gt;
+        &lt;calories&gt;450&lt;/calories&gt;
+    &lt;/plat&gt;
+    ...
+&lt;/menu&gt;</code></pre>
+                            <p><span class="em">menu.css</span> :</p>
+<pre><code>menu {
+    float: left;
+    margin-top: 30px;
+    margin-left: 150px;
+    margin-right: 150px;
+}
+
+plat {
+    display: block;
+    font-family: Arial,sans-serif;
+    padding-bottom: 16px;
+    background-color: yellow;
+}
+
+...</code></pre>
+                            <p>Le navigateur affichera alors la page suivante :</p>
+                            <img src="../images/menu_XML.png" alt="">
+                            <p>L'usage de feuilles CSS est une façon simple d'afficher un document XML mais il s'agit vraiment d'une solution basique qui ne permet pas d'exploiter toute la richelle du langage XML.</p>
+                            <p>Le principale inconvénient est que l'<span class="em">entièreté du document</span> XML est systématiquement affiché et ce dans l'<span class="em">ordre d'apparition</span> des éléments dans le document XML.</p>
+                            <p>C'est pourquoi une technique plus élaborée consiste à utiliser des feuilles de style XSLT ppour produire du code HTML (ou XHTML). Ces fichiers HTML peuvent eux référencer des feuilles de style CSS.</p>
+                        </li>
+                        <li>
+                            <h3>XSL :</h3>
+                            <p>Les feuilles de styles conçues pour les documents XML utilisent les langages XSLT et XPath afin de fournir un document dans un format HTML par exemple. Il est également possible de fournir un autre type de document dans un langage de formatage (XSL) qui permet lui des transformations dans des multiples formats : PDF, PostScript, ...</p>
+                            <p>Le principe esy assez complexe et repose sur deux parties : un <span class="em">langage de transformation</span>, qui permet de transformer un document XML en un autre document, et un <span class="em">langage de formatage</span>, qui est un vocabulaire particulier pour décrire une sémantique de présentation.</p>
+                            <p>Trois recommandations du W3C (3 langages donc) permettent de définir les feuilles de style :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="html">XSLT</span> signifie <Span class="em">eXtensible Stylesheet Langage Transformation</Span>.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">XSL</span> signifie <span class="em">eXtensible Stylesheet Langage</span>.</p>
+                                    <p>Notons l'existence du <span class="html">XSL-FO</span> signifie <span class="em">eXtensible Stylesheet Langage - Formating Objects</span>, et désigne un langage permettant le contrôle de la mise en page finale de la transformation. Ce langage est particulièrement destiné à la production de contenu au format PDF.</p>
+                                </li>
+                                <li>
+                                    <p><span class="html">XPath</span> est langage d'expression qui permet d'extraire de l'information du document XML.</p>
+                                </li>
+                            </ul>
+                            <p>Dans le cadre de ce cours, nous utiliserons exclusivement le langage de formatage HTML pour définir la présentation. Nous aborderons donc les langages <span class="html">XSLT</span> et <span class="html">XPath</span>.</p>
+                            <p>Avant d'aborder ces normes, il est utile d'introduire la notion d'arbre document qui consiste en une représentation du document XML sous forme d'arborescence.</p>
+                        </li>
+                        <li>
+                            <h3>L'arbre document :</h3>
+                            <p>La structure logique d'un document XML bien formé peut toujours se représenter sous forme d'un arbre, appelé l'<span class="em">arbre document</span>.</p>
+                            <p>Cette représentation s'avère bien utile en XML pour la bonne compréhension des expressions XPath, des feuilles de style XSLT, ...</p>
+                            <p>Ainsi le document XML se représente sous forme d'arborescence de noeuds de types différents : le <span class="em">noeud racine</span> ("/"), les <span class="em">noeuds éléments</span>, les <span class="em">noeuds attributs</span> et les <span class="em">noeuds textes</span>. Nous ne tiendrons pas comptes des noeuds instructions de traiteemnt, des noeuds espaces de noms et des noeuds commentaires.</p>
+                            <p>Le noeud racine et les noeuds éléments possèdent éventuellement <span class="em">un ou plusieurs noeuds enfants</span> et possèdent toujours un et un <span class="em">seul noeud parent</span> à l'exception du noeud racine qui n'en possède pas.</p>
+                            <p>Le <span class="em">noeud racine</span> ou "<span class="em">/</span>" est le noeud principal représentant le document XML dans l'arbre document. Il ne faut pas le confondre avec l'élément racine du document XML qui est lui un noeud élément, enfant du noeud racine.</p>
+                            <p>Les données textuelles comprises dans un élément sont représentées dans des <span class="em">noeuds textes</span>. Chaque contenu d'un élément est représenté dans un noeud texte qui est un noeud enfant de l'élément en question.</p>
+                            <p>Les <span class="em">noeuds attributs</span> sont associés à un noeud élément, ce ne sont pas des enfants de celui-ci. Leurs valeurs sont directement placées dans ce noeud.</p>
+                            <p>Voici un exemple de document XML :</p>
+<pre><code>&lt;?xml version="1.0" encoding="ISO-8859-1" ?&gt;
+
+&lt;?xml-stylesheet type="text/xsl" href="voiture.xsl"?&gt;
+&lt;voitures&gt;
+    &lt;voiture&gt;
+        &lt;marque&gt;Volkswagen&lt;/marque&gt;
+        &lt;immatriculation&gt;UIJ 375&lt;/immatriculation&gt;
+        &lt;modele&gt;Polo&lt;/modele&gt;
+        &lt;couleur&gt;blue&lt;/couleur&gt;
+    &lt;/voiture&gt;
+    &lt;voiture&gt;
+        &lt;marque&gt;Volkswagen&lt;/marque&gt;
+        &lt;immatriculation&gt;HYD 765&lt;/immatriculation&gt;
+        &lt;modele&gt;Golf&lt;/modele&gt;
+        &lt;couleur&gt;pink&lt;/couleur&gt;
+    &lt;/voiture&gt;
+&lt;/voitures&gt;</code></pre>
+                            <p>Et son arbre document correspondant :</p>
+                            <img src="../images/arbre_document_voitures_XML.png" alt="">
+                        </li>
+                        <li>
+                            <h3>XSLT :</h3>
+                            <ol>
+                                <li>
+                                    <h4>Définition :</h4>
+                                    <p>Le langage XSLT définit donc la <span class="em">syntaxe</span> et le fonctionnement d'une feuille de style utilisée pour transformer un document XML en un autre document HTML, XSL, texte ou autre.</p>
+                                    <p>Cette transformation est assurée par un <span class="em">parseur XSLT</span>. Ce parseur est toujours lié à une application :</p>
+                                    <ul>
+                                        <li>
+                                            <p>MSXML pour Internet Explorer</p>
+                                        </li>
+                                        <li>
+                                            <p>Xalan pour Apache</p>
+                                        </li>
+                                        <li>
+                                            <p>Saxon...</p>
+                                        </li>
+                                    </ul>
+                                    <p>La norme de référence est <a href="http://www.w3.org/TR/xslt" target="_blank">http://www.w3.org/TR/xslt</a>.</p>
+                                </li>
+                                <li>
+                                    <h4>Associer le document XML :</h4>
+                                    <p>Pour associer une feuille de style XSLT, par exemple <span class="em">maFeuilleDeStyle.xsl</span>, à un document XML l'instruction de traitement suiivante :</p>
+<pre><code>&lt;.xml-stylesheet type="text/xsl" href="maFeuilleDeStyle.xsl"?&gt;</code></pre>
+                                    <p>La norme XSLT préconise l'usage de la valeur <span class="html">text/xml</span> pour l'attribut <span class="html">type</span> mais de nombreux parseurs utilient la valeur <span class="html">text/xsl</span>.</p>
+                                </li>
+                                <li>
+                                    <h4>La structure d'une feuille de style XSLT :</h4>
+                                    <div>
+                                        <img src="../images/structure_XSLT.png" alt="" class="float_right">
+                                        <div>
+                                            <p>La structure de base d'une feuille de style XSLT commence par un <span class="em">prologue</span>, suivi de l'<span class="em">élément racine</span> <span class="html">xsl:stylesheet</span> pouvant contenir des attributs, notamment une déclaration d'espace de noms ainsi que le numéro de version.</p>
+                                            <p>Le prologue consiste en la <span class="em">déclaration XML</span> :</p>
+<pre><code>&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;</code></pre>
+                                            <p>Commence ensuite directement l'élément racine de la feuille de style.</p>
+<pre><code>&lt;xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;</code></pre>
+                                        </div>
+                                    </div>
+                                    <p>Cet élément renferme la déclaration de <span class="em">deux attributs</span> :</p>
+                                    <ul>
+                                        <li>
+                                            <p>l'attribut <span class="html">version</span> qui permet de déclarer la version du XSLT du document (1.0).</p>
+                                        </li>
+                                        <li>
+                                            <p>l'attribut <span class="html">xmlns</span> qui permet la déclaration de l'espace de noms du langage XSLT avec le préfixe <span class="html">xsl</span>.</p>
+                                        </li>
+                                    </ul>
+                                    
+                                </li>
+                            </ol>
                         </li>
                     </ol>
                 </article>
