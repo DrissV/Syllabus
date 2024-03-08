@@ -2300,7 +2300,186 @@ doctype-system="http://www.w3.org/TR/html4/strict.dtd"/&gt;</code></pre>
                                     <h4>Les instructions XSLT :</h4>
                                     <p>Les instructions XSLT sont des événements préfixés par <span class="html">xsl</span> qui ne peuvent apparaître qu'au sein de la définition d'un template.</p>
                                     <p>Les instructions principales sont détaillées ci-après en s'appuyant sur le document XML déjà présenté sous forme d'arbre document :</p>
-                                    
+<pre><code>&lt;?xml version="1.0" encoding="ISO-8859-1" ?&gt;
+
+&lt;?xml-stylesheet type="text/xsl" href="voiture?xsl"&gt;
+&lt;voitures&gt;
+    &lt;voiture&gt;
+        &lt;marque&gt;Volkswagen&lt;/marque&gt;
+        &lt;immatriculation&gt;UIJ 375&lt;/immatriculation&gt;
+        &lt;modele&gt;Polo&lt;/modele&gt;
+        &lt;couleur&gt;blue&lt;/couleur&gt;
+    &lt;/voiture&gt;
+    &lt;voiture&gt;
+        &lt;marque&gt;Volkswagen&lt;/marque&gt;
+        &lt;immatriculation&gt;HYD 765&lt;/immatriculation&gt;
+        &lt;modele&gt;Golf&lt;/modele&gt;
+        &lt;couleur&gt;pink&lt;/couleur&gt;
+    &lt;/voiture&gt;
+&lt;/voitures&gt;</code></pre>
+                                    <ol>
+                                        <li>
+                                            <h5>xsl:template :</h5>
+                                            <p>L'instruction <span class="html">xsl:template</span> permet de définir un template. Cette instruction est décrite ci-dessus.</p>
+                                            <p>Exemple 1 :</p>
+<pre><code>&lt;<span class="em">xsl:template</span> match="/"&gt;
+    &lt;html&gt;
+        &lt;head&gt;
+            &lt;title&gt;Mes voitures&lt;/title&gt;
+        &lt;/head&gt;
+        &lt;body&gt;
+            ...
+        &lt;/body&gt;
+    &lt;/html&gt;
+&lt;/xsl:template&gt;</code></pre>
+                                            <p>On peut nommer un template en spécifiant l'attribut <span class="html">name</span>.</p>
+                                            <p>Exemple 2 :</p>
+<pre><code>&lt;xsl:template match="pattern" name="nom"&gt;
+    Un template nommé
+&lt;/xsl:template&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:apply-templates :</h5>
+                                            <p>L'instruction <span class="html">xsl:apply-templates</span> permet de <span class="em">sélectionner un ensemble de noeuds</span> qui deviendront tour à tour le <span class="em">nouveau noeud contexte</span> et d'appliquer à ceux-ci le <span class="em">template</span> le plus approprié.</p>
+                                            <p>L'attribut <span class="html">select</span> permet de préciser le chemin d'accès (expression XPath) qui sélectionne l'ensemble des noeuds en question. Si cet attribut n'est pas précisé, l'instruction s'applique à tous les enfants du noeud contexte.</p>
+                                            <p>Cette instruction peut contenir un (des) élément(s) <span class="html">xsl:sort</span> qui permet de trier les noeuds avant de leur appliquer le template adéquat.</p>
+                                            <p>Elle également contenir des paramètres via l'instruction <span class="html">xsl:with-param</span>.</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;xsl:template match="/"&gt;
+    &lt;html&gt;
+        &lt;head&gt;
+            &lt;title&gt;Mes voitures&lt;/title&gt;
+        &lt;/head&gt;
+        &lt;body&gt;
+            <span class="em">&lt;xsl:apply-templates/&gt;</span>
+        &lt;/body&gt;
+    &lt;/html&gt;
+&lt;/xsl:template&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:text :</h5>
+                                            <p>L'instruction <span class="html">xsl:text</span> permet de générer du <span class="em">texte</span> dont la valeur est un ensemble de caractères de type <span class="em">#PCDATA</span> (c'est-à-dire que <span class="em">&lt;</span> par exemple doit être codé en <span class="em">&amp;lt;</span>).</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;xsl:text&gt;des es pa c es&lt;/xsl:text&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:value-of :</h5>
+                                            <p>L'instrution <span class="html">xsl:value-of</span> permet de générer du texte dont la <span class="em">valeur</span> est donnée par l'<span class="em">expression XPath</span> précisée dans l'attribut <span class="html">select</span>.</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;h1&gt;&lt;<span class="em">xsl:value-of select</span>="marque"/&gt;&lt;/h1&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:variable :</h5>
+                                            <p>L'instruction <span class="html">xsl:variable</span> sert à définir une <span class="em">variable</span> et à lui <span class="em">assigner une valeur</span>. Cet élément contient deux attributs :</p>
+                                            <ul>
+                                                <li>
+                                                    <p><span class="html">name</span> : contient le nom de la variable</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="html">select</span> : définit la valeur de la variable (expression XPath)</p>
+                                                </li>
+                                            </ul>
+                                            <p>Exemple :</p>
+<pre><code>&lt;<span class="em">xsl:variable name</span>="couleurVoiture" <span class="em">select</span>="couleur"/&gt;</code></pre>
+                                            <p>Pour afficher le contenu d'une variable, il faut la préfixer par <span class="em">$</span> :</p>
+<pre><code>&lt;xsl:value-of select="<span class="em">$</span>couleurVoiture"/&gt;</code></pre>
+                                            <p>Attention, pour qu'une variable soit évaluée dans un attribut, il faut la placer entre accolades.</p>
+<pre><code>&lt;span style="color:<span class="em">{$</span>couleurVoiture<span class="em">}</span>"&gt;
+    ...
+&lt;/span&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:param :</h5>
+                                            <p>L'instruction <span class="html">xsl:param</span> sert à définir un <span class="em">paramètre</span> pour un template et à lui assigner éventuellement une valeur par défaut. Cette instruction est utilisée <span class="em">dans une instruction xsl:template</span>.</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;xsl:template match="marque"&gt;
+    &lt;<span class="em">xsl:param name</span>="lang"&gt;fr&lt;+xsl:param&gt;
+    ...
+&lt;/xsl:template&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:call-template :</h5>
+                                            <p>L'instruction <span class="html">xs:call-template</span> permet d'<span class="em">exécuter</span> directement un <span class="em">template</span> <span class="html">xsl:template</span> en l'<span class="em">appelant par son nom</span>, donné par l'attribut <span class="html">name</span>. Ceci permet d'utiliser un template comme une fonction d'un langage de programmation classique.</p>
+                                            <p>Cette instruction peut contenir uniquement des instructions <span class="html">xsl:with-param</span> qui permettent de passer des paramètres au template appelé.</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;<span class="em">xs:call-template name</span>="nom"/&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:with-param :</h5>
+                                            <p>L'instruction <span class="html">xsl:with-param</span> permet de <span class="em">définir</span> des <span class="em">paramètres</span> lors d'un <span class="em">appel de template</span>, c'est-à-dire dans une instruction <span class="html">xsl:call-template</span> ou encore <span class="html">xsl:apply-templates</span>.</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;xsl:call-template name="nom"&gt;
+    &lt;<span class="em">xsl:with-param name</span>="date"&gt;17 février&lt;/xsl:with-param&gt;
+&lt;/xsl:call-template&gt;</code></pre>
+                                            <p>Sachant que le template suivant existe :</p>
+<pre><code>&lt;xsl:template match="pattern" name="nom"&gt;
+    &lt;xsl:param name="date"/&gt;
+    Une déclaration de template
+    le &lt;xsl:value-of select="$date"/&gt;
+&lt;/xsl:template&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:for-each :</h5>
+                                            <p>L'instruction <span class="html">xsl:for-each</span> permet de <span class="em">sélectionner un ensemble de noeuds</span> à l'aide de l'attribut <span class="html">select</span> puis de leur appliquer le template donné au sein de l'instruction. Chaque noeud devient <span class="em">tour à tour</span> le <span class="em">noeud contexte</span>.</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;xsl:template match="voitures"&gt;
+    &lt;<span class="em">xsl:for-each select</span>="voiture"&gt;
+        ...
+    &lt;/xsl:for-each&gt;
+&lt;/xsl:template&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:sort :</h5>
+                                            <p>L'instruction <span class="html">xsl:sort</span> permet de <span class="em">trier</span> les noeuds sélectionnés avant de leur appliquer le tmplate correspondant. Cette instruction peut se trouver dans l'instruction <span class="html">xsl:for-each</span> ou <span class="html">xsl:apply-templates</span>.</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;xsl:apply-templates select="voiture"&gt;
+    &lt;<span class="em">xsl:sort select</span>="marque"/&gt;
+    &lt;<span class="em">xsl:sort select</span>="modele"/&gt;
+    ...
+&lt;/xsl:apply-templates&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:if :</h5>
+                                            <p>L'instruction <span class="html">xsl:if</span> est l'<span class="em">instruction conditionnelle</span> classique. Elle permet d'exécuter un template de manière optionnelle en fonction de l'<span class="em">expression XPath</span> booléenne précisée dans l'attribut <span class="html">test</span>.</p>
+                                            <p>Il n'existe pas de clause <span class="html">else</span>. Il faut donc utiliser l'instruction <span class="html">xsl:choose</span> pour définir un <span class="html">else</span> dans une condition.</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;<span class="em">xsl:if test</span>="position()=1"&gt;
+    &lt;hr/&gt;
+&lt;/xsl:if&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:choose, xsl:when et xsl:otherwise :</h5>
+                                            <p>L'instruction <span class="html">xsl:chose</span> est l'<span class="em">instruction conditionnelle</span> classique avec la clause <span class="html">else</span>. Elle permet d'exécuter un template ou l'autre selon l'expression XPath booléenne précisée dans l'attribut <span class="html">test</span> du <span class="html">xs:when</span>.</p>
+                                            <p>Exemple :</p>
+<pre><code>&lt;<span class="em">xsl:choose</span>&gt;
+    &lt;<span class="em">xsl:when test</span>="position()=1"&gt;
+        &lt;hr/&gt;&lt;hr/&gt;
+    &lt;/xsl:when&gt;
+    &lt;<span class="em">xsl:when test</span>="position()=2"&gt;
+        &lt;hr/&gt;
+    &lt;/xsl:when&gt;
+    &lt;<span class="em">xsl:otherwise</span>&gt;
+        &lt;br/&gt;
+    &lt;/xsl:otherwose&gt;
+&lt;/xsl:choose&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <h5>xsl:element et xsl:attribute :</h5>
+                                            <p>Cet élément insère un nouvel élément dans la transformation. Le nom de l'élément est donné par l'attribut <span class="html">name</span>. L'utilisation de cet élément est de la forme :</p>
+<pre><code>&lt;xsl:element name="nomelement" use-attribute-sets="jeuattr"&gt;&lt;xsl:element&gt;</code></pre>
+                                            <p><span class="html">name</span> correspond au nom de l'élément à créer.</p>
+                                            <p><span class="html">use-attribute-sets</span> correspond au jeu d'attributs à associer à l'élément créé.</p>
+                                            <p>Cet exemple, ci-dessous, permet de créer dans le fichier un élément de paragraphe renfermant le contenu de l'élément <span class="html">texte</span> du document XML.</p>
+<pre><code>&lt;xsl:element name="p"&gt;
+    &lt;xsl:value-of select="texte" /&gt;
+&lt;/xsl:element&gt;</code></pre>
+                                            <p>Cet élément définit un attribut et l'ajoute au dernier élément actuellement ouvert dans le résultat de la transformation. Sous utilisation est de la forme :</p>
+<pre><code>&lt;xsl:attribute name="nom"&gt;valeur&lt;/xsl:attribute&gt;</code></pre>
+                                            <p><span class="html">name</span> correspond au nom de l'attribut à ajouter dans le contexte courant.</p>
+                                            <p><span class="html">valeur</span> correspond à la valeur à lui donner.</p>
+                                            
+                                        </li>
+                                    </ol>
                                 </li>
                             </ol>
                         </li>
