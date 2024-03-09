@@ -2567,8 +2567,106 @@ doctype-system="http://www.w3.org/TR/html4/strict.dtd"/&gt;</code></pre>
                             <ol>
                                 <li>
                                     <h4>Chemin absolu - chemin relatif :</h4>
-                                    <p></p>
+                                    <p>Un chemin d'accès peut être <span class="em">absolu par rapport au noeud racine</span> lorsqu'il commence par le caractère "/" ou <span class="em">relatif par rapport au noeud contexte</span> si ce n'est pas le cas.</p>
+                                    <p>Exemples :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">/carnet/persone</span> est un chemin d'accès absolu car il débute pas "/".</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">personne/nom</span> est un chemin d'accès relatif au noeud contexte.</p>
+                                        </li>
+                                    </ul>
                                 </li>
+                                <li>
+                                    <h4>Les étapes d'un chemin d'accès :</h4>
+                                    <p>Un chemin d'accès se compose d'<span class="em">étapes</span> séparés par des "/". Chaque étape sert à calculer un ensemble de noeuds qui servira de point de départ pour le calcul de l'étape suivante. Le résultat final du chemin d'accès est l'ensemble des noeuds obtenus lors de la dernière étape.</p>
+                                    <p>Exemples :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">/carnet/personne/contact</span> est un chemin d'accès absolu composé de 3 étapes.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">personne/nom</span> est un chemin d'accès relatif composé de 2 étapes.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Chaque <span class="em">étape</span> est constituée de 3 parties :</p>
+                                    <ul>
+                                        <li>
+                                            <p>Un <span class="em">axe de recherche</span> qui spécifie le sens de la relation entre le noeud courant et l'ensemble des noeuds recherchés : enfants, ancêtres, ...</p>
+                                        </li>
+                                        <li>
+                                            <p>Un <span class="em">noeud test</span> (filtre) qui spécifie le type de noeud et/ou le nom des noeuds à localiser.</p>
+                                        </li>
+                                        <li>
+                                            <p>Zéro ou plusieurs <span class="em">prédicats</span> qui sont des conditions supplémentaires pour filtrer les noeuds obtenus.</p>
+                                        </li>
+                                    </ul>
+<pre><code>axeRecherche::noeudTest[prédicat]</code></pre>
+                                    <p>Les parties <span class="em">axeRecherche</span> et <span class="em">prédicat</span> sont optionnelles.</p>
+                                    <p>Remarquez qu'il est possible d'écrire de multiples manières un même chemin d'accès. Tous les exemples qui suivront sont donnés à titre indicatif.</p>
+                                </li>
+                                <li>
+                                    <h4>Les noeuds test :</h4>
+                                    <p>Le noeud test suit l'axe de recherche dans une étape. Il indique quels sont les noeuds qu'il faudra sélectionner dans cet axe lors du calcul de l'étape. Le noeud test est toujours obligatoire dans uné étape.</p>
+                                    <p>Il est possible de préciser le noeud test de diverses manières :</p>
+                                    <dl>
+                                        <dt>le nom</dt>
+                                        <dd>
+                                            <p>Un noeud test constitué sélectionne <span class="em">tous les noeuds éléments</span> qui portent ce nom.</p>
+                                            <p>Dans le chemin d'acès <span class="em">/carnet/personne</span>, <span class="em">carnet</span> est le noeud test de la première étape et <span class="em">personne</span> celui de la seconde.</p>
+                                        </dd>
+                                        <dt>* ou @*</dt>
+                                        <dd>
+                                            <p>L'abréviation <span class="html"> *</span> permet de sélectionner <span class="em">tous les noeuds éléments</span> tandis que <span class="html">@*</span> permet de sélectionner <span class="em">tous les noeuds attributs</span>.</p>
+                                            <p>Le chemin d'accès <span class="em">/carnet/personne/*</span> permet de sélectionner tous les noeuds élements qui sont des enfants des noeuds personne.</p>
+                                            <p>Le chemin d'accès <span class="em">/carnet/personne/@*</span> permet de sélectionner les noeuds attributs <span class="em">titre</span> de tous les éléments <span class="em">personne</span>.</p>
+                                        </dd>
+                                        <dt>text()</dt>
+                                        <dd>
+                                            <p>Le noeud test égal à <span class="html">text()</span> sélectionne <span class="em">tous les noeuds textes</span> situés dans l'axe de recherche.</p>
+                                            <p>Le chemin d'accès <span class="em">/carnet/personne/email/text()</span> permet de sélectionner les noeuds textes (dont les valeurs sont "emmeline.leconte@ipl.be" et "michel.debacker@ipl.be") tandis que <span class="em">//email</span> renvoie les noeuds éléments <span class="em">email</span>.</p>
+                                        </dd>
+                                        <dt>node()</dt>
+                                        <dd>
+                                            <p>Le noeud test égal à <span class="html">node()</span> sélectionne <span class="em">tous les noeuds</span> situés dans l'axe de recherche <span class="em">quel que soit leur type</span>.</p>
+                                            <p>Le chemin d'accès <span class="em">/carnet/personne/node()</span> permet de sélectionner les 3 noeuds enfants de tous les noeuds <span class="em">personne</span> c'est-à-dire <span class="em">nom</span>, <span class="em">prenom</span> et <span class="em">contact</span>.</p>
+                                        </dd>
+                                    </dl>
+                                </li>
+                                <li>
+                                    <h4>Les prédicats :</h4>
+                                    <p>Un prédicat fixe une <span class="em">condition supplémentaire pour filtrer</span> les noeuds obtenus. Il est placé entre [] à la suite du noeud de test.</p>
+                                    <p>Il existe deux types de prédicat : les expressions <span class="em">numériques</span> et les expressions <span class="em">booléennes</span>.</p>
+                                    <p>Un prédicat numérique est un <span class="em">prédicat de position</span> : seul le noeud dont la position de contexte est égale à la valeur mentionnée est retenu. La position débute à <span class="em">1</span>.</p>
+                                    <p>Par exemple, le chemin d'accès <span class="em">/carnet/personne[2]/nom</span> sélectionne le nom de la deuxième personne du carnet. L'expression <span class="em">/carnet/personne[position()=2]/nom</span> est équivalente ou encore <span class="em">//personne[position()=2]/nom</span>. "//" est un raccourci qui permet de descendre dans l'arbre document jusqu'au noeud test précisé.</p>
+                                    <p>Plusieurs prédicats peuvent être placés à la suite l'un de l'autre, chacun filtrant l'ensemble de noeuds résultants du précédent.</p>
+                                    <p>Par exemple :</p>
+<pre><code>//personne[nom="Leconte"][prenom="Emmeline"]</code></pre>
+                                    <dl>
+                                        <dt>Les fonctions :</dt>
+                                        <dd>
+                                            <p>Il existe de nombreuses fonctions que l'on peut appeler dans un prédicat. Ces fonctions se classes selon les objets concernés : noeuds, chaînes de caractères, booléens et nombres. Chaque fonction peut avoir zéro ou plusieurs arguments.</p>
+                                            <p>Ces fonctions sont similaires à ce qui est vu dans les autres langages de programmation.</p>
+                                            <p>Nous n'en abordons que quelques-unes.</p>
+                                            <p>Dans les descriptions suivantes, lorsqu'un élément est suivi du caractère ?, cela signifie qu'il est optionnel. S'il est suivi de *, cela signifie qu'il peut y avoir plusieurs arguments.</p>
+                                            <table class="tableBalises">
+                                                <caption>Les fonctions de manipulation</caption>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="em">count(arg)</td>
+                                                        <td>
+                                                            <p>Renvoie le nombre de noeud <span class="em">arg</span>.</p>
+                                                            <p class="em">//personne[count(prenom)&gt;1]</p>
+                                                        </td>
+                                                        <td>La <span class="em">personne</span> qui possède plus de 1 <span class="em">prenom</span>.</td>
+                                                    </tr>
+                                                    
+                                                </tbody>
+                                            </table>
+                                        </dd>
+                                    </dl>
+                                </li> 
                             </ol>
                         </li>
                     </ol>
