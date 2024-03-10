@@ -3097,7 +3097,92 @@ return &lt;result&gt;{$x}&lt;/result&gt;</code></pre>
                         </li>
                         <li>
                             <h3>Jointure :</h3>
-                            
+                            <p>Comme en SQL, la clause <span class="html">where</span> permet de définir des conditions de jointure lorsque plusieurs variables sont utilisées. La requête suivante permettra d'obtenir toutes les personnes partageant le même numéro de téléphone (cette requête ne marchera malheureusement pas avec les homonymes ayant le même numéro de téléphone) :</p>
+<pre><code>for $i in doc("carnet.xml")//personne,
+    $j in doc("carnet.xml")//personne,    
+where $i/contact/tel = $j/contact/tel
+      and $i/nom &lt; $j/nom or ($i/nom=$j/nom and $i/prenom&lt;$j/prenom)
+return
+&lt;binome&gt;
+&lt;personne1&gt;{$i/nom}&lt;/personne1&gt;
+&lt;personne2&gt;{$j/nom}&lt;/personne2&gt;
+{$j/contact/tel}
+&lt;/binome&gt;</code></pre>
+                            <p>Cette requête renverra :</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;binome&gt;
+    &lt;personne1&gt;
+        &lt;nom&gt;Damas&lt;/nom&gt;
+    &lt;personne1&gt;
+    &lt;personne2&gt;
+        &lt;nom&gt;Debacker&lt;/nom&gt;
+    &lt;personne2&gt;
+    &lt;tel&gt;
+        027644653
+    &lt;/tel&gt;
+&lt;/binome&gt;</code></pre>
+                        </li>
+                        <li>
+                            <h3>FLWOR : autres constructions :</h3>
+                            <ol>
+                                <li>
+                                    <h4>Commentaires :</h4>
+                                    <p>Les commentaires sont ajoutés à l'aide des séparateurs "(:" et ":)".</p>
+<pre><code>for $x in distinct-values(doc("carnet.xml")//tel)
+(: ceci est un commentaire :)
+return &lt;result&gt;{$x}&lt;/result&gt;</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Distinct-values :</h4>
+                                    <p>À la manière du distinct de SQL, XQuery possède la fonction <span class="html">distinct-values</span> qui permet d'éliminer les doublons dans les valeurs d'une séquence. L'exemple suivant affiche tous les numéros de téléphone avec le nombre de personnes possédant le numéro. Cet exemple combine l'utilisation de <span class="html">distinct-values</span> avec l'utilisation de la fonction XPath <span class="html">count</span>.</p>
+<pre><code>for $x in distinct-values(doc("carnet.xml")//tel)
+order by count(doc("carnet.xml")//contact[tel=$x]) descending
+return &lt;telephone&gt;
+&lt;numero&gt;{$x}&lt;/numero&gt;
+&lt;nombre&gt;{count(doc("carnet.xml")//contact[tel=$x])}&lt;/nombre&gt;
+&lt;/telephone&gt;</code></pre>
+                                    <p>Cette requête renvoie :</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;telephone&gt;
+    &lt;numero&gt;027644653&lt;/numero&gt;
+    &lt;nombre&gt;2&lt;/nombre&gt;
+&lt;/telephone&gt;
+&lt;telephone&gt;
+    &lt;numero&gt;027644688&lt;/numero&gt;
+    &lt;nombre&gt;1&lt;/nombre&gt;
+&lt;/telephone&gt;</code></pre>
+                                    <p>Il est à noter que la fonction <span class="html">distinct-values</span> renvoie des valeurs et non des noeuds. Pour obtenir des éléments, il faut ajouter une balises ouvrante et fermante autour de la valeur comme dans l'exemple ci-dessus (les balises <span class="em">&lt;telephone&gt;</span>). En XQuery, tous les noeuds sont différents. Il n'existe donc pas de fonction permettant de comparer des noeuds. Pour une comparaison de noeud utilisable, il faudrait comparer la valeur de ces noeuds ainsi que la valeur de ces noeuds ainsi que leur descendance.</p>
+                                </li>
+                                <li>
+                                    <h4>Conditionnel :</h4>
+                                    <p>La fonction <span class="html">if then else</span> peut être utilisée à l'intérieur d'une expression FLWOR.</p>
+                                    <p>Voici un exemple :</p>
+<pre><code>&lt;result&gt;{
+for $x in doc("carnet.xml")//personne
+return element {if ($x/@titre='Mme') then "Madame" else "Monsieur"}
+{$x/nom}
+}    
+&lt;/result&gt;</code></pre>
+                                    <p>Cela donnera le résultat suivant :</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;result&gt;
+    &lt;Madame&gt;
+        &lt;nom&gt;Leconte&lt;/nom&gt;
+    &lt;/Madame&gt;
+    &lt;Monsieur&gt;
+        &lt;nom&gt;Debacker&lt;/nom&gt;
+    &lt;/Monsieur&gt;
+    &lt;Monsieur&gt;
+        &lt;nom&gt;Damas&lt;/nom&gt;
+    &lt;/Monsieur&gt;
+&lt;/result&gt;</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Quantificateur existentiel et universel :</h4>
+                                    <p>XQuery possède également des quantificateurs existentiels et universels.</p>
+                                    
+                                </li>
+                            </ol>
                         </li>
                     </ol>
                 </article>
