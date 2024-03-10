@@ -3180,9 +3180,29 @@ return element {if ($x/@titre='Mme') then "Madame" else "Monsieur"}
                                 <li>
                                     <h4>Quantificateur existentiel et universel :</h4>
                                     <p>XQuery possède également des quantificateurs existentiels et universels.</p>
-                                    
+<pre><code>for $x in doc("carnet/xml")//personne
+where some $y in $x/contact/tel satisfies $y eq '027644644653'
+return &lt;personne&gt;{$x/nom, $x/prenom}&lt;/personne&gt;</code></pre>
+                                    <p>Le mot clé <span class="html">some</span> permet de quantifier existentiellement à la manièra du EXISTS en SQL). L'expression <span class="html">some 1var in expr1 satisfies expr2</span> veut dire qu'il existe <span class="em">au moins un</span> noeud retourné par l'expression <span class="em">expr1</span> satisfont l'expression <span class="em">expr2</span>.</p>
+                                    <p>L'exemple suivant vérifie s'il y a au moins une femme dans le document carnet.xml.</p>
+<pre><code>&lt;message&gt;
+{if
+(every $i in doc("carnet.xml")//personne satisfies $i/@titre='Mr')
+then "Uniquement des hommes" else "Au moins une femme"}
+&lt;/message&gt;</code></pre>
+                                    <p>Une requête équivalente peut être faite avec un <span class="html">some</span>.</p>
+<pre><code>&lt;message&gt;
+{some $i in doc("carnet.xml")//personne satisfies $i/@titre='Mme')
+then "Au moins une femme" else "Uniquement des hommes"}
+&lt;/message&gt;</code></pre>
                                 </li>
                             </ol>
+                        </li>
+                        <li>
+                            <h3>Comparaison entre XQuery et XSLT :</h3>
+                            <p>Bien que XQuery ait été conçu au départ comme un langage de requête, XQuery est aussi capable de transformer des documents XML à la manière d'XSLT. XQuery et XSLT ont été développés par des personnes différentes mais partage des caractéristiques communes et incluent tout deux XPath comme sous-langage. Pour simplifier, il est préférable d'utiliser XSLT pour transformer et XQuery pour faire des requêtes.</p>
+                            <p>Par rapport à XSLT, XQuery est un langage non XML. Cela le rend moins verbeux et plus facile à lire. Par contre, grâce à leur structure XML, les fichiers XSLT peuvent être facilement parsé, validé et généré par des langages informatiques.</p>
+                            <p>XQuery a l'avantage de pouvoir prendre plusieurs documents XML en entrée.</p>
                         </li>
                     </ol>
                 </article>
