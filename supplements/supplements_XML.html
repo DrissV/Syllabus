@@ -52,6 +52,8 @@
                         <li><a href="#XML_JAVA">XML et JAVA</a></li>
                         <li><a href="#feuilles_style">Les feuilles de style</a></li>
                         <li><a href="#expressions_XPath">Les expressions XPath</a></li>
+                        <li><a href="#XQuery">XQuery</a></li>
+                        <li><a href="#exercices">Exercices</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -2013,18 +2015,18 @@ public class SAXHandler extends DefaultHandler {
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-        if (qName.equalsIgnoreCase("personne")) {
+        if ("personne".equalsIgnoreCase(qName)) {
             titre = attributes.getValue("titre");
-        } else if (qName.equalsIgnoreCase("nom")) {
+        } else if ("nom".equalsIgnoreCase(qName)) {
             bNom = true;
-        } else if (qName.equalsIgnoreCase("tel")) {
+        } else if ("tel".equalsIgnoreCase(qName)) {
             bTel = true;
         }
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.equalsIgnoreCase("personne")) {
+        if ("personne".equalsIgnoreCase(qName)) {
             System.out.println("-------------------");
         }
     }
@@ -3192,7 +3194,8 @@ then "Uniquement des hommes" else "Au moins une femme"}
 &lt;/message&gt;</code></pre>
                                     <p>Une requête équivalente peut être faite avec un <span class="html">some</span>.</p>
 <pre><code>&lt;message&gt;
-{some $i in doc("carnet.xml")//personne satisfies $i/@titre='Mme')
+{if
+(some $i in doc("carnet.xml")//personne satisfies $i/@titre='Mme)
 then "Au moins une femme" else "Uniquement des hommes"}
 &lt;/message&gt;</code></pre>
                                 </li>
@@ -3205,6 +3208,306 @@ then "Au moins une femme" else "Uniquement des hommes"}
                             <p>XQuery a l'avantage de pouvoir prendre plusieurs documents XML en entrée.</p>
                         </li>
                     </ol>
+                </article>
+                <article>
+                    <h2 id="exercices">Exercices :</h2>
+                    <p>Pour faire un espace en XSL, il faut faire un <span class="em">&lt;xsl:text&gt; &lt;/xsl:text&gt;</span></p>
+                    <ul>
+                        <li>
+                            <h3>Exercice 1 :</h3>
+                            <p>Considérons le fichier <a href="../files/recettes.xml" target="_blank">recettes.xml</a>, sachant que le contexte est la racine (sauf si indiqué différemment), donnez les expressions XPath pour obtenir :</p>
+                            <ol>
+                                <li>
+                                    <p>Le titre de toutes les recettes : <span class="em">//titre</span></p>
+                                </li>
+                                <li>
+                                    <p>Le troisième ingrédient de la première recette : <span class="em">//recette[1]//ingredient[3]</span></p>
+                                </li>
+                                <li>
+                                    <p>Supposant que le noeud courant est le troisième ingrédient de la première recette, quels sont les ingrédients suivants ? : <span class="em">//recette[1]//ingredient[3]/following-sibling::ingredient</span></p>
+                                </li>
+                                <li>
+                                    <p>Le titre des recettes qui ont 'ananas' comme ingrédient : <span class="em">//recette[.=//ingredient="ananas"]..titre</span></p>
+                                </li>
+                                <li>
+                                    <p>Les deux premiers ingrédients de la première recette : </p>
+                                    <span class="em">//recette[1]//ingredient[position()&lt;=2]</span>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Exercice 2 :</h3>
+                            <p>On vous fournit un fichier <a href="../files/films.xml" target="_blank">films.xml</a> ainsi qu'un fichier <a href="../files/films.css" target="_blank">films.css</a> et la dtd <a href="../files/films.dtd" target="_blank">films.dtd</a>.</p>
+                            <p>On vous demande d'écrire une feuille de transformation <span class="em">films.xml</span>.</p>
+                            <p>Dans <span class="em">films.xml</span>, vous devez avoir ces trois lignes en tout début de fichier :</p>
+<pre><code>&lt;?xml version="1.0"?&gt;
+&lt;xml-stylesheet type="text/xsl" href="films.xsl"?&gt;
+&lt;DOCTYPE films SYSTEM "files.dtd"&gt;
+&lt;films&gt;</code></pre>
+                            <p>Voici le DTD :</p>
+<pre><code>&lt;!-- une liste de films --&gt;
+&lt;!ELEMENT films (film+)&gt;
+
+&lt;!-- description d'un film --&gt;
+&lt;ELEMENT film (photo?, titre, annee, realisateur, casting, synopsis)&gt;
+
+&lt;!-- langue utilisée dans la fiche du film --&gt;
+&lt;!ATTLIST film lang (fr|en) #REQUIRED&gt;
+
+&lt;!-- photo du film --&gt;
+&lt;!ELEMENT photo EMPTY&gt;
+&lt;!ATTLIST photo href CDATA #REQUIRED&gt;
+
+&lt;!-- le casting --&gt;
+&lt;!ELMENT casting (acteur*)&gt;
+
+&lt;!-- un acteur et son personnage --&gt;
+&lt;!ELEMENT acteur (#PCDATA)&gt;
+&lt;ATTLIST acteur id ID #IMPLIED
+                   personnage CDATA #REQUIRED&gt;
+
+&lt;!-- le synopsis : du texte et des références aux personnages --&gt;
+&lt;!ELEMENT synopsis (#PCDATA|perso)*&gt;
+&lt;!ELEMENT perso EMPTY&gt;
+&lt;!ATTLIST perso ref IDREF #REQUIRED&gt;
+
+&lt;!-- les autres descripteurs du film --&gt;
+&lt;!ELEMENT titre (#PCDATA)&gt;
+&lt;!ELEMENT annee (#PCDATA)&gt;
+&lt;!ELEMENT realisateur (#PCDATA)&gt;</code></pre>
+                            <p>Le fichier HTML résultant de la transformation affichera la liste des films du document XML dans l'ordre lexicographique (par rapport au titre). Chaque film sera détaillé comme suit : le titre du film en <span class="em">&lt;h2&gt;</span>, son réalisateur et la date entre parenthèses en <span class="em">&lt;h4&gt;</span> sur une autre ligne et finalement une liste non ordonée des acteurs des films. Pour chacun d'eux indique entre parenthèses le nom de son personnage. Cette liste est précédée du titre <span class="em">Casting</span> en <span class="em">&lt;h3&gt;</span>.</p>
+                            <p>Ceci donne, par exemple, pour un film :</p>
+                            <img src="../images/seance10_1_XML.png" alt="">
+                            <p>Dans le fichier <span class="em">films.xml</span>, vous constatez que les éléments synopsis contiennent des éléments perso. Traitez ces éléments pour afficher le nom du personnage et le nom de l'acteur enttre parenthèse.</p>
+                            <p>Terminez le synopsis de chaque film par une barre horizontale (<span class="html">hr</span>).</p>
+                            <p>Par exemple, le synopsis de la guerre des étoiles doit afficher le texte suivant (les éléments perso en surligné gris afin d'attirer votre attention) :</p>
+                            <img src="../images/seance10_2_XML.png" alt="">
+                            <p>Traitez les éléments photo afin qu'ils apparaissent dans le browser s'ils sont présents dans le document. Ces éléments <span class="html">img</span> spécifient un attribut <span class="html">class</span> dans la valeur est <span class="em">photo</span>. Il existe effectivement une classe <span class="em">photo</span> dans le CSS qui les met en style.</p>
+                            <p>Utilisez pour cela les éléments <span class="html">xsl:element</span> et <span class="html">xsl:attribute</span>.</p>
+                            <p>Votre page doit maintenant débuter par un résumé de tous les films du document. Concrètement, il s'agit de placer, avant la présentation du détail des films, un élément <span class="html">div</span> dont l'attribut <span class="html">class</span> vaut <span class="em">films</span>. Cet élément débute par une précision du nombre de films. Ensuite, tous les titres des films énumérés dans l'ordre lexicographique comme des liens vers des ancres que vous aurez placés dans chaque titre (<span class="html">h2</span>) de film.</p>
+                            <img src="../images/seance10_3_XML.png" alt="">
+                            <p>En HTML, le lien sera, par exemple, <span class="em">&lt;a href="#film_1"&gt;Alice au Pays des Merveilles&lt;/a&gt;</span>. Pour créer ce lien, il faut créer une variable dans laquelle on met la valeur <span class="em">#film_1</span>, le '<span class="em">1</span>' correspondant à la position du film.</p>
+                            <p>Pour mettre une valeur dans une variable, il suffit de placer cette valeur dans l'élément <span class="html">xsl:variable</span>.</p>
+                            <p>Exemple : <span class="em">&lt;xsl:variable name="truc"&gt;&lt;xsl:text&gt;tchou_tchou&lt;/xsl:text&gt;&lt;/xsl:variable&gt;</span> place la valeur "<span class="em">tchou_tchou</span>" dans la variable <span class="em">truc</span>. Ensuite, pour récupérer le contenu de cette variable, il suffit de la placer entre accolades : <span class="em">{truc}</span>.</p>
+                            <p>Il ne faut pas oublier de placer les ancres dans les titres des films : <span class="em">&lt;h2 id="film_1"&gt;Alice au Pays des merveilles&lt;/h2&gt</span>.</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;
+    &lt;xsl:template match="/"&gt;
+        &lt;html&gt;
+            &lt;head&gt;
+                &lt;META NAME="author" LANG="fr" CONTENT="Driss Vandenheede"/&gt;
+                &lt;title&gt;Tous mes films&lt;/title&gt;
+                &lt;link rel="stylesheet" type="text/css" href="films.css"/&gt;
+            &lt;/head&gt;
+            &lt;body&gt;
+                &lt;div class="films"&gt;
+                    &lt;p&gt;Mes &lt;xsl:value-of select="count(.//film)"/&gt; films :&lt;/p&gt;
+                    &lt;ul&gt;
+                        &lt;xsl:for-each select=".//film"&gt;
+                            &lt;xsl:sort select=".//titre"/&gt;
+                            &lt;xsl:variable name="id"&gt;
+                                &lt;xsl:text&gt;#film_&lt;/xsl:text&gt;&lt;xsl:value-of select="position()"/&gt;
+                            &lt;/xsl:variable&gt;
+                            &lt;li&gt;&lt;a href="{$id}"&gt;&lt;xsl:value-of select=".//titre"/&gt;&lt;/a&gt;&lt;/li&gt;
+                        &lt;/xsl:for-each&gt;
+                    &lt;/ul&gt;
+                &lt;/div&gt;
+                &lt;xsl:apply-templates select=".//film"&gt;
+                    &lt;xsl:sort select=".//titre"/&gt;
+                &lt;/xsl:apply-templates&gt;
+            &lt;/body&gt;
+        &lt;/html&gt;
+    &lt;/xsl:template&gt;
+    &lt;xsl:template match="film"&gt;
+        &lt;xsl:variable name="id&gt;
+            &lt;xsl:text&gt;film_&lt;/xsl:text&gt;&lt;xsl:value-of select="position()"/&gt;
+        &lt;/xsl:variable&gt;
+        &lt;div id="{$id}"&gt;
+            &lt;xsl:if test=:"photo"&gt;
+                &lt;img class="photo" src"photo/{photo/@href}"/&gt;
+            &lt;/xsl:if&gt;
+            &lt;h2&gt;&lt;xsl:value-of select="titre"/&gt;&lt;/h2&gt;
+            &lt;h4&gt;de &lt;xsl:value-of select="realisateur"/&gt;&lt;xsl:text&gt; &lt;/xsl:text&gt;(&lt;xsl:value-of select="annee"/&gt;)&lt;/h4&gt;
+            &lt;h3&gt;Casting&lt;/h3&gt;
+            &lt;ul&gt;&lt;xql:apply-templates select="casting/acteur"/&gt;&lt;/ul&gt;
+            &lt;h3&gt;Synopsis&lt;/h3&gt;
+            &lt;p&gt;&lt;xsl:apply-templates select="synopsis"/&gt;&lt;/p&gt;
+            &lt;hr/&gt;
+        &lt;/div&gt;
+    &lt;/xsl:template&gt;
+    &lt;xsl:template match="titre"&gt;
+    &lt;/xsl:template&gt;
+    &lt;xsl:template match="realisateur"&gt;
+    &lt;/xsl:template&gt;
+    &lt;xsl:template match="annee"&gt;
+    &lt;/xsl:template&gt;
+    &lt;xsl:template match="acteur"&gt;
+        &lt;li&gt;&lt;xsl:value-of select="."/&gt;&lt;xsl:text&gt; &lt;/xsl:text&gt;(&lt;xsl:value-of select="@personnage"/&gt;)&lt;/li&gt;
+    &lt;/xsl:template&gt;
+    &lt;xsl:template match="perso"&gt;
+        &lt;xsl:variable name="perso" select="@href"/&gt;
+        &lt;xsl:value-of select="//acteur[@id=$perso]/@personnage"/&gt;&lt;xsl:text&gt; &lt;/xsl:text&gt;(&lt;xsl:value-of select="//acteur[@id=$perso]"/&gt;)
+    &lt;/xsl:template&gt;
+&lt;/xsl:stylesheet&gt;</code></pre>
+                        </li>
+                        <li>
+                            <h3>Exercice 3 :</h3>
+                            <p>Pour chacune des requêtes XQuery suivantes, expliquez ce qu'elle fait et anticipez le résultat de son exécution. Vérifiez à l'aide du logiciel BaseX.</p>
+                            <p>Soit le fichier <span class="em">library.xml</span> suivant :</p>
+<pre><code>&lt;?xml version="1.0"?&gt;
+&lt;library&gt;
+    &lt;songlist&gt;
+        &lt;song&gt;
+            &lt;track_ID&gt;3485&lt;/track_ID&gt;
+            &lt;name&gt;Nothing Else Matters&lt;/name&gt;
+            &lt;artist&gt;Metallica&lt;/artist&gt;
+            &lt;album&gt;Metallica&lt;/album&gt;
+            &lt;genre&gt;Metal&lt;/genre&gt;
+        &lt;/song&gt;
+        &lt;song&gt;
+            &lt;track_ID&gt;3590&lt;/track_ID&gt;
+            &lt;name&gt;Beat It&lt;/name&gt;
+            &lt;artist&gt;Michael Jackson&lt;/artist&gt;
+            &lt;album&gt;Thriller&lt;/album&gt;
+            &lt;genre&gt;Pop&lt;/genre&gt;
+        &lt;/song&gt;
+        &lt;song&gt;
+            &lt;track_ID&gt;3597&lt;/track_ID&gt;
+            &lt;name&gt;Billie Jean&lt;/name&gt;
+            &lt;artist&gt;Michael Jackson&lt;/artist&gt;
+            &lt;album&gt;Thriller&lt;/album&gt;
+            &lt;genre&gt;Pop&lt;/genre&gt;
+        &lt;/song&gt;
+    &lt;/songlist&gt;
+    &lt;playlists&gt;
+        &lt;list name="Cool"&gt;
+            &lt;track_ID&gt;3485&lt;/track_ID&gt;
+            &lt;track_ID&gt;3590&lt;/track_ID&gt;
+        &lt;/list&gt;
+        &lt;list name="MJ"&gt;
+            &lt;track_ID&gt;3590&lt;/track_ID&gt;
+            &lt;track_ID&gt;3597&lt;/track_ID&gt;
+        &lt;/list&gt;
+    &lt;/playlists&gt;
+&lt;/library&gt;</code></pre>
+                            <ol type="a">
+                                <li>
+<pre><code>&lt;results&gt;
+    {for $x in doc("library.xml")//song
+    where $x/Artist="Michael Jackson"
+    return element song { attribute name{$x/name}}}
+&lt;/results&gt;</code></pre>
+                                    <p>Pour chaque chanson de Michael Jackson, on crée un élément song dont l'attribut name vaut le titre de la chanson.</p>
+<pre><code>&lt;results&gt;
+    &lt;song name="Beat It"/&gt;
+    &lt;song name="Billie Jean"/&gt;
+&lt;/results&gt;</code></pre>
+                                </li>
+                                <li>
+<pre><code>&lt;results&gt;
+    for $f in doc("library.xml")//song
+    let $s := $f/name,
+        $a := $f/artist
+    return
+        &lt;result&gt;
+            {$a}
+            {$s}
+        &lt;/result&gt;
+&lt;/results&gt;</code></pre>
+<pre><code>&lt;results&gt;
+    &lt;result&gt;
+        &lt;artist&gt;Metallica&lt;/artist&gt;
+        &lt;name&gt;Nothing Else Matters&lt;/name&gt;
+    &lt;/result&gt;
+    &lt;result&gt;
+        &lt;artist&gt;Michael Jackson&lt;/artist&gt;
+        &lt;name&gt;Beat It&lt;/name&gt;
+    &lt;/result&gt;
+    &lt;result&gt;
+        &lt;artist&gt;Michael Jackson&lt;/artist&gt;
+        &lt;name&gt;Billie Jean&lt;/name&gt;
+    &lt;/result&gt;
+&lt;/results&gt;</code></pre>
+                                </li>
+                                <li>
+<pre><code>for $x in (doc("library.xml")//list)
+where every $y in ($x/track_ID)
+        satisifies (some $s in (doc("library.xml")//song)
+                        satisfies $s/artist="Michael Jackson" and $s/track_ID=$y)
+return &lt;liste&gt;{$x/@name}&lt;/liste&gt;</code></pre>
+<pre><code>&lt;list name="MJ"/&gt;</code></pre>
+                                </li>
+                                <li>
+<pre><code>for $x in distinct-values(doc("library.xml")//artist)
+return element artiste {
+    attribute name{$x},element songlist{
+        for $y in (doc("library.xml")//song[artist=$x])
+        return element song {attribute name{$y/name}}
+    }
+}</code></pre>
+<pre><code>&lt;artiste name="Mettalica"&gt;
+    &lt;songlist&gt;
+        &lt;song name="Nothing Else Matters"/&gt;
+    &lt;/songlist&gt;
+&lt;/artiste&gt;
+&lt;artiste name="Michael Jackson"&gt;
+    &lt;songlist&gt;
+        &lt;song name="Beat It"/&gt;
+        &lt;song name="Billie Jean"/&gt;
+    &lt;/songlist&gt;
+&lt;/artiste&gt;</code></pre>
+                                </li>
+                                <li>
+<pre><code>( for $x in distinct-values(doc("library.xml")//genre)
+    let $c := count(doc("library.xml")//song[genre=$x])
+    order by $c ascending
+    return
+    &lt;genre&gt;
+        &lt;name&gt;{$x}&lt;/name&gt;
+        &lt;nombre&gt;{$c}&lt;/nombre&gt;
+    &lt;/genre&gt;
+)[last()]</code></pre>
+<pre><code>&lt;genre&gt;
+    &lt;name&gt;Metal&lt;/Pop&gt;
+    &lt;nombre&gt;1&lt;/nombre&gt;
+&lt;/genre&gt;
+&lt;genre&gt;
+    &lt;name&gt;Pop&lt;/Pop&gt;
+    &lt;nombre&gt;2&lt;/nombre&gt;
+&lt;/genre&gt;</code></pre>
+                                </li>
+                            </ol>
+                            <p>Voici un second fichier <span class="em">duree.xml</span> (ce document donne les durées des chansons en secondes) :</p>
+<pre><code>&lt;?xml version="1.0"?&gt;
+&lt;durees&gt;
+    &lt;song track_ID="3485"&gt;
+        &lt;duree&gt;345&lt;/duree&gt;
+    &lt;/song&gt;
+    &lt;song track_ID="3590"&gt;
+        &lt;duree&gt;312&lt;/duree&gt;
+    &lt;/song&gt;
+    &lt;song track_ID="3597"&gt;
+        &lt;duree&gt;242&lt;/duree&gt;
+    &lt;/song&gt;
+&lt;/durees&gt;</code></pre>
+                            <ol type="a">
+                                <li>
+                                    <p>Écrivez une requête qui renvoie l'artiste et le titre de la chanson la plus longue. La sortie devrait ressembler à cela :</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;song&gt;&lt;artist&gt;Metallica&lt;/artist&gt;&lt;name&gt;name&gt;Nothing Else Matters&lt;/name&gt;&lt;/song&gt;</code></pre>
+<pre><code>let $c := max(doc("duree.xml")//song/duree)
+let $y := (doc("duree.xml")//song[duree = $c])
+let $x := (doc("library.xml")//song[track_ID = $y/@track_ID])
+return &lt;song&gt;{$x/artist}{$x/name}&lt;/song&gt;</code></pre>
+                                </li>
+                                <li>
+                                    <p>Écrivez une requête qui affiche toutes les informations d'une chanson (à savoir les infos de <span class="em">library.xml</span> ainsi que la durée contenue dans <span class="em">duree.xml</span>). La sortie devrait ressembler à cela :</p>
+                                    <p>Indice : <span class="html">node()</span> permet d'obtenir tous enfants d'un noeud.</p>
+                                    
+                                </li>
+                            </ol>
+                        </li>
+                    </ul>
                 </article>
             <!-- fin de section -->
             </section>
