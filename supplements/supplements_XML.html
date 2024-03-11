@@ -2169,7 +2169,7 @@ plat {
                             <h3>L'arbre document :</h3>
                             <p>La structure logique d'un document XML bien formé peut toujours se représenter sous forme d'un arbre, appelé l'<span class="em">arbre document</span>.</p>
                             <p>Cette représentation s'avère bien utile en XML pour la bonne compréhension des expressions XPath, des feuilles de style XSLT, ...</p>
-                            <p>Ainsi le document XML se représente sous forme d'arborescence de noeuds de types différents : le <span class="em">noeud racine</span> ("/"), les <span class="em">noeuds éléments</span>, les <span class="em">noeuds attributs</span> et les <span class="em">noeuds textes</span>. Nous ne tiendrons pas comptes des noeuds instructions de traiteemnt, des noeuds espaces de noms et des noeuds commentaires.</p>
+                            <p>Ainsi le document XML se représente sous forme d'arborescence de noeuds de types différents : le <span class="em">noeud racine</span> ("/"), les <span class="em">noeuds éléments</span>, les <span class="em">noeuds attributs</span> et les <span class="em">noeuds textes</span>. Nous ne tiendrons pas comptes des noeuds instructions de traitement, des noeuds espaces de noms et des noeuds commentaires.</p>
                             <p>Le noeud racine et les noeuds éléments possèdent éventuellement <span class="em">un ou plusieurs noeuds enfants</span> et possèdent toujours un et un <span class="em">seul noeud parent</span> à l'exception du noeud racine qui n'en possède pas.</p>
                             <p>Le <span class="em">noeud racine</span> ou "<span class="em">/</span>" est le noeud principal représentant le document XML dans l'arbre document. Il ne faut pas le confondre avec l'élément racine du document XML qui est lui un noeud élément, enfant du noeud racine.</p>
                             <p>Les données textuelles comprises dans un élément sont représentées dans des <span class="em">noeuds textes</span>. Chaque contenu d'un élément est représenté dans un noeud texte qui est un noeud enfant de l'élément en question.</p>
@@ -3503,7 +3503,226 @@ return &lt;song&gt;{$x/artist}{$x/name}&lt;/song&gt;</code></pre>
                                 <li>
                                     <p>Écrivez une requête qui affiche toutes les informations d'une chanson (à savoir les infos de <span class="em">library.xml</span> ainsi que la durée contenue dans <span class="em">duree.xml</span>). La sortie devrait ressembler à cela :</p>
                                     <p>Indice : <span class="html">node()</span> permet d'obtenir tous enfants d'un noeud.</p>
-                                    
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;songlist&gt;
+    &lt;song&gt;
+        &lt;track_ID&gt;3485&lt;/track_ID&gt;
+        &lt;name&gt;Nothing Else Matters&lt;/name&gt;
+        &lt;artist&gt;Metallica&lt;/artist&gt;
+        &lt;album&gt;Metallica&lt;/album&gt;
+        &lt;genre&gt;Metal&lt;/genre&gt;
+        &lt;duree&gt;345&lt;/duree&gt;
+    &lt;/song&gt;
+    ...
+&lt;/songlist&gt;</code></pre>
+<pre><code>&lt;songlist&gt;
+{for $x in (doc("library.xml")//song)
+let $y := (doc("duree.xml")//song[@track_ID = $x/track_ID])
+return
+    &lt;song&gt;
+        {$x/track_ID}
+        {$x/name}
+        {$x/artist}
+        {$x/album}
+        {$x/genre}
+        {$y/duree}
+    &lt;/song&gt;
+}
+&lt;/songlist&gt;</code></pre>
+                                </li>
+                                <li>
+                                    <p>Écrivez une requête qui calcule la durée totale de chaque liste contenue dans <span class="em">library.xml</span>. La sortie devrait ressembler à cela :</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;playlist&gt;
+    &lt;list name="Cool"&gt;
+        &lt;duree&gt;657&lt;/duree&gt;
+    &lt;/list&gt;
+    &lt;list name="MJ"&gt;
+        &lt;duree&gt;554&lt;/duree&gt;
+    &lt;/list&gt;
+&lt;/playlist&gt;</code></pre>
+<pre><code>&lt;playlist&gt;
+{for $x in (doc("library.xml")//song)
+let $c := sum(doc("duree.xml")//song[@track_ID = $x/track_ID]/duree)
+return
+    &lt;list name="{$x/@name}"&gt;
+        &lt;duree&gt;{$c}&lt;/duree&gt;
+    &lt;/list&gt;
+}
+&lt;/playlist&gt;</code></pre>
+                                </li>
+                                <li>
+                                    <p>Même question que la précédente mais en affichant uniquement les listes qui durent plus de 600 secondes.</p>
+                                    <p>Il est possible de répondre à cette question de plusieurs manières :</p>
+                                    <ul>
+                                        <li>
+                                            <p>tentez votre chance en adaptant uniquement le XPath de l'expression précédente.</p>
+                                        </li>
+                                        <li>
+                                            <p>essayer aussi en utilisant une expression conditionnelle (indice <a href="http://stackoverflow.com/questions/3687218/how-to-use-if-else-in-xquery-assignment" target="_blank">http://stackoverflow.com/questions/3687218/how-to-use-if-else-in-xquery-assignment</a>).</p>
+                                        </li>
+                                    </ul>
+<pre><code>&lt;playlist&gt;
+{for $x in (doc("library.xml")//list)
+let $c := sum(doc("duree.xml")//song[@track_ID = $x/track_ID]/duree)
+whzez $c &gt; 600
+return
+    &lt;list name="{$x/@name}"&gt;
+        &lt;duree&gt;{$c}&lt;/duree&gt;
+    &lt;/list&gt;
+}
+&lt;/playlist&gt;</code></pre>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Exercice 4 :</h3>
+                            <p>Soit le fichier <a href="../files/play.dtd" target="_blank">play.dtd</a> validant des fichiers XML de pièce théâtre. Un exemple de pièce est donné dans le fichier <a href="../files/hamlet.xml" target="_blank">hamlet.xml</a>.</p>
+                            <ol>
+                                <li>
+                                    <p>Pour chacune des requêtes XQuery suivantes, expliquez-les en français ou écrivez le code résultant de l'exécution.</p>
+                                    <ol type="a">
+                                        <li>
+<pre><code>let $s:=doc("hamlet.xml")//SPEECH[LINE="To be, or not to be: that is the question:"]
+return &lt;result&gt;
+    {count($s/following-sibling::SPEECH[SPEAKER=$s/SPEAKER]/LINE)}
+&lt;/result&gt;</code></pre>
+                                            <p>Affiche le nombre de répliques qu'Hamlet a dit après avoir dit "To be, or not to be: that is the question:" (44 répliques).</p>
+                                        </li>
+                                        <li>
+<pre><code>(for $s in doc("hamlet.xml")//SPEECH
+let $c := count($s/LINE)
+order by $c ascending
+return &lt;res&gt;{$s/LINE}&lt;/res&gt;)[last()]</code></pre>
+                                            <p>Affiche la réplique la plus longue.</p>
+                                        </li>
+                                    </ol>
+                                </li>
+                                <li>
+                                    <p>Requêtes XQuery :</p>
+                                    <ol type="a">
+                                        <li>
+                                            <p>Donnez pour chaque speaker le nombre de lignes qu'il dit. Le résultat doit être trié par le nombre de lignes dites. La sortie devrait ressembler à cela :</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;result&gt;
+    &lt;nombre_de_ligne&gt;
+        &lt;role&gt;HAMLET&lt;/role&gt;
+        &lt;nombre&gt;1495&lt;/nombre&gt;
+    &lt;/nombre_de_ligne&gt;
+    &lt;nombre_de_ligne&gt;
+        &lt;role&gt;KING CLAUDIUS&lt;/role&gt;
+        &lt;nombre&gt;550&lt;/nombre&gt;
+    &lt;/nombre_de_ligne&gt;
+    ...
+&lt;/result&gt;</code></pre>
+<pre><code>&lt;result&gt;
+{for $s in distinct-values(doc("hamlet.xml")//SPEAKER)
+let $c := count(doc("hamlet.xml")//SPEECH[SPEAKER=$s]/LINE)
+order by $c ascending
+return &lt;nombre_de_ligne&gt;&lt;role&gt;{$s}&lt;/role&gt;&lt;nombre&gt;{$c}&lt;/nombre&gt;&lt;/nombre_de_ligne&gt;}
+&lt;/result&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Même question mais en n'affichant uniquement les speakers qui disent plus de 100 lignes.</p>
+<pre><code>&lt;result&gt;
+{for $s in distinct-values(doc("hamlet.xml")//SPEAKER)
+let $c := count(doc("hamlet.xml")//SPEECH[SPEAKER=$s]/LINE)
+where &gt; 100
+order by $c ascending
+return &lt;nombre_de_ligne&gt;&lt;role&gt;{$s}&lt;/role&gt;&lt;nombre&gt;{$c}&lt;/nombre&gt;&lt;/nombre_de_ligne&gt;}
+&lt;/result&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Quelles sont les différentes phrases dites par Hamlet juste après des interventions de Marcellus ?</p>
+                                            <p>La sortie doit ressembler à cela :</p>
+<pre><code>&lt;result&gt;
+    &lt;LINE&gt;>I am very glad to see you. Good even, sir.&lt;/LINE&gt;
+    &lt;LINE&gt;>But what, in faith, make you from Wittenberg?&lt;/LINE&gt;
+    &lt;LINE&gt;>Did you not speak to it?&lt;/LINE&gt;
+    &lt;LINE&gt;Arm'd, say you ?&lt;/LINE&gt;
+    &lt;LINE&gt;From top to toe ?&lt;/LINE&gt;
+    &lt;LINE&gt;Then saw you not his face ?&lt;/LINE&gt;
+    &lt;LINE&gt;Hold off your hands.&lt;/LINE&gt;
+    &lt;LINE&gt;How say you, then; would heart of man once think it ?&lt;/LINE&gt;
+    &lt;LINE&gt;But you'ill be secret ?&lt;/LINE&gt;
+    &lt;LINE&gt;There's ne'er a villain dwelling in all Denmark&lt;/LINE&gt;
+    &lt;LINE&gt;But he's an arrant knave&lt;/LINE&gt;
+    &lt;LINE&gt;Nay, but swear't&lt;/LINE&gt;
+    &lt;LINE&gt;Upon my sword.&lt;/LINE&gt;
+    &lt;LINE&gt;Indeed, upon my sword, indeed.&lt;/LINE&gt;
+&lt;/result&gt;</code></pre>
+<pre><code>&lt;result&gt;
+{for $x in (doc("hamlet.xml")//SPEECH[SPEAKER='MARCELLUS'])
+    return $s/following-sibling::SPEECH[1][SPEAKER='HAMLET']/LINE
+}
+&lt;/result&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>POur chaque acte, donnez les différents speakers. La sortie devrait ressembler à cela :</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;ACTE&gt;
+    &lt;TITLE&gt;ACT 1&lt;/TITLE&gt;
+    &lt;SPEAKERS&gt;
+        &lt;SPEAKER&gt;BERNADO&lt;/SPEAKER&gt;
+        &lt;SPEAKER&gt;FRANCISCO&lt;/SPEAKER&gt;
+        &lt;SPEAKER&gt;HORATIO&lt;/SPEAKER&gt;
+    &lt;/SPEAKERS&gt;
+    ...
+&lt;/ACTE&gt;</code></pre>
+<pre><code>&lt;ACTE&gt;
+{for $s in (doc("hamlet.xml")//ACT)
+    return ($s/TITLE,&lt;SPEAKERS&gt;{
+        for $c in distinct-values($s/SPEAKER)
+            return &lt;SPEAKER&gt;{$c}&lt;/SPEAKER&gt;}
+    &lt;/SPEAKERS&gt;
+    )
+}
+&lt;/ACTE&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Affichez le nombre d'actes dans lequel apparaît chaque SPEAKER (trié par nombre décroissant d'acte). Le résultat devrait ressembler à cela :</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;speakers&gt;
+    &lt;speaker&gt;
+        &lt;nom&gt;KING CLAUDIUS&lt;/nom&gt;
+        &lt;nbActe&gt;5&lt;/nbActe&gt;
+    &lt;/speaker&gt;
+    ...
+&lt;/speakers&gt;</code></pre>
+<pre><code>&lt;speakers&gt;
+{for $s in distinct-values(doc("hamlet.xml")//SPEAKER)
+let $c := count(doc("hamlet.xml")//ACT[//SPEAKER=$s])
+order by $c descending
+return &lt;speaker&gt;&lt;nom&gt;{$s}&lt;/nom&gt;&lt;nbActe&gt;{$c}&lt;/nbActe&gt;&lt;/speaker&gt;}
+&lt;/speakers&gt;</code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Affichez les paires d'actes pour lesquels participent un même nombre de speakers. Le résultat devrait ressembler à cela :</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;actes&gt;
+    &lt;acte1&gt;
+        &lt;TITLE&gt;ACT III&lt;/TITLE&gt;
+    &lt;/acte1&gt;
+    &lt;acte2&gt;
+        &lt;TITLE&gt;ACT IV&lt;/TITLE&gt;
+    &lt;/acte2&gt;
+    &lt;nb&gt;15&lt;/nb&gt;
+&lt;/actes&gt;</code></pre>
+<pre><code></code></pre>
+                                        </li>
+                                        <li>
+                                            <p>Donnez les speakers qui parlent dans tous les actes où parle GUILDENSTERN. Le résultat devrait ressembler à cela :</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;speakers&gt;
+    &lt;speaker&gt;KING CLAUDIUS&lt;/speaker&gt;
+    &lt;speaker&gt;HAMLET&lt;/speaker&gt;
+    &lt;speaker&gt;QUEEN GERTRUDE&lt;/speaker&gt;
+    &lt;speaker&gt;OPHELIA&lt;/speaker&gt;
+    &lt;speaker&gt;ROSENCRANTZ&lt;/speaker&gt;
+&lt;/speakers&gt;</code></pre>
+<pre><code></code></pre>
+                                        </li>
+                                    </ol>
                                 </li>
                             </ol>
                         </li>
