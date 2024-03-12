@@ -3768,7 +3768,7 @@ public class WeatherForecast
     public int TemperatureF =&gt; 32 + (int)(TemperatureC / 0.5556);
     public string Summary { get; set; }
 }</code></pre>
-                    <p>On va rajouter la référence dans le projet Hybrid vers le Models, ainsi que la référence dans le projet Blazor Web App. Dans le fichier "_Impors.razor", on oublie pas de rajouter le using suivant :</p>
+                    <p>On va rajouter la référence dans le projet Hybrid vers le Models, ainsi que la référence dans le projet Blazor Web App. Dans le fichier "_Imports.razor", on oublie pas de rajouter le using suivant :</p>
 <pre><code>@using MyAppBlazor.Models</code></pre>
                     <p>On va supprimer le dossier "Data" du projet "MyAppBlazor.Mobile" et on va créer un projet "MyAppBlazor.Services" en supprimant le fichier "Class1.cs". On fait une référence le projet Models et on va créer le fichier "WeatherForecastService.cs" avec le contenu suivant :</p>
 <pre><code>using System;
@@ -4124,6 +4124,74 @@ public partial class Game
                     <h3>Dispose :</h3>
                     <p>Cependant, lorsqu'un composant n'est plus affiché à l'écran, il va se décharger de la mémoire et donc typiquement être détruit dans le sens où la mémoire qu'il utilisait va pouvoir être collectée mais surtout il va devoir nettoyer d'éventuelles ressources qu'il aurait occupées.</p>
                     <p>On peut implémenter l'interface <span class="html">IDisposable</span> ou <span class="html">IAsyncDisposable</span> et implémenter la méthode <span class="html">public void Dispose()</span> ou la méthode <span class="html">public async ValueTask DisposeAsync()</span> selon si c'est synchrone ou asynchrone.</p>
+                    <h3>TP Photo Explorer (v1) :</h3>
+                    <p>On va d'abord créer une solution nomée PhotoExplorer avec la ligne de commandes suivante :</p>
+<pre><code>dotnet new sln -n PhotoExplorer</code></pre>
+                    <p>Ensuite, on va ajouter trois nouveaux dossiers de solution nommés "api", "libs" et "ui". On va ensuite copier tous les éléments depuis le zip "api" dans un nouveau dossier nommé "PhotoExplorer.Api". Dans la solution, on oublie pas d'ajouter un projet existant dans le dossier "api".</p>
+                    <p>À partir de ce moment-là, on va vérifier et gérer les mises à jour des packages NuGet.</p>
+                    <p>On va ajouter un nouveau projet Blazor Web App nommé "PhotoExplorer.Manager" dans le dossier "ui". On décoche le HTTPS, on met aucun type d'authentification et "Server" "Per page/component" pour l'interactivité.</p>
+                    <p>On va également ajouter un nouveau projet Bibliothèque de classes Razor nommé "PhotoExplorer.Components" dans le dossier "libs". Dans le dossier "wwwroot" du projet, on copie les dossiers "css" et "images" et on crée un dossier "Layouts" dans lequel on met le fichier "MainLayout.razor".</p>
+                    <p>Maintenant, il faut pas oublier d'ajouter une référence vers le projet "Components" dans le projet "Manager" ainsi que supprimer le répertoire "Layout" et ajouter la ligne suivante dans le fichier "_Imports.razor" :</p>
+<pre><code>@using PhotoExplorer.Components.Layouts</code></pre>
+                    <p>Ainsi que dans le fichier "Routes.razor", le MainLayout pointe bien vers le bon fichier.</p>
+                    <p>Ensuite, on va créer un projet Application WebAssembly Blazor nommé "PhotoExplorer.Explorer" sans "HTTPS" et on va rajouter la référence vers le projet "Components", supprimer le dossier "Layout" et ajouter la ligne dans le "_Imports.razor".</p>
+                    <p>Enfin, on va créer le dernier projet qui est un projet Application .NET MAUI Blazor nommé "PhotoExplorer.Mobile" et ajouter la référence vers le projet "Components". On supprime les dossiers "Data" et "Shared", on supprime les fichiers exemples dans le dossier "Pages" et on ajoute la ligne dans le fichier "_Imports.razor". Dans le "MauiProgram.cs", on va supprimer le lien vers le "Data" et le Service.</p>
+                    <p>Commençons maintenant à créer nos premiers composants. On va créer un composant "PhotoList.razor" dans le projet "Components".</p>
+                    <p>On va créer un dossier "Models" dans le projet "Components" toujours, ajouter une classe photo, copier le JSON d'une photo récupérée depuis l'API et cliquer sur "Édition", "Collage spécial" et "Coller le code JSON en tant que classes". Le résultat final sera :</p>
+<pre><code>namespace PhotoExplorer.Components.Models;
+
+public class Photo
+{
+    public string Id { get; set; }
+    public string Path { get; set; }
+    public string Author { get; set; }
+    public string Description { get; set; }
+}</code></pre>
+                    <p>Dans le fichier "PhotoList.razor.cs", on rajoute un <span class="em">private List&lt;Photo&gt;? _photos;</span>.</p>
+                    <p>Dans le fichier "PhotoList.razor", on aura ceci :</p>
+<pre><code>@if(_photos is null)
+{
+    &lt;div class="d-flex align-items-center justify-content-center"&gt;
+        &lt;h1&gt;Chargement...&lt;/h1&gt;
+    &lt;/div&gt;
+}
+else
+{
+    &lt;div class="row"&gt;
+        @foreach (var photo in _photos)
+        {
+            &lt;div class="card shadow" style="width: 18trm;"&gt;
+                &lt;img src="https://localhost:7198/photos/@photo.Path" class="card-img-top" alt="@photo.Description"&gt;
+                &lt;div class="card-body"&gt;
+                    &lt;h5 class="card-title"&gt;@photo.Description&lt;/h5&gt;
+                    &lt;p class="card-text"&gt;
+                        @photo.Author
+                    &lt;/p&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        }
+    &lt;/div&gt;
+}</code></pre>
+                    <p>On oublie pas de rajouter les liens CDN de Bootstrap dans le fichier "App.razor" ainsi que le lien suivant :</p>
+<pre><code>&lt;link rel="stylesheet" href="_content/PhotoExplorer.Components/css/site.css"/&gt;</code></pre>
+                    <p>Voici l'implémentation du fichier "PhotoList.razor.cs" :</p>
+<pre><code>namespace PhotoExplorer.Components;
+
+public partial class PhotoList
+{
+
+    private List&lt;Photo&gt;? _photos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using (var client = new HttpClient())
+        {
+            _photos = await client.GetFromJsonAsync&lt;List&lt;Photo&gt;&gt;("https://localhost:7198/photos");
+        }
+    }
+}</code></pre>
+                    <p>Attention aux CORS de la WASM où il faut bien indiquer l'URL de la WASM autorisée dans l'API.</p>
+                    
                 </article>
                 <article>
                     <h2 id="ASP.NET_creation_api_web_c#_minimal_apis">ASP.NET : Création d'API Web avec C# et Minimal APIs :</h2>
