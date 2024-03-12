@@ -4019,6 +4019,111 @@ public partial class Game
 &lt;NombreMagique.Components.Game /&gt;</code></pre>
                     <p>Dans le dossier "Shared" du projet Hybrid, je n'ai ni besoin du "MainLayout.razor" ni du "NavMenu.razor" car on va déplacer le "MainLayout.razor" du projet Server. Et je nettoie la notion de Singleton dans le "MauiProgram.cs" qui n'a palus de sens ici.</p>
                     <p>On supprime le fichier CSS et on modifie le fichier "index.html" des projets Hybrid et WASM en ajoutant les liens Bootstrap et la "Bg-Image". Supprimons le loading du WASM.</p>
+                    <h3>Le cycle de vie :</h3>
+                    <p>Quand on tape "override" dans Visual Studio 2022, on voit, en plus des méthodes de la classe Object, les méthodes du cycle de vie.</p>
+                    <p>Lors de l'appel à la méthode <span class="html">SetParametersAsync</span> du cycle de vie, il appelle les méthodes <span class="html">OnInitialized</span>, <span class="html">OnInitializedAsync</span>, <span class="html">OnParametersSet</span> et <span class="html">OnParametersSetAsync</span> du cycle de vie. Il le répète deux fois avant d'appeler les méthodes <span class="html">OnAfterRender</span> et <span class="html">OnAfterRenderAsync</span>.</p>
+                    <p>On peut se demander pourquoi certaines méthodes sont appelées plusieurs fois. C'est la notion de prérendu qui va nous guider sur le chemin de la compréhension de pourquoi c'est appelé plusieurs fois.</p>
+                    <p>En effet, quand un composant Blazor va être invoqué, il va être prérendu. Un composant Blazor doit forcément avoir un constructeur sans paramètres, mais il n'est pas possible de définir un constructeur avec des paramètres en Blazor (en .NET 8 actuellement) parce que le composant Blazor doit être généré dynamiquement par le framework Blazor.</p>
+                    <p>Donc, le premier appel correspond au prérendu et le second appel correspond au rendu effectif quand le composant va commencer à pouvoir être interactif et qu'il va communiquer avec le serveur. C'est uniquement à partir de là qu'on aura le <span class="html">OnAfterRender</span> qui va se mettre en place.</p>
+                    <p>Pour résumer, comprendre le cycle de vie est crucial pour maîtriser le fonctionnement des composants Blazor. Lorsqu'un composant Blazor est invoqué, il subit un processus de prérendu (le composant est rendu sur le serveur et ça permet de générer le contenu HTML initial qui sera renvoyé au navigateur web) suivi du rendu effectif (une fois que le contenu initial est renvoyé au naviagteur client, le composant devient interactif et peut communiquer avec le serveur).</p>
+                    <p>Pour éviter le prérendu dans Blazor Server, dans le fichier App.razor, on doit modifier les Routes pour qu'elles deviennent <span class="html">&lt;Routes @rendermode=@(new InteravtiveServerRenderMode(false))" /&gt;</span>.</p>
+                    <p>Quand on met un <span class="em">await Task.Delay(2000)</span> dans la méthode <span class="em">OnInitializedAsync</span>, on passera par un <span class="em">OnAfterRender</span> entre le début et la fin et on aura un <span class="em">ShouldRnder</span> avant la fin du <span class="em">SetParametersAsync</span>.</p>
+                    <p>Le prerendering existe qu'en Blazor Server et non pas en Web Assembly. Dans cette dernière, on a le <span class="em">ShouldRnder</span> et le <span class="em">OnAfterRender</span> avant la fin du <span class="em">SetParametersAsync</span> et non plus après.</p>
+                    <h3>Les paramètres (routing & composant) :</h3>
+                    <p>Il y a une condition pour qu'on puisse passer un paramètre d'un composant A à un composant B, c'et-à-dire d'un composant parent à un composant enfant : c'est le fait que l'objet que l'on va passer en paramètres puisse être sérialisable. En effet, si on veut passer cette information, il faut que Blazor puisse la sérialiser pour la communiquer par le biais de l'arbre de rendu au composant enfant.</p>
+                    <p>Par exemple, le fichier SubComponent.razor :</p>
+<pre><code>&lt;p&gt;
+    SubComponent : @Data
+&lt;/p&gt;
+@code {
+    [Parameter]
+    public string Data { get; set; }
+}</code></pre>
+                    <p>Il va être appelé  comme ceci dans le composant parent :</p>
+<pre><code>&lt;SubComponent Data="Valeur du composant parent" /&gt;</code></pre>
+                    <p>Pour rendre ce paramètre obligatoire, on doit modifier l'annotation comme ceci :</p>
+<pre><code>[Parameter, EditorRequired]</code></pre>
+                    <p>On peut également extraire un paramètre d'une URL comme par exemple :</p>
+<pre><code>@page "/{Data}"
+
+&lt;p&gt;
+    Infos de route : @Data
+&lt;/p&gt;
+
+@code {
+    [Parameter]
+    public string Data { get; set; }
+}</code></pre>
+                    <p>Si on veut accéder à la page <span class="em">localhost:5283/?Data=toto</span>, on fait ceci :</p>
+<pre><code>@page "/"
+
+&lt;p&gt;
+    Infos de route : @Data
+&lt;/p&gt;
+
+@code {
+    [SupplyParameterFromQuery]
+    public string Data { get; set; }
+}</code></pre>
+                    <p><a href="https://learn.microsoft.com/fr-fr/aspnet/core/fundamentals/routing?view=aspnetcore-8.0&WT.mc_id=DT-MVP-5004836#route-constraints" target="_blank">Voir la documentation de Microsoft pour les contraintes de route.</a></p>
+                    <h3>OnParametersSet :</h3>
+                    <p>Pour rappel, la méthode <span class="html">OnParametersSet</span> est appelée après celle de <span class="html">OnInitialized</span>.</p>
+                    <p>L'affectation des paramètres du composant n'est pas faite par la méthode <span class="html">OnParametersSet</span> mais par la méthode <span class="html">SetParametersAsync</span>.</p>
+                    <p>Si tous les paramètres, de route ou de composant, sont tous initialisés dans la méthode <span class="em">OnInitialized</span>, on est en droit de se poser la question à quoi sert la méthode <span class="em">OnParametersSet</span>.</p>
+                    <p>Cette méthode <span class="em">OnParametersSet</span> sert à réagir aux modifications des paramètres du composant après leur initialisation initiale, c'est-à-dire qu'elle est appelée à chaque fois que les paramètres du composant sont mis à jour.</p>
+                    <h3>OnAfterRender :</h3>
+                    <p>Cette méthode est un peu particulière car, comme son nom l'indique, elle sera exécutée lorsque le composant sera affiché.</p>
+                    <p>On va mettre dans cette méthode tout le code qui va se passer après le rendu du composant. Le paramètre <span class="em">firstRender</span> est à <span class="em">true</span> comme dans l'exemple suivant :</p>
+<pre><code>protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    _steps.Add(nameof(OnAfterRenderAsync));
+    await Console.Write($"OnAfterRenderAsync - DEBUT (First ? {firstRender})");
+
+    if (firstRender)
+    {
+        await Task.Delay(5000);
+        _apiResponse = "Réponse de l'API";
+        StateHasChanged();
+    }
+
+    await base.OnAfterRenderAsync(firstRender);
+    await Console.Write($"OnAfterRenderAsync - FIN (First ? {firstRender})");
+}</code></pre>
+                    <p>Une autre solution que je n'ai pas mentionnée est d'utiliser la méthode <span class="html">StateHasChanged</span> dans le <span class="em">OnInitialized</span> pour provoquer un 1<sup>er</sup> rendu avant votre appel API, mais le résultat est similaire.</p>
+                    <p>Chaque fois que Blazor a détecté qu'une interface doit être rafraîchie, il va appeler la méthode <span class="html">ShouldRender</span> pour savoir si le composant va être rafraîchi en retournant un booléen. Il n'existe pas de méthode qui s'appelle <span class="em">ShouldRenderAsync</span>.</p>
+                    <p>Cela permet au développeur de contrôler finement le rendu des composants en fonction de divers critères tels que l'état interne du composnat, les propriétés qui ont changé ou d'autres conditions métier. En implémentant <span class="em">ShouldRender</span>, vous pouvez optimiser les performances de votre application en évitant les rendus inutiles lorsque le contenu du composant n'a pas changé.</p>
+                    <h3>SetParametersAsync & BuildRenderTree :</h3>
+                    <p>On a vu précédemment que la méthode <span class="em">SetParametersAsync</span> encadre l'appel au cycle d'initialisation de notre composant composé de <span class="em">OnInitialized</span> et de <span class="em">OnParametersSet</span>. Voici son implémentation basique :</p>
+<pre><code>public override async Task SetParametersAsync(ParameterView parameters)
+{
+    await base.SetParametersAsync(parameters);
+}</code></pre>
+                    <p>La méthode <span class="html">BuilderRenderTree</span> est une méthode automatiquement générée par le compilateur qui va lire le code HTML ou plus ou moins le code RAZOR du composant et va construire l'arbre de rendu.</p>
+                    <p>Voici comment ça fonctionne :</p>
+<pre><code>public class ElementsList : ComponentBase
+{
+    [Parameter, EditorRequired]
+    public List&lt;string&gt; Items { get; set; }
+
+    portected override void BuilderRenderTree(RenderTreeBuilder builder)
+    {
+        builder.OpenElement(0, "ul"); // &lt;ul&gt;
+        int sequence = 1;
+        foreach (var item in Items) {
+            builer.OpenElement(sequence, "li"); // &lt;li&gt;
+            builder.AddContent(++sequence, item); // valeur Item
+            builder.CloseElement(); // &lt;/li&gt;
+            sequence++;
+        }
+        builder.CloseElement(); //&lt;/ul&gt;
+    }
+}</code></pre>
+                    <p>Il sera appelé comme ceci :</p>
+<pre><code>&lt;ElementsList Items="_steps" /&gt;</code></pre>
+                    <p>En résumé, en combinant <span class="em">SetParametersAsync</span> pour gérer les mises à jour de paramètres et <span class="em">BuildRenderTree</span> pour constuire l'arbre de rendu, vous avez un moyen puissant de créer des composants Blazor flexibles et dynamiques.</p>
+                    <h3>Dispose :</h3>
+                    <p>Cependant, lorsqu'un composant n'est plus affiché à l'écran, il va se décharger de la mémoire et donc typiquement être détruit dans le sens où la mémoire qu'il utilisait va pouvoir être collectée mais surtout il va devoir nettoyer d'éventuelles ressources qu'il aurait occupées.</p>
+                    <p>On peut implémenter l'interface <span class="html">IDisposable</span> ou <span class="html">IAsyncDisposable</span> et implémenter la méthode <span class="html">public void Dispose()</span> ou la méthode <span class="html">public async ValueTask DisposeAsync()</span> selon si c'est synchrone ou asynchrone.</p>
                 </article>
                 <article>
                     <h2 id="ASP.NET_creation_api_web_c#_minimal_apis">ASP.NET : Création d'API Web avec C# et Minimal APIs :</h2>
@@ -4240,7 +4345,7 @@ app.MapPost("/articles", (Article a, ArticleService service) =&gt;
 });</code></pre>
                     <p>On peut également utiliser l'annotation "<span class="html">FromServices</span>".</p>
                     <h3>Exercice pratique :</h3>
-                    <p>le but du TP est de réaliser un exercice en totale autonomie de A à Z.</p>
+                    <p>Le but du TP est de réaliser un exercice en totale autonomie de A à Z.</p>
                     <p>Ce TP vous fera implémenter une API de gestion des tâches (TodoList).</p>
                     <p>Pour réaliser ce TP dans les meilleures conditions, voici quelques instructions destinées à vous guider :</p>
                     <ol>
