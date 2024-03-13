@@ -4341,7 +4341,7 @@ public partial class PhotoList
 
 }</code></pre>
                     <h3>Déterminer la variante de Blazor dans un composant :</h3>
-                    <p>Pour déterminer la variante de Blazor dans un composant, on peut utiliser le NavigationManager car il est différent d'une variante à l'autre. On peut faire ainsi :</p>
+                    <p>Pour déterminer la variante de Blazor dans un composant, on peut utiliser le NavigationManager, qui varie en fonction de l'environnement d'exécution. Voici deux approches pour obtenir cette information :</p>
 <pre><code>[Inject] private NavigationManager Navigation { get; set; } = default !;
 
 private string _platform = "Inconnue";
@@ -4355,7 +4355,6 @@ protected override void OnInitialized()
         _ =&gt; "Hybrid"
     };
 }</code></pre>
-                    <p>On peut également faire autrement :</p>
 <pre><code>[Inject] private NavigationManager Navigation { get; set; } = default !;
 
 private string _platform = "Blazor Web App Server";
@@ -4407,7 +4406,8 @@ protected override void OnInitialized()
         return "";
     }
 }</code></pre>
-                    <p>En Hybrid, il faut faire un <span class="em">builder.Services.AddScoped(sp =&gt; new HttpClient());</span>.</p>
+                    <p>En Hybrid, il faut faire un service HTTP comme suit :</p>
+<pre><code>builder.Services.AddScoped(sp =&gt; new HttpClient());</code></pre>
                     <h3>Appels HTTP (Blazor Web App) :</h3>
                     <p>Dans notre projet "Server", on va créer la classe "ServerDogsService" :</p>
 <pre><code>public class ServerDogsService : IDogService
@@ -4430,7 +4430,8 @@ protected override void OnInitialized()
         return "";
     }
 }</code></pre>
-                    <p>Dans le "Program.cs" du projet Server, on doit ajouter le <span class="em">builder.Services.AddhttpClient();</span>.</p>
+                    <p>Dans le "Program.cs" du projet Server, nous ajoutons :</p>
+<pre><code>builder.Services.AddhttpClient();</code></pre>
                     <h3>TP 3 : Photo Explorer (v2) :</h3>
                     <p>On va créer le dossier "Services" dans le projet "Components" et on y crée l'interface "IPhotoService" avec la méthode <span class="em">Task&lt;List&lt;Photo&gt;?&gt; GetPhotosFromApi();</span>.</p>
                     <p>Dans le fichier "PhotoList.rajor.cs" de mon projet "Components", on va injecter ce nouveau service :</p>
@@ -4468,8 +4469,115 @@ protected override void OnInitialized()
         return client.GetFromJsonAsync&lt;List&lt;Photo&gt;&gt;("https://localhost:7198/photos");
     }
 }</code></pre>
-                    <p>Pour le projet Hybrid, c'est la même chose. Et pour le projet Server, on aura un IHttpClientFactory come vu précédemment.</p>
-                    
+                    <p>Pour le projet Hybrid, c'est la même chose avec le "HybridPhotoService". Et pour le projet Server, on aura un IHttpClientFactory come vu précédemment.</p>
+                    <p>Ensuite, on va rajouter le contenu du fichier "style.css" à la fin de notre fichier "site.css". On va modifier le fichier "MainLayout.zor" du projet "Components" comme ceci :</p>
+<pre><code>@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+&lt;nav class="navbar mb-5 shadow"&gt;
+    &lt;div class="row"&gt;
+        &lt;a class="navbar-brand" href="/"&gt;
+            &lt;img src="_content/PhotoExplorer.Components/images/logo.png" height="120"&gt;
+        &lt;/a&gt;
+        &lt;span class="app-title"&gt;
+            Photo Explorer
+            @if (NavigationManager.GetType().AssemblyQualifiedName!.Contains("Server", StringComparaison.OrdinalIgnoreCase))
+            {
+                &lt;text&gt;Manager&lt;/text&gt;
+            }
+            else @if (NavigationManager.GetType().AssemblyQualifiedName!.Contains("WebView", StringComparaison.OrdinalIgnoreCase))
+            {
+                &lt;text&gt;Mobile&lt;/text&gt;
+            }
+        &lt;/span&gt;
+    &lt;/div&gt;
+&lt;/nav&gt;
+
+&lt;main&gt;
+    @Body
+&lt;/main&gt;</code></pre>
+                    <p>On va rajouter une nouvelle Task dans notre IPhotoService qu'on va devoir implémenter dans tous les services qui l'implémente :</p>
+<pre><code>Task&lt;Photo?&gt; GetPhotoById(string id);</code></pre>
+<pre><code>public Task&lt;Photo?&gt; GetPhotoById(string id)
+{
+    return client.GetFromJsonAsync&lt;Photo?&gt;("https://localhost:7198/photos/" + id);
+}</code></pre>
+                    <p>Dans le projet WASM, on crée la page de détails nommée tout simplement "Details.razor" :</p>
+<pre><code>public partial class Details
+{
+    [Paramter] public string Id { get; set; }
+
+    [Inject] private IPhotoService PhotoService { get; set; } = default!;
+
+    private Photo? _photo;
+    private bool _error;
+
+    protected override async Task OnInitializedAsync() {
+        var photo = await PhotoService.GetPhotoById(Id);
+        if (photo is not null)
+        {
+            _photo = photo;
+        }
+        else
+        {
+            _error = true;
+        }
+    }
+}</code></pre>
+<pre><code>@page "/photo{id}"
+
+@if (_error)
+{
+    &lt;h1&gt;Une erreur est survenue&lt;/h1&gt;
+    &lt;a href="/"&gt;Retourner à l'index&lt;/a&gt;
+}
+else
+{
+    @if (_photo is null)
+    {
+        &lt;h1&gt;Chargement...&lt;/h1&gt;
+    }
+    else
+    {
+        &lt;div class="card" style="height: 80vh;"&gt;
+            &lt;img src="https://localhost:7198/photos/@_photo.Path" class="card-img-top img-fluid" alt="@_photo.Description"&gt;
+            &lt;div class="card-body text-center"&gt;
+                &lt;h5 class="card-title"&gt;@_photo.Author&lt;/h5&gt;
+                &lt;p class="card-text"&gt;@_photo.Description&lt;/p&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    }
+}</code></pre>
+                    <p>On doit ajouter dans le fichier "PhotoList", la classe CSS "clickable" ainsi qu'un <span class="em">@onclick="() =&gt; ShowDetails(photo.Id)"</span> dans le div contenant la card de la photo :</p>
+<pre><code>[Inject] private NavigationManager Navigation { get; set; } = default!;
+
+private void ShowDetails(string photoId)
+{
+    if (Navigation.GetType().AssemblyQualifiedName!.Contains("WebAssembly", StringComparaison.OrdinalIgnoreCase))
+    {
+        Navigation.NavigateTo("/photo/" + photoId);
+    }
+}</code></pre>
+                    <h3>Les formulaires :</h3>
+                    <p>Dans la quasi totalité des applications web de gestion, on va retrouver des formulaires pour indiquer aux utilisateurs de saisir de la donnée.</p>
+                    <p>Pour débuter, dans notre projet WASM, on va créer un élément "Formulaire.razor" avec un formulaire basique :</p>
+<pre><code>@page "/formulaire"
+
+&lt;h3&gt;Formulaire&lt;/h3&gt;
+
+&lt;form method="post"&gt;
+    &lt;input type="text" placeholder="Nom" /&gt;
+    &lt;input type="submit"&gt;Envoyer&lt;/button&gt;
+&lt;/form&gt;
+
+@code {
+
+    public class Personne
+    {
+        public string Nom { get; set; }
+    }
+
+}</code></pre>
                 </article>
                 <article>
                     <h2 id="ASP.NET_creation_api_web_c#_minimal_apis">ASP.NET : Création d'API Web avec C# et Minimal APIs :</h2>
