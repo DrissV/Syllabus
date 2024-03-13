@@ -4124,7 +4124,7 @@ public partial class Game
                     <h3>Dispose :</h3>
                     <p>Cependant, lorsqu'un composant n'est plus affiché à l'écran, il va se décharger de la mémoire et donc typiquement être détruit dans le sens où la mémoire qu'il utilisait va pouvoir être collectée mais surtout il va devoir nettoyer d'éventuelles ressources qu'il aurait occupées.</p>
                     <p>On peut implémenter l'interface <span class="html">IDisposable</span> ou <span class="html">IAsyncDisposable</span> et implémenter la méthode <span class="html">public void Dispose()</span> ou la méthode <span class="html">public async ValueTask DisposeAsync()</span> selon si c'est synchrone ou asynchrone.</p>
-                    <h3>TP Photo Explorer (v1) :</h3>
+                    <h3>TP 2 : Photo Explorer (v1) :</h3>
                     <p>On va d'abord créer une solution nomée PhotoExplorer avec la ligne de commandes suivante :</p>
 <pre><code>dotnet new sln -n PhotoExplorer</code></pre>
                     <p>Ensuite, on va ajouter trois nouveaux dossiers de solution nommés "api", "libs" et "ui". On va ensuite copier tous les éléments depuis le zip "api" dans un nouveau dossier nommé "PhotoExplorer.Api". Dans la solution, on oublie pas d'ajouter un projet existant dans le dossier "api".</p>
@@ -4191,6 +4191,284 @@ public partial class PhotoList
     }
 }</code></pre>
                     <p>Attention aux CORS de la WASM où il faut bien indiquer l'URL de la WASM autorisée dans l'API.</p>
+                    <h3>La navigation optimisée en Blazor Web App .NET 8 :</h3>
+                    <p>La navigation dans une application Blazor est essentielle pour permettre aux utilisateurs de passer d'une page à une autre de manière fluide.</p>
+                    <p>La balise de base est le <span class="html">&lt;a&gt;</span> qui est, comme en HTML, utilisée pour créer des liens dans une page web. Par exemple suivant :</p>
+<pre><code>&lt;a href="2"&gt;Aller sur la page 2&lt;/a&gt;</code></pre>
+                    <p>C'est la navigation intelligente de Blazor qui fait un <span class="em">fetch</span> en JavaScript en arrière plan.</p>
+                    <p>Si vous voulez désactiver cette navigation intelligente de Blazor pour notamment contrôler le chargement précoce des ressources, il faut modifier le fichier "App.razor" du projet "Components" comme ceci :</p>
+<pre><code>&lt;script src="_framework/blazor.web/js" autostart="false"&gt;&lt;/script&gt;
+&lt;script&gt;
+    Blazor.start({
+        ssr: {
+            disableDomPreservation: true
+        }
+    });
+&lt;/script&gt;</code></pre>
+                    <p>Cette configuration empêchera Blazor de préserver le DOM lors de la navigation, offrant ainsi un contrôle accru sur le chargement des ressoruces.</p>
+                    <p>Microsoft a introduit un composant dédié à la navigation : <span class="html">NavLink</span>. Dans sa méthode <span class="em">BuildRenderTree</span>, ce composant génère une balise <span class="em">&lt;a&gt;</span>.</p>
+                    <p>L'avantage du <span class="em">NavLink</span> par rapport à un <span class="em">a</span> classique est qu'il va gérer pour nous la notion de <span class="em">isActive</span>. En se basant sur Bootstrap, il utilise la classe CSS <span class="em">active</span> mais vous pouvez définir votre propre classe en rajoutant la propriété <span class="html">ActiveClass</span> dans le composant <span class="em">NavLink</span>.</p>
+                    <p>On peut également ajouter des attributs additionnels à ce composant comme dans l'exemple suivant :</p>
+<pre><code>&lt;NavLink ActiveClass="current" AdditionalAttributes="@(new Dictionary&lt;string, object&gt;
+{
+    ["data-active"] = true,
+    ["href"] = "/"
+})"&gt;Aller sur l'accueil&lt;/NavLink&gt;</code></pre>
+                    <p>Ce composant a aussi la notion de <span class="em">Match</span> qui va déterminer le comportement à avoir par rapport à ce lien en particulier. Par exemple, pour la route <span class="em">/personnes/details/1</span>, on peut dire <span class="em">Match="NavLinkMatch.All"</span> pour dire qu'on prend l'URL au complet ou <span class="em">Math="NavLinkMatch.Prefix"</span> pour dire que l'URL <span class="em">/personnes</span> suffit.</p>
+                    <h3>Les services :</h3>
+                    <p>Il faut savoir que <span class="html">NavigationManager</span> est un service fourni par Blazor.</p>
+                    <p>Mais avant tout, il faut savoir qu'est-ce qu'un service. Un service va nous permettre de respecter le principe "SOLID S", c'est-à-dire de délocaliser la responsabilité de faire quelque chose dans une classe qui ne fera que ça.</p>
+                    <p>On va créer dans notre librairie de composants, un nouveau dossier "Services" dans lequel on va ajouter un nouvel élément "IApiService.cs" avec le code suivant :</p>
+<pre><code>public interface IApiService
+{
+    Task&lt;string&gt; GetDataFromApi();
+}</code></pre>
+                    <p>Pour l'appel dans notre fichier, on doit faire :</p>
+<pre><code>[Inject] private IApiService ApiService { get; set; } = default!</code></pre>
+                    <p><span class="em">default!</span> permet de dire qu'il y aura une valeur dans ce ApiService.</p>
+                    <p>Dans notre projet "Blazor Server", on va créer le dossier "Services" avec la classe "ServerApiService.cs" ci-dessous :</p>
+<pre><code>public class ServerApiService : IApiService
+{
+    public async Task&lt;string&gt; GetDataFromApi()
+    {
+        await Task.Delay(1000);
+        return "Valeur API Serveur";
+    }
+}</code></pre>
+                    <p>Dans le "Progam.cs" du projet "Blazor Server", on doit rajouter le service avec la ligne suivante :</p>
+<pre><code>builder.Services.AddSingleton&lt;IApiService, ServerApiService&gt;();</code></pre>
+                    <p>Comme dans le projet "Blazor Server", on doit créer le dossier "Services" et la classe "WASMApiService" dans le projet "WASM" tout en oubliant pas de rajouter ce service dans le "Program.cs".</p>
+                    <p>Dans le projet "Hybrid", il faut faire la même chose, c'est-à-dire la classe "HybridApiService" et son ajout dans "MauiProgram.cs".</p>
+                    <h3>Durée de vie des services (Transient & Singleton) :</h3>
+                    <p>Le Singleton Service aura une instance unique pour toute la durée de vie de l'application mais également pour tous les utilisateurs de l'application.</p>
+                    <p>Le Scoped Service permet de définir un périmètre et le Transient Service est éphémère.</p>
+                    <p>Il faut savoir que si le conteneur gère la construction et l'instanciation de notre service, il va aussi gérer sa destruction/sa durée de vie. Si on ne spécifie rien, la durée de vie du service sera liée à l'utilisation qu'on va en faire et donc sera typiquement collectée par le garbage collector.</p>
+                    <p>On peut tout simplement dire également qu'on veut que le service soit <span class="em">IDisposable</span> pour récrire la fonction <span class="em">Dispose</span>.</p>
+                    <p>Comme le Transient Service est éphémère, ça veut tout simplement dire également qu'il sera détruit dès que le composant sera détruit et il sera reconstruit à chaque demande d'un composant.</p>
+                    <p>Donc, il sera crée et supprimé lors du pré-rendu et fera la même chose pour le rendu effectif.</p>
+                    <p>Attention, un service éphémère peut utiliser un Singleton mais inversement c'est pas possible par ce que le Singleton est créé une seule fois or le service éphémère qu'il prend en paramètre lui devrait être recréé chaque fois donc ce n'est pas possible.</p>
+                    <p>Peu importe l'interactivité (WASM, Hybrid ou Server), le Transient Service sera recrée à chaque fois.</p>
+                    <h3>Le cas particulier de Scoped :</h3>
+                    <p>Selon les variantes de Blazor, on va pas avoir le même résultat avec le Scoped Service.</p>
+                    <p>La variante la plus facile à implémenter avec le Scoped Service est WASM. En Web Assembly, la notion de Scoped va être intimement liée à la session de l'utilisation sur notre application Web Assembly. Donc, Scoped est équivalent à Singleton dans WASM et dans Hybrid.</p>
+                    <p>Dans un projet "Blazor Server", le Scoped Service en interactivité globale va se comporter comme un Singleton par session utilisateur.</p>
+                    <p>Alors que le Scoped Service en interactivité par composants ou sans interactivité sera lié à la durée de vie du composant. Donc, une fois que le render est terminé, le composant est dispose et donc le service avec.</p>
+                    <h3>NavigationManager :</h3>
+                    <p>Le NavigationManager est un Scoped Service injecté automatiquement par le framework Blazor dans nos applications. Donc, on peut l'utiliser n'importe où n'importe quand sans le configurer. C'est également une classe abstraite, c'est-à-dire qu'on aura pas la même instance concrète de cette classe en fonction de la variante de Blazor (Hybrid, Server ou WASM).</p>
+                    <p>Comme c'est un service, il faut pas oublier de l'injecter dans notre code via <span class="em">@innject</span> ou via <span class="em">[Inject]</span>. Le cas tout à fait classique est :</p>
+<pre><code>@inject NavigationManager Navigation
+
+&lt;button @onclick="@(() =&gt; Navigation.NavigateTo("/2"))"&gt;
+    Aller sur la page 2
+&lt;/button&gt;</code></pre>
+                    <p>Attention, contrairement au href et au NavLink, pour que la fonction <span class="em">NavigateTo</span> fonctionne, il est nécessaire d'être en mode interactif.</p>
+                    <p>On peut utiliser la méthode <span class="em">NavigateTo</span> du <span class="em">NavigationManager</span> pour déclencher des transitions entre les pages de manière programmatique.</p>
+                    <p>Le paramètre <span class="em">forceLoad</span> de la méthode <span class="em">NavigateTo</span> va rafraîchir complètement le contexte de notre application. Ça peut être utile pour des problématiques de sécurité avec l'authentification. Ça peut être utile aussi pour pouvoir éventuellement libérer d'éventuelles ressources. Il est défini à <span class="em">false</span> par défaut.</p>
+                    <p>Le paramètre <span class="em">replace</span> de la méthode <span class="em">NavigateTo</span> est défini à <span class="em">false</span> par défaut. Il va simplement remplacer l'élément dans l'historique de navigation sans ajouter une nouvelle entrée.</p>
+                    <p>On a les propriétés <span class="em">BaseUri</span> et <span class="em">Uri</span> du <span class="em">NavigationManager</span>. Ce dernier va aussi nous donner les informations de contexte de notre navigation actuelle. En gros, vous n'aurez pas besoin de faire des appels JavaScript pour dire qu'elle est l'URL de ma page par exemple.</p>
+                    <p>Le code suivant permet de récupérer ce qui est après le BaseUri dans la valeur de la propriété Uri :</p>
+<pre><code>var str = Navigation.ToBaseRelativePath(Navigation.Uri);</code></pre>
+                    <p>En gros, ça permet de remplacer le BaseUri dans l'Uri par une chaîne vide et de stocker cette nouvelle valeur dans la variable str.</p>
+                    <p>La méthode <span class="em">Refresh()</span> pemet de rafraîchir la page actuelle, simulant l'action d'appuyer sur F5 dans le navigateur.</p>
+                    <p>NavigationManager propose la possibilité de passer un état quand on navigue d'un composant à l'autre pour pouvoir justement envoyer des informations sans passer par la notion de paramètres.</p>
+                    <p>La troisième signature de la méthode <span class="em">NavigateTo</span> permet de spécifier des <span class="em">NavigationOptions</span> qui est une structure qui contient les deux booléens vus précédemment (ForceLoad et ReplaceHistoryEntry) mais également le HistoryEntryState. Par exemple :</p>
+<pre><code>@inject NavigationManager Navigation
+
+&lt;button @onclick="@(() =&gt; Navigation.NavigateTo("/2", new NavigationOptions {
+    HistoryEntryState = "contexte de la page 1"
+}))"&gt;
+    Aller sur la page 2
+&lt;/button&gt;</code></pre>
+                    <p>Il propose aussi la possibilité de s'abonner et de mettre du code lorsque l'utilisateur va changer de composant.</p>
+                    <p>Par exemple, dans le fichier "MainLayout" :</p>
+<pre><code>@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+&lt;p&gt;
+    Page courante : @_page
+&lt;/p&gt;
+
+@Body
+
+@code {
+    private string _page = "Index";
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += (s, e) =&gt;
+        {
+            // _page = Navigation.ToBaseRelativePath(e.Location);
+            // StateHasChanged();
+        };
+        Navigation.RegisterLocationChangingHandler(LocationChanged);
+        base.OnInitialized();
+    }
+
+    public async ValueTask LocationChanged(LocationChangingContext context) {
+        _page = context.TargetLocation;
+    }
+}</code></pre>
+                    <p>Enfin, le composant <span class="html">NavigationLock</span> permet de verrouiller la navigation pendant le chargement d'une page, évitant ainsi que l'utilisateur ne navigue à une autre page avant que le chargement en cours soit terminé. Par exemple :</p>
+<pre><code>@page "/2"
+
+&lt;a href="/"&gt;Aller sur la page 1&lt;/a&gt;
+
+&lt;p&gt;
+    Contexte de navigation : @context
+&lt;/p&gt;
+
+&lt;button @onclick="() =&gt; count++"&gt;Compteur : @count&lt;button&gt;
+
+&lt;NavigationLock ConfirmExternalNavigation="@(count &gt; 0)" OnBeforeInternalNavigation="OnBeforeInternalNavigation"&gt;
+&lt;/NavigationLock&gt;
+
+@code {
+    private string? context;
+    private int count;
+
+    protected override void OnInitialized()
+    {
+        context = Navigation.HistoryEntryState;
+        base.OnInitialized();
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        if (count &gt; 0)
+        {
+            context.PreventNavigation();
+        }
+    }
+
+}</code></pre>
+                    <h3>Déterminer la variante de Blazor dans un composant :</h3>
+                    <p>Pour déterminer la variante de Blazor dans un composant, on peut utiliser le NavigationManager car il est différent d'une variante à l'autre. On peut faire ainsi :</p>
+<pre><code>[Inject] private NavigationManager Navigation { get; set; } = default !;
+
+private string _platform = "Inconnue";
+
+protected override void OnInitialized()
+{
+    _platform = Navigation.GetType().AssemblyQualifiedName switch
+    {
+        string s when s.Contains("Server", StringComparaison.OrdinalIgnoreCase) =&gt; "Blazor Web App Server",
+        string s when s.Contains("WebAssembly", StringComparaison.OrdinalIgnoreCase) =&gt; "Blazor WebAssembly",
+        _ =&gt; "Hybrid"
+    };
+}</code></pre>
+                    <p>On peut également faire autrement :</p>
+<pre><code>[Inject] private NavigationManager Navigation { get; set; } = default !;
+
+private string _platform = "Blazor Web App Server";
+
+protected override void OnInitialized()
+{
+    var isWasm = RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
+    if (isWasm)
+    {
+        _platform = "Blazor WebAssembly";
+    }
+    else
+    {
+        var isHybrid = RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) || RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) || RuntimeInformation.IsOSPlatform(OSPlatform.Create("WINDOWS"));
+        _platform = "Blazor Hybrid";
+    }
+}</code></pre>
+                    <h3>Appels HTTP (WASM & Hybrid) :</h3>
+                    <p>Dans le projet de librairie, on crée l'élément "Dogs" qui va afficher une photo d'un client :</p>
+<pre><code>public partial class Dogs
+{
+
+    [Inject] private IDogService DogService { get; set; }
+
+    private string? picture;
+
+    protected override Task OnInitializedAsync() {
+        _picture = await DogService.GetDogImage();
+    }
+}</code></pre>
+                    <p>On crée également un service "IDogService" avec une méthode <span class="em">public async Task&lt;string&gt; getDogImage();</span>.</p>
+                    <p>Dans le projet WASM, on crée le service "WASMDogService" comme ceci :</p>
+<pre><code>public class WASMDogService : IDogService
+{
+    private readonly HttpClient client;
+
+    public WASMDogService(HttpClient client)
+    {
+        this.client = client;
+    }
+
+    public async Task&lt;string&gt; GetDogImage() {
+        var data = await client.GetAsync("https://dog.ceo/api/breeds/image/random");
+        if (data.IsSuccessStatusCode)
+        {
+            JsonDocument doc = JsonDocument.Parse(await data.Content.ReadAsStringAsync());
+            return doc.RootElement.GetProperty("message").GetString();
+        }
+        return "";
+    }
+}</code></pre>
+                    <p>En Hybrid, il faut faire un <span class="em">builder.Services.AddScoped(sp =&gt; new HttpClient());</span>.</p>
+                    <h3>Appels HTTP (Blazor Web App) :</h3>
+                    <p>Dans notre projet "Server", on va créer la classe "ServerDogsService" :</p>
+<pre><code>public class ServerDogsService : IDogService
+{
+    private readonly IHttpClientFactory httpClientFactory;
+
+    public ServerDogsService(IHttpClientFactory httpClientFactory)
+    {
+        this.httpClientFactory = httpClientFactory;
+    }
+
+    public async Task&lt;string&gt; GetDogImage() {
+        using var client = httpClientFactory.CreateClient();
+        var data = await client.GetAsync("https://dog.ceo/api/breeds/image/random");
+        if (data.IsSuccessStatusCode)
+        {
+            JsonDocument doc = JsonDocument.Parse(await data.Content.ReadAsStringAsync());
+            return doc.RootElement.GetProperty("message").GetString();
+        }
+        return "";
+    }
+}</code></pre>
+                    <p>Dans le "Program.cs" du projet Server, on doit ajouter le <span class="em">builder.Services.AddhttpClient();</span>.</p>
+                    <h3>TP 3 : Photo Explorer (v2) :</h3>
+                    <p>On va créer le dossier "Services" dans le projet "Components" et on y crée l'interface "IPhotoService" avec la méthode <span class="em">Task&lt;List&lt;Photo&gt;?&gt; GetPhotosFromApi();</span>.</p>
+                    <p>Dans le fichier "PhotoList.rajor.cs" de mon projet "Components", on va injecter ce nouveau service :</p>
+<pre><code>public partial class PhotoList
+{
+    [Inject] private IPhotoService PhotoService { get; set; } = default!;
+
+    private List&lt;Photo&gt;? _photos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var photos = await PhotoService.GetPhotosFromApi();
+        if (photos is not null)
+        {
+            _photos = photos;
+        }
+        else
+        {
+            _photos = new List&lt;Photo&gt;();
+        }
+    }
+}</code></pre>
+                    <p>Dans le projet WASM, on crée la classe "WASMPhotoService" et on l'ajoute dans le "Program.cs" :</p>
+<pre><code>public class WASMPhotoService : IPhotoService
+{
+    private readonly HttpClient client;
+
+    public WASMPhotoService(HttpClient client)
+    {
+        this.client = client;
+    }
+
+    public Task&lt;List&lt;Photo&gt;?&gt; GetPhotosFromApi()
+    {
+        return client.GetFromJsonAsync&lt;List&lt;Photo&gt;&gt;("https://localhost:7198/photos");
+    }
+}</code></pre>
+                    <p>Pour le projet Hybrid, c'est la même chose. Et pour le projet Server, on aura un IHttpClientFactory come vu précédemment.</p>
                     
                 </article>
                 <article>
@@ -4211,7 +4489,7 @@ public partial class PhotoList
                         </li>
                     </ul>
                     <h3>Introduction :</h3>
-                    <p>API veut dire Application Porgammong Interface.</p>
+                    <p>API veut dire <q>Application Programming Interface</q>.</p>
                     <p>Le rôle d'une API est d'exposer du comportement métier à d'autres applications.</p>
                     <p>La communication d'une API peut se faire :</p>
                     <ul>
