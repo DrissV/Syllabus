@@ -4565,19 +4565,69 @@ private void ShowDetails(string photoId)
 
 &lt;h3&gt;Formulaire&lt;/h3&gt;
 
-&lt;form method="post"&gt;
-    &lt;input type="text" placeholder="Nom" /&gt;
+&lt;form method="post" @formname="personne_infos" @onsubmit="OnSubmit"&gt;
+    &lt;input type="text" placeholder="Nom" @bind-Value="Model.Nom" /&gt;
     &lt;input type="submit"&gt;Envoyer&lt;/button&gt;
 &lt;/form&gt;
 
-@code {
+@if (!string.IsNullOrEmpty(_nomPersonne))
+{
+    &lt;h2&gt;Le nom est @_nomPersonne&lt;/h2&gt;
+}</code></pre>
+<pre><code>public partial class Formulaire
+{
+    [SupplyParameterFromForm]
+    public Personne? Model { get; set; }
 
-    public class Personne
+    private string? _nomPersonne;
+
+    protected override void OnInitialized()
     {
-        public string Nom { get; set; }
+        Model ??= new Personne();
+    }
+
+    pivate async Task OnSubmit()
+    {
+        _nomPersonne = Model.Nom;
     }
 
 }</code></pre>
+                    <p><span class="em">[SupplyParameterFromForm]</span> indique que ce modèle va être enrichi par les données envoyées par le formulaire. Depuis .NET 8, on est obligé de nommer notre formulaire via le <span class="em">@formname</span>.</p>
+                    <p>On va créer le dossier "Models" dans lequel on crée la classe "Personne" sans oublier de rajouter un <span class="em">@using</span> dans le fichier <span class="em">_Imports.razor</span> de ce dossier :</p>
+<pre><code>public class Personne
+{
+    public string Nom { get; set; }
+}</code></pre>
+                    <p>Ce sera la même chose pour un projet Hybrid mais pas pour un projet Server qu'on va voir juste après.</p>
+                    <h3>La gestion côté serveur des formulaires :</h3>
+                    <p>Dans le projet Server, lorsqu'on utilse ce formulaire, ce dernier nous renvoie une erreur : <q>A valid antiforgery token was not provided with the request. Add an antiforgery token, or disable antiforgery validation for this endpoint.</q></p>
+                    <p>Cette erreur nous dit qu'un antiforgery token n'a pas été envoyé avec la requête. On a deux stratégies : soit on en ajoute un ou soit on le désactive.</p>
+                    <p>La stratégie que je ne vous recommande est de désactiver l'antiforgery car ça enlève un mécanisme de sécurité mais on le fait comme ceci :</p>
+<pre>@using Microsoft.AspNetCore.Antiforgery
+@rendermode RenderMode.InteractiveServer
+@attribute [RequireAntiforgeryToken(required: false)]</pre>
+                    <p>Pour la seconde stratégie, on doit ajouter un composant <span class="html">&lt;AntiforgeryToken /&gt;</span> dans la balise <span class="em">&lt;form&gt;</span> du formulaire qui est en fait un <span class="em">input:hidden</span></p>
+                    <h3>Le composant EditForm :</h3>
+                    <p>Blazor nous met à disposition un composant de formulaire qui contient déjà ce genre d'éléments : <span class="html">EditForm</span>.</p>
+                    <p>La notion de validation est très importante dans les formulaires. On peut le faire manuellement mais l'<span class="em">EditForm</span> le fait également.</p>
+                    <p>Voici comment transformer notre <span class="em">&lt;form&gt;</span> en <span class="em">EditForm</span> :</p>
+<pre><code>&lt;EditForm FormName="personne_infos" OnValidSubmit="OnSubmit" Model="Model"&gt;
+    &lt;DataAnnotationsValidator /&gt;
+    &lt;ValidationSummary /&gt;
+    &lt;input type="text" placeholder="Nom" @bind-Value="Model.Nom" /&gt;
+    &lt;ValidationMessage For="() =&gt; Model.Nom" /&gt;
+    &lt;input type="submit"&gt;Envoyer&lt;/button&gt;
+&lt;/EditForm&gt;</code></pre>
+                    <p>Il existe plusieurs composants pour remplacer les inputs classiques du HTML comme par exemple le <span class="html">InputText</span>. Pour la validation, on doit modifier la classe Personne :</p>
+<pre><code>using System.ComponentModel.DataAnnotations;
+
+public class Personne
+{
+    [Required(AllowEmptyStrings = false, ErrorMessage = "Le nom est requis")]
+    [StringLength(256, MinimumLength = 3)]
+    public string Nom { get; set; }
+}</code></pre>
+                    <h3></h3>
                 </article>
                 <article>
                     <h2 id="ASP.NET_creation_api_web_c#_minimal_apis">ASP.NET : Création d'API Web avec C# et Minimal APIs :</h2>
@@ -5258,7 +5308,7 @@ public DbSet&lt;FilmUtilisateur&gt; FilmsUtilisateur { get; set; }</code></pre>
 {
     options.SignIn.RequireConfirmedAccount = true;
 }).AddEntityFrameworkStores&lt;ApplicationDbContext&gt;().AddDefaultTokenProviders();</code></pre>
-                    <p>Remarquez le changement de IdentityUser à Utilisateur dans la configuration du service Identity. Cette modication permettra à .NET Identity d'utiliser votre classe Utilisateur pour tous les processus et services Identity; comme la configuration de UserMangaer et SignINManager.</p>
+                    <p>Remarquez le changement de IdentityUser à Utilisateur dans la configuration du service Identity. Cette modication permettra à .NET Identity d'utiliser votre classe Utilisateur pour tous les processus et services Identity; comme la configuration de UserMangaer et SignInManager.</p>
                     <p>ASP.NET Core Identity offre de nombreuses options de configuration pour personnaliser son comportement. Voici quelques-unes des options disponibles dans <span class="html">IdentityOptions</span> que vous pouvez configurer dans votre fichier <span class="em">Program.cs</span> :</p>
 <pre><code>// Cofiguration des options Identity dans ConfigureServices
 builder.Services.Configure&lt;IdentityOptions&gt;(options =&gt;
