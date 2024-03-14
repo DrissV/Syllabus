@@ -4618,7 +4618,7 @@ private void ShowDetails(string photoId)
     &lt;ValidationMessage For="() =&gt; Model.Nom" /&gt;
     &lt;input type="submit"&gt;Envoyer&lt;/button&gt;
 &lt;/EditForm&gt;</code></pre>
-                    <p>Il existe plusieurs composants pour remplacer les inputs classiques du HTML comme par exemple le <span class="html">InputText</span>. Pour la validation, on doit modifier la classe Personne :</p>
+                    <p>Il existe plusieurs composants pour remplacer les inputs classiques du HTML comme par exemple le <span class="html">InputText</span> (voir plus d'explications un peu plus loin). Pour la validation, on doit modifier la classe Personne :</p>
 <pre><code>using System.ComponentModel.DataAnnotations;
 
 public class Personne
@@ -4627,7 +4627,114 @@ public class Personne
     [StringLength(256, MinimumLength = 3)]
     public string Nom { get; set; }
 }</code></pre>
-                    <h3></h3>
+                    <h3>Validation avec FluentValidation :</h3>
+                    <p>Les annotations <span class="em">[Required]</span> et <span class="em">[Stringlength]</span> utilisés précédemment sont biens simples mais incomplexes.</p>
+                    <p>Dès lors qu'on veut mettre des processus de validation beaucoup plus poussés et avancés, elles sont très vite insuffisantes.</p>
+                    <p>Avec ceux-là, il est tout à fait impossible de faire une validation asynchrone. On peut le faire avec <span class="html">FluentValidation</span> qu'on va installer dans les packages NuGet.</p>
+                    <p>Comment ça fonctionne ? On va ajouter des classes de validation dans un nouveau dossier nommé "Validation". On va crée une classe par modèle. Par exemple, une classe "PersonneValidator" :</p>
+<pre><code>using FluentValidation;
+
+public class PersonneValidator : AbstractValidator&lt;Personne&gt;
+{
+    public PersonneValidator()
+    {
+        RuleFor(p =&gt; p.Nom)
+            .NotEmpty().WithMessage("Le nom est requis")
+            .MinimumLength(3).WithMessage("La taille minimale est de 3 caractères")
+            .MaximumLength(256).WithMessage("La taille maximale est de 256 caractères");
+    }
+}</code></pre>
+                    <p>Pour dire que le EditForm prenne en compte la nouvelle validation via FluentValidation, il faut installer le package NuGet "Blazored.FluentValidation" et faire ceci :</p>
+<pre><code>&lt;EditForm FormName="personne_infos" OnValidSubmit="OnSubmit" Model="Model"&gt;
+    &lt;Blazored.FluentValidation.FluentValidationValidator DisableAssemblyScanning="true" /&gt;
+    &lt;InputText placeholder="Nom" @bind-Value="Model.Nom" /&gt;
+    &lt;ValidationMessage For="() =&gt; Model.Nom" /&gt;
+    &lt;input type="submit"&gt;Envoyer&lt;/button&gt;
+&lt;/EditForm&gt;</code></pre>
+                    <p>Dans notre "Program.cs", on doit pas oublier d'ajouter le service de validation :</p>
+<pre><code>builder.Services.AddScoped&lt;IValidator&lt;Personne&gt; PersonneValidator&gt;();</code></pre>
+                    <h3>Les différents types de champs de saisie :</h3>
+                    <p>J'ai modifié le modèle pour que vous puissiez voir les différents types de champs de saisie existants en Blazor dans un EditForm :</p>
+<pre><code>public enum Sexe
+{
+    Home,
+    Femme
+}
+
+public class Personne
+{
+    public string Nom { get; set; }
+    public string Bio { get; set; }
+    public int Age { get; set; }
+    public bool VIP { get; set; }
+    public Sexe Sexe { get; set; }
+    public DateTime DateNaissance { get; set; }
+    public string Pays { get; set; }
+}</code></pre>
+                    <p>On va ensuite modifier notre formulaire :</p>
+<pre><code>&lt;EditForm FormName="personne_infos" OnValidSubmit="OnSubmit" Model="Model"&gt;
+    &lt;Blazored.FluentValidation.FluentValidationValidator DisableAssemblyScanning="true" /&gt;
+    &lt;InputText placeholder="Nom" @bind-Value="Model.Nom" /&gt;
+    &lt;ValidationMessage For="() =&gt; Model.Nom" /&gt;
+    &lt;br /&gt;
+    Bio : &lt;InputTextArea @bind-Value="Model.Bio" rows="5" /&gt;
+    &lt;br /&gt;
+    Age : &lt;InputNumber @bind-Value="Model.Age" step="1" min="0" max="120" /&gt;
+    &lt;br /&gt;
+    VIP : &lt;InputCheckbox @bind-Value="Model.VIP" /&gt;
+    &lt;br /&gt;
+    Sexe :
+    &lt;InputRadioGroup @bind-Value="Model.Sexe"&gt;
+        &lt;InputRadio Value="Sexe.Homme"&gt;&lt;/InputRadio&gt; Homme
+        &lt;InputRadio Value="Sexe.Femme"&gt;&lt;/InputRadio&gt; Femme
+    &lt;/InputRadioGroup&gt;
+    &lt;br /&gt;
+    Date Naissance : &lt;InputDate @bind-Value="Model.DateNaissance" /&gt;
+    &lt;br /&gt;
+    Pays :
+    &lt;InputSelect @bind-Value="Model.Pays"&gt;
+        &lt;option value=""&gt;&lt;/option&gt;
+        &lt;option value="France"&gt;France&lt;/option&gt;
+        &lt;option value="Belgique"&gt;Belgique&lt;/option&gt;
+        &lt;option value="Suisse"&gt;Suisse&lt;/option&gt;
+        &lt;option value="Canada"&gt;Canada&lt;/option&gt;
+    &lt;/InputSelect&gt;
+    &lt;input type="submit"&gt;Envoyer&lt;/button&gt;
+&lt;/EditForm&gt;</code></pre>
+                    <h3>Comprendre le data-binding :</h3>
+                    <p>Il faut que la propriété soit bindable pour utiliser le <span class="em">@bind-Value</span>. C'est un <span class="em">two-way</span> donc ça récupère la valeur de la propriété mais également la modifie.</p>
+                    <p>C'est avec l'événement <span class="em">onchange</span> que le binding se fait par défaut mais on peut le changer comme ceci :</p>
+<pre><code>&lt;input type="text" placeholder="Nom" @bind-Value="Model.Nom" @bind-Value:event="oninput" /&gt;</code></pre>
+                    <h3>Un cas particulier : InputFile :</h3>
+                    <p>L'<span class="em">InputFile</span> est différent des autres champs de saisie car il n'y a rien à binder dedans et donc il n'existe pas de <span class="em">@bind-Value</span>.</p>
+                    <p>On doit créer une propriété <span class="em">_imageBase64</span> et une méthode <span class="em">OnFileChosen</span> :</p>
+<pre><code>private string? _imageBase64;
+
+private async Task OnFileChosen(InputFileChangeEventArgs args)
+{
+    using (var stream = args.File.OpenStream())
+    {
+        using (var memStream = new MemoryStream())
+        {
+            await stream.CopyToAsync(memStream);
+            memStream.Position = 0;
+            _imageBase64 = Convert.ToBase64String(memStream.ToArray());
+        }
+    }
+}</code></pre>
+<pre><code>Photo : &lt;InputFile accpt="image/*" OnChange="" /&gt;
+&lt;br /&gt;
+@if (!string.IsNullOrEmpty(_imageBase64))
+{
+    &lt;img width="100" src="data:image/png;base64, @_imageBase64" /&gt;
+}</code></pre>
+                    <p>Pour sélectionner plusieurs fichiers, on doit mettre l'attribut <span class="em">multiple</span> dans le <span class="em">InputFile</span> et modifier la fonction <span class="em">OnFileChosen</span> :</p>
+<pre><code>private async Task OnFileChosen(InputFileChangeEventArgs args)
+{
+    var list = args.GetMultipleFiles(5);
+}</code></pre>
+                    <h3>TP 4 : Photo Explorer Mobile :</h3>
+                    
                 </article>
                 <article>
                     <h2 id="ASP.NET_creation_api_web_c#_minimal_apis">ASP.NET : Création d'API Web avec C# et Minimal APIs :</h2>
