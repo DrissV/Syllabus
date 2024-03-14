@@ -4722,7 +4722,7 @@ private async Task OnFileChosen(InputFileChangeEventArgs args)
         }
     }
 }</code></pre>
-<pre><code>Photo : &lt;InputFile accpt="image/*" OnChange="" /&gt;
+<pre><code>Photo : &lt;InputFile accpt="image/*" OnChange="OnFileChosen" /&gt;
 &lt;br /&gt;
 @if (!string.IsNullOrEmpty(_imageBase64))
 {
@@ -4734,7 +4734,153 @@ private async Task OnFileChosen(InputFileChangeEventArgs args)
     var list = args.GetMultipleFiles(5);
 }</code></pre>
                     <h3>TP 4 : Photo Explorer Mobile :</h3>
-                    
+                    <p>Ce TP sera l'occassion de mettre en pratique ce qu'on a vu avec les formulaires. On va ajouter le projet existant "PhotoExplorer.Models" dans le dossier de solution "libs" et ajouter les références vers ce dossier dans les autres projets.</p>
+                    <p>On va créer une page "Edit.razor" dans le projet Server :</p>
+<pre><code>@page "/edit/{id}"
+&lt;div class="card shadow"&gt;
+    &lt;div class=card-body"&gt;
+    @if (_photo is null)
+    {
+        &lt;p&gt;Chargement...&lt;/p&gt;
+    }
+    else
+    {
+        &lt;div class="row"&gt;
+            &lt;div class="col-6"&gt;
+                &lt;EditForm Model="_photo" OnValidSubmit="SavePhoto"&gt;
+                    &lt;Blazored.FluentValidation.FluentValidationValidator DisableAssemblyScanning="true" /&gt;
+                    &lt;div class="mb-3"&gt;
+                        &lt;label for="input_author" class="form-label"&gt;Auteur&lt;/label&gt;
+                        &lt;InputText class="form-control" id="input_author" placeholder="Auteur" @bind-Value="_photo.Author" /&gt;
+                    &lt;/div&gt;
+                    &lt;div class="mb-3"&gt;
+                        &lt;label for="input_description" class="form-label"&gt;Description&lt;/label&gt;
+                        &lt;InputText class="form-control" id="input_description" placeholder="Description" @bind-Value="_photo.Description" /&gt;
+                    &lt;/div&gt;
+                    &lt;div class="mb-3"&gt;
+                        &lt;InputCheckbox @bind-Value="_photo.Published" class="form-check-input" id="input_published" /&gt;
+                        &lt;label class="form-check-label" for="input_published"&gt;
+                            Publiée
+                        &lt;/label&gt;
+                    &lt;/div&gt;
+                    &lt;div class="mb-3"&gt;
+                        &lt;button class="btn btn-warning" type="submit"&gt;Mettre à jour&lt;/button&gt;
+                    &lt;/div&gt;
+                &lt;/EditForm&gt;
+            &lt;/div&gt;
+            &lt;div class="col-6"&gt;
+                &lt;img src="https://localhost:7198/photos/@_photo.Path" class="img-fluid" /&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    }
+&lt;/div&gt;</code></pre>
+<pre><code>public partial class Edit
+{
+    [Parameter]
+    public string Id { get; set; }
+
+    [Inject] private IPhotoService PhotoService { get; set; } = default!;
+
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+
+    private Photo? _photo;
+
+    protected override Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(Id))
+        {
+            _photo = await PhotoService.GetPhotoById(Id);
+        }
+        if (_photo is null)
+        {
+            NavigationManager.NavigateTo("/", replace: true);
+        }
+    }
+
+    private async Task SavePhoto()
+    {
+        if (_photo is null) return;
+        
+        var model = new PhotoUpdateModel
+        {
+            Author = _photo.Author,
+            Description = _photo.Description,
+            Published = _photo.Published
+        };
+
+        await PhotoService.Update(Id, model);
+        NavigationManager.NavigateTo("/");
+    }
+}</code></pre>
+                    <p>On va ajouter une nouvelle méthode dans l'interface <span class="em">IPhotoService</span> : <span class="em">Task Update(string id, PhotoUpdateModel model);</span>. Il faut aussi une méthode <span class="em">Delete</span>. Il faut pas implémenter dans le "ServerPhotoService" :</p>
+<pre><code>public async Task Update(string id, PhotoUpdateModel model)
+{
+    using var httpClient = factory.CreateClient("api");
+    await httpClient.PutAsJsonAsync("photos/" + id, model);
+}
+
+public async Task Delete(string id)
+{
+    using var httpClient = factory.CreateClient("api");
+    await httpClient.DeleteAsync("photos/" + id);
+}</code></pre>
+                    <p>Ensuite, dans le projet Components, on crée un élément nommé "PlatformService" :</p>
+<pre><code>public enum BlazorPlatform
+{
+    Server,
+    WebAssembly,
+    Hybrid
+}
+
+public class PlatformService
+{
+
+    public BlazorPlatform Platform { get; }
+
+    public PlatformService(NavigationManager navigation)
+    {
+        Platform = navigation.GetType().FullName switch
+        {
+            string s when s.Contains(".Server.") =&gt; BlazorPlatform.Server,
+            string s when s.Contains(".WebAssembly.") =&gt; BlazorPlatform.WebAssembly,
+            _ =&gt; BlazorPlatform.Hybrid,
+        };
+    }
+}</code></pre>
+                    <p>Ensuite, après ajouter en Scoped le service dans "Program.cs", dans le fichier "PhotoList", on l'injecte, on modifie la méthode ShowDetails et on ajoute les méthodes Edit et Delete :</p>
+<pre><code>private void ShowDetails(string photoId)
+{
+    if (PlatformService.PlatformService == BlazorPlatform.WebAssembly)
+    {
+        NavigationManager.NavigateTo("/photo/" + photoId);
+    } else if (PlatformService.PlatformService == BlazorPlatform.Server)
+    {
+        NavigationManager.NavigateTo("/edit/" + photoId);
+    }
+}
+
+private void Edit(string photoId) =&gt; NavigationManager.NavigateTo("/edit/" + photoId);
+
+private async Task Delete(string photoId)
+{
+    await PhotoService.Delete(photoId);
+    _photos!.RemoveAll(p => p.Id == photoId);
+}</code></pre>
+                    <p>Dans le fichier "PhotoList", on déplace le @onclick sur l'image et on rajoute les boutons pour supprimer et éditer des photos :</p>
+<pre><code>@if (PlatformService.Platform == BlazorPlatform.Server)
+{
+    &lt;a @onclick="() =&gt; Delete(photo.Id)" class="btn btn-danger"&gt;
+        &lt;i class="fa fa-solid fa-trash-can"&gt;&lt;/i&gt;
+    &lt;/a&gt;
+    &lt;a @onclick="() =&gt; Edit(photo.Id)" class="btn btn-warning"&gt;
+        &lt;i class="fa fa-regular fa-pen-to-square"&gt;&lt;/i&gt;
+    &lt;/a&gt;
+}
+else if (PlatformService.Platform == BlazorPlatform.WebAssembly)
+{
+    &lt;a @onclick="() =&gt; ShowDetails(photo.Id)" class="btn btn-primary"&gt;&lt;i class="far fa-eye"&gt;&lt;/i&gt;&lt;/a&gt;
+}</code></pre>
+                    <h3></h3>
                 </article>
                 <article>
                     <h2 id="ASP.NET_creation_api_web_c#_minimal_apis">ASP.NET : Création d'API Web avec C# et Minimal APIs :</h2>
