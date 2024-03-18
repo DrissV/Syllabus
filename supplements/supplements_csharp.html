@@ -4880,7 +4880,145 @@ else if (PlatformService.Platform == BlazorPlatform.WebAssembly)
 {
     &lt;a @onclick="() =&gt; ShowDetails(photo.Id)" class="btn btn-primary"&gt;&lt;i class="far fa-eye"&gt;&lt;/i&gt;&lt;/a&gt;
 }</code></pre>
-                    <h3></h3>
+                    <p>Dans le projet Hybrid, on crée un composant "Create" qui permettra de rajouter une photo dans la liste avec le flag "non publiée" :</p>
+<pre><code>@page "/new"
+
+&lt;h3&gt;Create&lt;/h3&gt;
+
+&lt;div class="card shadow"&gt;
+    &lt;div class=card-body"&gt;
+    @if (_photo is null)
+    {
+        &lt;p&gt;Chargement...&lt;/p&gt;
+    }
+    else
+    {
+        &lt;EditForm Model="_photo" OnValidSubmit="SavePhoto"&gt;
+            &lt;Blazored.FluentValidation.FluentValidationValidator DisableAssemblyScanning="true" /&gt;
+            &lt;div class="mb-3"&gt;
+                &lt;label for="input_author" class="form-label"&gt;Auteur&lt;/label&gt;
+                &lt;InputText class="form-control" id="input_author" placeholder="Auteur" @bind-Value="_photo.Author" /&gt;
+                &lt;small&gt;&lt;ValidationMessage For="() =&gt; _photo.Author" /&gt;&lt;/small&gt;
+            &lt;/div&gt;
+            &lt;div class="mb-3"&gt;
+                &lt;label for="input_description" class="form-label"&gt;Description&lt;/label&gt;
+                &lt;InputText class="form-control" id="input_description" placeholder="Description" @bind-Value="_photo.Description" /&gt;
+                &lt;small&gt;&lt;ValidationMessage For="() =&gt; _photo.Description" /&gt;&lt;/small&gt;
+            &lt;/div&gt;
+            &lt;div class="mb-3"&gt;
+                &lt;label for="input_photo" class="form-label"&gt;Fichier&lt;/label&gt;
+                &lt;InputFile class="form-control" type="file" id="input_photo" OnChange="OnPhotoUpload" /&gt;
+            &lt;/div&gt;
+            &lt;div class="mb-3"&gt;
+                &lt;button class="btn btn-warning" type="submit"&gt;Mettre à jour&lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/EditForm&gt;
+        @if (!string.IsNullOrEmpty(_photoBase64String))
+        {
+            &lt;div class="mb-3"&gt;
+                &lt;img class="img-fluid" height="400" src="data:image/png;base64,@_photoBase64String" /&gt;
+            &lt;/div&gt;
+        }
+    }
+&lt;/div&gt;</code></pre>
+<pre><code>public partial Create
+{
+
+    [Inject] IMobileService PhotoService { get; set; } = default!;
+    [Inject] NavigationManager Navigation { get; set; } = default!;
+
+    private Photo _photo = new();
+    private string? _photoBase64String;
+    private string? _name;
+
+    private async Task SavePhoto()
+    {
+        if (string.IsNullOrEmpty(_photoBase64String)) return;
+
+        var model = new PhotoUploadModel
+        {
+            Author = _photo.Author,
+            Description = _photo.Description,
+            Base64Content = _photoBase64String,
+            Name = _name
+        };
+
+
+        await PhotoService.Create(model);
+        Navigation.NavigateTo("/");
+    }
+
+    private async Task OnPhotoUpload(InputFileChangeEventArgs args)
+    {
+        using var stream = args.File.OpenReadStream();
+        using var memStream = new MemoryStream();
+
+        await stream.CopyToAsync(memStream);
+        memStream.Position = 0;
+
+        _photoBase64String = Convert.ToBase64String(memStream.ToArray());
+        _name = args.File.Name;
+    }
+}</code></pre>
+                    <p>Dans "PhotoList", on doit ajouter le lien vers cette page :</p>
+<pre><code>@if (PlatformService.Platform == BlazorPlatform.Hybrid)
+{
+    &lt;div class="row"&gt;
+        &lt;div class="col-auto"&gt;
+            &lt;a href="/new" class="btn btn-warning"&gt;Ajouter une photo&lt;/a&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+}</code></pre>
+                    <p>Dans le projet "Server", il faut faire un nouveau service "IManagerPhotoService" et on y déplace les méthode Update et Delete :</p>
+<pre><code>public interface IManagerPhotoService : IPhotoService
+{
+    Task Update(string id, PhotoUpdateModel model);
+    Task Delete(string id);
+}</code></pre>
+                    <p>Ainsi le ServerPhotoService implétementera uniquement le IManagerPhotoService et donc dans le "Edit" on remplace le "IPhotoService" par le "IManagerPhotoService". Dans le "Program.cs", on fait un lien entre le IManagerPhotoService et le ServerPhotoService.</p>
+                    <p>Dans le projet Hybrid, on crée l'interface "IMobilePhotoService" :</p>
+<pre><code>public interface IMobilePhotoService : IPhotoService
+{
+    Task&lt;Photo?&gt; Create(PhotoUploadModel model);
+}</code></pre>
+                    <p>Dans le HybridPhotoService, on va implémenter le IMobilePhotoService et plus le IPhotoService et on va créer la fonction Create :</p>
+<pre><code>public async Task&lt;Photo?&gt; Create(PhotoUploadModel model)
+{
+    var result = await client.PostAsJsonAsync("https://localhost:7198/photos/", model);
+    if (result.IsSuccessStatusCode)
+    {
+        return JsonSerializer.Deserialize&lt;Photo&gt;(await result.Content.ReadAsStringAsync());
+    }
+    return null;
+}</code></pre>
+                    <p>Dans le projet Server, on a un nouveau composant "Delete" :</p>
+<pre><code>@page "/delete/{id}"
+@inject NavigationManager Navigation
+
+&lt;h3&gt;Confirmez-vous la suppression de la photo ?&lt;/h3&gt;
+&lt;div class="row"&gt;
+    &lt;div class="col"&gt;
+        &lt;a @onclick="DeletePhoto" class="btn btn-error"&gt;Oui&lt;/a&gt;
+    &lt;/div&gt;
+    &lt;div class="col"&gt;
+        &lt;a @onclick="() =&gt; Navigation.NavigateTo("/")" class="btn btn-warning"&gt;Non&lt;/a&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [Inject] private IManagerPhotoService PhotoService { get; set; } = default!;
+
+    private async Task DeletePhoto()
+    {
+        await PhotoService.Delete(Id);
+        Navigation.NavigateTo("/");
+    }
+}</code></pre>
+                    <p>Dans la PhotoList, on doit modifier la fonction Delete comme ceci :</p>
+<pre><code>private void Delete(string photoId) =&gt; Navigation.NavigateTo("/delete" + photoId);</code></pre>
+                    <p>Dans le projet Server, on va devoir ajouter une barre de recherches pour afficher toutes les photos, seulement celles publiées ou encore celles non publiées.</p>
                 </article>
                 <article>
                     <h2 id="ASP.NET_creation_api_web_c#_minimal_apis">ASP.NET : Création d'API Web avec C# et Minimal APIs :</h2>
