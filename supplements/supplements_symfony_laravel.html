@@ -350,11 +350,16 @@ homepage:
         private float $price;
 
         #[ORM\Column(type: 'datetime_immutable')]
-        private ?\DateTimeImmutable $createdAt;
+        private \DateTimeImmutable $createdAt;
 
         public function __construct()
         {
             $this->createdAt = new \DateTimeImmutable();
+        }
+
+        public function __toString()
+        {
+            return $this-&gt;name;
         }
 
         public function getId(): ?int
@@ -416,11 +421,16 @@ homepage:
 
         #[ORM\Column(type: 'datetime_immutable')]
         #[Assert\NotNull()]
-        private ?\DateTimeImmutable $createdAt;
+        private \DateTimeImmutable $createdAt;
 
         public function __construct()
         {
             $this->createdAt = new \DateTimeImmutable();
+        }
+
+        public function __toString()
+        {
+            return $this-&gt;name;
         }
 
         public function getId(): ?int
@@ -443,6 +453,7 @@ homepage:
     }
 
 ?&gt;</code></pre>
+                    <h3>Étape 8 : Création des Fixtures :</h3>
                     <p>Dans la suite de ce tutoriel, on va créer des fixtures qui permettent de nous générer un jeu de fausses données comme un Faker.</p>
                     <p>Pour faire cela, on va installer les packages en développement :</p>
 <pre><code>composer require --dev orm-fixtures</code></pre>
@@ -473,6 +484,7 @@ homepage:
 
         public function load(ObjectManager $manager): void
         {
+            // Ingredients
             for ($i = 0; $i &lt; 50; $i++) {
                 $ingredient = new Ingredient();
                 $ingredient-&gt;setName($this-&gt;faker-&gt;word())-&gt;setPrice(mt_rand(0, 100));
@@ -489,10 +501,12 @@ homepage:
 <pre><code>php bin/console doctrine:fixtures:load</code></pre>
                     <p>Ou encore avec la commande abrégée :</p>
 <pre><code>php bin/console d:f:l</code></pre>
+                    <h3>Étape 9 : CRUD sur la table "Ingredient" :</h3>
                     <p>Maintenant, on va enfin faire des CRUD sur la table "Ingredient". D'abord, on va afficher la liste des ingrédients.</p>
                     <p>Premièrement, on va créer un nouveau contrôleur "IngredientController" avec la commande :</p>
 <pre><code>php bin/console make:controller IngredientController</code></pre>
                     <p>Remarque : Ça va créer le fichier <span class="em">`templates/ingredient/index.html.twig`</span>, mais, pour faire un peu le ménage, on va créer un dossier "pages" et donc on va y insérer dedans le dossier "ingredient".</p>
+                    <h4>Lister tous les ingrédients :</h4>
                     <p>Modifions la fonction "index" de notre contrôleur fraîchement créé :</p>
 <pre><code>#[Route('/ingredient', name: 'ingredient', methods: ['GET'])]
 public function index(IngredientRepository $repository) : Response
@@ -589,6 +603,7 @@ public function index(IngredientRepository $repository, PaginatorInterface $pagi
     {{ knp_pagination_render(ingredients) }}
 &lt;/div&gt;</code></pre>
                     <p>On peut faire un <span class="html">{% if not ingredients.items is same as([]) %}</span> pour vérifier que la liste n'est pas vide.</p>
+                    <h4>Créer un nouvel ingrédient :</h4>
                     <p>Pour la création d'un nouvel ingrédient, on va créer un nouveau formulaire "IngredientType" avec l'entité "Ingredient" via la commande :</p>
 <pre><code>php bin/console make:form</code></pre>
                     <p>Ça permet de créer le fichier <span class="em">`src/Form/IngredientType.php`</span> avec le contenu suivant :</p>
@@ -700,7 +715,7 @@ public function new(Request $request, EntityManagerInterface $manager): Response
     {{ form(form) }}
     &lt;/div&gt;
 {% endblock %}</code></pre>
-                    <p>Pour ajouter des messahes d'erreur, on va modifier le code précédent pour donner ceci :</p>
+                    <p>Pour ajouter des messages d'erreur, on va modifier le code précédent pour donner ceci :</p>
 <pre><code>{% extends "base.html.twig" %}
 
 {% block body %}
@@ -743,6 +758,7 @@ public function new(Request $request, EntityManagerInterface $manager): Response
     &lt;/div&gt;
 {% endfor %}</code></pre>
                     <p>Dans la navbar, on oublie pas de rajouter un lien vers "ingredient.index" pour accéder plus facilement à la liste des ingrédients.</p>
+                    <h4>Éditer un ingrédient :</h4>
                     <p>Dans notre contrôleur, on va rajouter une nouvelle fonction pour pouvoir éditer un ingrédient :</p>
 <pre><code>/**
 *
@@ -810,8 +826,9 @@ public function edit(Ingredient $ingredient, Request $request, Entity $manager) 
     ]);
 }</code></pre>
                     <p>Ensuite, dans le "edit.html.twig", on va copier le contenu du "new.html.twig" et modifier "Création" par "Modification".</p>
+                    <h4>Supprimer un ingrédient :</h4>
                     <p>Pour le delete, on rajoute une nouvelle fonction "delete" dans le contrôleur :</p>
-<pre><code>#[Route('/ingredient/suppression/{id}', 'ingredient.delete', methods:['GET'])]
+<pre><code>#[Route('/ingredient/suppression/{id}', 'ingredient.delete', methods: ['GET'])]
 public function delete(EntityManagerInterface $manager, Ingredient $ingredient) : Response
 {
     $manager-&gt;remove($ingredient);
@@ -832,7 +849,426 @@ public function delete(EntityManagerInterface $manager, Ingredient $ingredient) 
 &lt;td&gt;
     &lt;a href="{{ path('ingredient.delete', { id: ingredient.id }) }}" class="btn btn-danger"&gt;Supprimer&lt;/a&gt;
 &lt;/td&gt;</code></pre>
-                    
+                    <h3>Étape 10 : CRUD pour la table "Recipe" :</h3>
+                    <p>Maintenant, on va faire le CRUD pour la table "Recipe". Pour information, une recette sera définie par :</p>
+                    <ul>
+                        <li>
+                            <p>Un nom qui sera obligatoire et ne pourra pas être vide, il ne pourra également pas excéder plus de 5à caractères et devra faire au minimum 2 caractères.</p>
+                        </li>
+                        <li>
+                            <p>Un temps (en minutes) qui n'est pas obligatoire. S'il est rempli, il ne pourra pas être inférieur à une minute et ne pourra pas dépasser les 24h.</p>
+                        </li>
+                        <li>
+                            <p>Un nombre de personnes qui n'est pas obligatoire. S'il est rempli, il devra être inférieur à 50.</p>
+                        </li>
+                        <li>
+                            <p>Une difficulté n'est pas obligatoire. Si elle esy rentrée, elle sera comprise entre 1 et 5.</p>
+                        </li>
+                        <li>
+                            <p>Une liste d'étapes à suivre/description qui sera obligatoire et ne pourra pas être vide.</p>
+                        </li>
+                        <li>
+                            <p>Un prix qui ne sera pas obligatoire. S'il est renseigné, le prix ne pourra pas être inférieur à 0 et supérieur à 1000. Le prix pourra contenir des décimales.</p>
+                        </li>
+                        <li>
+                            <p>La possibilité de définir la recette comme étant favorite ou non.</p>
+                        </li>
+                        <li>
+                            <p>Une date de création.</p>
+                        </li>
+                        <li>
+                            <p>Une date de mise à jour.</p>
+                        </li>
+                        <li>
+                            <p>Une liste d'ingrédients.</p>
+                        </li>
+                    </ul>
+                    <p>Remarque : La date de création et la date de mise à jour seront générées automatiquement une fois la recette créée et/ou modifiée.</p>
+                    <p>Premièrement, on doit créer l'entité "Recipe" avec les propriétés "name" de type "string" non nullable, "time" de type "integer" nullable, "nbPeople" de type "integer" nullable, "difficulty" de type "integer" nullable, "description" de type "text" non nullable, "price" de type "float" nullable, "isFavorite" de type "boolean" non nullable, "createdAt" de type "datetime_immutable" non nullable, "updatedAt" de type "datetime_immutable" non nullable.</p>
+                    <p>Pour la propriété "ingredients" qui définit la liste des ingrédients, on va dire qu'il est de type "relation" lié à l'entité "Ingredient" dont le type de relation est "ManyToMany" et on veut pas récupérer depuis les ingrédients les recettes qui ont cet ingrédient.</p>
+                    <p>Voici donc le code généré par la commande <span class="html">php bin/console make:entity Recipe</span> sans tous les guetters et les setters et qu'on va modifier en ajoutant les <span class="em">Assert</span> :</p>
+<pre><code>&lt;?php
+
+    namespace App\Entity;
+
+    use App\Repository\RecipeRepository;
+    use Doctrine\Common\Collections\ArrayCollection;
+    use Doctrine\Common\Collections\Collection;
+    use Doctrine\ORM\Mapping as ORM;
+
+    use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+    use Symfony\Component\Validator\Constraints as Assert;
+
+    #[UniqueEntity('name')]
+    #[ORM\HasLifecycleCallbacks]
+    #[ORM\Entity(repositoryClass: RecipeRepository::class)]
+    class Recipe
+    {
+        #[ORM\Id]
+        #[ORM\GeneratedValue]
+        #[ORM\Column(type: 'integer')]
+        private ?int $id;
+
+        #[ORM\Column(type: 'string', length: 50)]
+        #[Assert\NotBlank()]
+        #[Assert\Length(min: 2, max: 50)]
+        private string $name;
+
+        #[ORM\Column(type: 'integer', nullable: true)]
+        #[Assert\Positive()]
+        #[Assert\LessThan(1441)]
+        private ?int $time;
+
+        #[ORM\Column(type: 'integer', nullable: true)]
+        #[Assert\Positive()]
+        #[Assert\LessThan(51)]
+        private ?int $nbPeople;
+
+        #[ORM\Column(type: 'integer', nullable: true)]
+        #[Assert\Positive()]
+        #[Assert\LessThan(6)]
+        private ?int $difficulty;
+
+        #[ORM\Column(type: 'text')]
+        #[Assert\NotBlank()]
+        private string $description;
+
+        #[ORM\Column(type: 'float', nullable: true)]
+        #[Assert\Positive()]
+        #[Assert\LessThan(1001)]
+        private ?float $price;
+
+        #[ORM\Column(type: 'boolean')]
+        private bool $isFavorite;
+
+        #[ORM\Column(type: 'datetime_immutable')]
+        #[Assert\NotNull()]
+        private \DateTimeImmutable $createdAt;
+
+        #[ORM\Column(type: 'datetime_immutable')]
+        #[Assert\NotNull()]
+        private \DateTimeImmutable $updatedAt;
+
+        #[ORM\ManyToMany(targetEntity: Ingredient::class)]
+        private $ingredients;
+
+        public function __construct() {
+            $this-&gt;ingredients = new ArrayCollection();
+            $this-&gt;createdAt = new \DateTimeImmutable();
+            $this-&gt;updatedAt = new \DateTimeImmutable();
+        }
+
+        #[ORM\PrePersist]
+        public function setUpdatedAtValue()
+        {
+            $this-&gt;updatedAt = new \DateTimeImmutable();
+        }
+
+        public function getId(): ?int
+        {
+            return $this-&gt;id;
+        }
+
+        public function getName(): ?string
+        {
+            return $this-&gt;string;
+        }
+
+        public function setName(string $name) : self
+        {
+            $this-&gt;name = $name;
+
+            return $this;
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Dans ma solution, je vais d'abord "DROP" toute la base de données avec la commande :</p>
+<pre><code>php bin/console d:d:d --force</code></pre>
+                    <p>Avant de la recréer avec la commande :</p>
+<pre><code>php bin/console d:d:c</code></pre>
+                    <p>Afin de créer une nouvelle migration avec la commande :</p>
+<pre><code>php bin/console make:migration</code></pre>
+                    <p>Et de migrer dans la base de données toutes les migrations avec la commande :</p>
+<pre><code>php bin/console d:m:m</code></pre>
+                    <p>Deuxièmement, on va créer les fixtures en modifiant le fichier <span class="em">`src/DataFixturesAppFixtures.php`</span> comme ceci :</p>
+<pre><code>&lt;?php
+
+    namespace App\DataFixtures;
+
+    use Faker\Factory;
+    use Faker\Generator;
+    use App\Entity\Ingredient;
+    use App\Entity\Recipe;
+    use Doctrine\Bundle\FixturesBundle\Fixture;
+    use Doctrine\Persistence\ObjectManager;
+
+    class AppFixtures extends Fixture
+    {
+        /**
+        * @var Generator
+        */
+        private Generator $faker;
+
+        public function __construct()
+        {
+            $this-&gt;faker = Factory::create('fr_FR');
+        }
+
+        public function load(ObjectManager $manager): void
+        {
+            // Ingredients
+            $ingredients = [];
+            for ($i = 0; $i &lt; 50; $i++) {
+                $ingredient = new Ingredient();
+                $ingredient-&gt;setName($this-&gt;faker-&gt;word())-&gt;setPrice(mt_rand(0, 100));
+
+                $ingredients[] = $ingredient;
+                $manager-&gt;persist($ingredient);
+            }
+
+            // Recipes
+            for ($j = 0; $j &lt; 25; $j++) {
+                $recipe = new Recipe();
+                $recipe-&gt;setName($this-&gt;faker-&gt;word())
+                    -&gt;setTime(mt_rand(0, 1) == 1 ? mt_rand(1, 1440) : null)
+                    -&gt;setNbPeople(mt_rand(0, 1) == 1 ? mt_rand(1, 50) : null)
+                    -&gt;setDifiiculty(mt_rand(0, 1) == 1 ? mt_rand(1, 5) : null)
+                    -&gt;setDescription($this-&gt;faker-&gt;text(300))
+                    -&gt;setPrice(mt_rand(0, 1) == 1 ? mt_rand(1, 1000) : null)
+                    -&gt;setIsFavorite(mt_rand(0, 1) == 1);
+                
+                for ($k = 0; $k &lt; mt_rand(5, 15); $k++) {
+                    $recipe-&gt;addIngredient($ingredients[array_rand($ingredients)]);
+                }
+            }
+
+            $manager-&gt;flush();
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Et on va pouvoir charger les nouvelles données factives avec la commande :</p>
+<pre><code>php bin/console d:f:l</code></pre>
+                    <p>Troisièmement, on va commencer le CRUD par lister toutes les recettes. Pour cela, on va créer le contrôleur "RecipeController" avec la commande :</p>
+                    <p>Remarque : On oublie pas de déplacer le dossier templates "recipe" dans le dossier "pages" et d'ajouter un lien vers cette page dans la navbar.</p>
+                    <p>Maintenant, modifions la fonction "index" du contrôleur comme ceci :</p>
+<pre><code>/**
+* This controller display all recipes
+*
+* @param RecipeRepository $repository
+* @param PaginatorInterface $paginator
+* @param Request $request
+* @return Response
+*/
+#[Route('/recette', name: 'recipe.index', methods: ['GET'])]
+public function index(RecipeRepository $repository, PaginatorInterface $paginator, Request $request): Response
+{
+    $recipes = $paginator-&gt;paginate(
+        $repository-&gt;findAll(),
+        $request-&gt;query-&gt;getInt('page', 1),
+        10
+    );
+
+    return $this-&gt;render('pages/recipe/index.html.twig', [
+        'recipes' =&gt; $recipes
+    ]);
+}</code></pre>
+                    <p>Quatrièmement, on va créer un nouveau formulaire pour la création d'une recette en rajoutant déjà dans le contrôleur la fonction "new" :</p>
+<pre><code>#[Route('/recette/creation', 'recipe.new', methods: ['GET', 'POST'])]
+public function new(): Response
+{
+    return $this-&gt;render('pages/recipe/new.html.twig');
+}</code></pre>
+                    <p>Cinquièmement, on va créer le formulaire "RecipeType" lié à l'entité "Recipe" avec la commande suivante :</p>
+<pre><code>php bin/console make:form RecipeType Recipe</code></pre>
+                    <p>On va améliorer sa fonction "buildForm" en ajoutant par exemple un submit :</p>
+<pre><code>public function buildForm(FormBuilderInterface $builder, array $options): void
+{
+    $builder
+        -&gt;add('name', TextType::class, [
+            'attr' =&gt; [
+                'class' =&gt; 'form-control',
+                'minlength' =&gt; '2',
+                'maxlength' =&gt; '50'
+            ],
+            'label' =&gt; 'Nom',
+            'label_attr' =&gt; [
+                'class' =&gt; 'form-label mt-4'
+            ],
+            'constraints' =&gt; [
+                new Assert\Length(['min' =&gt; 2, 'max' =&gt; 50]),
+                new Assert\NotBlank()
+            ]
+        ])
+        -&gt;add('time', IntegerType::class, [
+            'attr' =&gt; [
+                'class' =&gt; 'form-control',
+                'min' =&gt; 1,
+                'max' =&gt; 1440
+            ],
+            'required' =&gt; false,
+            'label' =&gt; 'Temps (en minutes)',
+            'label_attr' =&gt; [
+                'class' =&gt; 'form-label mt-4'
+            ],
+            'constraints' =&gt; [
+                new Assert\Possitive(),
+                new Assert\LessThan(1441)
+            ]
+        ])
+        -&gt;add('nbPeople', IntegerType::class, [
+            'attr' =&gt; [
+                'class' =&gt; 'form-control',
+                'min' =&gt; 1,
+                'max' =&gt; 50
+            ],
+            'required' =&gt; false,
+            'label' =&gt; 'Nombre de personnes',
+            'label_attr' =&gt; [
+                'class' =&gt; 'form-label mt-4'
+            ],
+            'constraints' =&gt; [
+                new Assert\Possitive(),
+                new Assert\LessThan(51)
+            ]
+        ])
+        -&gt;add('difficulty', RangeType::class, [
+            'attr' =&gt; [
+                'class' =&gt; 'form-range',
+                'min' =&gt; 1,
+                'max' =&gt; 5
+            ],
+            'required' =&gt; false,
+            'label' =&gt; 'Difficulté',
+            'label_attr' =&gt; [
+                'class' =&gt; 'form-label mt-4'
+            ],
+            'constraints' =&gt; [
+                new Assert\Possitive(),
+                new Assert\LessThan(6)
+            ]
+        ])
+        -&gt;add('description', TextareaType::class, [
+            'attr' =&gt; [
+                'class' =&gt; 'form-control'
+            ],
+            'label' =&gt; 'Description',
+            'label_attr' =&gt; [
+                'class' =&gt; 'form-label mt-4'
+            ],
+            'constraints' =&gt; [
+                new Assert\NotBlank()
+            ]
+        ])
+        -&gt;add('price', MoneyType::class, [
+            'attr' =&gt; [
+                'class' =&gt; 'form-control',
+            ],
+            'required' =&gt; false,
+            'label' =&gt; 'Prix',
+            'label_attr' =&gt; [
+                'class' =&gt; 'form-label mt-4'
+            ],
+            'constraints' =&gt; [
+                new Assert\Positive(),
+                new Assert\LessThan(1001),
+                new Assert\NotNull()
+            ]
+        ])
+        -&gt;add('isFavorite', CheckboxType::class, [
+            'attr' =&gt; [
+                'class' =&gt; 'form-check-input',
+            ],
+            'label' =&gt; 'Favoris ?',
+            'label_attr' =&gt; [
+                'class' =&gt; 'form-check-label mt-4'
+            ],
+            'constraints' =&gt; [
+                new Assert\NotNull()
+            ]
+        ])
+        -&gt;add('ingredients', EntityType::class, [
+            'class' =&gt; Ingredient::class,
+            'query_builder' =&gt; function(IngredientRepository $r) {
+                return $r-&gt;createQueryBuilder('i')
+                    -&gt;orderBy('i.name', 'ASC');
+            },
+            'label' =&gt; 'Les ingrédients',
+            'label_attr' =&gt; [
+                'class' =&gt; 'form-label mt-4'
+            ],
+            'choice_label' =&gt; 'name',
+            'multiple' =&gt; true,
+            'expanded' =&gt; true
+        ])
+        -&gt;add('submit', SubmitType::class, [
+            'attr' =&gt; [
+                'class' =&gt; 'btn btn-primary mt-4'
+            ],
+            'label' =&gt; 'Créer ma recette'
+        ]);
+}</code></pre>
+                    <p>On va modifier la fonction "new" précédemment créée :</p>
+<pre><code>/**
+* This controller allow us to create a new recipe
+*
+* @param Request $request
+* @param EntityManagerInterface $manager
+* @return Response
+*/
+#[Route('/recette/creation', 'recipe.new', methods: ['GET', 'POST'])]
+public function new(Request $request, EntityManagerInterface $manager): Response
+{
+    $recipe = new Recipe();
+    $form = $this-&gt;createForm(RecipeType::class, $recipe);
+
+    $form-&gt;handleRequest($request);
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        $recipe = $form-&gt;getData();
+
+        $manager-&gt;persist($recipe);
+        $manager-&gt;flush();
+
+        $this-&gt;addFlash('success', 'Votre recette a été créée avec succès !');
+
+        return $this-&gt;redirectToRoute('recipe.index');
+    }
+
+    return $this-&gt;render('pages/recipe/new.html.twig', [
+        'form' =&gt; $form-&gt;createView()
+    ]);
+}</code></pre>
+                    <p>Sixièmement, on va créer dans le contrôleur la fonction "edit" :</p>
+<pre><code>/**
+* This controller allow us to edit a recipe
+*
+* @param Recipe $recipe
+* @param Request $request
+* @param EntityManagerInterface $manager
+* @return Response
+*/
+#[Route('/recette/edition/{id}', 'recipe.edit', methods: ['GET', 'POST'])]
+public function edit(Recipe $recipe, Request $request, EntityManagerInterface $manager): Response
+{
+    $form = $this-&gt;createForm(RecipeType::class, $recipe);
+    $form-&gt;handleRequest($request);
+
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        $recipe = $form-&gt;getData();
+
+        $manager-&gt;persist($recipe);
+        $manager-&gt;flush();
+
+        $this-&gt;addFlash('success', 'Votre recette a été modifiée avec succès !');
+
+        return $this-&gt;redirectToRoute('recipe.index');
+    }
+
+    return $this-&gt;render('pages/recipe/edit.html.twig', [
+        'form' =&gt; $form-&gt;createView()
+    ]);
+}</code></pre>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
