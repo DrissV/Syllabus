@@ -1182,7 +1182,7 @@ public function new(): Response
             ],
             'label' =&gt; 'Favoris ?',
             'label_attr' =&gt; [
-                'class' =&gt; 'form-check-label mt-4'
+                'class' =&gt; 'form-check-label'
             ],
             'constraints' =&gt; [
                 new Assert\NotNull()
@@ -1269,6 +1269,83 @@ public function edit(Recipe $recipe, Request $request, EntityManagerInterface $m
         'form' =&gt; $form-&gt;createView()
     ]);
 }</code></pre>
+                    <p>Septièmement, on rajoute également la méthode "delete" dans le contrôleur :</p>
+<pre><code>/**
+* This controller allows us to delete a recipe
+*
+* @param EntityManagerInterface $manager
+* @param Recipe $recipe
+* @return Response
+*/
+#[Route('/recette/suppression/{id}', 'ingredient.delete', methods: ['GET'])]
+public function delete(EntityManagerInterface $manager, Recipe $recipe): Response
+{
+    $manager-&gt;remove($recipe);
+    $manager-&gt;flush();
+
+    $this-&gt;addFlash('success', 'Votre recette a été supprimée avec succès !');
+
+    return $this-&gt;redirectToRoute('recipe.index');
+}</code></pre>
+                    <h3>Étape 11 : Sécurité & compte utilisateur :</h3>
+                    <p>Un compte utilisateur sera défini par :</p>
+                    <ul>
+                        <li>
+                            <p>Un nom et un prénom qui seront obligatoires. Ils devront faire entre 2 et 50 caractères.</p>
+                        </li>
+                        <li>
+                            <p>Un pseudo qui sera facultatif et, s'il est renseigné, il devra également entre 2 et 50 caractères.</p>
+                        </li>
+                        <li>
+                            <p>Une adresse email qui sera unique et servira d'identifiant lors de la connexion.</p>
+                        </li>
+                        <li>
+                            <p>Un mot de passe qui sera encodé en base de données pour des questions de sécurité.</p>
+                        </li>
+                        <li>
+                            <p>Une date de création qui sera générée seule.</p>
+                        </li>
+                        <li>
+                            <p>Une date de modificaton sera également générée seule lors de la modification du profil utilisateur.</p>
+                        </li>
+                    </ul>
+                    <p>Pour cela, on utilise le bundle "Security" déjà installé et qui a généré le fichier <span class="em">`config\packages\security.yaml`</span>. Dans Sumfony, il y a une façon très simple de générer une classe utilisateur pour gérer la sécurité avec la commande :</p>
+<pre><code>php bin/console make:user</code></pre>
+                    <p>On nomme notre classe utilisateur "User", on la stocke dans la DB via Doctrine, on dit que la propriété "email" doit être unique et on a besoin de hasher les mots de passe. Voici le code généré (sans les getters et les setters) :</p>
+<pre><code>&lt;?php
+
+    namespace App\Entity;
+
+    use App\Repository\UserRepository;
+    use Doctrine\ORM\Mapping as ORM;
+    use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+    use Symfony\Component\Security\Core\User\UserInterface;
+
+    #[ORM\Entity(repositoryClass: UserRepository::class)]
+    class User implements UserInterface, PasswordAuthenticatedUserInterface
+    {
+        #[ORM\Id]
+        #[ORM\GeneratedValue]
+        #[ORM\Column(type: 'integer')]
+        private $id;
+
+        #[ORM\Column(type: 'string', length: 180, unique: true)]
+        private $email;
+
+        #[ORM\Column(type; 'json')]
+        private $roles = [];
+
+        #[ORM\Column(type: 'string')]
+        private $password;
+
+        public function getId(): ?int
+        {
+            return $this-&gt;id;
+        }
+    }
+
+?&gt;</code></pre>
+                    <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
