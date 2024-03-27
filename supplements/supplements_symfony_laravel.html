@@ -332,10 +332,10 @@ homepage:
 
     use App\Repository\IngredientRepository;
     use Doctrine\ORM\Mapping as ORM;
-
-    use Symfony\Component\Validator\Constraints as Assert;
+    use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
     #[ORM\Entity(repositoryClass: IngredientRepository::class)]
+    #[UniqueEntity('name')]
     class Ingredient
     {
         #[ORM\Id]
@@ -344,14 +344,13 @@ homepage:
         private ?int $id;
 
         #[ORM\Column(type: 'string', length: 50)]
-        #[Assert\Length(min: 2, max: 50)]
         private string $name;
 
         #[ORM\Column(type: 'float')]
         private float $price;
 
         #[ORM\Column(type: 'datetime_immutable')]
-        private ?DateTimeImmutable $createdAt;
+        private ?\DateTimeImmutable $createdAt;
 
         public function __construct()
         {
@@ -393,8 +392,10 @@ homepage:
 
     use App\Repository\IngredientRepository;
     use Doctrine\ORM\Mapping as ORM;
+    use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
     #[ORM\Entity(repositoryClass: IngredientRepository::class)]
+    #[UniqueEntity('name')]
     class Ingredient
     {
         #[ORM\Id]
@@ -415,7 +416,7 @@ homepage:
 
         #[ORM\Column(type: 'datetime_immutable')]
         #[Assert\NotNull()]
-        private ?DateTimeImmutable $createdAt;
+        private ?\DateTimeImmutable $createdAt;
 
         public function __construct()
         {
@@ -467,7 +468,7 @@ homepage:
 
         public function __construct()
         {
-            $this->faker = Factory::create('fr_FR');
+            $this-&gt;faker = Factory::create('fr_FR');
         }
 
         public function load(ObjectManager $manager): void
@@ -557,7 +558,7 @@ public function index(IngredientRepository $repository) : Response
 use Symfony\Component\HttpFoundation\Request;
 
 /**
-* This function display all ingredients
+* This controller display all ingredients
 *
 * @param IngredientRepository $repository
 * @param PaginatorInterface $paginator
@@ -657,7 +658,15 @@ public function index(IngredientRepository $repository, PaginatorInterface $pagi
 
 ?&gt;</code></pre>
                     <p>Dans notre IngredientController, on va créer une nouvelle fonction "new" :</p>
-<pre><code>#[Route('/ingredient/nouveau', 'ingredient.new', methods: ['GET', 'POST'])]
+<pre><code>/**
+*
+* This controller show a form which create an ingredient
+*
+* @param Request $request
+* @param EntityManagerInterface $manager
+* @return Response
+*/
+#[Route('/ingredient/nouveau', 'ingredient.new', methods: ['GET', 'POST'])]
 public function new(Request $request, EntityManagerInterface $manager): Response
 {
     $ingredient = new Ingredient();
@@ -670,6 +679,10 @@ public function new(Request $request, EntityManagerInterface $manager): Response
         
         $manager-&gt;persist($ingredient);
         $manager-&gt;flush();
+
+        $this-&gt;addFlash('success', 'Votre ingrédient a été créé avec succès !');
+
+        return $this-&gt;redirectToRoute('ingredient.index');
     }
 
     return $this-&gt;render('pages/ingredient/new.html.twig', [
@@ -681,11 +694,145 @@ public function new(Request $request, EntityManagerInterface $manager): Response
 
 {% block body %}
     &lt;div class="container"&gt;
-        &lt;h1 class="mt-4"&gt;Création d'un ingrédient&lt;/h1&gt;
+    
+    &lt;h1 class="mt-4"&gt;Création d'un ingrédient&lt;/h1&gt;
 
-        {{ form(form) }}
+    {{ form(form) }}
     &lt;/div&gt;
 {% endblock %}</code></pre>
+                    <p>Pour ajouter des messahes d'erreur, on va modifier le code précédent pour donner ceci :</p>
+<pre><code>{% extends "base.html.twig" %}
+
+{% block body %}
+    &lt;div class="container"&gt;
+    
+    &lt;h1 class="mt-4"&gt;Création d'un ingrédient&lt;/h1&gt;
+
+    {{ form_start(form) }}
+        
+        &lt;div class="form-group"&gt;
+            {{ form_label(form.name) }}
+            {{ form_widget(form.name) }}
+            &lt;div class="form-error"&gt;
+                {{ form_errors(form.name) }}
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class="form-group"&gt;
+            {{ form_label(form.price) }}
+            {{ form_widget(form.price) }}
+            &lt;div class="form-error"&gt;
+                {{ form_errors(form.price) }}
+            &lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form_row(form.submit) }}
+        &lt;/div&gt;
+
+        {{ form_end(form) }}
+    &lt;/div&gt;
+{% endblock %}</code></pre>
+                    <p>On va afficher un message FLASH dans l'index pour dire que la création d'un ingrédient a eu un statut de succès ainsi qu'un lien qui permet d'accéder à la page de création d'un nouvel ingrédient. Voici le code à rajouter :</p>
+<pre><code>&lt;a href="{{ path('ingredient.new') }} class="btn btn-primary"&gt;Créer un ingrédient&lt;/a&gt;
+
+{# read and display just one flash message type #}
+{% for message in app.flashes('success') %}
+    &lt;div class="alert alert-success mt-4"&gt;
+        {{ message }}
+    &lt;/div&gt;
+{% endfor %}</code></pre>
+                    <p>Dans la navbar, on oublie pas de rajouter un lien vers "ingredient.index" pour accéder plus facilement à la liste des ingrédients.</p>
+                    <p>Dans notre contrôleur, on va rajouter une nouvelle fonction pour pouvoir éditer un ingrédient :</p>
+<pre><code>/**
+*
+* This controller show a form which edit an ingredient
+*
+* @param IngredientRepository $repository
+* @param int $id
+* @param Request $request
+* @param EntityManagerInterface $manager
+* @return Response
+*/
+#[Route('/ingredient/edition/{id}', 'ingredient.edit', methods: ['GET', 'POST'])]
+public function edit(IngredientRepository $repository, int $id, Request $request, EntityManagerInterface $manager) : Response
+{
+    $ingredient = $repository-&gt;findBy(['id' =&gt; $id]);
+    $form = $this-&gt;createForm(IngredientType::class, $ingredient);
+
+    $form-&gt;handleRequest($request);
+
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        $ingredient = $form-&gt;getData();
+        
+        $manager-&gt;persist($ingredient);
+        $manager-&gt;flush();
+
+        $this-&gt;addFlash('success', 'Votre ingrédient a été modifié avec succès !');
+
+        return $this-&gt;redirectToRoute('ingredient.index');
+    }
+
+    return $this-&gt;render('pages/ingredient/edit.html.twig', [
+        'form' =&gt; $form-&gt;createView()
+    ]);
+}</code></pre>
+                    <p>Ça c'est ce que la plupart des gens font d'habitude, mais nous on va utiliser un <span class="html">@ParamConverter</span> comme ceci :</p>
+<pre><code>/**
+*
+* This controller show a form which edit an ingredient
+*
+* @param Ingredient $ingredient
+* @param Request $request
+* @param EntityManagerInterface $manager
+* @return Response
+*/
+#[Route('/ingredient/edition/{id}', 'ingredient.edit', methods: ['GET', 'POST'])]
+public function edit(Ingredient $ingredient, Request $request, Entity $manager) : Response
+{
+    $form = $this-&gt;createForm(IngredientType::class, $ingredient);
+
+    $form-&gt;handleRequest($request);
+
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        $ingredient = $form-&gt;getData();
+        
+        $manager-&gt;persist($ingredient);
+        $manager-&gt;flush();
+
+        $this-&gt;addFlash('success', 'Votre ingrédient a été modifié avec succès !');
+
+        return $this-&gt;redirectToRoute('ingredient.index');
+    }
+
+    return $this-&gt;render('pages/ingredient/edit.html.twig', [
+        'form' =&gt; $form-&gt;createView()
+    ]);
+}</code></pre>
+                    <p>Ensuite, dans le "edit.html.twig", on va copier le contenu du "new.html.twig" et modifier "Création" par "Modification".</p>
+                    <p>Pour le delete, on rajoute une nouvelle fonction "delete" dans le contrôleur :</p>
+<pre><code>#[Route('/ingredient/suppression/{id}', 'ingredient.delete', methods:['GET'])]
+public function delete(EntityManagerInterface $manager, Ingredient $ingredient) : Response
+{
+    $manager-&gt;remove($ingredient);
+    $manager-&gt;flush();
+
+    $this-&gt;addFlash('success', 'Votre ingrédient a été supprimé avec succès !');
+
+    return $this-&gt;redirectToRoute('ingredient.index');
+}</code></pre>
+                    <p>Dans la liste des ingrédients, on va rajouter deux nouvelles colonnes : une pour l'édition et l'autre pour la suppression :</p>
+<pre><code>&lt;th scope="col"&gt;Édition&lt;/th&gt;
+&lt;th scope="col"&gt;Suppression&lt;/th&gt;
+
+&lt;td&gt;
+    &lt;a href="{{ path('ingredient.edit', { id: ingredient.id }) }}" class="btn btn-info"&gt;Modifier&lt;/a&gt;
+&lt;/td&gt;
+
+&lt;td&gt;
+    &lt;a href="{{ path('ingredient.delete', { id: ingredient.id }) }}" class="btn btn-danger"&gt;Supprimer&lt;/a&gt;
+&lt;/td&gt;</code></pre>
+                    
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
