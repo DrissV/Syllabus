@@ -886,7 +886,7 @@ public function delete(EntityManagerInterface $manager, Ingredient $ingredient) 
                     <p>Remarque : La date de création et la date de mise à jour seront générées automatiquement une fois la recette créée et/ou modifiée.</p>
                     <p>Premièrement, on doit créer l'entité "Recipe" avec les propriétés "name" de type "string" non nullable, "time" de type "integer" nullable, "nbPeople" de type "integer" nullable, "difficulty" de type "integer" nullable, "description" de type "text" non nullable, "price" de type "float" nullable, "isFavorite" de type "boolean" non nullable, "createdAt" de type "datetime_immutable" non nullable, "updatedAt" de type "datetime_immutable" non nullable.</p>
                     <p>Pour la propriété "ingredients" qui définit la liste des ingrédients, on va dire qu'il est de type "relation" lié à l'entité "Ingredient" dont le type de relation est "ManyToMany" et on veut pas récupérer depuis les ingrédients les recettes qui ont cet ingrédient.</p>
-                    <p>Voici donc le code généré par la commande <span class="html">php bin/console make:entity Recipe</span> sans tous les guetters et les setters et qu'on va modifier en ajoutant les <span class="em">Assert</span> :</p>
+                    <p>Voici donc le code généré par la commande <span class="html">php bin/console make:entity Recipe</span> sans tous les getters et les setters et qu'on va modifier en ajoutant les <span class="em">Assert</span> :</p>
 <pre><code>&lt;?php
 
     namespace App\Entity;
@@ -991,7 +991,7 @@ public function delete(EntityManagerInterface $manager, Ingredient $ingredient) 
 <pre><code>php bin/console make:migration</code></pre>
                     <p>Et de migrer dans la base de données toutes les migrations avec la commande :</p>
 <pre><code>php bin/console d:m:m</code></pre>
-                    <p>Deuxièmement, on va créer les fixtures en modifiant le fichier <span class="em">`src/DataFixturesAppFixtures.php`</span> comme ceci :</p>
+                    <p>Deuxièmement, on va créer les fixtures en modifiant le fichier <span class="em">`src\DataFixtures\AppFixtures.php`</span> comme ceci :</p>
 <pre><code>&lt;?php
 
     namespace App\DataFixtures;
@@ -1051,6 +1051,7 @@ public function delete(EntityManagerInterface $manager, Ingredient $ingredient) 
                     <p>Et on va pouvoir charger les nouvelles données factives avec la commande :</p>
 <pre><code>php bin/console d:f:l</code></pre>
                     <p>Troisièmement, on va commencer le CRUD par lister toutes les recettes. Pour cela, on va créer le contrôleur "RecipeController" avec la commande :</p>
+<pre><code>php bin/console make:controller RecipeController</code></pre>
                     <p>Remarque : On oublie pas de déplacer le dossier templates "recipe" dans le dossier "pages" et d'ajouter un lien vers cette page dans la navbar.</p>
                     <p>Maintenant, modifions la fonction "index" du contrôleur comme ceci :</p>
 <pre><code>/**
@@ -1309,7 +1310,7 @@ public function delete(EntityManagerInterface $manager, Recipe $recipe): Respons
                             <p>Une date de modificaton sera également générée seule lors de la modification du profil utilisateur.</p>
                         </li>
                     </ul>
-                    <p>Pour cela, on utilise le bundle "Security" déjà installé et qui a généré le fichier <span class="em">`config\packages\security.yaml`</span>. Dans Sumfony, il y a une façon très simple de générer une classe utilisateur pour gérer la sécurité avec la commande :</p>
+                    <p>Pour cela, on utilise le bundle "Security" déjà installé et qui a généré le fichier <span class="em">`config\packages\security.yaml`</span>. Dans Symfony, il y a une façon très simple de générer une classe utilisateur pour gérer la sécurité avec la commande :</p>
 <pre><code>php bin/console make:user</code></pre>
                     <p>On nomme notre classe utilisateur "User", on la stocke dans la DB via Doctrine, on dit que la propriété "email" doit être unique et on a besoin de hasher les mots de passe. Voici le code généré (sans les getters et les setters) et que je modifie un peu :</p>
 <pre><code>&lt;?php
@@ -1321,7 +1322,7 @@ public function delete(EntityManagerInterface $manager, Recipe $recipe): Respons
     use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
     use Symfony\Component\Security\Core\User\UserInterface;
 
-    use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity
+    use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
     use Symfony\Component\Validator\Constraints as Assert;
 
     #[UniqueEntity('email')]
