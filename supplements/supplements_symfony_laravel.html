@@ -1401,6 +1401,109 @@ public function delete(EntityManagerInterface $manager, Recipe $recipe): Respons
             entity:
                 class: App\Entity\User
                 property: email</code></pre>
+                    <p>Pour hasher le mot de passe, on va définir un <span class="em">password_hashers</span> s'il n'est pas défini dans le fichier <span class="em">security.yaml</span> :</p>
+<pre><code>password_hashers:
+    Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: "auto"</code></pre>
+                    <p>Dans notre fixture, on va créer des utilisateurs fictifs :</p>
+<pre><code>// Users
+for ($i = 0; $i &lt; 10; $i++) {
+    $user = new User();
+    $user-&gt;setFullName($this-&gt;faker-&gt;name())
+        -&gt;setPseudo(mt_rand(0, 1) === 1 ? $this-&gt;faker-&gt;firstName() : null)
+        -&gt;setEmail($this-&gt;faker-&gt;email())
+        -&gt;setRoles(['ROLE_USER'])
+        -&gt;setPassword('password');
+
+    $manager-&gt;persist($user);
+}</code></pre>
+                    <p>On charge les nouveaux utilisateurs avec la commande :</p>
+<pre><code>php bin/console d:f:l</code></pre>
+                    <p>Ici, on peut voir que le mot de passe n'est pas encore crypté dans la base de données. Pour faire cela, on rajoute une propriété dans la classe "AppFixtures" et on modifie la fonction "load" :</p>
+<pre><code>private UserPasswordHasherInterface $hasher;</code></pre>
+<pre><code>// Users
+for ($i = 0; $i &lt; 10; $i++) {
+    $user = new User();
+    $user-&gt;setFullName($this-&gt;faker-&gt;name())
+        -&gt;setPseudo(mt_rand(0, 1) === 1 ? $this-&gt;faker-&gt;firstName() : null)
+        -&gt;setEmail($this-&gt;faker-&gt;email())
+        -&gt;setRoles(['ROLE_USER']);
+    
+    $hashPassword = $this-&gt;hasher-&gt;hashPassword($user, 'password');
+
+    $user-&gt;setPassword($hashPassword);
+
+    $manager-&gt;persist($user);
+}</code></pre>
+                    <p>Le problème avec cette solution, c'est que n'importe où on doit toujours demander que le mot de passe soit hashé.</p>
+                    <p>On voudrait exporter la logique de hashage du mot de passe à l'extérieur. Pour ce faire, on va utiliser les <span class="html">Entity Listeners</span> de Symfony qui, comme leur nom l'indique, vont écouter ce qui se passe au niveau des entités et faire plusieurs actions. On va de nouveau modifier la fonction "load" :</p>
+<pre><code>// Users
+for ($i = 0; $i &lt; 10; $i++) {
+    $user = new User();
+    $user-&gt;setFullName($this-&gt;faker-&gt;name())
+        -&gt;setPseudo(mt_rand(0, 1) === 1 ? $this-&gt;faker-&gt;firstName() : null)
+        -&gt;setEmail($this-&gt;faker-&gt;email())
+        -&gt;setRoles(['ROLE_USER'])
+        -&gt;setPlainPassword('password');
+
+    $manager-&gt;persist($user);
+}</code></pre>
+                    <p>Ensuite, on va rajouter un nouveau service dans le fichier <span class="em">`config\services.yaml`</span> :</p>
+<pre><code>App\EntityListener\
+    resource: "../src/EntityListener/"
+    tags: ["doctrine.orm.entity_listener"]
+</code></pre>
+                    <p>Avant la déclaration de la classe de l'entité "User", on rajoute la ligne suivante :</p>
+<pre><code>#[ORM\EntityListeners(['App\EntityListener\UserListener'])]</code></pre>
+                    <p>Dans le dossier "src", on va créer un dossier "EntityListener" et y insérer le fichier "UserListener.php" avec le contenu suivant :</p>
+<pre><code>&lt;?php
+
+    namespace App\EntityListener;
+
+    use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
+    class UserListener
+    {
+
+        private UserPasswordHasherInterface $hasher;
+
+        public function __construct(UserPasswordHasherInterface $hasher)
+        {
+            $this-&gt;hasher = $hasher;
+        }
+
+        public function prePersist(User $user)
+        {
+            $this-&gt;encodePassword($user);
+        }
+
+        public function preUpdate(User $user)
+        {
+            $this-&gt;encodePassword($user);
+        }
+
+        /**
+        * Encode password based on plain password
+        *
+        * @param User $user
+        * @return void
+        */
+        public function encodePassword(User $user)
+        {
+            if (is_null($user-&gt;getPlainPassword())) {
+                return;
+            }
+
+            $this-&gt;setPassword(
+                $this-&gt;hasher-&gt;hashPassword($user, $user-&gt;getPlainPassword())
+            );
+
+            $user-&gt;setPlainPassword(null);
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Remarques : Maintenant qu'on a le "$hasher" dans le "UserListener", on peut le supprimer dans les fixtures.</p>
+                    <h3>Étape 12 : Firewall et formulaire de connexion :</h3>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
