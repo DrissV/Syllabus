@@ -1459,6 +1459,7 @@ for ($i = 0; $i &lt; 10; $i++) {
 
     namespace App\EntityListener;
 
+    use App\Entity\User;
     use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
     class UserListener
@@ -1493,7 +1494,7 @@ for ($i = 0; $i &lt; 10; $i++) {
                 return;
             }
 
-            $this-&gt;setPassword(
+            $user-&gt;setPassword(
                 $this-&gt;hasher-&gt;hashPassword($user, $user-&gt;getPlainPassword())
             );
 
@@ -1504,6 +1505,68 @@ for ($i = 0; $i &lt; 10; $i++) {
 ?&gt;</code></pre>
                     <p>Remarques : Maintenant qu'on a le "$hasher" dans le "UserListener", on peut le supprimer dans les fixtures.</p>
                     <h3>Étape 12 : Firewall et formulaire de connexion :</h3>
+                    <p>La section "Firewall" est la section la plus importante en terme de sécurité. Pour faire simple, le firewall sert à définir les parties de notre application qui sont sécurisées et comment les utilisateurs vont avoir la possibilité de s'authentifier (par exemple que ce soit via un formulaire de connexion ou par rapport à un token si on fait une API, etc).</p>
+                    <p>On a deux firewalls : le "dev" et le "main". Le "dev" qui est un faux Firewall et le "main" qui de base n'est pas très sécurisé.</p>
+                    <p>Maintenant, on va créer un nouveau contrôleur pour afficher la page de connexion que l'on nomme "SecurityController" avec la commande :</p>
+<pre><code>php bin/console make:controller SecurityController</code></pre>
+                    <p>Remarques : on déplace le dossier "templates\security" dans le dossier "templates\pages" et on renomme le fichier "index.html.twig" par "login.html.twig". Modifions la fonction "index" de ce nouveau contrôleur pour que ça devienne ceci :</p>
+<pre><code>use Symfony\Component\Security\Http\authentification\AuthenticationUtils;
+
+#[Route('/connexion', name: 'security.login', methods: ['GET', 'POST'])]
+public function login(AuthenticationUtils $authenticationUtils): Response
+{
+    $lastUsername = $authenticationUtils-&gt;getLastUsername();
+    $error = $authenticationUtils-&gt;getLastAuthenticationError();
+
+    return $this-&gt;render('pages/security/login.html.twig', [
+        'last_username' =&gt; $lastUsername,
+        'error' =&gt; $error
+    ]);
+}</code></pre>
+                    <p>On va rajouter les lignes suivantes dans la configuration de notre "main" Firewall :</p>
+<pre><code>form_login:
+    login_path: security.login
+    check_path: security.login</code></pre>
+                    <p>On va ensuite créer la structure de notre formulaire de connexion dans "login.html.twig" :</p>
+<pre><code>{% extends 'base.html.twig' %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block body %}
+    &lt;div class="container"&gt;
+        &lt;h1 class="mt-4"&gt;Formulaire de connexion&lt;/h1&gt;
+
+        {% if error %}
+            &lt;div class="alert alert-danger"&gt;
+                {{ error.messageKey|trans(error.messageData, 'security') }}
+            &lt;/div&gt;
+        {% endif %}
+
+        &lt;form action="{{ path('security.login') }}" method="post"&gt;
+            &lt;div class="form-group"&gt;
+                &lt;label for="username" class="form-label mt-4"&gt;Adresse email&lt;/label&gt;
+                &lt;input type="email" class="form-control" id="username" name="username" value="{{ last_username }}"&gt;
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+                &lt;label for="password" class="form-label mt-4"&gt;Mot de passe&lt;/label&gt;
+                &lt;input type="password" class="form-control" id="password" name="password"&gt;
+            &lt;/div&gt;
+
+            &lt;button type="submit" class="btn btn-primary mt-4"&gt;
+                Se connecter
+            &lt;/button&gt;
+        &lt;/form&gt;
+    &lt;/div&gt;
+{% endblock %}</code></pre>
+                    <p>Voilà le formulaire fonctionne bien ! Passons vite fait à la déconnexion. Pour ce faire, on crée la fonction logout dans notre contrôleur et on rajoute les lignes suivantes dans le "main" Firewall :</p>
+<pre><code>#[Route('/deconnexion', 'security.logout')]
+public function logout()
+{
+    // Nothing to do here...
+}</code></pre>
+<pre><code>logout:
+    path: security.logout</code></pre>
+                    <h3>Étape 13 : Formulaire d'inscription :</h3>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
