@@ -1347,7 +1347,7 @@ public function delete(EntityManagerInterface $manager, Recipe $recipe): Respons
 
         #[ORM\Column(type: 'string')]
         #[Assert\NotBlank()]
-        private string $password;
+        private string $password = 'password';
 
         public function __construct()
         {
@@ -1512,6 +1512,12 @@ for ($i = 0; $i &lt; 10; $i++) {
                     <p>Remarques : on déplace le dossier "templates\security" dans le dossier "templates\pages" et on renomme le fichier "index.html.twig" par "login.html.twig". Modifions la fonction "index" de ce nouveau contrôleur pour que ça devienne ceci :</p>
 <pre><code>use Symfony\Component\Security\Http\authentification\AuthenticationUtils;
 
+/**
+* This controller allow us to login
+*
+* @param AuthenticationUtils $authenticationUtils
+* @return Response
+*/
 #[Route('/connexion', name: 'security.login', methods: ['GET', 'POST'])]
 public function login(AuthenticationUtils $authenticationUtils): Response
 {
@@ -1559,7 +1565,12 @@ public function login(AuthenticationUtils $authenticationUtils): Response
     &lt;/div&gt;
 {% endblock %}</code></pre>
                     <p>Voilà le formulaire fonctionne bien ! Passons vite fait à la déconnexion. Pour ce faire, on crée la fonction logout dans notre contrôleur et on rajoute les lignes suivantes dans le "main" Firewall :</p>
-<pre><code>#[Route('/deconnexion', 'security.logout')]
+<pre><code>/**
+* This controller allow us to logout
+*
+* @return void
+*/
+#[Route('/deconnexion', 'security.logout')]
 public function logout()
 {
     // Nothing to do here...
@@ -1567,6 +1578,319 @@ public function logout()
 <pre><code>logout:
     path: security.logout</code></pre>
                     <h3>Étape 13 : Formulaire d'inscription :</h3>
+                    <p>D'abord, on va créer le formulaire "RegistrationType" basé sur l'entité "User" avec la commande :</p>
+<pre><code>php bin/console make:form RegistrationType User</code></pre>
+                    <p>Ça génèrera le code suivant dans la fonction "buildForm" qu'on va modifier :</p>
+<pre><code>$builder-&gt;add('fullName', TextType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control',
+            'minlength' =&gt; '2',
+            'maxlength' =&gt; '50',
+        ],
+        'label' =&gt; 'Nom / Prénom',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form_label mt-4'
+        ],
+        'constraints' =&gt; [
+            new Assert\NotBlank(),
+            new Assert\Length(['min' =&gt; 2, 'max' =&gt; 50])
+        ]
+    ])
+    -&gt;add('pseudo', TextType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control',
+            'minlength' =&gt; '2',
+            'maxlength' =&gt; '50',
+        ],
+        'required' =&gt; false,
+        'label' =&gt; 'Pseudo (Facultatif)',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form_label mt-4'
+        ],
+        'constraints' =&gt; [
+            new Assert\Length(['min' =&gt; 2, 'max' =&gt; 50])
+        ]
+    ])
+    -&gt;add('email', EmailType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control',
+            'minlength' =&gt; '2',
+            'maxlength' =&gt; '180',
+        ],
+        'label' =&gt; 'Adresse email',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form-label mt-4'
+        ],
+        'constraints' =&gt; [
+            new Assert\NotBlank(),
+            new Assert\Email(),
+            new Assert\Length(['min' =&gt; 2, 'max' =&gt; 180])
+        ]
+    ])
+    -&gt;add('plainPassword', RepeatedType::class, [
+        'type' =&gt; PasswordType::class,
+        'first_options' =&gt; [
+            'attr' =&gt; [
+                'class' =&gt; 'form-control'
+            ],
+            'label' =&gt; 'Mot de passe',
+            'label_attr' =&gt; [
+                'class' =&gt; 'form-label mt-4'
+            ]
+        ],
+        'second_options' =&gt; [
+            'attr' =&gt; [
+                'class' =&gt; 'form-control'
+            ],
+            'label' =&gt; 'Confirmation du mot de passe',
+            'label_attr' =&gt; [
+                'class' =&gt; 'form-label mt-4'
+            ]
+        ],
+        'invalid_message' =&gt; 'Les mots de passe ne correspondent pas !'
+    ])
+    -&gt;add('submit', SubmitType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'btn btn-primary mt-4'
+        ]
+    ]);</code></pre>
+                    <p>Dans notre "SecurityController", on rajoute la fonction "registration" :</p>
+<pre><code>/**
+* This controller allow us to RegistrationType
+*
+* @param Request $request
+* @param EntityManagerInterface $manager
+* @return Response
+*/
+#[Route('/inscription', 'security.registration', methods: ['GET', 'POST'])]
+public function registration(Request $request, EntityManagerInterface $manager): Response
+{
+    $user = new User();
+    $user-&gt;setRoles(['ROLE_USER']);
+
+    $form = $this-&gt;createForm(RegistrationType::class, $user);
+
+    $form-&gt;handleRequest($request);
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        $user = $form-&gt;getData();
+
+        $manager-&gt;persist($user);
+        $manager-&gt;flush();
+
+        $this-&gt;addFlash('success', 'Votre compte a bien été créé !');
+
+        return $this-&gt;redirectToRoute('security.login');
+    }
+
+    return $this-&gt;render('pages/security/registration.html.twig', [
+        'form' =&gt; $form-&gt;createView()
+    ]);
+}</code></pre>
+                    <p>On va créer notre template avec le contenu suivant :</p>
+<pre><code>{% extends "base.html.twig" %}
+
+{%block title %}Inscription{% endblock %}
+
+{% block body %}
+    &lt;div class="container"&gt;
+        &lt;h1 class="mt-4"&gt;Formulaire d'inscription&lt;/h1&gt;
+
+        {{ form(form) }}
+
+    &lt;/div&gt;
+{% endblock %}</code></pre>
+                    <p>Voilà le formulaire d'inscription est fonctionnel.</p>
+                    <h3>Étape 14 : Édition du profil et du mot de passe :</h3>
+                    <p>On va créer le formulaire "UserType" lié à l'entité "User" avec la commande :</p>
+<pre><code>php bin/console make:form UserType User</code></pre>
+                    <p>Comme précédemment, on va modifier la fonction "buildForm" comme ceci :</p>
+<pre><code>$builder-&gt;add('fullName', TextType::class, [
+    'attr' =&gt; [
+        'class' =&gt; 'form-control',
+        'minlength' =&gt; '2',
+        'maxlength' =&gt; '50',
+    ],
+    'label' =&gt; 'Nom / Prénom',
+    'label_attr' =&gt; [
+        'class' =&gt; 'form_label mt-4'
+    ],
+    'constraints' =&gt; [
+        new Assert\NotBlank(),
+        new Assert\Length(['min' =&gt; 2, 'max' =&gt; 50])
+    ]
+])
+    -&gt;add('pseudo', TextType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control',
+            'minlength' =&gt; '2',
+            'maxlength' =&gt; '50',
+        ],
+        'required' =&gt; false,
+        'label' =&gt; 'Pseudo (Facultatif)',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form_label mt-4'
+        ],
+        'constraints' =&gt; [
+            new Assert\Length(['min' =&gt; 2, 'max' =&gt; 50])
+        ]
+    ])
+    -&gt;add('plainPassword', PasswordType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control'
+        ],
+        'label' =&gt; 'Mot de passe',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form-label mt-4'
+        ]
+    ])
+    -&gt;add('submit', SubmitType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'btn btn-primary mt-4'
+        ],
+        'label' =&gt; 'Modifier le profil'
+    ]);</code></pre>
+                    <p>Ensuite, on va créer un contrôleur "UserController", on met le dossier de template "user" dans le dossier "pages", on modifie le fichier "index.html.twig" en "edit.html.twig" et on modifie la fonction "index" du contrôleur en "edit" :</p>
+<pre><code>/**
+* This controller allow us to edit user's profile
+*
+* @param User $user
+* @param Request $request
+* @param EntityManagerInterface $manager
+* @param UserPasswordHasherInterface $hasher
+* @return Response
+*/
+#[Route('/utilisateur/edition/{id}', name: 'user.edit', methods: ['GET', 'POST'])]
+public function edit(User $user, Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $hasher): Response
+{
+    if ($this-&gt;getUser()) {
+        return $this-&gt;redirectToRoute('security.login');
+    }
+
+    if ($this-&gt;getUser() !== $user) {
+        return $this-&gt;redirectToRoute('recipe.index');
+    }
+
+    $form = $this-&gt;createForm(UserType::class, $user);
+
+    $form-&gt;handleRequest($request);
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        if ($hasher-&gt;isPasswordValid($user, $form-&gt;getData()-&gt;getPlainPassword()))
+        {
+            $user = $form-&gt;getData();
+            $manager-&gt;persist($user);
+            $manager-&gt;flush();
+
+            $this-&gt;addFlash('success', 'Les informations de votre compte ont bien été modifiées !');
+
+            return $this-&gt;redirectToRoute('recipe.index');
+        } else {
+            $this-&gt;addFlash('warning', 'Le mot de passe renseigné est incorrect !');
+        }
+    }
+
+    return $this-&gt;render('pages/user/edit.html.twig', [
+        'form' =&gt; $form-&gt;createView(),
+    ]);
+}</code></pre>
+                    <p>Modifions le template ainsi :</p>
+<pre><code>{% extends 'base.html.twig' %}
+
+{% block title %}Modification de l'utilisateur{% endblock %}
+
+{% block body %}
+    &lt;div class="container"&gt;
+        &lt;h1 class="mt-4"&gt;Formulaire de modification des informations de l'utilisateur&lt;/h1&gt;
+
+        {% for message in app.flashes('warning') %}
+            &lt;div class="alert alert-warning mt-4"&gt;
+                {{ message }}
+            &lt;/div&gt;
+        {% endfor %}
+
+        {{ form(form) }}
+    &lt;/div&gt;
+{% endblock %}</code></pre>
+                    <p>On crée un  nouveau formulaire "UserPasswordType" associer à l'entité "User" pour modifier le mot de passe :</p>
+<pre><code>$builder-&gt;add('plainPassword', RepeatedType::class, [
+    'type' =&gt; PasswordType::class,
+    'first_options' =&gt; [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control'
+        ],
+        'label' =&gt; 'Mot de passe',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form-label mt-4'
+        ]
+    ],
+    'second_options' =&gt; [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control'
+        ],
+        'label' =&gt; 'Confirmation du mot de passe',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form-label mt-4'
+        ]
+    ],
+    'invalid_message' =&gt; 'Les mots de passe ne correspondent pas !'
+])
+    -&gt;add('newPassword', PasswordType::class, [
+        'attr' =&gt; ['class' =&gt; 'form-control'],
+        'label' =&gt; 'Nouveau mot de passe',
+        'label_attr' =&gt; ['class' &gt;= 'form-label mt-4'],
+        'constraints' =&gt; [new Assert\NotBlank()]
+    ])
+    -&gt;add('submit', SubmitType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'btn btn-primary mt-4'
+        ],
+        'label' =&gt; 'Changer mon mot de passe'
+    ]);</code></pre>
+                    <p>On rajoute la fonction "editPassword" dans le contrôleur :</p>
+<pre><code>#[Route('/utilisateur/edit-mot-de-passe/{id}', 'user.edit.password', methods: ['GET, 'POST'])]
+public function editPassword(User $user, Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $hasher): Response
+{
+    $form = $this-&gt;createForm(UserPasswordType::class, $user);
+
+    $form-&gt;handleRequest($request);
+
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        if ($hasher-&gt;isPasswordValid($user, $form-&gt;getData()['plainPassword'])) {
+            $user-&gt;setPlainPassword($form-&gt;getData()['newPassword']);
+
+            $manager-&gt;persist($user);
+            $manager-&gt;flush();
+
+            $this-&gt;addFlash('success', 'Le mot de passe a été modifié !');
+
+            return $this-&gt;redirectToRoute('recipe.index');
+        } else {
+            $this-&gt;addFlash('warning', 'Le mot de passe renseigné est incorrect !');
+        }
+    }
+
+    return $this-&gt;render('pages/user/edit_password.html.twig', [
+        'form' =&gt; $form-&gt;createView(),
+    ]);
+}</code></pre>
+                    <p>Modifions également le template :</p>
+<pre><code>{% extends 'base.html.twig' %}
+
+{% block title %}Modification du mot de passe de l'utilisateur{% endblock %}
+
+{% block body %}
+    &lt;div class="container"&gt;
+        &lt;h1 class="mt-4"&gt;Formulaire de modification du mot de passe de l'utilisateur&lt;/h1&gt;
+
+        {% for message in app.flashes('warning') %}
+            &lt;div class="alert alert-warning mt-4"&gt;
+                {{ message }}
+            &lt;/div&gt;
+        {% endfor %}
+
+        {{ form(form) }}
+    &lt;/div&gt;
+{% endblock %}</code></pre>
+                    <h3>Étape 15 : Assigner les entités à un utilisateur (ingrédient, recette) :</h3>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
