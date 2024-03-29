@@ -318,7 +318,7 @@ homepage:
                             <p>Un prix au kg (par exemple 2 euros le kilo) qui ne pourra être inférieur à 1 et supérieur à 200. Le prix pourra contenir des décimales.</p>
                         </li>
                         <li>
-                            <p>Un champ contenant la date de création qui doit être générée automatiquement une fois l'ingrédfient créé.</p>
+                            <p>Un champ contenant la date de création qui doit être générée automatiquement une fois l'ingrédient créé.</p>
                         </li>
                     </ul>
                     <p>Pour créer cette entité, on utilise la commande :</p>
@@ -508,7 +508,7 @@ homepage:
                     <p>Remarque : Ça va créer le fichier <span class="em">`templates/ingredient/index.html.twig`</span>, mais, pour faire un peu le ménage, on va créer un dossier "pages" et donc on va y insérer dedans le dossier "ingredient".</p>
                     <h4>Lister tous les ingrédients :</h4>
                     <p>Modifions la fonction "index" de notre contrôleur fraîchement créé :</p>
-<pre><code>#[Route('/ingredient', name: 'ingredient', methods: ['GET'])]
+<pre><code>#[Route('/ingredient', name: 'ingredient.index', methods: ['GET'])]
 public function index(IngredientRepository $repository) : Response
 {
     $ingredients = $repository->findAll();
@@ -579,7 +579,7 @@ use Symfony\Component\HttpFoundation\Request;
 * @param Request $request
 * @return Response
 */
-#[Route('/ingredient', name: 'ingredient', methods: ['GET'])]
+#[Route('/ingredient', name: 'ingredient.index', methods: ['GET'])]
 public function index(IngredientRepository $repository, PaginatorInterface $paginator, Request $request) : Response
 {
 
@@ -1406,6 +1406,7 @@ public function delete(EntityManagerInterface $manager, Recipe $recipe): Respons
     Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: "auto"</code></pre>
                     <p>Dans notre fixture, on va créer des utilisateurs fictifs :</p>
 <pre><code>// Users
+$users = [];
 for ($i = 0; $i &lt; 10; $i++) {
     $user = new User();
     $user-&gt;setFullName($this-&gt;faker-&gt;name())
@@ -1414,6 +1415,7 @@ for ($i = 0; $i &lt; 10; $i++) {
         -&gt;setRoles(['ROLE_USER'])
         -&gt;setPassword('password');
 
+    $users[] = $user;
     $manager-&gt;persist($user);
 }</code></pre>
                     <p>On charge les nouveaux utilisateurs avec la commande :</p>
@@ -1762,7 +1764,7 @@ public function registration(Request $request, EntityManagerInterface $manager):
 #[Route('/utilisateur/edition/{id}', name: 'user.edit', methods: ['GET', 'POST'])]
 public function edit(User $user, Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $hasher): Response
 {
-    if ($this-&gt;getUser()) {
+    if (!$this-&gt;getUser()) {
         return $this-&gt;redirectToRoute('security.login');
     }
 
@@ -1902,7 +1904,98 @@ public function editPassword(User $user, Request $request, EntityManagerInterfac
 {% endblock %}</code></pre>
                     <h3>Étape 15 : Assigner les entités à un utilisateur (ingrédient, recette) :</h3>
                     <p>Dans cette partie, on va mettre en place la relation entre l'entité "User" et l'entité "Ingredient". On doit également modifier les fixtures pour lier les ingrédients à un utilisateur, ainsi que lier un ingrédient à l'utilisateur connecté lors de la création et afficher uniquement les ingrédients reliés à l'utilisateur.</p>
-                    <p></p>
+                    <p>Pour commencer, on rajoute la propriété "ingredients" dans l'entité "User" de type "relation" lié à l'entité "Ingredient" et de type de relation "OneToMany".</p>
+                    <p>On va dire que la propriété "user" non nullable sera rajouté dans l'entité "Ingredient" et on va ajouter le fait de supprimer l'ingrédient orphelin.</p>
+                    <p>Dans les fixtures, on déplace le code des users au-dessus de celui des ingrédients que l'on va modifier ainsi :</p>
+<pre><code>// Ingredients
+$ingredients = [];
+for ($i = 0; $i &lt; 50; $i++) {
+    $ingredient = new Ingredient();
+    $ingredient-&gt;setName($this-&gt;faker-&gt;word())
+        -&gt;setPrice(mt_rand(0, 100))
+        -&gt;setUser($users[array_range($users)]);
+}</code></pre>
+                    <p>On crée une nouvelle migration, on la migre et on load à nouveau les fixtures. Enfin, on modifie la fonction "index" de notre "IngredientController" pour qu'il affiche seulement les ingrédients lié à l'utilisateur connecté :</p>
+<pre><code>/**
+* This controller display all ingredients
+*
+* @param IngredientRepository $repository
+* @param PaginatorInterface $paginator
+* @param Request $request
+* @return Response
+*/
+#[Route('/ingredient', name: 'ingredient.index', methods: ['GET'])]
+public function index(IngredientRepository $repository, PaginatorInterface $paginator, Request $request) : Response
+{
+
+    $ingredients = $paginator-&gt;paginate(
+        $repository->findBy(['user' =&gt; $this-&gt;getUser()]),
+        $request-&gt;query-&gt;getInt('page', 1),
+        10    
+    );
+    // dd($ingredients);
+
+    return $this-&gt;render('pages/ingredient/index.html.twig', [
+        'ingredients' =&gt; $ingredients
+    ]);
+}</code></pre>
+                    <p>Pour lier l'utilisateur à un ingrédient lors de sa création, on va modifier la fonction "new" du "IngredientController" pour ajouter la ligne suivante :</p>
+<pre><code>$ingredient-&gt;setUser($this-&gt;getUser());</code></pre>
+                    <p>Ce sera pareil pour l'entité "Recipe" afin de la lier à celle de "User". On doit ajouter un constructeur et on doit modifier le "QueryBuilder" du formulaire pour lors de la création d'une recette, on affiche seulement tous les ingrédients de l'utilisateur connecté :</p>
+<pre><code>use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+
+private $token;
+
+public function __construct(TokenStorageInterface $token)
+{
+    $this-&gt;token = $token;
+}</code></pre>
+<pre><code>'query_builder' =&gt; function(IngredientRepository $r) {
+    return $r-&gt;createQueryBuilder('i')
+        -&gt;where('i.user = :user')
+        -&gt;orderBy('i.name', 'ASC')
+        -&gt;setParameter('user', $this-&gt;token-&gt;getToken()-&gt;getUser());
+}</code></pre>
+                    <p>On va modifier la navbar qui sera différente si l'utilisateur est connecté ou pas avec <span class="html">{% if app.user %}</span>.</p>
+                    <p>Les liens vers la connexion et l'inscription si l'utilisateur n'est pas connecté sinon les liens vers mes ingrédients et mes recettes comme par exemple :</p>
+<pre><code>&lt;div class="d-flex"&gt;
+    &lt;ul class="navbar-nav me-auto"&gt;
+        {% if app.user %}
+            &lt;li class="nav-item dropdown" style="margin-right: 5em;"&gt;
+                &lt;a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"&gt;{{ app.user.fullName }}&lt;/a&gt;
+                &lt;div class="dropdown-menu"&gt;
+                    &lt;a class="dropdown-item" href="{{ path('user.edit', {id: app.user.id}) }}"&gt;Modifier mes informations&lt;/a&gt;
+                    &lt;a class="dropdown-item" href="{{ path('user.edit.password', {id: app.user.id}) }}"&gt;Modifier mon mot de passe&lt;/a&gt;
+                    &lt;div class="dropdown-divider"&gt;&lt;/div&gt;
+                    &lt;a class="dropdown-item" href="{{ path('security.logout') }}"&gt;Déconnexion&lt;/a&gt;
+                &lt;/div&gt;
+            &lt;/li&gt;
+        {% else %}
+            &lt;li class="nav-item"&gt;
+                &lt,a class="nav-link" href="{{ path('security.login') }}"&gt;Connexion&lt;/a&gt;
+            &lt;/li&gt;
+            &lt;li class="nav-item"&gt;
+                &lt,a class="nav-link" href="{{ path('security.registration') }}"&gt;Inscription&lt;/a&gt;
+            &lt;/li&gt;
+        {% endif %}
+    &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+                    <h3>Étape 16 : Sécuriser les routes avec IS_GRANTED et SECURITY :</h3>
+                    <p>Dans cette partie, on va gérer la gestion de l'accès des pages, c'est-à-dire qu'on va interdire l'accès à certaines pahes en fonction de différents critères.</p>
+                    <p>Les annotations <span class="html">@Security</span> et <span class="html">@IsGranted</span> restreint l'accès aux contrôleurs et donc par extension aux pages.</p>
+                    <p>L'annotation <span class="em">@IsGranted</span> est la plus simple pour restreindre par rôle ou encore par les variables passées au contrôleur.</p>
+                    <p>L'annotation <span class="em">@Security</span> est plus flexible et plus complète qui permet de passer des expressions contenant de la logique.</p>
+                    <p>Pour la page de la liste des ingrédients, on va donner l'accès aux utilisateurs ayant le rôle "ROLE_USER" en ajoutant sur la méthode "index" du "IngredientController" la ligne suivante :</p>
+<pre><code>#[IsGranted('ROLE_USER')]</code></pre>
+                    <p>Pour la modification des ingrédients, on doit aussi vérifier qu'en plus du rôle "ROLE_USER" que l'utilisateur connecté soit bien celui lié à cet ingrédient avec la ligne suivante :</p>
+<pre><code>#[Security("is_granted('ROLE_USER') and user === ingredient.getUser()")]</code></pre>
+                    <p>Ce sera pareil pour les recettes. Pour la modification du profil de l'utilisateur ou encore pour la modification du mot de passe, on va supprimer les if de vérification pour les remplacer par la ligne suivante au-dessus de la fonction "edit" de l'"UserController" :</p>
+<pre><code>#[Security("is_granted('ROLE_USER') and user === choosenUser")]
+public function edit(User $choosenUser, Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $hasher): Response
+{
+    ...
+}</code></pre>
+                    <p>Remarque : On a modifié le "$user" par "$choosenUser" car il existe déjà la variable "user" dans l'annotation "Security".</p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
