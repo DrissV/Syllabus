@@ -1392,7 +1392,7 @@ public function delete(EntityManagerInterface $manager, Recipe $recipe): Respons
 ?&gt;</code></pre>
                     <p>Avant de créer une migration pour cette entité et de la migrer, il faut modifier l'entité "User" avec la commande :</p>
 <pre><code>php bin/console make:entity User</code></pre>
-                    <p>On va rajouter les propriétés "fullName" de taille "50" non nullable, "pseudo" de taille "50" nullable et "createdAt" de type "datetime_immutable" non nullable.</p>
+                    <p>On va rajouter les propriétés "fullName" de taille "50" non nullable, "pseudo" de taille "50" nullable, "createdAt" de type "datetime_immutable" non nullable et "updatedAt" de type "datetime_immutable" non nullable.</p>
                     <p>Donc, avec la commande `<span class="html">php bin/console make:migration</span>` on crée la migration et avec `<span class="em">php bin/console d:m:m</span>` pour la migrer.</p>
                     <p>Ensuite, dans le fichier "<span class="em">security.yaml</span>", on va rajouter le provider comme suit :</p>
 <pre><code>providers:
@@ -1846,15 +1846,25 @@ public function edit(User $user, Request $request, EntityManagerInterface $manag
         'label' =&gt; 'Changer mon mot de passe'
     ]);</code></pre>
                     <p>On rajoute la fonction "editPassword" dans le contrôleur :</p>
-<pre><code>#[Route('/utilisateur/edit-mot-de-passe/{id}', 'user.edit.password', methods: ['GET, 'POST'])]
+<pre><code>/**
+* This controller allow us to edit user's password
+*
+* @param User $user
+* @param Request $request
+* @param EntityManagerInterface $manager
+* @param UserPasswordHasherInterface $hasher
+* @return Response
+*/
+#[Route('/utilisateur/edit-mot-de-passe/{id}', 'user.edit.password', methods: ['GET, 'POST'])]
 public function editPassword(User $user, Request $request, EntityManagerInterface $manager, UserPasswordHasherInterface $hasher): Response
 {
-    $form = $this-&gt;createForm(UserPasswordType::class, $user);
+    $form = $this-&gt;createForm(UserPasswordType::class);
 
     $form-&gt;handleRequest($request);
 
     if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
         if ($hasher-&gt;isPasswordValid($user, $form-&gt;getData()['plainPassword'])) {
+            $user-&gt;setUpdatedAt(new \DateTimeImmutable());
             $user-&gt;setPlainPassword($form-&gt;getData()['newPassword']);
 
             $manager-&gt;persist($user);
@@ -1891,6 +1901,7 @@ public function editPassword(User $user, Request $request, EntityManagerInterfac
     &lt;/div&gt;
 {% endblock %}</code></pre>
                     <h3>Étape 15 : Assigner les entités à un utilisateur (ingrédient, recette) :</h3>
+                    <p>Dans cette partie, on va mettre en place la relation entre l'entité "User" et l'entité "Ingredient". On doit également modifier les fixtures pour lier les ingrédients à un utilisateur, ainsi que lier un ingrédient à l'utilisateur connecté lors de la création et afficher uniquement les ingrédients reliés à l'utilisateur.</p>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
