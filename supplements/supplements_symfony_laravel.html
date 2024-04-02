@@ -2007,7 +2007,7 @@ public function edit(User $choosenUser, Request $request, EntityManagerInterface
                         <li>Si la recette est rendue publique, alors les utilisateurs pourront la consulter.</li>
                         <li>Sinon, elle ne pourra pas être consultée par quelqu'un d'autre que le créateur.</li>
                     </ul>
-                    <p>On va rajouter la propriété "isPublic" de type "boolean" non nullable dans l'entité "Recipe". On fait une nouvelle migration et on la migre. On va modifier la fixture pour ajouter la ligne suivante :</p>
+                    <p>On va rajouter la propriété "isPublic" de type "boolean" non nullable dans l'entité "Recipe" avec la valeur par défaut à "false". On fait une nouvelle migration et on la migre. On va modifier la fixture pour ajouter la ligne suivante :</p>
 <pre><code>-&gt;setIsPublic(mt_rand(0, 1) == 1);</code></pre>
                     <p>Dans le contrôleur "RecipeController", on va rajouter la fonction "show" :</p>
 <pre><code>/**
@@ -2016,7 +2016,7 @@ public function edit(User $choosenUser, Request $request, EntityManagerInterface
 * @param Recipe $recipe
 * @return Response
 */
-#[Security("is_granted('ROLE_USER') and recipe.getIsPublic() === true")]
+#[Security("is_granted('ROLE_USER') and (recipe.getIsPublic() === true" || user === recipe.getUser()))]
 #[Route('/recette/{id}', 'recipe.show', methods: ['GET'])]
 public function show(Recipe $recipe): Response
 {
@@ -2219,7 +2219,7 @@ public function getAverage()
 * @param EntityManagerInterface $manager
 * @return Response
 */
-#[Security("is_granted('ROLE_USER') and recipe.getIsPublic() === true")]
+#[Security("is_granted('ROLE_USER') and (recipe.getIsPublic() === true" || user === recipe.getUser()))]
 #[Route('/recette/{id}', 'recipe.show', methods: ['GET', 'POST'])]
 public function show(Recipe $recipe, Request $request, MarkRepository $markRepository, EntityManagerInterface $manager): Response
 {
@@ -2268,7 +2268,89 @@ public function show(Recipe $recipe, Request $request, MarkRepository $markRepos
     {{ form(form) }}
 &lt;/div&gt;</code></pre>
                     <h3>Étape 19 : Upload une image :</h3>
-                    <p></p>
+                    <p>Pour uploader une image pour chaque recette, on va d'abord utiliser le bundle "VichUploaderBundle" et on va l'installer avec la commande suivante :</p>
+<pre><code>composer require vich/uploader-bundle</code></pre>
+                    <p>Cette commande va générer le fichier <span class="em">`config\packages\vich_uploader.yaml`</span> qui est le fichier de configuration de ce bundle qu'on va modifier :</p>
+<pre><code>vich_uploader:
+    db_driver: orm
+
+    mappings:
+        recipe_images:
+            uri_prefix: /images/recette
+            upload_destination: "%kernel.project_dir%/public/images/recette"
+            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
+</code></pre>
+                    <p>On va rajouter des informations pour l'upload des images dans l'entité "Recipe" :</p>
+<pre><code>...
+
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
+
+...
+
+#[Vich\Uploadable]
+class Recipe
+{
+
+    ...
+
+    /**
+    * NOTE : This is not a mapped field of entity metadata, just a simple property.
+    */
+    #[Vich\UploadableField(mapping: 'recipe_images', fileNameProperty: 'imageName')]
+    private ?File $imageFile = null;
+
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $imageName = null;
+
+    ...
+
+    /**
+    * If manually uploading a file (i.e. not using Symfony Form) ensure an instance
+    * of 'UploadedFile' is injected into this setter to trigger the update. If this
+    * bundle's configuration parameter 'inject_on_load' is set to 'true' this setter
+    * must be able to accept an instnace of 'File' as the bundle will inject one here
+    * during Doctrine hydration.
+    *
+    * @param File|\Symfony\Component\HttpFoundation\File\UpdloadedFile|null $imageFile
+    */
+    public function setImageFile(?File $imageFile = null): void
+    {
+        $this-&gt;imageFile = $imageFile;
+
+        if (null !== $imageFile) {
+            // It is required that at least one field changes if you are using doctrine
+            // otherwise the event listeners won't be called and the file is lost
+            $this-&gt;updatedAt = new \DateTimeImmutable();
+        }
+    }
+
+    public function getImageFile(): ?File
+    {
+        return $this-&gt;imageFile;
+    }
+
+    public function setImageName(?string $imageName): void
+    {
+        $this-&gt;imageName = $imageName;
+    }
+
+    ...
+    
+}</code></pre>
+                    <p>Dans le formulaire de création d'une recette, on va rajouter un champ "imageFile" comme ceci :</p>
+<pre><code>-&gt;add('imageFile', VichImageType::class, [
+    'label' =&gt; 'Image de la recette',
+    'label_attr' =&gt; [
+        'class' =&gt; 'form-label mt-4'
+    ]
+])</code></pre>
+                    <p>Et dans le template du formulaire de création/modification d'une recette :</p>
+<pre><code>{{ form_row(form.imageFile) }}</code></pre>
+                    <p>On oublie pas de créer la migration et la migrer. Pour afficher l'image dans le détail de la recette (show), on fait :</p>
+<pre><code>&lt;div class="recipe_image"&gt;
+    &lt;img style="max-width: 500px;" src="{{ vich_uploader_asset(recipe, 'imageFile') }}"&gt;
+&lt;/div&gt;</code></pre>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
