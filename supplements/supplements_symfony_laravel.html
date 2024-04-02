@@ -1030,6 +1030,7 @@ public function delete(EntityManagerInterface $manager, Ingredient $ingredient) 
             }
 
             // Recipes
+            $recipes = [];
             for ($j = 0; $j &lt; 25; $j++) {
                 $recipe = new Recipe();
                 $recipe-&gt;setName($this-&gt;faker-&gt;word())
@@ -1045,6 +1046,7 @@ public function delete(EntityManagerInterface $manager, Ingredient $ingredient) 
                 }
             }
 
+            $recipes[] = $recipe;
             $manager-&gt;flush();
         }
     }
@@ -2018,7 +2020,7 @@ public function edit(User $choosenUser, Request $request, EntityManagerInterface
 #[Route('/recette/{id}', 'recipe.show', methods: ['GET'])]
 public function show(Recipe $recipe): Response
 {
-    return $thi-&gt;render('pages/recipe/show.html.twig', [
+    return $this-&gt;render('pages/recipe/show.html.twig', [
         'recipe' =&gt; $recipe
     ]);
 }</code></pre>
@@ -2104,6 +2106,169 @@ public function findPublicRecipe(?int $nbRecipes): array
     return $queryBuilder-&gt;getQuery()
         -&gt;getResult();
 }</code></pre>
+                    <p>Sur la page d'accueil, on pourrait afficher les 3 dernières recettes de la communauté en précisant la valeur de "$nbRecipes" à 3.</p>
+                    <h3>Étape 18 : Noter une recette :</h3>
+                    <p>Cette fonctionnalité va permettre aux différents utilisateurs de noter les recettes mises en mode "public" sur l'application. Une fois la recette mise en mode "public", elle est éligible aux votes des utilisateurs.</p>
+                    <p>Un utilisateur connecté pourra donner une note entre 1 et 5. L'ensemble des notes deront une moyenne, et les utilisateurs pourront voir cette moyenne sur la page de la recette.</p>
+                    <p>En logique et c'est très compréhensible, un utilisateur ne pourra pas noter sa propre recette et un utilisateur ne pourra pas non plus noter deux fois la même recette.</p>
+                    <p>Pour commencer à coder cette fonctionnalité, on va d'abord créer une entité "Mark" ("note" en anglais) avec la commande suivante :</p>
+<pre><code>php bin/console make:entity Mark</code></pre>
+                    <p>Avec les propriétés "mark" de type "integer" non nullable, "user" de type "ManyToOne" non nullable liée à l'entité "User", "recipe" de type "ManyToOne" non nullable liée à l'entité "Recipe" et "createdAt" de type "datetime_immutable" non nullable.</p>
+                    <p>On va modifier l'entité "Mark" comme ceci :</p>
+<pre><code>#[ORM\Entity(repositoryClass: MarkRepository::class)]
+#[UniqueEntity(
+    fields: ['user', 'recipe'],
+    errorpath: 'user',
+    message: 'Cet utilisateur a déjà noté cette recette !'
+)]
+class Mark
+{
+
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private ?int $id = null;
+
+    #[ORM\Column(type: 'integer')]
+    #[Assert\Positive()]
+    #[Assert\LessThan(6)]
+    private int $mark;
+
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'marks')]
+    #[ORM\JoinColumn(nullable: false)]
+    private User $user;
+
+    #[ORM\ManyToOne(targetEntity: Recipe::class, inversedBy: 'marks')]
+    #[ORM\JoinColumn(nullable: false)]
+    private Recipe $recipe;
+
+    #ORM\Column(type: 'datetime_immutable')]
+    private ?\DateTimeImmutable $createdAt;
+
+    public function __construct()
+    {
+        $this-&gt;createdAt = new \DateTimeImmutable();
+    }
+
+}</code></pre>
+                    <p>On oublie pas de créer la migration et la migrer. Dans nos fixtures, on va rajouter les marks :</p>
+<pre><code>// Marks
+foreach ($recipes as $recipe) {
+    for ($i = 0; $i &lt; mt_rand(0, 4); $i++) {
+        $mark = new Mark();
+        $mark-&gt;setMark(mt_rand(1, 5))
+            -&gt;setUser($users[array_range($users)])
+            -&gt;setRecipe($recipe);
+        
+        $manager-&gt;persist($mark);
+    }
+}</code></pre>
+                    <p>Pour calculer la moyenne des notes de la recette, on rajouter un <span class="em">private ?float $average = null;</span> dans l'entité "Recipe" et y rajouter la fonction "getAverage" :</p>
+<pre><code>/**
+* Get the value of average
+*/
+public function getAverage()
+{
+    $marks = $this-&gt;marks;
+
+    if ($marks-&gt;toArray() === []) {
+        $this-&gt;average = null;
+    } else {
+        $total = 0;
+        foreach ($marks as $mark) {
+            $total += $mark-&gt;getMark();
+        }
+        $this-&gt;average = $total / count($marks);
+    }
+
+    return $this-&gt;average;
+}</code></pre>
+                    <p>On va créer un petit formulaire "MarkType" basé sur l'entité "Mark" pour pouvoir noter les recettes avec la commande suivante :</p>
+<pre><code>php bin/console make:form MarkType Mark</code></pre>
+                    <p>On va ensuite modifier la fonction "buildForm" de ce nouveau fichier comme ceci :</p>
+<pre><code>$builder
+    -&gt;add('mark', ChoiceType::class, [
+        'choices' =&gt; [
+            '1' =&gt; 1,
+            '2' =&gt; 2,
+            '3' =&gt; 3,
+            '4' =&gt; 4,
+            '5' =&gt; 5,
+        ],
+        'attr' =&gt; [
+            'class' =&gt; 'form-select'
+        ],
+        'label' =&gt; 'Noter la recette',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form-label mt-4'
+        ]
+    ])
+    -&gt;add('submit', SubmitType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'btn btn-primary mt-4'
+        ],
+        'label' =&gt; 'Noter la recette'
+    ]);</code></pre>
+                    <p>On va modfifier dans le "RecipeController" la fonction "show" :</p>
+<pre><code>/**
+* This controller allow us to see a recipe if this one is public
+*
+* @param Recipe $recipe
+* @param Request $request
+* @param MarkRepository $markRepository
+* @param EntityManagerInterface $manager
+* @return Response
+*/
+#[Security("is_granted('ROLE_USER') and recipe.getIsPublic() === true")]
+#[Route('/recette/{id}', 'recipe.show', methods: ['GET', 'POST'])]
+public function show(Recipe $recipe, Request $request, MarkRepository $markRepository, EntityManagerInterface $manager): Response
+{
+
+    $mark = new Mark();
+    $form = $this-&gt;createForm(MarkType::class, $mark);
+
+    $form-&gt;handleRequest($request);
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        $mark-&gt;setUser($this-&gt;getUser())
+            -&gt;setRecipe($recipe);
+
+        $existingMark = $markRepository-&gt;findOneBy([
+            'user' =&gt; $this-&gt;getUser(),
+            'recipe' =&gt; $recipe
+        ]);
+
+        if (!$existingMark) {
+            $manager-&gt;persist($mark);
+        } else {
+           $existingMark-&gt;setMark($form-&gt;getData()-&gt;getMark());
+        }
+
+        $manager-&gt;flush();
+
+        $this-&gt;addFlash('success', 'Votre note a bien été prise en compte !');
+
+        return $this-&gt;redirectToRoute('recipe.show', ['id' =&gt; $recipe-&gt;getId()]);
+    }
+
+    return $this-&gt;render('pages/recipe/show.html.twig', [
+        'recipe' =&gt; $recipe,
+        'form' =&gt; $form-&gt;createView()
+    ]);
+}</code></pre>
+                    <p>On va modifier le template lié à cette fonction pour ajouter les lignes suivantes au bon endroit :</p>
+<pre><code>{% for message in app.flashes('success') %}
+    &lt;div class="alert alert-success mt-4"&gt;
+        {{ message }}
+    &lt;/div&gt;
+{% endfor %}
+
+&lt;p&gt;La moyenne de cette recette est de {{ recipe.average|number_format(2, '.', ',') }}/5 !&lt;/p&gt;
+
+&lt;div class="mark"&gt;
+    {{ form(form) }}
+&lt;/div&gt;</code></pre>
+                    <h3>Étape 19 : Upload une image :</h3>
+                    <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
