@@ -2374,7 +2374,61 @@ class Recipe
                     <p>Le nom et le prénom seront optionnels. Ils devront faire entre 2 et 50 caractères. L'adresse email sera obligatoire, comme le message. Le sujet sera lui optionnel et contiendra macimum 50 caractères.</p>
                     <p>Si l'utilisateur est connecté, alors son nom, prénom et adresse email seront automatiquement remplis.</p>
                     <p>Le formulaire contiendra également un système reCaptcha.</p>
-                    
+                    <p>D'abord, on va créer une entité "Contact" avec les propriétés "fullName" de type "string" de taille "50" nullable, "email" de type "string" de taille "180" non nullable, "subject" de type "string" de taille "100" nullable, "message" de type "text" non nullable et "createdAt" de type "datetime_immutable" non nullable avec la commande :</p>
+<pre><code>php bin/console make:entity Contact</code></pre>
+                    <p>On va modifier cette entité pour rajouter les "Assert" :</p>
+<pre><code>#[ORM\Entity(repositoryClass: ContactRepository::class)]
+class Contact
+{
+ 
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private ?int $id;
+
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Assert\Length(min: 2, max: 50)]
+    private ?string $fullName = null;
+
+    #[ORM\Column(type: 'string', length: 180)]
+    #[Assert\Email()]
+    #[Assert\Length(min: 2, max: 180)]
+    private string $email;
+
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    #[Assert\Length(min: 2, max: 100)]
+    private ?string $subject = null;
+
+    #[ORM\Column(type: 'text')]
+    #[Assert\NotBlank()]
+    private string $message;
+
+    #[ORM\Column(type: 'datetime_immutable')]
+    #[Assert\NotNull()]
+    private ?\DateTimeImmutable $createdAt;
+    
+    public function __construct()
+    {
+        $this-&gt;createdAt = new \DateTimeImmutable();
+    }
+
+    ...
+
+}</code></pre>
+                    <p>On crée donc la migration et on la migre. On va rajouter des fixtures pour les contacts :</p>
+<pre><code>// Contact
+for ($i = 0; $i &lt; 5; $i++) {
+    $contact = new Contact();
+    $contact-&gt;setFullName($this-&gt;faker-&gt;name())
+        -&gt;setEmail($this-&gt;faker-&gt;-&gt;email())
+        -&gt;setSubject('Demande n°' . ($i + 1))
+        -&gt;setMessage($this-&gt;faker-&gt;text());
+
+    $manager-&gt;persist($contact);
+}</code></pre>
+                    <p>On va créer un contrôleur "ContactController" avec la commande :</p>
+<pre><code>php bin/console ContactController</code></pre>
+                    <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
