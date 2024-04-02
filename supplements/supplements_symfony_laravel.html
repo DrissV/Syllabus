@@ -214,6 +214,8 @@
                         <li>
                             <p>Créez le contrôleur nommé <span class="em">DefaultController</span> en utilisant la commande suivante :</p>
 <pre><code>php bin/console make:controller DefaultController</code></pre>
+                            <p>Ou encore on utilise la syntaxe suivante qui fait la même chose :</p>
+<pre><code>symfony console make:controller DefaultController</code></pre>
                         </li>
                         <li>
                             <p>Ouvrez le fichier <span class="em">`src/Controller/DefaultController.php`</span> avec votre éditeur de code préféré et voici le code généré par la commande :</p>
@@ -268,7 +270,7 @@ public function homepage() : Response {
                             <p>Modifiez le template pour qu'il étend de celui de base dans le fichier <span class="em">`templates/base.html.twig`</span> :</p>
 <pre><code>{% extends "base.html.twig" %}
 
-{%block title %}Mon Projet Symfony{% endblock %}
+{% block title %}Mon Projet Symfony{% endblock %}
 
 {% block body %}
     &lt;h1&gt;Bienvenue sur Mon Projet Symfony !&lt;/h1&gt;
@@ -1553,11 +1555,11 @@ public function login(AuthenticationUtils $authenticationUtils): Response
         &lt;form action="{{ path('security.login') }}" method="post"&gt;
             &lt;div class="form-group"&gt;
                 &lt;label for="username" class="form-label mt-4"&gt;Adresse email&lt;/label&gt;
-                &lt;input type="email" class="form-control" id="username" name="username" value="{{ last_username }}"&gt;
+                &lt;input type="email" class="form-control" id="username" name="_username" value="{{ last_username }}"&gt;
             &lt;/div&gt;
             &lt;div class="form-group"&gt;
                 &lt;label for="password" class="form-label mt-4"&gt;Mot de passe&lt;/label&gt;
-                &lt;input type="password" class="form-control" id="password" name="password"&gt;
+                &lt;input type="password" class="form-control" id="password" name="_password"&gt;
             &lt;/div&gt;
 
             &lt;button type="submit" class="btn btn-primary mt-4"&gt;
@@ -1572,7 +1574,7 @@ public function login(AuthenticationUtils $authenticationUtils): Response
 *
 * @return void
 */
-#[Route('/deconnexion', 'security.logout')]
+#[Route('/deconnexion', 'security.logout', methods: ['GET'])]
 public function logout()
 {
     // Nothing to do here...
@@ -1624,7 +1626,6 @@ public function logout()
             'class' =&gt; 'form-label mt-4'
         ],
         'constraints' =&gt; [
-            new Assert\NotBlank(),
             new Assert\Email(),
             new Assert\Length(['min' =&gt; 2, 'max' =&gt; 180])
         ]
@@ -1654,7 +1655,8 @@ public function logout()
     -&gt;add('submit', SubmitType::class, [
         'attr' =&gt; [
             'class' =&gt; 'btn btn-primary mt-4'
-        ]
+        ],
+        'label' =&gt; 'S\'inscrire'
     ]);</code></pre>
                     <p>Dans notre "SecurityController", on rajoute la fonction "registration" :</p>
 <pre><code>/**
@@ -1691,7 +1693,7 @@ public function registration(Request $request, EntityManagerInterface $manager):
                     <p>On va créer notre template avec le contenu suivant :</p>
 <pre><code>{% extends "base.html.twig" %}
 
-{%block title %}Inscription{% endblock %}
+{% block title %}Inscription{% endblock %}
 
 {% block body %}
     &lt;div class="container"&gt;
@@ -1961,9 +1963,9 @@ public function __construct(TokenStorageInterface $token)
 <pre><code>&lt;div class="d-flex"&gt;
     &lt;ul class="navbar-nav me-auto"&gt;
         {% if app.user %}
-            &lt;li class="nav-item dropdown" style="margin-right: 5em;"&gt;
+            &lt;li class="nav-item dropdown"&gt;
                 &lt;a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"&gt;{{ app.user.fullName }}&lt;/a&gt;
-                &lt;div class="dropdown-menu"&gt;
+                &lt;div class="dropdown-menu dropdown-menu-end"&gt;
                     &lt;a class="dropdown-item" href="{{ path('user.edit', {id: app.user.id}) }}"&gt;Modifier mes informations&lt;/a&gt;
                     &lt;a class="dropdown-item" href="{{ path('user.edit.password', {id: app.user.id}) }}"&gt;Modifier mon mot de passe&lt;/a&gt;
                     &lt;div class="dropdown-divider"&gt;&lt;/div&gt;
@@ -1972,10 +1974,10 @@ public function __construct(TokenStorageInterface $token)
             &lt;/li&gt;
         {% else %}
             &lt;li class="nav-item"&gt;
-                &lt,a class="nav-link" href="{{ path('security.login') }}"&gt;Connexion&lt;/a&gt;
+                &lt;a class="nav-link" href="{{ path('security.login') }}"&gt;Connexion&lt;/a&gt;
             &lt;/li&gt;
             &lt;li class="nav-item"&gt;
-                &lt,a class="nav-link" href="{{ path('security.registration') }}"&gt;Inscription&lt;/a&gt;
+                &lt;a class="nav-link" href="{{ path('security.registration') }}"&gt;Inscription&lt;/a&gt;
             &lt;/li&gt;
         {% endif %}
     &lt;/ul&gt;
@@ -1996,6 +1998,112 @@ public function edit(User $choosenUser, Request $request, EntityManagerInterface
     ...
 }</code></pre>
                     <p>Remarque : On a modifié le "$user" par "$choosenUser" car il existe déjà la variable "user" dans l'annotation "Security".</p>
+                    <h3>Étape 17 : Partager une recette :</h3>
+                    <p>Pour partager une recette, on la rendre publique ou non avec les spécificités suivantes :</p>
+                    <ul>
+                        <li>Un utilisateur connecté aura à disposition un champ, pour chaque recette, lui permettant de choisir si la recette en question est disponible pour l'ensemble de la communauté.</li>
+                        <li>Si la recette est rendue publique, alors les utilisateurs pourront la consulter.</li>
+                        <li>Sinon, elle ne pourra pas être consultée par quelqu'un d'autre que le créateur.</li>
+                    </ul>
+                    <p>On va rajouter la propriété "isPublic" de type "boolean" non nullable dans l'entité "Recipe". On fait une nouvelle migration et on la migre. On va modifier la fixture pour ajouter la ligne suivante :</p>
+<pre><code>-&gt;setIsPublic(mt_rand(0, 1) == 1);</code></pre>
+                    <p>Dans le contrôleur "RecipeController", on va rajouter la fonction "show" :</p>
+<pre><code>/**
+* This controller allow us to see a recipe if this one is public
+*
+* @param Recipe $recipe
+* @return Response
+*/
+#[Security("is_granted('ROLE_USER') and recipe.getIsPublic() === true")]
+#[Route('/recette/{id}', 'recipe.show', methods: ['GET'])]
+public function show(Recipe $recipe): Response
+{
+    return $thi-&gt;render('pages/recipe/show.html.twig', [
+        'recipe' =&gt; $recipe
+    ]);
+}</code></pre>
+                    <p>Créons donc ce template avec le contenu suivant :</p>
+<pre><code>{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ recipe.name }}
+{% endblock %}
+
+{% block body %}
+    &lt;div class="container"&gt;
+        &lt;h1 class="mt-4"&gt;{{ recipe.name }}&lt;/h1&gt;
+        &lt;div&gt;
+            &lt;span class="badge bg-primary"&gt;Créée le {{ recipe.createdAt|date('d/m/Y') }}&lt;/span&gt;
+        &lt;/div&gt;
+
+        {% if recipe.time %}
+            &lt;p&gt;Temps (en minutes) : {{ recipe.time }}&lt;/p&gt;
+        {% else %}
+            &lt;p&gt;Temps non renseigné&lt;/p&gt;
+        {% endif %}
+
+        {% if recipe.nbPeople %}
+            &lt;p&gt;Pour {{ recipe.nbPeople }} personnes&lt;/p&gt;
+        {% else %}
+            &lt;p&gt;Nombre de personnes non renseigné&lt;/p&gt;
+        {% endif %}
+
+        {% if recipe.difficulty %}
+            &lt;p&gt;Difficulté : {{ recipe.difficulty }}/5&lt;/p&gt;
+        {% else %}
+            &lt;p&gt;Difficulté non renseignée&lt;/p&gt;
+        {% endif %}
+
+        {% if recipe.price %}
+            &lt;p&gt;Prix (en €) : {{ recipe.price }}&lt;/p&gt;
+        {% else %}
+            &lt;p&gt;Prix non renseigné&lt;/p&gt;
+        {% endif %}
+
+        &lt;div class="mt-4"&gt;
+            {{ recipe.description|raw }}
+        &lt;/div&gt;
+
+        &lt;p class="mt-4"&gt;Ingrédients :&lt;/p&gt;
+        {% for ingredient in recipe.ingredients %}
+            &lt;span class="badge bg-primary"&gt;{{ ingredient.name }}&lt;/span&gt;
+        {% endfor %}
+    &lt;/div&gt;
+{% endblock %}</code></pre>
+                    <p>Pour afficher la page qui liste toutes les recettes qui ont été partagées par l'ensemble des personnes, on va créer dans le "RecipeController" une nouvelle fonction :</p>
+<pre><code>#[Route('/recette/pblique', 'recipe.public', methods: ['GET'])]
+public function indexPublic(RecipeRepository $repository, PaginatorInterface $paginator, Request $request): Response
+{
+    $recipes = $paginator-&gt;paginate(
+        $repository-&gt;findPublicRecipe(null),
+        $request-&gt;query-&gt;getInt('page', 1),
+        10
+    );
+
+    return $this-&gt;render('pages/recipe.index_public.html.twig', [
+        'recipes' =&gt; $recipes
+    ]);
+}</code></pre>
+                    <p>On peut copier le même template que la liste des recettes mais sans les boutons de modification et de suppression. Ensuite, on va créer une fonction dans le "RecipeRepository" qui va permettre de récupérer un nombre x de recettes publiques :</p>
+<pre><code>/**
+* This method allow us to find public recipes based on number of recipes
+*
+* @param integer $nbRecipes
+* @return array
+*/
+public function findPublicRecipe(?int $nbRecipes): array
+{
+    $queryBuilder = $this-&gt;createQueryBuilder('r')
+        -&gt;where('r.isPublic = 1')
+        -&gt;orderBy('r.createdAt', 'DESC');
+    
+    if ($nbRecipes !== 0 || !is_null($nbRecipes)) {
+        $queryBuilder-&gt;setMaxResults($nbRecipes);
+    }
+    
+    return $queryBuilder-&gt;getQuery()
+        -&gt;getResult();
+}</code></pre>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
