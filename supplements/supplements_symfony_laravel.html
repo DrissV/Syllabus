@@ -2699,6 +2699,37 @@ public function index(): Response
         -&gt;setTitle('SymRecipe - Administration')
         -&gt;renderContentMaximized();
 }</code></pre>
+                    <p>On va configurer les éléments du menu du Dashboard dans la fonction "configureMenuItems" de notre contrôleur :</p>
+<pre><code>public function configureMenuItems(): iterable
+{
+    yield MenuItem::linkToDashBoard('Dashboard', 'fa fa-home');
+    yield MenuItem::linkToCrud('Utilisateurs', 'fas fa-bowl-rice', User::class);
+}</code></pre>
+                    <p>Si on relance la page, on va voir qu'il y a une erreur car il n'y a pas de "UserCrudController".</p>
+                    <p>Un "CRUD controller" est un contrôleur qui va nous fournir les opérations de base d'un CRUD classique pour les entités. Il étend de <span class="em">AbstractCrudController</span> qui étend lui-même de <span class="em">AbstractController</span>. Pour faire ce fameux "CRUD controller", on utilise la commande suivante en sélectionnant l'entité sur lequel on veut le faire :</p>
+<pre><code>php bin/console make:admin:crud</code></pre>
+                    <p>Il sera généré dans le dossier <span class="em">`src\Controller\Admin`</span> avec le namespace "<span class="em">App\Controller\Admin</span>".</p>
+                    <p>On va rajouter la fonction "configureCrud" dans notre contrôleur :</p>
+<pre><code>public function configureCrud(Crud $crud): Crud
+{
+    return $crud
+        -&gt;setEntityLabelInPlural('Utilisateurs')
+        -&gt;setEntityLabelInSingular('Utilisateur');
+        -&gt;setPageTitle('index', 'Symrecipe - Administration des utilisateurs')
+        -&gt;setPaginatorPageSize(10);
+}</code></pre>
+                    <p>On va également configurer les champs à afficher dans le tableau dans la fonction "configureFields" de notre contrôleur :</p>
+<pre><code>public function configureFields(string $pageName): iterable
+{
+    return [
+        IdField::new('id')-&gt;hideOnForm(),
+        TextField::new('fullName'),
+        TextField::new('pseudo'),
+        TextField::new('email')-&gt;hideOnForm(),
+        ArrayField::new('roles')-&gt;hideOnIndex(),
+        DteTimeField::new('createdAt')-&gt;hideOnForm()-&gt;setFormTypeOption('disabled', 'disabled')
+    ];
+}</code></pre>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
