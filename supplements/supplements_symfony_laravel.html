@@ -3195,7 +3195,6 @@ tests:
     use Doctrine\ORM\EntityManagerInterface;
     use Symfont\Bundle\FrameworkBundle\test\WebTestCase;
     use Symfony\Component\HttpFoundation\Request;
-    use Symfony\Component\HttpFoundation\Response;
 
     class ContactTest extends WebTestCase
     {
@@ -3232,7 +3231,90 @@ tests:
 
 ?&gt;</code></pre>
                     <h3>Étape 23 : Créer une commande :</h3>
-                    <p>Dans cette partie, on va pouvoir créer un administrateur en ligne de commandes. Cela permettra d'ajouter des administrateurs par la suite si le site se développe.</p>
+                    <p>Dans cette partie, on va pouvoir créer un administrateur en ligne de commandes. Cela permettra d'ajouter des administrateurs par la suite si le site se développe. Donc, on va créer une commande "app:create-administrator" avec la commande suivante :</p>
+<pre><code>php bin/console make:command app:create-administrator</code></pre>
+                    <p>Cela génèrera le fichier <span class="em">`src\Command\CreateAdministratorCommand.php`</span> avec le contenu modifié suivant :</p>
+<pre><code>&lt;?php
+
+    namespace App\Command;
+
+    use App\Entity\User;
+    use Doctrine\ORM\EntityManagerInterface
+    use Symfony\Component\Console\Attribute\AsCommand;
+    use Symfony\Component\Console\Command\Command;
+    use Symfony\Component\Console\Input\InputArgument;
+    use Symfony\Component\Console\Input\InputInterface;
+    use Symfony\Component\Console\Output\OutputInterface;
+    use Symfony\Component\Console\Question\Question;
+    use Symfony\Component\Console\Style\SymfonyStyle;
+
+    #[AsCommand(
+        name: 'app:create-administrator',
+        description: 'Create an Administrator',
+    )]
+    class CreateAdministratorCommand extends Command
+    {
+        private EntityManagerInterface $entityManager;
+
+        public function __construct(EntityManagerInterface $entityManager)
+        {
+            parent::__construct('app:create-administrator');
+
+            $this-&gt;entityManager = $entityManager;
+        }
+
+        protected function configure(): void
+        {
+            $this
+                -&gt;addArgument('full_name', InputArgument::OPTIONAL, 'Full Name')
+                -&gt;addArgument('email', InputArgument::OPTIONAL, 'Email')
+                -&gt;addArgument('password', InputArgument::OPTIONAL, 'Password');
+        }
+
+        protected function execute(InputInterface $input, OutputInterface $output): int
+        {
+            $helper = $this-&gt;getHelper('question');
+            $io = new SymfonyStyle($input, $output);
+
+            $fullName = $input-&gt;getArgument('full_name');
+            if (!$fullName) {
+                $question = new Question('Quel est le nom de l\'adminstrateur : ');
+                $fullName = $helper-&gt;ask($input, $output, $question);
+            }
+
+            $email = $input-&gt;getArgument('email');
+            if (!$email) {
+                $question = new Question('Quel est l\'email de ' . $fullName . ' : ');
+                $email = $helper-&gt;ask($input, $output, $question);
+            }
+
+            $plainPassword = $input-&gt;getArgument('password');
+            if (!$plainPassword) {
+                $question = new Question('Quel est le mot de passe de ' . $fullName . ' : ');
+                $plainPassword = $helper-&gt;ask($input, $output, $question);
+            }
+
+            $user = (new User())-&gt;setFullName($fullName)
+                -&gt;setEmail($email)
+                -&gt;setPlainPassword($plainPassword)
+                -&gt;setRoles(['ROLE_USER', 'ROLE_ADMIN']);
+
+            $this-&gt;entityManager-&gt;persist($user);
+            $this-&gt;entityManager-&gt;flush();
+
+            $io-&gt;success('Le nouvel administrateur a été créé !');
+
+            return Command::SUCCESS;
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>La commande devient donc ceci :</p>
+<pre><code>php bin/console app:create-administrator</code></pre>
+                    <p>Et avec les arguments :</p>
+<pre><code>php bin/console app:create-administrator "Emilien" "emilien@symrecipe.fr" "password"</code></pre>
+                    <h3>Étape 24 : Créer un filtre Twig :</h3>
+                    <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
