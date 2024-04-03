@@ -3154,6 +3154,27 @@ tests:
 
             $this-&gt;assertRouteSame('ingredient.index');
         }
+
+        public function testIfDeleteAnIngredient(): void
+        {
+            $client = static::createClient();
+
+            $urlGenerator = $client-&gt;getContainer()-&gt;('router');
+
+            $entityManager = $client-&gt;getContainer()-&gt;get('doctirne.orm.entity_manager');
+
+            $user = $entityManager-&gt;find(User::class, 1);
+            
+            $ingredient = $entityManager-&gt;getRepository(Ingredient::class)-&gt;findOneBy([
+                'user' =&gt; $user
+            ]);
+            
+            $client-&gt;loginUser($user);
+            
+            $crawler = $client-&gt;request(Request::METHOD_GET, $urlGenerator-&gt;generate('ingredient.delete', [
+                'id' =&gt; $ingredient-&gt;getId()
+            ]));
+        }
     }
 
 ?&gt;</code></pre>
