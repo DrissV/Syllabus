@@ -3055,6 +3055,7 @@ tests:
     namespace App\Tests\Functional;
 
     use App\Entity\User;
+    use App\Entity\Ingredient;
     use Symfony\Bundle\FrameworkBundle\test\WebTestCase;
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\HttpFoundation\Response;
@@ -3093,6 +3094,63 @@ tests:
 
             // Gérer l'alert box et la route
             $this-&gt;assertSelectorTextContains('div.alert-success', 'Votre ingrédient a été créé avec succès !');
+
+            $this-&gt;assertRouteSame('ingredient.index');
+        }
+
+        public function testIfListIngredientIsSuccessful(): void
+        {
+            $client = static::createClient();
+
+            $urlGenerator = $client-&gt;getContainer()-&gt;('router');
+
+            $entityManager = $client-&gt;getContainer()-&gt;get('doctirne.orm.entity_manager');
+
+            $user = $entityManager-&gt;find(User::class, 1);
+
+            $client-&gt;loginUser($user);
+
+            $client-&gt;request(Request::METHOD_GET, $urlGenerator-&gt;generate('ingredient.index'));
+
+            $this-&gt;assertResponseIsSuccessful();
+
+            $this-&gt;assertRouteSame('ingredient.index');
+        }
+
+        public function testIfUpdateAnIngredientIsSuccessful(): void
+        {
+            $client = static::createClient();
+
+            $urlGenerator = $client-&gt;getContainer()-&gt;('router');
+
+            $entityManager = $client-&gt;getContainer()-&gt;get('doctirne.orm.entity_manager');
+
+            $user = $entityManager-&gt;find(User::class, 1);
+            
+            $ingredient = $entityManager-&gt;getRepository(Ingredient::class)-&gt;findOneBy([
+            'user' =&gt; $user
+            ]);
+            
+            $client-&gt;loginUser($user);
+            
+            $crawler = $client-&gt;request(Request::METHOD_GET, $urlGenerator-&gt;generate('ingredient.edit', [
+                'id' =&gt; $ingredient-&gt;getId()
+            ]));
+
+            $this-&gt;assertResponseIsSuccessful();
+
+            $form = $crawler-&gt;filter('form[name=ingredient]')-&gt;form([
+                'ingredient[name]' =&gt; "Un ingrédient 2",
+                'ingredient[price]' =&gt; floatval(34)
+            ]);
+
+            $client-&gt;submit($form);
+
+            $this-&gt;assertResponseStatusCodeSame(Response::HTTP_FOUND);
+
+            $client-&gt;followRedirect();
+
+            $this-&gt;assertSelectorTextContains('div.alert-success', 'Votre ingrédient a été modifié avec succès !');
 
             $this-&gt;assertRouteSame('ingredient.index');
         }
