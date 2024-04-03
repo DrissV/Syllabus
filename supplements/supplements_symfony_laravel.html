@@ -1554,7 +1554,7 @@ public function login(AuthenticationUtils $authenticationUtils): Response
             &lt;/div&gt;
         {% endif %}
 
-        &lt;form action="{{ path('security.login') }}" method="post"&gt;
+        &lt;form action="{{ path('security.login') }}" method="post" name="login"&gt;
             &lt;div class="form-group"&gt;
                 &lt;label for="username" class="form-label mt-4"&gt;Adresse email&lt;/label&gt;
                 &lt;input type="email" class="form-control" id="username" name="_username" value="{{ last_username }}"&gt;
@@ -2930,14 +2930,14 @@ $manager-&gt;persist($admin);</code></pre>
                     <p>Pour le test fonctionnel pour le formulaire de contact dans notre "App\Tests\Functional\ContactTest.php", on va avoir le contenu suivant :</p>
 <pre><code>&lt;?php
 
-    namespace App\tests\Functional;
+    namespace App\Tests\Functional;
 
     use Symfony\Bundle\FrameworkBundle\test\WebTestCase;
     use Symfony\Component\HttpFoundation\Response;
 
     class ContactTest extends WebTestCase
     {
-        public function testSomething(): void
+        public function testIfSubmitContactFormIsSuccessful(): void
         {
             $client = static::createClient();
             $crawler = $client-&gt;request('GET', '/contact');
@@ -2946,7 +2946,7 @@ $manager-&gt;persist($admin);</code></pre>
             $this-&gt;assertSelectorTextContains('h1', 'Formulaire de contact');
 
             // Récupérer le formulaire
-            $submitButton = $crawler-&gt;slectButton('Soumettre ma demande');
+            $submitButton = $crawler-&gt;selectButton('Soumettre ma demande');
             $form = $submitButton-&gt;form();
 
             $form["contact[fullName]"] = "Jean Dupont";
@@ -2971,6 +2971,78 @@ $manager-&gt;persist($admin);</code></pre>
     }
 
 ?&gt;</code></pre>
+                    <p>Ensuite, on va créer un test fonctionnel pour tester la logique de connexion avec la commande :</p>
+<pre><code>php bin/console make:test WebTestCase \App\Tests\Functional\LoginTest</code></pre>
+                    <p>On va modifier le contenu de cette classe comme ceci :</p>
+<pre><code>&lt;?php
+
+    namespace App\Tests\Functional;
+
+    use Symfony\Bundle\FrameworkBundle\test\WebTestCase;
+    use Symfony\Component\HttpFoundation\Response;
+
+    class LoginTest extends WebTestCase
+    {
+        public function testIfLoginIsSuccessful(): void
+        {
+            $client = static::createClient();
+
+            /** @var urlGeneratorInterface $urlGenerator */
+            $urlGenerator = $client-&gt;getContainer()-&gt;get("router");
+
+            $crawler = $client-&gt;request('GET', $urlGenerator-&gt;generate('security.login'));
+
+            $form = $crawler-&gt;filter("form[name=login]")-&gt;form([
+                "_username" =&gt; "admin@symrecipe.fr",
+                "_password" =&gt; 'password',
+            ]);
+
+            $client-&gt;submit($form);
+
+            $this-&gt;assertResponseStatusCodeSame(Response::HTTP_FOUND);
+
+            $client-&gt;followRedirect();
+
+            $this-&gt;assertRouteSame('home.index');
+        }
+    }
+
+    public function testIfLoginDailedWhenPasswordIsWrong(): void
+    {
+        $client = static::createClient();
+
+            /** @var urlGeneratorInterface $urlGenerator */
+            $urlGenerator = $client-&gt;getContainer()-&gt;get("router");
+
+            $crawler = $client-&gt;request('GET', $urlGenerator-&gt;generate('security.login'));
+
+            $form = $crawler-&gt;filter("form[name=login]")-&gt;form([
+                "_username" =&gt; "admin@symrecipe.fr",
+                "_password" =&gt; 'password_',
+            ]);
+
+            $client-&gt;submit($form);
+
+            $this-&gt;assertResponseStatusCodeSame(Response::HTTP_FOUND);
+
+            $client-&gt;followRedirect();
+
+            $this-&gt;assertRouteSame('security.login');
+
+            $this-&gt;assertSelectorTextContains("div.alert-danger", "Invalid credentials.");
+    }
+?&gt;</code></pre>
+                    <p>On va créer un "Makefile" avec toutes les commandes à faire, c'est-à-dire avec le contenu suivant :</p>
+<pre><code>.PHONY: tests
+tests:
+    php bin/console d:d:d --force --if-exists --env=test
+    php bin/console d:d:c --env=test
+    php bin/console d:m:m --no-interaction --env=test
+    php bin/console d:f:l --no-interaction --env=test
+    php bin/phpunit --testdox tests/Unit/
+    php bin/phpunit --testdox tests/Functional/</code></pre>
+                    <p>On exécute le "Makefile" avec la commande :</p>
+<pre><code>make tests</code></pre>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
