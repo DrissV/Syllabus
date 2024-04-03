@@ -2819,6 +2819,85 @@ $manager-&gt;persist($admin);</code></pre>
     &lt;div class="dropdown-divider"&gt;&lt;/div&gt;
 {% endif %}</code></pre>
                     <h3>Étape 22 : Tester notre application :</h3>
+                    <p>Dans cette partie, on va mettre en place des tests unitaires et des tests fonctionnels. En programmation, le test unitaire est un procédé permettant de s'assurer du fonctionnement correct d'une partie déterminée d'un logiciel ou d'une portion d'un programme. Les tests fonctionnels sont destinés à s'assurer que, dans le contexte d'utilisation réelle, le comportement fonctionnel obtenu est bien conforme avec celui attendu.</p>
+                    <p>Pour ce faire, Symfony nous propose d'utiliser le framework <span class="em">PHPUnit</span>. Pour exécuter les tests, on utilise la commande :</p>
+<pre><code>php bin/phpunit</code></pre>
+                    <p>Pour séparer les deux types de tests, je vous propose de créer deux dossiers différents dans le dossier "tests" : "Unit" et "Functional". On va ensuite créer notre premier test unitaire avec la commande :</p>
+<pre><code>php bin/console make:test TestCase \App\Tests\Unit\BasicTest</code></pre>
+                    <p>On va créer notre premier test fonctionnel avec la commande :</p>
+<pre><code>php bin/console make:test WebTestCase \App\Tests\Functional\BasicTest</code></pre>
+                    <p>On va copier les variables "DATABASE_URL" et "MAILER_DSN" dans le fichier ".env.test" et on va mettre la variable "RECAPTCHA3_ENABLED" à "0". On va créer la base de données de test avec la commande :</p>
+<pre><code>php bin/console d:d:c --env=test</code></pre>
+                    <p>On va migrer toutes les migrations dans cette nouvelle base de données avec la commande :</p>
+<pre><code>php bin/console d:m:m --env=test</code></pre>
+                    <p>On va loader les fixtures dans notre base de données avec la commande :</p>
+<pre><code>php bin/console d:f:l --env=test</code></pre>
+                    <p>Maintenant que cette base de données est créée, on va enfin faire les différents tests en commençant par les tests unitaires. Pour tester l'entité "Recipe", on utilise la commande suivante :</p>
+<pre><code>php bin/console make:test KernelTestCase \App\Tests\Unit\RecipeTest</code></pre>
+                    <p>On va modifier le contenu de cette classe comme ceci :</p>
+<pre><code>&lt;?php
+
+        namespace App\Tests\Unit;
+
+        use App\Entity\Recipe;
+        use App\Entity\User;
+        use App\Entity\Mark;
+        use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+
+        class RecipeTest extends KernelTestCase
+        {
+            public function getEntity(): Recipe
+            {
+                return (new Recipe())-&gt;setName('Recipe #1')
+                    -&gt;setDescription('Description #1')
+                    -&gt;setIsFavorite(true)
+                    -&gt;setCreatedAt(new \DateTimeImmutable())
+                    -&gt;setupdatedAt(new \DateTimeImmutable());
+            }
+
+            public function testEntityIsValid(): void
+            {
+                self::bootKernel();
+                $container = static::getContainer();
+
+                $recipe = $this-&gt;getEntity();
+
+                $errors = $container-&gt;get('validator')-&gt;validate($recipe);
+
+                $this-&gt;assertCount(0, $errors);
+            }
+        }
+
+        public function testInvalidName()
+        {
+            self::bootKernel();
+            $container = static::getContainer();
+
+            $recipe = $this-&gt;getEntity();
+            $recipe-&gt;setName('');
+
+            $errors = $container-&gt;get('validator')-&gt;validate($recipe);
+
+            $this-&gt;assertCount(2, $errors);
+        }
+
+        public function testGetAverage()
+        {
+            $recipe = $this-&gt;getEntity();
+            $user = static::getContainer()-&gt;get('doctrine.orm.entity_manager')-&gt;find(User::class, 1);
+
+            for ($i = 0; $i &lt; 5; $i++) {
+                $mark = new Mark();
+                $mark-&gt;setMark(2)
+                    -&gt;setUser($user)
+                    -&gt;setRecipe($recipe);
+                
+                $recipe-&gt;addMark($mark);
+            }
+
+            $this-&gt;assertTrue(2.0 === $recipe-&gt;getAverage());
+        }
+?&gt;</code></pre>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
