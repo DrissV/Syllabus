@@ -3186,7 +3186,51 @@ tests:
     }
 
 ?&gt;</code></pre>
-                    <p>On va aussi tester le CRUD des ingrédients via EasyAdmin.</p>
+                    <p>On peut aussi tester le CRUD des ingrédients via EasyAdmin. On va créer un nouveau dossier "Admin" dans le dossier "tests\Functional" et on va créer le fichier "ContactTest.php" avec le contenu suivant :</p>
+<pre><code>&lt;?php
+
+    namespace App\Tests\Funtional\Admin;
+
+    use App\Entity\User;
+    use Doctrine\ORM\EntityManagerInterface;
+    use Symfont\Bundle\FrameworkBundle\test\WebTestCase;
+    use Symfony\Component\HttpFoundation\Request;
+    use Symfony\Component\HttpFoundation\Response;
+
+    class ContactTest extends WebTestCase
+    {
+        public function testCrudIsHere(): void
+        {
+            $client = static::createClient();
+
+            /** @var EntityManagerInterface $entityManager */
+            $entityManager = $client-&gt;getContainer()-&gt;get('doctrine.orm.entity_manager');
+
+            $user = $entityManager-&gt;getRepository(User::class)-&gt;findOneBy(['id' =&gt; 1]);
+
+            $client-&gt;loginUser($user);
+
+            $client-&gt;request(Request::METHOD_GET, '/admin');
+
+            $this-&gt;assertResponseIsSuccessful();
+
+            $crawler = $client-&gt;clickLink('Demandes de contact');
+
+            $this-&gt;assertResponseIsSuccessful();
+
+            $client-&gt;click($crawler-&gt;filter('.action-new')-&gt;link());
+
+            $this-&gt;assertResponseIsSuccessful();
+
+            $client-&gt;request(Request::METHOD_GET, '/admin');
+
+            $client-&gt;click($crawler-&gt;filter('.action-edit')-&gt;link());
+
+            $this-&gt;assertResponseIsSuccessful();
+        }
+    }
+
+?&gt;</code></pre>
                     <h3>Étape 23 : Créer une commande :</h3>
                     <p>Dans cette partie, on va pouvoir créer un utilisateur en ligne de commandes.</p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
