@@ -2898,6 +2898,35 @@ $manager-&gt;persist($admin);</code></pre>
             $this-&gt;assertTrue(2.0 === $recipe-&gt;getAverage());
         }
 ?&gt;</code></pre>
+                    <p>Pour les tests fonctionnels, on va tester si on arrive sur telle ou telle page, si le formulaire est valide, etc. On va faire un nouveau test fonctionnel avec la commande suivante :</p>
+<pre><code>php bin/console make:test WebTestCase \App\Tests\Functional\HomePageTest</code></pre>
+                    <p>On va modifier le contenu de cette classe comme ceci :</p>
+<pre><code>&lt;?php
+
+    namespace App\tests\Functional;
+
+    use Symfony\Bundle\FrameworkBundle\test\WebTestCase;
+
+    class HomePageTest extends WebTestCase
+    {
+        public function testSomething(): void
+        {
+            $client = static::createClient();
+            $crawler = $client-&gt;request('GET', '/');
+
+            $this-&gt;assertResponseIsSuccessful();
+
+            $button = $crawler-&gt;filter('.btn.btn-primary.btn-lgz');
+            $this-&gt;assertEquals(1, count($button));
+
+            $recipes = $crawler-&gt;filter('.recipes .card');
+            $this-&gt;assertEquals(3, count($recipes));
+
+            $this-&gt;assertSelectorTextContains('h1', 'Bienvenue sur SymRecipe');
+        }
+    }
+
+?&gt;</code></pre>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
