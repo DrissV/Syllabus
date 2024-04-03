@@ -744,6 +744,10 @@ public function new(Request $request, EntityManagerInterface $manager): Response
         &lt;/div&gt;
         
         &lt;div class="form-group"&gt;
+            {{ form_row(form._token) }}
+        &lt;/div&gt;
+
+        &lt;div class="form-group"&gt;
             {{ form_row(form.submit) }}
         &lt;/div&gt;
 
@@ -3043,6 +3047,58 @@ tests:
     php bin/phpunit --testdox tests/Functional/</code></pre>
                     <p>On exécute le "Makefile" avec la commande :</p>
 <pre><code>make tests</code></pre>
+                    <p>On peut également faire des tests sur un CRUD simple, comme par exemple le CRUD d'un ingrédient avec la commande :</p>
+<pre><code>php bin/console make:test WebTestCase \App\Tests\Functional\IngredientTest</code></pre>
+                    <p>On peut modifier le contenu de notre classe comme ceci :</p>
+<pre><code>&lt;?php
+
+    namespace App\Tests\Functional;
+
+    use App\Entity\User;
+    use Symfony\Bundle\FrameworkBundle\test\WebTestCase;
+    use Symfony\Component\HttpFoundation\Request;
+    use Symfony\Component\HttpFoundation\Response;
+
+    class IngredientTest extends WebTestCase
+    {
+        public function testIfCreateIngredientIsSuccessful(): void
+        {
+            $client = static::createClient();
+
+            // Recup urlGenerator
+            $urlGenerator = $client-&gt;getContainer()-&gt;('router');
+
+            // Recup entity manager
+            $entityManager = $client-&gt;getContainer()-&gt;get('doctirne.orm.entity_manager');
+
+            $user = $entityManager-&gt;find(User::class, 1);
+
+            $client-&gt;loginUser($user);
+
+            // Se rendre sur la page de création d'un ingrédient
+            $crawler = $client-&gt;request(Request::METHOD_GET, $urlGenerator-&gt;generate('ingredient.new'));
+
+            // Gérer le formulaire
+            $form = $crawler-&gt;filter('form[name=ingredient]')-&gt;form([
+                'ingredient[name]' =&gt; "Un ingrédient",
+                'ingredient[price]' =&gt; floatval(33)
+            ]);
+
+            $client-&gt;submit($form);
+
+            // Gérer la redirection
+            $this-&gt;assertResponseStatusCodeSame(Response::HTTP_FOUND);
+
+            $client-&gt;followRedirect();
+
+            // Gérer l'alert box et la route
+            $this-&gt;assertSelectorTextContains('div.alert-success', 'Votre ingrédient a été créé avec succès !');
+
+            $this-&gt;assertRouteSame('ingredient.index');
+        }
+    }
+
+?&gt;</code></pre>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
