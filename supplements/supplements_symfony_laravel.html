@@ -2703,7 +2703,7 @@ public function index(): Response
 <pre><code>public function configureMenuItems(): iterable
 {
     yield MenuItem::linkToDashBoard('Dashboard', 'fa fa-home');
-    yield MenuItem::linkToCrud('Utilisateurs', 'fas fa-bowl-rice', User::class);
+    yield MenuItem::linkToCrud('Utilisateurs', 'fas fa-user', User::class);
 }</code></pre>
                     <p>Si on relance la page, on va voir qu'il y a une erreur car il n'y a pas de "UserCrudController".</p>
                     <p>Un "CRUD controller" est un contrôleur qui va nous fournir les opérations de base d'un CRUD classique pour les entités. Il étend de <span class="em">AbstractCrudController</span> qui étend lui-même de <span class="em">AbstractController</span>. Pour faire ce fameux "CRUD controller", on utilise la commande suivante en sélectionnant l'entité sur lequel on veut le faire :</p>
@@ -2727,9 +2727,98 @@ public function index(): Response
         TextField::new('pseudo'),
         TextField::new('email')-&gt;hideOnForm(),
         ArrayField::new('roles')-&gt;hideOnIndex(),
-        DteTimeField::new('createdAt')-&gt;hideOnForm()-&gt;setFormTypeOption('disabled', 'disabled')
+        DteTimeField::new('createdAt')-&gt;hideOnForm()
     ];
 }</code></pre>
+                    <p>Pour le champ textarea pour le message de contact, on doit mettre en place un WYSIWYG (abréviation de "What You See Is What You Get", c'est-à-dire litéralement "ce que vous voyez est ce que vous obtenez"). On va installer le bundle "CKEditor" avec la commande :</p>
+<pre><code>composer require friendsofsymfony/ckeditor-bundle</code></pre>
+                    <p>Ensuite, on va installer "drop" de CKEditor avec la commande :</p>
+<pre><code>php bin/console ckeditor:install</code></pre>
+                    <p>On va installer les assets de CKEditor avec la commande :</p>
+<pre><code>php bin/console assets:install public</code></pre>
+                    <p>Enfin, on va modifier notre fichier de configuration <span class="em">`config\packages\fos_ckeditor.yaml`</span> :</p>
+<pre><code>fos_ck_editor:
+    configs:
+        main_config:
+            toolbar:
+                - {
+                    name: "styles",
+                    items:
+                        [
+                            "Bold",
+                            "Italic",
+                            "Underline",
+                            "Strike",
+                            "Blockquote",
+                            "-",
+                            "Link",
+                            "-",
+                            "RemoveFormat",
+                            "-",
+                            "NumberedList",
+                            "BulletedList",
+                            "-",
+                            "Outdent",
+                            "Indent",
+                            "-",
+                            "-",
+                            "JustifyLeft",
+                            "JustifyCenter",
+                            "JustifyRight",
+                            "JustifyBlock",
+                            "-",
+                            "Image",
+                            "Table",
+                            "-",
+                            "Styles",
+                            "Format",
+                            "Font",
+                            "FontSize",
+                            "-",
+                            "TextColor",
+                            "BGColor",
+                            "Source",
+                        ],
+                }</code></pre>
+                    <p>On va modifier notre ContactCrudController avec les fonctions suivantes :</p>
+<pre><code>public function configureCrud(Crud $crud): Crud
+{
+    return $crud
+        -&gt;setEntityLabelInSingular('Demande de contact')
+        -&gt;setEntityLabelInPlural('Demandes de contact')
+        -&gt;setPageTitle('index', 'SymRecipe - Administration des demandes de contact')
+        -&gt;setPaginatorPageSize(20)
+        -&gt;addFormTheme('@FOSCKEditor/Form/ckeditor_widget.html.twig');
+}
+
+public function configureFields(string $pageName): iterable
+{
+    return [
+        IdField::new('id')-&gt;hideOnForm(),
+        TextField::new('fullName'),
+        TextField::new('email'),
+        TextareaField::new('message')-&gt;setFormType(CKEditor::class)-&gt;hideOnIndex(),
+        DateTimeField::new('createdAt')-&gt;hideOnForm()
+    ];
+}</code></pre>
+                    <p>On va mettre en place la sécurité en ajoutant un admin dans les fixtures :</p>
+<pre><code>$admin = new User();
+$admin-&gt;setFullName('Administrateur de SymRecipe')
+    -&gt;setPseudo(null)
+    -&gt;setEmail('admin@symrecipe.fr')
+    -&gt;setRoles(['ROLE_USER', 'ROLE_ADMIN'])
+    -&gt;setPlainPassword('password');
+
+$user[] = $admin;
+$manager-&gt;persist($admin);</code></pre>
+                    <p>On va rajouter le "IsGranted" sur les fonctions du DashboardController pour qu'il soit accessible aux utilisateurs ayant le rôle "ROLE_ADMIN" :</p>
+<pre><code>#[IsGranted('ROLE_ADMIN')]</code></pre>
+                    <p>Dans notre navbar, on peut ajouter le lien vers le dashboard :</p>
+<pre><code>{% if 'ROLE_ADMIN' in app.user.roles %}
+    &lt;a class="dropdown-item" href="{{ path('admin') }}"&gt;Administration&lt;/a&gt;
+    &lt;div class="dropdown-divider"&gt;&lt;/div&gt;
+{% endif %}</code></pre>
+                    <h3>Étape 22 : Tester notre application :</h3>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
