@@ -2593,7 +2593,7 @@ public function index(Request $request, EntityManagerInterface $manager, MailerI
     'constraints' =&gt; new Recaptcha3(),
     'action_name' =&gt; 'contact',
 ])</code></pre>
-                    <h3>Étape 21 : Administration avec EasyAdmin4 :</h3>
+                    <h3>Étape 21 : Les services :</h3>
                     <p>Les services sont simplement des objets PHP qui vont remplir une fonction particulière. Précédemment, on a déjà utilisé des services sans le savoir comme le service "EntityManager" ou encore le service "Mailer".</p>
                     <p>Tous ces services sont à l'intérieur d'une classe PHP qui est assez spéciale et qui s'appelle le container de services et va centraliser tous les services au sein de notre application Symfony.</p>
                     <p>Pour visualiser tous les services présents au sein de Symfony, on utilise la commande :</p>
@@ -2674,6 +2674,30 @@ public function index(Request $request, EntityManagerInterface $manager, MailSer
     return $this-&gt;render('pages/contact/index.html.twig', [
         'form' =&gt; $form-&gt;createView()
     ]);
+}</code></pre>
+                    <h3>Étape 22 : Administration avec EasyAdmin :</h3>
+                    <p>Pour utiliser des interfaces d'Administration simple, on va utiliser le bundle "EasyAdmin" et on va l'installer avec la commande :</p>
+<pre><code>composer require easycorp/easyadmin-bundle</code></pre>
+                    <p>Pour bien commencer, la première étape est les dashboards qui est le point d'entré de la partie administrateur. Pour créer notre dashboard, on utilise la commande suivante :</p>
+<pre><code>php bin/console make:admin:dashboard</code></pre>
+                    <p>On le nomme "DashboardController" et on le stocke dans le dossier <span class="em">`src\Controller\Admin`</span>. On peut voir que cette classe étend de <span class="em">AbstractDashboardController</span> qui lui-même étend de <span class="em">AbstractController</span>. On y modifie sa fonction "index" :</p>
+<pre><code>#[Route('/admin', name: 'admin')]
+public function index(): Response
+{
+    return $this-&gt;render('admin/dashboard.html.twig');
+}</code></pre>
+                    <p>On oublie pas de créer le dossier <span class="em">`templates\admin`</span> et dedans le fichier "dashboard.html.twig" :</p>
+<pre><code>{% extends "@EasyAdmin/pahe/content.html.twig" %}
+
+{% block content %}
+    &lt;h1&gt;Bienvenue au sein de l'administration de SymRecipe&lt;/h1&gt;
+{% endblock %}</code></pre>
+                    <p>On va configurer le dashboard en modifiant la fonction "configureDashboard" de notre contrôleur :</p>
+<pre><code>public function configureDashboard(): Dashboard
+{
+    return Dashboard::new()
+        -&gt;setTitle('SymRecipe - Administration')
+        -&gt;renderContentMaximized();
 }</code></pre>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
