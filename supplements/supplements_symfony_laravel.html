@@ -2927,6 +2927,50 @@ $manager-&gt;persist($admin);</code></pre>
     }
 
 ?&gt;</code></pre>
+                    <p>Pour le test fonctionnel pour le formulaire de contact dans notre "App\Tests\Functional\ContactTest.php", on va avoir le contenu suivant :</p>
+<pre><code>&lt;?php
+
+    namespace App\tests\Functional;
+
+    use Symfony\Bundle\FrameworkBundle\test\WebTestCase;
+    use Symfony\Component\HttpFoundation\Response;
+
+    class ContactTest extends WebTestCase
+    {
+        public function testSomething(): void
+        {
+            $client = static::createClient();
+            $crawler = $client-&gt;request('GET', '/contact');
+
+            $this-&gt;assertResponseIsSuccessful();
+            $this-&gt;assertSelectorTextContains('h1', 'Formulaire de contact');
+
+            // Récupérer le formulaire
+            $submitButton = $crawler-&gt;slectButton('Soumettre ma demande');
+            $form = $submitButton-&gt;form();
+
+            $form["contact[fullName]"] = "Jean Dupont";
+            $form["contact[email]"] = "jd@symrecipe.com";
+            $form["contact[subject]"] = "Test";
+            $form["contact[message]"] = "Test";
+
+            // Soumettre le formulaire
+            $client-&gt;submit($form);
+
+            // Vérifier le statut HTTP
+            $this-&gt;assertResponseStatusCodeSame(Response::HTTP_FOUND);
+
+            // Vérifier l'envoi du mail
+            $this-&gt;assertEmailCount(1);
+
+            $client-&gt;followRedirect();
+
+            // Vérifier la présence du message de succès
+            $this-&gt;assertSelectorTextContains('div.alert.alert-success.mt-4', 'Votre demande a été envoyée avec succès !');
+        }
+    }
+
+?&gt;</code></pre>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
