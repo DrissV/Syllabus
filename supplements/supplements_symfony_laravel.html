@@ -2273,6 +2273,8 @@ public function show(Recipe $recipe, Request $request, MarkRepository $markRepos
                     <p>Cette commande va générer le fichier <span class="em">`config\packages\vich_uploader.yaml`</span> qui est le fichier de configuration de ce bundle qu'on va modifier :</p>
 <pre><code>vich_uploader:
     db_driver: orm
+    metadata:
+        type: attribute
 
     mappings:
         recipe_images:
@@ -2347,7 +2349,7 @@ class Recipe
 ])</code></pre>
                     <p>Et dans le template du formulaire de création/modification d'une recette :</p>
 <pre><code>{{ form_row(form.imageFile) }}</code></pre>
-                    <p>On oublie pas de créer la migration et la migrer. Pour afficher l'image dans le détail de la recette (show), on fait :</p>
+                    <p>On oublie pas de créer la migration et de la migrer. Pour afficher l'image dans le détail de la recette (show), on fait :</p>
 <pre><code>&lt;div class="recipe_image"&gt;
     &lt;img style="max-width: 500px;" src="{{ vich_uploader_asset(recipe, 'imageFile') }}"&gt;
 &lt;/div&gt;</code></pre>
@@ -2427,7 +2429,252 @@ for ($i = 0; $i &lt; 5; $i++) {
     $manager-&gt;persist($contact);
 }</code></pre>
                     <p>On va créer un contrôleur "ContactController" avec la commande :</p>
-<pre><code>php bin/console ContactController</code></pre>
+<pre><code>php bin/console make:controller ContactController</code></pre>
+                    <p>On va créer un formulaire de contact nommé "ContactType" avec la commande :</p>
+<pre><code>php bin/console make:form ContactType Contact</code></pre>
+                    <p>Et on va modifier sa fonction "buildForm" :</p>
+<pre><code>$builder
+    -&gt;add('fullName', TextType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control'
+            'minlength' =&gt; '2',
+            'maxlength' =&gt; '50',
+        ],
+        'label' =&gt; 'Nom / Prénom',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form-label mt-4'
+        ]
+    ])
+    -&gt;add('email', EmailType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control',
+            'minlength' =&gt; '2',
+            'maxlength' =&gt; '180',
+        ],
+        'label' =&gt; 'Adresse email',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form-label mt-4'
+        ],
+        'constraints' =&gt; [
+            new Assert\NotBlank(),
+            new Assert\Email(),
+            new Assert\Length(['min' =&gt; 2, 'max' =&gt; 180])
+        ]
+    ])
+    -&gt;add('subject', TextType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control',
+            'minlength' =&gt; '2',
+            'maxlength' =&gt; '100',
+        ],
+        'label' =&gt; 'Sujet',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form-label mt-4'
+        ],
+        'constraints' =&gt; [
+            new Assert\Length(['min' =&gt; 2, 'max' =&gt; 100])
+        ]
+    ])
+    -&gt;add('message', TextareaType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'form-control',
+        ],
+        'label' =&gt; 'Message',
+        'label_attr' =&gt; [
+            'class' =&gt; 'form-label mt-4'
+        ],
+        'constraints' =&gt; [
+            new Assert\NotBlank()
+        ]
+    ])
+    -&gt;add('submit', SubmitType::class, [
+        'attr' =&gt; [
+            'class' =&gt; 'btn btn-primary mt-4'
+        ],
+        'label' =&gt; 'Soumettre ma demande'
+    ]);</code></pre>
+                    <p>On va modifier la fonction "index" de notre contrôleur pour ajouter le formulaire :</p>
+<pre><code>#[Route('/contact', name: 'contact.index')]
+public function index(Request $request, EntityManagerInterface $manager): Response
+{
+    $contact = new Contact();
+
+    if ($this-&gt;getUser()) {
+        $contact-&gt;setFullName($this-&gt;getUser()-&gt;getFullName())
+            -&gt;setEmail($this-&gt;getUser()-&gt;getEmail());
+    }
+
+    $form = $this-&gt;createForm(ContactType::class, $contact);
+
+    $form-&gt;handleRequest($request);
+
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        $contact = $form-&gt;getData();
+
+        $manager-&gt;persist($contact);
+        $manager-&gt;flush();
+
+        $this-&gt;addFlash('success', 'Votre demande a été envoyée avec succès !');
+
+        return $this-&gt;redirectToRoute('contact.index');
+    }
+
+    return $this-&gt;render('pages/contact/index.html.twig', [
+        'form' =&gt; $form-&gt;createView()
+    ]);
+}</code></pre>
+                    <p>Pour envoyer un email à chaque soumission du formulaire de contact, on va utiliser le composant "Mailer" avec le fichier de configuration <span class="em">`config\packages\mailer.yaml`</span>. Dans notre fichier ".env", on doit définir le système de transport d'email via la variable "MAILER_DSN" avec la syntaxe suivante :</p>
+<pre><code>MAILER_DSN=smtp://user:pass@smtp.example.com:port</code></pre>
+                    <p>Pour avoir une configuration SMTP, on peut utiliser <a href="https://mailtrap.io/">l'outil "mailtrap"</a>. Ensuite, on va modifier la fonction "index" de notre contrôleur :</p>
+<pre><code>#[Route('/contact', name: 'contact.index')]
+public function index(Request $request, EntityManagerInterface $manager, MailerInterface $mailer): Response
+{
+    $contact = new Contact();
+
+    if ($this-&gt;getUser()) {
+        $contact-&gt;setFullName($this-&gt;getUser()-&gt;getFullName())
+            -&gt;setEmail($this-&gt;getUser()-&gt;getEmail());
+    }
+
+    $form = $this-&gt;createForm(ContactType::class, $contact);
+
+    $form-&gt;handleRequest($request);
+
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        $contact = $form-&gt;getData();
+
+        $manager-&gt;persist($contact);
+        $manager-&gt;flush();
+
+        // Email
+        $email = (new TemplatedEmail())
+            -&gt;from($contact-&gt;getEmail())
+            -&gt;to('admin@symrecipe.com')
+            -&gt;subject($contact-&gt;getSubject())
+            -&gt;htmlTemplate('emails/contact.html.twig')
+            // pass variables (name =&gt; value)to the template
+            -&gt;context([
+                'contact' =&gt; $contact
+            ]);
+
+        $mailer-&gt;send($email);
+
+        $this-&gt;addFlash('success', 'Votre demande a été envoyée avec succès !');
+
+        return $this-&gt;redirectToRoute('contact.index');
+    }
+
+    return $this-&gt;render('pages/contact/index.html.twig', [
+        'form' =&gt; $form-&gt;createView()
+    ]);
+}</code></pre>
+                    <p>On va créer le dossier "emails" et dedans le fichier "contact.html.twig" avec le contenu suivant :</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;meta charset="UTF-8"&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;Demande de {{ contact.fullName }}&lt;/h1&gt;
+
+        &lt;p&gt;Email : {{ contact.email }}&lt;/p&gt;
+        &lt;p&gt;Sujet : {{ contact.subject }}&lt;/p&gt;
+        &lt;p&gt;Message :&lt;/p&gt;
+        &lt;div&gt;
+            {{ contact.message|raw }}
+        &lt;/div&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>On va mettre en place le reCaptcha qui, d'après Google, est la façon ultime de lutter contre les robots. On va utiliser le bundle "KarserRecaptcha3Bundle" qu'on va installer avec la commande :</p>
+<pre><code>composer require karser/karser-recaptcha3-bundle</code></pre>
+                    <p>On va dire "non" au "google/recaptcha" et "oui" au "karser/karser-recaptcha3-bundle". Dans son fichier de configuration <span class="em">`config\packages\karser_recaptcha3.yaml`</span>, on peut voir qu'il faut rajouter les variables "RECAPTCHA3_KEY" et "RECAPTCHA3_SECRET" dans notre fichier ".env".</p>
+                    <p>Dans notre formulaire "ContactType", on va rajouter le captcha comme ceci :</p>
+<pre><code>-&gt;add('captcha', Recaptcha3Type::class, [
+    'constraints' =&gt; new Recaptcha3(),
+    'action_name' =&gt; 'contact',
+])</code></pre>
+                    <h3>Étape 21 : Administration avec EasyAdmin4 :</h3>
+                    <p>Les services sont simplement des objets PHP qui vont remplir une fonction particulière. Précédemment, on a déjà utilisé des services sans le savoir comme le service "EntityManager" ou encore le service "Mailer".</p>
+                    <p>Tous ces services sont à l'intérieur d'une classe PHP qui est assez spéciale et qui s'appelle le container de services et va centraliser tous les services au sein de notre application Symfony.</p>
+                    <p>Pour visualiser tous les services présents au sein de Symfony, on utilise la commande :</p>
+<pre><code>php bin/console debug:autowiring --all</code></pre>
+                    <p>Si on cherche un service en particulier, on peut utiliser :</p>
+<pre><code>php bin/console debug:autowiring mailer.mailer</code></pre>
+                    <p>Ce qui est aussi très intéressant, c'est que nous pouvons également nos propres services car ça permettra d'utiliser une fonctionnalité précise à plusieurs endroits de notre code.</p>
+                    <p>Par exemple, chaque fichier a son rôle à jouer et il faut un service email pour être cohérent avec ce système car actuellement l'envoi est géré au sein du contrôleur et on doit mettre le moins de logique dans le contrôleur.</p>
+                    <p>On va créer le dossier <span class="em">`src\Service`</span> et dedans on y insère le fichier "MailService.php" avec le contenu suivant :</p>
+<pre><code>&lt;?php
+
+    namespace App\Service;
+
+    use Symfony\Bridge\twig\Mime\TemplatedEmail;
+    use Symfony\Component\Mailer\MailerInterface;
+
+    class MailService
+    {
+
+        /**
+        * @var MailerInterface
+        */
+        private MailerInterface $mailer;
+
+        public function __construct(MailerInterface $mailer)
+        {
+            $this-&gt;mailer = $mailer;
+        }
+
+        public function sendEmail(string $from, string $subject, string $htmlTemplate, array $context, string $to = 'admin@symrecipe.com'): void
+        {
+            $email = (new TemplatedEmail())
+                -&gt;from($from)
+                -&gt;to($to)
+                -&gt;subject($subject)
+                -&gt;htmlTemplate($htmlTemplate)
+                -&gt;context($context);
+
+            $this-&gt;mailer-&gt;send($email);
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>On va de nouveau modifier la fonction "index" de notre contrôleur pour remplacer notre "MailerInterface" par notre "MailService" :</p>
+<pre><code>#[Route('/contact', name: 'contact.index')]
+public function index(Request $request, EntityManagerInterface $manager, MailService $mailService): Response
+{
+    $contact = new Contact();
+
+    if ($this-&gt;getUser()) {
+        $contact-&gt;setFullName($this-&gt;getUser()-&gt;getFullName())
+            -&gt;setEmail($this-&gt;getUser()-&gt;getEmail());
+    }
+
+    $form = $this-&gt;createForm(ContactType::class, $contact);
+
+    $form-&gt;handleRequest($request);
+
+    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+        $contact = $form-&gt;getData();
+
+        $manager-&gt;persist($contact);
+        $manager-&gt;flush();
+
+        // Email
+        $mailService-&gt;sendEmail(
+            $contact-&gt;getEmail(),
+            $contact-&gt;getSubject(),
+            'emails/contact.html.twig',
+            ['contact' =&gt; $contact]
+        );
+
+        $this-&gt;addFlash('success', 'Votre demande a été envoyée avec succès !');
+
+        return $this-&gt;redirectToRoute('contact.index');
+    }
+
+    return $this-&gt;render('pages/contact/index.html.twig', [
+        'form' =&gt; $form-&gt;createView()
+    ]);
+}</code></pre>
                     <p></p>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
