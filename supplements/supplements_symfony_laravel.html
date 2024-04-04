@@ -3314,7 +3314,254 @@ tests:
                     <p>Et avec les arguments :</p>
 <pre><code>php bin/console app:create-administrator "Emilien" "emilien@symrecipe.fr" "password"</code></pre>
                     <h3>Étape 24 : Créer un filtre Twig :</h3>
-                    <p></p>
+                    <p>Par exemple si la recette a un temps en minutes avec une valeur de "1005", on pourrait afficher le temps en heures/minutes et donc créer/utiliser un filtre Twig (ou encore "extension Twig").</p>
+                    <p>Pour cela, dans le dossier "src", on crée le dossier "Twig" et on y insère le fichier "AppExtension.php" ou on utilise la commande suivante :</p>
+<pre><code>php bin/console make:twig-extension AppExtension</code></pre>
+                    <p>On va modifier son contenu comme ceci :</p>
+<pre><code>&lt;?php
+
+    namespace App\Twig;
+
+    use Twig\Extension\AbstractExtension;
+    use Twig\TwigFilter;
+
+    class AppExtension extends AbstractExtension
+    {
+        public function getFilters(): array
+        {
+            return [
+                new TwigFilter('min_to_hour', [$this, 'minutesToHours']);  
+            ];
+        }
+
+        public function minutesToHours($value)
+        {
+            if ($value &lt; 60 || !$value) {
+                return $value;
+            }
+
+            $hours = floor($value / 60);
+            $minutes = $value % 60;
+
+            if ($minutes &lt; 10) {
+                $minutes = '0' . $minutes;
+            }
+
+            $time = sprintf('%sh%s'; $hours, $minutes);
+
+            return $time;
+        }
+    }
+?&gt;</code></pre>
+                    <p>Une fois le filtre créé, dans notre template, on peut l'utiliser comme ceci :</p>
+<pre><code>&lt;p&gt;Temps : {{ recipe.time|min_to_hour }}&lt;/p&gt;</code></pre>
+                    <h3>Étape 25 : Mise en place d'un cache pour notre application :</h3>
+                    <p>Un cache va permettre de stocker les pages de nombreux sites Web, c'est-à-dire que les pages peuvent toujours être consultées même si le site Web d'origine est hors ligne.</p>
+                    <p>Dans le "Cache Component" qui couvre les besoins simples et plus avancés au niveau du cache, on a deux grandes familles : le "Cache Contracts" qui est un sytème plus simple et plus puissant mettant en cache des valeurs appelées ou recalculées très fréquemment, et le "PSR-6 Caching" qui est un système générique de cache basé sur des systèmes de "pools" et de "items".</p>
+                    <p>Dans notre application, comme on affiche très souvent les recettes publiques, ce sera intéressant de mettre un "Cache Contracts" dessus.</p>
+                    <p>Dans notre fonction "findPublicRecipe" de notre "RecipeRepository", on a un "sleep(3);". Dans le "RecipeController", on va ajouter le cache dans la fonction "indexPublic" comme ceci :</p>
+<pre><code>#[Route('/recette/communaute', 'recipe.community', methods: ['GET'])]
+public function indexPublic(RecipeRepository $repository, PaginatorInterface $paginator, Request $request): Response
+{
+    $cache = new FilesystemAdapter();
+    $data = $cache-&gt;get('recipes', function(ItemInterface $item) use ($repository) {
+        $item-&gt;expiresAfter(15);
+        return $repository-&gt;findPublicRecipe(null);
+    });
+
+    $recipes = $paginator-&gt;paginate(
+        $data,
+        $request-&gt;query-&gt;getInt('page', 1),
+        10
+    );
+
+    return $this-&gt;render('pages/recipe/commuity.html.twig', [
+        'recipes' =&gt; $recipes
+    ]);
+}</code></pre>
+                    <h3>Webpack Encore :</h3>
+                    <p>Symfony nous permet de manager correctement nos fichiers CSS et JavaScript, notamment avec "Webpack Encore". Cela va nous permettre de rendre notre travail plus agréable et plus qualicatif au niveau des fichiers de style et des fichiers de script. Ça va nous éviter d'avoir des fichiers dans le dossier "public" et de les inclure un à un.</p>
+                    <p>D'après Wikipédia, <q>Webpack est un modules bundle open source. Son objectif principal est de regrouper des fichiers JavaScript pour les utiliser dans un navigateur. Cet outil est également capable de transformer, regrouper ou empaqueter à peu près n'importe quelle ressource."</q></p>
+                    <p>Webpack Encore est un moyen plus simple d'intégrer Webpack dans notre application car de base il n'est pas facile à configurer. La première étape est d'installer le bundle avec la commande suivante :</p>
+<pre><code>composer require symfony/webpack-encore-bundle</code></pre>
+                    <p>Il nous demande ensuite de faire :</p>
+<pre><code>yarn install</code></pre>
+                    <p>Cela permet donc de faire un "vendor" pour JavaScript : les "node_modules" avec un fichier "package.json". On peut également utiliser le "<span class="em">npm install</span> à la place. Pour voir les modifications instantanées sur notre style sur Symfony avec la commande :</p>
+<pre><code>yarn watch</code></pre>
+                    <p>Ça permet de compiler tous nos fichiers dans le dossier "assets" dans le dossier "public\build". Dans ce nouveau dossier, on aura les fichiers "app.css" et "app.js". Dans le fichier "webpack.config.js", on a des "entry".</p>
+                    <p>Grâce à "<span class="em">{{ encore_entry_link_tags('app') }}</span>" et à "<span class="em">{{ encore_entry_script_tags('app') }}</span>", Symfony sait qu'on utilise Webpack Encore.</p>
+                    <h3>Étape 26 : Les Event Listener & Event Subscriber :</h3>
+                    <p>Durant l'exécution d'une application Symfony, plusieurs notifications d'évènements sont déclenchées. Par exemple, plusieurs évènements sont déclenchés lors d'une requête HTTP classique.</p>
+                    <p>La façon la plus commune pour écouter un évènement est d'enregistrer un "event listener". Dans le dossier "src", on crée le dossier "EventListener" et créer le fichier "ExceptionListener.php" ou avec la commande suivante :</p>
+<pre><code>php bin/console make:listener ExceptionListener</code></pre>
+                    <p>On va modifier le contenu de cette classe comme ceci :</p>
+<pre><code>&lt;?php
+
+    namespace App\EventListener;
+
+    use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+    use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+
+    class ExceptionListener
+    {
+        public function onKernelException(ExceptionEvent $event)
+        {
+            // You get the exception object from the reveived event
+            $exception = $event-&gt;getThrowable();
+            $message = sprintf(
+                'My error says: %s with code: %s',
+                $exception-&gt;getMessage(),
+                $exception-&gt;getCode()
+            );
+
+            // Customize your response object to display the exception details
+            $response = new Response();
+            $response-&gt;setContent($message);
+
+            // HttpExceptionInterface is a special type of exception that
+            // holds status code and header details
+            if ($exception instanceof HttpExceptionInterface) {
+                $response-&gt;setStatusCode($exception-&gt;getStatusCode());
+                $response-&gt;headers-&gt;replace($exception-&gt;getHeaders());
+            } else {
+                $response-&gt;setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            // sends the modified response object to the event
+            $event-&gt;setResponse($response);
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Dans le fichier de configuration "services.yaml", on doit ajouter les lignes suivantes :</p>
+<pre><code>App\EventListener\ExceptionListener:
+    tags:
+        - { name: kernel.event_listener, event: kernel.exception }</code></pre>
+                    <p>L'"event subscriber" est une classe qui définit une ou plusieurs méthodes qui écoutent un ou plusieurs évènements. La principale différence entre les deux est que les subscribers connaissent toujours les évènements qu'ils écoutent.</p>
+                    <p>Dans le dossier "src", on crée le dossier "EventSubscriber" et dedans le fichier "kernelSubscriber.php" ou le créer via la commande :</p>
+<pre><code>php bin/console make:subscriber</code></pre>
+                    <p>On va modifier le contenu de cette classe comme ceci :</p>
+<pre><code>&lt;?php
+
+    namespace App\EventSubscriber;
+
+    use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+    use Symfony\Component\HttpKernel\Event\RequestEvent;
+
+    class kernelSubscriber implements EventSubscriberInterface
+    {
+        public static function getSubscribedEvents()
+        {
+            return [RequestEvent =&gt; 'onKernelRequest'];
+        }
+
+        public function onKernelRequest(RequestEvent $event)
+        {
+            dd($event-&gt;getRequest()-&gt;getPathInfo());
+        }
+    }
+
+?&gt;</code></pre>
+                    <h3>Étape 27 : Authentification à double facteur :</h3>
+                    <p>Pour cette partie, on va créer un nouveau projet Symfony avec la commande :</p>
+<pre><code>symfony new 2FA --webapp</code></pre>
+                    <p>On duplique le contenu du fichier ".env" dans un nouveau fichier ".env.local". On va décommenter la ligne de la DB en SQLite par exemple et on va la créer avec la commande :</p>
+<pre><code>symfony console d:d:c</code></pre>
+                    <p>On va créer un contrôleur "Home" avec la commande :</p>
+<pre><code>symfony console make:controller Home</code></pre>
+                    <p>On va modifier la fonction "index" et on ajoute une fonction "home" comme ceci :</p>
+<pre><code>#[Route('/home', name: 'home')]
+public function home(): Response
+{
+    return $this-&gt;render('home/index.html.twig');
+}
+
+#[Route('/', name: 'index')]
+public function index(): Response
+{
+    return $this-&gt;redirectToRoute('home');
+}</code></pre>
+                    <p>Pour sécuriser la page "/home" pour dire que seul l'utilisateur ayant le rôle "ROLE_USER" peut y accéder, on peut ajouter dans le "access_control" du fichier "security.yaml" un path comme ceci :</p>
+<pre><code>access_control:
+    - { path: ^/home, roles: ROLE_USER }</code></pre>
+                    <p>On va créer un entité "User" avec la commande :</p>
+<pre><code>symfony console make:user</code></pre>
+                    <p>On oublie pas tout de suite dans la foulée de créer une migration avec la commande :</p>
+<pre><code>symfony console make:migration</code></pre>
+                    <p>Et bien sûr de migrer cette migration avec :</p>
+<pre><code>symfony console d:m:m</code></pre>
+                    <p>On va ensuite créer une page d'authentification avec la commande :</p>
+<pre><code>symfony console make:auth</code></pre>
+                    <p>On va donc créer un login form authenticator dans une classe "AppAuthenticator". On peut également créer une page d'inscription avec la commande :</p>
+<pre><code>symfony console make:registration-form</code></pre>
+                    <p>Grâce à la commande précédente, on peut ajouter une validation "<span class="em">@UniqueEntity</span>" à l'entité "User". Ça peut également envoyer un email pour vérifier l'adresse email de l'utilisateur après l'inscription ainsi qu'authentifier l'utilisateur après l'inscription. Après l'inscription, on veut être redirigé vers la page "home".</p>
+                    <p>Pour mettre en place l'authentification à double facteur, on doit installer le bundle "2FA" avec la commande :</p>
+<pre><code>composer require 2fa</code></pre>
+                    <p>On va aussi installer une extension à ce bundle qui est "scheb/2fa-email" avec la commande suivante :</p>
+<pre><code>composer require scheb/2fa-email</code></pre>
+                    <p>Dans le "main firewall" de "security.yaml", on va rajouter les lignes suivantes :</p>
+<pre><code>two_factor:
+    auth_form_path: 2fa_login # The route name you have used in the routes.yaml
+    auth_form_path: 2fa_login_check # The route name you have used in the routes.yaml</code></pre>
+                    <p>Dans le fichier de configuration "<span class="em">scheb_2fa.yaml</span>", on va modifier son contenu comme ceci :</p>
+<pre><code>scheb_two_factor:
+    security_tokens:
+        - Symfony\Component\Security\Http\Authenticator\token\PostAuthenticationToken
+    email:
+        digits: 6
+        enabled: true
+        sender_email: no-reply@test.com
+        sender_name: John Doe</code></pre>
+                    <p>On va implémenter le "<span class="em">SchebTwoFactorBundleModelEmailTwoFactorInterface</span>" dans notre entité "User" avec les lignes suivantes :</p>
+<pre><code>#[ORM\Column(type: 'string', nullable: true)
+private $authCode;
+
+public function isEmailAuthEnabled(): bool
+{
+    return true;    // This can be a persist field to switch email code authentication on/off
+}
+
+public function getEmailAuthRecipient(): string
+{
+    return $this-&gt;email;
+}
+
+public function getEmailAuthCode(): string
+{
+    if (is_null($this-&gt;authCode)) {
+        throw new \logicException('The email authentication code was not set');
+    }
+
+    return $this-&gt;authCode;
+}
+
+public function setEmailAuthCode(string $authCode): void
+{
+    $this-&gt;authCode = $authCode;
+}</code></pre>
+                    <p>Maintenant qu'on a modifié l'entité "User", on va créer une nouvelle migration et on va la migrer. On va configurer le "MAILER_DSN" via Docker par exemple dans le fiche "docker-compose.yml" avec le contenu suivant :</p>
+<pre><code>version: '3.7'
+services:
+    mailer:
+    image: schickling/mailcatcher
+    ports: [1025, 1080]</code></pre>
+                    <p>On va démarrer notre petit serveur de mail Docker avec la commande :</p>
+<pre><code>docker-compose up -d</code></pre>
+                    <p>Ensuite, on va mettre en place les appareils de confiance pour ne pas chaque fois récupérer un code par email lors de la double authentification.</p>
+                    <p>On va installer une nouvelle extension à ce bundle avec la commande :</p>
+<pre><code>composer require scheb/2fa-trusted-device</code></pre>
+                    <p>Dans notre fichier de configuration "scheb_2fa.yaml", on va rajouter les lignes suivantes :</p>
+<pre><code>trusted_device:
+    enabled: true   # If the trusted device feature should be enabled
+    lifetime: 5184000   # Lifetime of the trusted device token
+    extend_lifetime: false  # Automatically extend lifetime of the trusted cookie on re-login
+    cookie_name: trusted_device # Name of the trusted device cookie
+    cookie_secure: false    # Set the 'Secure' (HTTPS Only) flag on the trusted device cookie
+    cookie_same_site: "lax" # The same-site option of the cookie, can be "lax" or "strict"
+    cookie_path: "/"    # Path to use when setting the cookie</code></pre>
+                    <p>Dans le "two_factor" de notre "main firewall" de notre "security.yaml", on rajoute la ligne :</p>
+<pre><code>trusted_parameter_name: _trusted # Name of the parameter for the trusted device option</code></pre>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
