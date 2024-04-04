@@ -3503,7 +3503,7 @@ public function index(): Response
                     <p>Dans le "main firewall" de "security.yaml", on va rajouter les lignes suivantes :</p>
 <pre><code>two_factor:
     auth_form_path: 2fa_login # The route name you have used in the routes.yaml
-    auth_form_path: 2fa_login_check # The route name you have used in the routes.yaml</code></pre>
+    check_path: 2fa_login_check # The route name you have used in the routes.yaml</code></pre>
                     <p>Dans le fichier de configuration "<span class="em">scheb_2fa.yaml</span>", on va modifier son contenu comme ceci :</p>
 <pre><code>scheb_two_factor:
     security_tokens:
@@ -3562,6 +3562,54 @@ services:
     cookie_path: "/"    # Path to use when setting the cookie</code></pre>
                     <p>Dans le "two_factor" de notre "main firewall" de notre "security.yaml", on rajoute la ligne :</p>
 <pre><code>trusted_parameter_name: _trusted # Name of the parameter for the trusted device option</code></pre>
+                    <h3>Étape 28 : Authentification à deux facteurs avec Google Authenticator :</h3>
+                    <p>Avec le prochain package qu'on va installer, le site web va générer un QR Code qui va partager une "OTP Secret Key", l'"issuer" (l'émetteur) et la "period" (durée de validation du QR Code définie par défaut à 30 secondes).</p>
+                    <p>Dans un terminal, on va cloner <a href="https://github.com/pentiminax/symfony-google-authenticator" target="_blank">le repository "symfony-google-authenticator" du youtubeur "Pentiminax"</a> dont les explications sont tirées avec la commande :</p>
+<pre><code>git clone https://github.com/pentiminax/symfony-google-authenticator.git</code></pre>
+                    <p>On va installer les packages composer et Symfony avec la commande :</p>
+<pre><code>composer install</code></pre>
+                    <p>On va lancer le serveur local avec la commande :</p>
+<pre><code>php -S localhost:8000 -t public/</code></pre>
+                    <p>Dans notre entité "User", on a une nouvelle propriété qui va stocker la clé secrète :</p>
+<pre><code>#[ORM\Column(length: 255, nullable: true)]
+private ?string $secret = null;</code></pre>
+                    <p>Dans notre fichier de configuration des services, "services.yaml", on a un paramètre "app.issuer" avec la valeur "Amazaune" par exemple.</p>
+                    <p>Pour commencer on va créer le service "AuthenticatorService" dans le dossier "src\Service" avec le contenu suivant :</p>
+<pre><code>&lt;?php
+
+    namespace App\Service;
+
+    use Doctrine\ORM\EntityManagerInterface;
+    use OTPHP\TOTP;
+    use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+
+    class AuthenticatorService
+    {
+        public function __construct(
+            private readonly ParameterBagInterface $parameters,
+            private readonly EntityManagerInterface $em
+        )
+        {
+
+        }
+
+        public function getCodeUri(User $user)
+        {
+            $totp = TOTP::generate();
+
+            $totp-&gt;setIssuer($this-&gt;parameters-&gt;get('app.issuer'));
+            $totp-&gt;setLabel($user-&gt;getUserIdentifier());
+
+            $qrCodeUri = $totp-&gt;getQRCodeUri(
+                'https://api.qrserver.com/v1/create-qr-code/?color=000&bgcolor=FFF&data=[DATA]&qzone=2&margin=0&size=300x300&ecc=M',
+                '[DATA]'
+            );
+
+            return [$qrCodeUri, $totp-&gt;getSecret()];
+        }
+    }
+
+?&gt;</code></pre>
                     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
                 </article>
                 <article>
