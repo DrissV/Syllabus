@@ -3593,7 +3593,7 @@ private ?string $secret = null;</code></pre>
 
         }
 
-        public function getCodeUri(User $user)
+        public function getCodeUri(User $user): array
         {
             $totp = TOTP::generate();
 
@@ -3607,14 +3607,103 @@ private ?string $secret = null;</code></pre>
 
             return [$qrCodeUri, $totp-&gt;getSecret()];
         }
+
+        public function validatePairing(User $user, string $secret): void
+        {
+            if (!$secret) {
+                return;
+            }
+
+            $user-&gt;setSecret($secret);
+
+            $this-&gt;em-&gt;flush();
+        }
     }
 
 ?&gt;</code></pre>
-                    <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
-                </article>
-                <article>
-                    <h2 id="intro_laravel">Introduction au Framework PHP Laravel :</h2>
-                    <p>Dans ce tutoriel, nous allons vous guider à travers les étapes pour commencer à utiliser le framework PHP Laravel. Laravel est un framework web élégant et puissant qui facilite le développement rapide d'applications web modernes.</p>
+                    <p>Dans le "AuthenticatorController", on va y modifier sa fonction "pair" comme ceci :</p>
+<pre><code>&lt;?php
+
+    namespace App\Controller;
+
+    use App\Service\AuthenticatorService;
+    ...
+
+    class AuthenticatorController extends AbstractController
+    {
+        #[Route('authenticator/pair', name: 'app_authenticator_pair')]
+        public function pair(AuthenticatorService $authenticatorService, Request $request): Response
+        {
+            if ($request-&gt;isMethod(Request::METHOD_POST)) {
+                $authenticatorService-&gt;validatePairing($this-&gt;getUser(), $request-&gt;request-&gt;get('secret'));
+
+                return $this-&gt;redirectToRoute('app_home_index');
+            }
+
+            [$qrCodeUri, $secret] = $authenticatorService-&gt;getQRCodeUri($this-&gt;getUser());
+
+            return $this-&gt;render('authenticator/pair.html.twig', [
+                'qrCodeUri' =&gt; $qrCodeUri,
+                'secret' =&gt; $secret
+            ]);
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>On va modifier également le template pour qu'il puisse afficher les nouvelles valeurs comme ceci :</p>
+<pre><code>{% extends 'base.html.twig' %}
+    
+{% block title %}Pair{% endblock %}
+
+{% block body %}
+    &lt;img alt="QR Code" src="{{ qrCodeUri }}"&gt;
+
+    &lt;form method="post"&gt;
+        &lt;input type="hidden" name="secret" value="{{ secret }}"&gt;
+        &lt;button type="submit"&gt;Validate Pairing&lt;/button&gt;
+    &lt;/form&gt;
+{% endblock %}</code></pre>
+                    <p>Enfin, on va vérifier le code dans la fonction "verify" du "AuthenticatorController" :</p>
+<pre><code>#[Route('/authenticator/verify', name: 'app_authenticator_verify')]
+public function verify(Request $request): Response
+{
+    if (is_null($this-&gt;getUser()-&gt;getSecret())) {
+        return $this-&gt;redirectToRoute('app_authenticator_pair');
+    }
+
+    if ($request-&gt;isMethod(Request::METHOD_POST)) {
+        $totp = TOTP::createFromSecret($this-&gt;getUser()-&gt;getSecret());
+
+        $result = $totp-&gt;verify($request-&gt;request-&gt;getString('otp'));
+    }
+
+    return $this-&gt;render('authenticator/verify.html.twig', [
+        'result' =&gt; $result ?? null;
+    ]);
+}</code></pre>
+    <p>On modifie également son template comme ceci :</p>
+<pre><code>{% extends 'base.html.twig' %}
+
+{% block title %}Verify{% endblock %}
+
+{% block body %}
+    &lt;form method="post"&gt;
+        &lt;label for="otp"&gt;OTP Code&lt;/label&gt;
+        &lt;input type="text" name="otp" id="otp"&gt;
+        &lt;button type="submit"&gt;Verify&lt;/button&gt;
+    &lt;/form&gt;
+
+    &lt;br/&gt;
+
+    {% if result is not null %}
+        &lt;p&gt;{{ result == true ? 'Le code est bon' : "C'est pas bon" }}&lt;/p&gt;
+    {% endif %}
+{% endblock %}</code></pre>
+    <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
+</article>
+<article>
+    <h2 id="intro_laravel">Introduction au Framework PHP Laravel :</h2>
+    <p>Dans ce tutoriel, nous allons vous guider à travers les étapes pour commencer à utiliser le framework PHP Laravel. Laravel est un framework web élégant et puissant qui facilite le développement rapide d'applications web modernes.</p>
                     <h3>Étape 1 : Installation de Laravel :</h3>
                     <p>Avant de commencer, assurez-vous d'avoir PHP et le grestionnaire de dépendances Composer installés sur votre système.</p>
                     <ol>
