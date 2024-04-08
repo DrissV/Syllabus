@@ -3958,7 +3958,59 @@ services:
     <p class="em">Pensez à vérifier que votre fichier <span class="html">`prod.decrypt.private.php`</span> est bien présent dans votre <span class="html">`.gitignore`</span> :</p>
 <pre><code>/config/secrets/prod/prod.decrypt.private.php</code></pre>
     <h6>Ajouter une variable d'environnement à la liste des secrets :</h6>
-    <p></p>
+    <p>Pour ajouter un nouveau secret (<span class="em">`DEMO_SECRET: Ceci est un secret`</span>) nous devons utiliser la commande suivante :</p>
+<pre><code>php bin/console secrets:set DEMO_SECRET</code></pre>
+    <p>Pour la production :</p>
+<pre><code>APP_RUNTIME_ENV=prod php bin/console secrets:set DEMO_SECRET</code></pre>
+    <p>Nous constatons la création d'un nouveau fichier <span class="em">`config/secrets/dev/dev/DEMO_SECRET.80921a.php`</span> qui contient notre variable d'environnement chiffrée :</p>
+<pre><code>&lt;?php // dev.DEMO_SECRET.80921a on Mon, 07 Mar 2022 10:07:38 +0100
+
+    return "\xCD\x9B\x7F6\xDC\xC9\x82\xE6\xEB\xE2\x808\xBF\xA9P\xA8\x9BL\x3A\xA5\xC0\xBD\xA6\xA6\xA7\x7D\x10\xCD\xE9\xD0\xBEg\xA3ez\x8A\xC2\x91k\xD04DDLo\x9D\xB9\x17\xCD\xC9\x989\x24\x3A\xC3U\xFCFP\x5CQ\xC0\xB9\xA3T\x60";
+
+?&gt;</code></pre>
+    <p>Et accédons à notre variable d'environnement depuis Twig :</p>
+<pre><code>twig:
+        default_path: '%kernel.project_dir%templates'
+        globals:
+            DEMO: '%env(DEMO)%'
+            DEMO_SECRET: '%env(DEMO_SECRET)%'</code></pre>
+    <p>Modifions notre fichier twig <span class="em">`templates/test/index.html.twig`</span> :</p>
+<pre><code>{% extends 'base.html.twig' %}
+
+{% block title %}Hello TestController!{% endblock %}
+
+{% block body %}
+
+    {{ DEMO_SECRET }}
+
+{% endblock %}</code></pre>
+    <p>Dumpons nos variables d'environnement :</p>
+<pre><code>composer dump-env dev</code></pre>
+    <p>Et constatons le résultat :</p>
+    <img src="../images/symfony_variables_environnement_10.webp" alt="">
+    <h6>Set d'un secret en local :</h6>
+    <p>Vous pouvez aussi <span class="em">set</span> un secret en local (valable uniquement sur votre machine) :</p>
+<pre><code>php bin/console secrets:set --local DEMO_SECRET</code></pre>
+    <p>Dumpons nos variables d'environnement :</p>
+<pre><code>composer dump-env dev</code></pre>
+    <p>Et vérifions :</p>
+    <img src="../images/symfony_variables_environnement_11.webp" alt="">
+    <h6>Quelques outils pour gérer les secrets :</h6>
+    <ul>
+        <li>
+            <p>Lister les secrets :</p>
+<pre><code><span class="html">php bin/console secrets:list --reveal</span>
+------------- ---------------------- ---------------------------- 
+Secret        Value                  Local Value                 
+------------- ---------------------- ---------------------------- 
+DEMO_SECRET   "Ceci est un secret"   "Ceci est un secret local"  
+------------- ---------------------- ----------------------------</code></pre>
+        </li>
+        <li>
+            <p>Supprimer un secret :</p>
+<pre><code>php bin/console secrets:remove DEMO_SECRET</code></pre>
+        </li>
+    </ul>
     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
 </article>
 <article>
