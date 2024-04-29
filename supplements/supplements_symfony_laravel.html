@@ -1656,7 +1656,13 @@ public function logout()
                 'class' =&gt; 'form-label mt-4'
             ]
         ],
-        'invalid_message' =&gt; 'Les mots de passe ne correspondent pas !'
+        'invalid_message' =&gt; 'Les mots de passe ne correspondent pas !',
+        'constraints' =&gt; [
+            new Assert\Length([
+                'min' =&gt; 8,
+                'minMessage' =&gt; 'Le mot de passe doit contenir au moins  {{ limit }} caractères !'
+            ])
+        ]
     ])
     -&gt;add('submit', SubmitType::class, [
         'attr' =&gt; [
@@ -1841,7 +1847,13 @@ public function edit(User $user, Request $request, EntityManagerInterface $manag
             'class' =&gt; 'form-label mt-4'
         ]
     ],
-    'invalid_message' =&gt; 'Les mots de passe ne correspondent pas !'
+    'invalid_message' =&gt; 'Les mots de passe ne correspondent pas !',
+    'constraints' =&gt; [
+        new Assert\Length([
+            'min' =&gt; 8,
+            'minMessage' =&gt; 'Le mot de passe doit contenir au moins  {{ limit }} caractères !'
+        ])
+    ]
 ])
     -&gt;add('newPassword', PasswordType::class, [
         'attr' =&gt; ['class' =&gt; 'form-control'],
@@ -3011,7 +3023,7 @@ $manager-&gt;persist($admin);</code></pre>
         }
     }
 
-    public function testIfLoginDailedWhenPasswordIsWrong(): void
+    public function testIfLoginFailedWhenPasswordIsWrong(): void
     {
         $client = static::createClient();
 
