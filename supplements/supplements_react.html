@@ -60,6 +60,8 @@
                         <li><a href="#familiarisation_props">Familirisation avec les props</a></li>
                         <li><a href="#maitrise_evenements_React">Maîtrise des événements en React</a></li>
                         <li><a href="#creation_formulaires_React">Création de formulaires avec React</a></li>
+                        <li><a href="#stateful_components">Les stateful components</a></li>
+                        <li><a href="#useState">useState</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -874,6 +876,60 @@ export default QuestionForm</code></pre>
 &lt;/div&gt;</code></pre>
                     <p>Et ça marche bien !</p>
                     <h3>Comprenez les avantages des formulaires contrôlés :</h3>
+                    <p>Eh bien, cela permet d'<span class="em">interagir directement avec la donnée renseignée par l'utilisateur</span>. Vous pouvez donc afficher un message d'erreur si la donnée n'est pas valide, ou bien la filtrer en interceptant une mauvaise valeur.</p>
+                    <p>Si nous décidons qu'il n'est pas autorisé d'utiliser la lettre "f" (bon oui, c'est un peu bizarre), eh bien nous pouvons déclarer une variable :</p>
+<pre><code>const isInputError = inputValue.includes('f')</code></pre>
+                    <p>et afficher ou non un message d'erreur en fonction de ce booléen :</p>
+<pre><code>{isInputError && (
+    &lt;div&gt;🔥 Vous n'avez pas le droit d'utiliser la lettre "f" ici.&lt;/div&gt;
+)}</code></pre>
+                    <p>De la même manière, nous pouvons intercepter une mauvaise valeur entrée par l'utilisateur. Pour cela, il faut déclarer une fonction intermédiaire :</p>
+<pre><code>function checkValue(value) {
+    if (!value.includes('f')) {
+        setInputValue(value)
+    }
+}</code></pre>
+                    <p>et on aplique la modification dans notre fonction callback :</p>
+<pre><code>onChange={(e) =&gt; checkValue(e.target.value)}</code></pre>
+                    <p>Ici, vous aure be.au marteler votre touche 'f' autant de fois que vous voudrez, la valeur ne s'inscrira pas dans votre input.</p>
+                    <p>Vous ne vous en rendez peut-être pas compte pour l'instant, mais ça vous laisse une très grande liberté quant aux validations que vous voulez créer; et en tant que développeur, c'est vraiment très puissant.</p>
+                    <p>Quand utiliser le composant contrôlé et quand utiliser sa version non contrôlée ? Eh bien cela dépen des cas. À vous de voir selon vos contraintes. Quand vous avez un composant rapide à faire, qui n'intègre aucuene complexité, un input non contrôlé peut faire l'affaire. À l'inverse, si vous avez des vérifications à faire, il vaudra sûrement mieux passer par un composant contrôlé. Pour ma part, j'ai vu beaucoup plus de composants contrôlés dans les codebases que j'ai pu voir.</p>
+                    <p>Sachez qu'il existe également des bibliothèqyes qui vous permettent de gérer les formulaires et leur validation aussi proprement que possible, par exemple <a href="https://react-hook-form.com/" target="_blank">le très bon outil <span class="html">react-hook-form</span></a>.</p>
+                    <p>Et voilà, vous êtes maintenant équipé pour interagir avec vos utilisateurs grâce aux événements et aux formulaires.</p>
+                </article>
+                <article>
+                    <h2 id="stateful_components">Découvrez les stateful components :</h2>
+                    <p>Le state local est présent à l'intérieur d'un composant et <span class="em">garde sa valeur, même si l'application le re-render</span>. On peut alors dire qu'il <span class="em">stateful</span>.</p>
+                    <p>Dans <span class="html">Cart.js</span>, nous allons uniquement <span class="em">permettre aux utilisateurs d'ajouter des monsteras dans leur panier</span>, supprimons donc tout le reste.</p>
+                    <p>Commençons par <span class="em">importer <span class="html">useState</span></span> avec :</p>
+<pre><code>import { useState } from 'react'</code></pre>
+                    <p>Puis, on peut <span class="em">créer un state <span class="html">cart</span></span>. Avec <span class="html">useState</span>, nous devons déclarer en même temps une fonction pour mettre à jour ce state (<span class="html">updateCart</span>), et lui attribuer une valeur initiale, qui sera ici de 0 :</p>
+<pre><code>const [cart, updateCart] = useState(0)</code></pre>
+                    <p>Je vais maintenant pouvoir <span class="em">ajouter un bouton dans mon panier qui permet d'ajouter un monstera</span> avec la fonction que nous venons de déclarer. Ce qui me donne dans <span class="html">Cart.js</span> :</p>
+<pre><code>function Cart() {
+    const monsteraPrice = 8
+    const [cart, updateCart] = useState(0)
+
+    return (
+        &lt;div className='lmj-cart'&gt;
+            &lt;h2&gt;Panier&lt;/h2&gt;
+            &lt;div&gt;
+                Monstera : {monsteraPrice}€
+                &lt;button onClick={() =&gt; updateCart(cart + 1)}&gt;
+                    Ajouter
+                &lt;/button&gt;
+            &lt;/div&gt;
+            &lt;h3&gt;Total : {monsteraPrice * cart}€&lt;/h3&gt;
+        &lt;/div&gt;
+    )
+}</code></pre>
+                    <p>Maintenant, si on clique sur "Ajouter", le montant total est modifié en fonction du nombre d'éléments sauvegardés dans le state du panier. Lorsqu'un state est modifié, alors l'affichage du composant est rafraichit et la valeur affichée est actualisée, on dit que le composant est re-render.</p>
+                    <p>Bienvenue dans la magie du state ! Notre composant Cart est maintenant devenu un <span class="em">stateful component</span>, grâce à <span class="html">useState</span>.</p>
+                    <p>Concrètement, cela veut dire que le composant Cart peut être re-render autant de fois que nécessaire, mais la valeur du panier sera préservée.</p>
+                </article>
+                <article>
+                    <h2 id="useState">Familiarisez-vous avec useState :</h2>
+                    <p><span class="html">useState</span> est un hook qui permet d'ajouter le state local React à des composants fonctions.</p>
                     
                 </article>
             <!-- fin de section -->
