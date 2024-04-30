@@ -52,6 +52,7 @@
                         <li><a href="#initialisation_JSX">Initialisation au JSX</a></li>
                         <li><a href="#Create_React_App">Create React App</a></li>
                         <li><a href="#organisation_code">Organisation du code</a></li>
+                        <li><a href="#stylisation_app">Stylisation de l'application</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -390,8 +391,66 @@ ReactDOM.render(
                 <article>
                     <h2 id="organisation_code">Organisez votre code :</h2>
                     <p>Nous allons maintenant <span class="em">modifier notre base de code</span> pour qu'elle soit plus à l'image de notre projet. Il existe plusieurs manières d'organiser son code, et il est important de réfléchir à comment l'organiser. Ici, nous allons séparer les fichiers selon leur type : composants/style/images, etc.</p>
-                    
+                    <p>On va commencer par créer un dossier <span class="html">/components</span> dans <span class="html">/src</span>, où nous mettrons tous nos composants. On y glisse <span class="html">App.js</span> et on en profite pour changer le chemin d'import dans <span class="html">index.js</span>. Pour ce qui est des autres fichiers, le plus important est <span class="html">index.js</span> que vous devez garder. Vous pouvez également garder <span class="html">index.css</span>, mais vous pouvez supprimer les autres fichiers.</p>
+                    <p>Maintenant, <span class="em">créons notre</span> <span class="html">Banner</span> dans un fichier JavaScript à part dans <span class="html">/components</span> que nous pouvons appeler <span class="html">Banner.js</span>.</p>
+<pre><code>function Banner() {
+    return &lt;h1&gt;La maison jungle&lt;/h1&gt;
+}
+
+export default Banner</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous remarquez la notation <span class="html">export default</span> ? Il s'agit d'une syntaxe prévue dans l'ES6, qui vous épargnera d'utiliser les accolades au moment de l'import.</p>
+                    </div>
+                    <p>On peut maintenant adapter le code de <span class="html">App.js</span> en supprimant le code de base, et <span class="em">y importer notre</span> <span class="html">Banner</span>.</p>
+<pre><code>import Banner from './Banner'
+
+function App() {
+    return &lt;Banner /&gt;
+}
+
+export default App</code></pre>
+                    <p>Ce qui nous donne :</p>
+                    <figure>
+                        <img src="../images/banner_React.png" alt="">
+                        <figcaption>Notre Banner s'affiche dans le navigateur.</figcaption>
+                    </figure>
+                    <p>Félicitations ! Comme je l'ai déjà mentionné, mais ici, c'est <a href="https://webpack.js.org/" target="_blank">Webpack</a> qui nous permet d'importer notre composant aussi facilement, avec <span class="html">import</span>. Cet outil particulièrement utile est essentiel pour lier les fichiers entre eux, afin qu'ils soient interprétés par le navigateur. Et dire que Create React App nous a permis de l'installer sans faire aucune configuration. Si ça c'est pas de la chance !</p>
+                    <figure>
+                        <img src="../images/webpack_React.png" alt="">
+                        <figcaption>Import vos composants grâce à Webpack</figcaption>
+                    </figure>
                 </article>
+                <article>
+                    <h2 id="stylisation_app">Stylisez votre app :</h2>
+                    <p>C'est maintenant le moment d'ajouter un peu de style à nos composants.</p>
+                    <h3>Exploitez les classNames :</h3>
+                    <p>Comme en HTML, nous pouvons <span class="em">associer des attributs à nos éléments</span>. Les attributs HTML tels que <span class="html">id</span>, <span class="html">href</span> pour un lien &lt;a /&gt;, <span class="html">src</span> pour une balise &lt;img /&gt;, fonctionnent normalement en JSX.</p>
+                    <p>En revanche, il existe des mots réservés en JavaScript, tels que <span class="html">class</span>. Pour attribuer du style avec une classe CSS, il suffit pour cela d'utiliser l'attribut <span class="html">className</span>, et de lui préciser une string. D'ailleurs, vous pouvez utiliser plusieurs classes sur un élément en les mettant à la suite, séparées par un espace.</p>
+                    <p>Créons dans <span class="html">/src</span> un dossier <span class="html">/styles</span> qui va regrouper nos fichiers CSS. On peut y glisser <span class="html">index.css</span> en n'oubliant pas de modifier le path relatif pour importer <span class="html">index.css</span> dans <span class="html">index.js</span>.</p>
+                    <p>Je crée donc mon fichier <span class="html">Banner.css</span> qui va me permettre de <span class="em">styliser mon composant</span>. Ce qui nous donne une organisation comme dans la capture ci-dessous :</p>
+                    <figure>
+                        <img src="../images/banner_CSS_React.png" alt="">
+                        <figcaption>L'arborescence de notre app</figcaption>
+                    </figure>
+                    <p>Dans <span class="html">Banner.js</span>, je wrappe mon <span class="em">h1</span> dans une div à laquelle je <span class="em">précise la className lmj-banner</span> ("lmj" pour la maison jungle, bien sûr !) :</p>
+<pre><code>&lt;div className='lmj-banner'&gt;
+    &lt;h1&gt;La maison jungle&lt;/h1&gt;
+&lt;/div&gt;</code></pre>
+                    <p>Et retour dans notre fichier <span class="html">Banner.css</span>, où on <span class="em">crée la classe correspondante</span> :</p>
+<pre><code>.lmj-banner {
+    color: black;
+    text-align: right;
+    padding: 32px;
+    border-bottom: solid 3px black;
+}</code></pre>
+                    <p>Jetons un oeil à notre page dans le navigateur.</p>
+                    <p>Rien ne se passe car nous n'avons tout simplement pas <span class="em">importé le fichier</span>. Il suffit de rajouter dans notre fichier <span class="html">Banner.js</span> :</p>
+<pre><code>import '../styles/Banner.css'</code></pre>
+                    <p>Et ça y est ! Notre style est appliqué !</p>
+                    <p>En React comme dans toutes les librairies et tous les frameworks front, <span class="em">l'accessibilité du web est essentielle</span>. Elle est nécessaire pour permettre aux technologies d'assistance et aux personnes en situation de handicap, notamment, d'interpréter les pages web. Pour en savoir plus, je vous conseille "<a href="https://openclassrooms.com/fr/courses/6691346-concevez-un-contenu-web-accessible" target="_blank">Concevez un contenu web accessible</a>", un excellent cours sur ce sujet.</p>
+                </article>
+                
             <!-- fin de section -->
             </section>
         </main>
