@@ -53,6 +53,10 @@
                         <li><a href="#Create_React_App">Create React App</a></li>
                         <li><a href="#organisation_code">Organisation du code</a></li>
                         <li><a href="#stylisation_app">Stylisation de l'application</a></li>
+                        <li><a href="#decouverte_attribut_style">Découverte de l'attribut style</a></li>
+                        <li><a href="#utilisation_images">Utilisation des images</a></li>
+                        <li><a href="#iteration_contenu">Itération sur le contenu</a></li>
+                        <li><a href="#contextualisation_contenu_composants">Contextualisation du contenu des composants</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -143,7 +147,7 @@
                     <p>Pour faire simple : en utilisant <span class="html">React.createElement</span>, React crée d'abord ses éléments dans le DOM virtuel, puis il vient prévenir le DOM au moment de sa créatuibn "Hé, rajoute-moi une balise h1 avec le texte <span class="em">La maison jungle</span> dedans".</p>
 <pre><code>&lt;div id="root"&gt;&lt;/div&gt;
 
-const Header = React.createElement('h1', {} 'La maison jungle')
+const Header = React.createElement('h1', {}, 'La maison jungle')
 
 console.log(Header)
 
@@ -276,7 +280,7 @@ ReactDOM.render(Header, document.getElementById("root"))</code></pre>
                     <h3>Installez et lancez CRA :</h3>
                     <div class="information">
                         <img src="../images/information.png" alt="Information" class="float_left">
-                        <p>Pour manipuler Create React App ici, nous allons avoir besoin d'un gestionnaire de paquet (<span class="em">package manager</span>) directeemnt dans le terminal. Ici, je vais utiliser <span class="html">yarn</span>. Si vous utilisez une autre version, telle que npm, je vous conseille de vous référer au <a href="https://github.com/facebook/create-react-app#user-guide" target="_blank">guide d'utilisation de Create React App par Facebook, sur GitHub</a> (en anglais).</p>
+                        <p>Pour manipuler Create React App ici, nous allons avoir besoin d'un gestionnaire de paquet (<span class="em">package manager</span>) directement dans le terminal. Ici, je vais utiliser <span class="html">yarn</span>. Si vous utilisez une autre version, telle que npm, je vous conseille de vous référer au <a href="https://github.com/facebook/create-react-app#user-guide" target="_blank">guide d'utilisation de Create React App par Facebook, sur GitHub</a> (en anglais).</p>
                         <p>D'ailleurs, si vous voulez en apprendre davantage sur pourquoi choisir npm ou Yarn, <a href="https://blog.zenika.com/2017/03/13/npm-vs-yarn/" target="_blank">je vous conseille cet excellent article de blog qui compare les deux.</a></p>
                     </div>
                     <p>Pour commencer, placez-vous dans le dossier où vous voulez créer votre projet.</p>
@@ -450,7 +454,137 @@ export default App</code></pre>
                     <p>Et ça y est ! Notre style est appliqué !</p>
                     <p>En React comme dans toutes les librairies et tous les frameworks front, <span class="em">l'accessibilité du web est essentielle</span>. Elle est nécessaire pour permettre aux technologies d'assistance et aux personnes en situation de handicap, notamment, d'interpréter les pages web. Pour en savoir plus, je vous conseille "<a href="https://openclassrooms.com/fr/courses/6691346-concevez-un-contenu-web-accessible" target="_blank">Concevez un contenu web accessible</a>", un excellent cours sur ce sujet.</p>
                 </article>
-                
+                <article>
+                    <h2 id="decouverte_attribut_style">Découvrez l'attribut style :</h2>
+                    <p>Bonne nouvelle : les éléments React acceptent également l'attribut <span class="html">style</span> pour styliser un composant. À la différence des éléments HTML, pour lesquels cet attribut est également accepté, il faut lui passer un objet en paramètre. On appelle cette méthode du <span class="em">inline style</span> :</p>
+<pre><code>import '../styles/Banner.css'
+
+function Banner() {
+    return (
+        &lt;div
+                style={{
+                    color: 'black',
+                    textAlign: 'right',
+                    padding: 32,
+                    borderBottom: 'solid 3px solid'
+                }}
+        &gt;
+            &lt;h1&gt;La maison jungle&lt;/h1&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default Banner</code></pre>
+                    <p>Cet attribut peut être pratique pour tester rapidement quelque chose, mais il n'est pas recommandé d'en faire une utilisation plus poussée. Donc, pour styliser votre application, privilégiez davantage la méthode des classNames, ou d'autres méthodes avec des librairies tierces, par exemple.</p>
+                </article>
+                <article>
+                    <h2 id="utilisation_images">Utilisez des images :</h2>
+                    <p>Vous avez peut-être vu le <span class="em">logo.svg</span> de React situé dans <span class="html">/src</span> ?</p>
+                    <p>Ici, nous allons faire un peu la même chose. Mais commençons par organiser tout ça.</p>
+                    <p>Toujours dans <span class="html">/src</span> , on crée un dossier <span class="html">/assets</span> dans lequel on vient mettre notre fichier <span class="em">logo.png</span> qui voici :</p>
+                    <img src="../images/logo.png" alt="">
+                    <p>Pour <span class="em">l'importer dans votre code</span>, vous pouvez maintenant faire de la manière suivante . Dans <span class="html">Banner.js</span> :</p>
+<pre><code>import logo from '../assets/logo.png'</code></pre>
+                    <p>Vous voyez ici, on déclare en fait une variable logo à laquelle on assigne le contenu de notre image.</p>
+                    <p>Puis vous pouvez <span class="em">l'utiliser dans un élément img</span>, ce qui nous donne pour notre <span class="html">Banner.js</span> :</p>
+<pre><code>import logo from '../assets/logo.png'
+import '../styles/Banner.css'
+
+function Banner() {
+    const title = 'La maison jungle'
+    return (
+        &lt;div className='lmj-banner'&gt;
+            &lt;img src={logo} alt='La maison jungle' className='lmj-logo' /&gt;
+            &lt;h1 className='lmj-title'&gt;{title}&lt;/h1&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default Banner</code></pre>
+                    <p>En ajoutant un peu de CSS, me voilà avec la bannière telle que je la voulais.</p>
+                    <p>Vous avez maintenant une très bonne base de code pour créer votre application, en utilisant du style et des assets directement dans vos composants React.</p>
+                </article>
+                <article>
+                    <h2 id="iteration_contenu">Itérez sur votre contenu :</h2>
+                    <p>En code, vous serez très souvent confronté à des listes de données qui présentent la même struture. Bonne nouvelle ! Pas besoin de vous faire des crampes à force de copier-coller : vous pouvez <span class="em">directement itérer sur votre contenu et générer des composants react dessus</span>.</p>
+                    <h3>Découvrez votre allié : map() :</h3>
+                    <p>La <a href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Array/map" target="_blank">méthode JavaScript <span class="html">map()</span></a> passe sur chaque élément d'un tableau. Elle lui applique une fonction, et renvoie un nouveau tableau contenant les résultats de cette fonction appliquée sur chaque élément.</p>
+                    <p>Par exemple, pour une fonction qui doublerait la valeur d'un élément, cela donne :</p>
+<pre><code>const numbers = [1, 2, 3, 4]
+const doubles = numbers.map(x =&gt; x * 2) // [ 2, 4, 6, 8]</code></pre>
+                    <p>Dans notre cas, ekke ca biys oerlerrre de <span class="em">prendre une liste de données</span>, et de la <span class="em">transformer en liste de composants</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>La méthode <span class="html">map()</span> permet facilement d'itérer sur des données et de retourner un tableau d'éléments. Comme elle, les méthodes <span class="html">forEach()</span>, <span class="html">filter()</span>, <span class="html">reduce()</span>, etc., qui permettent de manipuler des tableaux, seront également vos alliés en React.</p>
+                    </div>
+                    <p>On va donc créer un composant <span class="html">ShoppingList.js</span> pour notre magain de plantes.</p>
+                    <p>Dans ce fichier, on déclare une variable plantList qui <span class="em">contient notre liste de plantes</span> :</p>
+<pre><code>const plantList = [
+    'monstera',
+    'ficus lyrata',
+    'pothos argenté',
+    'yucca',
+    'palmier'
+]</code></pre>
+                    <p>Et <span class="em">on ajoute en dessous le composant</span> lui-même :</p>
+<pre><code>function ShoppingList() {
+    return (
+        &lt;ul&gt;
+            {plantList.map((plant) => (
+                &lt;li&gt;{plant}&lt;/li&gt;
+            ))}
+        &lt;/ul&gt;
+    )
+}
+
+export default ShoppingList</code></pre>
+                    <p>Vous voyez : pour chaque entrée du tableau, on retourne un élément <span class="html">&lt;li&gt;</span>.</p>
+                    <p>On <span class="em">importe ShoppingList.js dans</span> <span class="html">&lt;App /&gt;</span>. On a notre liste de composants !</p>
+                    <p>Mais qu'est-ce que c'est que cette erreur rouge dans ma console ?</p>
+                    <p>Oh oh ! Il semblerait que j'aie oublié la prop <span class="html">key</span>.</p>
+                    <p>La <a href="https://fr.reactjs.org/docs/lists-and-keys.html" target="_blank">documentation de React</a> est claire sur ce sujet : les <span class="html">key</span> (clés) aident React à <span class="em">identifier quels éléments d'une liste ont changé, ont été ajoutés ou spprimés</span>. Vous devez donner une clé à chaque élément dans un tableau, afin d'apporter aux éléménts une identité stable.</p>
+                    <p>Si vous voulez éviter kes bugs, une <span class="html">key</span> doit impérativement respecter deux principes :</p>
+                    <ul>
+                        <li>
+                            <p>Elle doit être <span class="em">unique</span> au sein du tableau.</p>
+                        </li>
+                        <li>
+                            <p>Et <span class="em">stable dans le temps</span> (pour la même donnée source, on aura toujours la même valeur de <span class="html">key=</span>).</p>
+                        </li>
+                    </ul>
+                    <p>Nous avons plusieurs méthodes pour générer une <span class="em">key</span> unique :</p>
+                    <ul>
+                        <li>
+                            <p>La méthode la plus simple et la plus fiable consiste à <span class="em">utiliser l'id associée à votre donnée</span> dans votre base de données.</p>
+                        </li>
+                        <li>
+                            <p>Vous pouvez également trouver un moyen d'<span class="Em">exploiter la valeur de la donnée</span>, si vous avez la certitude qu'elle sera toujours unique, et stable dans le temps.</p>
+                        </li>
+                        <li>
+                            <p>En dernier recours, vous pouvez <span class="em">définir une string et la combiner avec l'index</span> de la data dans votre tableau.</p>
+                        </li>
+                    </ul>
+                    <p>Dans notre cas, puisqu'il n'y a pas d'id associée, on peut faire une combinaison entre l'index et le nom de la plante qui est une string :</p>
+<pre><code>function ShoppingList() {
+    return (
+        &lt;ul&gt;
+            {plantList.map((plant, index) =&gt; (
+                &lt;li key={`${plant}-${index}`}&gt;{ plant }&lt;/li&gt;
+            ))}
+        &lt;/ul&gt;
+    )
+}
+
+export default ShoppingList</code></pre>
+                    <p>Cette fois-ci, pas d'erreur dans la console !</p>
+                </article>
+                <article>
+                    <h2 id="contextualisation_contenu_composants">Contextualisez le contenu de vos composants :</h2>
+                    <p>React nous permet de faire des listes de composants : un gain de temps énorme dans votre vie de développeur. Mais ce n'est pas tout ! Le JSX nous permet également d'<span class="em">afficher des éléments de manière conditionnelle dans nos composants</span>.</p>
+                    <h3>Créez des conditions dans le JSX :</h3>
+                    <p>Donc... Nous avons déjà vu <a href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Op%C3%A9rateurs/L_op%C3%A9rateur_conditionnel" target="_blank">ternaire</a>. maintenant qu'on a une app complète pour nous faire la main, moi, ça me donne envie de le mettre en applicationdans notre site de plantes.</p>
+                    
+                </article>
             <!-- fin de section -->
             </section>
         </main>
