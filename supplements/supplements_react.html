@@ -58,6 +58,8 @@
                         <li><a href="#iteration_contenu">Itération sur le contenu</a></li>
                         <li><a href="#contextualisation_contenu_composants">Contextualisation du contenu des composants</a></li>
                         <li><a href="#familiarisation_props">Familirisation avec les props</a></li>
+                        <li><a href="#maitrise_evenements_React">Maîtrise des événements en React</a></li>
+                        <li><a href="#creation_formulaires_React">Création de formulaires avec React</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -663,7 +665,165 @@ export default CareScale</code></pre>
                     <p>Les props sont donc des <span class="em">objets que l'on peut récupérer dans les paramètres de notre composant fonction</span>.</p>
                     <p>On va pousser la logique un peu plus loin afin de véritablement paramétrer notre composant.</p>
                     <h3>Créez des paramètres :</h3>
-                    
+                    <p>Je vais commencer par <span class="em">préciser une <span class="html">prop</span> pour le type que j'appellerai <span class="html">careType</span> pour mon composant <span class="html">CareScale</span> et réutiliser ce composant</span> entre l'ensoleillement et l'arrosage :</p>
+<pre><code>&lt;CareScale careType='water' scaleValue={plant.water} /&gt;
+&lt;CareScale careType='light' scaleValue={plant.light} /&gt;</code></pre>
+                    <p>Il faut maintenant que j'adapte <span class="html">CareScale</span> pour récupérer le <span class="html">careType</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>À partir de maintenant, je vais utiliser une syntaxe qui nous est permise depuis l'ES6 : la <span class="em">déstructuration</span>. Elle permet directement de déclarer une variable et de lui assigner la valeur d'une propriété d'un objet.</p>
+                        <p>Ici on peut donc faire :</p>
+<pre><code>const {scaleValue, careType} = props
+// On évite de multiplier les déclarations qui sans cette syntaxe auraient été :
+// const scaleValue = props.scaleValue et
+// const careType = props.careType</code></pre>
+                        <p>Cela nous permet de <span class="em">déclarer directement nos deux variables</span> <span class="html">scaleValue</span> et <span class="html">careType</span>, et de <span class="em">les assigner aux valeurs</span> passées en propos. On peut même directement l'écrire dans les paramètres :</p>
+<pre><code>function CareScale({scaleValue, careType}) {</code></pre>
+                    </div>
+                    <p>On peut donc maintenant <span class="em">paramétrer notre composant <span class="html">CareScale</span> pour qu'il puisse gérer les données</span> d'arrosage et les données d'ensoleillement :</p>
+<pre><code>function CareScale({ scaleValue, careType }) {
+    const range = [1, 2, 3]
+    
+    const scaleType = careType === 'light' ? '☀️' : '💧'
+
+    return (
+        &lt;div&gt;
+            {range.map((rangeElem) =&gt; scaleValue &gt;= rangeElem ? &lt;span key={rangeElem.toString()}&gt;{scaleType}&lt;/span&gt; : null
+            )}
+        &lt;/div&gt;
+    )
+}</code></pre>
+                    <p>Comme vous l'avez vu ici, nous avons utilisé <span class="em">deux syntaxes différentes pour nos props</span>. Pour <span class="html">scaleType</span>, nous lui avons assigné une <span class="html">string</span>, entre guillemets. En revanche, pour <span class="em">scaleValue</span>, nous lui avons attribué la valeur d'un objet, que nous avons passée entre accolades.</p>
+                    <p>En pratique, une prop peut avoir n'importe quelle valeur possible en JavaScript, mais syntaxiquement, en JSX, on n'a en gros que deux possibilités :</p>
+                    <ul>
+                        <li>
+                            <p>un littéral <span class="html">String</span>, matérialisé par des guillemets;</p>
+                        </li>
+                        <li>
+                            <p>ou, pour toute le reste (booléen, number, expression JavaScript, etc.), des accolades <span class="html">{}</span>.</p>
+                        </li>
+                    </ul>
+                    <h3>Faites descendre les données, des parents vers les enfants :</h3>
+                    <p>Les props nous permettent de configurer nos composants. Elles répondent à la logique même de React selon laquelle les données descendent à travers notre arborescence de composants : il s'agit d'<span class="em">un flux de données unidirectionnel</span>.</p>
+                    <figure>
+                        <img src="../images/composants_parents_enfants_React.png" alt="">
+                        <figcaption>Les composants parents partagent leurs données avec leurs enfants.</figcaption>
+                    </figure>
+                    <p>Comme vous pouvez vous en douter, un composant est le parent du composant défini dans le <span class="html">return()</span>.</p>
+                    <p>Dans notre exemple, <span class="html">CareScale</span> est l'enfant, et <span class="html">ShoppingList</span> est le parent.</p>
+                    <p>Pour les props, vous devez garder deux règles à l'esprit :</p>
+                    <ul>
+                        <li>
+                            <p>Une prop est toujours <span class="em">passée par un composant parent à son enfant</span> : c'est le seul moyen normal de transmission.</p>
+                        </li>
+                        <li>
+                            <p>Une prop est considérée <span class="em">en lecture seule</span> dans le composant qui la reçoit.</p>
+                        </li>
+                    </ul>
+                    <h3>Découvrez la prop technique children :</h3>
+                    <p>Il existe des props qui ont un comportement un peu particulier : nous les appelons les <span class="em">props techniques</span>.</p>
+                    <p>La syntaxe de cette prop est particulière, puisqu'elle n'est pas fournie à l'aide d'un attribut, mais en <span class="em">imbriquant des composants</span> à l'intérieur du composant concerné.</p>
+                    <p>Ce qui nous donne :</p>
+<pre><code>&lt;Parent&gt;
+    &lt;Enfant1 /&gt;
+    &lt;Enfant2 /&gt;
+&lt;/Parent&gt;</code></pre>
+                    <p>Par exemple, si on <span class="em">utilise <span class="html">children</span> pour réécrire la Banner</span>, cela nous donnerait dans <span class="html">App.js</span> :</p>
+<pre><code>&lt;Banner&gt;
+    &lt;img src={logo} alt='La maison jungle' /&gt;
+    &lt;h1 className='lmj-title'&gt;La maison jungle&lt;/h1&gt;
+&lt;/Banner&gt;</code></pre>
+                    <p>Ici, <span class="em">img</span> et <span class="em">h1</span> sont les noeuds enfants dans le DOM de <span class="html">Banner</span>.</p>
+                    <p>Et on peut <span class="em">accéder à ces noeuds enfants de Banner dans ses paramètres</span>, un peu de la même manière qu'on récupérerait des props :</p>
+<pre><code>function Banner({ children }) {
+    return &lt;div className='lmj-banner'&gt;{children}&lt;/div&gt;
+}</code></pre>
+                    <p>Cette manière d'utiliser <span class="html">children</span> et particulièrement <span class="em">utile lorsqu'un composant ne connaît pas ses enfants à l'avance</span>, par exemple pour une barre de navigation (Sidebar) ou bien pour une modale.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Les <span class="html">props</span> constituent un aspect clé de React. Mais, en les manipulant, vous verrez qu'il peut être très facile de faire des erreurs. Cela vient notamment de la flexibilité de JavaScript, qui fait du <a href="https://developer.mozilla.org/fr/docs/Glossaire/typage_dynamique" target="_blank">typage dynamique</a> (les types <span class="html">string</span>, <span class="html">int</span>, etc.). Pour vous donner un exemple d'erreur classique :</p>
+                        <ul>
+                            <li>
+                                <p>Vous pouvez passer une prop value à un composant.</p>
+                            </li>
+                            <li>
+                                <p>Vous utilisez une liste de valeurs, certaines valeurs sont des strings, d'autres des nombres.</p>
+                            </li>
+                            <li>
+                                <p>Vous appliquez la méthode <span class="html">.toUpperCase()</span> à votre <span class="html">value</span> : <span class="em">boum</span> !</p>
+                            </li>
+                        </ul>
+                        <p>Une erreur ! <span class="html">.toUpperCase()</span> n'existe pas sur un nombre.</p>
+                        <p>Pour éviter ce genre d'erreur, je vous conseille d'être extrêmement rigoureux sur le type de props que vous passez à vos composants.</p>
+                    </div>
+                    <p>Pour cela, React a créé les <span class="em">PropTypes</span>, qui nous permettent de préciser dès le début le type d'une prop, si elle est requise, et de lui attribuer une valeur par défaut.</p>
+                </article>
+                <article>
+                    <h2 id="maitrise_evenements_React">Maîtrisez les évenements en React :</h2>
+                    <p>Si vous avez déjà manipulé du JavaScript, vous êtes sûrement déjà familier avec les événements. Bon, vous avez quand même droit à un petit rappel : un événement est une <span class="em">réaction</span> à une <span class="em">action</span> émise par l'utilisateur, comme le clic sur un bouton ou la saisie d'un texte dans un formulaire.</p>
+                    <p>Bonne nouvelle pour vous : avec sa syntaxe pratique et concise, React facilite énormément la gestion des événements du DOM.</p>
+                    <h3>Familiarisez-vous avec ka syntaxe :</h3>
+                    <p>Quelques caractéristiques de la déclaration d'un événement en React :</p>
+                    <ul>
+                        <li>
+                            <p>l'événement s'écrit dans une balise en <span class="em">camelCase</span>;</p>
+                        </li>
+                        <li>
+                            <p>vous <span class="em">déclarez l'événement</span> à capter, et <span class="em">lui passez entre accolades la fonction</span> à appeler;</p>
+                        </li>
+                        <li>
+                            <p>contrairement au JS, dans la quasi totalité des cas, <span class="em">vous n'avez pas besoin d'utiliser <span class="html">addEventListener</span></span>.</p>
+                        </li>
+                    </ul>
+                    <p>Testons ça dès maintenant dans notre code. Dans <span class="html">components/PlantItem.js</span>, je vais <span class="em">déclarer une finction <span class="html">handleClick</span> qui vient faire un log</span> dans notre console :</p>
+<pre><code>function handleClick() {
+    console.log('Ceci est un clic')
+}</code></pre>
+                    <p>On <span class="em">ajoute maintenant <span class="html">onClick={handleClick}</span></span> dans la balise <span class="html">li</span> du composant <span class="html">PlantItem</span>. On a donc :</p>
+<pre><code>&lt;li className='lmj-plant-item' onClick={handleClick}&gt;
+    &lt;img className='img-plant-item-cover' src={cover} alt={`${name} cover`} /&gt;
+    {name}
+    &lt;div&gt;
+        &lt;CareScale careType='water' scaleValue={water} /&gt;
+        &lt;CareScale careType='light' scaleValue={light} /&gt;
+    &lt;/div&gt;
+&lt;/li&gt;</code></pre>
+                    <p>J'ouvre la console et ça fonctionne comme prévu !</p>
+                    <p>Je vais pousser cet exercice un peu plus loin : on va déclencher une alerte qui affiche le nom de la plante sur laquelle on a cliqué.</p>
+                    <p>On <span class="em">passe donc <span class="html">plantName</span> en paramètre</span> de handleClick comme ici :</p>
+<pre><code>function handleClick(plantName) {
+    alert(`Vous voulez acheter 1 ${plantName} ? Très bon choix 🌱✨`)
+}</code></pre>
+                    <p>Mais si je clique, ça ne marche pas :</p>
+                    <figure>
+                        <img src="../images/plantName_React_1.png" alt="">
+                        <figcaption>Aucune de nos plantes ne s'appelle 1 [object Object].</figcaption>
+                    </figure>
+                    <p>En effet, React passe par défaut un objet (que nous aborderons dans quelques minutes), mais ici, nous voulons lui spécifier notre propre argument.</p>
+                    <p>Pour cela, c'est très simple : on <span class="em">déclare une fonction directement dans <span class="html">onClick</span></span> (les fonctions fléchées sont très pratiques pour ça). Cette fonction appellera handleClick en lui passant <span class="html">name</span> en paramètre. Donc on a :</p>
+<pre><code>onClick={() =&gt; handleClick(name)}</code></pre>
+                    <h3>Découvrez les événements synthétiques :</h3>
+                    <p>Donc, je vous parlais de l'objet que React passe par défaut en paramètre aux fonctions indiquées en callback des événements. Voyons voir à quoi ça ressemble.</p>
+                    <p>Si je <span class="em">récupère le paramètre dans handleClick</span> :</p>
+<pre><code>function handleClick(e) {
+    console.log('Cecu est mon event :', e)
+}</code></pre>
+                    <p>j'obtiens ça :</p>
+                    <img src="../images/console_log_React_1.png" alt="">
+                    <p>Il s'agit en fait d'un <span class="em">événement synthétique</span>. Pour faire bref, il s'agit de la même interface que pour les événements natifs du DOM, sauf qu'ils sont compatibles avec toues les navigateurs.</p>
+                    <p>Pratique, n'est-ce pas ?</p>
+                    <p>Vous pouvez utiliser les méthodes <span class="html">preventDefault</span> et <span class="html">stopPropagation</span> avec le paramètre dans la fonction passée à l'événement. Dans notre cas, vous auriez pu faire <span class="html">e.preventDefault()</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Si vous voulez en savoir plus sur les événements synthétiques, vous trouverez <a href="https://fr.reactjs.org/docs/events.html" target="_blank">une liste de tous les événemebrs orus eb charge ici</a>.</p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="creation_formulaires_React">Simplifiez votre création de formulaires avec React :</h2>
+                    <p>En React, la gestion des formulaires est simplifiée : on a accès à la valeur très facilement, qu'il s'agisse d'un input checkbox, d'un textarea, ou encore d'un select avec <span class="html">onChange</span>.</p>
+                    <p>Il existe deux grandes manières de gérer les formulaires : <span class="em">la manière contrôlée et la manière non contrôlée</span>. J'aborderai assez rapidement la manière non contrôlée, parce qu'elle nécessite moins d'implication de react, et que React encourage l'utilisation des formulaires contrôlés.</p>
+                    <h3>Déléguez le contrôle : les formulaires non contrôlés :</h3>
+                    <p>Je vous fais une petite démo d'un formulaire non contrôlé.</p>
                 </article>
             <!-- fin de section -->
             </section>
