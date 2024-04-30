@@ -823,7 +823,48 @@ export default CareScale</code></pre>
                     <p>En React, la gestion des formulaires est simplifiée : on a accès à la valeur très facilement, qu'il s'agisse d'un input checkbox, d'un textarea, ou encore d'un select avec <span class="html">onChange</span>.</p>
                     <p>Il existe deux grandes manières de gérer les formulaires : <span class="em">la manière contrôlée et la manière non contrôlée</span>. J'aborderai assez rapidement la manière non contrôlée, parce qu'elle nécessite moins d'implication de react, et que React encourage l'utilisation des formulaires contrôlés.</p>
                     <h3>Déléguez le contrôle : les formulaires non contrôlés :</h3>
-                    <p>Je vous fais une petite démo d'un formulaire non contrôlé.</p>
+                    <p>Je vous fais une petite démo d'un formulaire non contrôlé. Sur notre app; directement dans <span class="html">App.js</span>, je mets un composant <span class="html">QuestionForm</span> que je vais déclarer dans un fichier à part. Nous allons ajouter un champ pour une question.</p>
+                    <p>Donc pour ça, je <span class="em">crée un form</span>, qui englobe mon input :</p>
+<pre><code>&lt;form onSubmit={handleSubmit}&gt;
+    &lt;input type='text' name='my_input' defaultValue='Tapez votre texte' /&gt;
+    &lt;button type='submit'&gt;Entrer&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+                    <p>Et <span class="em">pour <span class="html">handleSubmit</span></span>, cela donne :</p>
+<pre><code>function handleSubmit(e) {
+    e.preventDefault()
+    alert(e.target['my_input'].value)
+}</code></pre>
+                    <p>Vous voyez que React me permet de préciser une <span class="html">defaultValue</span> à mon champ input. Ici, j'appelle <span class="html">preventDefault</span>, sinon le <span class="html">submit</span> rafraîchirait la page.</p>
+                    <p>Et j'ai bien mon alerte qui se déclenche.</p>
+                    <p>Plutôt simple, n'est-ce pas ? Vous déléguez le travail à votre DOM. Effectivement, les formulaires non contrôlés nous permettent de <span class="em">ne pas avoir à gérer trop d'informations</span>. Mais cette approche est un peu moins "React", parce qu'elle ne permet pas de tout faire.</p>
+                    <p>À la place, vous pouvez utiliser les composants contrôlés.</p>
+                    <h3>Contrôlez vos formulaires :</h3>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ici, pour vous montrer l'utilisation des formulaires contrôlés, je vais avoir besoin d'une notions que nous aborderons prochainement : le state (état). Donc je vais essayer de vous faire un petit brief sans rentrer dans le détail.</p>
+                    </div>
+                    <p>Le <span class="em">state local</span> nous permet de <span class="html">garder des informations. Ces informations sont spécifiques à un composant et elles proviennent d'une iteraction</span> que l'utilisateur a eue avec le composant.</p>
+                    <p>Donc je vais <span class="em">créer ma variable <span class="html">inputValue</span> et la fonction</span> qui va permettre de changer sa valeur dans le state local avec <span class="html">useState</span>.</p>
+                    <p>Sachez juste que la ligne de code ci-dessous me permet de déclarer l'état initial pour <span class="html">inputValue</span> et la fonction correspondante pour la modifier, et de lui préciser la valeur par défaut "Posez votre question ici" :</p>
+<pre><code>const [inputValue, setInputValue] = useState("Posez votre question ici")</code></pre>
+                    <p>J'ai donc mon <span class="html">QuestionForm</span> comme ci-dessous :</p>
+<pre><code>import { useState } from 'react'
+
+function QuestionForm() {
+    const [inputValue, setInputValue] = useState('Posez votre question ici')
+    return (
+        &lt;div&gt;
+            &lt;textarea
+                value={inputValue}
+                onChange={(e) =&gt; setInputValue(e.target.value)}
+            /&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default QuestionForm</code></pre>
+                    <p>Ici, je passe une fonction en callback à <span class="html">onChange</span> pour qu'elle sauvegarde dans mon state local la valeur de mon input. J'accède à la valeur tapée dans l'input avec <span class="html">e.targer.value</span>.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
