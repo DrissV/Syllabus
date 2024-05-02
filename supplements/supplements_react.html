@@ -69,6 +69,9 @@
                         <li><a href="#SPA">Single Page Application</a></li>
                         <li><a href="#react_router">React Router</a></li>
                         <li><a href="#navigation_Link">Navigation avec les Link</a></li>
+                        <li><a href="#Outlets_pages">Utilisation des Outlets pour afficher certaines parties de la page</a></li>
+                        <li><a href="#recuperation_parametres_URL">Récupération des paramètres dans l'URL</a></li>
+                        <li><a href="#route_404">Route 404</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -138,7 +141,7 @@
     return (&lt;div&gt;Hello World !&lt;/div&gt;)
 }</code></pre>
                     <p>En copiant ce code dans la partie JS, rien ne se passe. Pas de panique ! C'est normal : il vous reste encore à attacher votre composant React à votre HTML.</p>
-                    <p>On va dès mainenant <span class="em">utiliser ReactDOM pour s'atatcher à notre HTML</span>.</p>
+                    <p>On va dès maintenant <span class="em">utiliser ReactDOM pour s'atatcher à notre HTML</span>.</p>
                     <p>Dans le code ci-dessous, l'id <span class="em">root</span> permet de préciser où notre app React va vivre dans notre HTML. Ensuite, on va ordonner à ReactDOM de générer (<span class="em">render</span>) notre composant React qui s'appelle MyComponent.</p>
 <pre><code>ReactDOM.render(&lt;,MyComponent /&gt;, document.getElementById('root'))</code></pre>
                     <p>Et tadaaa ! Notre composant s'affiche !</p>
@@ -1587,6 +1590,7 @@ ReactDom.render(
 import ReactDOM from 'react-dom'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home/'
+import Survey from './pages/Survey/'
 
 ReactDom.render(
     &lt;React.StrictMode&gt;
@@ -1606,6 +1610,163 @@ ReactDom.render(
                 <article>
                     <h2 id="navigation_Link">Naviguez avec les Link :</h2>
                     <p>Profitons-en pour créer notre header, avec les liens vers les différentes pages de notre application.</p>
+                    <p>Dans notre dossier <span class="html">/components</span>, on crée donc un nouveau dossier <span class="html">/Header</span> avec un fichier <span class="html">index.jsx</span> à l'intérieur, ce qui nous donne <span class="html">/components/Header/index.jsx</span> :</p>
+<pre><code>import { Link } from 'react-router-dom'
+
+function Header() {
+    return (
+        &lt;nav&gt;
+            &lt;Link to="/"&gt;Accueil&lt;/Link&gt;
+            &lt;Link to="/survey"&gt;Questionnaire&lt;/Link&gt;
+        &lt;/nav&gt;
+    )
+}
+
+export default Header</code></pre>
+                    <p>Ici, j'utilise <span class="html">Link</span>, qui nous vient de React Router et se comporte comme une balise <span class="html">anchor</span>. Il est donc très important de l'utiliser lorsque vous souhaitez naviguer pour l'accessibilité de votre application (et non utoliser des redirections déclenchées par des <span class="html">onClick</span>).</p>
+                    <p>Utilisons maintenant <span class="html">Header</span> dans <span class="html">index.jsx</span> à la racine de notre projet :</p>
+<pre><code>import React from 'react'
+import ReactDOM from 'react-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Home from './pages/Home/'
+import Survey from './pages/Survey/'
+import header from './components/Header'
+
+ReactDom.render(
+    &lt;React.StrictMode&gt;
+        &lt;Router&gt;
+            &lt;Header /&gt;
+            &lt;Routes&gt;
+                &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+                &lt;Route path="/survey" element={&lt;Survey /&gt;} /&gt;
+            &lt;/Routes&gt;
+        &lt;/Router&gt;
+    &lt;/React.StrictMode&gt;,
+    document.getElementById('root')
+)</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ici, j'aurais pu utiliser <span class="html">Header</span> dans <span class="html">Home</span> et dans <span class="html">Survey</span>. Mais, encore mieux, je le place à la base du router. On considère ici que notre <span class="html">Header</span> fait partie du <span class="html">Layout</span> (agencement) de notre application.</p>
+                    </div>
+                    <figure>
+                        <img src="../images/routes_React.png" alt="">
+                        <figcaption>Nos routes renvoient bien les bons composants.</figcaption>
+                    </figure>
+                    <p>Vous avez maintenant la base de votre application avec navigation : félicitations à vous, vous avez fait du bon boulot.</p>
+                    <p>Maintenant que nous avons vu comment mettre en place le routing, j'en profite pour vous montrer comment découper notre router quand nous avons beaucoup de routes à gérer - dans un projet de code plus important, par exemple.</p>
+                </article>
+                <article>
+                    <h2 id="Outlets_page">Utilisez les Outlets pour afficher certaines parties de la page :</h2>
+                    <p>Dans une application complexe, on peut décider d'afficher certaines parties de la page en fonction de la route que nous avons prise. Imaginons que pour notre questionnaire nous souhaitons afficher des questions différentes si la personne est porteuse de projet ou prestataire freelance.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Nous ne le ferons pas dans notre application, nous faisons juste cet exemple afin que vous avez connaissance de cette possibilité.</p>
+                    </div>
+                    <p>Nous commençons donc par modifier notre composant Survey comme ceci :</p>
+<pre><code>import { Outlet, Link } from 'react-router'
+
+function Survey() {
+    return (
+        &lt;div&gt;
+            &lt;h1&gt;Questionnaire&lt;/h1&gt;
+            &lt;Link to="client"&gt;Questionnaire Client&lt;/Link&gt;
+            &lt;Link to="freelance"&gt;Questionnaire Freelance&lt;/Link&gt;
+            &lt;Outlet /&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default Survey</code></pre>
+                    <p>Ensuite, il nous faut créer nos composants pour les formulaires client et prestataires. Je vais donc créer un dossier <span class="html">ClientForm</span> dans <span class="html">/components</span>. Dans ce dossier, je crée mon fichier <span class="html">index.js</span> avec le code suivant :</p>
+<pre><code>function ClientForm() {
+    return (
+        &lt;div&gt;
+            &lt;h2&gt;Questionnaire Client&lt;/h2&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default ClientForm</code></pre>
+                    <p>Je peux faire la même chose ensuite avec le composant FreelanceForm, puis finalement he viens de modifier mon Router afin d'inclure les composants de ma page Questionnaire de cette manière :</p>
+<pre><code>import React from 'react'
+import ReactDOM from 'react-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Home from './pages/Home/'
+import Survey from './pages/Survey/'
+import header from './components/Header'
+// On ajoute nos composants
+import ClientForm from './components/ClientForm'
+import FreelanceForm from './coimponents/FreelanceForm'
+
+ReactDom.render(
+    &lt;React.StrictMode&gt;
+        &lt;Router&gt;
+            &lt;Header /&gt;
+            &lt;Routes&gt;
+                &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+                &lt;Route path="/survey" element={&lt;Survey /&gt;}&gt;
+                    { /* Nous imbriquons nos composants dans survey */ }
+                    &lt;Route path="client" element={&lt;ClientForm /&gt;} /&gt;
+                    &lt;Route path="freelance" element={&lt;FreelanceForm /&gt;} /&gt;
+                &lt;/Route&gt;
+            &lt;/Routes&gt;
+        &lt;/Router&gt;
+    &lt;/React.StrictMode&gt;,
+    document.getElementById('root')
+)</code></pre>
+                    <p>Et voilà, notre affichage de survey dépendra maintenant de notre route :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">/survey</span> : n'affichera que l'en-tête et les deux liens;</p>
+                        </li>
+                        <li>
+                            <p><span class="html">/survey/client</span> : ajoutera le composant ClientForm;</p>
+                        </li>
+                        <li>
+                            <p><span class="html">/survey/freelance</span> : ajoutera le composant ClientForm.</p>
+                        </li>
+                    </ul>
+                    <figure>
+                        <img src="../images/Outlets_React.png" alt="">
+                        <figcaption>Nos Outlets fonctionnent !</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Si vous avez réalisé le code en même temps que moi, je vous conseille de le commit dans une nouvelle branche, car comme énoncé plus haut, nous ne servirons pas des Outlets dans notre projet.</p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="recuperation_parametres_URL">récupérez des paramètres dans vos URL :</h2>
+                    <p>La navigation de notre application fonctionne bien, mais comment faire si vous voulez passer des paramètres ? Par exemple, lorsqu'on va faire le questionnaire et que le numéro de chaque question sera récupéré depuis l'URL ? Eh bien, bonne question ! Le router vous permet de récupérer des paramètres; pour cela, il suffit d'écrire votre route comme ici dans le fichier <span class="html">index.jsx</span> à la racine de <span class="html">/src</span> :</p>
+<pre><code>&lt;Route path="/survey/:questionNumberé element={&lt;Survey /&gt;} /&gt;</code></pre>
+                    <p>Dans <span class="html">components/Header/index.jsx</span>, mettons donc un numéro de question à la suite :</p>
+<pre><code>function Header() {
+    return (
+        &lt;nav&gt;
+            &lt;Link to="/"&gt;Accueil&lt;/Link&gt;
+            &lt;Link to="/survey/42"&gt;Questionnaire&lt;/Link&gt;
+        &lt;/nav&gt;
+    )
+}</code></pre>
+                    <p>Allons maintenant récupérer ce paramètre dans <span class="html">Survey/index.jsx</span> à l'aide du hook <span class="html">useParams</span>, mis à disposition par React Router :</p>
+<pre><code>import { useParams } from 'react-router-dom'
+
+function Survey() {
+    const { questionNumber } = useParams()
+
+    return (
+        &lt;div&gt;
+            &lt;h1&gt;Questionnaire&lt;/h1&gt;
+            &lt;h2&gt;Question {questionNumber}&lt;/h2&gt;
+        &lt;/div&gt;
+    )
+}</code></pre>
+                    <p>Félicitations à vous ! Vous avez récupéré le numéro de votre question en paramètre.</p>
+                </article>
+                <article>
+                    <h2 id="route_404">Créez une route pour les attraper toutes : 404 :</h2>
+                    <p>Quelle chance, tout fonctionne comme on le souhaite ! Mais qu'est-ce qui se passe si je commence à taper n'importe quoi dans mon URL ? par exemple, si j'essaie d'accéder au contenu de <a href="http://localhost:3000/coucouCommentCaVa" target="_blank">http://localhost:3000/coucouCommentCaVa</a> ?</p>
+                    <p>Notre header s'affiche, mais rien d'autre... Moi, j'aimerais signaler à l'utilisateur que rien n'existe à cette adresse. Eh bien, ça vous dit quelque chose, les pages d'erreur ? C'est ce que nous allons faire ici : afficher une page 404.</p>
                     
                 </article>
             <!-- fin de section -->
