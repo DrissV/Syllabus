@@ -66,6 +66,9 @@
                         <li><a href="#useEffect">useEffect</a></li>
                         <li><a href="#regles_useEffect">Les règles de useEffect</a></li>
                         <li><a href="#creation_application_React_complete">Création d'une application React complète</a></li>
+                        <li><a href="#SPA">Single Page Application</a></li>
+                        <li><a href="#react_router">React Router</a></li>
+                        <li><a href="#navigation_Link">Navigation avec les Link</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1291,7 +1294,7 @@ function Cart({ cart, updateCart }) {
 }
 
 export default Cart</code></pre>
-                    <p>Et voilà ! Tout se passe comme espéré, pour la simple et bonne raison que <span class="html">useEffect</span> nous permet d'<span class="em">effectuer notre effet une fois le rendu du composant terminé</span>. Et comme <span class="html">useEffect</span> est directement dans notre composant, nous avons directeemnt accès à notre state, à nos variables, nos props, magique n'est-ce pas ?</p>
+                    <p>Et voilà ! Tout se passe comme espéré, pour la simple et bonne raison que <span class="html">useEffect</span> nous permet d'<span class="em">effectuer notre effet une fois le rendu du composant terminé</span>. Et comme <span class="html">useEffect</span> est directement dans notre composant, nous avons directement accès à notre state, à nos variables, nos props, magique n'est-ce pas ?</p>
                     <p>Quand je ferme mon, mon alerte se déclenche aussi ! Eh bien c'est normal : je vous ai dit que <span class="html">useEffect</span> se déclenche après le rendu. Eh bien il se déclenche après <span class="em">CHAQUE</span> rendu du composant. Sauf si vous...</p>
                     <h3>Précisez quand déclencher une effect avec le tableau de dépendances :</h3>
                     <p>Pour décider précisément quand on veut déclencher un effet, on peut utoliser le tableau de dépendances. Il correspond au deuxième paramètre passé à <span class="html">useEffect</span>.</p>
@@ -1433,7 +1436,177 @@ export default Cart</code></pre>
                     </div>
                     <p>Et voilà pour notre architecture ! Penchons-nous maintenant sur quelques outils qui nous permettent d'écrire du code plus proprement et d'éviter des erreurs communes.</p>
                     <h3>Exploitez les outils ESLint et Prettier :</h3>
-                                        
+                    <p>Pour ce qui est des erreurs de code, ou tout simpelment de la mise en forme, vous le savez sûremnt déjà, JavaScript est très <span class="em">souple</span> : pas de compilation stricte qui vous signale vos erreurs. Heureusement, il existe des outils qui permettent d"crire du code plus propre !</p>
+                    <p>Vous vous posez la question suivante : <q>Écrire du code plus proprement ? Pourquoi prendre du temps à configurer des outils, alors que je m'en sors très bien comme ça ?</q> Eh bien, vous vous en sortez bien actuellement, sur une codebase plutôt petite et en travaillant seul. Mais imaginez que vous travaillez dans une équipe, dans laquelle chacun a son <span class="em">propre style de code</span> (mettre des points-virgules ou non, les règles d'indentation, etc.). Croyez-moi, ce n'est vraiment pas efficace.</p>
+                    <p>Dans notre cas, nous allons nous intéresser à <span class="html">ESLint</span>, qui va vous signaler des erreurs dans le code (aussi bien des erreurs de style que des erreurs basiques de code qui peuvent conduire à des bugs), et <span class="html">Prettier</span>, qui va le formater.</p>
+                    <h4>Sécurisez votre code avec ESLint et son extension :</h4>
+                    <p>Commençons donc par ESLint.</p>
+                    <p>Si vous regardez votre <span class="html">package.json</span>, vous verrez qu'ESLint fait déjà partie des outils préconfigurés par Create React App. Cet outil permet de vous signaler des erreurs de code - si vous utilisez une variable qui n'a jamais été déclarée, par exemple.</p>
+                    <p>Testons dès maintenant. Dans <span class="html">Home/index.jsx</span>, je rajoute une ligne de code en faisant un console.log d'une variable non déclarée avant le <span class="html">return</span> :</p>
+<pre><code>console.log(ceciEstUneErreur)</code></pre>
+                    <p>Rien de spécial ne s'affiche. Pourtant, la variable n'est pas déclarée, donc c'est bien une erreur.</p>
+                    <p>... Mais si vous n'avez pas encore installé l'extension ESLint dans votre éditeur de code (IDE), rien ne se passe.</p>
+                    <p>Installons donc l'extension. Pour ma part, j'utilise VS Code qui me permet d'installer une extension directement dans l'onglet "Extensions" (cela dépend de l'IDE que vous utilisez). Une fois l'extension installée, votre éditeur de code devrait souligne votre erreur, comme ici.</p>
+                    <figure>
+                        <img src="../images/ESLint_React.png" alt="">
+                        <figcaption>La voilà notre erreur !</figcaption>
+                    </figure>
+                    <p>Et voilà, la configuration est prête. On peut configurer manuellement ESLint en créant le fichier <span class="html">.eslintrc</span> avec le contenu suivant :</p>
+<pre><code>{
+    "extends": ["react-app"],
+    "rules": {
+        "no-console": "error"
+    }
+}</code></pre>
+                    <p>On peut également utiliser la configuration ESLint de Airbnb qui peut être installé via <span class="html">npx</span>.</p>
+                    <h4>Formatez votre code avec Prettier :</h4>
+                    <p>Alors qu'ESLint vous permet de relever des erreurs de syntaxe, Prettier est la référence pour formater votre code. Contrairement à ESLint, Prettier n'est pas installé de base avec Create-React-App.</p>
+                    <p>Pour vous donner une idée de la puissance de cet outil, regardez un peu ce GIF :</p>
+                    <figure>
+                        <img src="../images/Prettier_React.gif" alt="">
+                        <figcaption>Bien pratique de tout formater en un clic, n'est-ce pas ?</figcaption>
+                    </figure>
+                    <p>Pas mal, n'est-ce pas ? Alors, lançons-nous dans la config ! Pour commencer, vous pouvez installer la library (bibliothèque) dans votre terminal avec <span class="html">yarn add -D prettier</span>.</p>
+                    <p>À partir de là, l'outil est installé, mais nous devons le lancer manuellement - alors que nous voulons que Prettier fasse tout à notre place sans même avoir à y penser ! La manière la plus simple est d'installer l'extension de Prettier directement dans les extensions de votre IDE.</p>
+                    <p>Pour ma part, dans VSCode, j'installe l'extension.</p>
+                    <figure>
+                        <img src="../images/extension_Prettier_VSCode.png" alt="">
+                        <figcaption>L'extension Prettier dans VSCode</figcaption>
+                    </figure>
+                    <p>Il vous suffit d'aller dans les paramètres de votre IDE (<span class="html">Code</span> &gt; <span class="html">Preferences</span> &gt; <span class="html">Settings</span> dans VSCode pour Windows) pour activer la commande <span class="html">formatOnSave</span>. Elle permettra de formater le fichier à chaque fois que vous sauvegardez.</p>
+                    <p>Vous pouvez également aller dans la barre de recherche de votre IDE, taper "format" et activer <spab class="html">formatOnSave</spab> :</p>
+                    <figure>
+                        <img src="../images/formatOnSave.png" alt="">
+                        <figcaption>Le parametrage à activer dans VSCode pour formater en sauvegardant</figcaption>
+                    </figure>
+                    <p>Mais attendez, on n'a pas encore fini ! Nous allons aussi activer l'option qui permet d'éviter de modifier tous les fichiers à tort et à travers.</p>
+                    <p>Tapez <span class="html">require config</span> ey descendez sur le paramètre correspondant à Prettier. Activez le paramètre comme ci-dessous :</p>
+                    <figure>
+                        <img src="../images/require_config.png" alt="">
+                        <figcaption>Activez cette option dans vos paramètres pour formater uniquement les fichiers qui ont une config Prettier.</figcaption>
+                    </figure>
+                    <p>Cela permet de préciser à VSCode de formater le fichier uniquement quand une configuration est présente dans le projet pour Prettier.</p>
+                    <p>Donc à nous d'en créer une !</p>
+                    <p>À la racine de votre projet, créez un fichier <span class="html">.prettierrc</span> dans lequel vous allez pouvoir préciser quelques règles. Vous trouverez l'ensemble de ces règles dans <a href="https://prettier.io/docs/en/options.html" target="_blank">la documentation de Prettier</a>. typiquement, si vous voulez supprimer tous les points-virgules, vous faites :</p>
+<pre><code>{
+    "semi": false
+}</code></pre>
+                    <p>Et voilà, si vous retournez dans votre fichier <span class="html">Home/index.jsx</span>, vous aurez bien du code sans les points-virgules !</p>
+                    <p>Félicitations ! Vous venez de configurer avec succès ESLint et Prettier avec leurs extensions, vous n'aurez plus à vous soucier du formatage de votre code ou bien de faire des erreurs d'inattention !</p>
+                </article>
+                <article>
+                    <h2 id="SPA">Transformez votre application en Single Page Application avec React Router :</h2>
+                    <h3>Comprenez le principe de SPA :</h3>
+                    <p>Prenons notre machine à voyager dans le temps et retournons aux débuts du Web.</p>
+                    <p>À cette époque, l'immense majorité des sites consistaient en un groupe de pages, envoyées par le serveur, qui s'affichaient en fonction de la navigation. Pour chaque interaction, telle que l'envoi d'un formulaire, la page entière devait être rechargée.</p>
+                    <p>Mais au début des abbées 2000, le concept de Single Page Application (SPA) commence à émerger. Les idées principales derrière ce concept sont les suivantes :</p>
+                    <ul>
+                        <li>
+                            <p>les utilisateurs ne chargent une page Web qu'une seule fois (le fameux <span class="html">index.html</span>).</p>
+                        </li>
+                        <li>
+                            <p>Au lieu de récupérer toute la page avec une page avec une requête HTTP, on les récupère de manière distincte, petite partie par petite partie, ce qui permet à l'utilusateur d'interagir de manière beaucoup plus dynamique.</p>
+                        </li>
+                        <li>
+                            <p>L'utilisateur peut naviguer entre plusieurs pages et JavaScript (et dans notre cas, React) gère l'affichage de nouvelles pages au sein du même domaine, sans qu'un rafraîchissement complet de la page soit nécessaire.</p>
+                        </li>
+                    </ul>
+                    <figure>
+                        <img src="../images/site_Web_classique_SPA.png" alt="">
+                        <figcaption>L'affichage du site Web classique en haut est moins dynamique que celui de la SPA en bas.</figcaption>
+                    </figure>
+                    <p>Toutes les applications ne sont pas nécessairement des SPA. Lorsque vous codez votre site en Single Page Application, il faut être conscient de certains inconvénients : vos utilisateurs doivent notamment impérativement avoir JavaScript pour que votre site fonctionne, ou encore le Search Engine Optimisation (SEO, l'optimisation de l'indexation de votre site par les moteurs de recherche) est plus laborieux pour les Single Page Applications.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Je vous ai déjà parlé de Gatsby ou bien Next.js. Il s'agit de frameworks basés sur React qui permettent de générer notre application côté serveuur et donc de faire du <span class="em">Server Side Rendering</span> (SSR). C'est-à-dire qu'ils génèrent le HTML depuis React côté serveur et puis l'envoient avec chaque page déjà générée au client. Pour ce qui est de leur <span class="em">routing</span>, ils mettent leur propre solution à disposition. Elle se comporte comme du routing de SPA au niveau de l'expérience utilisateur, mais qui est un peu plus complexe qu'il n'y paraît.</p>
+                    </div>
+                    <p>Les projets que nous créons avec Create React App ne peuvent pas encore être considérés comme des Single Page Applications : il leur manque une solution de <span class="em">routing</span>.</p>
+                </article>
+                <article>
+                    <h2 id="react_router">Découvrez React Router :</h2>
+                    <p>Contrairement aux frameworks comme Angular, React ne nous fournit pas directement une solution pour gérer les routes de notre application. Pas de panique, comme pour quasiment tout en React, l'écosystème a vite comblé ce besoin. Il existe donc plusieurs solutions de routing. Cela à laquelle nous allons nous intéresser dans la suite est <a href="https://reactrouter.com/" target="_blank">React Router</a> (le nom est plutôt bien trouvé, n'est-ce pas ?).</p>
+                    <p>Comme nous pouvons le voir dans <a href="https://reactrouter.com/en/6.8.1/start/concepts#defining-routes" target="_blank">la documentation React Router</a>, une route permet d'afficher des composants de manière conditionnelle si le path (chemin) de l'URL correspond au path de la route.</p>
+                    <p>On lui passe en prop le path auquel la route correspond et elle se charge d'afficher les children qui lui sont passés.</p>
+                    <p>Cette bibliothèqye, créée par <a href="https://remix.run/" target="_blank">Remix</a>, met à votre disposition tous les outils nécessaires pour gérer la navigation dans votre appliction côté client.</p>
+                    <p>Alors, partons à la découverte de React Router.</p>
+                    <h3>Créez votre prmeier fichier de routing :</h3>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>React Router est très régulièrement mis à jour. La version utilisée pour faire ce cours est la <span class="em">V6</span>. Pour suivre ce cours, vous pourrez préciser la version que vous souhaitez installer directement dans la ligne de commande pour installer le package. Ici nous installerons la version 6.10.0.</p>
+                        <p>N'hésitez pas à <a href="https://reacttraining.com/blog/" target="_blank">consulter le blog de React Router</a> pour en apprendre davantage sur les différentes versions et leurs actualités.</p>
+                    </div>
+                    <p>Nous allons commencer par installer la bibliothèque avec <span class="html">yarn add react-router-dom@6.10.0</span>. Si vous voulez en apprendre davantage sur la configuration, n'hésitez pas à jeter un oeil à <a href="https://reactrouter.com/en/6.10.0/start/tutorial" target="_blank">la documentation de React Router</a>.</p>
+                    <p>React Router est maintenant prêt à être utilisé !</p>
+                    <p>Actuellement, nous n'avons qu'une seule fonctionnalité avec <span class="html">Home</span>. Créons dès maintenant un nouveau composant pour le questionnaire.</p>
+                    <p>Pour cela, on crée un dossier, on crée un dossier <span class="html">SUrvey.jsx</span> dans <span class="html">pages</span>. Pour le moment, gardons un composant très simple :</p>
+<pre><code>function Survey() {
+    return (
+        &lt;div&gt;
+            &lt;h1&gt;Questionnaire&lt;/h1&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default Survey</code></pre>
+                    <p>Votre mission, si vous l'acceptez, est de pouvoir <span class="em">naviguer entre la page d'accueil - Home - et le questionnaire - Survey</span>.</p>
+                    <p>Vous vous en doutez sûrement : nous allons utiliser React Router et ses composants BrowserRouter, Routes et Route !</p>
+                    <p>Dans l'exemple ci-dessous, on renomme <span class="html">BrowserRouter</span> en <span class="html">Router</span> pour une lecture plus simple. Il servira à stocker et à s'abandonner au changement de l'URL de la page courante (celle qu'on retrouve dans la barre d'URL).</p>
+                    <p>Ensuite, nous ajoutons le composant <span class="em">Routes</span> qui va servir à sélectionnner le composant enfant correspondant à la location.</p>
+                    <p>Finalement, le composant le plus complexe, le composant <span class="em">Route</span>. Ce composant prend de base plusieurs paramètres dont à minima :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">path</span> qui contient l'URL dans notre navigateur qui dirigera vers le composant;</p>
+                        </li>
+                        <li>
+                            <p><span class="html">element</span> qui va permettre de sélectionner le composant à afficher.</p>
+                        </li>
+                    </ul>
+                    <p>Le fichier <span class="html">index.jsx</span> à la racine de votre projet se transforme donc de cette manière :</p>
+<pre><code>import React from 'react'
+import ReactDOM from 'react-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Home from './pages/Home/'
+
+ReactDom.render(
+    &lt;React.StrictMode&gt;
+        &lt;Router&gt;
+            &lt;Routes&gt;
+                &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+            &lt;/Routes&gt;
+        &lt;/Router&gt;
+    &lt;/React.StrictMode&gt;,
+    document.getElementById('root')
+)</code></pre>
+                    <p>L'idée est maintenant de mettre dans notre router toutes les routes qui seront accessibles.</p>
+                    <figure>
+                        <img src="../images/survey_URL_React.png" alt="">
+                        <figcaption>Il faudra afficher le bon composant pour cette URL.</figcaption>
+                    </figure>
+                    <p>Créons donc une route pour la page d'accueil et pour notre questionnaire.</p>
+<pre><code>import React from 'react'
+import ReactDOM from 'react-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Home from './pages/Home/'
+
+ReactDom.render(
+    &lt;React.StrictMode&gt;
+        &lt;Router&gt;
+            &lt;Routes&gt;
+                &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+                &lt;Route path="/survey" element={&lt;Survey /&gt;} /&gt;
+            &lt;/Routes&gt;
+        &lt;/Router&gt;
+    &lt;/React.StrictMode&gt;,
+    document.getElementById('root')
+)</code></pre>
+                    <p>Si vous allez sur l'URL <a href="http://localhost:3000/" target="_blank">http://localhost:3000/</a>, on a bien la page d'accueil qui s'affiche. C'est la mêem chose si vous vous mettez <a href="http://localhost:3000/survey" target="_blank">http://localhost:3000/survey</a> dans la barre d'URL.</p>
+                    <p>Félicitations ! Tout fonctionne bien comme prévu !</p>
+                    <p>Mais bon... Ce n'est pas vraiment pratique de devoir taper toutes nos URL à la main dans la barre du navigateur pour changer de page.</p>
+                </article>
+                <article>
+                    <h2 id="navigation_Link">Naviguez avec les Link :</h2>
+                    <p>Profitons-en pour créer notre header, avec les liens vers les différentes pages de notre application.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
