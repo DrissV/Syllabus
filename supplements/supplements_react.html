@@ -62,6 +62,10 @@
                         <li><a href="#creation_formulaires_React">Création de formulaires avec React</a></li>
                         <li><a href="#stateful_components">Les stateful components</a></li>
                         <li><a href="#useState">useState</a></li>
+                        <li><a href="#remonter_etat_maj_composants_enfants">Remonter l'état et le mettre à jour depuis les composants enfants</a></li>
+                        <li><a href="#useEffect">useEffect</a></li>
+                        <li><a href="#regles_useEffect">Les règles de useEffect</a></li>
+                        <li><a href="#creation_application_React_complete">Création d'une application React complète</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -930,7 +934,495 @@ export default QuestionForm</code></pre>
                 <article>
                     <h2 id="useState">Familiarisez-vous avec useState :</h2>
                     <p><span class="html">useState</span> est un hook qui permet d'ajouter le state local React à des composants fonctions.</p>
-                    
+                    <p>Un hook est <span class="em">une fonction qui permet de "se brancher" (to hook up) sur des fonctionnalités React</span>. On peut d'ailleurs les importer directement depuis React. Après useState, nous verrons un autre hook : <span class="html">useEffect</span>. Il existe d'autres hooks.</p>
+                    <p>Nous l'avons déjà utilisé, mais je vous le remets ici :</p>
+<pre><code>const [cart, updateCart] = useState(0)</code></pre>
+                    <p>Investiguons comment est construit notre state cart.</p>
+                    <h3>Comprenez les crochets :</h3>
+                    <p>Tout d'abord, les crochets <span class="html">[]</span>. Si cette syntaxe peut vous paraître un peu particulière, il s'agit en fait de la même pratique que nous avions vue précédemment : la déstructuration. Sauf qu'ici, ça s'appelle la <span class="em">décomposition</span> parce qu'il s'agit d'un <span class="em">tableau</span> et non d'un objet.</p>
+                    <p><span class="html">useState</span> nous <span class="em">renvoie une paire de valeurs dans un tableau de 2 éléments</span>, que nous récupérons dans les variables <span class="em">cart</span> et <span class="em">updateCart</span> dans notre exemple. Le premier élément est la valeur actuelle, et le deuxième est une fonction qui permet de la modifier.</p>
+                    <p>Sans la décomposition, nous aurions aussi pu faire :</p>
+<pre><code>const cartState = useState(0)
+const cart = cartState[0]
+const updateCart = cartState[1]</code></pre>
+                    <p>Dans un tableau qu'on décompose, nous pouvons librement nommer nos variables. J'aurais tout aussi bien pu faire :</p>
+<pre><code>const [coucou, cavabien] = useState(0)</code></pre>
+                    <h3>Initialisez votre state :</h3>
+                    <p>Intéressons-nous maintenant au paramètre passé entre parenthèses à <span class="em">useState</span> : <span class="html">useState(0)</span>.</p>
+                    <p>Comme je vous l'ai dit, il correspond à l'<span class="em">état initial de notre state</span>. Cet état initial peut être un nombre comme ici, une string, un booléen, un tableau ou encore un objet avec plusieurs propriétés.</p>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Il est important de préciser une valeur initiale dans votre state. Sinon, elle sera <span class="em">undefined</span> par défaut, et ce n'est pas un comportement souhaitable : plus vous serez explicite, mieux votre application s'en portera !</p>
+                    </div>
+                    <h3>Créez plusieurs variables d'état :</h3>
+                    <p>Nous allons encore améliorer notre panier. Cette fois-ci, je veux pouvoir <span class="em">choisir de l'afficher ou de le cacher</span>. Pour ça, nous allons utiliser une variable d'état dans notre composant Cart.</p>
+                    <p>S'il y en a déjà une, comment en créer une autre ? Pas de panique. Il y a plusieurs moyens de faire. Mais le plus simple est d'utiliser plusieurs variables d'état.</p>
+                    <p>Dans notre cas, il suffit de <span class="em">créer une variable <span class="html">isOpen</span> associée avec la fonction <span class="html">setIsOpen</span></span>, et de l'initialiser à false :</p>
+<pre><code>const [isOpen, setIsOpen] = useState(false)</code></pre>
+                    <p>Pour pouvoir interagir, on crée ensuite :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">un bouton pour ouvrir</span> le panier qui sera le seul composant retourné par Cart si le panier est fermé;</p>
+                        </li>
+                        <li>
+                            <p>et <span class="em">un bouton pour fermer</span> le panier.</p>
+                        </li>
+                    </ul>
+                    <p>Cela nous donne le code suivant :</p>
+<pre><code>function Cart() {
+    const monsteraPrice = 8
+    const [cart, updateCart] = useState(0)
+    const [isOpen, setIsOpen] = useState(false)
+
+    return isOpen ? (
+        &lt;div className='lmj-cart'&gt;
+            &lt;button onClick={() =&gt; setIsOpen(false)}&gt;Fermer&lt;/button&gt;
+            &lt;h2&gt;Panier&lt;h2&gt;
+            &lt;div&gt;
+                Monstera : {monsteraPrice}€
+                &lt;button onClick={() => updateCart(cart + 1)}&gt;
+                    Ajouter
+                &lt;/button&gt;
+            &lt;/div&gt;
+            &lt;h3&gt;Total : {monsteraPrice * cart}€&lt;/h3&gt;
+        &lt;/div&gt;
+    ) : (
+        &lt;button onClick={() =&gt; setIsOpen(true)}&gt;Ouvrir le Panier&lt;/button&gt;
+    )
+}
+
+export default Cart</code></pre>
+                    <p>En ajoutant un peu de style, j'ai donc :</p>
+                    <figure>
+                        <img src="../images/panier_lmj_React.jpg" alt="">
+                        <figcaption>Le panier du site de la maison jungle</figcaption>
+                    </figure>
+                    <p>Vous voyez ? Pas de soucis à créer plusieurs variables d'état dans un même composant !</p>
+                    <p>C'est bien beau, nous avons nos composants avec leur state local. Notre panier permet d'ajouter des monsteras, et le total du panier se calcule en fonction.</p>
+                    <p>Mais comment faire pour <span class="em">changer le comportement d'un composant en fonction du state d'un autre composant</span> ? Par exemple, si je veux enfin ajouter un lien entre mon <span class="em">Cart</span> et mon composant <span class="em">ShoppingList</span>. Je peux créer un bouton "Ajouter au panier" dans chaque <span class="em">PlantItem</span>... Mais comment faire pour venir compléter mon panier en fonction ?</p>
+                </article>
+                <article>
+                    <h2 id="remonter_etat_maj_composants_enfants">Faites remonter l'état et mettez-le à jour depuis vos composants enfants :</h2>
+                    <p>Comme son nom l'indique, un state local... est local. Ni les parents, ni les enfants ne peuvent manipuler le state local d'un composant (ils n'en ont pas la possibilité technique).</p>
+                    <p>Pour partager un élément d'état entre plusieurs composants, il faudra <span class="em">faire remonter ces données</span> vers le state local du <span class="em">plus proche composant qui est un parent commun</span>, et y garder le state. À partir de là, il sera possible de :</p>
+                    <ul>
+                        <li>
+                            <p>Faire <span class="em">redescendre</span> ces infos avec des props jusqu'aux composants qui en ont besoin.</p>
+                        </li>
+                        <li>
+                            <p>Faire <span class="em">"remonter" les demandes d'update</span> toujours dans les props. Pour cela, on peut utiliser la fonction de mise à jour du state récupérée dans useState, en la passant en props aux composants qui en ont besoin.</p>
+                        </li>
+                    </ul>
+                    <figure>
+                        <img src="../images/remonter_maj_parents_props_React.png" alt="">
+                        <figcaption>Remonter les mises à jour aux parents dans les props</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous vous demandez peut-être quelles sont les bonnes pratiques : où mettre le state ? Dans le composant parent, ou le composant enfant ? Eh bien, dans la pratique... ça dépend totalement. Il est considéré comme plus propre de garder la logique au maximum dans les composants parents, et que les enfants ne servent qu'à afficher les éléments en props. Mais dans de nombreux cas, il est bien mieux de garder le state dans le composant enfant. Vous apprendrez à le voir avec le temps et l'expérience.</p>
+                    </div>
+                    <p>Attaquons-nous donc à notre exemple.</p>
+                    <p>Je commence à <span class="em">faire remonter <span class="html">cart</span> dans <span class="html">App.js</span></span> :</p>
+<pre><code>function App() {
+    const [cart, updateCart]  useState(0)
+
+    return (
+        &lt;div&gt;
+            &lt;Banner&gt;
+                &lt;img src={logo} alt='La maison jungle' className='lmj-logo' /&gt;
+                &lt;h1 className='lmj-title'&gt;La maison jungle&lt;/h1&gt;
+            &lt;/Banner&gt;
+            &lt;div className='lmj-layout-inner'&gt;
+                &lt;Cart cart={cart} updateCart={updateCart} /&gt;
+                &lt;ShoppingList cart={cart} updateCart={updateCart} /&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default App</code></pre>
+                    <p>Et toujours dans <span class="html">App.js</span> dans le JSX, je <span class="em">passe <span class="html">cart</span> ainsi que <span class="html">updateCart</span> en props</span> :</p>
+<pre><code>&lt;Cart cart={cart} updateCart={updateCart} /&gt;</code></pre>
+                    <p>... <span class="em">que je récupère dans <span class="html">Cart.js</span></span>. Vous vous souvenez de la déstructuration ? Ça nous permet de récupérer notre prop en une ligne.</p>
+                    <p>J'en profite pour supprimer mon bouton "Ajouter" dans <span class="html">Cart.js</span>.</p>
+                    <p>On a donc un panier un peu vide :</p>
+<pre><code>function Cart({ cart, updateCart }) {
+    const monsteraPrice = 8
+    const [isOpen, setIsOpen] = useState(true)
+
+    return isOpen ? (
+        &lt;div className='lmj-cart'&gt;
+            &lt;button
+                className='lmj-cart-toggle-button'
+                onClick={() =&gt; setIsOpen(false)}
+            &gt;
+                Fermer
+            &lt;/button&gt;
+            &lt;h2&gt;Panier&lt;h2&gt;
+            &lt;h3&gt;Total : {monsteraPrice * cart}€&lt;/h3&gt;
+            &lt;button onClick={() =&gt;updateCart(0)}&gt;Vider le panier&lt;/button&gt;
+        &lt;/div&gt;
+    ) : (
+        &lt;div className='lmj-cart-closed'&gt;
+            &lt;button
+                className='lmj-cart-toggle-button'
+                onClick={() =&gt; setIsOpen(true)}
+            &gt;
+                Ouvrir le panier
+            &lt;/button&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default Cart</code></pre>
+                    <p>Du côté de <span class="html">ShoppingList</span>, je <span class="em">lui passe <span class="html">updateCart</span></span>. Je <span class="em">le récupère ensuite dans <span class="html">ShoppingList.js</span></span>.</p>
+                    <p>Je <span class="em">change ensuite ma liste de plantes</span> pour avoir (toujours dans <span class="html">ShoppingList.js</span>) :</p>
+<pre><code>function ShoppingList({ cart, updateCart }) {
+    // Petite précision : categories permet de récupérer toutes les catégories uniques de plantes.
+
+    const categories = plantList.renduce(
+        (acc, elem) =&gt;
+            acc.includes(elem.category) ? acc : acc.concat(elem.category),
+            []
+    )
+
+    return (
+        &lt;div className='lmj-shopping-list'&gt;
+            &lt;ul&gt;
+                {categories.amp((cat) =&gt; (
+                    &lt;li key={cat}&gt;{cat}&lt;/li&gt;
+                ))}
+            &lt;/ul&gt;
+            &lt;ul class='lmj-plant-list'&gt;
+                {plantList.map(({ id, cover, name, water, light }) =&gt; (
+                    &lt;div key={id}&gt;
+                        &lt;PlantItem cover={cover} name={name} water={water} light={light} /&gt;
+                        &lt;button onClick={() =&gt; updateCart(cart + 1)}&gt;Ajouter&lt;/button&gt;
+                    &lt;/div&gt;
+                ))}
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default ShoppingList</code></pre>
+                    <p>Et voilà ! Maintenant, vous pouvez updater votre panier directement en cliquant sur un bouton lié à chaque plante.</p>
+                    <p>Vous voyez, ce n'est pas si compliqué, il a suffit de :</p>
+                    <ul>
+                        <li>
+                            <p>faire remonter notre state;</p>
+                        </li>
+                        <li>
+                            <p>faire descendre le contenu de notre state et la fonction pour l'updater;</p>
+                        </li>
+                        <li>
+                            <p>déclencher la mise à jour de notre state avec une interaction utilisateur (ici le clic sur le bouton).</p>
+                        </li>
+                    </ul>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ici, nous sommes sur une petite application : il n'y a qu'une seule page et nous partageons le state directement entre parents et enfants. Mais ça peut vite devenir le bazar pour une plus grosse application. C'est pourquoi la notion de state management va beaucoup plus loin. Il existe des outils dédiés au State Management tels que Flux, Redux ou des solutions natives comme React Context.</p>
+                    </div>
+                    <p>Nous avons vu comment partager des éléments du state entre plusieurs composants. Nous allons maintenant adapter notre application pour que le panier se comporte de manière un peu plus réaliste.</p>
+                    <p>L'idée ici est que <span class="em">notre state stocke quels types</span> de plantes ont été ajoutés, <span class="em">en quelle quantité</span>, et <span class="em">de mettre à jour le montnat total</span> en fonction du prix.</p>
+                    <p>Première étape : ajouter le prix à chaque plante dans le fichier <span class="em">plantList.js</span>.</p>
+                    <p>Dans le fichier <span class="em">App.js</span>, on modifie le state <span class="em">cart</span> pour que ce soit un tableau comme ceci :</p>
+<pre><code>const [cart, updateCart] = useState([])</code></pre>
+                    <p>Troisième étape : on modifie le fichier <span class="em">Cart.js</span> pour itérer sur les <span class="em">cart</span> comme ceci :</p>
+<pre><code>import { useState } from 'react'
+import '../styles/Cart.css'
+
+function Cart({ cart, updateCart }) {
+    const [isOpen, setIsOpen] = useState(true)
+    const total = cart.reduce(
+        (acc, plantType) =&gt; acc + plantType.amount * plantType.price,
+        0
+    )
+    return isOpen ? (
+        &lt;div className='lmj-cart'&gt;
+        &lt;button
+            className='lmj-cart-toggle-button'
+            onClick={() =&gt; setIsOpen(false)}
+        &gt;
+            Fermer
+        &lt;/button&gt;
+        &lt;h2&gt;Panier&lt;/h2&gt;
+        {cart.map(({ name, price, amount}, index) =&gt; (
+            &lt;div key={`${name}-${index}`}&gt;
+                {name} {price}€ x {amount}
+            &lt;/div&gt;
+        ))}
+
+        &lt;h3&gt;Total : {total}€&lt;/h3&gt;
+        &lt;button onClick={() =&gt; updateCart([])}&gt;Vider le panier&lt;/button&gt;
+    ) : (
+        &lt;div className='lmj-cart-closed'&gt;
+            &lt;button
+                className='lmj-cart-toggle-button'
+                onClick={() =&gt; setIsOpen(true)}
+            &gt;
+                Ouvrir le panier
+            &lt;/button&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default Cart</code></pre>
+                    <p>Enfin, dernière étape : on fait une modification dans le fichier <span class="em">ShoppingList.js</span> pour ajouter la fonction <span class="html">addToCart(...)</span> comme ci-dessous :</p>
+<pre><code>import '../styles/ShoppingList.css'
+
+function ShoppingList({ cart, updateCart }) {
+    
+    const categories = plantList.renduce(
+        (acc, plant) =&gt;
+            acc.includes(plant.category) ? acc : acc.concat(plant.category),
+            []
+    )
+
+    function addToCart(name, price) {
+        const currentPlantAdded = cart.find((plant) =&gt; plant.name === name)
+        if (currentPlantAdded) {
+            const cartFilteredCurrentPlant = cart.filter(
+                (plant) =&gt; plant.name !== name
+            )
+            updateCart([
+                ...cartFilteredCurrentPlant = cart.filter(
+                    (plant) =&gt; plant.name !== name
+                )
+                updateCart([
+                    ...cartFilteredCurrentPlant,
+                    { name, price, amount: currentPlantAdded.amount + 1 }
+                ])
+            ])
+        } else {
+            updateCart([...cart, { name, price, amount: 1 }])
+        }
+    }
+
+    return (
+        &lt;div className='lmj-shopping-list'&gt;
+            &lt;ul&gt;
+                {categories.amp((cat) =&gt; (
+                    &lt;li key={cat}&gt;{cat}&lt;/li&gt;
+                ))}
+            &lt;/ul&gt;
+            &lt;ul class='lmj-plant-list'&gt;
+                {plantList.map(({ id, cover, name, water, light }) =&gt; (
+                    &lt;div key={id}&gt;
+                        &lt;PlantItem cover={cover} name={name} water={water} light={light} /&gt;
+                        &lt;button onClick={() =&gt; addToCart(name, price)}&gt;Ajouter&lt;/button&gt;
+                    &lt;/div&gt;
+                ))}
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default ShoppingList</code></pre>
+                    <p>Notre panier fait maintenant une liste des articles sélectionnés, et met à jour le total en fonction des plantes sélectionnées et de leur prix.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Est-ce que vous avez remarqué que lorsqu'on change le state, on crée un nouvel objet avec le spread operator ? C'est normal : le state est immutable, c'est-à-dire qu'il ne faut pas le modifier directement.</p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="useEffect">Déclenchez des effets avec useEffect :</h2>
+                    <p>Est-ce que je vous ai déjà parlé du render (rendu) d'une application React ?</p>
+                    <p>Dès qu'une modification intervient dans une prop ou le state, le composant concerné et ses enfants sont re-render.</p>
+                    <p>Mais comment faire si on on veut effectuer une action qui ne fait pas partie du return ? Qui intervient après que React a mis à jour le DOM ? Par exemple, si vous voulez déclencher une alerte à chaque fois que votre panier est mis à jour ? Ou bien même pour sauvegarder ce panier à chaque mise à jour ?</p>
+                    <p>Eh bien, ces types d'actions s'appellent des effets de bord, et pour cela, nous avons <span class="html">useEffect</span>. Ils nous permettent d'effectuer une action à un moment donné du cycle de vie de nos composants.</p>
+                    <p>Disons que je veux <span class="em">créer une alert lorsque j'ajoute une plante à mon panier</span>, et que cette alerte <span class="em">affiche le montant total du panier</span>.</p>
+                    <p>Pour ça, une petite ligne de code suffit dans <span class="em">Cart.js</span> :</p>
+<pre><code>alert(`J'aurai ${total}€ à payer`)</code></pre>
+                    <p>On la met donc directement dans notre composant, avant le <span class="em">return</span>. Mais, quand je clique, ça bloque mon code et ma valeur ne s'affiche qu'une fois que j'ai cliqué sur "OK" !</p>
+                    <p>À la place, on va utiliser <span class="html">useEffect</span>.</p>
+                    <p><span class="em">Importez-le</span> comme nous l'avons fait avec <span class="html">useState</span> dans <span class="em">Cart.js</span> :</p>
+<pre><code>import { useState, useEffect } from 'react'</code></pre>
+                    <p>et <span class="em">utilisez ce snippet à la place</span> (toujours dans <span class="em">Cart.js</span>) :</p>
+<pre><code>useEffect(() =&gt; {
+    alert(`J'aurai ${total}€ à payer`)
+})</code></pre>
+                    <p>Ce qui nous donne pour <span class="em">Cart.js</span> :</p>
+<pre><code>import { useState, useEffect } from 'react'
+import '../styles/Cart.css'
+
+function Cart({ cart, updateCart }) {
+    const [isOpen, setIsOpen] = useState(true)
+    const total = cart.reduce(
+        (acc, plantType) =&gt; acc + plantType.amount * plantType.price,
+        0
+    )
+
+    useEffect(() =&gt; {
+        alert(`J'aurai ${total}€ à payer`)
+    })
+
+    return isOpen ? (
+        &lt;div className='lmj-cart'&gt;
+        &lt;button
+            className='lmj-cart-toggle-button'
+            onClick={() =&gt; setIsOpen(false)}
+        &gt;
+            Fermer
+        &lt;/button&gt;
+        {cart.length &gt; 0 ? (
+            &lt;h2&gt;Panier&lt;/h2&gt;
+            {cart.map(({ name, price, amount}, index) =&gt; (
+                &lt;div key={`${name}-${index}`}&gt;
+                    {name} {price}€ x {amount}
+                &lt;/div&gt;
+            ))}
+
+            &lt;h3&gt;Total : {total}€&lt;/h3&gt;
+            &lt;button onClick={() =&gt; updateCart([])}&gt;Vider le panier&lt;/button&gt;            
+        ) : (
+            &lt;div&gt;Votre panier est vide&lt;/div&gt;
+        )}
+    ) : (
+        &lt;div className='lmj-cart-closed'&gt;
+            &lt;button
+                className='lmj-cart-toggle-button'
+                onClick={() =&gt; setIsOpen(true)}
+            &gt;
+                Ouvrir le panier
+            &lt;/button&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default Cart</code></pre>
+                    <p>Et voilà ! Tout se passe comme espéré, pour la simple et bonne raison que <span class="html">useEffect</span> nous permet d'<span class="em">effectuer notre effet une fois le rendu du composant terminé</span>. Et comme <span class="html">useEffect</span> est directement dans notre composant, nous avons directeemnt accès à notre state, à nos variables, nos props, magique n'est-ce pas ?</p>
+                    <p>Quand je ferme mon, mon alerte se déclenche aussi ! Eh bien c'est normal : je vous ai dit que <span class="html">useEffect</span> se déclenche après le rendu. Eh bien il se déclenche après <span class="em">CHAQUE</span> rendu du composant. Sauf si vous...</p>
+                    <h3>Précisez quand déclencher une effect avec le tableau de dépendances :</h3>
+                    <p>Pour décider précisément quand on veut déclencher un effet, on peut utoliser le tableau de dépendances. Il correspond au deuxième paramètre passé à <span class="html">useEffect</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Petit rappel : le premier paramètre passé à useEffect est une fonction.</p>
+                    </div>
+                    <p>Cette fonction correspond à l'<span class="em">effet à exécuter</span>. Ici, il s'agit de :</p>
+<pre><code>() =&gt; {
+    alert(`J'aurai ${total}€ à payer`)
+}</code></pre>
+                    <p>Le deuxième paramètre de <span class="html">useEffect</span> accepte <span class="em">un tableau noté entre crochets</span> : il s'agit du tableau de dépendances.</p>
+                    <p>Dans notrre cas, si je veux que l'<span class="em">alerte ne s'affiche que lorsque le total de mon panier change</span>, il me suffit de faire :</p>
+<pre><code>useEffect(() =&gt; {
+    alert(`J'aurai ${total}€ à payer`)
+}, [total])</code></pre>
+                    <p>Vous pouvez mettre n'imprte quelle variable ici. Si vous voulez afficher l'alerte quand le total change OU quand une nouvelle catégorie est sélectionnée, vous pourriez tout à fait :</p>
+                    <ul>
+                        <li>
+                            <p>récupérer la catégorie sélectionnée (en faisant remonter <span class="html">activeCategory</span> et <span class="html">setActiveCategory</span> et en les passant en props);</p>
+                        </li>
+                        <li>
+                            <p>puis mettre <span class="html">[total, activeCategory]</span> dans votre tableau de dépendances.</p>
+                        </li>
+                    </ul>
+                    <p>L'alerte s'affiche bien quand la catégorie change ou bien quand le total change.</p>
+                    <p>Est-ce que l'effet est lancé au tout premier render de mon composant ? Oui, l'alerte s'affiche.</p>
+                    <p>Comment faire pour exécuter un effet uniquement après le premier render de mon composant ? Par exemple, si je veux récupérer des données sur une API ? Eh bien, dans ce cas, il faut <span class="em">renseigner un tableau de dépendances vide</span> :</p>
+<pre><code>useEffect(() =&gt; {
+    alert('Bienvenue dans La maison jungle')
+}, [])</code></pre>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>À partir du moment où vous utilisez le tableau de dépendances, faites attention à ne pas ouvlier des dépendances, ou bien à ne pas en laisser qui n'ont plus rien à y faire, pour éviter d'exécuter à des moments inopportuns.</p>
+                    </div>
+                    <h3>Modifiez le titre de votre onglet :</h3>
+                    <p>Bon, moi je commence à en avoir un peu marre de toutes ces alertes. J'ai plutôt envie d'utiliser <span class="html">useEffect</span> pour <span class="em">mettre à jour le titre de l'onglet de mon navigateur</span>.</p>
+                    <img src="../images/titre_onglet_React_1.png" alt="">
+                    <p>Vous voyez de quoi je parle ?</p>
+                    <p>On va donc <span class="em">utiliser <span class="html">document.title</span></span> toujours dans <span class="em">Cart.js</span>, comme ici :</p>
+<pre><code>useEffect(() =&gt; {
+    document.title = `LMJ : ${total}€ d'achats`
+}, [total])</code></pre>
+                    <p>Et voilà ! Le litre de notre onglet change en fonction du total de notre panier !</p>
+                    <figure>
+                        <img src="../images/titre_onglet_React_2.png" alt="">
+                        <figcaption>useEffect modifie le titre de notre onglet pour la maison jungle.</figcaption>
+                    </figure>
+                </article>
+                <article>
+                    <h2 id="regles_useEffect">Maîtrisez les règles de useEffect :</h2>
+                    <h3>Intégrez les différentes étapes de useEffect :</h3>
+                    <p>Repassons sur ce qu'on vient de voir de useEffect :</p>
+<pre><code>useEffect(() =&gt; {
+    console.log(`Cette alerte s'affiche à chaque rendu`)
+})</code></pre>
+<pre><code>useEffect(() =&gt; {
+    console.log(`Cette alerte s'affiche au premier rendu`)
+}, [])</code></pre>
+<pre><code>useEffect(() =&gt; {
+    console.log(`Cette alerte s'affiche la première fois et quand mon panier est mis à jour`)
+}, [cart])</code></pre>
+                    <p>Il est pssoble d'effectier une action quand React démonte le composant en le retirant du DOM. Dans notre <span class="em">App.js</span>, on rajoute le state :</p>
+<pre><code>const [isFooterShown, updateIsFooterShown] = useState(true)
+
+{isFooterShown && &lt;Footer cart={cart} /&gt;}</code></pre>
+                    <p>Ensuite, dans notre <span class="em">Footer.js</span>, on utilise le <span class="html">useEffect</span> suivant :</p>
+<pre><code>useEffect(() =&gt; {
+    return () =&gt;
+        console.log(`Cette alerte s'affiche quand Footer est retiré du DOM`)
+})</code></pre>
+                    <p>Cela nous permet d'effectuer un "nettoyage" de notre effet. En effet, il est indispensable de nettoyer certains effets au <span class="em">unmount</span> (démontage) d'un composant pour éviter les fuites de mémoire, typiquement si on utilise <span class="html">setInterval</span>. Nous n'aurons pas besoin de tels effets pour le moment.</p>
+                    <h3>Intégrez quelques règles :</h3>
+                    <p>Comme je vous l'ai expliqué précédemment, <span class="html">useEffect</span> est un <span class="em">hook</span>, une fonction qui permet de "se brancher" sur la fonctionnalité des effets de React. Mais quelques règles s'appliquent au hook <span class="html">useEffect</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Appelez toujours <span class="html">useEffect</span> à la <span class="em">racine de votre composant</span>. Vous ne pouvez pas l'appeler à l'intérieur de boucles, de code conditionnel ou de fonctions imbriquées. Ainsi, vous vous assurez d'éviter des erreurs involontaires.</p>
+                        </li>
+                        <li>
+                            <p>Comme pour <span class="html">useState</span>, <span class="html">useEffect</span> est uniquement accessible dans un <span class="em">composant fonction React</span>. Donc ce n'est pas possible de l'utiliser dans un composant classe, ou dans une simple fonction JavaScript.</p>
+                        </li>
+                    </ul>
+                    <p>Par ailleurs, je vous conseille de séparer les différentes actions effectuées dans différents useEffect. Cela est plutôt une bonne pratique qu'une règle.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Les hooks sont assez récents. Les développeurs React y ont accès depuis début 2019. Avant, il n'était pas possible d'accéder au state ni aux effets depuis des composants fonctions. Si on voulait utiliser un effet de bord ou l'état local; il fallait forcément passer par un <span class="em">class component</span>. Vous pouvez vous estimer heureux d'avoir accès aux hooks dès le début de votre apprentissage de React, car ils représentent plusieurs avanatages pour les développeurs et développeuses :</p>
+                        <ul>
+                            <li>
+                                <p>ils nécessitent d'écire moins de code;</p>
+                            </li>
+                            <li>
+                                <p>ils sont donc plus faciles à tester;</p>
+                            </li>
+                            <li>
+                                <p>mais également plus lisibles.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="creation_application_React_complete">Créez une application React complète :</h2>
+                    <h3>Installez votre app avec Create React App :</h3>
+                    <p>Pour initialiser notre application, nous allons utiliser Create React App (CRA).</p>
+                    <p>Dans votre terminal, placez-vous dans le dossier où vous souhaitez créer votre projet et faites la commande suivante :</p>
+<pre><code>npx create-react-app shiny-agency</code></pre>
+                    <h3>Architecturez votre projet par modules :</h3>
+                    <p>Maintenant que nous avons la base de notre projet, nous allons pouvoir nous décider sur son architure.</p>
+                    <p>Pas de panique ! Ici, je ne vais pas vous parler de patterns complexes. L'idée est juste de suivre des règles logiques et suffisamment claires pour que vous sachiez où placer les fichiers que vous créez, et où retrouver ceux dont vous avez besoin dans votre codebase. D'ailleurs, dans la documentation React <a href="https://fr.reactjs.org/docs/faq-structure.html" target="_blank">sur la structure de fichiers</a>, React laisse la liberté aux développeurs quant à la structure de leur projet.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Lorsque vous utilisez des frameworks tels que <a href="https://nextjs.org/" target="_blank">Next</a> ou <a href="https://www.gatsbyjs.com/" target="_blank">Gatsby</a> une structure de fichiers toute faite vous sera déjà proposée. je vous conseille d'y jeter un oeil si vous avez l'occassion !</p>
+                        <p>Précédemment, nous avions organisé le code de sorte à regrouper les fichiers par type : chaque fiche correspondait à un composant situé dans le dossier <span class="html">/components</span>. Les fichiers CSS, quant à eux, se trouvaient dans le dossier <span class="html">/style</span>, etc.</p>
+                        <p>Ici, nous allons organiser nos fichiers en suivant la même logique, sauf qu'il faudra ajouter un dossier pour les "pages", qui regroupera les composants vers lesquels chacune de nos routes renverra (pas de panique si vous ne savez pas ce qu'est une route).</p>
+                        <p><span class="em">Commençons</span> donc par créer un dossier <span class="html">/components</span> et un dossier <span class="html">pages</span> dans <span class="html">src</span>. Dans <span class="html">/pages</span>, on créé un dossier <span class="html">Home</span> et l'on y insère <span class="html">App.js</span>, qu'on renomme en <span class="html">index.jsx</span>. On peut ensuite supprimer tous les fichiers que nous n'utiliserons pas.</p>
+                        <p>Ce qui nous donne...</p>
+<pre><code>├── README.md
+├── node_modules
+...
+├── package.json
+├── public
+...
+├── src
+│   ├── index.js
+│   ├── components
+│   └── pages
+│       └── Home
+│            └── index.jsx 
+└── yarn.lock</code></pre>
+                        <p>Ici, pas d'obligation d'utiliser l'extension <span class="html">.jsx</span>. Votre fichier React fonctionnera très bien aussi avec une extension <span class="html">.js</span>, mais puisqu'on peut l'utiliser, autant être explicite, n'est-ce pas ? Ainsi, vous voyez en un coup d'oeil quand votre fichier du React, et quand il n'en contient pas.</p>
+                        <p>Ce qui est important pour nous est de pouvoir retrouver rapidement nos fichiers.</p>
+                    </div>
                 </article>
             <!-- fin de section -->
             </section>
