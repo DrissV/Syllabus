@@ -75,6 +75,7 @@
                         <li><a href="#PropTypes">Les PropTypes</a></li>
                         <li><a href="#styled_components">Styled components</a></li>
                         <li><a href="#useState_useEffect_calls_API">useState et useEffect pour effectuer des calls API</a></li>
+                        <li><a href="#useContext">useContext</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -2279,6 +2280,86 @@ export default Survey</code></pre>
                     <p>Mais ça vient d'où ce petit moment de "blanc" ? Comment fait-on pour que ça ressemble plus aux sites professionnels ? Eh bien, ça correspond tout simple au temps entre lequel lequel le composant est <span class="em">render</span> (généré) et celui où leuel les données sont chargées. Effectivement, d'un point de vue UI (interface utilisateur), ce n'est pas idéal : l'utilisateur ne comprend pas que les données sont en train d'être chargées, et peut alors penser qu'uk y a un problème sur l'application.</p>
                     <p>Une pratique très répandue consiste à mettre un petit <span class="em">loader</span> pour <span class="em">signifier que les données vont bientôt s'afficher</span>. On pourrait mettre un simple texte "Chargement...", mais bon, on sait manier le CSS : autant s'amuser avec, non ?</p>
                     <p>Je vous propose de <span class="em">créer un simple <span class="html">Loader</span> en CSS</span>, directement dans le fichier <span class="html">utils.Atoms.jsx</span>. Pour cela, on a également besoin d'importer <span class="html">keyframes</span> depuis la bibliothèque <span class="html">styled-components</span>. Ce qui nous donne :</p>
+<pre><code>import colors from './colors'
+import styled, { keyframes } from 'styled-components'
+
+const rotate = keyframes`
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+`
+
+export const Loader = styled.div`
+    padding: 10px;
+    border: 6px solid ${colors.primary};
+    border-bottom-color: transparent;
+    border-radius: 22px;
+    animation: ${rotate} 1s infinite linear;
+    height: 0;
+    width: 0;
+`</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ici, ce CSS n'est pas l'objet de ce cours, donc pas de panique si vous ne comprenez pas tout : sachez juste qu'il s'agit d'une utilisation un peu détournée pour avoir un <span class="html">Loader</span> en CSS pur.</p>
+                    </div>
+                    <p>On va maintenant <span class="Em">utiliser le state pour afficher notre <span class="html">Loader</span></span>. Pour cela, on crée une variable <span class="html">isDataLoading</span> avec <span class="html">useState</span> :</p>
+<pre><code>const [isDataLoading, setDataLoading] = useState(false)</code></pre>
+                    <p>Dans le <span class="html">useEffect</span>, on vient <span class="em">modifier notre booléen</span> :</p>
+<pre><code>useEffect(() =&gt; {
+    setDataLoading(true)
+    fetch(`http://localhost:8000/survey`)
+        .then((response) =&gt; response.json())
+        .then(({ surveyData }) =&gt; {
+            setSurveyData(surveyData)
+            setDataLoading(false)
+        })
+}, [])</code></pre>
+                    <p>... ce ui nous permet ainsi de <span class="em">condititionner le rendu de notre composant</span> : le <span class="html">Loader</span> s'affiche tant que les données chargent, et une fois qu'on les a bien, le contenu de la question s'affiche à la place du <span class="html">Loader</span>.</p>
+<pre><code>&lt;SurveyContainer&gt;
+    &lt;QuestionTitle&gt;Question {questionNumber}&lt;/QuestionTitle&gt;
+    {isDataLoading ? (
+        &lt;Loader /&gt;
+    ) : (
+        &lt;QuestionContent&gt;{surveyData[questionNumber]}&lt;/QuestionContent&gt;
+    )}
+    ...
+&lt;/SurveyContainer&gt;</code></pre>
+                    <p>On a bien notre contenu qui s'affiche comme on le souhaitait !</p>
+                    <figure>
+                        <img src="../images/state_loading_React_1.png" alt="">
+                        <figcaption>Pas mal, ce petit loader ?</figcaption>
+                    </figure>
+                    <p>Maintenant que nous avons le comportement que nous souhaitons, profitons-en pour implémenter une syntaxe un peu plus moderne, et pour gérer les erreurs :</p>
+<pre><code>useEffect(() =&gt; {
+    async function fetchSurvey() {
+        try {
+            const response = await fetch(`http://localhost:8000/survey`)
+            const { surveyData } = await response.json()
+            setSurveyData(surveyData)
+        } catch(err) {
+            console.log(err)
+            setError(true)
+        } finally {
+            setDataLoading(false)
+        }
+    }
+    fetchSurvey()
+}, [])</code></pre>
+                </article>
+                <article>
+                    <h2 id="useContext">Partagez vos données avec le Contexte et useContext :</h2>
+                    <h3>Découvrez le Contexte dans React :</h3>
+                    <p>Dans la famille des hooks, je veudx maintenant celui qui nous permet d'utiliser simplement le Contexte de React !</p>
+                    <p>Contexte est un moyen de partage simplement les props entre les composants. Contexte est natif à React et ne nécessite pas d'installer quoi que ce soit de plus.</p>
+                    <p>Précédemment, vous avez vu comment passer de simples props entre les composants parents et enfants, et comment utiliser les props pour faire remonter le state. Mais est-ce que vous imaginez ce que ça pourrait donner dans une application complexe, où pour passer une prop à un composant enfant, vous devez <span class="em">le faire par des dizaines de composants</span> parents qui n'ont eux-mêmes pas beosin de cette prop ?</p>
+                    <figure>
+                        <img src="../images/useContext_React_1.png" alt="">
+                        <figcaption>Ça n'a pas l'air très efficace, n'est-ce pas ?</figcaption>
+                    </figure>
                     
                 </article>
             <!-- fin de section -->
