@@ -74,6 +74,7 @@
                         <li><a href="#route_404">Route 404</a></li>
                         <li><a href="#PropTypes">Les PropTypes</a></li>
                         <li><a href="#styled_components">Styled components</a></li>
+                        <li><a href="#useState_useEffect_calls_API">useState et useEffect pour effectuer des calls API</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1912,7 +1913,7 @@ Card.propTypes = {
 }
 
 export default Card</code></pre>
-                    <p>Vous pouvez essayer dès mainteant de passer une prop dont le type n'est pas <span class="html">string</span>, pour voir. Dans <span class="html">freelances/index.jsx</span> :</p>
+                    <p>Vous pouvez essayer dès maintenant de passer une prop dont le type n'est pas <span class="html">string</span>, pour voir. Dans <span class="html">freelances/index.jsx</span> :</p>
 <pre><code>{freelanceProfiles.map((profile, index) =&gt; (
     &lt;Card
         key={`${profile.name}-${index}`}
@@ -1963,6 +1964,246 @@ export default Card</code></pre>
                     <h2 id="styled_components">Scopez votre CSS avec styled components :</h2>
                     <p>Pour ajouter du style à votre application React, vous avez certainement jusqu'ici utilisé du CSS. Pour gagner du temps de développement sur le CSS nous pouvons même utiliser des bibliothèqyes comme <a href="https://getbootstrap.com/" target="_blank">Bootstrap</a> ou encore <a href="https://tailwindcss.com/" target="_blank">Tailwind</a>. Cependant, vous est-il déjà arrivé de réutiliser le nom d'une classe CSS dans un autre composant sans faire exprès ? Ou bien encore de trouver du style appliqué à un élément sans comprendre d'où il venait ? Si ça vous est déjà arrivé, vous devez savoir à quel point c'est frustrant !</p>
                     <p>L'enjeu de <span class="em">scoper</span> notre style aux composants concernés est réel.</p>
+                    <p>Le scope correspond aux parties de notre code qui ont accès à un élément, comme une variable, ou une classe CSS. Il peut être global (comme c'est le cas pour les classes CSS dont je vous parlais il y a quelques instants), ou bien converner une partie spécifique du code.</p>
+                    <p>Pour scoper le style, il existe des solutions, telles que des méthodologies d'architecture de CSS ou bien des outils spécifiques comme Sass (qui requiert un préprocesseur). Mais depuis quelques années, le <span class="em">CSS in JS</span> émerge comme l'une des solutions à notre problème.</p>
+                    <h3>Découvrez le CSS in JS :</h3>
+                    <p>Comme son nom l'indique, le CSS in JS est généré... avec du JavaScript. Il sera inséré dans le DOM dans un élément <span class="html">&lt;style&gt;</span>.</p>
+                    <p>L'inline style est inséré dans le DOM sur l'attribut <span class="html">style</span> d'un élément spécifique (souvenez-vous, on fait <span class="html">&lt;div style={{ color: 'red' }} /&gt;</span>). Par ailleurs, l'inline style ne permetpas d'utiliser les pseudo-selectors. Ce n'est pas pareil pour le CSS in JS, avec lequel on peut utiliser autant de pseudo-selectors que nécessaire.</p>
+                    <p>Mais avec le CSS in JS, on garde l'idée que <span class="em">le style est attaché à un compposant spécifique</span>, directement dans le même fichier. Beaucoup plus simple lorsqu'il faut supprimer ou modifier du style déjà existant, n'est-ce pas ?</p>
+                    <p>Il existe plusieurs solutions de CSS in JS, avec leurs syntaxes propres. Ici nous allons nous intéresser à la bibliothèque <span class="em">styled components</span>.</p>
+                    <p>Commençons dès maintenant par installer la bibliothèque avec <span class="html">yarn add styled-components</span> :</p>
+                    <figure>
+                        <img src="../images/CSS_in_JS.jpg" alt="">
+                        <figcaption>Styled-components s'installe.</figcaption>
+                    </figure>
+                    <p>Penchons-nous dès maintenant sur le style que nous allons pouvoir créer !</p>
+                    <h3>Appliquez la logique styled components :</h3>
+                    <p>Dans styled components, la principale chose à comprendre est que tout est composant. Pour voir cela, créons dès maintenant notre premier styled component (styled composant).</p>
+                    <p>Dans <span class="html">Card/index.jsx</span>, créons donc le style pour le <span class="html">label</span>.</p>
+                    <p>On commence par ajouter l'import de styled-components puis nous créons notre composant <span class="html">CardLabel</span> de la manière suivante :</p>
+<pre><code>import styled from 'styled-components'
+
+const CardLabel = styled.span``</code></pre>
+                    <p>Et on a réutilisé <span class="html">CardLabel</span> directement dans le JSX :</p>
+<pre><code>&lt;CardLabel&gt;{label}&lt;/CardLabel&gt;</code></pre>
+                    <p>Pas de panique ! Ici, <span class="html">styled-components</span> utilise des templates literals que vous pouvez voir <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates" target="_blank">dans la documentation Mozilla</a>. Vous pouvez écrire votre CSS directement à l'intérieur. Ce qui nous donne :</p>
+<pre><code>const CardLabel = styled.span`
+    color: #5843e4;
+    font-size: 22px;
+    font-weight: bold;
+`</code></pre>
+                    <p>Profitons-en pour ajouter du style à notre image. Cette fois-ci, toujours dans le même fichier <span class="html">Card/index.jsw</span>, on a :</p>
+<pre><code>const CardImage = styled.img`
+    height: 80px;
+    width: 80px;
+    border-radius: 50%;
+`</code></pre>
+                    <p>... qu'on utilise dans le code :</p>
+<pre><code>&lt;CardImage src={picture} alt="freelance" /&gt;</code></pre>
+                    <p>Bravo à vous ! Vous avez généré des éléments <span class="html">span</span> et <span class="html">img</span> auxquels vous avez appliqué du style avec <span class="html">styled-components</span> ! Vous vous en doutez, ça ne s'arrête pas à <span class="html">span</span> et <span class="html">img</span> : vous pouvez ainsi générer tous les éléments du DOM... mais pas que.</p>
+                    <p>Style components prévoit ce cas ! Prenons l'exemple de <span class="html">Header/index.jsx</span>. Pour cela, il nous suffit de faire :</p>
+<pre><code>import { Link } from 'react-router-dom'
+import styled from 'styled-components'
+
+const StyledLink = styled(Link)`
+`
+
+function Header() {
+    return (
+        &lt;nav&gt;
+            &lt;StyledLink to="/"&gt;Accueil&lt;/StyledLink&gt;
+            &lt;StyledLink to="/survey/1"&gt;Questionnaire&lt;/StyledLink&gt;
+            &lt;StyledLink to="/freelances"&gt;Profils&lt;/StyledLink&gt;
+        &lt;/nav&gt;
+    )
+}
+
+export default Header</code></pre>
+                    <p>Essayez ce code pour voir le rendu vous-même - pas mal, n'est-ce pas ?</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>D'ailleurs, vous pouvez styliser un composant que vous avez vous-même créé de la même manière. Cette technique permet d'étendre votre style.</p>
+                    </div>
+                    <h3>Passez des props dans votre CSS :</h3>
+                    <p>C'est bien beau, nous avons créé nos styled components et nous les avons utilisés, mais quels autres avantages tire-t-on du fait d'écrire notre style avec du JS ? ...Eh bien justement, on utilise du JS. On va pouvoir passer des props à nos composants directement depuis notre composant React.</p>
+                    <p>Voyons voir concrètement ce que cela donne dans notre <span class="html">Header</span>.</p>
+<pre><code>&lt;styledLink to="/survey/1" $isFullLink&gt;
+    Faire le test
+&lt;/StyledLink&gt;</code></pre>
+                    <p>Ici on passe la prop <span class="html">1isFullLink</span>. Ce qui nous permet d'utiliser la prop directement dans le style :</p>
+<pre><code>const StyledLink = styled(Link)`
+    padding: 15px;
+    color: #8186a0;
+    text-decoration: none;
+    font-size: 18px;
+    ${(props) =&gt;
+        props.$isFullLink &&
+        `color; wite; border-radius: 300px; background-color; #5843E4;`}
+`</code></pre>
+                    <p>C'est quoi ce <span class="html">$</span> ? Eh bien, cela permet de signaler à <span class="html">styled-components</span> que notre prop nous sert pour le style, et qu'elle ne doit pas être passée dans le DOM.</p>
+                    <p>Ce <span class="html">$</span> est uniquement nécessaire pour passer une prop si le composant en question est un composant React, comme ici pour <span class="html">Link</span> (et non un élément HTML). Si mon styled component était basé sur une simple balise <span class="html">a</span>, je pourrais totalement utiliser la prop <span class="html">isFullLink</span> sans le <span class="html">$</span>.</p>
+                    <p>Voyons l'utilisation du state en prop de plus près ci-dessous :</p>
+<pre><code>// Dans /pages/Home/index.jsx
+import { useState } from 'react'
+import styled from 'styled-components'
+
+const HomeContainer = styled.div`
+    height: 100px;
+    width: 100px;
+    border-radius: 50px;
+    background-color: #e20202;
+    transform: scale(${({ size }) =&gt; size});
+`
+
+function Home() {
+    const [size, setSize] = useState(1)
+    return (
+        &lt;HomeContainer&gt;
+            &lt;h1 onClick={() =&gt; setSize(size + 0.1)}&gt;Page d'accueil&lt;/h1&gt;
+            &lt;Ballon size={size} /&gt;
+        &lt;/HomeContainer&gt;
+    )
+}
+
+export default Home</code></pre>
+                    <p>Pas mal, non ?</p>
+                    <h3>Utilisez des variables :</h3>
+                    <p>Vous voyez, dans notre avant-dernier snippet de code, on a encore utilisé la couleur violette <span class="html">#5843E4</span>. Qui dit JS dit aussi qu'on peut utiliser des variables, et c'est ce que nous allons faire : nous allons utiliser des variables pour <span class="em">stocker nos couleurs</span> !</p>
+                    <p>Vous pourriez tout simplement déclarer un objet <span class="html">colors</span> qui reprend toutes les couleurs de notre application, mais il est considéré comme une bonne pratique de créer un thème géré par <span class="html">styled-components</span>.</p>
+                    <p>On crée donc un dossier <span class="html">/utils</span> directement dans <span class="html">src/</span>, dans lequel on met un dossier <span class="html">/style</span>. On y crée notre fichier <span class="html">color.js</span>, ce qui nous donne :</p>
+<pre><code>├── assets
+│   └── profile.png
+├── components
+│   ├── Card
+│   │   └── index.jsx
+│   ├── Error
+│   │   └── index.jsx
+│   └── Header
+│       └── index.jsx
+├── index.jsx
+├── pages
+│   ├── Freelances
+│   │   └── index.jsx
+│   ├── Home
+│   │   └── index.jsx
+│   ├── Results
+│   │   └── index.jsx
+│   └── Survey
+│       └── index.jsx
+└── utils
+└── style
+└── colors.js</code></pre>
+                    <p>Dans <span class="html">color.js</span>, on définit nos couleurs :</p>
+<pre><code>const colors = {
+    primary '#5843E4',
+    secondary: '8186A0',
+    backgroundLight: '#F9F9FC',
+}
+
+export default colors</code></pre>
+                    <p>Pour l'utiliser, il nous suffit de l'importer directement dans notre template string :</p>
+<pre><code>const StyledLink = styled(Link)`
+    padding: 15px;
+    color: #8186a0;
+    text-decoration: none;
+    font-size: 18px;
+    ${(props) =&gt;
+        props.$isFullLink && 
+        `color: white; border-radius: 30px; background-color: ${colors.primary};`}
+`</code></pre>
+                    <p>Et on a bien ce qu'on voulait.</p>
+                    <p>Par contre, comment faire si je veux styliser mon composant au survol de la souris ? Eh bien, c'est très simple ici puisque les pseudosélecteurs fonctionnent dans nos styled components.</p>
+                    <p>Pour mettre tout ça en pratique, on va retourner sur nos <span class="html">Cards</span>. On y ajoutera un peu de style pour que l'effet de <span class="em">hover</span> soit plus visible. Dans <span class="html">pages/freelances.jsx</span>, on met :</p>
+<pre><code>const CardContainer = styled.div`
+    display: grid;
+    gap: 24px;
+    grid-template-rows: 350px 350px;
+    grid-template-columns: repeat(2, 1fr);
+`</code></pre>
+                    <p>... qu'on utilise tout de suite dans le même fichier :</p>
+<pre><code>function Freekabces() {
+    return (
+        &lt;div&gt;
+            &lt;h1&gt;Freelances&lt;/h1&gt;
+            &lt;CardsContainer&gt;
+                {freelanceProfiles.map((profile, index) =&gt; (
+                    &lt;Card
+                        key={`${profile.name}-${index}`}
+                        label={profile.jobTitle}
+                        title={profile.name}
+                    /&gt;
+                ))}
+            &lt;/CardContainer&gt;
+        &lt;/div&gt;
+    )
+}</code></pre>
+                    <p>Puis dans <span class="html">Card/index.jsx</span>, on peut créer un effet d'ombre au survol de la souris. Pour ça, on crée un <span class="html">CardWrapper</span> qui vient remplacer notre précédente <span class="html">div</span> :</p>
+<pre><code>function Card({ label, title, picture }) {
+    return (
+        &lt;CardWrapper&gt;
+            &lt;CardLabel&gt;{label}&lt;/CardLabel&gt;
+            &lt;CardImage src={picture} alt="freelance" /&gt;
+            &lt;span&gt;{title}&lt;/span&gt;
+        &lt;/CardWrapper&gt;
+    )
+}</code></pre>
+                    <p>Et on définit CardWrapper comme suit :</p>
+<pre><code>const CardWrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    background-color: ${colors.backgroundLight};
+    border-radius: 30px;
+    width: 350px;
+    transition: 200ms;
+    &:hover {
+        cursor: pointer;
+        box-shadow: 2px 2px 10px #e2e3e9;
+    }
+`</code></pre>
+                    <p>La syntaxe <span class="html">&:hover</span> nous permet d'accéder au pseudosélecteur du survol de la souris, et on a bien l'effet souhaité !</p>
+                    <figure>
+                        <img src="../images/hover_React.png" alt="">
+                        <figcaption>On a bien l'effet d'ombre au survol de la souris.</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ici, nous avons utilisé le pseudosélecteur <span class="html">:hover</span> avec <span class="html">&</span>. <span class="html">&</span> est très utile dans nos styled components, notamment pour utiliser des pseudosélecteurs, mais aussi pour accéder à d'autres éléments. Notamment si un de nos compoisants a <span class="html">className</span> et qu'on ne peut pas accéder directement à son style. Je ne vous le montrerai pas ici, mais <a href="https://styled-components.com/docs/basics#pseudoelements-pseudoselectors-and-nesting" target="_blank">vous trouverez des exemples dans la documentation de Styled Components</a>.</p>
+                    </div>
+                    <h3>Créez un style global :</h3>
+                    <p>Nous avons déjà vu beaucoup de choses avec styled components. Encore une fois, nous ne pouvons pas tout couvrir dans ce cours, mais avant de conclure j'aimerais que nous créions un style global. Cela nous permettra de créer un style de base, notamment pour la police ou pour d'autres propriétés CSS.</p>
+                    <p>Pour cela, dans <span class="html">index.jsx</span> à la racine de notre projet, vous pouvez créer un composant GlobalStyle :</p>
+<pre><code>const GlobalStyle = createGlobalStyle`
+    div {
+        font-family: 'Trebuchet MS', Helvetica, sans-serif;
+    }
+`</code></pre>
+                    <p>Et vous l'importez tout simplement dans vos composants :</p>
+<pre><code>&lt;Router&gt;
+    &lt;GlobalStyle /&gt;
+    &lt;Header /&gt;
+    ...
+&lt;/Router&gt;</code></pre>
+                    <p>Et voilà ! Ensemble, nous avons utilisé <span class="html">styled-components</span> pour styliser notre application !</p>
+                </article>
+                <article>
+                    <h2 id="useState_useEffect_calls_API">Exploitez vos connaissances de useState et useEffect pour effectuer des calls API :</h2>
+                    <h3>Rafraîchissez vos connaissances de useState et useEffect :</h3>
+                    <p>Souvenez-vous...</p>
+                    <p>Le <span class="em">state local</span> esy présent à l'intérieur d'un composant : ce composant peut être re-render autant de fois que l'on veut, mais les données seront <span class="em">préservées</span>. Pour cela on utilise <span class="html">useState</span>, un hook qui permet d'ajouter un state local dans un composant fonction.</p>
+                    <p><span class="html">useEffect</span> est également un hook, qui permet d'exécuter des actions après le render de nos composants, en choisissant à quel moment et à quelle fréquence cette action doit être exécutée, avec le tableau de dépendances.</p>
+                    <p>Vous vous en doutez sûrement, nous allons les utiliser pour faire des calls API :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">useEffect</span> nous permettra de déclencher le <span class="html">fetch</span>;</p>
+                        </li>
+                        <li>
+                            <p><span class="html">useState</span> permettra de stocker le retour de l'API dans le <span class="em">state</span>.</p>
+                        </li>
+                    </ul>
+                    <h3>Récupérez les données d'une API :</h3>
+                    <h4>Reprenez les bases des calls API :</h4>
+                    <p>Les données sont au coeur d'une application. Qu'il s'agisse de données locales ou bien qu'elles soient récupérées depuis une API, elles viennent <span class="em">alimenter nos composants</span> et <span class="em">nourrir les interactions</span> avec les utilisateurs.</p>
                     
                 </article>
             <!-- fin de section -->
