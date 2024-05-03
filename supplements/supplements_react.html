@@ -72,6 +72,8 @@
                         <li><a href="#Outlets_pages">Utilisation des Outlets pour afficher certaines parties de la page</a></li>
                         <li><a href="#recuperation_parametres_URL">Récupération des paramètres dans l'URL</a></li>
                         <li><a href="#route_404">Route 404</a></li>
+                        <li><a href="#PropTypes">Les PropTypes</a></li>
+                        <li><a href="#styled_components">Styled components</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1630,7 +1632,7 @@ import ReactDOM from 'react-dom'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home/'
 import Survey from './pages/Survey/'
-import header from './components/Header'
+import Header from './components/Header'
 
 ReactDom.render(
     &lt;React.StrictMode&gt;
@@ -1693,7 +1695,7 @@ import ReactDOM from 'react-dom'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home/'
 import Survey from './pages/Survey/'
-import header from './components/Header'
+import Header from './components/Header'
 // On ajoute nos composants
 import ClientForm from './components/ClientForm'
 import FreelanceForm from './coimponents/FreelanceForm'
@@ -1767,6 +1769,200 @@ function Survey() {
                     <h2 id="route_404">Créez une route pour les attraper toutes : 404 :</h2>
                     <p>Quelle chance, tout fonctionne comme on le souhaite ! Mais qu'est-ce qui se passe si je commence à taper n'importe quoi dans mon URL ? par exemple, si j'essaie d'accéder au contenu de <a href="http://localhost:3000/coucouCommentCaVa" target="_blank">http://localhost:3000/coucouCommentCaVa</a> ?</p>
                     <p>Notre header s'affiche, mais rien d'autre... Moi, j'aimerais signaler à l'utilisateur que rien n'existe à cette adresse. Eh bien, ça vous dit quelque chose, les pages d'erreur ? C'est ce que nous allons faire ici : afficher une page 404.</p>
+                    <p>On commence par créer un simple composant <span class="em">Error</span> dans <span class="html">components/Error/index.jsx</span> :</p>
+<pre><code>function Error() {
+    return (
+        &lt;div&gt;
+            &lt;h1&gt;Oups ! Cette page n'existe pas&lt;/h1&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default Error</code></pre>
+                    <p>On retourne maintenant dans notre Router. Afin de gérer les erreurs qui n'existent pas nous ajouterons une route avec un <span class="html">path</span> particulier, le <span class="html">path=*</span> ainsi que toutes les routes qui ne sont pas mentionnées plus haut conduiront à ma page d'erreur.</p>
+                    <p>Dans notre router, on a donc :</p>
+<pre><code>import React from 'react'
+import ReactDOM from 'react-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Home from './pages/Home/'
+import Survey from './pages/Survey/'
+import Header from './components/Header'
+import Error from './components/Error/'
+
+ReactDom.render(
+    &lt;React.StrictMode&gt;
+        &lt;Router&gt;
+            &lt;Header /&gt;
+            &lt;Routes&gt;
+                &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+                &lt;Route path="/survey/:questionNumber" element={&lt;Survey /&gt;} /&gt;
+                &lt;Route path="*" element={&lt;Error /&gt;} /&gt;
+            &lt;/Routes&gt;
+        &lt;/Router&gt;
+    &lt;/React.StrictMode&gt;,
+    document.getElementById('root')
+)</code></pre>
+                    <p>Testons dans notre navigateur :</p>
+                    <figure>
+                        <img src="../images/erreur_404_React.png" alt="">
+                        <figcaption>Notre Route permet d'afficher une erreur lorsque l'URL saisie n'existe pas dans le router.</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ici, nos besoins en routing restent limités. Mais comment auriez-vous fait si vous aviez dû créer un système d'authentification ? Eh bien, le router aurait été au coeur de votre login. Vous auriez séparé votre application entre les routes non authentifiées, telles qu'une page d'inscription, de connexion, etc., et les routes authentifiées. À chaque requête sur une page authentifiée, vous auriez dû passer un token secret permettant de vous authentifier à l'API :</p>
+                        <ul>
+                            <li>
+                                <p>Si le token est correct, pas de souci, vous récupérez vos données.</p>
+                            </li>
+                            <li>
+                                <p>En cas d'erreur de token, vous recevez une erreur qui a pour conséquence de vous rediriger auutomatiquement côté router de React sur la partie non authentifiée avec Redirect.</p>
+                            </li>
+                        </ul>
+                        <p>Vous pouvez en apprendre plus sur <a href="https://ui.dev/react-router-v5-protected-routes-authentication/" target="_blank">l'authentification avec React React Router dans cet article (en anglais)</a>.</p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="PropTypes">Indiquez les types de vos props avec les PropTypes :</h2>
+                    <h3>Découvrez le typage :</h3>
+                    <p>Les PropTypes sont une des méthodes les plus répandues pour sécuriser le type des props que reçoivent vos composants.</p>
+                    <p>En termes de typage, le typage de JavaScript est considéré comme "faible" : JS fonctionne sur du <a href="https://developer.mozilla.org/fr/docs/Glossary/Dynamic_typing" target="_blank">typage dynamique</a> et n'assure pas de type safety. Cela veut dire que lorsqu'on déclare une nouvelle variable, le développeur ou la développeuse <span class="em">ne précise pas de quel type</span> sera la nouvelle variable, le code s'adapte à la volée, et on peut tout à fait changer le type d'une variable.</p>
+                    <p>En JS, je peux totalement faire :</p>
+<pre><code>let maVariable = 42
+maVariable = "quarante trois"</code></pre>
+                    <p>Alors que dans un certain nombre d'autres langages, ce n'est pas du tout possible.</p>
+                    <p>Typiquement, en C, je dois préciser le type <span class="em">dès la déclaration</span> et il <span class="em">ne change pas</span>. Le typage est alors qualifié de "statique". Ici, <span class="html">maVariable</span> est un <span class="html">integer</span> :</p>
+<pre><code>int maVariable;
+maVariable = 42; // Pas de souci ici
+maVariable = "Quarante trois"; // ce code ne compilera pas !</code></pre>
+                    <p>Les choses sont donc bien plus flexibles en JavaScript.</p>
+                    <p>Mais ne vous réjouissez pas trop vite, cette flexibilité peut aussi causer votre perte. En effet, des bugs sont vite arrivés en JavaScript, surtout lorsque vous collaborez en équipe !</p>
+                    <p>C'est pourquoi il existe des outils pour assurer ses arrières, tels que les <span class="html">PropTypes</span>.</p>
+                    <h3>Installez PropTypes :</h3>
+                    <p>La bibliothèque PropTypes vous permey de déclarer le type des props qui est attendu lorsque vous les récupérez dans vos composants, et de déclencher un warning si ça ne correspond pas. Bien pratique !</p>
+                    <p>Comme d'habitude, pour installer la bibliothèque PropTypes, il vous suffit de lancer la commande <span class="html">yarn add prop-types</span>.</p>
+                    <p>Profitons-en pour mettre les <span class="html">propTypes</span> en pratique dans notre application Shiny Agency !</p>
+                    <p>Nous allons dès maintenant coder la base des <span class="html">Card</span> dans la page <span class="html">/freelances</span>.</p>
+                    <p>Dans le dossier <span class="html">/components</span>, on vient créer un nouveau dossier <span class="html">/Card</span> dans lequel vous pouvez créer un fichier <span class="html">index.jsx</span>. Vous pouvez y coller le code suivant :</p>
+<pre><code>function Card({ label, title, picture }) {
+    return (
+        &lt;div style={{ display: 'flex', flexDirection: 'column', padding: 15 }}&gt;
+            &lt;span&gt;{label}&lt;/span&gt;
+            &lt;img src={picture} alt="freelance" height={80} width={80} /&gt;
+            &lt;span&gt;{title}&lt;/span&gt;
+        &lt;/div&gt;
+    )
+}
+
+export default Card</code></pre>
+                    <p>Ce composant récupère 3 props : <span class="html">label</span>, <span class="html">title</span> et <span class="html">picture</span>. J'ai également ajouté quelques propriétés de style pour que le tout soit plus visible.</p>
+                    <p>Nous allons utiliser les <span class="html">Card</span> dans notre fichier <span class="html">Freelances/index.js</span>. Comme nous n'avons pas encore récupéré les datas que nous afficherons, nous allons créer un tableau d'objets nous-mêmes, qu'on déclare dans <span class="html">/pages/Freelances/index.jsx</span> :</p>
+<pre><code>import DefaultPicture from '../../assets/profile.png'
+
+const freelanceProfiles = [
+    {
+        name: 'Jane Doe',
+        jobTitle: 'Devops',
+        picture: DefaultPicture,
+    },
+    {
+        name: 'John Doe',
+        jobTitle: 'Développeur frontend',
+        picture; DefaultPicture,
+    },
+    {
+        name: 'Jeanne Biche',
+        jobTitle: 'Développeuse Fullstack',
+        picture: DefaultPicture,
+    },
+]</code></pre>
+                    <p>Ici, on utilise une photo de profil vide standard qu'on a mise dans un dossier <span class="html">/assets</span>. Nous pouvons mapper ce tableau pour afficher le composant <span class="html">Card</span> :</p>
+<pre><code>function Freelances() {
+    return (
+        &lt;div&gt;
+            &lt;h1&gt;Freelances&lt;/h1&gt;
+            {freelanceProfiles.map((profile, index) =&gt; (
+                &lt;Card
+                    key={`${profile.name}-${index}`}
+                    label={profile.jobTitle}
+                    picture={profile.picture}
+                    title={profile.name}
+                /&gt;
+            ))}
+        &lt;/div&gt;
+    )
+}</code></pre>
+                    <p>Nous avons tout ce qu'il nous faut ! Sécurisons donc les props de <span class="html">Card</span> avec les propTypes !</p>
+                    <p><span class="html">Card</span> récupère 3 props, <span class="html">label</span>, <span class="html">title</span> et <span class="html">picture</span>. On va donc importer <span class="html">PropTypes</span> depuis la bibliothèque et utiliser <span class="html">Card.propTypes</span> pour préciser les types de chacune des propriétés.</p>
+<pre><code>import PropTupes from 'prop-types'
+
+function Card({ label, title, picture }) {
+    return (
+        &lt;div style={{ display: 'flex', flexDirection: 'column', padding: 15 }}&gt;
+            &lt;span&gt;{label}&lt;/span&gt;
+            &lt;img src={picture} alt="freelance" height={80} width={80} /&gt;
+            &lt;span&gt;{title}&lt;/span&gt;
+        &lt;/div&gt;
+    )
+}
+
+Card.propTypes = {
+    label: PropTypes.string,
+    title: PropTypes.string,
+    picture: PropTypes.string,
+}
+
+export default Card</code></pre>
+                    <p>Vous pouvez essayer dès mainteant de passer une prop dont le type n'est pas <span class="html">string</span>, pour voir. Dans <span class="html">freelances/index.jsx</span> :</p>
+<pre><code>{freelanceProfiles.map((profile, index) =&gt; (
+    &lt;Card
+        key={`${profile.name}-${index}`}
+        label={profile.jobTitle}
+        picture={profile.picture}
+        title={42}
+    /&gt;
+))}</code></pre>
+                    <figure>
+                        <img src="../images/propTypes_React.jpg" alt="">
+                        <figcaption>Ça me renvoie directement une erreur dans la console !</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ici, nous n'avons que des <span class="html">strings</span>, mais il existe bien plus de types supportés par <span class="html">propTypes</span>. <a href="https://fr.reactjs.org/docs/typechecking-with-proptypes.html#proptypes" target="_blank">Vous pourrez les trouver dans la doc de React.</a></p>
+                    </div>
+                    <p>Bravo à vous, vous venez de sécuriser votre composant <span class="html">Card</span> à l'aide des propTypes.</p>
+                    <p>Mais je ne vous ai pas tout montré : vous pouvez même préciser si une prop est requise ou non !</p>
+                    <h3>Exigez une prop :</h3>
+                    <p>Il est très simple de préciser qu'une prop est requise pour le bon fonctionnement de l'application. Pour cela, il suffit d'ajouter <span class="html">isRequired</span> à la suite du type déclaré.</p>
+                    <p>Par exemple, toujours pour <span class="html">Card</span>, si on fait :</p>
+<pre><code>Card.propTypes = {
+    label: PropTypes.string,
+    title: PropTypes.string.isRequired,
+    picture: PropTypes.string
+}</code></pre>
+                    <p>... et qu'on omet de déclarer la prop <span class="html">title</span>, ça nous donne :</p>
+                    <figure>
+                        <img src="../images/propTypes_React_1.jpg" alt="">
+                        <figcaption>Une erreur apparaît dans la console lorsque vous oubliez de préciser une prop qui est requise.</figcaption>
+                    </figure>
+                    <p>Et voilà, vous avez réussi à "exiger une prop avec <span class="html">.isRequired</span> !</p>
+                    <p>Je voulais vous montrer une dernière chose en lien avec les propTypes : comment définir une prop par défaut.</p>µ
+                    <h3>Définissez des props par défaut :</h3>
+                    <p>Bon, précédemment, vous avez déjà vu comment définir par défaut avec la déstructuration. Mais nous allons voir comment le faire de manière plus formelle : nous allons utiliser <span class="html">defaultProps</span>. Dans l'exemple précédent, au lieu de déclencher une erreur pour notre propriété manquante (alors qu'on avait précisé <span class="html">isRequired</span>), nous aurions pu aussi déclarer une propriété par défaut.</p>
+                    <p>Il est possible d'assigner une valerur à <span class="html">title</span> directement dans la déstructuration, comme ici :</p>
+<pre><code>function Card({ label, title = 'Mon titre par défaut', picture })</code></pre>
+                    <p>Mais cette syntaxe déclenche malgré tout une erreur de <span class="html">PropType</span>. Dans ce cas, la meilleure manière est d'avoir recours à <span class="html">defaultProps</span>. Juste en dessous de <span class="html">Card.propTypes</span>, nous déclarons un objet <span class="html">Card.defaultProps</span> :</p>
+<pre><code>Card.defaultProps = {
+    title: 'Mon titre par défaut',
+}</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Jusqu'à il y a quelques années, <span class="html">prop-types</span> était la solution recommandée pour typer ses props. Mais aujourd'hui, il existe d'autres solutions, telles que <span class="html">TypeScript</span> ou <span class="html">Flow</span>. Si vous voulez voir à quoi ressemble la base d'une application codée avec TypeScript, <a href="https://github.com/OpenClassrooms-Student-Center/7150606-React-intermediaire/tree/typescript" target="_blank">vous trouverez la branche "typescript" dans le projet "shiny-agency" où l'application est entièrement codée en TS</a>.</p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="styled_components">Scopez votre CSS avec styled components :</h2>
+                    <p>Pour ajouter du style à votre application React, vous avez certainement jusqu'ici utilisé du CSS. Pour gagner du temps de développement sur le CSS nous pouvons même utiliser des bibliothèqyes comme <a href="https://getbootstrap.com/" target="_blank">Bootstrap</a> ou encore <a href="https://tailwindcss.com/" target="_blank">Tailwind</a>. Cependant, vous est-il déjà arrivé de réutiliser le nom d'une classe CSS dans un autre composant sans faire exprès ? Ou bien encore de trouver du style appliqué à un élément sans comprendre d'où il venait ? Si ça vous est déjà arrivé, vous devez savoir à quel point c'est frustrant !</p>
+                    <p>L'enjeu de <span class="em">scoper</span> notre style aux composants concernés est réel.</p>
                     
                 </article>
             <!-- fin de section -->
