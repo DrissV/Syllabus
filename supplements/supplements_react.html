@@ -1741,7 +1741,7 @@ ReactDom.render(
                 <article>
                     <h2 id="recuperation_parametres_URL">récupérez des paramètres dans vos URL :</h2>
                     <p>La navigation de notre application fonctionne bien, mais comment faire si vous voulez passer des paramètres ? Par exemple, lorsqu'on va faire le questionnaire et que le numéro de chaque question sera récupéré depuis l'URL ? Eh bien, bonne question ! Le router vous permet de récupérer des paramètres; pour cela, il suffit d'écrire votre route comme ici dans le fichier <span class="html">index.jsx</span> à la racine de <span class="html">/src</span> :</p>
-<pre><code>&lt;Route path="/survey/:questionNumberé element={&lt;Survey /&gt;} /&gt;</code></pre>
+<pre><code>&lt;Route path="/survey/:questionNumber element={&lt;Survey /&gt;} /&gt;</code></pre>
                     <p>Dans <span class="html">components/Header/index.jsx</span>, mettons donc un numéro de question à la suite :</p>
 <pre><code>function Header() {
     return (
@@ -2204,6 +2204,81 @@ export default colors</code></pre>
                     <h3>Récupérez les données d'une API :</h3>
                     <h4>Reprenez les bases des calls API :</h4>
                     <p>Les données sont au coeur d'une application. Qu'il s'agisse de données locales ou bien qu'elles soient récupérées depuis une API, elles viennent <span class="em">alimenter nos composants</span> et <span class="em">nourrir les interactions</span> avec les utilisateurs.</p>
+                    <p>Une <span class="em">API</span> (Application Programming Interface) est littéralement une interface de programmation d'application : c'est un moyen de communication entre deux logiciels. Concrètement, pour nous, c'est ce qui nous permet de <span class="em">récupérer des données</span>.</p>
+                    <p>Mais pourquoi on n'a pas mis les données directement dans le front ? Eh bien... oui, on aurait pu. Ici, on dispose de toutes les données. Mais dans les faits, ce ne sera pas toujours le cas, loin de là. Vous pouvez par exemple avoir besoin que votre contenu soit administré par une personne qui ne sait pas coder. Dans ce cas, vous pourriez <a href="https://openclassrooms.com/fr/courses/5922626-optimisez-le-referencement-de-votre-site-seo-en-ameliorant-ses-performances-techniques/6055246-accelerez-un-site-cree-avec-un-cms" target="_blank">utiliser un CMS</a> (comme <a href="https://wordpress.com/fr/" target="_blank">WordPress</a>, <a href="https://ghost.org/" target="_blank">Ghost</a>, etc.), et récupérer le contenu.</p>
+                    <p>Ou bien tout silmplement, vous pouvez créer une application complexe qui requiert un système d'authentification, qui sauvegarde des données utilisateurs, etc. Dans ce cas, une application frontend ne suffit pas et doit être complémentaire avec l'application backend.</p>
+                    <p>Mettons tout ça en application dès maintenant !</p>
+                    <p>Pour notre projet pour l'agence Shiny, nous allons utiliser l'API <a href="https://github.com/OpenClassrooms-Student-Center/7150606-API-React-intermediaire" target="_blank">que vous trouverez ici</a>. Vous trouverez toutes les instructions nécessaires pour la faire tourner dans le <span class="html">README.md</span>. Je vous laisse un petit moment pour cloner le repo et lancer l'API en local.</p>
+                    <p>... C'est bon, vous avez bien l'API qui tourne en local ? On va aller récupérer le contenu de nos questions sur l'API sur la route <a href="http://localhost:8000/" target="_blank">http://localhost:8000/</a> avec <a href="https://developer.mozilla.org/fr/docs/Web/API/Fetch_API/Using_Fetch" target="_blank">la méthode <span class="html">fetch()</span></a>.</p>
+                    <p><span class="html">fetch()</span> est la méthode native pour faire des calls API. Nous aurions très bien pu utiliser des outils tels que <a href="https://github.com/axios/axios" target="_blank">axios</a>, mais ici la méthode native a été privilégiée, pour vous éviter une nouvelle installation d'outil externe.</p>
+                    <h4>Développez le questionnaire avec les données :</h4>
+                    <p>Pour nous atteler à l'utilisation de l'API, nous allons développer la page <span class="html">/survey</span>. Souvenez-vous, précédemment, nous avions créé des liens pour naviguer entre les questions, et rediriger l'utilisateur sur <span class="html">/results</span> quand il atteignait la dixième question. Eh bien, ici, nous allons continuer à développer cette page afo, de récupérer les données depuis l'API.</p>
+                    <p>L'API nous renvoie l'ensemble de questions sur l'endpoint <a href="http://localhost:8000/survey" target="_blank">http://localhost:8000/survey</a>.</p>
+                    <p>Hé, mais comment on sait ça ? Bon, c'est facile pour moi parce que j'ai aussi écrit l'API que nous utilisons. Mais vous pouvez tout simplement utiliser la documentation de l'API accessible dans le fichier <span class="html">README.md</span>.</p>
+                    <p>On peut donc l'appeler, comme nous l'avons dit, dans notre <span class="html">useEffect</span> pour récupérer les questions. Si vous regardez la documentation, vous verrez que la route correspondant aux questions (<a href="http://localhost:8000/survey" target="_blank">http://localhost:8000/survey</a>) est une route <span class="html">GET</span>, et qu'elle ne requiert pas de paramètre : on pourra récupérer les données en faisant <span class="html">fetch('http://localhost:8000/survey')</span>.</p>
+                    <p>Ici, on a donc uniquement besoin d'appeler l'API à la première initialisation de notre composant, et on <span class="em">précise un tableau de dépendances vide</span> dans notre fichier :</p>
+<pre><code>useEffect(() =&gt; {
+    fetch('http://localhost:8000/survey')
+        .then((response) =&gt; response.json())
+        .then(({ surveyData }) =&gt; console.log(surveyData))
+        .catch((error) =&gt; console.log(error))
+}, [])</code></pre>
+                    <p>Et voilà : on a bien ce qu'on voulait  !</p>
+                    <figure>
+                        <img src="../images/donnees_questionnaire_React.png" alt="">
+                        <figcaption>Les données de notre questionnaire arrivent dans la console.</figcaption>
+                    </figure>
+                    <p>Ici, nous avons utilisé des <span class="html">Promises</span>. Une autre syntaxe aurait été possible avec des <span class="html">async</span> / <span class="html">await</span>. Mais attention, il y a une petite subtilité avec <span class="html">useEffect</span>.</p>
+                    <p>Bon, ce n'est pas tout d'afficher le retour de notre API dans la console : on veut que ce soit visible dans notre application !</p>
+                    <p>Pour cela, nous allons <span class="em">utiliser le state</span>. À l'aide de <span class="html">useState</span>, on crée donc :</p>
+<pre><code>const [questions, setQuestions] = useState({})</code></pre>
+                    <p><span class="html">questions</span> va nous permettre de <span class="em">stocker l'objet qui a été retourné par l'API</span>. À partir de là, on peut exploiter <span class="html">questions</span> assez simplement en appelant : <span class="html">setQuestions(surveyData)</span>.</p>
+                    <p>Ici, vous avez pu voir dans votre console que <span class="html">surveyData</span> est un objet ayant pour clé des nombres. C'est très pratique pour s'assurer que les questions sont toujours ordonnées, et on peut tout simplement <span class="em">accéder à une question</span> avec :</p>
+<pre><code>surveyData[questionNumber]</code></pre>
+                    <p>De la même manière, pour savoir s'il faut mettre un lien vers le numéro de question suivant, ou bien un lien vers les résultats, vous pouvez tout simplement <span class="em">vérifier ce que donne l'affirmation</span> :</p>
+<pre><code>surveyData[questionNumberInt + 1] ?</code></pre>
+                    <p>Ce qui nous donne le code suivant :</p>
+<pre><code>function Survey() {
+    const { questionNumber } = useParams()
+    const questionNumberInt = parseInt(questionNumber)
+    const prevQuestionNumber = questionNumberInt === 1 ? 1 : questionNumberInt - 1
+    const nextQuestionNumber = questionNumberInt + 1
+    const [surveyData, setSurveyData] = useState({})
+
+    useEffect(() =&gt; {
+        setDataLoading(true)
+        fetch('http://localhost:8000/survey')
+            .then((response) =&gt; response.json())
+            .then(({ surveyData }) =&gt; console.log(surveyData))
+            .catch((error) =&gt; console.log(error))
+    }, [])
+
+    return (
+        &lt;SurveyContainer&gt;
+            &lt;QuestionTitke&gt;Question {questionNumber}&lt;/questionNumber&gt;
+            &lt;QuestionContent&gt;{surveyData[questionNumber]}&lt;/QuestionContent&gt;
+            &lt;LinkWrapper&gt;
+                &lt;Link to={`/survey/${prevQuestionNumber}`}&gt;Précédent&lt;/Précédent&lt;/Link&gt;
+                {surveyData[questionNumberInt + 1] ? (
+                    &lt;Link to={`/survey/${nextQuestionNumber}`}&gt;Suivant&lt;/Link&gt;
+                ) : (
+                    &lt;Link to="/results"&gt;Résultats&lt;/Link&gt;
+                )}
+            &lt;/LinkWrapper&gt;
+        &lt;SurveyContainer&gt;
+    )
+}
+
+export default Survey</code></pre>
+                    <h3>Créez un state loading :</h3>
+                    <p>C'est pas mal tout ça, n'est-ce pas ? Notre question s'affiche bien :</p>
+                    <figure>
+                        <img src="../images/state_loading_React.png" alt="">
+                        <figcaption>Votre application affiche bien la question souhaitée.</figcaption>
+                    </figure>
+                    <p>Mais ça vient d'où ce petit moment de "blanc" ? Comment fait-on pour que ça ressemble plus aux sites professionnels ? Eh bien, ça correspond tout simple au temps entre lequel lequel le composant est <span class="em">render</span> (généré) et celui où leuel les données sont chargées. Effectivement, d'un point de vue UI (interface utilisateur), ce n'est pas idéal : l'utilisateur ne comprend pas que les données sont en train d'être chargées, et peut alors penser qu'uk y a un problème sur l'application.</p>
+                    <p>Une pratique très répandue consiste à mettre un petit <span class="em">loader</span> pour <span class="em">signifier que les données vont bientôt s'afficher</span>. On pourrait mettre un simple texte "Chargement...", mais bon, on sait manier le CSS : autant s'amuser avec, non ?</p>
+                    <p>Je vous propose de <span class="em">créer un simple <span class="html">Loader</span> en CSS</span>, directement dans le fichier <span class="html">utils.Atoms.jsx</span>. Pour cela, on a également besoin d'importer <span class="html">keyframes</span> depuis la bibliothèque <span class="html">styled-components</span>. Ce qui nous donne :</p>
                     
                 </article>
             <!-- fin de section -->
