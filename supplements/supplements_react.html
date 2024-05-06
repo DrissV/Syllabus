@@ -76,6 +76,7 @@
                         <li><a href="#styled_components">Styled components</a></li>
                         <li><a href="#useState_useEffect_calls_API">useState et useEffect pour effectuer des calls API</a></li>
                         <li><a href="#useContext">useContext</a></li>
+                        <li><a href="#hooks">Hooks</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -2420,7 +2421,160 @@ export default Footer</code></pre>
         &lt;/ThemeContext.Provider&gt;
     )
 }</code></pre>
-                    <p>On a bien crée un composant qui nous permet de wrapper notre composant parent avec <span class="html">Provider</span> de thème. Le state de <span class="html">theme</span> et sa fonction pour le modifier, <span class="html">setTheme</span>, sont passés dans les <span class="html">values</span>. Ainsi, tous les composants enfants qui se retrouvent englobés par le <span class="html">Provvider</span> vont pouvoir accéder à <span class="html">theme</span> et <span class="html">setTheme</span>.</p>
+                    <p>On a bien créé un composant qui nous permet de wrapper notre composant parent avec <span class="html">Provider</span> de thème. Le state de <span class="html">theme</span> et sa fonction pour le modifier, <span class="html">setTheme</span>, sont passés dans les <span class="html">values</span>. Ainsi, tous les composants enfants qui se retrouvent englobés par le <span class="html">Provvider</span> vont pouvoir accéder à <span class="html">theme</span> et <span class="html">setTheme</span>.</p>
+                    <p>C'est le moment d'<span class="em">utiliser notre <span class="html">Provider</span> au plus haut niveau</span> où les composants devront pouvoir accéder au Contexte. On va donc le mettre dans <span class="html">index.jsx</span> à la racine de <span class="html">/src</span>. On a donc maintenant :</p>
+<pre><code>ReactDOM.render(
+    &lt;React.StrictMode&gt;
+        &lt;Router&gt;
+            &lt;ThemeProvider&gt;
+                &lt;GlobalStyle /&gt;
+                &lt;Header /&gt;
+                &lt;Routes&gt;
+                    &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+                    &lt;Route path="/survey+:questionNumber" element={&lt;Survey /&gt;} /&gt;
+                    &lt;Route path="/results" element={&lt;Results /&gt;} /&gt;
+                    &lt;Route path="/freelances" element={&lt;Freelances /&gt;} /&gt;
+                    &lt;Route path="*" element={&lt;Error /&gt;} /&gt;
+                &lt;/Routes&gt;
+            &lt;/ThemeProvider&gt;
+        &lt;/Router&gt;
+    &lt;/React.StrictMode&gt;,
+    document.getElementById('root')
+);</code></pre>
+                    <p>Ça veut dire qu'on doit forcément mettre notre <span class="html">Provider</span> au niveau de notre <span class="html">router</span> ? Eh bien... Pas nécessairement ! Comme son nom l'indique, le Contexte nous sert à "contextualiser" nos datas. Cetaines parties de l'application ont besoin d'être au courant d'une partie du state, alors qu'il n'y en a pas du tout besoin ailleurs. <span class="em">À vous de voir quelle utilisation est la plus adaptée.</span></p>
+                    <h4>Accédez à vos données avec useContext :</h4>
+                    <p><span class="html">useContext</span> est un hook qui permet de se "brancher" depuis un composant enfant qui a été wrappé par un <span class="html">Provider</span>, et donc d'<span class="em">accéder simplement au state partagé</span>.</p>
+                    <p>Mettons-le en pratique dès maintenant.</p>
+                    <p>On va d'abord utiliser le <span class="html">theme</span> pour effectuer une modification très visible : <span class="em">modifier le <span class="html">background-color</span>  de toute notre application</span>.</p>
+                    <p>Auparavant, on avait notre <span class="html">GlobalStyle</span> dans notre fichier <span class="html">index.jsx</span> à la racine de <span class="html">/src</span>, mais on va le déplacer dans un fichier à part dans <span class="html">/utils/style/GlobalStyle.jsx</span>. On va également modier GlobalStyle en composant fonction qui va nous permettre d'y utiliser des hooks (alors qu'avant c'était un simple style component). On a donc :</p>
+<pre><code>function GlobalStyle() {
+    return &lt;StyledGlobalStyle /&gt;
+}</code></pre>
+                    <p>Puis on importe <span class="html">ThemeContext</span> et <span class="html">useContext</span> avec :</p>
+<pre><code>import { useContext } from 'react'
+import { ThemeContext } from '../context/ThemeProvider'</code></pre>
+                    <p>Ce qui nous permet de <span class="em">récupérer le thème</span> :</p>
+<pre><code>function GlobalStyle() {
+    const { theme } = useContext(ThemeContext)
+
+    return &lt;StyledGlobalStyle isDarkMode={theme === 'dark'} /&gt;
+}</code></pre>
+                    <p>... et donc de <span class="em">passer une prop <span class="html">isDarkMode</span></span> en fonction du thème activé.</p>
+                    <p>Dans notre <span class="html">Style</span>, on l'utilise ainsi :</p>
+<pre><code>const StyledGlobalStyle = createGlobalStyle`
+    * {
+        font-family: 'Trebuchet MS', Helvetica, sans-serif;
+    }
+
+    body {
+        /* Ici cette syntaxe revient au même que
+        background-color: ${({ props}) =&gt;
+        props.isDarkMode ? '#2F241' : 'white'};
+        */
+        background-color: ${({ isDarkMode }) =&gt; (isDarkMode ? 'black' : 'white')};
+        margin: 0;
+    }
+`</code></pre>
+                    <p>Et c'est parti pour la dernière pièce de notre puzzle : <span class="em">l'implémentation du bouton permettant de changer de mode</span>.</p>
+                    <p>On retourne donc dans notre <span class="html">Footer/index.jsx</span>. De la même manière que ce qu'on a fait juste avant, on importe <span class="html">ThemeContext</span> et <span class="html">useContext</span>.</p>
+                    <p>Et on récupère notre action <span class="html">toggleTheme</span> et <span class="html">theme</span> avec :</p>
+<pre><code>const { toggleTheme, theme } = useContext(ThemeContext)</code></pre>
+                    <p>... qu'on peut utiliser juste en dessous :</p>
+<pre><code>function Footer() {
+    const { toggleTheme, theme } = useContext(ThemeContext)
+    return (
+        &lt;FooterContainer&gt;
+            &lt;NightModeButton onClick={() =&gt; toggleTheme()}&gt;
+                Changer de mode : {theme === 'light' ? '☀️' : '🌙'}
+            &lt;/NightModeButton&gt;
+        &lt;/FooterContainer&gt;
+    )
+}</code></pre>
+                    <p>Et si on teste...</p>
+                    <figure>
+                        <img src="../images/useContext_React_3.png" alt="">
+                        <figcaption>La couleur du backgrouynd change bien au clic sur le bouton.</figcaption>
+                    </figure>
+                    <p>Bravo à vous : vous venez de créer un Contexte et vous l'avez utilisé avec <span class="html">useContext</span> pour créer un dark mode dans votre application.</p>
+                    <p>Comme je vous le disais, vous êtes un chanceux : avant les hooks, le Contexte était plus compliqué à mettre en oeuvre. Je vous fais une démonstration juste en dessous de comment ça se passait.</p>
+<pre><code>// import { useContext } from 'react'
+import { ThemeContext } from '../../utils/context'
+import styled from 'styled-components'
+import colors from '../../utils/style/colors'
+
+const FooterContainer = styled.footer`
+    display: flex;
+    flex-direction: row;
+    align-item: center;
+    justify-content: center;
+    padding-top: 60px;
+`
+
+const NightModeButton = styled.button`
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    color: ${colors.secondary};
+`
+
+function Footer() {
+    // const { toggleTheme, theme } = useContext(ThemeContext)
+
+    return (
+        &lt;ThemeContext.Consumer&gt;
+            {({toggleTheme, theme}) =&gt; (
+                &lt;FooterContainer&gt;
+                    &lt;NightModeButton onClick={() =&gt; toggleTheme()}&gt;
+                        Changer de mode : {theme === 'light' ? '☀️' : '🌙'}
+                    &lt;/NightModeButton&gt;
+                &lt;/FooterContainer&gt;
+            )}
+        &lt;/ThemeContext.Consumer&gt;
+    )
+}
+
+export defaut Footer</code></pre>
+                </article>
+                <article>
+                    <h2 id="hooks">Allez plus loin avec les hooks :</h2>
+                    <p>Précédemment, vous avez découvert les hooks avec <span class="html">useState</span> et <span class="html">useEffect</span> et, ensemble, nous avons appris à les utiliser pour faire des calls API. Vous avez également découvert le Contexte et comment y accéder simplement avec <span class="html">useContext</span> : vous commencez à avoir quelques cartes en main pour utiliser les hooks dans vos applications React.</p>
+                    <p>Et si je vous disais que vous pouvez créer vos propres hooks ?</p>
+                    <h3>Créez vos propres hooks pour simplifier votre code :</h3>
+                    <p>Je ne sais pas ce que ça évoque pour vous, mais moi la prmeière fois qu'on m'a dit que je pouvais créer mes propres hooks, ça m'a un peu fait paniquer. Je m'imaginais devoir travailler sur la codebase de React, et devoir créer un de ces fichiers immenses pour pouvoir faire tourner un hook "custom".</p>
+                    <p>Détrompez-vous, la création d'un hook "custom" est <span class="em">toute simple</span> : il s'agit juste d'une fonction qui commence par "use", qui extrait de la logique réutilisable et qui peut utiliser d'autres hooks.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information">
+                        <p>Comme pour tout le reste, créer des hooks n'est pas obligatoire, mais cela peut vous simplifier la vie ! Cette approche vous aidera à mettre en application le principe "DRY" ("don't reapeat yourself" ou "ne vous répétez pas"), avec des bouts de logique qui deviennent réutilisables à travers votre application.</p>
+                    </div>
+                    <p>Mettons en application ce que nous avons vu dès maintenant.</p>
+                    <h4>Créez un hook pour vos calls API :</h4>
+                    <p>Précédemment, vous avez appelé l'API du projet Shiny pour récupérer les profils des freelances, ainsi que les questions de notre questionnaire.</p>
+                    <p>Si vous regardez votre code d'un peu plus près, vous aussi vous voyez <span class="em">une certaine répétition</span> ? C'est normal. On va donc essayer de mutualiser tout ça avec un hook "personnalisé" !</p>
+                    <p>Pour cela, on crée dans <span class="html">/utils</span> un nouveau dossier qu'on appelle <span class="html">/hooks</span> et dans lequel on crée un fichier <span class="html">index.jsx</span>.</p>
+                    <p>On va <span class="em">créer notre hook</span> qu'on base cette fois-ci sur la syntaxe <span class="html">async</span> / <span class="html">await</span> :</p>
+<pre><code>import { useState, useEffect } from 'react'
+
+export function useFetch(url) {
+    const [data, setData] = useState({})
+    const [isLoading, setLoading] = useState(true)
+
+    useEffect(() =&gt; {
+        if (!url) return
+
+        async function fetchData() {
+            const response = await fetch(url)
+            const data = await response.json()
+            setData(data)
+            setLoading(false)
+        }
+        
+        setLoading(true)
+        fetchData()
+    }, [url])
+
+    return { isLoading, data }
+}</code></pre>
+                    <p>Le code est plutôt explicite, n'est-ce pas ? Pour notre nouveau hook, <span class="html">useFetch</span>, on lui passe en paramlètre l'URL de l'API qu'on veut appeler. Il possède un state interne qui lui permet de stocker la data, et de savoir si la data est en train de charger avec <span class="html">isLoading</span>.</p>
                     
                 </article>
             <!-- fin de section -->
