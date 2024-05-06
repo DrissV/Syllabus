@@ -2543,7 +2543,7 @@ export defaut Footer</code></pre>
                     <p>Je ne sais pas ce que ça évoque pour vous, mais moi la prmeière fois qu'on m'a dit que je pouvais créer mes propres hooks, ça m'a un peu fait paniquer. Je m'imaginais devoir travailler sur la codebase de React, et devoir créer un de ces fichiers immenses pour pouvoir faire tourner un hook "custom".</p>
                     <p>Détrompez-vous, la création d'un hook "custom" est <span class="em">toute simple</span> : il s'agit juste d'une fonction qui commence par "use", qui extrait de la logique réutilisable et qui peut utiliser d'autres hooks.</p>
                     <div class="information">
-                        <img src="../images/information.png" alt="Information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Comme pour tout le reste, créer des hooks n'est pas obligatoire, mais cela peut vous simplifier la vie ! Cette approche vous aidera à mettre en application le principe "DRY" ("don't reapeat yourself" ou "ne vous répétez pas"), avec des bouts de logique qui deviennent réutilisables à travers votre application.</p>
                     </div>
                     <p>Mettons en application ce que nous avons vu dès maintenant.</p>
@@ -2575,7 +2575,147 @@ export function useFetch(url) {
     return { isLoading, data }
 }</code></pre>
                     <p>Le code est plutôt explicite, n'est-ce pas ? Pour notre nouveau hook, <span class="html">useFetch</span>, on lui passe en paramlètre l'URL de l'API qu'on veut appeler. Il possède un state interne qui lui permet de stocker la data, et de savoir si la data est en train de charger avec <span class="html">isLoading</span>.</p>
-                    
+                    <p>Dans <span class="html">useEffect</span>, le hook fait un <span class="html">return</span> vide si le paramètre de l'URL est vide, et commence par mettre <span class="html">isLoading</span> à <span class="html">true</span>. Il déclare la fonction asynchrone <span class="html">fetchData</span> qui permet de :</p>
+                    <ul>
+                        <li>
+                            <p>appeler <span class="html">fetch</span>;</p>
+                        </li>
+                        <li>
+                            <p>parcer ce qui est retourné avec <span class="html">data.json()</span>;</p>
+                        </li>
+                        <li>
+                            <p>et changer l'état de <span class="html">isLoading</span>.</p>
+                        </li>
+                    </ul>
+                    <p><span class="html">url</span> fait partie du tableau de dépendances du <span class="html">useEffect</span>, ce qui permettra de redéclencher le call en cas de changement d'URL passée en paramètre. Puis on appelle notre fonction <span class="html">fetchData</span>.</p>
+                    <p>Pour <span class="em">utiliser notre nouveau hook</span>, modifions <span class="html">/Survey/index.jsx</span>. On commence par importer notre hook avec :</p>
+<pre><code>import { useFetch } from '../utils/hooks'</code></pre>
+                    <p>Puis on <span class="em">récupère notre <span class="html">data</span></span> avec :</p>
+<pre><code>const { data, isLoading } = useFetch(`http://localhost:8000/survey`)
+
+const { surveyData } = data</code></pre>
+                    <p>Je vous invite aussi à <span class="em">supprimer tout le contenu</span> du <span class="html">useEffect</span> qui permettait d'effectuer le <span class="html">fetch</span>. J'adore supprimer du code inutile : c'est super satisfaisant, non ?</p>
+                    <p>On n'oublie pas de remplacer <span class="html">isDataLoading</span> par <span class="html">isLoading</span> qui sera plus générique ici, et de remplacer <span class="html">surveyData</span> par <span class="html">data</span>.</p>
+                    <p>Est-ce que ça marche toujours ? ... Oh, on a une erreur qui empêche le code de tourner !</p>
+                    <p>Pas de panique, c'est normal ! Pour faire la navigation, on a accédé au contenu de notre objet de questions en faisant <span class="html">data[questionNumber]</span>. Sauf qu'à l'initialisation, <span class="html">data</span> est un objet vide... Ce qui veut dire qu'avec :</p>
+<pre><code>const { surveyData } = data</code></pre>
+                    <p><span class="html">surveyData</span> est undefined. JavaScript provoque donc une erreur pour <span class="html">data[questionNumber]</span>. Une des manières déviter l'erreur est donc de vérifier que <span class="html">surveyData</span> est défini avant de l'utiliser dans le composant :</p>
+<pre><code>&lt;QuestionContent&gt;
+
+    {surveyData && surveyData[questionNumber]}
+
+&lt;/QuestionContent&gt;</code></pre>
+                    <p>Et voilà, notre page fonctionne à nouveau comme avant, en utilisant notre hook <span class="html">useFetch</span>, ce qui a permis de supprimer pas mal de code répétitif !</p>
+                    <h4>Ajoutez une grestion d'erreur :</h4>
+                    <p>Mais que se passe-t-il quand l'API nous renvoie une erreur ? Notre application ne se comportera pas comme prévu, et l'utilisateur n'en sera même pas informé. Je vous propose d'intégrer une gestion d'erreur dans notre hook <span class="html">useFetch</span> afin d'afficher à l'écran qu'il y a eu un problème.</p>
+                    <p>Pour cela, dans <span class="html">utils/hooks/index.jsx</span>, on peut <span class="em">créer un state pour <span class="html">error</span></span> avec :</p>
+<pre><code>const [error, setError] = useState(false)</code></pre>
+                    <p>Puis, on <span class="em">ajoute un <span class="html">try</span> et un <span class="html">catch</span></span> à notre cher hook <span class="html">useFetch</span> :</p>
+<pre><code>const function useFetch(url) {
+    const [data, setData] = useState({})
+    const [isLoading, setLoading] = useState(true)
+    const [error, setError] = useState(false)
+
+    useEffect(() =&gt; {
+        if (!url) return
+        setLoading(true)
+
+        async function fetchData() {
+            try {
+                const response = await fetch(url)
+                const data = await response.json()
+                setData(data)
+            } catch (err) {
+                console.log(err)
+                setError(true)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchData()
+    }, [url])
+
+    return { isLoading, data, error }
+}</code></pre>
+                    <p>Ce qui nous permet de passer <span class="html">error</span> à <span class="html">true</span> lorsqu'un problème est rencontré.</p>
+                    <p>De la même manière, dans <span class="html">Survey.jsx</span>, on <span class="em">récupère maintenant <span class="html">error</span></span> :</p>
+<pre><code>const { data, isLoading, error } = useFetch(`http://localhost:8000/survey`)</code></pre>
+                    <p>Et on peut tout simplement <span class="em">ajouter au-dessous du <span class="html">return</span></span> :</p>
+<pre><code>if (error) {
+    return &lt;span&gt;Il y a un problème&lt;/span&gt;
+}</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Si vous voulez tester votre nouvelle gestion d'erreur, vous pouvez tout simplement stopper l'API et voir ce qui se passe... !</p>
+                    </div>
+                    <p>Et voilà, vous avez même géré les erreurs d'appel API !</p>
+                    <p>Nous allons en profiter pour utiliser <span class="html">useFetch</span> pour envoyer les réponses de l'utilisateur, et donc récupérer les résultats de notre API depuis la page <span class="html">/results</span>.</p>
+<pre><code>function formatQueryParams(answers) {
+    const answersNumbers = Object.keys(answers)
+
+    return answersNumbers.reduce((previousParams, answerNumber, index) =&gt; {
+        const isFirstAnswer = index === 0
+        const separator = isFirstAnswer ? '' : '&'
+        return `${previousParams}${separator}a${answerNumber}=${answers[answerNumber]}`
+    }, '')
+}
+
+function Results() {
+    const { theme } = useContext(ThemeContext)
+    const { answers } = useContext(SurveyContext)
+    const queryParams = formatQueryParams(answers)
+
+    const { data, isLoading, error } = useFetch(`http://localhost:8000/results?${queryParams}`)
+
+    console.log('===== data =====', data)
+
+    if (error) {
+        return &lt;span&gt;Il y a un problème&lt;/span&gt;
+    }
+
+    const resultData = data?.resultsData
+
+    return isLoading ? (
+        &lt;LoaderWrapper&gt;
+            &lt;Loader /&gt;
+        &lt;/LoaderWrapper&gt;
+    ) : (
+        &lt;ResultsContainer theme={theme}&gt;
+            &lt;ResultTitle thme={theme}&gt;
+            ...
+        &lt;/ResultsContainer&gt;
+    )
+}</code></pre>
+                    <p>C'est pas mal ce <span class="html">useFetch</span>, je vais pouvoir l'implémenter dans toutes les bases de code en production ? Le hook <span class="html">useFetch</span> que nous avons codé ici est très pratique pour éviter de nous répéter... et pour pratiquer la création de hooks personnalisés. Mais dans les faits, ce code est un peu trop basique pour être utilisé en production. À la place, vous pouvez utiliser <a href="https://tanstack.com/query/latest/docs/react/overview" target="_blank">un outil bien plus robuste tel que <span class="html">TanStack Query</span> pour React</a>, qui vous permet d'utiliser des hooks pour faire vos requêtes et les mettre en cache dans vos applications.</p>
+                    <h4>Maîtrisez les hooks :</h4>
+                    <h5>Intégrez les règles des hooks :</h5>
+                    <p>Je le rappelle ici : les hooks ont leurs propres règles d'utilisation.</p>
+                    <ul>
+                        <li>
+                            <p>Les hooks sont uniquement accessibles dans un <span class="em">composant fonction React</span>. Donc ce n'est pas possible d'en utiliser dans un composant classe ou bien dans une simple fonction JavaScript.</p>
+                        </li>
+                        <li>
+                            <p>Appelez les hooks au niveau racine de vos composants.</p>
+                        </li>
+                        <li>
+                            <p>Attention au nommage de vos hooks personnalisés : même s'il ne s'agit pas vraiment d'une règle obligatoire, mais d'une convention, vos hooks personnalisés doivent commencer par <span class="html">use</span> pour que l'on sache en un coup d'oeil qu'il s'agit d'un hook.</p>
+                        </li>
+                    </ul>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Effectivement, il existe d'autres hooks mis à disposition par React, dont vous pouvez <a href="https://fr.reactjs.org/docs/hooks-reference.html" target="_blank">trouver la liste sur la documentation</a>.</p>
+                    </div>
+                    <p>Pour l'instant, voici quelques hooks que vous pourriez être susceptible de croiser dans différentes codebases :</p>
+                    <dl>
+                        <dt>useRef</dt>
+                        <dd>je vous laisse regarder par vous-même la documentation si ça vous intéresse, mais même s'il existe plusieurs utilisations de <span class="html">useRef</span>, ce hook est avant tout utilisé pour interagir avec des éléments du DOM.</dd>
+                        <dt>useReducer</dt>
+                        <dd><span class="html">useReducer</span> permet de mieux gérer votre state lorsqu'il comporte de nombreuses propriétés qui doivent être modifiées régulièrement.</dd>
+                        <dt>useMemo et useCallback</dt>
+                        <dd>Ces deux hooks nous permettent d'éviter de refaire des calculs coûteux pour nos performances. Vous pouvez préciser des valeurs pour lesquelles il faudra refaire les calculs uniquement si l'un des paramètres change, grâce à <span class="html">useMemo</span> et <span class="html">useCallback</span>.</dd>
+                    </dl>
+                    <p>Et il en existe encore d'autres... À l'heure où ce cours a été écrit, nous en sommes à la version 17 de React. Mais nous ne sommes pas à l'abri que d'autres hooks soient créés entretemps.</p>
                 </article>
             <!-- fin de section -->
             </section>
