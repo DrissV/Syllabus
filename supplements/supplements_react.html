@@ -3042,6 +3042,76 @@ describe('The home component', () =&gt; {
                     <p>La leçon à retenir est donc que pour tester un hook, le meilleur moyen est de <span class="em">tester un composant qui utilise ce hook</span>.</p>
                     <h3>Allez plus loin dans vos tests :</h3>
                     <p>Qu'il s'agisse de Jest ou de React Testing Library, ces outils sont très puissants : ils permettent de simuler à peu près ce que l'on veut.</p>
+                    <p>Dans notre application Shiny, la majeure partie de notre contenu vient des données que l'on récupère depuis une API (comme on aurait récupéré notre contenu depuis un CMS). Les calls API ne dérogent pas à la règle : les datas peuvent <span class="em">être simulées dans nos tests</span> et on appelle ça des <span class="em">mocks</span> (des simulations) ! Nous allons donc pouvoir tester nos autres composants.</p>
+                    <h4>Testez des composants qui font des calls API :</h4>
+                    <h5>Installez msw pour faire vos simulations de calls API :</h5>
+                    <p>Pour pouvoir simuler nos calls API, un peu de configuration s'impose à nous. Si, comme moi, vous n'aimez pas la config, ne vous inquiétez pas : je vous promets que ça ne durera pas trop longtemps !</p>
+                    <p>Pour faire nos mocks, React Testing Library recommande d'utiliser une bibliothèqye externe : <a href="https://github.com/mswjs/msw" target="_blank">MSW (pour Mock Service Worker), hébergée sur GitHub</a>. On commence donc par <span class="em">installer la bibliothèque</span> :</p>
+<pre><code>yarn add msw --dev</code></pre>
+                    <p>Pour faire simple, la biliothèque <span class="html">msw</span> va permettre d'<span class="em">intercepter les calls API que font vos composants lors des tests</span>. Et fonc, elle permet de <span class="em">simuler ce qui aurait été retourné</span>, sans même que votre application ait conscience de quoi que ce soit.</p>
+                    <h5>Créez vos mocks :</h5>
+                    <p>Pour cela, dans chacun de nos fichiers de test, on va devoir configurer un "server", qui va s'occuper de l'interception des calls API. Lançonnous dès maintenant dans le <span class="em">test du composant de la page</span> <span class="html">Freelances/index.jsx</span>. On crée donc un fichier dans <span class="html">/pages/Freelances</span>, qu'on appelle <span class="html">index.test.js</span>.</p>
+                    <p>On va avoir besoin de <span class="html">rest</span> depuis <span class="html">msw</span>. On fait donc :</p>
+<pre><code>import { rest } from 'msw'
+import { setupServer } from 'msw/node'
+import { render, waitFor, screen } from '@testing-library/react'
+
+import Freelances from './'
+
+const server = setupServer(
+    // On précidr ivi l'url qu'il faudra "intercepter"
+    rest.get('http://localhost:8000/freelances', (req, res, ctx) =&gt; {
+        // Là on va pouvoir passer les datas mockées dans ce qui est retourné en json
+        return res(ctx.json({}))
+    })
+)
+
+// Active la simulation d'API avant les tests depuis server
+beforeAll(() =&gt;server.listen())
+// Réinitialise tout ce qu'on aurait pu ajouter en termes de durée pour nos tests avant chaque test
+afterEach(() =&gt; server.resetHandlers())
+// Ferme la simulation d'API une fois que les tests sont finis
+afterAll(() =&gt; server.close())</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ici, <span class="html">beforeAll()</span>, <span class="html">beforeEach()</span> et <span class="html">afterEach</span> n'ont pas besoin d'être importés au même titre que test et describe : ils font partie de l'environnement global de Jest. Vous ne trouverez égalemnt dans <a href="https://jestjs.io/docs/api" target="_blank">la documentation des <span class="html">Globals</span> de Jest</a>. Comme leur nom l'indique :</p>
+                        <ul>
+                            <li>
+                                <p><span class="html">beforeAll</span> est exécuté avant les tests;</p>
+                            </li>
+                            <li>
+                                <p><span class="html">beforeEach</span> est exécuté avant chaque test;</p>
+                            </li>
+                            <li>
+                                <p>et <span class="html">afterEach</span> est exécuté après chacun des tests.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <p>Et voilà, c'est tout pour la configuration !</p>
+                    <p>Mais... elle est où la data qu'on renvoie ?! Très bien vu. Je ne l'avais pas encore mise. Il nous faut un <span class="em">format qui corresponde à ce que l'API nous renvoie</span>. So vpis faites un <span class="html">console.log</span> de ce que <a href="http://localhost:8000/freelances" target="_blank">http://localhost:8000/freelances</a> vous retourne, vous verre que c'est une liste d'objets. On crée donc une liste d'objets pour notre mock :</p>
+<pre><code>const freelancersMockedData = [
+    {
+        name: 'Harry Potter',
+        job: 'Magicien fontend',
+        picture: '',
+    },
+    {
+        name: 'Hermione Granger',
+        job: 'Magicienne fullstack',
+        picture: '',
+    },
+]</code></pre>
+                    <p>... qu'on <span class="em">retourne dans notre mock</span> :</p>
+<pre><code>const server = setupServer(
+    // On précidr ivi l'url qu'il faudra "intercepter"
+    rest.get('http://localhost:8000/freelances', (req, res, ctx) =&gt; {
+        // Là on va pouvoir passer les datas mockées dans ce qui est retourné en json
+        return res(ctx.json({ freelancersList: freelancersMockedData }))
+    })
+)</code></pre>
+                    <p>Tout est prêt ! C'est le moment d'utiliser tout ça.</p>
+                    <h5>Exploitez vos mocks :</h5>
+                    <p>Notre configuration est prête. On va pouvoir l'utiliser pour tester <span class="html">pages/Freelances/index.jsx</span>.</p>
                     
                 </article>
             <!-- fin de section -->
