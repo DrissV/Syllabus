@@ -2874,7 +2874,7 @@ describe('La fonction formatJobList', () =&gt; {
                     <h3>Assurez-vous d'avoir le test coverage idéal :</h3>
                     <p>Lorsqu'on commence à avoir des tests, il devient possible de mesurer la <span class="em">couverture de tests (code coverage)</span>, c'est-à-dire le pourcentage de notre code - à l'expression près ! - qui est couvert par les tests. On peut alors repérer les parties non testées, ou insuffisamment testées, et savoir ainsi où concentrer nos prochains efforts d'écriture de test.</p>
                     <p>Lançons dès maintenant la commande nous permettant de vérifier notre code coverage.</p>
-                    <p>Pour cela, je fais <span class="html">yarn test --coverage</span>.</p>
+                    <p>Pour cela, je fais <span class="html">yarn test -- --coverage</span>.</p>
                     <figure>
                         <img src="../images/test_React_3.png" alt="">
                         <figcaption>Le test coverage s'affiche sous la forme d'un tableau dans le terminal.</figcaption>
@@ -2901,6 +2901,147 @@ describe('La fonction formatJobList', () =&gt; {
                     <p>Lançons-nous dès maintenant dans le test de nos composants avec React Testing Library... !</p>
                     <h3>Créez un test simple d'un composant :</h3>
                     <p>Mais... on n'a même pas installé la bibliothèque ? C'est normal, pas besoin d'installation ici puisque React Testing Library fait maintenant partie des outils istallés de base par Create React App. Il nous suffit juste d'importer ce dont on a besoin dans notre fichier de test.</p>
+                    <p>Nous allons commencer par <span class="em">tester notre composant <span class="html">Footer</span></span> qui permet de changer de thème. Dans <span class="html">/components/Footer</span>, on crée donc un fichier <span class="html">index.test.js</span>.</p>
+                    <p>Nous allons commencer tout d'abord nous <span class="em">assurer que <span class="html">Footer</span> render bien</span>, sans crasher. Pour cela, on importe <span class="html">Footer</span>, le <span class="html">render</span> de React Testing Library, et on utilise <span class="html">render</span> :</p>
+<pre><code>import Footer from './'
+import { render } from '@testing-library/react'
+
+describe('Footer', () =&gt; {
+    test('Should render without crash', async () =&gt; {
+        render(&lt;Footer /&gt;;)
+    })
+})</code></pre>
+                    <p>Si vous n'avez pas quitté le mode watch, vos tests se lancent automatiquement... Ou sinon, vous pouvez refaire <span class="html">yarn run test</span>. Et on a <span class="em">une erreur</span>...</p>
+<pre><code>TypeError: Cannot destructure property toggleTheme of '(0 , _react.useContext)(...)' as it is undefined.</code></pre>
+                    <p>Évidemment ! Notre composant fait partie d'un ensemble qui utilise le Contexte... Or, ici, notre composant n'est pas englobé par notre Provider de thème <span class="html">light</span> / <span class="html">dark</span>.</p>
+                    <p>Pas de panique, vous vous en doutez : React Testing Library nous permet de gérer ça. Il y a un moyen plus propre que nous verrons un peu plus tard, mais pour l'instant, contentons-nous de <span class="em">wrapper le composant <span class="html">Footer</span> avec <span class="html">ThemeProvider</span> directement dans notre test</span> :</p>
+<pre><code>import Footer from './'
+import { render } from '@testing-library/react'
+import { ThemeProvider } from '../../utils/context'
+
+describe('Footer', () =&gt; {
+    test('Should render without crashing', async () =&gt; {
+        render(
+            &lt;ThemeProvider&gt;
+                &lt;Footer /&gt;
+            &lt;/ThemeProvider&gt;
+        )
+    })
+})</code></pre>
+                    <p>Et bravo ! Ainsi le retour de notre test est <span class="em">tout vert</span>.</p>
+                    <p>Profitons-en pour aller un peu plus loin dans ce que l'on teste dans notre composant.</p>
+                    <h3>Testez les événements de vos composants :</h3>
+                    <p>Je vous ai déjà parlé du fait que la philosophie React Testing Library est de se mettre dans la peau de votre utilisateur.</p>
+                    <p>Alors comment faire pour tester que notre <span class="html">NightModeButton</span> fonctionne bien ? Ici, il n'est pas question de vérifier le state interne de notre Contexte. Au lieu de ça, <span class="em">regardons ce que l'utilisateur voit</span>.</p>
+                    <p>Le bouton affiche "☀️" lorsque nous sommes en mode jour et "🌙" pour le mode nuit. Il faut donc que l'on vérifie ce qui est affiché.</p>
+                    <p>On va donc récupérer le contenu de notre bouton, et comparer le texte affiché - allons-y !</p>
+                    <h4>Interagissez avec un élément :</h4>
+                    <p>La bibliothèque met à jour toute une série de <span class="em">sélecteurs</span> permettant d'<span class="em">accéder à un élément spécifique</span> (comme en JavaScript). N'hésitez pas à jeter un oeil à <a href="https://testing-library.com/docs/react-testing-library/cheatsheet" target="_blank">la documentation de React Testing Library (en anglais)</a> pour découvrir tous les sélecteurs auxquels vous avez accès.</p>
+                    <p>Vous pouvez sélectionner un élément <span class="em">selon son rôle, son label, son placeholder</span>, etc. Dans notre cas, notre <span class="html">Footer</span> ne contient qu'un seul bouton. On peut donc très simplement utiliser <span class="html">getByRole</span>.</p>
+                    <p>On va également avoir besoin de <span class="html">screen</span> qu'on importe avec <span class="html">render</span> :</p>
+<pre><code>import { render, screen } from '@testing-library/react'</code></pre>
+                    <p>C'est quoi encore ça, <span class="html">screen</span> ? Eh bien, <span class="html">screen</span> est en quelque sorte le <span class="html">body</span> qui contient notre composant, à partir duquel on va pouvoir utiliser nos sélecteurs.</p>
+                    <p>Pour <span class="em">accéder à notre bouton</span>, on a donc :</p>
+<pre><code>test('Change theme', async () =&gt; {
+    render(
+        &lt;ThemeProvider&gt;
+            &lt;Footer /&gt;
+        &lt;/ThemeProvider&gt;
+    )
+    const nightModeButton = screen.getByRole('button')
+})</code></pre>
+                    <p>Et à partir de là, les choses sérieuses commencent !</p>
+                    <p>Comme précédemment, on va <span class="em">comparer ce qui est attendu avec ce qui se passe vraiment</span>. Alors réfléchissons.</p>
+                    <p>Au départ, notre thème est récupéré. Sa valeur initiale est <span class="html">light</span> : le "☀️" est affiché. Lorsqu'on clique sur le bouton, la valeur du thème change (avec <span class="html">toggleTheme</span>), et le thème devient <span class="html">dark</span>. Le bouton affiche alors "🌙". Un bon test est de :</p>
+                    <ol>
+                        <li>
+                            <p>Vérifier la présence de "☀️".</p>
+                        </li>
+                        <li>
+                            <p>Cliquer sur le bouton.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier s'il y a bien "🌙".</p>
+                        </li>
+                    </ol>
+                    <p>Commençons donc par la première étape, <span class="em">la présence de "☀️"</span>.</p>
+<pre><code>test('Change theme', async () =&gt; {
+    render(
+        &lt;ThemeProvider&gt;
+            &lt;Footer /&gt;
+        &lt;/ThemeProvider&gt;
+    )
+    const nightModeButton = screen.getByRole('button')
+    expect(nightModeButton.textContent).toBe('Changer de mode : ☀️')
+})</code></pre>
+                    <p>En vérifiant notre terminal, ce test fonctionne bien.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>D'ailleurs, n'hésitez pas <span class="html">textContent</span> pour casser votre test et voir ce qui se passe.</p>
+                    </div>
+                    <p>On passe donc à l'étape 2, et on peut enchaîner directement avec l'étape 3 puisqu'elle ressemble fortement à l'étape 1.</p>
+                    <p>Pour <span class="em">interagir avec notre composant</span>, on a besoin de <span class="html">fireEvent</span> qui va nous permettre de <span class="em">déclencher des événements du DOM</span>, ici <span class="html">click</span>. On fait donc :</p>
+<pre><code>import { render, screen, fireEvent } from '@testing-library/react'
+import { ThemeProvider } from '../../utils/context'
+import Footer from './'
+
+test('Change theme', async () =&gt; {
+    render(
+        &lt;ThemeProvider&gt;
+            &lt;Footer /&gt;
+        &lt;/ThemeProvider&gt;
+    )
+    const nightModeButton = screen.getByRole('button')
+    expect(nightModeButton.textContent).toBe('Changer de mode : ☀️')
+    fireEvent.click(nightModeButton)
+    expect(nightModeButton.textContent).toBe('Changer de mode : 🌙')
+})</code></pre>
+                    <p>Bravo à vous ! Vous venez de tester avec succès votre composant <span class="html">Footer</span> !</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ici, nous avons utilisé le sélecteur <span class="html">getByRole</span>. Ce sélecteur peut dans beaucoup de cas vous permettre d'accéder à votre élément, d'autant que vous pouvez lui passer un paramètre pour cibler encore plus précisément un élément. Mais dans le cas où vous ne pouvez pas l'utiliser, et où aucun autre sélecteur ne vous permet de cibler votre élément, vous pouvez tout à fait passer <span class="html">data-testid</span> à votre composant et ensuite y accéder avec le sélecteur <span class="html">getByTestId</span>. Je vous laisse regarder <a href="https://testing-library.com/docs/queries/bytestid" target="_blank">la documentation de React Testing Library par vous-même (en anglais)</a>.</p>
+                    </div>
+                    <p>Voyons maintenant quelques méthodes supplémentaires pour faire des tests :</p>
+                    <p>On va vérifier dans <span class="html">Home/index.test.js</span> que le titre de la page s'affiche bien :</p>
+<pre><code>import { MemoryRouter } from 'react-router-dom'
+import { render, screen } from '@testing-library/react'
+import Home from './'
+import { ThemeProvider } from '../../utils/context'
+
+describe('The home component', () =&gt; {
+    it('should render title'; () =&gt; {
+        render(
+            &lt;MemoryRouter&gt;
+                &lt;ThemeProvider&gt;
+                    &lt;Home /&gt;
+                &lt;/ThemeProvider&gt;
+            &lt;/MemoryRouter&gt;
+        )
+        expect(
+            screen.getByRole('heading', {level: 2, 'text: Récupérez vos besoins, on s'occupe du reste, avec les meilleurs talents' })
+        ).toBeTruthy()
+    })
+})</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Le composant &lt;MemoryRouter&gt; utilisé précédemment, importé de React Router, nous permet d'inclure le router dans les tests. Vous pourrez trouver plus d'information dans <a href="https://reactrouter.com/en/main/router-components/memory-router" target="_blank">la documentation</a>.</p>
+                    </div>
+                    <h4>Testez vos hooks :</h4>
+                    <p>Précédemment, vous avez appris à créer vos propres hooks personnalisés. Mais <span class="em">comment tester ses hooks</span> ?</p>
+                    <p>Il pourrait être tentant de les tester indépendamment, mais la plupart du temps, ça ne correspond pas à la philosophie de React Testing Library. En effet, ces tests peuvent être considérés comme des "tests de détails d'implémentation", qui prennent du temps, pour ne pas être forcément très pertinents, précisément ce qu'on cherche à éviter.</p>
+                    <p>De toute manière, ici, vous avez <span class="em">déjà testé un de vos hooks</span> sans vous en rendre compte. Allez-y, lancez la commande <span class="html">yarn test -- --coverage</span> pour voir.</p>
+                    <figure>
+                        <img src="../images/React_Testing_Library_1.png" alt="">
+                        <figcaption>Voilà un screenshot du coverage.</figcaption>
+                    </figure>
+                    <p>Vous voyez que votre fichier <span class="html">utils/hooks/index.jsx</span> est effectivement testé (le pourcentage est bas, car le hook qui est dans le même fichier <span class="html">useFetch</span> n'a pas été testé). En effet, <span class="em">votre composant <span class="html">Footer</span> utilise le hook <span class="html">useTheme</span></span> pour accéder à <span class="html">theme</span> et <span class="html">toggleTheme</span>. Et la plupart du temps, c'est la méthode à privilégier.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Si vous souhaitez en savoir plus sur ce sujet, ou tout de même savoir comment tester des hooks, je vous conseille de lire <a href="https://kentcdodds.com/blog/how-to-test-custom-react-hooks" target="_blank">cet article (en anglais) du créateur de React Testing Library</a>.</p>
+                    </div>
+                    <p>La leçon à retenir est donc que pour tester un hook, le meilleur moyen est de <span class="em">tester un composant qui utilise ce hook</span>.</p>
+                    <h3>Allez plus loin dans vos tests :</h3>
+                    <p>Qu'il s'agisse de Jest ou de React Testing Library, ces outils sont très puissants : ils permettent de simuler à peu près ce que l'on veut.</p>
                     
                 </article>
             <!-- fin de section -->
