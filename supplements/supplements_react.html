@@ -78,6 +78,7 @@
                         <li><a href="#useContext">useContext</a></li>
                         <li><a href="#hooks">Hooks</a></li>
                         <li><a href="#tests_React_Jest">Tests dans React avec Jest</a></li>
+                        <li><a href="#React_Testing_Library">React Testing Library</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -2372,7 +2373,7 @@ export const Loader = styled.div`
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Comme son nom l'indique, le State Management cherche à <span class="em">optimiser la gestion du State</span>. Il existe des solutions dédiées telles que Redux (Redux nécessite d'installer une bibliothèque externe). Le Contexte permet de manipuler des variables liées au state. Mais il ne s'agit pas vraiment à proprement parler d'une solution de State Management. Contexte ne vient donc pas remplacer Redux, mais cohabite avec Redux dans la plupart des codebases. Comprendre le State Management est essentiem si vous souhaitez travailler sur une base de code en entreprise.</p>
                     </div>
-                    <p>Avant les hooks, l'utilisation du Contexte était plus laborieuse, mais réjouissez-vous : vous avez mainteant le hook <span class="html">useContext</span>.</p>
+                    <p>Avant les hooks, l'utilisation du Contexte était plus laborieuse, mais réjouissez-vous : vous avez maintenant le hook <span class="html">useContext</span>.</p>
                     <h3>Tirez profit du COntexte et de useContext :</h3>
                     <p>Maintenant que nous avons vu ce qu'était un OCntexte, utilisons-le dès maintenant dans notre application Shiny !</p>
                     <h4>Mettez en place un Contexte :</h4>
@@ -2406,7 +2407,7 @@ function Footer() {
 }
 
 export default Footer</code></pre>
-                    <p>Ce bouton dans notre Footer permettra de déclencher le dark mode de l'application. C'est mainteant le moment de <span class="em">créer notre Provider de Contexte pour le thème</span>. Pour cela, on va créer un dossier dédié au Contexte dans <span class="html">utils/context</span>. On crée un fichier <span class="html">index.jsx</span>.</p>
+                    <p>Ce bouton dans notre Footer permettra de déclencher le dark mode de l'application. C'est maintenant le moment de <span class="em">créer notre Provider de Contexte pour le thème</span>. Pour cela, on va créer un dossier dédié au Contexte dans <span class="html">utils/context</span>. On crée un fichier <span class="html">index.jsx</span>.</p>
                     <p>On commence par importer <span class="html">{ createContext }</span> depuis <span class="html">react</span>, et initialiser notre Contexte pour le thème avec :</p>
 <pre><code>export const ThemeContexte = createContext()</code></pre>
                     <p>Et on utilise ensuite <span class="html">ThemeContext</span> :</p>
@@ -2723,7 +2724,183 @@ function Results() {
                     <h3>Utilisez les tests automatisés dans React :</h3>
                     <p>Peu importe le langage dans lequel vous développez, les tests font partie intégrante du métier de développeur, même en frontend. Ils permettent de s'assurer de la <span class="em">fiabilité</span> de votre code.</p>
                     <h4>Comprenez l'utilité des tests :</h4>
-                    <p>rédiger des temps prend du <span class="em">temps</span> et de la <span class="em">réflexion</span>. Et pourtant, vous pouvez vous considérer comme chanceux : depuis quelques années apparaissent des outils de plus en plus simples à utiliser pour tester le JS. Encore une fois, quand vous codez seul sur une petite application, ça peut vite vous sembler pénible pour pas grand-chose. Mais essayez de vous projeter.</p>
+                    <p>Rédiger des temps prend du <span class="em">temps</span> et de la <span class="em">réflexion</span>. Et pourtant, vous pouvez vous considérer comme chanceux : depuis quelques années apparaissent des outils de plus en plus simples à utiliser pour tester le JS. Encore une fois, quand vous codez seul sur une petite application, ça peut vite vous sembler pénible pour pas grand-chose. Mais essayez de vous projeter.</p>
+                    <p>Lorsque vous travaillez sur une base de code qui comporte de <span class="em">nombreuses fonctionnalités</span>, et que vous <span class="em">codez à plusieurs</span>, il est si simple de faire une modification qui amène une <span class="em">régression</span> (introduction d'un bug en production). Surtout lorsque vous touchez à du code que vous n'avez pas écrit vous-même... et donc pour lequel vous ne saisissez pas toujours toutes les subtilités. Dans ces cas-là, c'est un vrai atout de savoir que vous pouvez <span class="em">compter sur les tests</span> pour vous signaler une erreur ! Vous <span class="em">évitez les régressions</span>, et vous <span class="em">gagnez en confiance sur vos modifications</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Un des meilleurs moyens pour s'obliger à recouvrir aux tests en équipe est d'intégrer une étape "test" directement lorsque vous pushez votre travail sur la plateforme où vous hévergez votre code versionné, typiquement sur <a href="https://github.com/" target="_blank">GitHub</a>. On appelle ça <span class="em">l'intégration continue</span>. Chaque commit sur une branche déclenche votre série de tests automatisés, et l'équipe ne merge pas le code si les tests ne fonctionnnent pas, ou bien si le code coverage n'est pas suffisant (nous verrons ce que c'est dans un très court instant).</p>
+                    </div>
+                    <p>Mais "test" est un tout petit mot qui recouvre une réalité bien plus grande : il existe de <span class="em">nombreux types de tests</span>.</p>
+                    <h4>Faites la différence entre les types de tests :</h4>
+                    <p>Il existe différents types de tests, les principaux sont <span class="em">les tests unitaires, d'intégration et end-to-end</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Une petite explication s'impose :</p>
+                        <ul>
+                            <li>
+                                <p>Les tests <span class="em">unitaires</span> vont venir tester une petite partie de votre code de manière totalement indépendante : une fonction, un bout de script... Ils sont les plus rapides à écrire, mais n'assurent pas forcément vos arrières.</p>
+                            </li>
+                            <li>
+                                <p>Les tests <span class="em">end-to-end</span>, quant à eux, permettent de tester l'intégralité d'une fonctionnalité de bout en bout. Ils sont beaucoup plus sécurisants, mais prennent donc beaucoup de temps à écrire.</p>
+                            </li>
+                            <li>
+                                <p>Viennent enfin les tests <span class="em">d'intégration</span> qui sont souvent considérés comme le juste milieu entre sécurité fournie et temps requis pour les rédiger. Ils permettent de tester une fonctionnalité, en simulant des interactions utilisateur pour s'assurer que tout fonctionne bien comme prévu.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <p>Cela ne veut pas dire que vous devez totalement abandonner les tests unitaires et les tests end-to-end, mais qu'il est important de <span class="em">trouver un juste milieu</span> entre les trois types. Par exemple, vous pouvez totalement choisir d'implémenter des tests end-to-end spécifiquement pour une fonctionnalité "critique" de votre application.</p>
+                    <h3>Créez votre premier test avec Jest :</h3>
+                    <p>Comme tout ce qui a trait à JavaScript, l'écosystème des tests évolue très vite. Dans cette partie, nous allons utiliser <span class="em">Jest</span> et <span class="em">React Testing Library</span>.</p>
+                    <p>Pour sa part, Jest fait partie des outils acclamés depuis plusieurs années, et il se trouve également que Jest est déjà installé Create-React-App. Pas mal pour se lancer dans les tests.</p>
+                    <p>Quant à React Testing Library, il s'agit d'une bibliothèque qui donne accès à davantage d'outils permettant de tester des composants. Nous la découvrirons un peu plus tard.</p>
+                    <p>Si vous vous demandez comment les deux s'articulent, vous pouvez vous dire que Jest est l'outil de base pour vos tests, et que React Testing Library est l'outil qui vous facilite les tests de composants.</p>
+                    <p>Plongeons ensemble dans le monde des tests avec un premier exemple de Jest :</p>
+                    <p>Par exemple, dans <span class="em">Home/index.jsx</span>, on a une fonction <span class="em">sum</span> qui additionne deux nombres :</p>
+<pre><code>export function sum(a, b) {
+    return a + b
+}</code></pre>
+                    <p>On va créer le fichier de tests <span class="em">Home/index.test.js</span> :</p>
+<pre><code>import {sum} from './'
+
+test('Ma fonction sum', () =&gt; {
+    const result = sum(3, 7)
+    expect(result).toBe(10)
+})</code></pre>
+                    <p>Et on lance la commande suivante :</p>
+<pre><code>yarn run test</code></pre>
+                    <p>Maintenant, <span class="em">écrivons un test unitaire</span>.</p>
+                    <h4>Préparez votre code :</h4>
+                    <p>Pour tester notre code de manière indépendante, nous allons <span class="em">sortir une partie de notre logique</span> sur la page <span class="html">/Results/index.jsx</span>. On peut faire la fonction :</p>
+<pre><code>export function formatJobList(title, listLength, index) {
+    if (index === listLength - 1) {
+        return title
+    }
+    return `${title},`
+}</code></pre>
+                    <p>Et dans notre JSX, on met :</p>
+<pre><code>&lt;ResultsTitle theme={theme}&gt;
+    Les compétences dont vous avez besoin :
+    {resultsData &&
+        resultsData.amp((result, index) =&gt; (
+            &lt;JobTitle
+                key={`result-title-${index}-${result.title}`}
+                theme={theme}
+            &gt;
+                {formatJobList(result.title, resultsData.length, index)}
+            &lt;/JobTitle&gt;
+        ))}
+&lt;/ResultsTitle&gt;</code></pre>
+                    <p>Nous voilà dond fin prêts pour notre test.</p>
+                    <h4>Créez votre fichier de test :</h4>
+                    <p>Depuis quelques temps, tous nos fichiers sont répartis dans des dossiers ayant un nom spécifique et un fichier <span class="html">index.jsx</span>. Eh bien, cette répartition va nous être bien utile car elle va nous permettre de <span class="em">mettre nos tests directement à la racine de chaque dossier</span>.</p>
+                    <p>On va donc commencer par <span class="html">/Results</span> et y créer un fichier <span class="html">index.test.js</span>, et voilà !</p>
+                    <p>Mais comment Jest va retrouver notre fichier de test ? Eh bien, pas de panique. Jest est ici configuré pour chercher dans tous les sous-dossiers (à part <span class="html">node_modules</span> et <span class="html">.git</span>, notamment) à la recherche de fichiers se terminant par <span class="html">spec.js</span> ou <span class="html">test.js</span>, précédé d'un trait d'union (-) ou d'un point (.). C'est également possible de mettre vos tests dans un dossier <span class="html">__tests__</span>.</p>
+                    <h4>Comprenez la rédaction du test :</h4>
+                    <p>Attelons-nous maintenant à la <span class="em">rédaction du test</span>.</p>
+                    <p>Il nous faut dans un premier temps <span class="em">importer l'élément</span> à tester, puis <span class="em">utiliser <span class="html">test</span></span>.</p>
+                    <p>On utilise <span class="html">test</span>, mais on ne l'a importé nulle part ? Pourquoi on n'a pas une erreur ici ? Eh bien, test un outil auquel on peut accéder globalement dans un fichier de test grâce à Jest. Il existe d'autres outils globaux, <a href="https://jestjs.io/docs/api" target="_blank">vous pourrez en apprendre davantage sur la documentation (en anglais)</a>.</p>
+                    <p>Vérifions dès maintenant que notre test fonctionne. Dans <span class="html">Results/results.test.js</span>, on importe notre fonction, et on prépare le test :</p>
+<pre><code>import { formatJobList } from './'
+
+test('Ceci est mon premier test', () =&gt; {})</code></pre>
+                    <p>Notez bien que <span class="html">test()</span> prend une <span class="html">string</span> en premier <span class="html">argument</span>, puis une fonction en deuxième argument.</p>
+                    <p>J'essaie dès maintenant de <span class="em">lancer la commande <span class="html">yarn run test</span></span> dans mon terminal.</p>
+                    <figure>
+                        <img src="../images/test_React.png" alt="">
+                        <figcaption>Aucun fichier de test n'est trouvé</figcaption>
+                    </figure>
+                    <p>... C'est complètement normal. Ici, nous n'avons pas écrit le coeur de notre test : <span class="em">exécuter notre fonction</span>, et <span class="em">comparer avec une référence</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Notez ici que Jest ne rend pas la main : il est en mode "watch", c'est-à-dire qu'il <span class="em">surveille</span> vos fichiers et relance les tests appropriés si besoin. Ce mode a été exécuté automatiquement par <span class="html">"react-scripts test"</span>. Pour arrêter Jest dans ce cas, il vous suffit d'appuyer sur <span class="html">q</span> (quitter) ou de taper <span class="html">Ctrl+C</span>.</p>
+                    </div>
+                    <p>Pour cela, on va utiliser <span class="html">expect</span> et <span class="html">toEqual</span>. Ici, <span class="html">toEqual</span> est ce qui s'appelle <span class="em">un matcher</span>, mis à disposition par Jest. On utilise la fonction <span class="html">expect()</span>, qui va comparer un élément avec notre <span class="em">matcher</span>. Cela nous oblige à nous interroger sur ce qu'on veut obtenir de <span class="html">formatJobList</span>.</p>
+                    <p>On prend par exemple un élément <span class="html">item2</span> qui sera en deuxième position dans notre liste (son index est donc de 1), mais qui ne sera pas le dernier élément : on veut donc que <span class="em">le titre ajoute une virgule</span>.</p>
+                    <p>Ce qui nous donne :</p>
+<pre><code>import { formatJobList } frrom './'
+
+test('Ceci est mon premier test', () =&gt; {
+    const expectedState = 'item2,'
+    expect(formatJobList('item2', 3, 1)).toEqual(expectedState)
+})</code></pre>
+                    <p>On sauvegarde, et nos tests se lancent automatiquement (sauf si on a quitté le mode <span class="html">watch</span>). On a bien du vert !</p>
+                    <figure>
+                        <img src="../images/test_React_1.png" alt="">
+                        <figcaption>Notre premier test est tout bon !</figcaption>
+                    </figure>
+                    <p>Vous avez vu : ce n'était pas si dur, n'est-ce pas ?</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous aurez besoin de nombreux autres <span class="em">matchers</span> pour comparer ce que votre code retourne avec les outils de Jest, par exemple <span class="html">toBe</span>, <span class="html">toContains</span>, etc.</p>
+                        <p>Pour en savoir plus, je vous conseille <a href="https://jestjs.io/docs/getting-started" target="_blank">de lire la documentation Jest (en anglais)</a>.</p>
+                    </div>
+                    <p>Il existe aussi d'autres fonctions, telles que <span class="html">describe()</span>.</p>
+                    <p><span class="html">describe</span> vous permet d'<span class="em">englober plusieurs tests</span> qui ont un lien entre eux (vous êtes libre de choisir quel est ce lien), et que cela s'affiche de manière plus lisible lorsque vous lancez vos tests. Dans notre exemple, on peut maintenant ajouter un test pour vérifier que notre fonction ne met pas de virgule sur le dernier élément :</p>
+<pre><code>import { formatJobList } from './'
+
+describe('La fonction formatJobList', () =&gt; {
+    test('ajoute une virgule à un item', () =&gt; {
+        const expectedState = 'item2,'
+        expect(formatJobList('item2', 3, 1)).toEqual(epectedState)
+    })
+    test('ne met pas de virgule pour le dernier élément', () =&gt; {
+        const expectedState = 'item3'
+        expect(formatJobList('item3', 3, 2)).toEqual(expectedState)
+    })
+})</code></pre>
+                    <p>Ce qui nous donne :</p>
+                    <figure>
+                        <img src="../images/test_React_2.png" alt="">
+                        <figcaption>Nos deux tests marchent !</figcaption>
+                    </figure>
+                    <p>C'est beaucoup plus lisible, n'est-ce pas ?</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Jusqu'à maintenant, vous utilisé "test" pour écrire vos tests. Mais il existe un alias pour cette fonction : <span class="html">it()</span>.</p>
+                    </div>
+                    <p>Comme pour tout, il existe des <span class="em">conventions de rédaction de tests</span> pour que les appellations soient <span class="em">les plus explicites possibles</span>. Une des conventions possibles consiste à commencer tous les tests par "should". Dans ce cas, c'est encore plus explicite d'utiliser l'alias <span class="html">it</span> dont je viens de vous parler. Ce qui aurait donné dans notre cas :</p>
+<pre><code>import { formatJobList } from './'
+
+describe('La fonction formatJobList', () =&gt; {
+    it('ajoute une virgule à un item', () =&gt; {
+        const expectedState = 'item2,'
+        expect(formatJobList('item2', 3, 1)).toEqual(epectedState)
+    })
+    it('ne met pas de virgule pour le dernier élément', () =&gt; {
+        const expectedState = 'item3'
+        expect(formatJobList('item3', 3, 2)).toEqual(expectedState)
+    })
+})</code></pre>
+                    <h3>Assurez-vous d'avoir le test coverage idéal :</h3>
+                    <p>Lorsqu'on commence à avoir des tests, il devient possible de mesurer la <span class="em">couverture de tests (code coverage)</span>, c'est-à-dire le pourcentage de notre code - à l'expression près ! - qui est couvert par les tests. On peut alors repérer les parties non testées, ou insuffisamment testées, et savoir ainsi où concentrer nos prochains efforts d'écriture de test.</p>
+                    <p>Lançons dès maintenant la commande nous permettant de vérifier notre code coverage.</p>
+                    <p>Pour cela, je fais <span class="html">yarn test --coverage</span>.</p>
+                    <figure>
+                        <img src="../images/test_React_3.png" alt="">
+                        <figcaption>Le test coverage s'affiche sous la forme d'un tableau dans le terminal.</figcaption>
+                    </figure>
+                    <p>On a donc le détail de la couverture de nos tests, y compris des lignes qui ne sont pas couvertes par les tests.</p>
+                    <p>Il existe des services qui permettent d'utiliser la couverture de tests comme critère de blocage pour l'intégration de nouveau code à nos projets, en définissant des exigences de taux absolu plancher, ou l'interdiction de faire baisser le taux existant, pour autoriser une <span class="em">pull request</span> à être fusionnée dans sa branche destinataire.</p>
+                    <p>Il peut être très satisfaisant d'augmenter son code coverage au maximum. Mais attention, le code coverage peut être traître : non seulement, vous pouvez perdre trop de temps afin d'essayer d'obtenir 100% de couverture, ce qui, la plupart du temps, n'est pas nécessaire. D'autant plus quand on sait que les tests doivent être maintenus dans le temps, en gardant la même logique à l'esprit. Et un autre point de vigilance : le coverage ne prend pas du tout compte la pertinence de vos tests. Alors, ne vous laissez pas aveuglément séduire !</p>
+                </article>
+                <article>
+                    <h2 id="React_Testing_Library">Testez vos composants avec React Testing Library :</h2>
+                    <p>Pour l'instant, nous avons appris à faire de simples tests unitaires pour tester des fonctions simples. Mais qu'en est-il du comportement de nos composants . Comment vérifier que ce qui est affiché pour l'utilisateur fonctionne bien comme on le souhaite, et qu'il n'y a pas de régession ?</p>
+                    <p>En d'autres mots, comment faire pour <span class="em">tester nos composants</span> ?</p>
+                    <p>Vous avez pu voir précédemment que pour tester, on exécute, et on compare avec ce qui était attendu. Or, nos composants React fournissent des instructions permettant de mettre à jour le DOM. Pour tester nos composants, il faudra donc <span class="em">faire un render, vérifier le DOM généré, et le comparer avec ce qui était attendu</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous pouvez en apprendre davantage sur la logique des tests directement sur <a href="https://reactjs.org/docs/testing-recipes.html" target="_blank">la documentation de React</a>.</p>
+                    </div>
+                    <p>Pour faire ça, nous allons pouvoir utiliser React Testing Library, la bibliothèque dont je vous ai déjà parlé.</p>
+                    <h3>Découvrez React Testing Library :</h3>
+                    <p>React Testing Library nous donne accès à des outils basés sur <span class="html">react-dom</span> et <span class="html">react-fom/test-utils</span> qui nous permettent de <span class="em">respecter les bonnes pratiques</span> des tests et de profiter de <span class="em">messages d'erreur lisibles</span>.</p>
+                    <p>Cette solution ne remplace pas Jest, au contraire, elle est <span class="em">complémentaire</span> à Jest. React Testing Library nous permet de vraiment nous concentrer sur le DOM, en le recréant, en permettant de simuler des interactions et de vérifier ce qui est rendu? Cela nous aide à <span class="em">nous mettre dans la peau de nos utilisateurs</span>, et à anticiper ce qu'ils verront.</p>
+                    <p>Par exemple, lorsqu'on veut tester un composant qui fait un call API, on n'a pas forcément besoin de vérifier le <span class="html">useEffect</span> et le <span class="html">state</span> qui nous permettent de faire tout ça. La logique de React Testing Library est de vérifier qu'on a bien notre composant, qu'il est remplacé par un loader le temps que les datas chargent, puis qu'il est complété avec les datas qu'on a récupérées.</p>
+                    <p>Mais ici... On a affaire à des tests d'intégration ou des tests unitaires ? Eh bien, React Testing Library nous permet de faire <span class="em">les deux</span>. On va pouvoir tester nos hooks en isolation pour faire des tests unitaires dessus, et tester les interactions entre nos différents composants, faisant ainsi des tests d'intégration.</p>
+                    <p>Lançons-nous dès maintenant dans le test de nos composants avec React Testing Library... !</p>
+                    <h3>Créez un test simple d'un composant :</h3>
+                    <p>Mais... on n'a même pas installé la bibliothèque ? C'est normal, pas besoin d'installation ici puisque React Testing Library fait maintenant partie des outils istallés de base par Create React App. Il nous suffit juste d'importer ce dont on a besoin dans notre fichier de test.</p>
                     
                 </article>
             <!-- fin de section -->
