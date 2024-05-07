@@ -3139,6 +3139,38 @@ test('Should render without crash', async () =&gt; {
                     <p>C'est bien beau, "ça fonctionne", mais qu'est-ce qui me dit que mon test n'est pas toujours bon ? Que ça fonctionne quoi qu'il arrive ? Essayez de changer l'<span class="html">id</span> pour vous assurer que ça casse bien :</p>
 <pre><code>expect(screen.getByTestId('cetIdCorrespondÀRien')).toBeTruthy()</code></pre>
                     <p>Notre test <span class="em">échoue</span> bien.</p>
+                    <p>On va maintenant tester avec nos datas. Pour cela, on va avoir besoin de <span class="html">waitFor</span> que je vous ai déjà importer juste avant depuis <span class="html">'@testing-library/react'</span>. Cette méthode permet de <span class="em">gérer du code asynchrone</span>, comme pour un call API, par exemple. On n'oublie d'ailleurs pas d'<span class="em">ajouter un <span class="html">async</span></span> devant le callback de notre test.</p>
+                    <p>On va vérifier ici que <span class="em">notre code affiche bien les noms</span> "Harry Potter" et "Hermione Granger". Pour cela, on a :</p>
+<pre><code>it('Should display freelancers names', async () =&gt; {
+    render(
+        &lt;ThemeProvider&gt;
+            &lt;Freelances /&gt;
+        &lt;/ThemeProvider&gt;
+    )
+    expect(screen.getByTestId('loader')).toBeTruthy()
+    await waitFor(() =&gt; {
+        expect(screen.getByText('Harry Potter')).toBeTruthy()
+        expect(screen.getByText('Hermione Granger')).toBeTruthy()
+    })
+})</code></pre>
+                    <p>Encore une fois, vous pouvez <span class="em">modifier le texte</span>, avec par exemple :</p>
+<pre><code>expect(screen.getByText('Harry PotDeBeurre')).toBeTruthy()</code></pre>
+                    <p>Et le test <span class="em">échoue</span> !</p>
+                    <p>Maintenant que nous avons vu les mocks et une stratégie pour les tests, on se retrouve juste en dessous pour un autre exemple :</p>
+                    <p>Grâce à la méthode <span class="html">waitForElementToBeRemoved</span>, qui est une fonction asynchrone qui attend que notre élément soit retiré du DOM avant d'exécuter la suite, on va remplacer le code précédent par ceci :</p>
+<pre><code>it('Should display freelancers names', async () =&gt; {
+    render(
+        &lt;ThemeProvider&gt;
+            &lt;Freelances /&gt;
+        &lt;/ThemeProvider&gt;
+    )
+    await waitForElementToBeRemoved(() =&gt; screen.getByTestId('loader'))
+    await waitFor(() =&gt; {
+        expect(screen.getByText('Harry Potter')).toBeTruthy()
+        expect(screen.getByText('Hermione Granger')).toBeTruthy()
+    })
+})</code></pre>
+                    <h3>Personnalisez votre render :</h3>
                     
                 </article>
             <!-- fin de section -->
