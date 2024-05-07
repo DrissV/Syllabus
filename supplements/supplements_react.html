@@ -3112,6 +3112,33 @@ afterAll(() =&gt; server.close())</code></pre>
                     <p>Tout est prêt ! C'est le moment d'utiliser tout ça.</p>
                     <h5>Exploitez vos mocks :</h5>
                     <p>Notre configuration est prête. On va pouvoir l'utiliser pour tester <span class="html">pages/Freelances/index.jsx</span>.</p>
+                    <p>Mais avant de la tester, arrêtons-nous quelques instants sur <span class="em">notre stratégie de tests</span>. Notre composant affiche un loader pendant qu'il fait la requête à l'API, puis affiche les données dans des composants <span class="html">Cards</span>. Dans un premier temps, on peut donc vérifier que :</p>
+                    <ol>
+                        <li>
+                            <p><span class="em">Le loader s'affiche bien</span> pendant le call.</p>
+                        </li>
+                        <li>
+                            <p>Notre première <span class="html">Card</span> <span class="em">affiche bien les éléments récupérées</span> dans le call avec le premier élément.</p>
+                        </li>
+                    </ol>
+                    <p>Commençons par nous occuper de la première étape. On sait que <span class="html">isLoading</span> est initialisé à <span class="html">true</span>, donc on peut tout simplement vérifier que notre <span class="html">Loader</span> apparaît bien.</p>
+                    <p>Mais d'ailleurs, on fait comment ? Notre <span class="html">Loader</span> est une simple <span class="html">div</span> stylisée, il ne contient pas de texte ? Je vous l'avais mentionné précédemment, c'est maintenant le moment d'<span class="em">utiliser <span class="html">data-testid</span></span>. On va tout simplement le préciser dans <span class="html">Freelances/index.jsx</span> :</p>
+<pre><code>&lt;Loader theme={theme} data-testid="loader" /&gt;
+```
+Et dans notre test, on le récupère avec :
+```
+test('Should render without crash', async () =&gt; {
+    render(
+        &lt;ThemeProvider&gt;
+            &lt;Freelances /&gt;
+        &lt;/ThemeProvider&gt;
+    )
+    expect(screen.getByTestId('loader')).toBeTruthy()
+})</code></pre>
+                    <p>Votre test se lance. Ça <span class="em">fonctionne</span>.</p>
+                    <p>C'est bien beau, "ça fonctionne", mais qu'est-ce qui me dit que mon test n'est pas toujours bon ? Que ça fonctionne quoi qu'il arrive ? Essayez de changer l'<span class="html">id</span> pour vous assurer que ça casse bien :</p>
+<pre><code>expect(screen.getByTestId('cetIdCorrespondÀRien')).toBeTruthy()</code></pre>
+                    <p>Notre test <span class="em">échoue</span> bien.</p>
                     
                 </article>
             <!-- fin de section -->
