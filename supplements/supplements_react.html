@@ -79,6 +79,8 @@
                         <li><a href="#hooks">Hooks</a></li>
                         <li><a href="#tests_React_Jest">Tests dans React avec Jest</a></li>
                         <li><a href="#React_Testing_Library">React Testing Library</a></li>
+                        <li><a href="#anciennes_syntaxes_React">Anciennes syntaxes de React</a></li>
+                        <li><a href="#API_composant_classe">Affichage de données d'API dans un composant classe</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -834,7 +836,7 @@ export default CareScale</code></pre>
                     <p>Vous pouvez utiliser les méthodes <span class="html">preventDefault</span> et <span class="html">stopPropagation</span> avec le paramètre dans la fonction passée à l'événement. Dans notre cas, vous auriez pu faire <span class="html">e.preventDefault()</span>.</p>
                     <div class="information">
                         <img src="../images/information.png" alt="Information" class="float_left">
-                        <p>Si vous voulez en savoir plus sur les événements synthétiques, vous trouverez <a href="https://fr.reactjs.org/docs/events.html" target="_blank">une liste de tous les événemebrs orus eb charge ici</a>.</p>
+                        <p>Si vous voulez en savoir plus sur les événements synthétiques, vous trouverez <a href="https://fr.reactjs.org/docs/events.html" target="_blank">une liste de tous les événements orus eb charge ici</a>.</p>
                     </div>
                 </article>
                 <article>
@@ -2368,7 +2370,7 @@ export const Loader = styled.div`
                         <img src="../images/useContext_React_2.png" alt="">
                         <figcaption>Cette fois-ci, le composant se branche tout simplement au Provider pour accéder au Contexte !</figcaption>
                     </figure>
-                    <p>L'idée de passer simplement nos datas entre les composants est au coeur de nombreuses questions, afin que le code soit le plus performabr et lisible possible. Vous verre plus particulièrement des interrogations sur la manière de gérer le state de manière compréhensible et performante. On parle de <span class="em">State Management</span>. Vous en avez déjà entendu parler ?</p>
+                    <p>L'idée de passer simplement nos datas entre les composants est au coeur de nombreuses questions, afin que le code soit le plus performant et lisible possible. Vous verre plus particulièrement des interrogations sur la manière de gérer le state de manière compréhensible et performante. On parle de <span class="em">State Management</span>. Vous en avez déjà entendu parler ?</p>
                     <div class="information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Comme son nom l'indique, le State Management cherche à <span class="em">optimiser la gestion du State</span>. Il existe des solutions dédiées telles que Redux (Redux nécessite d'installer une bibliothèque externe). Le Contexte permet de manipuler des variables liées au state. Mais il ne s'agit pas vraiment à proprement parler d'une solution de State Management. Contexte ne vient donc pas remplacer Redux, mais cohabite avec Redux dans la plupart des codebases. Comprendre le State Management est essentiem si vous souhaitez travailler sur une base de code en entreprise.</p>
@@ -3171,7 +3173,380 @@ test('Should render without crash', async () =&gt; {
     })
 })</code></pre>
                     <h3>Personnalisez votre render :</h3>
-                    
+                    <p>Bon, depuis tout à l'heure je vous fais utiliser votre <span class="html">Theme</span> directemnt dans vos tests. Ce n'est pas très propre. Surtout que si vous testez d'autres composants tels que <span class="html">Home</span>, vous aurez aussi à le wrapper dans le router.</p>
+                    <p>Mais ça tombe bien, puisque la fonction <span class="em">render</span> de React Testing Library peut <span class="em">prendre en paramètre un wrapper</span>.</p>
+                    <p>Dans le test qu'on a fait juste au-dessus, on va donc <span class="em">déclarer un nouveau composant React <span class="html">Wrapper</span></span> :</p>
+<pre><code>function Wrapper({ children }) {
+    return &lt;ThemeProvider&gt;{children}&lt;/ThemeProvider&gt;
+}</code></pre>
+                    <p>Et on le réutilise en le <span class="em">passant en paramètre de notre <span class="html">render</span></span> :</p>
+<pre><code>render(&lt;Freelances /&gt;, { wrapper: Wrapper })</code></pre>
+                    <p>Et voilà !</p>
+                    <p>On peut même en <span class="em">faire un outil qu'on pourra réutiliser dans tous nos tests</span>.</p>
+                    <p>Pour cela, on crée un dossier <span class="html">/test</span> dans <span class="html">/utils</span> et on y met un fichier <span class="html">index.js</span> afin d'y mettre notre outil qui servira pour tous nos tests.</p>
+                    <p>Ce qui nous donne :</p>
+<pre><code>import { render as rtlRender } from '@testing-library/react'
+import { ThemeProvider } from '../../utils/context'
+
+function Wrapper({ children }) {
+    return &lt;ThemeProvider&gt;{children}&lt;/ThemeProvider&gt;
+}
+
+export function render(ui) {
+    rtlRender(ui, { wrapper: Wrapper })
+}</code></pre>
+                    <p>Il ne nous reste qu'à <span class="em">importer notre nouveau <span class="html">render</span></span> dans notre <span class="html">/pages/Freelances/index.test.js</span>, et à supprimer <span class="html">rendre</span> des imports depuis <span class="html">'@testing-library/react'</span>.</p>
+                    <p>... Et ça fonctionne comme on le souhaite !</p>
+                    <p>Puisqu'on en est là, autant en profiter pour gérer notre <span class="html">Router</span> et notre <span class="html">SurveyProvider</span> aussi. Si vous voulez explorer différentes options (et si vous avez besoin besoin de faire des tests en ayant accès à notre <span class="html">history</span>), vous pouvez regarder <a href="https://testing-library.com/docs/example-react-router/" target="_blank">la documentation de React Testing Library (en anglais)</a>.</p>
+                    <p>Mais dans notre cas, on veut juste que nos tests fonctionnent, même lorsqu'il y a des <span class="html">Link</span> dans nos composants. On transforme donc notre fichier pour ajouter notre <span class="html">Router</span> et <span class="html">SurveyProvider</span> :</p>
+<pre><code>import { render as rtlRender } from '@testing-library/react'
+import { ThemeProvider } from '../../utils/context'
+
+function Wrapper({ children }) {
+    return (
+        &lt;MemoryRouter&gt;
+            &lt;ThemeProvider&gt;
+                &lt;SurveyProvider&gt;{children}&lt;/SurveyProvider&gt;
+            &lt;/ThemeProvider&gt;
+        &lt;/MemoryRouter&gt;
+    )
+}
+
+export function render(ui) {
+    rtlRender(ui, { wrapper: Wrapper })
+}</code></pre>
+                    <p>En lançant le test, tout fonctionne comme prévu !</p>
+                    <h3>Découvrez d'autres types de tests :</h3>
+                    <p>Vous avez appris à créer des tests unitaires avec Jest et à teser vos composants avec React Testing Library. Vous avez testé vos interactions et pu simuler des appels API. Mais vous vous en doutez peut-être : <span class="em">le sujet des tests est très vaste</span>. Il existe de nombreux outils et de nombreuses approches.</p>
+                    <p>Ci-dessous, je vous fais la démo d'une approche que nous n'avons pas vue ensemble.</p>
+                    <p>L'idée des snapshots est plutôt simple : le test vient faire une capture de ce qui est rendu par notre composant et, quand on fait une modification de code, le test compare le snapshot qui a été pris avec la nouvelle version obtenue. Cela permet de nous signaler ce qui change quand on fait une modification de code et donc de vérifier que rien de critique n'est caché sans que l'on s'en rende compte. On va le faire le test sur la page "Freelances" pour les messages d'erreur venant de l'API</p>
+                    <p>Dans le <span class="httml">useEffect</span> du hook personnalisé <span class="html">useFetch</span> dans le fichier <span class="html">/hooks/index.jsx</span>, on a le code suivant :</p>
+<pre><code>useEffect(() =&gt; {
+    if (!url) return
+    setLoading(true)
+    async function fetchData() {
+        try {
+            const response = await fetch(url)
+            if (!response.ok) {
+                const { errorMessage } = await response.json()
+                throw new Error(errorMessage)
+            } else {
+                const data = await response.json()
+                setData(data)
+            }
+        } catch (err) {
+            setError(err.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+    fetchData()
+}, [url])</code></pre>
+                    <p>Donc, dans notre fichier <span class="html">/pages/Freelances/index.jsx</span>, on a le code ci-dessous :</p>
+<pre><code>const { data, isLoading, error } = useFetch(`http://localhost:8000/freelances`)
+
+if (error) {
+    return &lt;span data-testid="error"&gt;{error}&lt;/span&gt;
+}</code></pre>
+                    <p>Enfin, dans le fichier <span class="html">/pages/Freelances/index.test.js</span>, on a ceci :</p>
+<pre><code>it('Should display error content', async () =&gt; {
+    server.use(
+        rest.get('http://localhost:8000/freelances', (req, res, ctx) =&gt; {
+            return res.once(
+                ctx.status(500,
+                ctx.json({
+                    errorMessage: `Oups il y a eu une erreur dans l'API`,
+                }))
+            )
+        })
+    )
+    render(&lt;Freelances /&gt;)
+    await waitForElementToBeRemoved(() =&gt; screen.getByTestId('loader'))
+    expect(screen.getTestId('error')).toMatchInlineSnapshot()
+})</code></pre>
+                    <p>On lance le test avec <span class="html">yarn run test</span> et, une fois le test totalement exécuté, on peut voir dans <span class="html">/pages/Freelances/index.test.js</span> le contenu de notre élément s'est rajouté dedans.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Juste au-dessus, nous avons appris à manier des snapshots. Si vous voulez en apprendre davantage, n'hésitez pas à jeter un oeil à <a href="https://jestjs.io/fr/docs/snapshot-testing" target="_blank">la documentation officielle de Jest sur les snapshots</a>, et à <a href="https://kentcdodds.com/blog/effective-snapshot-testing" target="_blank">cet article de blog (en anglais)</a>.</p>
+                    </div>
+                    <p>Je vous ai également mentionné les tests end-to-end. Nous ne les avons pas vus ensemble, mais ils constituent un outil très puissant. À l'heure actuelle, j'aurais tendance à vous conseiller d'utiliser <a href="https://www.cypress.io/" target="_blank">la bibliothèque <span class="html">Cypress</span></a>.</p>
+                    <p>Comme pour tout le reste en JavaScript, les outils de tests <span class="em">évoluent rapidement</span>. Pour rester à la page, je vous conseille de faire une veille, puis la documentation des nouveaux outils.</p>
+                </article>
+                <article>
+                    <h2 id="anciennes_syntaxes_React">Apprivoisez les anciennes syntaxes de React :</h2>
+                    <p>À l'heure où ce cours a été écrit, nous en sommes à la version 17.0.2 de React. React a effectivement connu de nombreuses évolutions. Cela veut aussi dire que la manière dont on écrit un composant aujourd'hui ne ressemble pas du tout à la manière dont on le faisait au début. On pourrait considérer que ce qui appartient au passé reste dans le passé. Mais ce serait sans compter les codebases qui contiennent des composants écrits dans d'autres syntaxes. Remontons dans notre machine à remonter dans le temps pour voir les grandes étapes de React.</p>
+                    <h3>Découvrez les évolutions principales de React :</h3>
+                    <h4>Au tout début : createClass :</h4>
+                    <p>Lorsque React a été rendu open source en 2013, les composants étaient créés avec <span class="html">React.createClass</span>. Pour vous donner un exemple, un composant <span class="html">MyComponent</span> reçoit une prop <span class="html">title</span> se serait écrit de la manière suivante :</p>
+<pre><code>React.createClass({
+    displayName: "MyComponent",
+    render() {
+        return (
+            &lt;div&gt;
+                &lt;h1&gt;{this.props.title}&lt;/h1&gt;
+            &lt;/div&gt;
+        )
+    }
+})</code></pre>
+                    <p>Mais aujourd'hui, cette syntaxe est officiellement considérée comme dépréciée, et vous ne la trouvez nulle part dans la documentation de React.</p>
+                    <p>... En revanche, vous risquez clairement de tomber sur des composants classe.</p>
+                    <h3>Le temps des composants classe :</h3>
+                    <p>Avec l'ajout des classes dans ES 2015 (voici <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes" target="_blank">la documentation de Mozilla sur les classes, en anglais</a>), React a voulu s'aligner en créant les composants classe. Il s'agissait à l'époque d'un changement majeur. Dans la suite de ce cours, nous allons prendre le temps de revenir sur leur syntaxe, la manière de faire des appels API et de gérer le state et les props dans les composants classe.</p>
+                    <p>Découvrons ci-dessous la syntaxe des composants classe. On va transformer notre composant fonction <span class="html">Card</span> en composant classe comme ceci :</p>
+<pre><code><span class="html">import { Component } from 'react'</span>
+import PropTypes from 'prop-types'
+import DefaultPicture from '../../assets/profile.png'
+import { CradWrapper, CardLabel, CardImage, CardTitle } from './style'
+
+/* function Card({ label, title, picture, theme }) {
+    return (
+        &lt;CardWrapper theme={theme}&gt;
+            &lt;CardLabel theme={theme}&gt;{label}&lt;/CardLabel&gt;
+            &lt;CardImage src={picture} alt="freelance" /&gt;
+            &lt;CardTitle theme={theme}&gt;{title}&lt;/CardTitle&gt;
+        &lt;/CardWrapper&gt;
+    )
+} */
+
+<span class="html">class Card extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {}
+    }
+
+    render() {
+        const { theme, label, picture, title } = this.props
+        return (
+            &lt;CardWrapper theme={theme}&gt;
+                &lt;CardLabel theme={theme}&gt;{label}&lt;/CardLabel&gt;
+                &lt;CardImage src={picture} alt="freelance" /&gt;
+                &lt;CardTitle theme={theme}&gt;{title}&lt;/CardTitle&gt;
+            &lt;/CardWrapper&gt;
+        )
+    }
+}</span>
+
+Card.propTypes = {
+    label: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    picture: PropTypes.string.isRequired,
+}
+
+Card/defaultProps = {
+    label: '',
+    title: '',
+    picture: '',
+}
+
+export default Card</code></pre>
+                    <h3>Découvrez la syntaxe :</h3>
+                    <p>Comme vous avez pu le voir juste au-dessus, la syntaxe des composants classe est différente. Nous allons ici créer un nouveau composant <span class="html">EmailInput</span> que nous mettrons dans le footer.</p>
+                    <p>On commence d'abord par déclarer le composant :</p>
+<pre><code>import { Component } from 'react'
+
+class EmailInput extends Component {
+    constructor() {
+    }
+
+    render() {
+        return (
+            &lt;div&gt;
+                &lt;input /&gt;
+            &lt;/div&gt;
+        )
+    }
+
+}
+
+export default EmailInput</code></pre>
+                    <p><span class="html">class</span> et <span class="html">extends Component</span> sont ici la manière de déclarer cotre composant. Si vous avez déjà manipulé des classes, vous devriez déjà avoir vu <span class="html">extends</span> et <span class="html">constructor</span>. Mais sachez que le <span class="html">constructor</span>, <a href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Classes/constructor" target="_blank">dont vous trouverez la documentation ici</a>, est une méthode qui est utilisée pour créer et initialiser un objet lorsqu'on utilise le mot clé <span class="html">class</span>.</p>
+                    <p>Mais au fait, c'est quoi ce <span class="html">render</span> ?! Eh bien, il s'agit d'une méthode de votre composant. C'est d'ailleurs la seule méthode qui est obligatoirement appelée dans votre composant (et donc qui doit impérativement y figurer). Pour un certain nombre d'événements, votre composant devra être "re-render". À chaque fois, cette méthode va recalculer ce qui y est déclaré, et afficher ce qui est retourné.</p>
+                    <p>Il y aura un nouveau render à chaque fois qu'une mise à jour aura lieu :</p>
+                    <ul>
+                        <li>
+                            <p>à l'initialisation du <span class="html">constructor</span>;</p>
+                        </li>
+                        <li>
+                            <p>à chaque mise à jour d'une props;</p>
+                        </li>
+                        <li>
+                            <p>à chaque changement du state (mais nous y reviendrons plus tard).</p>
+                        </li>
+                    </ul>
+                    <p>Effectivement, vous n'avez pas de <span class="html">render</span> dans le composants fonction.</p>
+                    <p>Notez que <span class="html">render</span> doit forcément retourner du JSX (ce qui sera dans le <span class="html">return</span>). Mais si vous n'avez rien à retourner dans votre <span class="html">render</span>, vous pouvez également retourner <span class="html">null</span>.</p>
+                    <h3>Accédez aux props :</h3>
+                    <p>Nous allons ajouter un peu de style au composant que vous venons de créer, en faisant une version pour le <span class="html">darkMode</span> et une version pour le <span class="html">lightMode</span>. Sauf que, comme je vous l'ai dit précédemment, utiliser le Contexte est beaucoup plus simple avec les hooks... Or, on ne peut pas utiliser les hooks depuis les composants classe. On va donc se contenter le <span class="html">theme</span> en props.</p>
+                    <p>Mais d'ailleurs, ici, on n'a pas de paramètres dans lesquels récupérer les props ? On fait comment pour les récupérer ? Vous vous en doutez sûrement, il existe également un moyen de les récupérer dans les composants classe. Pour cela, vous pouvez utiliser <span class="html">this.props</span> partout dans votre composant - que ce soit dans le <span class="html">return</span>, le <span class="html">render</span>, ou dans une méthode. On va d'abord les initialiser dans le <span class="html">constructor</span>, on en profite pour lui passer le <span class="html">state</span> initial, même si nous n'en avons pas besoin pour le moment (sinon, notre linter va râler).</p>
+                    <p>On déclare donc dans notre composant :</p>
+<pre><code>import { Component } from 'react'
+
+class EmailInput extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            inputValue: '',
+        }
+    }
+
+    render() {
+        // Ici on récupère theme en destructurant this.props
+        const { theme } = this.props
+        return (
+            &lt;div&gt;
+                &lt;input /&gt;
+            &lt;/div&gt;
+        )
+    }
+
+}
+
+export default EmailInput</code></pre>
+                    <p>Ce qui va nous permettre de faire un style différent en fonction de notre <span class="html">theme</span>.</p>
+                    <p>Mais au fait, c'est quoi ce <span class="html">this</span>, là ? Si vous êtes familier de JavaScript, vous connaissez sûrement déjà <span class="html">this</span>. <span class="html">this</span> fait référence à l'objet auquel il appartient.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Si vous essayez de faire un <span class="html">console.log</span> de <span class="htmm">this</span> dans un composant fonction, vous verrez qu'il est <span class="html">undefined</span>. Pour en apprendre davantage sur le this, vous pouvez jeter un oeil <a href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/this" target="_blank">à la documentation</a>.</p>
+                    </div>
+                    <p>Donc, ici, le <span class="html">this</span> fait référence à notre composant : il s'agit des <span class="html">props</span> et du <span class="html">state</span> de <span class="html">EmailInput</span>.</p>
+                    <p>Mais attention, lorsque vous déclarez des méthodes (qui sont en quelque sorte des fonctions) dans vos composants, il vous faudra faire attention au <span class="html">bind</span>.</p>
+                    <p>C'est quoi encore ça, le "bind" ? Déjà, commençons simple : "bind" en traduction littérale veut dire "lier". Cela veut dire qu'on va <span class="em">lier</span> nos méthodes à notre composant classe : il faut qu'elles soient correctement bindées au <span class="html">this</span>. C'est ce que nous verrons dans quelques instants, une fois que nous aurons utilisé le <span class="html">state</span>.</p>
+                    <h3>Gérez le state avec setState :</h3>
+                    <p>Nous allons maintenant gérer la valeur qui est saisie dans notre <span class="html">EmailInput</span> avec <span class="html">setState</span>.</p>
+                    <p><span class="html">setState</span>... C'est un peu la même chose que <span class="html">useState</span>, non ? Eh bien... non. Tout d'abord, <span class="html">useState</span> est un hook : il s'agit donc de la manière de gérer le state pour les composants fonction. <span class="html">setState</span> concerne les composants classe. Par ailleurs, si ces deux fonctions concernent toutes les deux le state, elles ne fonctionnent pas de la même manière :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">useState</span> vous permet de déclarer votre variable de state, d'initialiser sa valeur et de récupérer une fonction pour la mettre à jour;</p>
+                        </li>
+                        <li>
+                            <p>mais <span class="html">setState</span> permet uniquement de mettre à jour tout le state de notre composant. Souvenez-vous : le state initial est déclaré dans le <span class="html">constructor</span>.</p>
+                        </li>
+                    </ul>
+                    <p>Pour gérer le state de la valeur saisie dans notre <span class="html">EmailInput</span>, nous allons devoir procédér par étapes.</p>
+                    <p>Juste au-dessus, vous aviez initialisé votre state dans le <span class="html">constructor</span> avec :</p>
+<pre><code>this.state = {
+    inputValue: '',
+}</code></pre>
+                    <p>On va maintenant pouvoir déclarer une fonction pour mettre à jour la valeur de notre state :</p>
+<pre><code>updateInputValue = (value) =&gt; {
+    this.setState({ inputValue: value })
+}</code></pre>
+                    <p>Pas besoin de <span class="html">const =</span> devant notre fonction. D'habitude, il aurait fallu l'initialiser, mais ici, étant donné que vous êtes dans une <span class="html">classe</span>, <span class="html">updateInputValue</span> est une méthode de votre classe <span class="html">EmailInput</span>.</p>
+                    <p>On aurait pu mettre <span class="html">updateInputValue</span> dans le <span class="html">render</span>, non ? Eh bien, oui. On aurait pu. Mais comme je vous disais, tout ce qui est dans le <span class="html">render</span> est exécuté à chaque fois qu'une prop, ou que le state, est mis à jour. Ce qui veut dire que notre fonction serait à nouveau déclarée : pas très performant, n'est-ce pas ?</p>
+                    <p>Et cette méthode est appelée dans <span class="html">onChange</span> de <span class="html">input</span> :</p>
+<pre><code>&lt;input
+    onChange={(e) =&gt; this.updateInputValue(e.target.value)}
+/&gt;</code></pre>
+                    <p>Ici, chaque fois qu'un <span class="html">setState</span> est effectué, cela va déclencher un nouveau <span class="html">render</span> de notre composant.</p>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Puisque <span class="html">setState</span> déclenche un <span class="html">rerender</span> de votre composant, vous ne pouvez jamais appeler <span class="html">setState</span> depuis <span class="html">render</span>, sinon, cela provoquera une boucle infinie dans votre composant.</p>
+                    </div>
+                    <p>Il existe un certain nombre de règles à respecter pour <span class="html">setState</span> (le fait que <span class="html">setState</span> soit asynchrone, que les mises à jour du state soient fusionnées, etc.). Je vous conseille donc de vous renseigner sur ces règles directement dans <a href="https://fr.reactjs.org/docs/state-and-lifecycle.html#using-state-correctly" target="_blank">la documentation de React</a>.</p>
+                    <p>Et de la même manière qu'on a accédé aux <span class="html">props</span> avec <span class="html">this.props</span>, c'est <span class="html">this.state</span> qui nous permet d'accéder au state courant.</p>
+                    <p>Pour afficher le contenu de notre input, on peut donc faire :</p>
+<pre><code>render() {
+    return (
+        &lt;div&gt;
+            {this.state.inputValue}
+            &lt;input
+                onChange={(e) =&gt; this.updateInputValue(e.target.value)}
+            /&gt;
+        &lt;/div&gt;
+    )
+}</code></pre>
+                    <h3>Revenez au this :</h3>
+                    <p>D'habitude, lorsque nous déclarons une nouvelle fonction, on utilise la syntaxe <span class="html">function myFunction()</span>. Alors pourquoi ici on a utilisé une fonction fléchée ? Eh bien, pour pouvoir accéder à votre méthode dans votre classe, vous avez besoin de "binder" votre fonction à votre classe, relier les deux, en quelque sorte. Les fonctions fléchées permettent de le faire de manière implicite. Donc pas d'embêteemnt ici.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ça ne vous provoquera pas systématiquement une erreur si vous ne bindez pas votre fonction au <span class="html">this</span> systématiquement, mais il faut clairement éviter de le faire car cela PEUT provoquer une erreur très facilement.</p>
+                    </div>
+                    <p>Sans fonction fléchée, autrement, vous auriez dû le faire de manière explicite comme ci-dessous :</p>
+<pre><code>constructor(props) {
+    super(props)
+    this.updateInputValue = this.updateInputValue.bind(this)
+    this.state = {
+        inputValue: '',
+    }
+}
+
+updateInputValue (value) {
+    this.setState({ inputValue: value })
+}</code></pre>
+                    <p>Je sais que le <span class="html">this</span> peut être un peu complexe à saisir. C'est d'ailleurs une des raisons pour lesquelles React a choisi de favoriser les composants fonction, pour éviter cette complexité au moment de l'apprentissage. Mais n'hésitez pas à creuser un peu le sujet si cela reste trop flou pour vous. Par exemple, <a href="https://medium.com/byte-sized-react/what-is-this-in-react-25c62c31480" target="_blank">cet article de blog (en anglais)</a> revient sur quelques notions fondamentales.</p>
+                </article>
+                <article>
+                    <h2 id="API_composant_classe">Affichez les données d'une API dans un composant classe :</h2>
+                    <p>Entre le moment où ils sont générés dans le DOM, et le moment où ils en sont retirés, les composants passent par différentes étapes. Dans les composants classe, vous avez une liste d'étapes qui correspondent à un moment précis du cycle de vie, dans lesquelles vous pouvez effectuer des actions.</p>
+                    <p>On parle de <span class="em">méthodes de cycle de vie</span>.</p>
+                    <h3>Découvrez les méthodes de cycle de vie :</h3>
+                    <p>Juste en dessous, vous aurez une petite démonstration des différentes étapes que connaît un composant, et auxquelles vous pouvez accéder.</p>
+                    <p>Pour la démonstration, j'ai créé un nouveau composant <span class="html">MyComponent</span> qui va être affiché dans <span class="html">Home</span> selon le state <span class="html">display</span>. Notre nouveau composant possède le contenu suivant :</p>
+<pre><code>import { Component } from 'react'
+
+export default class MyComponent extends Component {
+
+    render() {
+        console.log('===== render =====')
+        return (
+            &lt;div
+                style={{
+                    backgroundColor: 'red',
+                    height: 30,
+                    marginBottom: 20,
+                    textAlign: 'center',
+                }}
+            &gt;
+                Mon composant
+            &lt;/div&gt;
+        )
+    }
+}</code></pre>
+                    <p>La méthode du cycle la plus évidente et qui est obligatoire est le <span class="html">render</span>.</p>
+                    <p>La méthode <span class="html">componentDidMount()</span> est appelé juste après que le composant a été monté dans le DOM, donc juste après le premier <span class="html">render</span> :</p>
+<pre><code>componentDidMount() {
+    console.log('===== componentDidMount =====')
+}</code></pre>
+                    <p>La méthode <span class="html">componentDidUpdate()</span> intervient, comme son nom l'indique, juste après une mise à jour du state ou des props :</p>
+<pre><code>componentDidUpdate(prevProps, prevState) {
+    console.log('===== componentDidUpdate =====')
+}</code></pre>
+                    <p>La méthode explicite <span class="html">componentWillUnmont()</span> intervient juste avant la mort en quelque sorte du composant, lorsqu'il va être retiré du DOM :</p>
+<pre><code>componentWillUnmont() {
+    console.log('===== componentWillUnmont =====')
+}</code></pre>
+                    <p>Alors est-ce que ça vous paraît plus clair ?</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Dans les composants fonction que vous connaissez davantage, vous avez appris à déclencher une action juste après que le composant a été généré dans le DOM avec <span class="html">useEffect</span> et en passant un tableau de dépendances vide.</p>
+                    </div>
+                    <p>Pour vous faire un petit résumé des différentes étapes auxquelles vous avez accès dans les composants classe :</p>
+                    <figure>
+                        <img src="../images/methodes_cycle_vie_React.png" alt="">
+                        <figcaption>Voilà un diagramme des méthodes de cycle de vie.</figcaption>
+                    </figure>
+                    <p>Comme vous l'avez vu juste en haut :</p>
+                    <ul>
+                        <li>
+                            <p>Le <span class="html">constructeur</span> est invoqué, comme pour n'importe quel objet, lorsque le composant apparaît pour la première fois dans un DOM virtuel... Il reçoit les props initiales en argument.</p>
+                        </li>
+                        <li>
+                            <p>Puis vient le <span class="html">render</span>. C'est ensuite le moment où est appelé <span class="html">componentDidMount</span> (une fois que le composant est monté sur le DOM).</p>
+                        </li>
+                        <li>
+                            <p>Après, s'il y a une mise à jour et que le composant est re-render, <span class="html">componentDidUpdate</span> est appelé.</p>
+                        </li>
+                        <li>
+                            <p>Et juste avant que le composant soit retiré du DOM, c'est au tour de <span class="html">componentWillUnmount</span> d'être appelé.</p>
+                        </li>
+                    </ul>
+                    <p>Il existe d'autres méthodes de cycle de vie, mais vous aurez moins souvent besoin de celles-ci. Vous pourrez en apprendre davantage dans <a href="https://fr.reactjs.org/docs/react-component.html#rarely-used-lifecycle-methods" target="_blank">la documentation de React</a>.</p>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>En ce qui concerne les méthodes de cyclique de vie, il existe un certain nombre de méthodes qui ont été dépréciées au fil du temps, telles que "componentWillMount". Vous verrez que depuis quelques années, ces méthodes dépréciées ont été renommées pour éviter qu'on les utilise. Ainsi, <span class="html">componentWillMount</span> s'appelle désormais <span class="html">UNSAFE_componentWillMount()</span>. Ça ne donne pas vraiment envie de l'utiliser, non ? Dans les dernières versions, elles ne fonct même plus partie de React.</p>
+                        <h3>Appelez une API dans un composant classe avec componentDidMount :</h3>
+                        
+                    </div>
                 </article>
             <!-- fin de section -->
             </section>
