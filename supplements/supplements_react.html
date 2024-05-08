@@ -81,6 +81,7 @@
                         <li><a href="#React_Testing_Library">React Testing Library</a></li>
                         <li><a href="#anciennes_syntaxes_React">Anciennes syntaxes de React</a></li>
                         <li><a href="#API_composant_classe">Affichage de données d'API dans un composant classe</a></li>
+                        <li><a href="#state_management">State management</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -3694,6 +3695,57 @@ class Profile extends Component {
 
 export default Profile</code></pre>
                     <p>Et voilà ! Vous avez un tout nouveau composant <span class="html">Profile</span> qui permet d'afficher le profil de vos freelances, et le tout écrit avec un composant classe.</p>
+                </article>
+                <article>
+                    <h2 id="state_management">Découvrez le state management :</h2>
+                    <h3>Revenez sur les notions dde state et de props :</h3>
+                    <p>Vous rappelez-vous comment créer un composant réutilisable et configurable ?</p>
+                    <p>Revoyons brièvement la différence entre les <span class="em">props</span> et le <span class="em">state</span>, ce qu'ils nous permettent de faire et leurs limites.</p>
+                    <p>En réutilisant nos composants, nous souhaitons la plupart du temps <span class="em">adapter leur comportement selon leur emplacement</span> dans l'application ou <span class="em">selon certaines données</span> provenant du composant parent. Nous utilisons donc à cet effet <span class="em">les props</span>, qui seront appliqués à nos composants.</p>
+<pre><code>const IMAGES = [
+    {
+        url: "https://unsplash.com/fr/photos/cjSUZMA2iW8",
+        title: "Un cheval"
+    },
+    {
+        url: "https://unsplash.com/fr/photos/1ZjI3KgB9Co",
+        title: "Un chien"
+    }
+]
+
+const Container = () =&gt; {
+    return IMAGES.map((image, index) =&gt; &lt;Picture url={image.url} title={image.title} key={index} /&gt;)
+}</code></pre>
+                    <p>Ci-dessus, nous utilisons le composant <span class="html">Picture</span> pour afficher autant d'images différentes provenant d'un tableau <span class="html">IMAGES</span> en passant en props des valeurs <span class="html">url</span> et <span class="html">title</span> distinctes.</p>
+                    <p>Certains composants <span class="em">évoluent au fil du temps</span>. Ils <span class="em">réagissent aux évènements utilisateurs</span> : des actions sur un bouton ou la saisie d'un nombre dans un champ, par exemple.</p>
+                    <p>Le <span class="em">state</span>n, ou état local du composant, nous permet de <span class="em">stocker à l'échelle de notre composant des valeurs qui changent</span> et <span class="em">dont les changements ont une incidence sur le comportement de notre composant</span> :</p>
+<pre><code>const Counter = () =&gt; {
+    const [count, setCount] = useState(0)
+
+    return &lt;div&gt;
+        &lt;span&gt;Valeur du compteur: {count}&lt;/span&gt;
+        &lt;button onClick={() =&gt; setCount(count + 1)}&gt;ajouter&lt;/button&gt;
+    &lt;/div&gt;
+}</code></pre>
+                    <p>Ci-dessus, nous modifions la valeur d'un compteur qui change à chaque clic sur le bouton "Ajouter".</p>
+                    <p>En combinant props et state, il nous est donc possible de <span class="em">partager des valeurs de states</span> entre des composants faisant partie de la même branche, c'est-à-dire ayant un <span class="em">parent commun</span>.</p>
+                    <p>Pour accéder au state d'un parent, un composant doit recevoir en props les valeurs du state du parent. Un composant peut modifier le state de son parent si celui-ci obtient la méthode <span class="html">setState</span>, qui permet de modifier le state en props. On dit que les <span class="em">props descendent et que l'état remonte</span> :</p>
+                    <figure>
+                        <img src="../images/state_management_1.png" alt="">
+                        <figcaption>Les props descendent et l'état remonte.</figcaption>
+                    </figure>
+                    <p>Ci-dessus, nous partageons la valeur du state du composant parent vers les composants A et B en passant celle-ci en props. Grâce au <span class="html">setState</span> passé en props, le composant B peut modifier la valeur du state A.</p>
+                    <p>Notez aussi qu'un composant A qui partage le même parent que le composant B ne peut pas accéder au state de celle-ci. C'est une contrainte, puisque faire remonter le state dans le composant parent devient ici l'unique moyen de partager le state entre A et B.</p>
+                    <h3>Comprenez le principe de props drilling :</h3>
+                    <p>Nous venons de voir que l'état peut se districbuer dans les composants par le biais des props. Du fait que deux composants ayant le même parent ne peuvent pas accéder directement à leur state respectif, nous sommes contraints de passer par le state du parent pour le distribuer dans chacun d'eux.</p>
+                    <p>Ce qui suit décrit une seconde contrainte.</p>
+                    <p>Comment faire pour transmettre des données à un composant qui n'est pas enfant direct d'un autre composant ? On respecte dans ce cas le sens de distribution pazrent vers enfant et on s'assure de passer les props jusqu'au composant ciblé.</p>
+                    <figure>
+                        <img src="../images/state_management_2.png" alt="">
+                        <figcaption>Le props drilling</figcaption>
+                    </figure>
+                    <p>Ci-dessus, nous voyons un exemple de transmission à travers les composants. Notre Props A, appliqué à notre Composant A, traverse ainsi le Composant B pour être appliqué au Composant C.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
