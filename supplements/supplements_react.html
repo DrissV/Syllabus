@@ -3605,7 +3605,95 @@ class Profile extends Component {
 
 export default Profile</code></pre>
                     <p>Notre paramètre s'affiche bien.</p>
-                    
+                    <p>Passons maintenant aux choses sérieuses en lançant notre appel API dans la méthode de cycle de vie <span class="html">componentDidMount()</span>. Encore une fois, nous allons devoir nous passer de notre hook <span class="html">useFetch</span> puisque nous sommes dans un composant classe.</p>
+                    <p>On commence donc par notre <span class="html">constructor</span>. Ici, si vous regardez l'API, vous verrez que nous allons récupérer un objet <span class="html">profileData</span>; il nous faudra donc <span class="html">profileData</span> dans notre state.</p>
+<pre><code>constructor(props) {
+    super(props)
+    this.state = {
+        profileData: {},
+    }
+}</code></pre>
+                    <p>Pour le fetch, vous pouvez réutiliser le code que vous aviez dans <span class="html">useFetch</span>, version Promise. On le met tout simplement dans <span class="html">componentDidMount()</span>, ce qui nous donne :</p>
+<pre><code>componentDidMount() {
+    const { id } = this.props
+
+    fetch(`http://localhost:8000/freelance?id=${id}`)
+    .then((response) =&gt; response.json())
+    .then((jsonResponse) =&gt: {
+        this.setState({ profileData: jsonResponse?.freelanceData })
+    })
+}</code></pre>
+                    <p>Et... Ça fonctionne bien !</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Si vous aviez voulu utiliser la syntaxe <span class="html">async</span> / <span class="html">await</span>, ça aurait donné ça :</p>
+<pre><code>componentDidMount() {
+    const { id } = this.props
+    const fetchData = async () =&gt; {
+        const response = await fetch(`http://localhost:8000/freelance?id=${id}`)
+        const jsonResponse = await response.json()
+        if (jsonResponse && jsonResponse.freelanceData) {
+            this.setState({ profileData: jsonResponse?.freelanceData })
+        }
+    }
+    fetchData()
+}</code></pre>
+                    </div>
+                    <p>Il ne reste plus qu'à afficher ce qui nous est retourné par l'API. Et voilà notre composant :</p>
+<pre><code>import { Component } from 'react'
+
+class Profile extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            profileData: {},
+        }
+    }
+
+    componentDidMount() {
+        const { id }  this.props
+
+        fetch(`http://localhost:8000/freelance?id=${id}`)
+        .then((response) =&gt; response.json())
+        .then((jsonResponse) &gt; {
+            this.setState({ profileData: jsonResponse?.freelanceData })
+        })
+    }
+
+    render() {
+        const { profileData } = this.state
+        const {
+            picture,
+            name,
+            location,
+            tjm,
+            job,
+            skills,
+            available,
+            id,
+        } = profileData
+
+        return (
+            &lt;div&gt;
+                &lt;img src={picture} alt={name} height={150} width={150} /&gt;
+                &lt;h1&gt;{name}&lt;/h1&gt;
+                &lt;span&gt;{location}&lt;/span&gt;
+                &lt;h2&gt;{job}&lt;/h2&gt;
+                &lt;div&gt;
+                    {skills &&
+                        skills.map((skill) =&gt; (
+                            &lt;div key={`skill-${skill}-${id}`}&gt;{skill}&lt;/div&gt;
+                        ))}
+                &lt;/div&gt;
+                &lt;div&gt;{available ? 'Disponible maintenant' : 'Indisponible'}&lt;/div&gt;
+                &lt;span&gt;{tjm} € / jour&lt;/span&gt;
+            &lt;/div&gt;
+        )
+    }
+}
+
+export default Profile</code></pre>
+                    <p>Et voilà ! Vous avez un tout nouveau composant <span class="html">Profile</span> qui permet d'afficher le profil de vos freelances, et le tout écrit avec un composant classe.</p>
                 </article>
             <!-- fin de section -->
             </section>
