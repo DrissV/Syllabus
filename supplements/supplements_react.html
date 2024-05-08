@@ -3543,10 +3543,69 @@ export default class MyComponent extends Component {
                     <p>Il existe d'autres méthodes de cycle de vie, mais vous aurez moins souvent besoin de celles-ci. Vous pourrez en apprendre davantage dans <a href="https://fr.reactjs.org/docs/react-component.html#rarely-used-lifecycle-methods" target="_blank">la documentation de React</a>.</p>
                     <div class="important">
                         <img src="../images/important.png" alt="Important" class="float_left">
-                        <p>En ce qui concerne les méthodes de cyclique de vie, il existe un certain nombre de méthodes qui ont été dépréciées au fil du temps, telles que "componentWillMount". Vous verrez que depuis quelques années, ces méthodes dépréciées ont été renommées pour éviter qu'on les utilise. Ainsi, <span class="html">componentWillMount</span> s'appelle désormais <span class="html">UNSAFE_componentWillMount()</span>. Ça ne donne pas vraiment envie de l'utiliser, non ? Dans les dernières versions, elles ne fonct même plus partie de React.</p>
-                        <h3>Appelez une API dans un composant classe avec componentDidMount :</h3>
-                        
+                        <p>En ce qui concerne les méthodes de cyclique de vie, il existe un certain nombre de méthodes qui ont été dépréciées au fil du temps, telles que "componentWillMount". Vous verrez que depuis quelques années, ces méthodes dépréciées ont été renommées pour éviter qu'on les utilise. Ainsi, <span class="html">componentWillMount</span> s'appelle désormais <span class="html">UNSAFE_componentWillMount()</span>. Ça ne donne pas vraiment envie de l'utiliser, non ? Dans les dernières versions, elles ne fonct même plus partie de React.</p>    
                     </div>
+                    <h3>Appelez une API dans un composant classe avec componentDidMount :</h3>
+                    <p>C'est le moment de mettre tout ça en application en appelant notre API Shiny dans un nouveau composant classe. Pour l'occassion, nous allons créer un nouveau composant qui permet d'afficher plus d'informations sur un freelance lorsqu'on clique sur la <span class="html">Card</span>.</p>
+                    <p>Nous allons commencer par permettre de naviguer sur <a href="http://localhost/profile/:id" target="_blank">http://localhost/profile/:id</a>. Dans le fichier <span class="html">index.jsx</span> à la racine de <span class="html">/src</span>, nous avons ajouté une route pour bien rediriger l'utilisateur vers le profil du freelance :</p>
+<pre><code>...
+&lt;Route path="/freelances" element={&lt;Freelances /&gt;} /&gt;
+&lt;Route path="/profile/:id" element={&lt;Profile /&gt;} /&gt;
+&lt;Route path="*" element={&lt;Error /&gt;} /&gt;
+...</code></pre>
+                    <p>On enchraîne ensuite en permettant de naviguer sur la page <span class="html">profile</span> en ajoutant un lien autour de la <span class="html">Card</span> dans <span class="html">/pages/Freelances/index.jsx</span>. Pour cela, on fait donc :</p>
+<pre><code>&lt;CardsContainer&gt;
+    {freelancersList?.map((profile) =&gt; (
+        &lt;Link key={`free-lance-${profile.id}`} to={`/profile/${profile.id}`}&gt;
+            &lt;Card
+                label={profile.job}
+                title={profile.name}
+                picture={profile.picture}
+                theme={theme}
+            /&gt;
+        &lt;/Link&gt;
+    ))}
+&lt;/CardsContainer&gt;</code></pre>
+                    <p>Et on oublie pas de supprimer la fonctionnalité de favoris dans le composant classe (pour ne pas avoir des étoiles ajoutées inutilement). Il ne nous reste plus qu'à développer <span class="html">pages/Profile/index.jsx</span> elle-même !</p>
+                    <p>On va commencer par récupérer l'<span class="html">id</span> du freelance dont on veut afficher le profil dans les paramètres. Mais oh oh... Comment on va faire ?</p>
+                    <p>Comme on l'avait fait pour la page <span class="html">Survey</span> : il nous suffit d'utiliser <span class="html">useParams</span>, non ?! Eh bien non ! Souvenez-vous : les hooks sont uniquement accessibles depuis les composants fonction. D'ailleurs, la version 6 de React Router, sortie en 2021, soit 2 ans après la mise en place des hooks, est pensée pour être utilisée dans des composants fonctions. Nous avons donc ici 2 options :</p>
+                    <ol>
+                        <li>
+                            <p>Transformer le composant Profile en composant de type fonction.</p>
+                        </li>
+                        <li>
+                            <p>Créer un composant qui sera parent de Profile et qui pourra récupérer les paramètres.</p>
+                        </li>
+                    </ol>
+                    <p>Comme nous souhaitons pour l'exemple créer notre composant Profile en Classe nous allons donc opter pour la deuxième option.</p>
+                    <p>On va donc devoir changer la déclaration de notre route. Dans <span class="html">/src/index.jsx</span>, on fait donc :</p>
+<pre><code>&lt;Route
+    path="/profile/:id"
+    element={&lt;ProfileContainer /&gt;}
+/&gt;</code></pre>
+                    <p>Nous créons donc notre composant ProfileContainer que nous ajouterons à notre dossier components. Nous aurons donc un nouveau fichier <span class="html">index.jsx</span> dans le dossier <span class="html">src/components/ProfileContainer</span> avec ce code :</p>
+<pre><code>import { useParams } from 'react-router-dom'
+import Profile from '../../pages/Profile'
+
+function ProfileContainer() {
+    const { id } = useParams()
+    return &lt;Profile id={id} /&gt;
+}
+
+export default ProfileContainer</code></pre>
+                    <p>Ensuite nous pourrons récupérer l'id dans notre classe <span class="html">Profile</span> comme n'importe quelle autre props :</p>
+<pre><code>import { Component } from 'react'
+
+class Profile extends Component {
+    render() {
+        const { id } = this.props
+        return &lt;div&gt;&lt;h1&gt;Freelance : {id}&lt;/h1&gt;&lt;/div&gt;
+    }
+}
+
+export default Profile</code></pre>
+                    <p>Notre paramètre s'affiche bien.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
