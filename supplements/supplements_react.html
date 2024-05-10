@@ -4556,9 +4556,86 @@ export default App;</code></pre>
                     <ol>
                         <li>
                             <p>Un fichier <span class="html">app/store.js</span> comme suit :</p>
-<pre><code></code></pre>
+<pre><code>import { configureStore } from "@reduxjs/toolkit";
+import { PouletCroquant, SuperCremeux } from '../common/models";
+
+let state = {
+    value: null,
+    list: [
+        SuperCremeux,
+        PouletCroquant,
+    ],
+};
+
+const reducer = (currentState, action) =&gt; {
+    switch (action.type) {
+        case 'ADD_PRODUCT':
+            const listWithNewProduct = [...currentState.list, action.payload];
+            return {...currentState, list; listWithNewProduct};
+        case 'REMOVE_PRODUCT':
+            const list = currentState.list.filter(
+                (item, index) =&gt; index !== action.payload
+            );
+            return {...currentState, list: list};
+        case 'APPLY_VOUCHER':
+            const withVoucherList = currentState.list.map(
+                item =&gt; item.title === 'Super Crémeux' ? ({...item, price: action.payload.price}) : item
+            );
+            return {...currentState, list: withVoucherList};
+        case 'UPDATE_FIRSTNAME':
+            const owner = {...currentState.owner, firstName: action.payload};
+            return {...currentState, owner};
+        default:
+            return currentState;
+    }
+};
+
+export const store = configureStore({
+    preloadedState: state,
+    reducer,
+});</code></pre>
+                        </li>
+                        <li>
+                            <p>Un fichier <span class="html">common/models.js</span> :</p>
+<pre><code>export const DoubleCantal = {
+    title: 'Double Cantal',
+    price: 15.99,
+};
+
+export const SuperCremeux = {
+    title: 'Super Crémeux',
+    price: 14.99,
+};
+
+export const PouletCroquant {
+    title: 'Poulet Croquant',
+    price: 17.99,
+};</code></pre>
+                        </li>
+                        <li>
+                            <p>Un fichier <span class="html">app/App.js</span> :</p>
+<pre><code>import { Provider } from 'react-redux';
+import { store } from './store';
+import './App.css';
+
+function App() {
+    return (
+        &lt;Provider store={store}&gt;
+            &lt;div className="App"&gt;
+            &lt;/div&gt;
+        &lt;/Provider&gt;
+    );
+}
+
+export default App;</code></pre>
                         </li>
                     </ol>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Enfin, pour avoir le même rendu que moi, vous pouvez ajouter un fichier <span class="html">index.css</span>.</p>
+                    </div>
+                    <p>Nous venons d'intégrer nos sources à notre projet React. Ainsi, nous avons :</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
