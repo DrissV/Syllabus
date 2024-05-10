@@ -82,6 +82,8 @@
                         <li><a href="#anciennes_syntaxes_React">Anciennes syntaxes de React</a></li>
                         <li><a href="#API_composant_classe">Affichage de données d'API dans un composant classe</a></li>
                         <li><a href="#state_management">State management</a></li>
+                        <li><a href="changements_state_Flux">Changements de state via Flux</a></li>
+                        <li><a href="#modification_valeurs_state_Reducers">Modification des valeurs du state avec les Reducers</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -3745,6 +3747,352 @@ const Container = () =&gt; {
                         <figcaption>Le props drilling</figcaption>
                     </figure>
                     <p>Ci-dessus, nous voyons un exemple de transmission à travers les composants. Notre Props A, appliqué à notre Composant A, traverse ainsi le Composant B pour être appliqué au Composant C.</p>
+                    <p>Nous faisons ici ce qu'on appelle du <span class="em">props drilling</span>, nous avons "percé" un passage dans le composant B pour transmettre la valeur de notre <span class="em">props A</span> au <span class="em">composant C</span>.</p>
+                    <h3>Découvrez les limites du props drilling :</h3>
+                    <p>Nous avons donc un moyen de partager des states dans ce cas dans notre application, pourquoi ne pas utiliser cette méthode partout ? La raison est à la fois conceptuelle et pratique.</p>
+                    <p>Lorsque nous créons des composants afin de les réutiliser, nous cherchons à les rendre le plus <span class="em">génériques</span> possible. C'est-à-dire suffisammebr simples et conçus de manière à être adaptés à beaucoup de situations. Nous essayons alors de <span class="em">limiter la responsabilité de chaque composant à ses fonctionnalités propres</span>.</p>
+                    <p>Lorsque nous utilisons le props drilling, nos composants intermédiaires (ici Composant B) <span class="em">doivent recevoir des props et les transmettre même si ces données ne sont pas rattachées à leur logique propre</span>. Nous donnons ainsi à ces composants trop de responsabilités.</p>
+                    <p>De plus, si nous multiplions la réutilisation de nos composants intermédiaires avec des composants enfants qui attendent des props différents à chaque fois, nous <span class="em">augmentons le nombre de props à faire traverser</span>.</p>
+                    <figure>
+                        <img src="../images/state_management_3.png" alt="">
+                        <figcaption>Le props drilling devient plus compliqué.</figcaption>
+                    </figure>
+                    <p>Ci-dessus, nous représentons la réutilisation du composant B dans 2 situations. Le composant B doit faire redescendre Props A, Props B et Props C, et ce, même s'ils ne sont pas utilisés dans tous les cas.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Bien évidemment, sur un arbre qui ne contient que quelques composants, il est assez simple de distribuer ces props. Mais on imagine très vite que certaines applications demanderaient une difficile organisation de cette distribution.</p>
+                    </div>
+                    <p>On comprend très vite que mis à l'échelle dans une application qui contient des <span class="em">dizaines composants à faire communiquer</span>, avec <span class="em">plusieurs composants intermédiaires</span>, l'exercice peut s'avérer <span class="em">difficile</span>.</p>
+                    <h3>Gérez le state depuis un store centralisé :</h3>
+                    <p>Eh oui, distribuer les valeurs via les props peut devenir un vrai casse-tête. Alors, comment gérer le state ?</p>
+                    <p>À l'image d'une étagère remplie de livres dans lesquels des élèves se servent au moment voulu, peut-on imaginer stocker les données à un seul endroit et connecter chaque composant qui aurait besoin de ceux-ci ? C'est ce que propose Dan Abramow via la librairie <span class="em">Redux</span> qui s'inspire de l'architecture Flux. D'autres librairies s'inspirent ou sont des alternatives de cette architecture, comme MobX ou Recoil. Vous pouvez retrouver <a href="https://github.com/facebookarchive/flux" target="_blank">le projet archivé de Flux sur GitHub</a>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Dan Abramov est un développeur de la communauté open source qui a contribué fortement à la création de Redix et qui, à l'heure où ce cours s'écrit, travaille auprès de Facebook, au coeur même des contributeurs principaux de ReactJS.</p>
+                    </div>
+                    <p>Le principe de l'architecture flux est le suivant :</p>
+                    <ul>
+                        <li>
+                            <p>nous stockons un <span class="em">état général</span> dans ce qu'on appelle des <span class="em">stores</span>;</p>
+                        </li>
+                        <li>
+                            <p>les composants qui ont <span class="em">besoin d'une valeur</span> de ce state viennent <span class="em">consulter le store</span> et <span class="em">s'abonner aux changements</span> de ce state</p>
+                        </li>
+                        <li>
+                            <p>le store possède un mécanisme qui à chaque changement du state, va <span class="em">informer chaque composant abonné qu'un changement a eu lieu</span>;</p>
+                        </li>
+                        <li>
+                            <p>chaque composant peut alors <span class="em">relire le contenu du state et mettre à jour son état local</span>.</p>
+                        </li>
+                    </ul>
+                    <figure>
+                        <img src="../images/state_management_4.png" alt="">
+                        <figcaption>L'état centralisé simplifie la distribution d'état dans l'application React.</figcaption>
+                    </figure>
+                    <p>Ainsi nous <span class="em">stockons l'état à l'extérieur</span> de notre application qui <span class="em">vient s'alimenter le moment voulu</span>.</p>
+                    <p>Nous reviendrons plus en détail sur cette architecture prochainement, lorsque nous mettrons en place notre propre implémentation.</p>
+                </article>
+                <article>
+                    <h2 id="changements_state_Flux">Communiquez les changements de state à travers un architecture Flux :</h2>
+                    <h3>Décortiquez l'architecture Flux :</h3>
+                    <p>Nous avons vu précédemment le fonctionnement général de cette architecture. Quels sont les éléments qui aident à mettre celle-ci en place et comment ils interagissent ?</p>
+                    <figure>
+                        <img src="../images/changements_state_Flux_1.png" alt="">
+                        <figcaption>On identifie ici le sens de modification du state à partir du composant.</figcaption>
+                    </figure>
+                    <p>Ci-dessus, le <span class="em">dispatcher</span> centralise les changements du state.</p>
+                    <p>Il reçoit ainsi des <span class="em">actions</span>, ou messages, qui comportent :</p>
+                    <ul>
+                        <li>
+                            <p>le <span class="em">type de traitement à appliquer au state</span>, l'ajout d'un produit à la liste, par exemple;</p>
+                        </li>
+                        <li>
+                            <p>un <span class="em">payload</span>, ou un <span class="em">ensemble de données</span> servant à mettre à jour le state, admettons le nom et le prix du produit à ajouter.</p>
+                        </li>
+                    </ul>
+                    <p>Ensuite, il <span class="em">transmet cette action à tous les stores</span> qui, selon leur responsabilité, vont <span class="em">exécuter l'action</span>, puis <span class="em">notifier aux composants abonnés</span> que leur state a été modifié.</p>
+                    <p>Les composants peuvent ensuite venir <span class="em">récupérer les nouvelles valeurs</span> du state et <span class="em">mettre à jour leur rendu</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Nous verrons plus tard comment s'articule Redux, mais nous remarquerons dès ici que Flux autorise le multi-store. A contrario, <span class="em">Redux</span> est <span class="em">mono-store</span>.</p>
+                    </div>
+                    <h3>Créez votre propre système simplifié d'architecture Flux :</h3>
+                    <p>Nous allons tenter d'appliquer cette architecure en nous concentrant uniquement sur le state et les actions d'abonnement (<span class="html">subscribe</span>) et de répartition (<span class="html">dispatch</span>).</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Nous allons ainsi nous permettre, en introduisant petit à petit d'autres outils que nous verrons dans les prochains chapitres et parties, de faire évoluer notre architecture vers un modèle se rapprochant de Redux.</p>
+                    </div>
+                    <p>Pour cela, je vous propose ci-dessous de comprendre comment implémenter simplement le mécanisme lié à cette architecture :</p>
+                    <p>On va créer les fichiers <span class="html">index.html</span> et <span class="html">flux.js</span> avec le contenu suivant pour <span class="html">index.html</span> :</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;script src="flux.js" defer&gt;&lt;/script&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div id="header"&gt;
+            Aucun propriétaire configuré
+        &lt;/div&gt;
+        &lt;form id="addForm" action="#"&gt;
+            &lt;input name="firstName" /&gt;
+            &lt;button&gt;Enregistrer&lt;/button&gt;
+        &lt;/form&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>Et le contenu suivant pour <span class="html">flux.js</span> :</p>
+<pre><code>let state = {};
+
+const subscribers = [];
+
+const subscribe = (fct) =&gt; {
+    return subscribers.push(fct);
+};
+
+const dispatch = (newStateValue) =&gt; {
+    state = newStateValue;
+    for (const fct of subscribers) {
+        fct(state);
+    }
+};
+
+document.getElementById("addForm").addEventListener("submit", (evt) =&gt; {
+    evt.preventDefault();
+    const firstNameInput = evt.currentTarget.firstName;
+    dispatch({
+        owner: {
+            firstName: firstNameInput.value,
+        }
+    })
+})
+
+subscribe((state) =&gt; {
+    if (state) {
+        document.getElementById("header").textContent = `Le propriétaire du restaurant est ${state.owner.firstName}`;
+    }
+})</code></pre>
+                    <p>Revenons ici sur l'implémentation. Nous avons créé :</p>
+                    <ul>
+                        <li>
+                            <p>une variable de type objet pour stocker le state;</p>
+                        </li>
+                        <li>
+                            <p>une fonction d'abonnement, <span class="html">subscribe</span>, qui permet d'empiler des fonctions qui seront exécutées à chaque appel à la fonction <span class="html">dispatch</span>.</p>
+                        </li>
+                    </ul>
+                    <p>Ce qui nous donne dans notre fichier <span class="html">flux_s1.html</span> :</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;script src="flux.js" defer&gt;&lt;/script&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div id="header"&gt;
+            Aucun propriétaire configuré
+        &lt;/div&gt;
+        &lt;form id="addForm" action="#"&gt;
+            &lt;input name="firstName" /&gt;
+            &lt;button&gt;Enregistrer&lt;/button&gt;
+        &lt;/form&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>Et dans notre fichier <span class="html">flux_s1.js</span> :</p>
+<pre><code>let state = {
+};
+
+const subscribers = [];
+
+const dispatch = (newStateValue) =&gt; {
+    state = newStateValue;
+    for (const fct of subscribers) {
+        fct(state)
+    }
+}
+
+const subscribe = (subscriberFct) =&gt; {
+    subscribers.push(subscriberFct);
+}
+
+subscribe((state) =&gt; {
+    if (state.owner) {
+        console.log('Le propriétaire est ajouté', state.owner)
+        document.getElementById('header').textContent = `Le propriétaire du restaurant est ${state.owner.firstName}`
+    }
+})
+
+dispatch({
+    company: {
+        name: 'Burger du Pré'
+    }
+})
+
+document.getElementById('addForm').addEventListener("submit", (evt) =&gt; {
+    evt.preventDefault()
+    const firstNameInput = evt.currentTarget.firstName
+    dispatch({
+        company: {
+            name: 'Burger du Pré'
+        },
+        owner: {
+            firstName: firstNameInput.value,
+        }
+    })
+})</code></pre>
+                    <h3>À vous de jouer !</h3>
+                    <p>Et si on mettait tout de suite en place cette architecture dans le cadre de notre projet de borne de commande ?</p>
+                    <p>Pour rappeler le contexte de notre projet fil rouge, nous souhaitons créer une application pour une borne de commande de burger. On devrait donc pouvoir ajouter une liste de produits à une commande, et c'est ce que nous allons réaliser dans cette première étape.</p>
+                    <p>Dans cette partie du cours, je vous laisse travailler sur une architecture qui nous permettra de stocker un panier de burgers sélectionnés pour la commande.</p>
+                    <p>L'objectif est d'<span class="em">afficher en console, de votre navigateur, une liste actualisée de burgers sélectionnés à chaque nouvelle sélection</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Ci-dessous, vous trouverez des éléments qui vous aideront à concrétiser cet exercice. Les modèles sont les objets à utiliser et à insérer dans notre liste.</p>
+                    </div>
+                    <p>D'abord, un fichier <span class="html">flux_s2.js</span> :</p>
+<pre><code>const DoubleCantal = {
+    title: 'Double Cantal',
+    price: 15.99,
+}
+
+const SuperCremeux = {
+    title: 'Super Crémeux',
+    price: 14.99,
+}
+
+const PouletCroquant = {
+    title: 'Poulet Croquant',
+    price: 17.99,
+}</code></pre>
+                    <p>Et un fichier <span class="html">flux_s2.html</span> :</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div id="header"&gt;
+            Aucun propriétaire configuré
+        &lt;/div&gt;
+        &lt;form id="addForm" action="#"&gt;
+            &lt;input name="firstName" /&gt;
+            &lt;button&gt;Enregistrer&lt;/button&gt;
+        &lt;/form&gt;
+        &lt;div&gt;
+            &lt;button class="orderButton" data-id="PouletCroquant"&gt;Poulet Croquant&lt;/button&gt;
+            &lt;button class="orderButton" data-id="DoubleCantal"&gt;Double Cantal&lt;/button&gt;
+            &lt;button class="orderButton" data-id="SuperCremeux"&gt;Super Cremeux&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div id="command"&gt;&lt;/div&gt;
+        &lt;script src="flux_s2.js" defer&gt;&lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Pour vous aiguiller, vous devez adapter le <span class="html">dispatch</span> pour gérer un tableau comme valeur de <span class="html">value</span> dans le state, qui sera augmenté d'un nouveau burger à chaque utilisation du <span class="html">dispatch</span>.</p>
+                    </div>
+                    <p>Vous avez tout implémenté ? Voici la correction :</p>
+                    <p>Donc, premièrement, voici le contenu du fichier <span class="html">flux_s2.html</span> :</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div id="header"&gt;
+            Aucun propriétaire configuré
+        &lt;/div&gt;
+        &lt;form id="addForm" action="#"&gt;
+            &lt;input name="firstName" /&gt;
+            &lt;button&gt;Enregistrer&lt;/button&gt;
+        &lt;/form&gt;
+        &lt;div&gt;
+            &lt;button class="orderButton" data-id="PouletCroquant"&gt;Poulet Croquant&lt;/button&gt;
+            &lt;button class="orderButton" data-id="DoubleCantal"&gt;Double Cantal&lt;/button&gt;
+            &lt;button class="orderButton" data-id="SuperCremeux"&gt;Super Cremeux&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div id="command"&gt;&lt;/div&gt;
+        &lt;script src="flux_s2.js" defer&gt;&lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>Et dans <span class="html">flux_s2.js</span> :</p>
+<pre><code>let state = {
+    list: [],
+};
+
+const subscribers = [];
+
+const subscribe = (fct) =&gt; {
+    return subscribers.push(fct);
+};
+
+const dispatch = (newStateValue) =&gt; {
+    state = newStateValue;
+    for (const fct of subscribers) {
+        fct(state);
+    }
+};
+
+document.getElementById("addForm").addEventListener("submit", (evt) =&gt; {
+    evt.preventDefault();
+    const firstNameInput = evt.currentTarget.firstName;
+    dispatch({
+        owner: {
+            firstName: firstNameInput.value,
+        }
+    })
+});
+
+subscribe((state) =&gt; {
+    if (state.owner) {
+        document.getElementById("header").textContent = `Le propriétaire du restaurant est ${state.owner.firstName}`;
+    }
+    if (state.list) {
+        document.getElementById("command").innerHTML = `&lt;h2&gt;Vous avez sélectionné les produits suivants :&lt;/h2&gt;;
+
+        for (let item of state.list) {
+            const itemElement = document.createElement("div");
+            itemElement.innerHTML = `
+                &lt;div&gt;
+                    ${item.title} &lt;span&gt;${item.price}&lt;/span&gt;
+                &lt;/div&gt;
+            `;
+            document.getElementById("command").appendChild(itemElement);
+        }
+    }
+});
+
+const DoubleCantal = {
+    title: 'Double Cantal',
+    price: 15.99,
+};
+
+const SuperCremeux = {
+    title: 'Super Crémeux',
+    price: 14.99,
+};
+
+const PouletCroquant = {
+    title: 'Poulet Croquant',
+    price: 17.99,
+};
+
+const PRODUCT_LIST = {
+    PouletCroquant,
+    SuperCremeux,
+    DoubleCantal,
+};
+
+document.querySelectorAll('.orderButton').forEach((element) =&gt; {
+    element.addEventListener('click', event =&gt; {
+        const productId = event.target.dataset['id'];
+        const productList = state.list;
+        productList.push(PRODUCT_LIST[productId]);
+        dispatch({
+            list: productList,
+        });
+    });
+});</code></pre>
+                </article>
+                <article>
+                    <h2 id="modification_valeurs_state_Reducers">Modifiez les valeurs du state de la bonne manière avec les Reducers :</h2>
+                    <h3>Rappelez-vous l'immutabilité :</h3>
+                    <p>Maintenant que nous avons mis en place une méthode qui permet à la fois de centraliser un state et de communiquer les chanegements de celui-ci, nous allons nous concentrer sur la manière dont nous modifions sa valeur.</p>
                     
                 </article>
             <!-- fin de section -->
