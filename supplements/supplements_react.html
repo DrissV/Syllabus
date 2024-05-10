@@ -3977,7 +3977,7 @@ const PouletCroquant = {
         &lt;div&gt;
             &lt;button class="orderButton" data-id="PouletCroquant"&gt;Poulet Croquant&lt;/button&gt;
             &lt;button class="orderButton" data-id="DoubleCantal"&gt;Double Cantal&lt;/button&gt;
-            &lt;button class="orderButton" data-id="SuperCremeux"&gt;Super Cremeux&lt;/button&gt;
+            &lt;button class="orderButton" data-id="SuperCremeux"&gt;Super Crémeux&lt;/button&gt;
         &lt;/div&gt;
         &lt;div id="command"&gt;&lt;/div&gt;
         &lt;script src="flux_s2.js" defer&gt;&lt;/script&gt;
@@ -4004,7 +4004,7 @@ const PouletCroquant = {
         &lt;div&gt;
             &lt;button class="orderButton" data-id="PouletCroquant"&gt;Poulet Croquant&lt;/button&gt;
             &lt;button class="orderButton" data-id="DoubleCantal"&gt;Double Cantal&lt;/button&gt;
-            &lt;button class="orderButton" data-id="SuperCremeux"&gt;Super Cremeux&lt;/button&gt;
+            &lt;button class="orderButton" data-id="SuperCremeux"&gt;Super Crémeux&lt;/button&gt;
         &lt;/div&gt;
         &lt;div id="command"&gt;&lt;/div&gt;
         &lt;script src="flux_s2.js" defer&gt;&lt;/script&gt;
@@ -4093,6 +4093,40 @@ document.querySelectorAll('.orderButton').forEach((element) =&gt; {
                     <h2 id="modification_valeurs_state_Reducers">Modifiez les valeurs du state de la bonne manière avec les Reducers :</h2>
                     <h3>Rappelez-vous l'immutabilité :</h3>
                     <p>Maintenant que nous avons mis en place une méthode qui permet à la fois de centraliser un state et de communiquer les chanegements de celui-ci, nous allons nous concentrer sur la manière dont nous modifions sa valeur.</p>
+                    <p>Si nous nous souvenons du fonctionnement de JavaScript au niveau de l'assignation, c'est-à-dire l'association entre les variables et les valeurs, hormis les cas des primitives ("string", "number", "boolean"...), toutes les autres valeurs sont assignées par <span class="em">référence</span> : c'est l'adresse mémoire où se trouve la valeur qui est stockée. La variable ne stocke pas directement la valeur !</p>
+<pre><code>const A = {name: 'joe'}
+const B = {name: 'joe'}
+
+A === B
+// false</code></pre>
+                    <p>Et ceci parce que les valeurs de A et B n'ont pas la même référence. C'est-à-dire, elles <span class="em">ne sont pas placées au même endroit de la mémoire</span> de votre ordinateur.</p>
+                    <p>Comme nous l'avons vu précédemment, nous pouvons faire des copies par valeur pour nous assurer de l'immutabilité. C'est-à-dire que nous copions tout le contenu d'une variable et nous créons une nouvelle référence.</p>
+                    <p>Par contre, si nous faisons :</p>
+<pre><code>const C = A
+C.name = "claude"
+
+A.name
+// claude</code></pre>
+                    <p>A et C partagent la même référence.</p>
+                    <p>D'accord, il y a les valeurs et les références, mais pourquoi s'arrêter là-dessus ici ? Eh bien, si nous revenons sur notre implémentation précédente, nous mettons à jour la valeur de notre variable state <span class="em">à chaque <span class="html">dispatch</span></span>. Ceci peut présenter des effets non désirés et des incohérences dans les données. Selon le contexte dans lequel nous faisons appel à une variable, celle-ci ne retourne pas exactement le résultat attendu.</p>
+                    <p>Voici comment ces effets peuvent avoir lieu :</p>
+<pre><code>// flux_s3.js
+
+function autoAddPromo() {
+    setTimeout(function() {
+        const newState = {...state};
+        newState.list = state.list.map(item =&gt; ({...item}));
+        newState.list.find((product) =&gt; product.title === "Super Crémeux").price = 2;
+        dispatch(newState);
+    }, 9000)
+}
+
+autoAddPromo();</code></pre>
+                    <p>Pour revenir à ce que nous venons de voir, copier une référence de state peut s'avérer contre-intuitif.</p>
+                    <p>Dans notre exemple, nous avons appliqué une promotion aux produits du panier du type Super Crémeux, sauf que nous avons modifié la valeur <span class="html">price</span> de l'objet en référence <span class="html">SuperCremeux</span>. Donc à chaque nouvel ajout du produit <span class="html">SuperCremeux</span>, celui-ci n'est plus au prix de base mais au prix promotionnel.</p>
+                    <p>Pour éviter cette situation, nous allons <span class="em">créer une copie complète de notre state</span>, et nous assurer qu'à chaque changement, ce soit la nouvelle copie modifiée qui soit transmise dans le dispatch.</p>
+                    <h3>Maîtrisez les changements avec les Reducers :</h3>
+                    <p>Il faudra donc à chaque fois reconstruire un nouveau state ? Oui, mais nous allons le faire de la bonne façon. Pour nous rapprocher de Redux nous allons simplifier notre méthode en introduisant un nouvel outil : le reducer.</p>
                     
                 </article>
             <!-- fin de section -->
