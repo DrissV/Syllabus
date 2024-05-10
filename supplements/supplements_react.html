@@ -84,6 +84,8 @@
                         <li><a href="#state_management">State management</a></li>
                         <li><a href="changements_state_Flux">Changements de state via Flux</a></li>
                         <li><a href="#modification_valeurs_state_Reducers">Modification des valeurs du state avec les Reducers</a></li>
+                        <li><a href="#Redux">Redux</a></li>
+                        <li><a href="#Redux_React">Redux dans React</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -4151,7 +4153,412 @@ autoAddPromo();</code></pre>
     }
 }</code></pre>
                     <p>Maintenant, je vais vous montrer comment l'utiliser.</p>
-                    
+                    <p>On va ajouter le bouton dans notre fichier HTML comme ceci :</p>
+<pre><code>&lt;div&gt;
+    &lt;button id="voucher"&gt;Super Crémeux à 2 euros&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+                    <p>Et dans le fichier JS, on rajoute notre reducer comme cela :</p>
+<pre><code>const reducter = (currentState, action) =&gt; {
+    switch(action.type) {
+        case 'ADD_PRODUCT':
+            const listWithNewProduct = [...currentState.list, action.payload]
+            return {...currentState, list: listWithNewProduct}
+        case 'APPLY_VOUCHER':
+            const withVoucherList = currentState.list.map(
+                item =&gt; item.title === 'Super Crémeux' ? ({...item, price: action.payload.price}) : ({...item})
+            )
+            return {...currentState, list: withVoucherList}
+        default:
+            return currentState
+    }
+}</code></pre>
+                    <p>Et dans ce fichier, on va également modifier le code des boutons "order" :</p>
+<pre><code>document.querySelectorAll(".orderButton").forEach((element) =&gt; {
+    element.addEventListener("click", (event) =&gt; {
+        const productId = event.target.dataset["id"];
+        const newState = reducer(state, {
+            type: "ADD_PRODUCT",
+            payload: PRODUCT_LIST[productId],
+        });
+        dispatch(newState);
+    });
+});
+
+document.getElementById("voucher").addEventListener("click", () =&gt; {
+    const newState = reducer(state, {
+        type: "APPLY_VOUCHER",
+        payload: { price: 2.0 },
+    });
+    dispatch(newState);
+});</code></pre>
+                    <p>Pour résumer le code ci-dessus, ça présente comment appliquer une action dans notre reducer en veillant à bien recréer un nouveau state à chaque changement :</p>
+<pre><code>// Nous créons le reducer
+const reducer = (currentState, action ) =&gt; {
+    switch (action.type) {
+        case 'ADD_PRODUCT':
+            const listWithNewProduct = [...currentState.list, action.payload]
+            return {...currentState, list: listWithNewProduct}
+        case 'REMOVE_PRODUCT':
+            const list = currentState.list.filter(
+                (item, index) =&gt; index !== action.payload
+            )
+            return {...currentState, list: list}
+        case 'APPLY_VOUCHER':
+            const withVoucherList = currentState.list.map(
+                        item =&gt; item.title === 'Super Crémeux' ? ({...item, price: action.payload.price}) : item
+            )
+            return {...currentState, list: withVoucherList}
+        case 'UPDATE_FIRSTNAME':
+            const owner = {...currentState.owner, firstName: action.payload}
+            return {...currentState, owner}
+        default:
+            return currentState
+    }
+}
+
+// Et nous modifions en conséquence...
+dispatch({...state, company: {name: 'Burger du Pré'}})
+document.getElementById('addForm').addEventListener("submit", (evt) =&gt; {
+    evt.preventDefault()
+    const firstNameInput = evt.currentTarget.firstName
+    const newState = reducer(state, {type: 'UPDATE_FIRSTNAME', payload: firstNameInput.value })
+    dispatch(newState)
+})
+
+document.querySelectorAll('.orderButton').forEach((element) =&gt; {
+    element.addEventListener('click', (event) =&gt; {
+        const productId = event.target.dataset['id']
+        const newState = reducer(state, {type: 'ADD_PRODUCT', payload: PRODUCT_LIST[productId] })
+        dispatch(newState)
+    })
+})
+
+document.getElementById('voucher').addEventListener("click", (evt) =&gt; {
+    const newState = reducer(state, {type: 'APPLY_VOUCHER', payload: {price: 2.00} })
+    dispatch(newState)
+})</code></pre>
+                </article>
+                <article>
+                    <h2 id="Redux">Simplifiez votre architecture avec Redux :</h2>
+                    <h3>Intallez Redux :</h3>
+                    <p>En tant que développeurs, nous devons nous efforcer à ne pas réinventer la roue à chaque nouveau projet.</p>
+                    <p>De ce fait, il existe des outils de la communauté qui nous permettent dans la plupart des cas de répondre à nos problématiques. Et c'est ici qu'entre en jeu <span class="em">Redux</span>, notre gestionnaire de state centralisé.</p>
+                    <p>Tout d'abord, je vous propose d'installer Redux. Et pour ce faire, je vais vous demander d'installer Redux Toolkit.</p>
+                    <p>Mais pourquoi installer Redux Toolkit alors que l'on travaille sur Redux ? Eh bien la raison est la suivante : Redux est un outil <span class="em">open source</span>, propulsé par une <span class="em">communauté</span>. De ce fait, les développeurs qui la composent ont dicté des "<span class="em">best pratices</span>" qui font office de normes. Les pratiques actuelles préconisent d'utiliser Redux avec Redux Toolkit (RTK). C'est donc pourquoi nous apprenons à utiliser Redux avec RTK.</p>
+                    <p>Installons maintenant Redux et RTK :</p>
+                    <p>Ajoutez la ressource suivante dans votre fichier HTML :</p>
+<pre><code>&lt;script src="https://unpkg.com/@reduxjs/toolkit@1.9.7/dist/redux-toolkit.umd.js"&gt;&lt;/script&gt;</code></pre>
+                    <p>Dans votre navigateur, dans la console, tapez <span class="html">window.RTK</span> puis <span class="html">Entrée</span>. Vous devriez retrouver ce qui suit :</p>
+                    <figure>
+                        <img src="../images/Redux_RTK.png" alt="">
+                        <figcaption>Redux et RTK sont installés.</figcaption>
+                    </figure>
+                    <p>Voilà Redux et RTK bien installés !</p>
+                    <h3>Créez un store avec Redux :</h3>
+                    <p>Allons-nous remplacer notre implémentation par Redux ? Oui, mais vous verrez, son utilisation ne diffère pas beaucoup de ce que nous avons réalisé.</p>
+                    <p>Remplaçons notre architecture Flux par Redux dans le fichier JS :</p>
+<pre><code>let state = {
+    list: [],
+};
+
+// Nous créons le reducer
+const reducer = (currentState, action ) =&gt; {
+    switch (action.type) {
+        case 'ADD_PRODUCT':
+            const listWithNewProduct = [...currentState.list, action.payload]
+            return {...currentState, list: listWithNewProduct}
+        case 'REMOVE_PRODUCT':
+            const list = currentState.list.filter(
+                (item, index) =&gt; index !== action.payload
+            )
+            return {...currentState, list: list}
+        case 'APPLY_VOUCHER':
+            const withVoucherList = currentState.list.map(
+                        item =&gt; item.title === 'Super Crémeux' ? ({...item, price: action.payload.price}) : item
+            )
+            return {...currentState, list: withVoucherList}
+        case 'UPDATE_FIRSTNAME':
+            const owner = {...currentState.owner, firstName: action.payload}
+            return {...currentState, owner}
+        default:
+            return currentState
+    }
+}
+
+const store = window.RTK.configureStore({
+    preloadedState: state,
+    reducer: reducer,
+});
+
+store.subscribe(() =&gt; {
+    const state = store.getState();
+    if (state.owner) {
+        document.getElementById("header").textContent = `Le propriétaire du restaurant est ${state.owner.firstName}`;
+    }
+    if (state.list) {
+        document.getElementById("command").innerHTML = `&lt;h2&gt;Vous avez sélectionné les produits suivants :&lt;/h2&gt;`;
+
+        for (let i in state.list) {
+            const itemElement = document.createElement("div");
+            itemElement.innerHTML = `
+                &lt;div&gt;
+                    ${item.title} &lt;span&gt;{item.price}&lt;/span&gt;
+                    &lt;button id="removeButton_${i}"&gt;remove&lt;/button&gt;
+                &lt;/div&gt;
+            `;
+            document.getElementById("removeButton_${i}").addEventListener("click", () =&gt; {});
+        }
+    }
+});
+
+const DoubleCantal = {
+    title: 'Double Cantal',
+    price: 15.99,
+};
+
+const SuperCremeux = {
+    title: 'Super Crémeux',
+    price: 14.99,
+};
+
+const PouletCroquant = {
+    title: 'Poulet Croquant',
+    price: 17.99,
+};
+
+const PRODUCT_LIST = {
+    PouletCroquant,
+    SuperCremeux,
+    DoubleCantal,
+};
+
+document.querySelectorAll('.orderButton').forEach((element) =&gt; {
+    element.addEventListener('click', event =&gt; {
+        const productId = event.target.dataset['id'];
+        store.dispatch({
+            type: 'ADD_PRODUCT',
+            payload: PRODUCT_LIST[productId],
+        });
+    });
+});
+
+document.getElementById('voucher').addEventListener("click", () =&gt; {
+    store.dispatch({
+        type: 'APPLY_VOUCHER',
+        payload: {price: 2.00},
+    });
+});</code></pre>          
+                    <p>Pour résumer, nous avons donc créer un store avec la focntion <span class="html">configureStore</span> de RTK. Ce store nous expose deux fonctions, <span class="html">subscribe</span> et <span class="html">dispatch</span>, ce qui nous permet de remplacer les deux fonctions implémenées précédemment. C'est tout ce qu'il y avait à faire le fonctionnement reste le même.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Notez que nous avons initialisé un state via la propriété <span class="html">preloadedState</span>. Cette propriété nous permet de configurer un state par défaut dans notre store.</p>
+                    </div>
+                    <p>Ce qui nous donne dans un fichier <span class="html">flux_s6.html</span> :</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div id="header"&gt;
+            Aucun propriétaire configuré
+        &lt;/div&gt;
+        &lt;form id="addForm" action="#"&gt;
+            &lt;input name="firstName" /&gt;
+            &lt;button&gt;Enregistrer&lt;/button&gt;
+        &lt;/form&gt;
+        &lt;div&gt;
+            &lt;button class="orderButton" data-id="PouletCroquant"&gt;Poulet Croquant&lt;/button&gt;
+            &lt;button class="orderButton" data-id="DoubleCantal"&gt;Double Cantal&lt;/button&gt;
+            &lt;button class="orderButton" data-id="SuperCremeux"&gt;Super Cremeux&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+            &lt;button id="voucher"&gt;Super Crémeux à 2 euros&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div id="command"&gt;&lt;/div&gt;
+        &lt;script src="https://unpkg.com/@reduxjs/toolkit/dist/redux-toolkit.umd.min.js"&gt;&lt;/script&gt;
+        &lt;script src="flux_s6.js"&gt;&lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>Et dans un fichier <span class="html">flux6.js</span> :</p>
+<pre><code>const DoubleCantal = {
+    title: 'Double Cantal',
+    price: 15.99,
+}
+
+
+const SuperCremeux = {
+    title: 'Super Crémeux',
+    price: 14.99,
+}
+
+const PouletCroquant = {
+    title: 'Poulet Croquant',
+    price: 17.99,
+}
+
+const PRODUCT_LIST = {
+    PouletCroquant,
+    SuperCremeux,
+    DoubleCantal,
+}
+
+let state = {
+    value: null,
+    list: []
+};
+const subscribers = [];
+
+const reducer = (currentState, action ) =&gt; {
+    switch (action.type) {
+        case 'ADD_PRODUCT':
+            const listWithNewProduct = [...currentState.list, action.payload]
+            return {...currentState, list: listWithNewProduct}
+        case 'REMOVE_PRODUCT':
+            const list = currentState.list.filter(
+                (item, index) =&gt; index !== action.payload
+            )
+            return {...currentState, list: list}
+        case 'APPLY_VOUCHER':
+            const withVoucherList = currentState.list.map(
+                item =&gt; item.title === 'Super Crémeux' ? ({...item, price: action.payload.price}) : item
+            )
+            return {...currentState, list: withVoucherList}
+
+        case 'UPDATE_FIRSTNAME':
+            const owner = {...currentState.owner, firstName: action.payload}
+            return {...currentState, owner}
+        default:
+            return currentState
+    }
+}
+
+const store = window.RTK.configureStore(
+    {
+        preloadedState: state,
+        reducer
+    }
+)
+
+store.subscribe(() =&gt; {
+    const state = store.getState()
+    if (state.owner) {
+        console.log('Le propriétaire est ajouté', state.owner)
+         document.getElementById('header').textContent = `Le propriétaire du restaurant est ${state.owner.firstName}`
+    }
+    if (state.list) {
+        document.getElementById('command').innerHTML = ``;
+        for (let item of state.list) {
+            const itemElement = document.createElement('div')
+            itemElement.innerHTML = `
+                &lt;div&gt;
+                    ${item.title} &lt;span&gt;${item.price}&lt;/span&gt;
+                &lt;/div&gt;
+            `
+            document.getElementById('command').appendChild(itemElement)
+        }
+    }
+})
+
+document.getElementById('addForm').addEventListener("submit", (evt) =&gt; {
+    evt.preventDefault()
+    const firstNameInput = evt.currentTarget.firstName
+    store.dispatch({type: 'UPDATE_FIRSTNAME', payload: firstNameInput.value })
+})
+
+document.querySelectorAll('.orderButton').forEach((element) =&gt; {
+    element.addEventListener('click', (event) =&gt; {
+        const productId = event.target.dataset['id']
+        store.dispatch({type: 'ADD_PRODUCT', payload: PRODUCT_LIST[productId] })
+    })
+})
+
+document.getElementById('voucher').addEventListener("click", (evt) =&gt; {
+    store.dispatch({type: 'APPLY_VOUCHER', payload: {price: 2.00} })
+})</code></pre>
+                </article>
+                <article>
+                    <h2 id="Redux_React">Ajoutez Redux à une application React :</h2>
+                    <h3>Créez une application React :</h3>
+                    <p>Redux fonctionne <span class="em">indépendamment</span> de React. Nous avons découvert précédemment les concepts qui fondent son fonctionnement. Nous savons ainsi que nous pouvons :</p>
+                    <ul>
+                        <li>
+                            <p>stocker dans un store centralisé des états;</p>
+                        </li>
+                        <li>
+                            <p>exécuter des parties de notre code en fonction des chanegements intervenant dans le store;</p>
+                        </li>
+                        <li>
+                            <p>modifier les valeurs du store en appliquant des actions.</p>
+                        </li>
+                    </ul>
+                    <p>Créons alors notre application React en suivant les commandes ci-dessous :</p>
+<pre><code>## create react project
+npm init react-app resto-cmd
+# ou
+yarn react-app resto-cmd
+# ou encore
+yarn create-react-app resto-cmd</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous pouvez retrouver d'autres outils qui permettent de configurer un projet React, d'ailleurs la nouvelle documentation ne mentionne plus <span class="html">create-react-app</span>. L'outil reste utilisable pour configurer rapidement un projet. Vous pouvez ainsi utiliser <a href="https://vitejs.dev/" target="_blank">Vite</a> comme suit :</p>
+<pre><code>npm create vite@latest resto-cmd -- --template react
+cd resto-cmd
+npm install
+npm run dev</code></pre>
+                    </div>
+                    <p>Nous allons ajouter notre package Redux Toolkit pour bénéficier de Redux dans notre application React et du package <span class="html">react-redux</span>, qui va nous permettre de manipuler le store dans nos composants :</p>
+                    <p>Pour ce faire, utilisez ma commande suivante :</p>
+<pre><code>## add rtk as package
+npm install @reduxjs/tookit react-redux
+# ou
+yarn add @reduxjs/tookit react-redux</code></pre>
+                    <p>À ce stade, vous devriez obtenir une application React prête à être développée avec notre state manager Redux.</p>
+                    <p>Afin de préparer la suite de nos avancées, nous allons utiliser une partie du code que nous avons déjà implémenté !</p>
+                    <p>Afin de suivre les bonnes pratiques, nous allons respecter certaines règles proposées dans le guide de styles que vous retrouvez dans <a href="https://redux.js.org/style-guide/#structure-files-as-feature-folders-with-single-file-logic" target="_blank">la documentation de Redux (en anglais)</a>.</p>
+                    <ol>
+                        <li>
+                            <p>D'abord, créons un dossier <span class="html">app/</span>.</p>
+                        </li>
+                        <li>
+                            <p>Nous y dépaçons nos fichiers <span class="html">App.js</span> et <span class="html">App.css</span> en modifiant leurs imports.</p>
+                        </li>
+                        <li>
+                            <p>Ensuite, nous créons notre fichier <span class="html">app/store.js</span>.</p>
+                        </li>
+                        <li>
+                            <p>Créons un dossier <span class="html">common</span> pour y placer notre fichier <span class="html">models.js</span>, car il sera utile à plusieurs parties de notre application et tous les composants réutilisables. Nous ajoutons nos produits dans ce fichier.</p>
+                        </li>
+                        <li>
+                            <p>Puis, en copiant l'intégralité de notre fichier <span class="html">flux_s6.js</span>, nous ajoutons ce code dans le fichier <span class="html">store.js</span>. J'en profite pour rajouter deux produits par défaut dans mon store. Vous pouvez voir dans le code qui suit comment je m'y prends.</p>
+                        </li>
+                        <li>
+                            <p>Nous modifions, notre import du composant App dans <span class="html">index.js</span> qui devient <span class="html">./app/App.js</span>.</p>
+                        </li>
+                        <li>
+                            <p>Nous ajoutons le provider dans notre fichier <span class="html">app/App.js</span> comme suit, et nettoyons un peu son implémentation :</p>
+<pre><code>import { Provider } from 'react-redux';
+import { store } from './store';
+import './App.css';
+
+function App() {
+    return (
+        &lt;Provider store={store}&gt;
+            &lt;div className="App"&gt;
+            &lt;/div&gt;
+        &lt;/Provider&gt;
+    );
+}
+
+export default App;</code></pre>
+                        </li>
+                    </ol>
+                    <p>Vous devriez à ce stade avoir :</p>
+                    <ol>
+                        <li>
+                            <p>Un fichier <span class="html">app/store.js</span> comme suit :</p>
+<pre><code></code></pre>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
