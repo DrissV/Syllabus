@@ -4635,6 +4635,74 @@ export default App;</code></pre>
                         <p>Enfin, pour avoir le même rendu que moi, vous pouvez ajouter un fichier <span class="html">index.css</span>.</p>
                     </div>
                     <p>Nous venons d'intégrer nos sources à notre projet React. Ainsi, nous avons :</p>
+                    <ul>
+                        <li>
+                            <p>construit un fichier <span class="html">store.js</span> pour y placer notre reducer et notre configurtion du store;</p>
+                        </li>
+                        <li>
+                            <p>appliqué à notre <span class="em">provider</span> à la racine de notre application (<span class="html">App.js</span>) afin de pouvoir accéder à notre store au sein de chacun de nos composants</p>
+                        </li>
+                        <li>
+                            <p>placé nos <span class="em">modèles</span> dans un fichier dédié pour mieux structurer notre code;</p>
+                        </li>
+                        <li>
+                            <p>ajouté le <span class="em">style</span> de l'application pour utiliser les classes toutes prêtes.</p>
+                        </li>
+                    </ul>
+                    <p>Et voilà, nous sommes enfin prêts à manipuler notre state dans React avec Redux et Redux Toolkit !</p>
+                    <h3>Associez le store à un premier composant :</h3>
+                    <p>Maintenant que notre store est configuré, notre prochain défi sera de...</p>
+                    <p>... l'associer à lun de nos composants ? Exact !</p>
+                    <p>Pour accéder au store de Redux dans nos composants, nous pouvons utiliser le hook <span class="html">useStore</span> de react-redux que nous avons précédemment installé.</p>
+                    <p>Ci-dessous, un exemple d'implémentation permettant d'accéder au store.</p>
+<pre><code>import { useStore } from "react-redux";
+
+const Component = () =&gt; {
+    const store = useStore();
+    return &lt;i&gt;&lt;/i&gt;
+};</code></pre>
+                    <p><span class="html">useStore</span> nous permet donc d'<span class="em">accéder à l'instance du store qui est diffusée dans notre application</span> via le Provider préalablement inséré.</p>
+                    <p>Maintenant que nous savons comment accéder au store, nous allons commencer à l'utiliser dans notre application.</p>
+                    <p>Pour cela, nous allons créer notre composant affichant la liste des produits sélectionnés, que nous appellerons <span class="html">Cart</span>, dans le fichier <span class="html">features/cart/Cart.js</span>.</p>
+                    <p>L'instance <span class="html">store</span> fournit une méthode <span class="html">getState()</span> qui nous permet d'obtenir à chaque instance les valeurs stockées dans le store. Si nous faisons donc appel à <span class="html">store.getState()</span>, nous aurons accès à <span class="html">list</span> qui contient notre liste de produits sélectionnés.</p>
+                    <p>Il ne nous reste donc plus qu'à "mapper" sur <span class="em">store.getState().list</span> en faisant :</p>
+<pre><code>store.getState().list.map((item, index) =&gt; &lt;JSXElement /&gt;)</code></pre>
+                    <p>Je vous propose maintenant de comprendre comment le créer ci-dessous.</p>
+                    <p>On va créer le fichier <span class="html">src/app/features/cart/Cart.js</span> avec le contenu suivant :</p>
+<pre><code>import { useStore } from "react-redux";
+    
+export const Cart = () =&gt; {
+    const store = useStore();
+    return (
+        &lt;div className="Selection"&gt;
+            &lt;h1&gt;Vos produits sélectionnés&lt;/h1&gt;
+            {
+                store.getState().list.map(
+                    (item, index) =&gt; &lt;span key={index} className="SelectedProduct"&gt;{item.title} {item.price}&lt;/span&gt;
+                );
+            }
+        &lt;/div&gt;
+    );
+}</code></pre>
+                    <p>N'oublions pas de rajouter ce composant dans notre application, <span class="html">App</span> :</p>
+<pre><code>import { Provider } from 'react-redux';
+import { store } from './store';
+import './App.css';
+import { Cart } from '../features/cart/Cart';
+
+function App() {
+    return (
+        &lt;Provider store={store}&gt;
+            &lt;div className="App"&gt;
+                &lt;Cart /&gt;
+            &lt;/div&gt;
+        &lt;/Provider&gt;
+    );
+}
+
+export default App;</code></pre>
+                    <p>Nous venons donc d'ajouter l'affichage du listing de nos produits sélectionnés dans notre panier.</p>
+                    <p>Faisons le point sur cette phase d'implémentation, au cours de laquelle nous avons :</p>
                     
                 </article>
             <!-- fin de section -->
