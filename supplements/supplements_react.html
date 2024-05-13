@@ -88,6 +88,7 @@
                         <li><a href="#Redux_React">Redux dans React</a></li>
                         <li><a href="#partage_state_composants">Partage du state entre composants</a></li>
                         <li><a href="#acces_valeurs_store_selecteurs">Accès aux valeurs du store avec les sélecteurs</a></li>
+                        <li><a href="#Redux_Toolkit">Redux ToolKit</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -4916,7 +4917,7 @@ export const Total = () =&gt; {
         {list.length === 0 ? &lt;div&gt;Aucun produit sélectionné&lt;/div&gt; : &lt;div&gt;Total commande {totalCommand} euros&lt;/div&gt;}
     &lt;/div&gt;
 };</code></pre>
-                    <p>et <span class="html">features/cart/Voucher.js</span>.</p>
+                    <p>et <span class="html">features/voucher/Voucher.js</span>.</p>
 <pre><code>import { useStore } from "react-redux";
 import { useEffect, useState } from "react";
 import { isVoucherAvailable } from "../../app/selectors";
@@ -4947,7 +4948,124 @@ export const Total = () =&gt; {
                     <p>Nous venons de revisiter notre implémentation en cherchant à simplifier. Mais nous répétons malgré tout les <span class="html">useEffect</span>. N'aurait-on pas un outil pour aller encore plus loin dans cette simplification ? Eh si, nous voyons juste après un outil qui va nous permettre de gérer l'accès aux valeurs du store et de "re-rendre" les composants à tout changement.</p>
                     <h3>Utilisez useSelector :</h3>
                     <p>Ok, très bien, on avance à grands pas. Continuons à apporter des améliorations à notre code base en exploitant encore plus d'outils par react-redux.</p>
-                    
+                    <p>Nous avons précédemment utilisé le hook <span class="html">useEffect</span> pour attacher le state local de chacun de nos composants aux changements du store.</p>
+                    <p>Peut-on simplifier cette implémentation ? La réponse est oui, et nous allons tout de suite mettre en pratique la solution : <span class="html">useSelector</span>.</p>
+                    <p>Ce hook nous permet de réaliser deux choses essentielles pour accéder aux valeurs à jour de notre store. Il <span class="em">récupère l'état complet du store</span>. Nous pouvons donc accéder à toutes les valeurs.</p>
+                    <p>De plus, il <span class="em">s'abandonne aux changements d'état du store</span>. Nous pouons ainsi nous passer d'attacher un état local puisque le hook va exécuter notre sélecteur passé en paramètre à chaque changement d'état du store. Ce qui nous assure un rerender en cas de changement de valeur.</p>
+                    <p>Pour l'utiliser, rien de plus simple.</p>
+                    <p>Pour notre liste de produits, nous remplaçons notre constante <span class="html">list</span> et le state local par une constante list à laquelle nous assignons la valeur de <span class="html">useSelector(getProductList)</span> comme suit :</p>
+<pre><code>const list = useSelector(productList)</code></pre>
+                    <p>Notre implémentation sera beaucoup plus simple. On va remplacer nos <span class="html">useEffect</span> et <span class="html">setState</span> par un simple <span class="html">useSelector</span> dans nos fichiers : <span class="html">features/cart/Cart.js</span>,</p>
+<pre><code>import { useSelector, useStore } from "react-redux";
+import { SuperCremeux } from "../../common/models";
+import { getProductList } from '../../app/selectors';
+
+export const Cart = () =&gt; {
+    const store = useStore();
+
+    const list = useSelector(getProductList);
+
+    return (
+        &lt;div className="Selection"&gt;
+            &lt;h1&gt;Choisir son menu&lt;/h1&gt;
+            &lt;div className="CartNavBar"&gt;
+                &lt;button onClick={() =&gt; store.dispatch({ type: 'ADD_PRODUCT', payload: SuperCremeux })}&gt;Ajouter un super crémeux&lt;/button&gt;
+            &lt;/div&gt;
+            {
+                list.map(
+                    (item, index) =&gt; &lt;span key={index} className="SelectedProduct"&gt;{item.title} {item.price}€&lt;/span&gt;
+                )
+            }
+        &lt;/div&gt;
+    );
+};</code></pre>
+                    <p><span class="html">features/voucher/Voucher.js</span>,</p>
+<pre><code>import { useSelector, useStore } from "react-redux";
+import { isVoucherAvailable } from "../../app/selectors";
+
+export const Voucher = () =&gt; {
+    const store = useStore();
+
+    const available = useSelector(isVoucherAvailable);
+
+    return &lt;div className="Voucher"&gt;
+        {available && &lt;button onClick={() =&gt; store.dispatch({type: 'APPLY_VOUCHER', payload: { price: 2 }})}&gt;Appliquer ma promo Super crémeux à 2 euros&lt;/button&gt;}
+    &lt;/div&gt;
+};</code></pre>
+                    <p>et <span class="html">features/total/Total.js</span>.</p>
+<pre><code>import { useSelector } from "react-redux";
+import { getProductList, getTotalOrder } from "../../app/selectors";
+
+export const Total = () =&gt; {
+    const list = useSelector(getProductList);
+    const totalCommand = useSelector(getTotalOrder);
+
+    return &lt;div class="TotalCommand"&gt;
+        {list.length === 0 ? &lt;div&gt;Aucun produit sélectionné&lt;/div&gt; : &lt;div&gt;Total commande {totalCommand} euros&lt;/div&gt;}
+    &lt;/div&gt;
+};</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Petit arrêt sur notre sélecteur <span class="html">getTotalOrder</span>, vous avez sans doute remarqué qu'à certaines reprises, le montant affiché à un format pas très esthétique, par exemple : Total commande 45.980000000000004 euros / Total commande 94.94999999999999 euros.</p>
+                        <p>Je vous propse cette solution, mais il y en a d'autres. Dans le fichier <span class="html">app/selectors.js</span>, ajoutez :</p>
+<pre><code>export const getTotalOrder = (state) =&gt; getProductList(state).reduce((prv, cur) =&gt; Math.round((cur.price + prv) * 100) / 100, 0)</code></pre>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="Redux_Toolkit">Découvez Redux ToolKit :</h2>
+                    <h3>Découvez les avantages de Redux Toolkit :</h3>
+                    <p>Enfin ! Nous l'avons déjà installé avec Redux, mais nous n'en avons pas encore parlé - c'est quoir Redux Toolkit ? <span class="em">Redux Toolkit</span> est une <span class="em">librairie qui facilite la gestion de l'état dans les applications React avec Redux</span>. Développée pour rendre l'utilisation de Redux plus simple, plus concise et plus agréable, en fournissant des utilisateurs prédéfinis pour certaines tâches courantes. Elle est suivie d'une <a href="https://redux-toolkit.js.org/" target="_blank">documentation complète</a> et d'un <a href="https://redux-toolkit.js.org/usage/usage-guide" target="_blank">guide des meilleures pratiques</a> afin de nous aider à intégrer Redux d'une façon plus conventionnelle.</p>
+                    <p>Elle embarque aussi une bonne partie des modules complémentaires de Redux qui faciliteront le développement. Par exemple, la gestion du code asynchrone et le déclenchement automatique des actions en fonction du résultat de la promesse avec <span class="html">createAsyncThunk</span>. Ou bien, de pouvoir combiner la génération d'action, de reducers et de sélecteurs et de composer notre store par fonctionnalités grâce à <span class="html">createSlice</span>.</p>
+                    <p>Ne vous inquiétez pas, on verra tout ça prochainement, ainsi que d'autres outils qui compléteront notre "kit".</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Et bonne nouvelle - si vous avez déjà une application Redux, cette librairie est conçue pour être compatible avec le code existant. Vous pouvez donc migrer progressivement sans avoir à tout réécrire.</p>
+                    </div>
+                    <p>Enfin, Redux Toolkit est soutenu par la communauté et dispose de <a href="https://redux-toolkit.js.org/tutorials/overview" target="_blank">tutoriels et exemples</a> pour vous aider à démarrer rapidement, en plus de sa documentation solide.</p>
+                    <h3>Définissez vos actions avec createAction :</h3>
+                    <p>Voyons tout de suite comment Redux Toolkit facilite la création de nos actions !</p>
+                    <p>Dans nos précédents appels au <span class="html">dispatch</span>, nous avons écrit entièrement un objet de la forme suivante pour définir l'action :</p>
+<pre><code>{
+    type: "ACTION_NAME",
+    payload: {
+        ...
+    }
+}</code></pre>
+                    <p>Pour <span class="em">éviter de réécrire à chaque fois nos actions à dispatch</span>, nous pouvons définir ce qu'on appelle des action creators. C'est-à-dire des fonctions qui vont nous retourner un objet, dont les propriétés correspondent à celles de l'action, et l'appeler comme ci-dessous :</p>
+<pre><code>const myAction = (payloadValue) =&gt; ({
+    type: "ACTION_NAME",
+    payload: payloadValue,
+})
+store.dispatch(myAction({/* payload */}))</code></pre>
+                    <p>Et si nous voulons utiliser <span class="em">la même clé d'action</span> pour notre reducer, nous devons exporter la clé comme ci-dessous :</p>
+<pre><code>export const MY_ACTION = "MY_ACTION"
+
+const myAction = (payloadValue) =&gt; ({
+    type: MY_ACTION,
+    payload: payloadValue,
+})</code></pre>
+<pre><code>import { MY_ACTION } from "./actions";
+
+const reducer = (state = initialState, action) =&gt; {
+    switch (action.type) {
+        case MY_ACTION:
+            return {
+                ...state,
+                /* payload */
+            }
+        default:
+            return state
+    }
+}</code></pre>
+                    <p>Redux Toolkit nous fournit un outil pour simplifier cela, <span class="html">createAction</span>.</p>
+                    <p><span class="html">createAction</span> renvoie un <span class="html">action creator</span>, et la variable créée peut être utilisée comme clé dans nos reducers.</p>
+                    <p>On voit comment l'utiliser ci-dessous :</p>
+<pre><code>import { createAction } from '@reduxjs/toolkit'
+
+export const myAction = createAction('MY_ACTION')
+
+store.dispatch(myAction(/* payload */))</code></pre>
+                    <p></p>
                 </article>
             <!-- fin de section -->
             </section>
