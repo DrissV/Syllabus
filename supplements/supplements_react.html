@@ -89,6 +89,7 @@
                         <li><a href="#partage_state_composants">Partage du state entre composants</a></li>
                         <li><a href="#acces_valeurs_store_selecteurs">Accès aux valeurs du store avec les sélecteurs</a></li>
                         <li><a href="#Redux_Toolkit">Redux ToolKit</a></li>
+                        <li><a href="#slices">Les slices</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -5065,7 +5066,46 @@ const reducer = (state = initialState, action) =&gt; {
 export const myAction = createAction('MY_ACTION')
 
 store.dispatch(myAction(/* payload */))</code></pre>
-                    <p></p>
+                    <p>Notez que <span class="html">createAction</span> peut prendre un deuxième paramètre qui permet de <span class="em">préparer le <span class="html">payload</span> associé à l'action</span>. C'est très utile lorsque nous voulons nous assurer du format des données, par exemple. Ci-dessous, une petite démonstration :</p>
+<pre><code>export const addEvent = createEvent('ADD_EVENT', (date) =&gt; ({
+    payload: {
+        day: date.getDate(),
+        month: date.getMonth(),
+        year: date: date.getFullYear(),
+    }
+}))
+
+store.dispatch(addEvent(new Date("2023-03-03")))</code></pre>
+                    <p>Via l'exemple ci-dessus, nous nous assurons que ce qui est passé en payload n'est pas une date JavaScript, mais directement un objet contenant explicitement le jour, le mois et l'année.</p>
+                    <h3>Définissez vos reducers avec createReducer :</h3>
+                    <p>Nous venons de voir <span class="html">createAction</span>, voilà qui simplifie grandement la gestion des actions.</p>
+                    <p>Mais quid de celle-ci dans nos reducers ? Aurions-nous une manière plus simple et plus esthétique de gérer nos actions dans nos reducers ? Eh bien oui, grâce à <span class="html">createReducer</span>.</p>
+                    <p>C'est une fonction qui nous permet de générer un reducer et d'y associer les différentes actions. Elle prend en paramètre l'état initial et une fonction qui va nous permettre d'ajouter chacun de nos cas. Ci-après, je vous montre comment l'utiliser dans des portions de code "démos" qui présentent la forme, et ne sont pas rattachées à notre projet fil rouge.</p>
+                    <p>D'abord, en passant une fonction <span class="html">builder</span> :</p>
+<pre><code>import { createAction, createReducer } from '@reduxjs/toolkit'
+
+export const myAction = createAction('MY_ACTION')
+
+const initialState = {}
+
+export const reducer = createReducer(initialState, function(builder) {
+    builder.addCase(myAction, (state, action) =&gt; {
+        /** RETURN NEW STATE VALUE */
+    })
+})</code></pre>
+                    <p>On peut aussi bien définir nos actions en passant un objet en paramètre :</p>
+<pre><code>export const reducer = createReducer(initialState, {
+    [myAction]: (state, action) =&gt; ({
+        /** RETURN NEW STATE VALUE */
+    })
+})</code></pre>
+                    <p>On peut donc très bien passer un objet pour configurer le reducer ou bien passer une fonction <span class="html">builder</span>, d'où les deux implémentations précédentes.</p>
+                </article>
+                <article>
+                    <h2 id="slices">Mettez en place des slices :</h2>
+                    <h3>Découvrez les slices :</h3>
+                    <p>Notre application évolue à grands pas ! Nous savons à présent organiser notre store autour des actions et de notre reducer.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
