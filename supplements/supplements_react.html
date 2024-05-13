@@ -90,6 +90,7 @@
                         <li><a href="#acces_valeurs_store_selecteurs">Accès aux valeurs du store avec les sélecteurs</a></li>
                         <li><a href="#Redux_Toolkit">Redux ToolKit</a></li>
                         <li><a href="#slices">Les slices</a></li>
+                        <li><a href="#configuration_reducers_EntityAdapters">Configuration des reducers avec les EntityAdapters</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -5138,9 +5139,75 @@ export const reducer = createReducer(initialState, function(builder) {
                                     <p>l'ajout de la promo;</p>
                                 </li>
                             </ul>
-<pre><code></code></pre>
+<pre><code>import { createSlice } from '@reduxjs/toolkit';
+
+export const cartSlice = createSlice({
+    name: 'list',
+    initialState: {}, // le state par défaut de notre slice
+    reducers: {
+        // action ADD_PRODUCT déplacée ici
+        addProduct: (currentState, action) =&gt; {
+            const listWithNewProduct = [...currentState, action.payload];
+            return listWithNewProduct;
+        },
+        // action REMOVE_PRODUCT déplacée ici
+        removeProduct: (currentState, action) =&gt; {
+            const list = [...currentState.list].filter(
+                (item, index) =&gt; index !== action.payload
+            );
+            return list;
+        },
+        // action APPLY_VOUCHER déplacée ici
+        applyVoucher: (currentState, action) =&gt; {
+            const withVoucherList = currentState.map(
+                item =&gt; item.title === 'Super Crémeux' ? ({...item, price: action.payload.price}) : item
+            );
+            return withVoucherList;
+        }
+    },
+});</code></pre>
+                        </li>
+                        <li>
+                            <p>modifier notre <span class="html">app/store.js</span> pour combiner 2 reducers : celui créé directement par notre slice et les actions restantes pour la mise à jour du propriétaire du restaurant.</p>
+<pre><code>import { combineReducers, configureStore, createAction, createReducer } from "@reduxjs/toolkit";
+import { cartSlice } from "../features/cart/cartSlice";
+
+let state = {
+    owner: {},
+    list: []
+};
+
+export const updateFirstName = createAction('UPDATE_FIRSTNAME', (firstName) =&gt; {
+    return {
+        payload: firstName
+    };
+});
+
+const reducer = createReducer(state, {
+    // on garde cette partie qui ne fait pas partie de notre slice
+    [updateFirstName]: (currentState, action) =&gt; {
+        const owner = {...currentState.owner, firstName: action.payload};
+        return {...currentState, ...owner};
+    }
+});
+
+export const store = configureStore(
+    {
+        preloadedState: state,
+        reducer: combineReducers({ // utilisé pour combiner nos reducers
+            owner: reducer,
+            list: cartSlice.reducer,
+        })
+    }
+);</code></pre>
                         </li>
                     </ul>
+                </article>
+                <article>
+                    <h2 id="configuration_reducers_EntityAdapters">Configurez vos reducers avec les EntityAdapters :</h2>
+                    <h3>Comprenez ce qu'est un EntityAdapter :</h3>
+                    <p>Nous faisons bien souvent des applications avec la même approche, et des fonctionnalités qui se rapprochent bien plus qu'il nous paraît...</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
