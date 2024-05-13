@@ -87,6 +87,7 @@
                         <li><a href="#Redux">Redux</a></li>
                         <li><a href="#Redux_React">Redux dans React</a></li>
                         <li><a href="#partage_state_composants">Partage du state entre composants</a></li>
+                        <li><a href="#acces_valeurs_store_selecteurs">Accès aux valeurs du store avec les sélecteurs</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -4752,7 +4753,7 @@ export const Cart = () =&gt; {
 
     useEffect(() =&gt; {
         store.subscribe(() =&gt; setList(store.getState().list));
-    }, [store]);
+    });
 
     return (
         &lt;div className="Selection"&gt;
@@ -4793,8 +4794,61 @@ export const Cart = () =&gt; {
                     <h3>Créez un second composant :</h3>
                     <p>Maintenant que nous pouvons modifier notre store et consulter son état à chaque fois que c'est nécessaire, allons apprendre à le gérer à travers plusieurs composants. Ça tombe bien, c'est notre objectif principal !</p>
                     <p>Pour cela, rien de plus simple. Chaque composant de notre application peut avoir accès au store. Nous allons créer un composant dédié au motant total de la commande.</p>
-                    <p>Ainsi, dans notre composant <span class="html">Cart.js</span>, on utilise <span class="html">useStore</span> pour accéder au store.</p>
                     <p>Nous rajoutons un abonnement au chanegement de valeur du store pour nous assurer que notre composant sera bien à jour à l'ajout ou à la suppression de produit dans la liste des produits sélectionnés.</p>
+                    <p>Nous créons donc notre composant <span class="html">Total.js</span> dans le dossier <span class="html">features/total/</span> et nous l'ajoutons à notre composant <span class="html">app/App.js</span> comme suit :</p>
+<pre><code>import { useStore } from "react-redux";
+import { useEffect, useState } from "react";
+
+export const Total = () =&gt; {
+    const store = useStore();
+    const [list, setList] = useState(store.getState().list);
+
+    const totalCommand = list.reduce((prv, cur) =&gt; cur.price + prv, 0);
+    useEffect(() =&gt; {
+        store.subscribe(() =&gt; setList(store.getState().list));
+    });
+
+    return &lt;div className="TotalCommand"&gt;
+        {list.length === 0 ? &lt;div&gt;Aucun produit sélectionné&lt;/div&gt; : &lt;div&gt;Total commande {totalCommand} euros&lt;/div&gt;}
+    &lt;/div&gt;
+};</code></pre>
+                    <p>Vous vous dites que c'est plutôt simple, et c'est effectivement le cas.</p>
+                    <p>Nous sommes capables de diffuser les valeurs de notre store à plusieurs composants.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Si l'on se penche sur la qualité du code, on s'aperçoit que certaines répétitions sont faites entre chaque composant. Un peu de patience, nous allons bientôt nous doter d'outils pour y remédier !</p>
+                    </div>
+                    <h3>Échangez des valeurs du state grâce au store :</h3>
+                    <p>Et si on rajoutait un composant supplémentaire pour appliquer notre bon promo ?</p>
+                    <p>Pour cela, nous créons un composant Voucher, que nous allons ajouter à notre composant <span class="html">app/App.js</span> et auquel nous donnerons accès à notre <span class="html">store</span>. Le store nous fournit la méthode <span class="html">dispatch()</span> qui va nous servir à appliquer des actions.</p>
+                    <p>Si on ajoute une action de type <span class="html">APPLY_VOUCHER</span>, en passant en payload la valeur <span class="html">{price: 2}</span>, nous allons pouvoir appliquer notre réduction.</p>
+                    <p>Sans plus tarder, ajoutons notre nouveau composant Voucher :</p>
+                    <p>Vous trouverez ci-dessous une implémentation dans le fichier <span class="html">features/voucher/Voucher.js</span> :</p>
+<pre><code>import { useStore } from "react-redux";
+import { useEffect, useState } from "react";
+
+export const Voucher = () =&gt; {
+    const store = useStore();
+    const [list, setList] = useState(store.getState().list);
+
+    const available = list.find(product =&gt; product.title === 'Super Crémeux');
+
+    useEffect(() =&gt; {
+        store.subscribe(() =&gt; setList(store.getState().list));
+    });
+
+    return (
+        &lt;div className="Voucher"&gt;
+            {available && &lt;button OnClick={() =&gt; store.dispatch({ type: 'APPLY_VOUCHER', payload: { price: 2 }})}&gt;Appliquer ma promo Super crémeux à 2 euros&lt;/button&gt;}
+        &lt;/div&gt;
+    );
+};</code></pre>
+                </article>
+                <article>
+                    <h2 id="acces_valeurs_store_selecteurs">Accédez aux valeurs du store avec les sélecteurs :</h2>
+                    <h3>Découvrez les sélecteurs :</h3>
+                    <p>Prenons le temps de revenir sur nos progrès et arrêtons-nous un peu sur la façon dont nous accédons aux valeurs du store.</p>
+                    <p>Dans le cas de la liste des produits sélectionnés, nous répétons chaque fois que nécessaire <span class="html">store.getState().list</span>.</p>
                     
                 </article>
             <!-- fin de section -->
