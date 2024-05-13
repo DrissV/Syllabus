@@ -86,6 +86,7 @@
                         <li><a href="#modification_valeurs_state_Reducers">Modification des valeurs du state avec les Reducers</a></li>
                         <li><a href="#Redux">Redux</a></li>
                         <li><a href="#Redux_React">Redux dans React</a></li>
+                        <li><a href="#partage_state_composants">Partage du state entre composants</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -4673,6 +4674,7 @@ const Component = () =&gt; {
     
 export const Cart = () =&gt; {
     const store = useStore();
+
     return (
         &lt;div className="Selection"&gt;
             &lt;h1&gt;Vos produits sélectionnés&lt;/h1&gt;
@@ -4703,6 +4705,96 @@ function App() {
 export default App;</code></pre>
                     <p>Nous venons donc d'ajouter l'affichage du listing de nos produits sélectionnés dans notre panier.</p>
                     <p>Faisons le point sur cette phase d'implémentation, au cours de laquelle nous avons :</p>
+                    <ol>
+                        <li>
+                            <p>Déclaré et inséré notre composant Cart dans <span class="html">App.js</span>.</p>
+                        </li>
+                        <li>
+                            <p>Créé notre composant Cart dans <span class="html">Cart.js</span>.</p>
+                        </li>
+                        <li>
+                            <p>Importé <span class="html">useStore</span> de react-redux.</p>
+                        </li>
+                        <li>
+                            <p>Utilisé <span class="html">useStore</span> pour l'assigner à notre variable locale store.</p>
+                        </li>
+                        <li>
+                            <p>Utilisé la méthode <span class="html">getState</span> pour récupérer l'état (le state) courant.</p>
+                        </li>
+                        <li>
+                            <p>Mappé sur list du store qui contient la liste des produits sélectionnés.</p>
+                        </li>
+                    </ol>
+                    <h3>Faites des modifications du store à partir de votre composant :</h3>
+                    <p>Nous voilà capables d'afficher la liste de produits sélectionnés... enfin, presque ! La liste contient des produits insérés manuellement avec le code.</p>
+                    <p>Mais nous souhaitons rendre cette liste <span class="em">dynamique</span>, c'est-à-dire être capables d'ajouter d'autres produits sans pour cela réécrire de code pour en ajouter.</p>
+                    <p>Pour ajouter cette fonctionnalité, nous allons créer un bouton pour chaque produit et utiliser le store pour stocker le produit correspondant à chaque bouton lors du clic sur le bouton.</p>
+                    <p>À l'instar de la méthode <span class="html">getState</span>, l'instance <span class="html">store</span> fournit une méthode dispatch qui va nous permettre d'appliquer des actions, <span class="html">dispatch()</span>.</p>
+                    <p>Bien évidemment, la méthode dispatch fonctionne de pair avec la méthode subscribe. On va donc modifier notre accès à <span class="html">list</span> et ajouter un état local qui sera modifié à chaque <span class="html">dispatch</span>.</p>
+                    <p>On ajoute donc :</p>
+<pre><code>const [list, setList] = useState(store.getState().list);</code></pre>
+                    <p>Et afin de venir modifier notre state à chaque changement du store, on ajoute à notre composant :</p>
+<pre><code>useEffect(() =&gt; {
+    store.subscribe(() =&gt; { setList(store.getState().list) });
+}, [store]);</code></pre>
+                    <p>Pour ajouter un produit, nous allons créer un bouton et ajouter un <span class="html">dispatch</span> de type <span class="html">ADD_PRODUCT</span> avec comme payload le modèle 'SuperCremeux' au clic sur celui-ci :</p>
+<pre><code>&lt;div className="cartNavBar"&gt;
+    &lt;button onClick={() =&gt; store.dispatch({type: 'ADD_PRODUCT', payload: SuperCremeux})}&gt;Ajouter un super crémeux&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+                    <p>On va modifier le fichier <span class="html">features/cart/Cart.js</span> pour rajouter le code ci-dessus comme ceci :</p>
+<pre><code>import { useStore } from "react-redux";
+import { SuperCremeux } from "./models";
+import { useEffect, useState } from "react";
+
+export const Cart = () =&gt; {
+    const store = useStore();
+    const [list, setList] = useState(store.getState().list);
+
+    useEffect(() =&gt; {
+        store.subscribe(() =&gt; setList(store.getState().list));
+    }, [store]);
+
+    return (
+        &lt;div className="Selection"&gt;
+            &lt;h1&gt;Choisir son menu&lt;/h1&gt;
+            &lt;div className="CartNavBar"&gt;
+                &lt;button onClick={() =&gt; store.dispatch({type: 'ADD_PRODUCT', payload: SuperCremeux})}&gt;Ajouter un super crémeux&lt;/button&gt;
+            &lt;/div&gt;
+            {
+                list.map((item, index) =&gt, &lt;span key={index} className="SelectedProduct"&gt;{item.title} {item.price}€&lt;/span&gt;)
+            }
+        &lt;/div&gt;
+    );
+};</code></pre>
+                    <p>Revoyons ensemble ce que nous venons de réaliser :</p>
+                    <ol>
+                        <li>
+                            <p>Nous avons connecté notre composant au store pour écouter chaque changement de valeur de celui-ci.</p>
+                        </li>
+                        <li>
+                            <p>Nous avons exécuté une action d'ajout de produit pour modifier la valeur du store.</p>
+                        </li>
+                    </ol>
+                    <h3>Débuggez votre configuration Redux :</h3>
+                    <p>Avant d'aller plus loin, je vous propose de vous mettre dans les meilleures conditions pour travailler avec Redux et Redux Toolkit.</p>
+                    <p>En tant qu'utilisateur régulier de React, vous avez sans doute eu l'opportunité d'installer les <span class="em">DevTools</span>, ces outils qui permettent de visualiser et de débugger votre application React dans la barre du navigateur.</p>
+                    <p>Eh bien Redux fournit ce même genre d'outil, <a href="https://chrome.google.com/webstore/detail/redux-devtools/lmhkpmbekcpmknklioeibfkpmmfibljd" target="_blank">Redux DevTools</a> !</p>
+                    <figure>
+                        <img src="../images/Redux_DevTools_1.png" alt="">
+                        <figcaption>Redux DevTools</figcaption>
+                    </figure>
+                    <p>Découvrons l'outil Redux DevTools :</p>
+                    <p>Dans l'inspecteur du navigateur, dans l'onglet "Redux", on peut contrôler les actions qui ont eu lieu, ainsi que de les rejouter, consulter la valeur du state à un instant "T" et exécuter manuellement des actions.</p>
+                    <p>Nous avons vu que cet outil nous sera utile pour débugegr notre application Redux, notamment grâce à la possibilité de suivre les changements du state, de visualiser les actions et leur contenu, la possibilité de rejouer, d'éditer des actions et encore plein d'autres fonctionnalités.</p>
+                    <p>Vous savez à présent comment l'installer et l'utiliser. Il vous sera très utile pour déboguer votre application.</p>
+                </article>
+                <article>
+                    <h2 id="partage_state_composants">Partagez un state entre plusieurs composants :</h2>
+                    <h3>Créez un second composant :</h3>
+                    <p>Maintenant que nous pouvons modifier notre store et consulter son état à chaque fois que c'est nécessaire, allons apprendre à le gérer à travers plusieurs composants. Ça tombe bien, c'est notre objectif principal !</p>
+                    <p>Pour cela, rien de plus simple. Chaque composant de notre application peut avoir accès au store. Nous allons créer un composant dédié au motant total de la commande.</p>
+                    <p>Ainsi, dans notre composant <span class="html">Cart.js</span>, on utilise <span class="html">useStore</span> pour accéder au store.</p>
+                    <p>Nous rajoutons un abonnement au chanegement de valeur du store pour nous assurer que notre composant sera bien à jour à l'ajout ou à la suppression de produit dans la liste des produits sélectionnés.</p>
                     
                 </article>
             <!-- fin de section -->
