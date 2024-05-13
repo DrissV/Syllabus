@@ -3180,7 +3180,7 @@ test('Should render without crash', async () =&gt; {
     })
 })</code></pre>
                     <h3>Personnalisez votre render :</h3>
-                    <p>Bon, depuis tout à l'heure je vous fais utiliser votre <span class="html">Theme</span> directemnt dans vos tests. Ce n'est pas très propre. Surtout que si vous testez d'autres composants tels que <span class="html">Home</span>, vous aurez aussi à le wrapper dans le router.</p>
+                    <p>Bon, depuis tout à l'heure je vous fais utiliser votre <span class="html">Theme</span> directement dans vos tests. Ce n'est pas très propre. Surtout que si vous testez d'autres composants tels que <span class="html">Home</span>, vous aurez aussi à le wrapper dans le router.</p>
                     <p>Mais ça tombe bien, puisque la fonction <span class="em">render</span> de React Testing Library peut <span class="em">prendre en paramètre un wrapper</span>.</p>
                     <p>Dans le test qu'on a fait juste au-dessus, on va donc <span class="em">déclarer un nouveau composant React <span class="html">Wrapper</span></span> :</p>
 <pre><code>function Wrapper({ children }) {
@@ -4849,6 +4849,104 @@ export const Voucher = () =&gt; {
                     <h3>Découvrez les sélecteurs :</h3>
                     <p>Prenons le temps de revenir sur nos progrès et arrêtons-nous un peu sur la façon dont nous accédons aux valeurs du store.</p>
                     <p>Dans le cas de la liste des produits sélectionnés, nous répétons chaque fois que nécessaire <span class="html">store.getState().list</span>.</p>
+                    <p>Afin de bien respecter les principes du DRY (Don't Repeat Yourself), nous allons <span class="em">regrouper nos accès</span>. Ils seront ainsi disponibles directement via des <span class="em">imports</span>. Nous avons donc besoin de déplacer l'accès à la liste, avoir le total de commande et savoir si oui ou non la promotion est utilisable.</p>
+                    <p>Créons un fichier <span class="html">app/selectors.js</span> dans lequel nous allons mettre nos accès au store que nous appellerons à présent, vous l'avez deviné : des <span class="em">sélecteurs</span>.</p>
+                    <p>Nous créons donc une fonction <span class="html">getProductList</span> qui prend le state en paramètre et nous retourne <span class="html">list</span>, qui est la liste des produits sélectionnés.</p>
+                    <p>En deuxième temps, nous ajoutons une fonction <span class="html">getTotalOrder</span> qui prend le state et nous retourne le montant total de la commande.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Notez que les sélecteurs peuvent se combiner. Nous pouvons ainsi appeler <span class="html">getProductList</span> pour obtenir la liste des produits et appliquer notre somme.</p>
+                    </div>
+                    <p>Enfin, nous ajoutons une fonction qui nous retourne <span class="html">true</span> s'il est possible d'appliquer la promotion, <span class="html">false</span> dans le cas contraire, nous la nommons <span class="html">isVoucherAvailable</span> :</p>
+<pre><code>export const getProductList = (state) =&gt; state?.list
+
+export const getTotalOrder = (state) =&gt; getProductList(state).reduce((prv, cur) =&gt; cur.price + prv, 0)
+
+export const isVoucherAvailable = (state) =&gt; getProductList(state).find((product) =&gt; product.title === "Super Crémeux")</code></pre>
+                    <p>Puis, nous mettons à jour les trois fichiers suivants : <span class="html">features/cart/Cart.js</span>,</p>
+<pre><code>import { useStore } from "react-redux";
+import { SuperCremeux } from "../../common/models";
+import {useEffect, useState } from "react";
+import { getProductList } from '../../app/selectors';
+
+export const Cart = () =&gt; {
+    const store = useStore();
+
+    const [list, setList] = useState(getProductList(store.getState()));
+
+    useEffect(() =&gt; {
+        store.subscribe(() =&gt; setList(getProductList(store.getState())));
+    });
+
+    return (
+        &lt;div className="Selection"&gt;
+            &lt;h1&gt;Choisir son menu&lt;/h1&gt;
+            &lt;div className="CartNavBar"&gt;
+                &lt;button
+                    onClick={() =&gt;
+                        store.dispatch({ type: "ADD_PRODUCT", payload: SuperCremeux })
+                    }
+                &gt;
+                    Ajouter un super crémeux
+                &lt;/button&gt;
+            &lt;/div&gt;
+            {list?.map((item, index) =&gt; (
+                &lt;span key={index} className="SelectedProduct"&gt;
+                    {item.title} {item.price}€
+                &lt;/span&gt;
+            ))}
+        &lt;/div&gt;
+    );
+};</code></pre>
+                    <p><span class="html">features/cart/Total.js</span>,</p>
+<pre><code>import { useStore } from "react-redux";
+import { useEffect, useState } from "react";
+import { getProductList, getTotalOrder } from "../../app/selectors";
+
+export const Total = () =&gt; {
+    const store = useStore();
+    const [list, setList] = useState(getProductList(store.getState()));
+
+    const totalCommand = getTotalOrder(store.getState());
+    useEffect(() =&gt; {
+        store.subscribe(() =&gt; setList(getProductList(store.getState())));
+    });
+
+    return &lt;div className="TotalCommand"&gt;
+        {list.length === 0 ? &lt;div&gt;Aucun produit sélectionné&lt;/div&gt; : &lt;div&gt;Total commande {totalCommand} euros&lt;/div&gt;}
+    &lt;/div&gt;
+};</code></pre>
+                    <p>et <span class="html">features/cart/Voucher.js</span>.</p>
+<pre><code>import { useStore } from "react-redux";
+import { useEffect, useState } from "react";
+import { isVoucherAvailable } from "../../app/selectors";
+
+export const Total = () =&gt; {
+    const store = useStore();
+    const [available, setAvailable] = useState(isVoucherAvailable(store.getState()));
+
+    useEffect(() =&gt; {
+        store.subscribe(() =&gt; setAvailable(isVoucherAvailable(store.getState())));
+    });
+
+    return (
+        &lt;div className="Voucher"&gt;
+            {available && (
+                &lt;button
+                    onClick{() =&gt;
+                        store.dispatch({ type: "APPLY_VOUCHER", payload: { price: 2 } })
+                    }
+                &gt;
+                    Appliquer ma promo Super crémeux à 2 euros
+                &lt;/button&gt;
+            )}
+        &lt;/div&gt;
+    );
+};</code></pre>
+                    <p>Les sélecteurs nous permettent de <span class="em">partager les implémentations logiques</span>. Ce qui nous permet de rendre réutilisables nos accès au store.</p>
+                    <p>Nous venons de revisiter notre implémentation en cherchant à simplifier. Mais nous répétons malgré tout les <span class="html">useEffect</span>. N'aurait-on pas un outil pour aller encore plus loin dans cette simplification ? Eh si, nous voyons juste après un outil qui va nous permettre de gérer l'accès aux valeurs du store et de "re-rendre" les composants à tout changement.</p>
+                    <h3>Utilisez useSelector :</h3>
+                    <p>Ok, très bien, on avance à grands pas. Continuons à apporter des améliorations à notre code base en exploitant encore plus d'outils par react-redux.</p>
                     
                 </article>
             <!-- fin de section -->
