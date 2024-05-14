@@ -92,6 +92,7 @@
                         <li><a href="#slices">Les slices</a></li>
                         <li><a href="#configuration_reducers_EntityAdapters">Configuration des reducers avec les EntityAdapters</a></li>
                         <li><a href="#maj_store_asynchrone">Mise à jour du store en asynchrone</a></li>
+                        <li><a href="#utilisation_web_services">Utilisation de web services</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -5472,6 +5473,131 @@ import * as ProductList from "../../common/models";
 export const addProductThunk = createAsyncThunk('cart/addProductThunk', async (product, thunkApi) =&gt; {
 
 });</code></pre>
+                   <p>Le <span class="html">thunkApi</span> nous donne accès à plusieurs choses : le <span class="html">dispatch</span> et le <span class="html">getState</span> du store, une fonction <span class="html">rejectWithValue</span> et une fonction <span class="html">fulfillWithValue</span> pour annuler ou valider l'action asynchrone, ainsi que d'autres paramètres tels que <span class="html">requestId</span>, <span class="html">signal</span> et <span class="html">extra</span>.</p>
+                   <p>Nous simplifions notre fonction en veillant à <span class="html">dispatch</span> un produit dans la liste sélectionné via <span class="html">thunkApi.dispatch(cartSlice.actions.addProduct(product));</span> :</p>
+<pre><code>export const addProductThunk = createAsyncThunk('cart/addProductThunk', async (product, thunkApi) =&gt; {
+
+    // Ajout du produit au panier via le dispatch du store
+    thunkApi.dispatch(cartSlice.actions.addProduct(product));
+});</code></pre>
+                    <p>Selon le choix de l'utilisateur, nous retournons une Promise qui sera résolue (<span class="html">resolve()</span>), s'il valide l'ajout au panier de la promo, et rejetée (<span class="html">reject()</span>) dans le cas contraire.</p>
+                    <p>Notre fonction addProductThunk devient donc :</p>
+<pre><code>export const addProductThunk = createAsyncThunk('cart/addProductThunk', async (product, thunkApi) =&gt; {
+
+    thunkApi.dispatch(cartSlice.actions.addProduct(product));
+    // Promise retourner par notre thunk
+    return new Promise((resolve, reject) =&gt; {
+        setTimeout(() =&gt; {
+            const state = getState();
+            const numberProductPerName = getListQuantityProductPerName(state);
+            const numberForSpecialOffer = numberProductPerName.find((item) =&gt; item.title === 'Poulet Croquant')?.quantity;
+            if (numberForSpecialOffer === 2) {
+                if (window.confirm("Voulez-vous ajouter une troisième fois ce produit à moitié prix ?")) {
+                    
+                    resolve();
+                } else {
+                    reject();
+                }
+            } else {
+                reject();
+            }
+        }, 5000);
+    });
+});</code></pre>
+                    <p>Dans notre slice, nous ajoutons les cas d'actions qui nous intéressent via la propriété <span class="html">`extraReducers`</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">builder.addCase(addProductThunk.rejected, ...)</span> lorsque notre fonction asynchrone sera <span class="html">rejected</span></p>
+                        </li>
+                        <li>
+                            <p><span class="html">builder.addCase(addProductThunk.fulfilled, ...)</span> lorsqu'elle sera <span class="html">resolved</span>.</p>
+                        </li>
+                    </ul>
+<pre><code>extraReducers: function(builder) {
+    builder.addCase(addProductThunk.fulfilled, (state) =&gt; {
+        const specialOffer : ProductList.PouletCroquant;
+        return [...state, {...specialOffer, price: Math.round((ProductList.PouletCroquant.price / 2) * 100) / 100}];
+    });
+    builder.addCase(addProductThunk.rejected, (state) =&gt; {
+        return [...state];
+    });
+}</code></pre>
+                    <p>Pour le premier cas, nous renvoyons le state non modifié. Pour le second, nous ajoutons un produit à moitié prix.</p>
+                    <p>Retrouvez ci-dessous l'implémentation complète de ces modifications dans le fichier <span class="html">features/cart/cartSlice.js</span> :</p>
+<pre><code>import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { getListQuantityProductPerName } from "../../app/selectors";
+import * as ProductList from '../../common/models';
+
+export const addProductThunk = createAsyncThunk( 'cart/addProductThunk' , async (product, thunkApi) =&gt; {
+    // Ajout du produit au panier via le dispatch du store
+    thunkApi.dispatch(cartSlice.actions.addProduct(product));
+    return new Promise((resolve, reject) =&gt; {
+        setTimeout(() =&gt; {
+            const state = thunkApi.getState();
+            const numberProductPerName = getListQuantityProductPerName(state);
+                const numberForSpecialOffer = numberProductPerName.find((item) =&gt; item.title === "Poulet Croquant")?.quantity;
+                if (numberForSpecialOffer === 2) {
+                    if (window.confirm("Voulez-vous ajouter une troisième fois ce produit à moitié prix ?")) {
+                        resolve();
+                    } else {
+                        reject();
+                    }
+                } else {
+                    reject();
+                }
+        }, 5000);
+        });
+});
+
+export const cartSlice = createSlice({
+    name: 'list',
+    initialState: {},
+    reducers: {
+        addProduct: (currentState, action) =&gt; {
+            const listWithNewProduct = [...currentState, action.payload];
+            return listWithNewProduct;
+        },
+        removeProduct: (currentState, action) =&gt; {
+            const list = [...currentState].filter(
+                (item, index) =&gt; index !== action.payload
+            );
+            return list;
+        },
+        applyVoucher: (currentState, action) =&gt; {
+            const withVoucherList = currentState.map(
+                item =&gt; item.title === 'Super Crémeux' ? ({...item, price: action.payload.price}) : item
+            );
+            return withVoucherList;
+        },
+    },
+    extraReducers: function(builder) {
+        builder.addCase(addProductThunk.fulfilled, (state) =&gt; {
+            const specialOffer = ProductList.PouletCroquant;
+            return [...state, {...specialOffer, price: Math.round((ProductList.PouletCroquant.price / 2) * 100) / 100}];
+        });
+        builder.addCase(addProductThunk.rejected, (state) =&gt; {
+            return [...state];
+        });
+    }
+});</code></pre>
+                    <p>N'oublions pas de modifier le fichier <span class="html">features/menu/Menu.js</span> et d'ajouter l'import de <span class="html">addProductThunk</span> en supprimant l'implémentation précédente :</p>
+<pre><code>import { addProductThunk } from '../cart/cartSlice';</code></pre>
+                </article>
+                <article>
+                    <h2 id="utilisation_web_services">Utilisez des web services :</h2>
+                    <h3>Découvrez les web services :</h3>
+                    <p>À partir du moment où votre application est connectée, c'est-à-dire qu'elle interagit avec un service distant, elle utilise des web services. Les <span class="em">web services</span> peuvent être sous plusieurs formes : des requêtes API REST, une API GraphQL, ou des websockets. Cela peut être pour accéder à un compte utilisateur, récupérer la liste de messages actualisée d'un blog, ou consulter les notifications, par exemple.</p>
+                    <p>Dès qu'elle consomme de la donnée à partir d'un autre serveur ou service, ou qu'elle y exécute une action, notre application fait appel de manière asynchrone à des web services.</p>
+                    <p>Cela tombe à pic ! Nous venons de voir comment gérer les asynchrones grâce aux <span class="html">thunks</span>.</p>
+                    <p>Dans la suite, nous allons d'abord utiliser <span class="html">fetch</span>, l'outil standard pour exécuter nos appels de données. Puis, nous utiliserons un outil de Redux Toolkit, Query, qui va nous permettre de créer des configuration d'appels API.</p>
+                    <h3>Utilisez fetch pour appeler une API :</h3>
+                    <p>Pour exécuter des appels API pour notre store, nous pouvons utiliser <span class="html">fetch</span> et les <span class="html">thunks</span>.</p>
+                    <p>Nous allons apprendre à le faire en mettant en place une fonctionnalité de notre application qui permettra de savoir si les produits sont disponibles, et si ce n'est pas le cas, nous rendrons la commande inactive pour ceux-ci.</p>
+                    <p>Vous avez sans doute déjà remarqué les vignettes "Victime de son succès" dans les fast-foods. Eh bien, c'est ce que nous allons faire !</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Nous avons donc besoin de faire appel à un service web qui va nous lister les produits indisponibles. Nous n'aurons malheureusement pas le temps, et ce n'est pas l'objectif de ce cours, de créer un webservice. Je vous propose donc d'utiliser <a href="https://gist.githubusercontent.com/techerjeansebastienpro/f28e00c733c8e0b3fda7718072076ff3/raw/7fd0e66c68afeea5171255396d7e04493a457e50/unavailable.json" target="_blank">un simple fichier que vous trouverez dans ce Git, qui listera les produits indisponibles</a>.</p>
+                    </div>
                     
                 </article>
             <!-- fin de section -->
