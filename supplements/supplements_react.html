@@ -5598,7 +5598,122 @@ export const cartSlice = createSlice({
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Nous avons donc besoin de faire appel à un service web qui va nous lister les produits indisponibles. Nous n'aurons malheureusement pas le temps, et ce n'est pas l'objectif de ce cours, de créer un webservice. Je vous propose donc d'utiliser <a href="https://gist.githubusercontent.com/techerjeansebastienpro/f28e00c733c8e0b3fda7718072076ff3/raw/7fd0e66c68afeea5171255396d7e04493a457e50/unavailable.json" target="_blank">un simple fichier que vous trouverez dans ce Git, qui listera les produits indisponibles</a>.</p>
                     </div>
-                    
+                    <p>Nous allons donc ajouter une slice <span class="html">features/menu/menuSlice.js</span>, un thunk 'getUnaibleThunk' et appeler ce dernier au montage de notre composant <span class="html">features/menu/Menu.js</span>.</p>
+                    <p>Ce thunk va exécuter une requête GET sur notre fichier <span class="html">/unavailable.json</span> avec fetch et nous insérera son contenu dans notre state après avoir sérialisé la réponse avec <span class="html">fetch.json()</span>.</p>
+                    <p>Puis, nous allons ajouter un selector <span class="html">getUnavailableProducts</span> qui nous retournera la liste des produits non disponibles. Nous ajoutons la propriété <span class="html">unavailable</span> à notre composant <span class="html">ProductCard</span> en mettant <span class="html">true</span> si notre produit est dans la liste des produits non disponibles, <span class="html">false</span> dans le cas contraire.</p>
+                    <p>C'est parti pour ajouter notre slice au store !</p>
+                    <p>Nous ajoutons ceci à <span class="html">app/selectors.js</span> :</p>
+<pre><code>export const getUnavailableProducts = (state) =&gt; state?.menu?.unavailableProducts</code></pre>
+                    <p>Nous ajoutons ceci à <span class="html">app/store.js</span> :</p>
+<pre><code>reducer: combineReducers({
+    owner: ownerSlice.reducer,
+    list: cartSlice.reducer,
+    menu: menuSlice.reducer,
+}),</code></pre>
+                    <p>Nous modifions <span class="html">features/menu/Menu.js</span> :</p>
+<pre><code>import { useDispatch, useSelector } from 'react-redux';
+import * as ProductList from '../../common/models';
+import { ProductCard } from '../../common/components/ProductCard';
+import { addProductThunk } from '../cart/cartSlice';
+import { useEffect } from 'react';
+import { getUnavailableThunk } from './menuSlice';
+import { getUnavailableProducts } from '../../app/selectors';
+
+export const Menu = () =&gt; {
+    const dispatch = useDispatch();
+    const unavailableProducts = useSelector(getUnavailableProducts);
+
+    useEffect(() => {
+        dispatch(getUnavailableThunk());
+    }, []);
+
+    return (
+        &lt;div className="Menu"&gt;
+            {
+                Object.values(ProductList).map(product =&gt; &lt;ProductCard unavailable={unavailableProducts?.includes(product.title)} key={product.name} product={product} onSelect={() =&gt; dispatch(addProductThunk(product))} /&gt;)
+            }
+        &lt;/div&gt;
+    );
+};</code></pre>
+                    <p>Nous ajoutons <span class="html">features/menu/menuSlice.js</span> :</p>
+<pre><code>import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+
+export const getUnavailableThunk = createAsyncThunk( 'cart/getUnavailableThunk' , async (thunkApi) =&gt; {
+    return await (async () =&gt; {
+    const response = await fetch('https://gist.githubusercontent.com/techerjeansebastienpro/f28e00c733c8e0b3fda7718072076ff3/raw/7fd0e66c68afeea5171255396d7e04493a457e50/unavailable.json');
+        return await response.json();
+    })();
+});
+
+export const menuSlice = createSlice({
+    name: 'menu',
+    initialState: {
+        unavailableProducts: []
+    },
+    reducers: {},
+    extraReducers: (builder) =&gt; {
+        builder.addCase(getUnavailableThunk.fulfilled, (state, action) =&gt; {
+            return {...state, unavailableProducts: action.payload};
+        });
+    }
+});</code></pre>
+                    <h3>Simplifiez vos appels API avec Query :</h3>
+                    <p>Devinez quoi !</p>
+                    <p>Redux Toolkit nous fournit un outil pour les appels API ? Eh oui ! Vous l'avez deviné.</p>
+                    <p>Cet outil c'est <span class="em">Query</span> ! Il nous permet de <span class="em">configurer nos calls API</span> et de <span class="em">gérer plusieurs aspects</span> à notre place, comme le cache, la gestion d'erreur, le polling; très utile quand on veut actualiser automatiquement des données à invervalle régulier.</p>
+                    <p>Query, via la fonction <span class="html">createApi</span>, va <span class="em">générer à notre place tous les outils pour notre store</span>, comme le reducer, la définition des actions ou <span class="html">thunks</span>, la définition des selectors... les briques indispensables si on veut aller vite en utilisant les webservices.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Notez bien que Query est une <span class="em">extension</span> de Redux Toolkit et que vous pouvez bien faire vos applications avec Redux Toolkit sans l'utiliser. Nous essayons ici de finaliser notre tour découverte du kit en visitant un outil construit au-dessus de RTK et qui est très complet.</p>
+                    </div>
+                    <p>Pour utiliser Query, on utilise la méthode <span class="html">createApi</span> de <span class="html">@reduxjs/toolkit/query</span> comme ce qui suit :</p>
+<pre><code>import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
+const api = createApi({
+    baseQuery: fetchBaseQuery({ baseUrl: 'BASE_URL' }),
+    endpoints: (builder) =&gt; ({
+        myEndpoint: builder.query({
+            query: (id) =&gt; `path/${id}`,
+        }),
+    }),
+});</code></pre>
+                    <p>Tout plein d'outils que nous ne verrons malheureusement pas, mais que vous aurez sans doute le plaisir d'utiliser.</p>
+                    <p>Ce que nous allons voir ici, c'est comment poser les bases avec Query, et pour cela, je vous propose de réaliser ce qui suit.</p>
+                    <p>Nous allons ensemble mettre en place une fonctionnalité qui va permettre à l'utilisateur de récupérer son solde de compte fidélité.</p>
+                    <p>Nous allons donc créer un nouveau composant, <span class="html">features/fidelity/Fidelity.js</span>, que nous ajouterons à notre fichier <span class="html">app/App.js</span>, et ajouter un dossier <span class="html">services</span> dans lequel nous allons créer une API avec Query pour rechercher la valeur via une requête HTTP dans le fichier <span class="html">services/fidelityApi.js</span>.</p>
+                    <p>Voici comment j'implémente tout ça.</p>
+                    <p>D'abord, on va créer notre service avec le contenu suivant :</p>
+<pre><code>import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
+export const api = createApi({
+    reducerPath: 'fidelityApi',
+    baseQuery: fetchBaseQuery({
+        baseUrl: 'https://gist.githubusercontent.com/techerjeansebastienpro/'
+    }),
+    endpoints: (builder) =&gt; ({
+        getFidelity: builder.query({
+            query: () =&gt; `a71c41c32b5a4307217af02f31b02b3d/raw/19e6c2109fa56d75bb0140fc45fe7c52f5b6b40e/fidelity.json`,
+        })
+    })
+});
+
+export const { useGetFidelityQuery } = api;</code></pre>
+                    <p>Ensuite, dans notre store, on rajoute la ligne suivante dans les reducers :</p>
+<pre><code>[api.reducerPath]: api.reducer,</code></pre>
+                    <p>Ainsi que le middleware :</p>
+<pre><code>middleware: getDefaultMiddleware =&gt; getDefaultMiddleware().concat(api.middleware).concat(thunk),</code></pre>
+                    <p>Voici le contenu de notre nouveau composant :</p>
+<pre><code>import { useGetFidelityQuery } from "../../services/fidelityApi";
+
+export const Fidelity = () =&gt; {
+    const { data: fidelity, isLoading } = useGetFidelityQuery();
+    return !isLoading && &lt;div className="FidelityPoints"&gt;Vos points de fidélité s&amp;#39;élèvent à { fidelity?.amount } points&lt;/div&gt;;
+};</code></pre>
+                    <h3>En conclusion :</h3>
+                    <p>Notre application mérite d'aller plus loin, comme vous : vous pouvez encore approfondir Redux et Redux Toolkit, qui je l'espère, vous aideront à concrétiser beaucoup de projets bluffants.</p>
+                    <p>Nous avons vu les bases de Redux, en passant par l'architecture Flux pour centraliser nos données avant d'ajouter Redux à React. Puis, nous avons vu ce que Redux Toolkit apporte pour rendre votre code plus efficace ! Enfin, nous venons de voir comment consommer des appels API grâce au store.</p>
+                    <p>Vous avez maintenant tout ce qu'il faut pour mettre en place votre store et exploiter le potentiel de Reux.</p>
+                    <p>C'est à vous de jouer !</p>
                 </article>
             <!-- fin de section -->
             </section>
