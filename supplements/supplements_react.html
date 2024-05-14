@@ -91,6 +91,7 @@
                         <li><a href="#Redux_Toolkit">Redux ToolKit</a></li>
                         <li><a href="#slices">Les slices</a></li>
                         <li><a href="#configuration_reducers_EntityAdapters">Configuration des reducers avec les EntityAdapters</a></li>
+                        <li><a href="#maj_store_asynchrone">Mise à jour du store en asynchrone</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -5207,6 +5208,270 @@ export const store = configureStore(
                     <h2 id="configuration_reducers_EntityAdapters">Configurez vos reducers avec les EntityAdapters :</h2>
                     <h3>Comprenez ce qu'est un EntityAdapter :</h3>
                     <p>Nous faisons bien souvent des applications avec la même approche, et des fonctionnalités qui se rapprochent bien plus qu'il nous paraît...</p>
+                    <p>Si nous stockons une liste de "choses", il est évident qu'une des fonctionnalités sera d'ajouter une "chose" à cette liste. De plus, si nous stockons une liste, nous souhaitons généralement de l'afficher.</p>
+                    <p>Dans notre cas, imaginons qu'un client ayant des allergies alimentaires veuille pouvoir indiquer les aliments à retirer de son burger. Pour ce faire, nous pouvons ajouter la fonctionnalité d'ajout de notes qui seront affichées aux cuisiniers de notre restaurant.</p>
+                    <p>Nous pourrions ajouter une slice, des sélecteurs... ou utiliser un outil qui nous permettrait de simplifier la configuration !</p>
+                    <p>Vous voyez où je veux en venir ? Je parle bien du <span class="em">CRUD</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Create (créer),</p>
+                        </li>
+                        <li>
+                            <p>Read (lire),</p>
+                        </li>
+                        <li>
+                            <p>Update (mettre à jour),</p>
+                        </li>
+                        <li>
+                            <p>Delete (supprimer).</p>
+                        </li>
+                    </ul>
+                    <p>Ce sont des opérations que nous pouvons qualifier de <span class="em">génériques</span>. C'est-à-dire que ce sont des actions qui ont des comportements identiques mais qui sont appliquées à des objets différents.</p>
+                    <p>Je vous mets un petit exemple dans le code suivant :</p>
+<pre><code>const houses = [
+    {
+        id: 1,
+        name: 'house1',
+        price: 100000
+    },
+    {
+        id: 2,
+        name: 'house2',
+        price: 200000
+    },
+    {
+        id: 3,
+        name: 'house3',
+        price: 300000
+    }
+]
+
+const students = [
+    {
+        id: 1,
+        name: 'student1',
+        average: 20
+    },
+    {
+        id: 2,
+        name: 'student2',
+        average: 19
+    },
+    {
+        id: 3,
+        name: 'student3',
+        average: 18
+    }
+]
+
+const getHouses = () =&gt; {
+    return houses
+}
+
+const getStudents = () =&gt; {
+    return students
+}
+
+const getHouseById = (id) =&gt; {
+    return houses.filter(house =&gt; house.id === id)
+}
+
+const getStudentById = (id) =&gt; {
+    return students.filter(student =&gt; student.id === id)
+}
+
+const addHouse = (house) =&gt; {
+    houses.push(house)
+}
+
+const addStudent = (student) =&gt; {
+    students.push(student)
+}</code></pre>
+                    <p>Ci-dessus, <span class="html">students</span> et <span class="html">houses</span> sont des listes d'objets différents. À première vue, on ne peut pas avoir les mêmes actions. Mais en prenant un peu de hauteur, <span class="html">addStudent</span> et <span class="html">addHouse</span> font la même chose, ajouter un élément dans la liste : <span class="html">students</span> pour <span class="html">addStudent</span> et <span class="html">houses</span> pour <span class="html">addHouse</span>.</p>
+                    <p>On peut à priori <span class="em">simplifier</span> tout ça.</p>
+                    <p>Je vous propose la petite implémentation ci-après :</p>
+<pre><code>const entityAdapter = () =&gt; {
+    const entities = [];
+    return (
+        addOne: (entity) =&gt; {
+            entities.push(entity);
+            return this;
+        },
+        selectAll: () =&gt; entities,
+        selectById: (id) =&gt; entities.find(entity =&gt; entity.id === id),
+    );
+};
+
+const students = entityAdapter();
+const houses = entityAdapter();</code></pre>
+                    <p>Nos deux constantes <span class="html">students</span> et <span class="html">houses</span> ont maintenant des actions associées (<span class="html">addOne</span>, <span class="html">selectAll</span> et <span class="html">selectById</span>). Plus besoin de les créer une à une, grâce à un outil inclus dans Redux Toolkit : <span class="html">EntityAdapter</span>.</p>
+                    <p>Cet outil permet de configurer notre store et de générer les outils qui vont nous permettre d'effectuer simplement ces opérations CRUD.</p>
+                    <p>L'<span class="html">EntityAdapter</span> est une fonction qui <span class="em">génère un ensemble de reducers et de sélecteurs destiné à effectuer des opérations CRUD</span>. Avec cet outil, nous aurons accès à des méthodes comme <span class="html">addOne</span> pour ajouter une entrée, <span class="html">addMany</span> pour ajouter plusieurs entrées, <span class="html">setOne</span> pour modifier une entrée, etc.</p>
+                    <h3>Créez un EntityAdapter :</h3>
+                    <p>Pour utiliser cette fonctionnalité, utilisons <span class="html">createEntityAdapter</span> de Redux Toolkit.</p>
+                    <p>Cette fonction s'emploie un peu dans notre implémentation simplifiée vue dans le paragraphe juste au-dessus, avec la particularité de pouvoir surcharger chaque action du CRUD. Pour ce faire, on peut passer en paramètre un objet qui reprend chaque action devant être adaptée en cas de besoin.</p>
+                    <p>Par exemple, admettons que l'<span class="html">id</span> de nos élèves ne soit pas stocké dans <span class="html">student.id</span> mais dans <span class="html">student.studentId</span>. Notre précédente implémentation ne fonctionnerait pas pour <span class="html">students</span>.</p>
+                    <p>En effet, cette fonction ne retournera aucun résultat, car <span class="html">entity.id</span> sera toujours <span class="html">undefined</span> :</p>
+<pre><code>selectById: (id) =&gt; entities.find(entity =&gt; entity.id === id),</code></pre>
+                    <p>Il nous faut donc un moyen d'adapter notre <span class="html">selectById</span> selon l'entité, mais uniquement pour cette fonction.</p>
+                    <p>Avec <span class="html">createEntityAdapter</span>, nous n'avons qu'à ajouter la fonction qui va être appliquée au moment de faire <span class="html">student.selectById</span>, en passant un objet comme ceci :</p>
+<pre><code>{
+    selectById: (students, id) =&gt; students.find(student =&gt; student.studentId === id),
+}</code></pre>
+                    <p>Ce qui nous donne le code suivant :</p>
+<pre><code>import { createEntityAdapter } from '@reduxjs/toolkit'
+
+const students = createEntityAdapter({
+    selectById: (students, id) =&gt; students.find(student =&gt; student.studentId === id),
+})</code></pre>
+                    <p><span class="html">createEntityAdapter</span> va donc générer un objet, <span class="html">students</span>, avec des actions prédéfinies.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous pouvez retrouver la liste complète des fonctions CRUD dans la <a href="https://redux-toolkit.js.org/api/createEntityAdapter#crud-functions" target="_blank">documentation de Redux Toolkit</a>.</p>
+                    </div>
+                    <p>Notre fonction <span class="html">selectById</span> sera exécutée lorsque nous ferons appel à <span class="html">students.selectById</span> et nous aurons bien un résultat pour un <span class="html">id</span> donné.</p>
+                    <p>Pour ajouter notre <span class="html">entityAdaptor</span> à notre store, rien de plus simple. Comme je vous l'ai dit, il génère notre reducer et nos sélecteurs. Ci-dessous, je vous montre comment l'ajouter au store et comment extraire les sélecteurs :</p>
+<pre><code>const students = createEntityAdapter({
+    selectById: (students, id) =&gt; students.find(student =&gt; student.studentId === id),
+})
+
+const studentSlice = createSlice({
+    ...,
+    reducers: {
+        add: students.addOne,
+    }
+})
+
+const store = configureStore({
+    reducer: {
+        students: studentSlice.reducer,
+    },
+})
+
+const studentsSelectors = students.getSelector(state =&gt; state.students)</code></pre>
+                </article>
+                <article>
+                    <h2 id="maj_store_asynchrone">Mettez à jour le store de façon asynchrone :</h2>
+                    <h3>Revenez sur l'asynchrone :</h3>
+                    <p>JavaScript est un langage dit "single-thread", c'est-à-dire que les tâches sont exécutées les unes après les autres sans possibilité d'exécuter deux choses ou plus à la fois.</p>
+                    <p>Si vous arrivez à exécuter le script suivant dans votre navigateur, vous verrez que le temps qu'il se termine, rien d'autre ne pourra être fait :</p>
+<pre><code>let a = 0
+const b = 10_000_000_000 // notation BIGINT
+console.log(new Date())
+for (let i = 0; i &lt; b; i++) {
+    a += i
+}
+
+console.log(a)
+console.log(new Date())</code></pre>
+                    <p>Tous les autres scripts ou actions devront attendre la fin de celui-ci avant de s'exécuter.</p>
+                    <p>Dans bien des cas, ce fonctionnement sera problématique. Par exemple, faire une requête de données pourrait bloquer la page.</p>
+                    <p>Comment éviter ce comportement ? Eh bien avec JavaScript, nous pouvons contourner ce problème en utilisant la <span class="em">programmation asynchrone</span>. Vous connaissez sans doute le gestionnaire d'événements, la fameuse méthode <span class="html">addEventListener</span> : c'est une approche de l'asynchrone.</p>
+                    <p>Quel impact cette approche a-t-elle sur notre store Redux ? Et comment l'ajouter à notre store ? Nous allons pour cela introduire un outil Redux, les middlewares, et ainsi utiliser <span class="html">createAsyncThunk</span> pour gérer l'asynchrone dans notre store.</p>
+                    <h3>Interceptez les chnagements du state avec les middlewares :</h3>
+                    <p>Les <span class="em">middlewares</span> sont en quelque sorte une pile de <span class="em">fonctions qui exécutent un traitement sur une donnée</span>, puis <span class="em">la transmettent</span> jusqu'à la fonction suivante <span class="em">jusqu'à ce qu'une des fonctions termine le programme</span> ou qu'il n'y ait plus de fonction à la suite.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous avez sans doute déjà lu ce terme quelque part : par exemple, certaines librairies serveur avec Node.js utilise cette approche. On peut citer <a href="https://expressjs.com/fr/" target="_blank">Express</a> ou bien <a href="https://koajs.com/" target="_blank">Koa</a>. Mais cette approche ne se limite pas à l'univers JavaScript, et je vous invite à vous documenter si vous découvrez les middlewares. Pour ces frameworks, on utilise les middlewares pour intercepter et on traite les requêtes HTTP avant de retourner une réponse.</p>
+                    </div>
+                    <p>Je vous fais un petit schéma ci-dessous pour représenter le processus :</p>
+                    <figure>
+                        <img src="../images/middlewares_React.png" alt="">
+                        <figcaption>Comment les middlewares fonctionnent ?</figcaption>
+                    </figure>
+                    <p>Les middlewares interceptent donc les valeurs et les modifient si nécessaire. Si on veut ajouter ou supprimer une valeur avant de laisser la main à la fonction suivante, par exemple, ou bien si on veut vérifier des données avant que l'application fasse un traitement sur ces données.</p>
+                    <p>Les middlewares Redux fonctionnent de cette manière en <span class="em">interceptant les actions avant de les transmettre aux reducers</span>. Il est donc possible de traiter les valeurs des payloads ou de modifier les types des actions avant que les reducers ne traitent les actions.</p>
+                    <p>Cette fonctionnalité nous permet par exemple d'ajouter du logging, du reporting en cas de crash, de faire des appels à des API, et bien plus.</p>
+                    <p>Je ne vais pas vous proposer de créer un middleware, mais pour mieux comprendre ses interactions avec les actions et le store, je vous suggère de me suivre ci-dessous :</p>
+                    <p>On va déclarer une propriété <span class="html">middleware</span> dans notre store, c'est-à-dire dans la fonction <span class="html">configureStore</span>, qui est un tableau et chaque middleware est une fonction qui retourne une fonction retournant encore une fonction.</p>
+                    <p>Si vous voulez essayez vous-même, voici le code que vous pouvez copier et coller dans le store :</p>
+<pre><code>export const store = configureStore(
+    {
+        preloadedState: state,
+        reducer: combineReducers({
+            owner: ownerSlice.reducer,
+            list: cartSlice.reducer,
+            notes: notesSlice.reducer,
+        }),
+        // Liste des middlewares
+        middleware: (getDefaultMiddleware) =&gt;
+            getDefaultMiddleware().preprend([
+                (store) =&gt; (next) =&gt; (action) =&gt; {
+                    console.log('Action', action);
+                    next(action);
+                }
+            ]);
+    }
+);</code></pre>
+                    <p>Ce middleware a un fonctionnement très simple : il reçoit l'action lorsque l'on utilise le <span class="html">dispatch</span> du store, il affiche l'action dans la console, et transmet l'action au middleware suivant.</p>
+                    <p>Vous devriez voir dans la console de votre navigateur s'afficher l'action exécutée, et cela, pour toutes les actions.</p>
+                    <h3>Utilisez les thunks pour modifier le store de façon asynchrone :</h3>
+                    <p>Nous savons ce que sont les middlewares et nous maîtrisons le concept d'asynchrone. Voyons maintenant comment combiner ces deux aspects afin d'exécuter des traitements asynchrones dans notre store. Cela nous permettra d'utiliser les appels de données via le réseau, avec <span class="html">fetch</span> par exemple.</p>
+                    <p>Pour cela, nous allons utiliser les thunks de Redux fournis par le middleware <span class="em">redux-thunk</span>.</p>
+                    <p>Un <span class="html">thunk</span> est une <span class="em">fonction qui s'exécute de façon synchrone ou asynchrone</span> et qui <span class="em">prend en paramètres les méthodes <span class="html">dispatch</span> et <span class="html">getState</span></span> de notre store :</p>
+<pre><code></code></pre>
+                    <p>Comme pour les actions, il est préférable de créer des thunks actions creators, <span class="html">thunkCreator</span>, comme ci-dessous :</p>
+<pre><code>const thunkCreator = (arg1, arg2) =&gt; {
+    return async (dispatch, getState) =&gt; {
+        // on met ici la logique du thunk
+    };
+};</code></pre>
+                    <p>Nous allons maintenant créer notre premier <span class="html">thunk</span>.</p>
+                    <p>Admettons que pour toute commande de Poulet Croquant, nous voulions demander au client s'il veut bénéficier d'une offre spéciale : 3 burgers 'Poulet Croquant' achetés, le troisième à moitié prix. Et pour cela, nous lui demandons dans une boîte de dialogue s'il veut en profiter en ajouter un troisième poulet croquant 5 secondes après qu'il a ajouté 2.</p>
+                    <p>Pour comprendre comment implémenter cette fonctionnalité, il faut donc modifier notre fichier <span class="html">features/menu/Menu.js</span> pour changer notre <span class="html">dispatch</span> d'ajout de produit.</p>
+                    <p>Nous allons créer un thunk action creator et ajouter une confirmation de l'utilisateur. Celle-ci s'affiche au bout de 5 secondes après l'ajout du burger si celui-ci est de type Poulet Croquant et au nombre de 2 dans le panier :</p>
+<pre><code>import { useDispatch } from 'react-redux';
+import * as ProductList from '../../common/models';
+import { ProductCard } from '../../common/components/ProductCard';
+import { cartSlice } from '../cart/cartSlice';
+import { getListQuantityProductPerName } from '../../app/selectors';
+
+const addProductThunk = (product) =&gt; (dispatch, getState) =&gt; {
+    dispatch(cartSlice.actions.addProduct(product));
+    return new Promise((resolve) =&gt; {
+        setTimeout(() =&gt; {
+            const state = getState();
+            const numberProductPerName = getListQuantityProductPerName(state);
+            const numberForSpecialOffer = numberProductPerName.find((item) =&gt; item.title === 'Poulet Croquant')?.quantity;
+            if (numberForSpecialOffer === 2) {
+                window.confirm("Voulez-vous ajouter une troisième fois ce produit à moitié prix ?");
+
+                const specialOffer = ProductList.PouletCroquant;
+                dispatch(cartSlice.actions.addProduct({...specialOffer, price; Math.round((ProductList.PouletCroquant.price / 2) * 100) / 100}));
+            }
+            resolve();
+        }, 5000);
+    });
+};
+
+export const Menu = () =&gt; {
+    const dispatch = useDispatch();
+    return &lt;div className="Menu"&gt;
+        {
+            Object.values(ProductList).map(product =&gt; &lt;PorductCard key={product.name} product={product} onSelect={() =&gt; dispatch(addProductThunk(product))} /&gt;);
+        }
+    &lt;/div&gt;
+}</code></pre>
+                    <h3>Utilisez createAsyncThunk pour notre store :</h3>
+                    <p>Vous l'aurez sans doute deviné, Redux Toolkit nous amène un outil pour gérer nos thunks, <span class="html">createAsyncThunk</span> !</p>
+                    <p>Je vous propose donc réécrire notre thunk d'ajout de produit en utilisant cette fois-ci <span class="html">createAsyncThunk</span> de RTK.</p>
+                    <p>Dans notre fichier <span class="html">cartSlice.js</span>, on reporte notre fonction <span class="html">addProductThunk</span>.</p>
+                    <p>Elle devient une fonction qui :</p>
+                    <ul>
+                        <li>
+                            <p>en premier paramètre, comme pour les actions, va prendre une clé pour identifier le thunk;</p>
+                        </li>
+                        <li>
+                            <p>en deuxième paramètre, en tant que fonction asynchrone, prend toujours en dernier paramètre le <span class="html">thunkApi</span>.</p>
+                        </li>
+                    </ul>
+<pre><code>import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { getListQuantityProductPerName } from "../../app/selectors";
+import * as ProductList from "../../common/models";
+
+export const addProductThunk = createAsyncThunk('cart/addProductThunk', async (product, thunkApi) =&gt; {
+
+});</code></pre>
                     
                 </article>
             <!-- fin de section -->
