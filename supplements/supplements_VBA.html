@@ -63,6 +63,7 @@
                         <li><a href="#operateurs_conditionnels">Les opérateurs conditionnels</a></li>
                         <li><a href="#boucles">Les boucles</a></li>
                         <li><a href="#fonctions_evenements">Les fonctions et les événements</a></li>
+                        <li><a href="#interaction_utilisateurs_formulaires">Interaction avec les utilisateurs via des formulaires</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1388,6 +1389,201 @@ Range("D1").Value = "Reporting du " & jour & " " & mois & " " & annee
 
 End Sub</code></pre>
                     <p>Cette fonction vous permet d'écrire la date dans un titre, "Reporting du mois du 1 février 2023".</p>
+                    <p>Imaginons que vous ayez <span class="em">besoin de cette fonction dans une autre macro</span>, vous n'aurez pas envie de l'écrire à nouveau. C'est pourquoi vous pouvez en faire un sous-programme que vous aurez seulement besoin d'appeler pour transformer le mois.</p>
+                    <p>Le problème, c'est que la lecture de la date se fait dans le programme principal; vous avez deux solutions, soit :</p>
+                    <ul>
+                        <li>
+                            <p>relire dans votre sous-programme la valeur de la cellule qui contient la valeur du mois;</p>
+                        </li>
+                        <li>
+                            <p>passer comme argument le mois que vous avez déjà récupéré à votre sous-programme.</p>
+                        </li>
+                    </ul>
+                    <p>Pour ce premier test, vous allez relire la variable dans le sous-programme.</p>
+                    <p>Voici ce que cela peut devenir avec une subroutine.</p>
+<pre><code>Sub changement_mois_SP()
+
+Dim date_reporting As Date
+Dim transformation_date As Integer
+Dim mois As String
+Dim jour As Integer
+Dim annee As Integer
+
+date_reporting = Range("A1").Value
+jour = Day(date_reporting)
+annee = Year(date_reporting)
+
+transformation_mois
+
+mois = Range("B1").Value
+
+Range("D1").Value = "Reporting du " & jour & " " & mois & " " & annee
+
+End Sub
+
+Sub transformation_mois()
+
+Dim date_reporting As Date
+Dim transformation_date As Integer
+Dim mois As String
+
+date_reporting = Range("A1").Value
+
+transformation_date = Month(date_reporting)
+
+Select Case transformation_date
+    Case 1
+    mois = "janvier"
+    Case 2
+    mois = "février"
+    Case 3
+    mois = "mars"
+    Case 4
+    mois = "avril"
+    Case 5
+    mois = "mai"
+    Case 6
+    mois = "juin"
+    Case 7
+    mois = "juillet"
+    Case 8
+    mois = "août"
+    Case 9
+    mois = "septembre"
+    Case 10
+    mois = "octobre"
+    Case 11
+    mois = "novembre"
+    Case 12
+    mois = "decembre
+End Select
+
+Range("B1").Value = mois
+
+End Sub</code></pre>
+                    <p>Vous avez <span class="em">fractionné</span> le programme initial qui est maintenant bien plus petit et on peut voir qu'il appelle le sous-programme transformation_mois. Le sous-programme :</p>
+                    <ul>
+                        <li>
+                            <p>récupère les informations de la date dans le fichier;</p>
+                        </li>
+                        <li>
+                            <p>passer par le <span class="html">Select Case</span>;</p>
+                        </li>
+                        <li>
+                            <p>puis stocke la valeur de sa transformation dans la cellule B2.</p>
+                        </li>
+                    </ul>
+                    <p>Le programme principal n'a plus qu'à récupérer cette valeur en B2 et écrire le titre du reporting.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Félicitations ! Vous venez de faire votre premier sous-programme !</p>
+                    </div>
+                    <p>Nous allons faire une légère digression avant de passer aux arguments.</p>
+                    <p>Vous pouvez limiter la portée des appels pour les différents sous-programmes en utilisant la procédure :</p>
+                    <ul>
+                        <li>
+                            <p><span class="html">Private</span> : utilisable seulement par les programmes d'un même module;</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Public</span> : utilisable par tous les modules;</p>
+                        </li>
+                        <li>
+                            <p><span class="html">Static</span> : permet d'utiliser les variables pendant toute la durée du programme (les variables sont globales et non plus locales pour un sous-programme).</p>
+                        </li>
+                    </ul>
+                    <p>Mais dans l'exemple, il n'y a rien d'écrit : pas de private, public ou static. C'est normal ? Effectivement, de base quand on ne rajoute rien, le sous-programme est par défaut en <span class="html">public</span>.</p>
+                    <p>Si vous souhaitez limiter l'appel de votre programme à votre module, vous écrirez :</p>
+<pre><code>Private Sub transformation_mois()</code></pre>
+                    <p>Voyons comment fractionner notre code pour le rendre lisible.</p>
+                    <h3>Maîtrisez les arguments de vos fonctions :</h3>
+                    <p>Comme nous l'avons vu plus haut, vous pouvez fractionner un morceau de programme que vous êtes susceptible de réutiliser, ou tout simplement pour rendre le code plus lisible.</p>
+                    <p>Je ne sais pas si vous avez fait attention, mais dans le sous-programme que nous avons utilisé, nous avons écrit volontairement le résultat de notre Select Case dans la cellule B2. Les sous-programmes ne permettent pas de renvoyer une valeur à un autre sous-programme, c'est pour cela que nous avons écrit dans une cellule sur Excel pour stocer la valeur.</p>
+                    <p>Pour pallier ce problème, nous pouvons utiliser des <span class="em">fonctions</span>. L'utilisation des fonctions est très similaire à la subroutine, à la différence qu'elle peut <span class="em">renvoyer</span> à un autre programme avec la transformation des données.</p>
+                    <p>Regardons ensemble ce que cela va changer sur notre programme initial avec la subroutine.</p>
+<pre><code>Sub changement_mois_Fonc()
+
+Dim date_reporting As Date
+Dim mois As string
+Dim jour As Integer
+Dim annee As Integer
+
+date_reporting = Range("A1").Value
+jour = Day(date_reporting)
+annee = Year(date_reporting)
+
+mois = transformation_mois_fonc(date_reporting)
+
+Range("D1").Value = "Reporting du " & jour & " " & mois & " " & annee
+
+End Sub
+
+Private Function transformation_mois_fonc(ByVal transformation_date As Date) As string
+
+transformation_mois_fonc = Month(transformation_date)
+
+Select Case transformation_mois_fonc
+    Case 1
+    transformation_mois_fonc = "janvier"
+    Case 2
+    transformation_mois_fonc = "février"
+    Case 3
+    transformation_mois_fonc = "mars"
+    Case 4
+    transformation_mois_fonc = "avril"
+    Case 5
+    transformation_mois_fonc = "mai"
+    Case 6
+    transformation_mois_fonc = "juin"
+    Case 7
+    transformation_mois_fonc = "juillet"
+    Case 8 
+    transformation_mois_fonc = "août"
+    Case 9
+    transformation_mois_fonc = "septembre"
+    Case 10
+    transformation_mois_fonc = "octobre"
+    Case 11
+    transformation_mois_fonc = "novembre"
+    Case 12
+    transformation_mois_fonc = "décembre"
+End Select
+
+End Function</code></pre>
+                    <p>Vous voyez dans le code ci-dessus que la fonction est déclarée comme une <span class="html">Private Function</span>. Et cette fois, dans les parenthèses de la fonction nous avons ajouté une variable que nous avons déclarée. Elle s'appelle transformation_date, et c'est une date. Cette déclaration vous permet de dire à la fonction que quand vous allez l'appeler dans le programme principal, vous lui donnez une valeur qui sera une date et qui sera automatiquement transférée dans cette nouvelle variable transformation_date.</p>
+                    <p>Dans la déclaration de la fonction, j'ai également ajouté As String à la fin de la déclaration.</p>
+                    <p>Ce n'est pas une erreur, ça ? Vous ne voyez pas le rapport entre une déclaration de variable et une fonction. Eh bien non, ce n'est pas une erreur. En faisant cela, j'utilise le nom de ma fonction comme une variable et je vais justement <span class="em">retourner</span> cette variable <span class="html">transformation_mois_fonc</span> dans mon programme principal. Vous pouvez également voir que j'ai remplacé la variable qui contient le résultat de mon <span class="html">Select Case</span> par cette nouvelle variable.</p>
+                    <p>Retournons maintenant du côté du sous-programme. J'ai seulement changé l'appel de ma fonction :</p>
+<pre><code>mois = transformation_mois_fonc(date_reporting)</code></pre>
+                    <p>Je passe dans ma fonction la variable <span class="html">date_reporting</span> pour que ma fonction puisse la récupérer. Vous voyez que je stocke la valeur de ma fonction dans la variable mois. En effet, la fonction va nous renvoyer une valeur au travers d'une string (que nous avons déclarée dans la fonction).</p>
+                    <p>Je n'ai volontairement pas encore parlé du <span class="html">ByVal</span> que j'ai ajouté dans ma fonction, c'est vrai. Je garde le meilleur pour la fin.</p>
+                    <p>Vous pouvez ajouter soit un <span class="html">ByVal</span> soit un <span class="html">ByRef</span>, sachant que si vous ne mettez rien, c'est que vous utilisez un <span class="html">ByRef</span>. En ajoutant un <span class="html">ByVal</span>, je protège ma variable initiale qui ne va pas changer. En effet, la valeur qui est renvoyée par ma fonction est une nouvelle variable.</p>
+                    <p>En utilisant un <span class="html">ByRef</span>, je modifie la variable initiale en la remplaçant par ma transformation.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>L'utilisation du <span class="html">ByRef</span> est plus performante, car j'utilise toujours la même variable, alors que l'utilisation du <span class="html">ByVal</span> est protectrice, car j'utilise une nouvelle variable.</p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="interaction_utilisateurs_formulaires">Interagissez avec les utilisateurs via des forlulaires :</h2>
+                    <p>Nous avons vu ensemble, tout au long de ce cours, les différents variables, opérateurs, boucles et fonctions. Il nous reste à voir une dernière partie importante : comment interagir avec les utilisateurs ?</p>
+                    <p>Ça va être plus visuel, car vous allez voir les boîtes de dialogue et les formulaires.</p>
+                    <h3>Interagissez avec Excel en créant votre boîte de dialogue :</h3>
+                    <p>Depuis le début de ce cours, vous avez déjà utilisé des boîtes de dialogue sans vraiment les nommer.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Une boîte de dialogue est une fenêtre qui permet d'interagir avec les utilisateurs.</p>
+                    </div>
+                    <p>Vous avez au début utilisé les msgbox. C'est la boîte de dialogue  la plus simple pour Excel.</p>
+                    <p>Le code est très simple. C'est seulement :</p>
+<pre><code>Sub premier_message()
+msgbox ("Hello World")
+End Sub</code></pre>
+                    <p>Quand vous exécutez ce code, vous obtenez une petite fenêtre qui vous dit :</p>
+                    <figure>
+                        <img src="../images/exemple_messagebox_Excel.png" alt="">
+                        <figcaption>Exemple de messagebox dans Excel</figcaption>
+                    </figure>
+                    <p>Rappelez-vous que nous avions utilisé la msgbox pour donner à l'utilisateur son département de rattachement. C'est une version simple des différentes interactions que nous allons voir avec les utilisateurs.</p>
                     
                 </article>
             <!-- fin de section -->
