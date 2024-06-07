@@ -80,6 +80,128 @@
                     <p>Dans la suite de ce cours, nous allons voir comment nous pouvons utiliser le VBA associé à Excel pour manipuler les fichiers, puis nous nous attarderons plus spécifiquement sur l'automatisation d'actions comme l'exécution des mises à jour ou encore des envois d'e-mails. Nous nous focuserons sur la sécurité dans l'environnement et dans le code.</p>
                     <h3>Interagissez avec les fichiers grâce à VBA :</h3>
                     <p>Vous vous posez sûrement la question suivante : <q>Tu parles de lire, copier, déplacer et lister des fichiers. Mais pourquoi je voudrais déplacer ou créer des dossiers en VBA ? On ne davait pas travailler sur Excel avec ?</q> Vous avez raison, le VBA est majoritairement utilisé dans Excel. Cepdendant, vous pouvez aussi l'utiliser pour <span class="em">manipuler</span> des fichiers. Vous vous demandez peut-être à quel moment cela peut arriver.</p>
+                    <p>Imaginons un instant que vous deviez <span class="em">concaténer</span> cinq fichiers dans un un même fichier Excel, il y a plusieurs options possible pour faire cette action plus ou moins difficile :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">la version manuelle</span> : ouvrir les cinq fichiers et faire un copier-coller de chaque fichier dans un nouveau fichier;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">la version semi-automatique</span> : ouvrir chaque fichier et exécuter une macro qui copie les données et les colle dans un nouveau fichier (automatisation simple en VBA);</p>
+                        </li>
+                        <li>
+                            <p><span class="em">la version automatique</span> : créer un programme qui vient lister les fichiers dans le dossier, qui ouvre tout seul les fichiers, qui copie et colle les données, qui ferme les fichiers et qui enregistre automatiquement le nouveau fichier contenant les données des cinq autres fichiers.</p>
+                        </li>
+                    </ul>
+                    <p>Au début, j'aurais sûrement choisi la première solution, puis maintenant la deuxième ! La troisième vous semble compliquée, non ? Eh bien non justeemnt, nous allons voir que c'est même plutôt facile.</p>
+                    <p>Prtons du principe que nous ne connaissons pas le nombre de fichiers que nous devons concaténer.</p>
+                    <p>Prenons un peu de recul et décortiquons les différentes actions que nous devons réaliser :</p>
+                    <ol>
+                        <li>
+                            <p>Aller dans le dossier avec le VBA;</p>
+                        </li>
+                        <li>
+                            <p>Lister tous les fichiers que nous avons dans le dossier;</p>
+                        </li>
+                        <li>
+                            <p>Écrire un sous-programme qui va copier les données.</p>
+                        </li>
+                    </ol>
+                    <h3>Listez, créez et déplacez des fichiers avec VBA :</h3>
+                    <p>Commençons par voir comment nous pouvons <span class="em">lister les fichiers</span> qui sont présents dans un dossier.</p>
+                    <p>Pour ce faire, vous allez utiliser une fonction du VBA qui s'appelle <span class="html">Dir()</span>.</p>
+                    <p>Cette fonction permet de lister les différents fichiers d'un dossier automatiquement. Le seul argument dont la fonction a besoin, c'est le chemin du dossier dans lequel se trouvent vos fichiers.</p>
+                    <p>Pour trouver le chemin de votre dossier sur votre ordinateur, allez dans le dossier qui contient les fichiers, puis cliquez dans la barre d'adresse.</p>
+                    <figure>
+                        <img src="../images/exemple_chemin_explorateur_fichier_Windows_VBA.png" alt="">
+                        <figcaption>Exemple de chemin dans l'explorateur de fichier Windows</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Le chemin, c'est <span class="html">Ce PC &gt; Storage &gt; P2C1 &gt; Data</span>, mais ce n'est pas exploitable par le VBA. Pour pouvoir le convertir en un chemin exploitable, il faut cliquer dans cette barre d'adresse et vous aurez un chemin exploitable sous la forme : I:\P2C1\Data. Pour finir, il ne faut pas oublier d'ajouter un dernier back slash (barre oblique inversée) avec la combinaison de touches sur votre clavier <kbd>ALT GR</kbd> + <kbd>8 \</kbd> pour Windows ou <kbd>Option</kbd> + <kbd>MAJ</kbd> + <kbd>/</kbd> sur Mac. Pour notre exemple, le chemin final est donc sous la forme : I:\P2C1\Data\.</p>
+                    </div>
+                    <p>Maintenant que nous avons le chemin du dossier, nous n'avons plus qu'à écrire le code qui va nous permettre de faire la liste.</p>
+<pre><code>Sub Liste_fichier()
+    Dim Chemin As String
+    Dim Fichier As String
+    Dim i As Integer
+
+    '   Initialisation de la variable
+    i = 1
+
+    '   Choix du dossier à lister
+    Chemin = "D:\Extraction\Data"
+    Fichier = Dir(Chemin)
+
+    '   Boucle sur les fichiers xls du répertoire
+    Do While Len(Fichier) &gt; 0
+        Range("A" & i).Value = Chemin & fichier
+        i = i + 1
+        Fichier = Dir()
+    Loop
+End Sub</code></pre>
+                    <p>Dans le code ci-desus, nous avons commencé par déclarer trois variables :</p>
+                    <ul>
+                        <li>
+                            <p>"Chemin" : va contenir le chemin vers le dossier;</p>
+                        </li>
+                        <li>
+                            <p>"Fichier" : va contenir le chemin vers le dossier et le nom du fichier;</p>
+                        </li>
+                        <li>
+                            <p>"I" : pour créer notre boucle.</p>
+                        </li>
+                    </ul>
+                    <p>Mais comment fait-on pour connaître le nombre de fichiers qu'il y a dans le dossier ? Avec cette fonction, nous n'avons pas besoin de connaître le nombre de fichiers qu'il y a dans le dossier. La particularité de la fonction <span class="html">Dir</span>, c'est que, chaque fois qu'on appelle, elle s'incrémente automatiquement sur le fichier d'après.</p>
+                    <p>Quand elle a fini, elle renovie juste le chiffre 0. C'est pourquoi nous utilisons une boucle <span class="html">Do While</span>, car nous souhaitons boucler sur la fonction tant qu'elle n'est pas égale à 0.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous pouvez essayer ce code chez vous sur n'importe quel dossier et vous obtiendrez quelque chose de similaire à mon exemple.</p>
+                    </div>
+                    <figure>
+                        <img src="../images/exemple_listing_fichiers_fonction_Dir_VBA.png" alt="">
+                        <figcaption>Exemple de listing de fichiers avec la fonction Dir</figcaption>
+                    </figure>
+                    <p>Pour aller un peu plus loin, nous souhaitons maintenant <span class="em">déplacer les fichiers</span> que nous venons de lister dans un dossier qui s'appellera "Fichiers traités".</p>
+                    <p>Pour cela, nous utilisons la commande <span class="html">FileSystemObject</span> pour déplacer des fichiers et la commande <span class="html">MkDir</span> pour créer un dossier.</p>
+                    <p>La commande <span class="html">MkDir</span> est assez similaire à la commande <span class="html">Dir</span>. Elle ne peut avoir qu'un argument, qui est le chemin que vous souhaitez créer.</p>
+                    <p>Dans notre cas, nous allons utiliser ce code :</p>
+<pre><code>"I:\P2C1\Data\Fichiers_traités"</code></pre>
+                    <p>La fonction <span class="html">MkDir</span> va alors simplement créer le dossier "Fichiers_traités".</p>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Là encore, il faut faire attention, nous n'avons sûrement pas le même chemin, pour moi, il s'agit de I:\P2C1\. Faites attention à adapter le chemin sur votre ordinateur.</p>
+                    </div>
+                    <p>Pour finir, déplaçons les fichiers dans ce dossier avec l'objet "<span class="html">FileSystemObject</span>".</p>
+                    <p>Pour cela, commençons par déclarer cet objet avec les deux lignes ci-dessous :</p>
+<pre><code>Dim FSO As Object
+Set FSO = CreateObject("Scripting.FileSystemObject")</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Nous déclarons ici une nouvelle variable qui s'appelle "<span class="html">FSO</span>" (pour <span class="html">F</span>ile<span class="html">S</span>ystem<span class="html">O</span>bject). Nous pourrions lui donner un autre nom, mais il est plus simple de lui donner le nom de son objet. Puis nous utilisons la commande <span class="html">Set</span> qui permet d'affecter un objet à la variable objet "Scripting.FileSystemObject".</p>
+                    </div>
+                    <p>Nous allons pouvoir maintenat utiliser plusieurs méthodes et propriétés sur cet objet.</p>
+                    <p>Dans les méthodes intéressantes, nous avons par exemple :</p>
+                    <ul>
+                        <li>
+                            <p>CopyFile ou CopyFolder : copier un fichier ou un dossier à un emplacement;</p>
+                        </li>
+                        <li>
+                            <p>DeleteFile ou DeleteFolder : supprimer un fichier ou un dossier;</p>
+                        </li>
+                        <li>
+                            <p>FileExists ou FolderExists : tester l'existence d'un fichier ou d'un dossier;</p>
+                        </li>
+                        <li>
+                            <p>MoveFile ou MoveFolder : déplacer un fichier ou un dossier.</p>
+                        </li>
+                    </ul>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous pouvez aller consulter sur le <a href="https://learn.microsoft.com/fr-fr/office/vba/language/reference/user-interface-help/filesystemobject-object" target="_blank">site de Microsoft la liste de toutes les méthodes ou propriétés de cet objet</a>.</p>
+                    </div>
+                    <p>Nous n'avons plus qu'à utiliser cet objet pour déclacer nos fichiers avec la ligne de code :</p>
+<pre><code>FSO.MoveFile "I:\P2C1\Data\Reporting 2023S01.xlsx", "I:\P2C1\Data\Fichiers_traités\Reporting 2023S01.xlsx"</code></pre>
+                    <p>Nous utilisons la fonction <span class="html">FSO.MoveFile</span>. Nous donnons comme premier argument le chemin du fichier à déplacer, puis en second argument, le nouvel emplacement.</p>
                     
                 </article>
             <!-- fin de section -->
