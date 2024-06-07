@@ -64,6 +64,8 @@
                         <li><a href="#boucles">Les boucles</a></li>
                         <li><a href="#fonctions_evenements">Les fonctions et les événements</a></li>
                         <li><a href="#interaction_utilisateurs_formulaires">Interaction avec les utilisateurs via des formulaires</a></li>
+                        <li><a href="#transfert_competences_Excel_Google_Sheets">Transfert de compétences d'Excel vers Google Sheets</a></li>
+                        <li><a href="#prolongation_apprentissage_VBA">Prolongation de l'apprentissage en VBA</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1586,7 +1588,7 @@ End Sub</code></pre>
                     <p>Rappelez-vous que nous avions utilisé la msgbox pour donner à l'utilisateur son département de rattachement. C'est une version simple des différentes interactions que nous allons voir avec les utilisateurs.</p>
                     <p>Vous pouvez customiser un peu ce bouton pour qu'il soit plus sympa pour l'utilisateur. Vous pouvez rajouter par exemple le bouton Annuler :</p>
 <pre><code>Sub deuxieme_message()
-msgbox "Souhaitez-vous confirmer la fermeture de l'onglet ?", vbYesNo + vbQuestion
+msgbox ("Souhaitez-vous confirmer la fermeture de l'onglet ?", vbYesNo + vbQuestion)
 End Sub</code></pre>
                     <p>Dans cette deuxième version, j'ai rajouté <span class="html">vbYesNo</span> qui permet d'afficher les boutons Oui et Non, ainsi que l'icône <span class="html">vbQuestion</span> qui vous permet d'avoir un point d'interrogation :</p>
                     <figure>
@@ -1594,7 +1596,314 @@ End Sub</code></pre>
                         <figcaption>Exemple de messagebox avec un choix (oui ou non)</figcaption>
                     </figure>
                     <p>Voici les principales personnalisations rapodes que vous pouvez faire :</p>
-                    
+                    <ul>
+                        <li>
+                            <p>Bouton :</p>
+                            <ul>
+                                <li>
+                                    <p>vbOKOnly &#8594; bouton OK</p>
+                                </li>
+                                <li>
+                                    <p>vbOKCancel &#8594; boutons OK et Annuler</p>
+                                </li>
+                                <li>
+                                    <p>vbAbordRetryIgnore &#8594; biutons Abandonner, Répéter et Ignorer</p>
+                                </li>
+                                <li>
+                                    <p>vbYesNoCancel &#8594; biytons Oui, Non et Annuler</p>
+                                </li>
+                                <li>
+                                    <p>vbYesNo &#8594; boutons Oui et Non</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Icône :</p>
+                            <ul>
+                                <li>
+                                    <p>vbCritical &#8594; icône Interdit</p>
+                                </li>
+                                <li>
+                                    <p>vbQuestion &#8594; icône Question</p>
+                                </li>
+                                <li>
+                                    <p>vbExclamation &#8594; icône Exclamation</p>
+                                </li>
+                                <li>
+                                    <p>vbInformation &#8594; icône Information</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>Cette boîte de dialogue peut vous renvoyer également le bouton que l'utilisateur a choisi :</p>
+                    <ul>
+                        <li>
+                            <p>1 : OK</p>
+                        </li>
+                        <li>
+                            <p>2 : Annuler</p>
+                        </li>
+                        <li>
+                            <p>3 : Abandonner</p>
+                        </li>
+                        <li>
+                            <p>4 : Répéter</p>
+                        </li>
+                        <li>
+                            <p>5 : Ignorer</p>
+                        </li>
+                        <li>
+                            <p>6 : Oui</p>
+                        </li>
+                        <li>
+                            <p>7 : Non</p>
+                        </li>
+                    </ul>
+                    <p>Voici le code pour récupérer la réponse de l'utilisateur avec une variable :</p>
+<pre><code>Sub deuxieme_message_recup()
+Dim valeur_msgbox As Integer
+
+valeur_msgbox = msgbox ("Souhaitez-vous confirmer la fermeture de l'onglet ?", vbYesNo + vbQuestion, "Demande utilisateur")
+End Sub</code></pre>
+                    <figure>
+                        <img src="../images/exemple_messagebox_evenement_beforesave.png" alt="">
+                        <figcaption>Exemple de messagebpx avec l'événement beforesave</figcaption>
+                    </figure>
+                    <p>Et voici l'état de la variable :</p>
+                    <figure>
+                        <img src="../images/exemple_recuperation_choix_utilisateur_messagebox_VBA.png" alt="">
+                        <figcaption>Exemple de récupération du choix de l'utilisateur dans le messagebox</figcaption>
+                    </figure>
+                    <p>Vous pouvez également demander des informations à l'utilisateur en ouvrant une <span class="html">InputBox</span> en lui demandant de saisir une information.</p>
+                    <p>Allez par exemple demander à l'utilisateur de saisir lui-même son département de naissance :</p>
+<pre><code>Sub demande_utilisateur()
+
+Dim departement As Integer
+
+departement = InputBox("Quel est votre département de naissance ?", "demande du département", 0)
+End Sub</code></pre>
+                    <figure>
+                        <img src="../images/exemple_inputbox_Excel.png" alt="">
+                        <figcaption>Exemple d'InputBox dans Excel</figcaption>
+                    </figure>
+                    <p>La première partie de l'<span class="html">InputBox</span> permet de poser la question à l'utilisateur, puis ensuite de saisir le titre de cette fenêtre. La dernière partie permet de saisir une valeur par défaut. Nous stockons cette information dans une variable, puis vous pouvez maintenant l'utiliser dans la suite de votre programme.</p>
+                    <h3>Utilisez les boîtess de dialogue Excel :</h3>
+                    <p>Certaines boîtes de dialogue sont propres à Excel. C'est le cas des deux boîtes de dialogue que vous allez voir maintenant.</p>
+                    <p>La première s'appelle <span class="html">GetOpenFileName</span>, et elle permet quand vous l'utilisez d'ouvrir une fenêtre pour choisir le fichier à ouvrir.</p>
+                    <p>L'utilisation est très simple :</p>
+<pre><code>Sub ouverture_fichier()
+
+Application.GetOpenFilename Title:="Sélectionner le fichier à ouvrir pour la mise à jour"
+
+End Sub</code></pre>
+                    <p>Ce code va ouvrir la fenêtre qui permet d'ouvrir de nouveaux fichiers Excel. J'ai ici personnalisé le texte de cette fenêtre.</p>
+                    <p>La deuxième s'appelle <span class="html">GetSaveAsFileName</span>. Vous l'aez peut-être deviné : elle permet d'ouvrir la fenêtre "Enregistrer sous" d'Excel. Elle fonctionne exactement de la même manière.</p>
+                    <p>Est-ce qu'il y a aussi une boîte de dialogue pour imprimer ? Non effectivement, il n'existe pas de boîte de dialogue toute faite pour imprimer une page. Cependant, comme d'habitude en VBA, il y a une solution à tout !</p>
+                    <p>Vous pouvez utiliser une ligne de code pour choisir l'imprimante et une deuxième qui lance l'impression (ou qui vous demande où il faut enregistrer le fichier si c'est une impression PDF).</p>
+                    <p>Voici le code :</p>
+<pre><code>Sub Impression()
+
+Application.Dialogs(xlDialogPrinterSetup).Show
+ActiveSheet.PrintOut Copies:=1, Collate:True, _
+IgnorePrintAreas:=False
+End Sub</code></pre>
+                    <h3>Utilisez les formulaires :</h3>
+                    <p>Pour finir, nous allons voir ensemble les formulaires. C'est un outil puissant mais assez compliqué. Nous n'allons pas pouvoir faire un exemple très compliqué maintenant mais peut-être un peu plus tard dans le cours. L'idée est plutôt que vous puissiez vous rendre compte de la grande capacité des formulaires en VBA.</p>
+                    <p>Jusqu'à maintenant vous avez vu des fenêtres ou des boîtes de dialogue propres à Microsoft. Les formulaires vous permettent de créer vous-même de nouvelles boîtes de dialogue en insérant différents objets.</p>
+                    <p>Pour commencer, vous allez ajouter un <span class="html">userform</span>. C'est une feuille spéciale qui permet de fabriquer votre boîte de dialogue. Pour cela, il faut aller dans "Insertion" puis "UserForm".</p>
+                    <p>Vous avez maintenant une fenêtre vide que vous allez pourvoir paramétrer en ajouter différents contrôles, comme :</p>
+                    <ul>
+                        <li>
+                            <p>du texte;</p>
+                        </li>
+                        <li>
+                            <p>des listes;</p>
+                        </li>
+                        <li>
+                            <p>des cases à cocher;</p>
+                        </li>
+                        <li>
+                            <p>des boutons d'options;</p>
+                        </li>
+                        <li>
+                            <p>des boutons à bascules;</p>
+                        </li>
+                        <li>
+                            <p>des onglets;</p>
+                        </li>
+                        <li>
+                            <p>des barres de défilement;</p>
+                        </li>
+                        <li>
+                            <p>etc.</p>
+                        </li>
+                    </ul>
+                    <p>Voici un petit formulaire qui permet de demander à l'utilisateur de choisir dans une litse son département de naissance :</p>
+                    <figure>
+                        <img src="../images/exemple_formulaire_VBA.png" alt="">
+                        <figcaption>Exemple de formulaire</figcaption>
+                    </figure>
+                    <div class="inforamtion">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>J'ai fait différents paramètres dans les boutons, que nous allons voir ensemble ainsi que sur la liste.</p>
+                    </div>
+                    <div class="inforamtion">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Pour accéder au code d'un bouton, il faut cliquer dessus.</p>
+                    </div>
+                    <p>Voici le code associé au bouton OK :</p>
+<pre><code>Private Sub Bouton_OK_Click()
+Dim choix_departement As string
+
+choix_departement = ComboBox1.Value
+Unload Me
+Association_region_formulaire (choix_departement)</code></pre>
+                    <p>Je déclare une variable <span class="html">choix_departement</span> qui vous permet de récupérer la valeur de la <span class="html">combobox1</span> en utilisant le <span class="html">.value</span>.</p>
+                    <p>Le code <span class="html">Unload</span> me permet de fermer le <span class="html">userform</span>, puis j'appelle un sous-programme que nous avons vu précédemment. Il va vous renvoyer avec une msgbox l'agence à laquelle vous vous êtes rattaché.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>J'ai modifié le début du code pour qu'il puisse prendre une variable, car je souhaite lui envoyer la valeur de notre liste. Voici le début du code jusqu'au <span class="html">Select Case</span> :</p>
+<pre><code>Sub Association_region_formulaire(departement_naissance As Integer)
+
+Select Case departement_naissance</code></pre>
+                    </div>
+                    <p>Concernant le <span class="em">bouton Annuler</span>, j'ai simplement utilisé une msgbox qui dit à l'utilisateur qu'il a abandonné la procédure.</p>
+                    <p>Enfin, concernant la liste, j'ai seulement passé la liste des départements que j'ai stockés dans une feuille Excel en utilisant les propriétés de la combobox.</p>
+                    <p>Quand vous cliquez sur la combobox, sur la gauche du VBE vous avez toute la liste des propriétés. C'est assez large, cela va du nom et de la valeur du bouton, en passant par la couleur et les bordures, etc.</p>
+                    <p>Pour la combobox, vous avez également une propriété qui est <span class="html">RowSource</span>. De mon côté, j'ai chargé pour la plage de cellules "Feuil1!A2:A46".</p>
+                    <p>Une fois que vous avez fini le paramétrage, vous pouvez, quand vous êtes sur le <span class="html">userform</span>, utiliser le bouton "Play" pour tester le userform.</p>
+                </article>
+                <article>
+                    <h2 id="transfert_competences_Excel_Google_Sheets">Transférez vos compétences d'Excel à Google Sheets :</h2>
+                    <h3>Utilisez vos compétences Excel dans Google :</h3>
+                    <p>Depuis le début de ce cours, nous parlons beaucoup de VBA et de programmation dans Excel. Depuis quelque temps, il y a d'autres logiciels qui permettent de faire comme Ecvel. On retrouve bien sûr la version en ligne d'Excel avec <span class="em">Microsoft 365</span>, mais Google a également sorti sa suite bureautique avec <span class="em">Google Sheets</span>.</p>
+                    <p>Google a donc également sorti sa version des macros. Vous pouvons donc faire la même chose qu'avec Excel direrectement dans Google Sheets en utilisant cette fois du <span class="em">JavaScript</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Le JavaScript est un langage de programmation utilisé principalement sur les pages internet.</p>
+                    </div>
+                    <p>Comme nous l'avions abordé au début de ce cours, vous allez pouvoir confirmer que l'important, c'est d'apprendre un premier langage de programmation. Le JavaScript est bien sûr différent du VBA dans les mots à utiliser, mais il reste fondamentalement similaire au VBA dans la conception.</p>
+                    <p>Si on fait le parallèle avec le langage humain, la prmeière langue que l'on va apprendre va être difficile. Vous aurez par contre des facilités d'apprentissage pour les autres langues que vous apprendrez. C'est exactement pareil pour la programmation ! C'est pourquoi je vous propose de traduire un de vos <span class="em">premiers scripts en JavaScript</span>, et de l'exécuter sur Google Sheets.</p>
+                    <h3>Écrivez votre premier script sur Google Sheets :</h3>
+                    <p>Allez sur <a href="https://docs.google.com/spreadsheets/create?hl=fr" target="_blank">Google Sheets</a> et créez un nouveau sheet. Pour les besoins de notre exemple, nous allons refaire le code VBA que nous avons déjà vu plus haut :</p>
+<pre><code>Sub annee()
+
+Dim departement_naissance As string
+departement_naissance = Range("A1").Value
+
+If departement_naissance = 34 Then
+    MsgBox ("Tu es rattaché à l'agence Occitanie")
+    ElseIf departement_naissance = 75 Then
+    MsgBox ("Tu es rattaché à l'agence d'Île-de-France")
+    ElseIf departement_naissance = 33 Then
+    MsgBox ("Tu es rattaché à l'agence de Nouvelle Aquitaine")
+    ElseIf departement_naissance = 69 Then
+    MsgBox ("Tu es rattaché à l'agence Auvergne Rhône-Alpes")
+    Else
+    MsgBox ("Nous n'avons pas l'information")
+End If
+
+End Sub</code></pre>
+                    <p>Dans ce code, vous avez déclaré une variable, puis vous l'avez chargée avec la valeur de la cellule A1. Vous avez ensuite testé pour 4 départements (34, 75, 33 et 69), et vous avez indiqué l'agence de rattachement. Si on ne connaît pas le départelent, vous indiquez que nous n'avons pas l'information.</p>
+                    <p>Afin de commencer à écrire votre macro, vous allez écrire dans un premier temps 34 dans la cellule A1 de votre Google Sheets.</p>
+                    <p>Allez ensuite dans l'éditeur de macro. Pour faire cela, il faut aller dans Extensions puis cliquer sur Apps Script. Cela vous ouvre un nouvel onglet vers l'apps script, l'éditeur de macro de Google Sheets.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Avant de vous spoiler avec la suite du cours, je vous encourage fortement à faire quelques recherches et à tester par vous-mêmes les différentes lignes de commande qu'il faut trouver. Le code utilisé est du JavaScript, vous pouvez aller voir sur Internet tout un tas de ressources pour comprendre comment faire pour récupérer une valeur, déclarer une variable ou encore utiliser un IF.</p>
+                    </div>
+                    <p>Vous trouverez ci-dessous un corrigé du code en JavaScript, qui fait exactement la même chose. Vous pouvez vous amuser à regarder les similitudes entre les deux langages.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>VBA</th>
+                                <th>JavaScript</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>SUb annee()</td>
+                                <td>function annee() {</td>
+                            </tr>
+                            <tr>
+                                <td>Dim departement_naissance As String</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>departement_naissance = Range("A1").Value</td>
+                                <td>var departement_naissance = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange("A1").getValue();</td>
+                            </tr>
+                            <tr>
+                                <td>If departement_naissance = 34 Then</td>
+                                <td>if (departement_naissance == 34) {</td>
+                            </tr>
+                            <tr>
+                                <td>MsgBox ("Tu es rattaché à l'agence Occitanie")</td>
+                                <td>SpreadsheetApp.getUi().alert("Tu es rattaché à agence Occitanie");</td>
+                            </tr>
+                            <tr>
+                                <td>ElseIf departement_naissance = 75 Then</td>
+                                <td>} else if (departement_naissance == 75) {</td>
+                            </tr>
+                            <tr>
+                                <td>MsgBox ("Tu es rattaché à l'agence d'Île-de-France")</td>
+                                <td>SpreadsheetApp.getUi().alert("Tu es rattaché à l'agence d'Île-de-France");</td>
+                            </tr>
+                            <tr>
+                                <td>ElseIf departement_naissance = 33 Then</td>
+                                <td>} else if (departement_naissance == 33) {</td>
+                            </tr>
+                            <tr>
+                                <td>MsgBox ("Tu es rattaché à l'agence de Nouvelle Aquitaine")</td>
+                                <td>SpreadsheetApp.getUi().alert("Tu es rattaché à l'agence de Nouvelle Aquitaine");</td>
+                            </tr>
+                            <tr>
+                                <td>ElseIf departement_naissance = 69 Then</td>
+                                <td>} else if (departement_naissance == 69) {</td>
+                            </tr>
+                            <tr>
+                                <td>MsgBox ("Tu es rattaché à l'agnence Auvergne Rhône-Alpes")</td>
+                                <td>SpreadsheetApp.getUi().alert("u es rattaché à l'agence Auvergne Rhône-Alpes");</td>
+                            </tr>
+                            <tr>
+                                <td>Else</td>
+                                <td>} else {</td>
+                            </tr>
+                            <tr>
+                                <td>MsgBox("Nous n'avons pas l'information")</td>
+                                <td>SpreadsheetApp.getUi().alert("Nous n'avons pas l'information");</td>
+                            </tr>
+                            <tr>
+                                <td>End If</td>
+                                <td>}</td>
+                            </tr>
+                            <tr>
+                                <td>End Sub</td>
+                                <td>}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Comme vous pouvez le voir sur cet exemple, le code est très similaire. Ce sont deux langages de programmation qui sont différents, mais vous remarquez que dans la manière, chaque ligne de VBA est associée à une ligne en JavaScript.</p>
+                    <p>Comme nous l'avons dit au début de ce cours, l'important en programmation c'est de <span class="em">comprendre les concepts</span>. Vous pourrez rapidement vous adapter à un nouveau langage de programmation si vous avez compris la logique.</p>
+                </article>
+                <article>
+                    <h2 id="prolongation_apprentissage_VBA">Prolongez votre apprentissage de VBA :</h2>
+                    <p>Précédemment, vous avez vu comment utiliser le VBA pour automatiser des tâches. Bien évidemment, cela n'est pas encore suffisant pour se lancer dans de l'analyse de données. Pour certaines parties comme les objets, nous n'avons qu'effleuré les possibilités.</p>
+                    <h3>Poursuivez votre apprentissage :</h3>
+                    <p>Comme dans tous les apprentissages, vous pouvez toujours continuer à apprendre de nouvelles choses. La programmation ne fait pas exception, bien au contraire. Le code évolue tellement vite qu'il faut toujours essayer de rester au courant des nouvelles tendances. Parfois cela permet d'ouvrir sur des choses qu'on ne pensait alors jamais faire, ou encore accélérer le traitement d'une tâche avec une nouvelle manière de procédéder.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous trouverez énormément de ressources sur <a href="https://learn.microsoft.com/fr-fr/office/vba/library-reference/concepts/getting-started-with-vba-in-office" target="_blank">le site de Microsoft sur le VBA</a>.</p>
+                    </div>
+                    <p>L'avantage du VBA, c'est que ce code est utilisé depuis plusieurs dizaines d'années. Il y a plusieurs millards de lignes de code disponibles sur internet sur des miliers de forums. L'important, c'est d'arriver à faire ce que vous voulez avec votre code.</p>
+                    <p>Depuis le temps que ce code existe, je me dis toujours que je ne dois pas être tout seul à avoir eu tel ou tel problème, et que cette question a déjà dû être posée sur internet. Une simple recherche sur internet permet le plus souvent de trouver une solution à votre problème.</p>
+                    <h3>Utilisez VBA en dehors d'Excel :</h3>
+                    <p>Nous l'avons dit en introduction, le langage VBA est un langage principalement utilisé par Microsoft pour les applications Microsoft.</p>
+                    <p>Nous l'avons pour le moment uniquement utilisé au travers d'Excel, mais en réalité vous pouvez interagir avec différentes applications à partir du VBE Excel.</p>
+                    <p>Pour terminer notre projet, vous pourriez imaginer un dernier bouton qui serait "Envoi du reporting". Le code permettrait de passer à <span class="em">Outlook</span> la liste des destinataires, l'objet, le corps du mail ainsi que la pièce jointe, puis pour finir, de l'envoyer directement.</p>
+                    <p>Nous reviendrons sur cet exemple prochainement dans la suite de cours qui sera consacrée à l'analyse de données.</p>
+                    <p>Nous en profiterons également pour exécuter des requêtes dans une base <span class="em">ACCESS</span>.</p>
+                    <p>Bravo ! Vous venez de terminer la partie de ce cours sur la découverte des fondamentaux du VBA. Nous avons vu comment nous pouvons automatiser des tâches simples en VBA avec l'aide des vairables, des opérateurs, des boucles et des fonctions.</p>
+                    <p>Si vous souhaitez apprendre à toujours plus automatiser votre récolte de données, vos analyses et votre reporting, suivez-moi dans la deuxième partie de ce cours sur le VBA : <a href="./supplements_analyse_donnees_VBA.html">>Analysez vos données avec VBA</a>.</p>
                 </article>
             <!-- fin de section -->
             </section>
