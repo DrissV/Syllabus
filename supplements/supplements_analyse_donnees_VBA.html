@@ -48,6 +48,9 @@
                         <li><a href="../supplements.html">Retour au sommaire</a></li>
                         <li><a href="#introduction">Introduction</a></li>
                         <li><a href="#manipulation_fichiers_VBA">Manipulation des fichiers avec VBA</a></li>
+                        <li><a href="#programmation_execution_automatique_traitements_donnees_VBA">Programmation de l'exécution automatique des traitements de données avec VBA</a></li>
+                        <li><a href="#gestion_securite_application_VBA">Gestion de la sécurité de l'application VBA</a></li>
+                        <li><a href="#analyse_donnees_VBA">Analyse des données avec VBA</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -120,7 +123,7 @@
                         <p>Le chemin, c'est <span class="html">Ce PC &gt; Storage &gt; P2C1 &gt; Data</span>, mais ce n'est pas exploitable par le VBA. Pour pouvoir le convertir en un chemin exploitable, il faut cliquer dans cette barre d'adresse et vous aurez un chemin exploitable sous la forme : I:\P2C1\Data. Pour finir, il ne faut pas oublier d'ajouter un dernier back slash (barre oblique inversée) avec la combinaison de touches sur votre clavier <kbd>ALT GR</kbd> + <kbd>8 \</kbd> pour Windows ou <kbd>Option</kbd> + <kbd>MAJ</kbd> + <kbd>/</kbd> sur Mac. Pour notre exemple, le chemin final est donc sous la forme : I:\P2C1\Data\.</p>
                     </div>
                     <p>Maintenant que nous avons le chemin du dossier, nous n'avons plus qu'à écrire le code qui va nous permettre de faire la liste.</p>
-<pre><code>Sub Liste_fichier()
+<pre><code>Sub Liste_fichiers()
     Dim Chemin As String
     Dim Fichier As String
     Dim i As Integer
@@ -202,6 +205,554 @@ Set FSO = CreateObject("Scripting.FileSystemObject")</code></pre>
                     <p>Nous n'avons plus qu'à utiliser cet objet pour déclacer nos fichiers avec la ligne de code :</p>
 <pre><code>FSO.MoveFile "I:\P2C1\Data\Reporting 2023S01.xlsx", "I:\P2C1\Data\Fichiers_traités\Reporting 2023S01.xlsx"</code></pre>
                     <p>Nous utilisons la fonction <span class="html">FSO.MoveFile</span>. Nous donnons comme premier argument le chemin du fichier à déplacer, puis en second argument, le nouvel emplacement.</p>
+                    <p>Dans ce cas, nous avons <span class="em">déplacé</span> les fichiers un par un, mais nous pourrions être moins restrictifs en lui demandant de déplacer tous les fichiers avec un nom similaire, avec la même extension ou encore l'intégralité d'un dossier.</p>
+                    <p>Pour aller plus loin, voici le code pour déplacer tous les fichiers avec un nom similaire :</p>
+<pre><code>FSO.MoveFile "I:\P2C1\Data\Reporting*.xlsx", "I:\P2C1\Data\Fichiers_traités\"</code></pre>
+                    <p>Nous avons utilisé l'étoile "*" pour lui spécifier que nous souhaitons qu'il déplace tous les fichiers du dossier qui commencent par "Reporting".</p>
+                    <h3>Automatisez le traitement des données de plusieurs fichiers :</h3>
+                    <p>Maintenant, vous savez lister des fichiers, créer des dossiers et déplacer des fichiers. Il ne reste plus qu'à rajouter le traiteemnt à appliquer.</p>
+                    <p>Nous allons donc modifier notre programme pour :</p>
+                    <ul>
+                        <li>
+                            <p>ouvrir les fichiers;</p>
+                        </li>
+                        <li>
+                            <p>faire le nettoyage des données dans un sous-programme;</p>
+                        </li>
+                        <li>
+                            <p>copier les données;</p>
+                        </li>
+                        <li>
+                            <p>coller les données</p>
+                        </li>
+                        <li>
+                            <p>fermer le fichier.</p>
+                        </li>
+                    </ul>
+                    <p>Je vous montre tout cela dans le code ci-dessous :</p>
+<pre><code>Sub Liste_fichiers()
+
+Dim Chemin As String
+Dim Fichier As String
+Dim i As Integer
+Dim j As Integer
+Dim FSO As Object
+Set FSO = CreateObject("Scripting.FileSystemObject")
+Dim fichier_reporting As String
+Dim fichier_a_rajouter As String
+Dim cell_max As Integer
+
+fichier_reporting = ActiveWorkbook.Name
+
+'/////////////////////////////////////////////////////////
+'////////// BOUCLE POUR LE LISTING DES FICHIERS \\\\\\\\\\
+'\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+'Initialisation de la variable
+i = 1
+
+'Changement de feuille Excel
+Sheets("Reporting").Select
+
+'Choix du dossier à lister
+Chemon = "D:\Extraction\Données\"
+Fichier = Dir(Chemin)
+
+'Boucle sur les fichiers du répertoire.
+Do While Len(Fichier) &gt; 0
+    Range("A" & i).Value = Chemin & Fichier
+    i = i + 1
+    Fichier = Dir()
+Loop
+
+'Création du dossier
+MkDir("D:\Extraction\Données\Fichiers_traités\")
+
+'/////////////////////////////////////////////
+'////////// traitement des fichiers \\\\\\\\\\
+'\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+For j = 1 To (i - 1)
+    'Sélection de la feuille
+    Sheets("Reporting").Select
+    'Récupération du lien du fichier à compiler
+    Fichier = Range("A" & j).Value
+    'Ouverture du fichier
+    Workbooks.Open Filename:=Fichier
+    'Récupération du nom du fichier
+    fichier_a_rajouter = ActiveWorkbook.Name
+    'Sous-programme de traitement des données
+    'traitement_reporting
+
+    'Suppression des colonnes inutiles
+    Columns("A:G").Select
+    Selection.Delete Shift:=xlToLeft
+    Columns("X:AF").Select
+    Section.Delete Shift:=xlToLeft
+    'Changement du format
+    Columns("W:W").Select
+    Selection.NumberFormat = "#,##0.0"
+    'Suppression des .0 dans le code postal
+    Columns("N:N").Select
+    Selection.Replace What:=".0", Replacement:="", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SrarchFormat:=False,
+        ReplaceFormat:=False
+    'Copie des données
+    Range("A2:AU1000").Select
+    Selection.Copy
+    
+    'Changement de fichier
+    Windows(fichier_reporting).Activate
+    'Sélection de la feuille
+    Sheets("Data").Select
+    'Recherche de la dernière cellule vide pour coller nos données
+    If j &gt; 1 Then
+    Range("A2").Select
+    Else
+    Range("A1").Select
+    End If
+    Selection.End(xlDown).Select
+    cell_max = ActiveCell.Row
+    Range("A" & (cell_max + 1)).Select
+    'Collage des données
+    ActiveSheet.Paste
+    'Retour sur le fichier
+    Workbooks(fichier_a_rajouter).Activate
+    'Fermeture du fichier
+    ActiveWorkbook.Save
+    ActiveWorkbook.Close
+
+    'Déplacement du fichier traité
+    FSO.MoveFile Fichier, Chemin & "Fichiers_traités\"
+    'Rajoute d'une indication dans le fichier pour valider que le traitement est OK
+    Sheets("Reporting").Select
+    Range("B" & j).Select
+    ActiveCell.FormulaR1C1 = "Fichier OK"
+Next j
+
+End Sub</code></pre>
+                    <p>Comme vous avez pu le voir dans le code ci-dessus, nous avons dû faire des modifications supplémentaires dans le code initial.</p>
+                    <p>Le fait d'ajouter de <span class="em">l'automatisation</span> nous oblige par exemple à trouver la dernière ligne qui est remplie.</p>
+                    <p>Vous avez pu également voir que j'utilise beaucoup le code avec des Sheets("name").Select" ou encore "Range("A1").Select". Ce code n'est pas obligatoire du tout et vous verrez prochainement comment nous pouvons nous en passer.</p>
+                    <p>Je trouve qu'utiliser ce type de code au départ permet d'être plus visuel dans le mode pas à pas du VBE. Le fait de réaliser des "Select" de fichier, de feuille ou encore de cellule nous permet de voir ce que notre code va faire. Il est ainsi plus facile de suivre le déroulé de notre code.</p>
+                    <p>Dans un second temps, ou dès que vous serez à l'aise, vous pourrez optimiser votre code en supprimant ce genre d'étape qui ralentit le code.</p>
+                </article>
+                <article>
+                    <h2 id="programmation_execution_automatique_traitements_donnees_VBA">Programmez l'exécution automatique de vos traitements de données avec VBA :</h2>
+                    <p>Vous venez de voir comment commencer à automatiser un reporting.</p>
+                    <p>Pour le moment, cette automatisation nécessite toujours l'intervention d'une personne physique qui va lancer la macro. Dans la suite de ce cours, nous allons voir comment tout cela peut se faire de façon automatique pendant que vous êtes en train de prendre votre café !</p>
+                    <h3>Automatisez l'exécution de vos scripts :</h3>
+                    <p>Pour continuer à pousser l'automatisation plus loin, nous allons utiliser des fonctions qui permettent de s'exécuter en fonction de certains événements.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Un <span class="em">événement</span> est une action que le VBE attend pour déclencher du code. Imaginons que, chaque fois que vous ajoutez une feuille, vous souhaitez faire une mise en page spécifique ou alors demander quelque chose à l'utilisateur. Vous pouvez faire cela avec les événements.</p>
+                    </div>
+                    <figure>
+                        <img src="../images/fenetre_projets_differents_modules_VBE.png" alt="">
+                        <figcaption>Fenêtre des projets avec les différents modules dans le VBE</figcaption>
+                    </figure>
+                    <p>Jusqu'à maintenant, vos macros étaient dans les modules, mais vous pouvez également les insérer dans des <span class="em">feuilles</span> ou dans "<span class="em">ThisWorkbook</span>".</p>
+                    <p>Mais pour quoi faire ? À quoi cela sert-il de rajouter de la complexité ? Les événements sont définis dans le VBE et nous ne pouvons pas en créer. Nous allons donc utiliser les événements qui sont mis à votre disposition dans le VBE. Certains sont <span class="em">associés à la feuille (événement Worksheet)</span> comme :</p>
+                    <ul>
+                        <li>
+                            <p>BeforeDoubleClick;</p>
+                        </li>
+                        <li>
+                            <p>Calculate;</p>
+                        </li>
+                        <li>
+                            <p>Activate;</p>
+                        </li>
+                        <li>
+                            <p>SelectionChange;</p>
+                        </li>
+                        <li>
+                            <p>FollowHyperlink.</p>
+                        </li>
+                    </ul>
+                    <p>D'autres sont <span class="em">associés au classeur (événement Workbook)</span>, par exemple :</p>
+                    <ul>
+                        <li>
+                            <p>NewSheet;</p>
+                        </li>
+                        <li>
+                            <p>Open;</p>
+                        </li>
+                        <li>
+                            <p>BeforeClose;</p>
+                        </li>
+                        <li>
+                            <p>BeforePrint;</p>
+                        </li>
+                        <li>
+                            <p>BeforeSave;</p>
+                        </li>
+                        <li>
+                            <p>SheetActivate;</p>
+                        </li>
+                        <li>
+                            <p>WindowsActivate.</p>
+                        </li>
+                    </ul>
+                    <p>Pour voir les différents événements, il faut déjà choisir si ce sera un événement lié à une feuille ou au classeur. Dans notre cas, il sera lié à l'ouverture du classeur Excel.</p>
+                    <figure>
+                        <img src="../images/utilisation_module_ThisWorkBook_evenements_VBA.png" alt="">
+                        <figcaption>Utilisation du module "ThisWorkBook" pour les événements</figcaption>
+                    </figure>
+                    <p>Vous allez donc :</p>
+                    <ul>
+                        <li>
+                            <p>aller dans "ThisWorkBook";</p>
+                        </li>
+                        <li>
+                            <p>cliquer sur "Général";</p>
+                        </li>
+                        <li>
+                            <p>choisir "Workbook" dans la liste;</p>
+                        </li>
+                        <li>
+                            <p>aller encore à droite pour choisir "Open".</p>
+                        </li>
+                    </ul>
+                    <p>Vous devez normalement obtenir un résultat similaire :</p>
+                    <figure>
+                        <img src="../images/exemple_sous-programme_evenement_Workbook_Open_VBA.png" alt="">
+                        <figcaption>Exemple de sous-programme qui se lance avec l'événement "Workbook_Open"</figcaption>
+                    </figure>
+                    <p>Le VBE vous a automatiquement créé une nouvelle fonction avec différentes variables.</p>
+                    <p>Je crois que vous avez compris : nous allons ici lancer automatiquement notre programme à l'ouverture du fichier Excel ? Tout à fait ! Cela va donner un code très simple :</p>
+<pre><code>Private Sub Workbook_BeforeSave(ByVal SaveAsUI as Boolean, Cancel As Boolean)
+
+'Code à mettre ici
+
+End Sub</code></pre>
+                    <h3>Automatisez la mise à jour de vos données :</h3>
+                    <p>Nous allons maintenant <span class="em">modifier</span> notre code pour qu'il se lance automatiquement à l'ouverture. Nous allons également en profiter pour ajouter un petit reporting. Cema va nous permettre de connaître le statut de la mise à jour (vu qu'elle va se faire toute seule, il nous faut bien un indicateur), en regardant la colonne "État" qui pourra prendre la valeur "Fait", si le reporting a déjà été fait.</p>
+                    <p>Avant de lancer le reporting, j'ai rajouté <span class="em">une table de paramétrage</span> sur le fichier Excel pour le mois de mai 2023 :</p>
+                    <figure>
+                        <img src="../images/ajout_table_parametrage_Excel.png" alt="">
+                        <figcaption>Ajout d'une table de paramétrage dans le fichier Excel</figcaption>
+                    </figure>
+                    <p>Cette table va permettre au code de venir chercher quel jour nous sommes et de voir si, ce jour-là, nous souhaitons mettre à jour le reporting en utilisant la colonne E "Statut du reporting". Si c'est "Oui", alors nous lançons le reporting, sinon nous ne faisons rien.</p>
+                    <p>Nous allons également utiliser la colonne G pour donner l'état de la mise à jour. Le programme écrit "Fait" dans cette colonne les jours où il a été lancé.</p>
+                    <p>Je vous montre tout cela dans le code suivant :</p>
+<pre><code>Private Sub Workbook_Open()
+
+Dim jour As Date
+Dim statut As String
+Dim etat As String
+Dim num_ligne As Integer
+
+jour = Date
+
+'Ouverture du fichier
+'Workbooks.Open Filename:="D:\C1P3\reporting.xlsb"
+
+'Recherche du jour
+Sheets("Reporting").Select
+Range("D3:D40").Select
+Selection.Find(What:=jour, After:=ActiveCell, LookIn:=xlFormulas _
+    , LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+    MatchCase:=False, SearchFormat:=False).Activate
+
+'Récupération des paramétrages des cellules
+num_ligne = ActiveCell.Row
+statut = Range("E" & num_ligne).Value
+etat = Range("G" & num_ligne).Value
+
+'Test de lancement du sous-programme
+If (statut = "Oui" And etat = "") Then
+    Liste_fichiers
+    Range("G" & num_ligne).Select
+    ActiveCell.FormulaR1C1 = "Fait"
+End If
+
+End Sub</code></pre>
+                    <p>Ah oui, effectivement, ce n'est pas mal tout ça; mais au final, vous devez toujours lancer le fichier moi-même avant d'aller prendre votre café, c'est dommage ! Effectivement, si nous nous arrêtons là, nous devons le lancer nous-mêmes et nous n'allons pas gagner tant de temps que cela.</p>
+                    <p>Pour terminer cette automatisation, nous allons utiliser le <span class="em">planificateur de tâches de Windows</span>. Cet outil Windows permet de paramétrer une tâche à une heure bien précise de la journée et d'y associer une action. Dans notre cas, cela sera l'ouverture de notre fichier de reporting.</p>
+                    <p>Dans le planificateur de tâches de Windows, dans l'onglet "Actions", on va "créer une tâche de base" avec le nom "Lancement reporting" par exemple.</p>
+                    <p>Nous allons ensuite la paramétrer. Donc, on souhaite la lancer tous les jours. Puis, nous allons choisir un horaire (par exemple, 09:00).</p>
+                    <p>L'action que nous souhaitons faire, c'est lancer un programme et on lui donne le lien de notre programme, on clique sur "Suivant", on confirme les informations, à savoir le nom ("Lancement reporting") et le déclencheur (tous les jours à 9h) et on clique sur "Terminer".</p>
+                    <p>Maintenant qu'on vient de créer cette action, nous allons aller voir où elle est paramétrée. Dans la liste des tâches actives en dessous, je vais aller chercher mon action qui s'appelle "Lancement reporting" et je peux double-cliquer dessus.</p>
+                    <p>Quand je double-clique dessus, je tombe sur les déclencheurs, les actions, c'est ce qu'on a paramétré tout à l'heure.</p>
+                    <p>Dans le volet de droite, je vais simuler une exécution pour le lancer et le tester. C'est ce que nous allons faire. Je vais cliquer sur "Exécuter" et simuler que je suis aujourd'hui à 9h pour voir si la macro s'exécute parfaitement.</p>
+                    <p>Et voilà ! Vous pouvez maintenant aller boire votre café directement en arrivant au bureau. Votre reporting se fera tout seul à 9h !</p>
+                    <h3>Automatisez l'envoi de rapports par e-mail :</h3>
+                    <p>Finalement, devant la machine à café à 9h, vous vous demandez si votre script a vraiment fonctionné. Et s'il y avait une erreur, un problème ? Vous ne pourrez le savoir qu'au moment où vous allez retourner devant votre ordinateur et consulter le statut de la mise à jour dans le fichier reporting.</p>
+                    <p>C'est pourquoi nous allons pousser l'automatisation encore un peu plus loin.</p>
+                    <p>Encore plus automatiser, c'est possible ?! Nous allons maintenant nous <span class="em">envoyer un e-mail automatiquement</span> afin d'avoir le statut de cette mise à jour directement sur notre téléphone.</p>
+                    <p>Pour cela, il vous suffit d'instancier un nouvel objet "Outlook" avec le code :</p>
+<pre><code>Dim outlook As Object
+Set outlook = CreateObject("Outlook.Application")</code></pre>
+                    <p>Paramétre ensuite l'objet "Outlook" avec la méthode "<span class="html">CreateItem</span>" qui a besoin de différents paramètres :</p>
+                    <ul>
+                        <li>
+                            <p>Subject : le sujet de l'e-mail;</p>
+                        </li>
+                        <li>
+                            <p>To : l'adresse ou les adresses e-mail auxquelles envoyer le fichier;</p>
+                        </li>
+                        <li>
+                            <p>Body : le corps du message (on peut utiliser également HTMLBody pour pouvoir personnaliser un peu le texte);</p>
+                        </li>
+                        <li>
+                            <p>Display : si vous souhaitez voir l'e-mail avant de l'envoyer;</p>
+                        </li>
+                        <li>
+                            <p>Send : qui permey d'envoyer l'e-mail;</p>
+                        </li>
+                        <li>
+                            <p>Add (chemin de la pièce jointe) : pour ajouter une pièce jointe à l'e-mail.</p>
+                        </li>
+                    </ul>
+<pre><code>'À mettre dans Thisworksheet
+Private Sub Workbook_Open()
+
+Dim jour As Date
+Dim statut As String
+Dim etat As String
+Dim num_ligne As Integer
+Dim outlook As Object
+Dim Resultat As String
+
+Set outlook = CreateObject("Outlook.Application")
+
+jour = Date
+
+'Ouverture du fichier
+'Workbooks.Open Filename:="D:\C1P3\reporting.xlsb"
+
+'Recherche du jour
+Sheets("Reporting").Select
+Range("D3:D40").Select
+Selection.Find(What:=jour, After:=ActiveCell, LookIn:=xlFormulas _
+    , LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+    MatchCase:=False, SearchFormat:=False).Activate
+
+'Récupération des paramétrages des cellules
+num_ligne = ActiveCell.Row
+statut = Range("E" & num_ligne).Value
+etat = Range("G" & num_ligne).Value
+
+'Teste si on doit lancer le sous-programme
+If (statut = "Oui" And etat = "") Then
+    Liste_fichiers
+    Range("G" & num_ligne).Select
+    ActiveCell.FormulaR1C1 = "Fait"
+End If
+
+'Créer une phrase à envoyer par email
+If Range("G" & num_ligne).Value = "Fait" Then
+    Resultat = "La mise à jour est passée correctement en date du : " & jour
+Else
+    Resultat = "Problème avec la mise à jour du : " & jour
+End If
+
+'Creation et envoi de l'email automatiquement
+With outlook.CreateItem(alMailitem)
+    .Subject = "Reporting - " & jour
+    .To = "driss.vandenheede.techinfo@gmail.com"
+    .Body = Resultat
+    .send
+End With
+
+End Sub</code></pre>
+                    <p>Comme vous pouvez le voir, je n'ai pas fait de changement dans les autres sous-programmes. Nous modifions seulement le programme principal pour ajouter des fonctionnalités : au départ, lancer une mise à jour, puis faire un petit reporting et, pour finir, envoyer ce reporting par e-mail.</p>
+                    <p>Bien sûr, nous pouvons ajouter encore des options et des fonctionnalités en utilisant les différentes propriétés des objets. Dans notre cas, nous allons nous arrêter à un simple e-mail. <a href="https://learn.microsoft.com/fr-fr/office/vba/api/outlook.application.createitem" target="_blank">Voici un lien vers le site de Microsoft pour conna^tre les autres possibilités.</a></p>
+                </article>
+                <article>
+                    <h2 id="gestion_securite_application_VBA">Gérez la sécurité de votre application VBA :</h2>
+                    <p>Vous avez vu précédemment comment automatiser le reporting en utilisant différents outils comme les événements ou encore les autres logiciels de la suite Office de Microsoft.</p>
+                    <p>Maintenant, nous allons mettre l'accent sur la <span class="em">sécurité</span> autour de votre environnement de développement et vous montrer comment vous pouvez mieux sécuriser l'exécution d'une macro.</p>
+                    <h3>Sécurisez votre code :</h3>
+                    <p>Comme vous avez déjà pu le voir avec les fichiers Excel, chaque fichier possède une <span class="em">extension</span>. Pour Excel, les quatre principaux formats sont .xls, .xlsb, .xlsx et .xlsm.</p>
+                    <p>L'extension a une réelle importance pour votre code en VBA, car, en fonction de cette dernière, le code associé à votre macro sera stocké ou non dans votre fichier.</p>
+                    <p>Si vous venez d'écrire une macro dans votre fichier Excel et que vous souhaitez l'enregistrer en .xlsx, un message d'erreur va apparaître.</p>
+                    <figure>
+                        <img src="../images/message_erreur_Excel_enregistrer_fichier_code_xlsx_VBA.png" alt="">
+                        <figcaption>Message d'erreur d'Excel quand on souhaite enregistrer un fichier contenant du code en .xlsx</figcaption>
+                    </figure>
+                    <p>Excel vous signale que la fonctionnalité "<span class="em">Projet VB</span>" ne peut pas être enregistrée, car l'extension .xlsx ne peut pas contenir de code VBA. Cette restriction permet de vous protéger de l'exécution de macros à l'ouverture par exemple.</p>
+                    <p>Comme nous l'avons vu précédemment, vous pouvez exécuter du code sans que l'utilisateur le voie (lorsque vous avez utilisé l'événment "Open" par exemple).</p>
+                    <p>Une personne mal intentionnée pourrait par exemple dérober des fichiers ou des données et se les envoyer par e-mail, sans que vous puissiez vous en rendre compte, juste en ouvrant un fichier Excel.</p>
+                    <p>Pour pallier ce type de problème, Microsoft a créé une extension (<span class="em">.xlsx</span>) qui ne peut pas contenir de code.</p>
+                    <p>Pour les extensions .xls, .xlsb ou .xlsm, le code que vous avez écrit est directement enregistré dans le fichier avec vos données.</p>
+                    <p>Mais alors, si un jour vous supprimez mon fichier, vous allez aussi perdre votre code ? Eh oui, bonne remarque, c'est bien le problème. Votre code étant à l'intérieur de votre fichier, n'importe qui peut le modifier ou l'exécuter. Si vous perdez votre fichier, vous perdez également votre code. Il est donc important de pouvoir le sécuriser et de le sauvegarder régulièrement.</p>
+                    <p>Si votre code est inclus à l'intérieur du fichier, je vous encourage vivement à faire <span class="em">des sauvegardes</span> des différents modules dans des fichiers externes (Bloc-notes, Word, OneNote, site internet, etc.). Vous pourrez donc avoir une copie du code et le restaurer.</p>
+                    <p>Parfois, on ne souhaite pas que le code soit directement dans le fichier. Par exemple, on ne veut pas que d'autres personnes puissent lancer le code VBA. Pour ce faire, vous pouvez utiliser par exemple un fichier qui s'appelle "<span class="em">Personal</span>". Ce nouveau fichier Excel ne va contenir que du code (vous ne pourrez pas y insérer de données).</p>
+                    <p>Pour faire apparaître le fichier "Personal", il vous suffit de lancer l'enregistrement d'une macro (onglet "Développeur" ou "Affichage"), puis d'enregistrer une nouvelle macro.</p>
+                    <p>Dans la partie "Enregistrer la macro dans", choisissez "Classeur de macros personnelles", puis cliquez sur "OK".</p>
+                    <p>Votre classeur de macros personnelles est maintenant créé ! Si vous retournez dans le VBE, vous pouvez voir dans la fenêtre des projets un nouveau fichier Excel qui s'appelle "<span class="em">PERSONAL.XLSB</span>".</p>
+                    <figure>
+                        <img src="../images/fenetre_projets_VBE_fichier_PERSONAL_XLSB.png" alt="">
+                        <figcaption>Fenêtre des projets dans le VBE avec le fichier "PERSONAL.XLSB"</figcaption>
+                    </figure>
+                    <p>Vous pouvez maintenant stocer votre code dans les différents modules de ce fichier. Votre code pourra alors s'exécuter sur les différents fichiers, mais il ne sera jamais stocké directement dans vos fichiers de reporting par exemple.</p>
+                    <p>Quand vous allez quitter Excel après votre première macro dans ce fichier, Excel vous demandera si vous souhaitez enregistrer les modifications dans votre classeur de macros personnelles. Il faudra bien sûr cliquer sur "enregistrer".</p>
+                    <p>Le fait de stocker vos macros dans ce fichier empêche que des utilisateurs modifient ou exécutent votre code. Mais, souvenez-vous que cela n'empêche pas de perdre votre code. Tous vos scripts VBA étant dans ce fichier, cela devient plus simple de les sauvegarder. En effet, vous pouvez retrouver sur l'ordinateur le fichier "PERSONALXLSB". Généralement, il se trouve dans : C:\Users\"le nom de votre ordinateur"\AppData\Roaming\Microsoft\Excel\XLSTART.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>le dossier "AppData" est souvent un dossier masqué par Windows. Pour afficher les dossiers cachés, vous pouvez consulter <a href="https://support.microsoft.com/fr-fr/windows/afficher-les-fichiers-cach%C3%A9s-0320fe58-0117-fd59-6851-9b7f9840fdb2#:~:text=Cliquez%20sur%20le%20bouton%20D%C3%A9marrer,cach%C3%A9s%2C%20puis%20cliquez%20sur%20OK" target="_blank">la procédure en fonction de votre version de Windows sur le site de Microsoft</a>.</p>
+                    </div>
+                    <p>Si vous avez stocké toutes vos macros dans ce classeur, vous pouvez maintenant sauvegarder ce fichier pour mettre en sécurité l'intégralité de vos macros. De même, si un jour vous changez d'ordinateur, ce fichier peut simplement être déplacé sur le nouvel ordinateur pour avoir accès à toutes les macros facilement et rapidement.</p>
+                    <h3>Maîtrisez les options avancées de sécurité :</h3>
+                    <p>Parfois, les ordinateurs sont paramétrés pour ne pas lancer les macros. Vous avez dans ce cas un message d'Excel qui vous indique que toutes les macros ont été désactivées.</p>
+                    <p>Pour changer cela, il faut :</p>
+                    <ul>
+                        <li>
+                            <p>cliquer sur l'icône d'Office (en haut à gauche de la fenêtre);</p>
+                        </li>
+                        <li>
+                            <p>aller dans "Options";</p>
+                        </li>
+                        <li>
+                            <p>sélectionner "Centre de gestion de la confidentialité";</p>
+                        </li>
+                        <li>
+                            <p>cliquer sur "Paramètres du centre de gestion de la confidentialité" dans la fenêtre de droite.</p>
+                        </li>
+                    </ul>
+                    <p>Dans cette nouvelle fenêtre, cliquez sur "<span class="em">Paramètres des macros</span>". Vous avez ensuite quatre choix possibles :</p>
+                    <ol>
+                        <li>
+                            <p>"Désactiver tous les macros sans notification" : vous n'aurez alors pas le message pour activer les macros à l'ouverture d'Excel.</p>
+                        </li>
+                        <li>
+                            <p>"Désactiver toutes les macros avec notification" : c'est un choix intéressant si vous développez souvent des macros. Cela permet d'aller la praticité et la sécurité.</p>
+                        </li>
+                        <li>
+                            <p>"Désactiver toutes les macros à l'exception des macros signées numériquement".</p>
+                            <div class="information">
+                                <img src="../images/information.png" alt="Information" class="float_left">
+                                <p>Nous allons revenir en détails sur cette option qui est très pratique.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <p>"Activer toutes les macros" : cela n'est pas recommandé par Excel et je ne vous le conseille pas non plus. N'importe quel code VBA pourrait se lancer à l'ouverture d'Excel.</p>
+                        </li>
+                    </ol>
+                    <p>Aussi, j'apprécie tout particulièrement la possibilité de <span class="em">signer</span> une macro, mais qu'est-ce que cela signifie ? En pratique, la vraie signature numérique requiert de passer par un organisme qui atteste que votre macro vous appartient et qu'elle est donc sûre. Pour une petite macro sur votre ordinateur, vous n'avez pas beosin dqu'un organisme externe authentifie votre code.</p>
+                    <p>Pour simplifier cette procédure, Microsoft met à disposition un outil qui vous permet de signer vous-même une macro : <span class="html">Selfcert</span>.</p>
+                    <p>Pour ce faire, allez chercher cet outil. De mon côté, il se trouve dans C:\Program Files\Microsoft Office\root\Office16.</p>
+                    <p>Vous pouvez ensuite lancer l'application qui s'appelle "SELFCERT.EXE".</p>
+                   <figure>
+                    <img src="../images/fenetre_creation_certificat_Selfcert_VBA.png" alt="">
+                    <figcaption>Fenêtre de création d'un certificat avec Selfcert</figcaption>
+                   </figure>
+                   <p>Donnez un nom à votre certificat : "reporting", par exemple. Puis cliquez sur "OK", le message suivant apparaît : "Création réussie d'un certificat pour reporting".</p>
+                   <p>Retournez maintenant dans le VBE pour affecter ce certificat à votre code :</p>
+                   <ul>
+                        <li>
+                            <p>cliquez dans la fenêtre des projets sur le fichier Excel qui contient le code VBA;</p>
+                        </li>
+                        <li>
+                            <P>allez dans "Outils", puis "Signature électronique";</P>
+                        </li>
+                        <li>
+                            <p>cliquez sur "Choisir";</p>
+                        </li>
+                        <li>
+                            <p>choisissez le certificat que vous venez de créer;</p>
+                        </li>
+                        <li>
+                            <p>validez votre choix en cliquant sur "OK".</p>
+                        </li>
+                    </ul>
+                    <figure>
+                        <img src="../images/exemple_attribution_certificat_VBA.png" alt="">
+                        <figcaption>Exemple d'attribution d'un certificat</figcaption>
+                    </figure>
+                    <p>Maintenant, il ne vous reste plus qu'à changer le paramétrage d'exécution des macros dans les options d'Excel pour le passer en "Désactiver toutes les macros à l'exception des macros signées numériquement". Si tout s'est bien passé, votre macro doit maintenant s'exécuter, sans faire apparaître de message particulier.</p>
+                    <h3>Sécurisez l'utilisation de vos données par les utilisateurs :</h3>
+                    <p>Pour finir, voyons comment nous pouvons <span class="em">protéger le code</span>. Dans un premier temps, vous pouvez rajouter un mot de passe pour ouvir le VBE.</p>
+                    <p>Rien de plus simple :</p>
+                    <ul>
+                        <li>
+                            <p>faites un clic droit sur votre classeur dans la fenêtre des projets du VBE;</p>
+                        </li>
+                        <li>
+                            <p>cliquez sur "<span class="em">Propriétés de VBAProject</span>";</p>
+                        </li>
+                        <li>
+                            <p>cliquez sur l'onglet "Protection de cette nouvelle fenêtre";</p>
+                        </li>
+                        <li>
+                            <p>ajoutez un mot de passe pour pouvoir afficher le code.</p>
+                        </li>
+                    </ul>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Cetains mots de passe sont plus faciles à "casser" que d'autres. Il ne faut pas perdre de vue que celui-là est plus difficile et il faudra être un utilisateur averti pour passer outre. Je vous conseille donc de bien retenir ce mot de passe !</p>
+                    </div>
+                    <p>Vous avez maintenant un code qui est protégé et qui ne peut pas être modifié. Cependant, ce code peut toujours être exécuté par n'importe quel utilisateur à l'ouverture d'Excel. Or, nous souhaitons le rendre exécutable seulement par nous-même.</p>
+                    <p>Vous pouvez pour cela ajouter une condition dans le code qui va permettre de savoir quel est l'ordinateur qui essaye de lancer le code.</p>
+                    <p>Nous allons utiliser le code "<span class="em">Username</span>".</p>
+                    <p>Il faudra seulement définir une nouvelle variable et ajouter à cette variable le "Username" :</p>
+<pre><code>dim nom_utilisateur as String
+nom_utilisateur = Environ("USERNAME")</code></pre>
+                    <p>La variable "nom_utilisateur" contient donc maintenant le nom de la session de votre ordinateur, dans mon cas "Driss Vandenheede".</p>
+                    <p>Je n'ai plus qu'à mettre un "If" au début de mon code pour qu'il s'exécute seulement si le "Username" = "Driss Vandenheede".</p>
+<pre><code>Private Sub Workbook_Open()
+
+Dim jour As Date
+Dim statut As String
+Dim etat As String
+Dim num_ligne As Integer
+Dim outlook As Object
+Dim Resultat As String
+Dim nom_utilisateur As String
+
+nom_utilisateur = Environ("USERNAME")
+
+If nom_utilisateur = "Driss Vandenheede" Then
+
+    Set outlook = CreateObject("Outlook.Application")
+
+    jour = Date
+
+    'Ouverture du fichier
+    'Workbooks.Open Filename:="D:\C1P3\reporting.xlsb"
+
+    'Recherche du jour
+    Sheets("Reporting").Select
+    Range("D3:D40").Select
+    Selection.Find(What:=jour, After:=ActiveCell, LookIn:=xlFormulas _
+        , LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+        MatchCase:=False, SearchFormat:=False).Activate
+
+    'Récupération des paramétrages des cellules
+    num_ligne = ActiveCell.Row
+    statut = Range("E" & num_ligne).Value
+    etat = Range("G" & num_ligne).Value
+
+    'Teste si on doit lancer le sous-programme
+    If (statut = "Oui" And etat = "") Then
+        Liste_fichiers
+        Range("G" & num_ligne).Select
+        ActiveCell.FormulaR1C1 = "Fait"
+    End If
+
+    'Créer une phrase à envoyer par email
+    If Range("G" & num_ligne).Value = "Fait" Then
+        Resultat = "La mise à jour est passée correctement en date du : " & jour
+    Else
+        Resultat = "Problème avec la mise à jour du : " & jour
+    End If
+
+    'Creation et envoi de l'email automatiquement
+    With outlook.CreateItem(alMailitem)
+        .Subject = "Reporting - " & jour
+        .To = "driss.vandenheede.techinfo@gmail.com"
+        .Body = Resultat
+        .send
+    End With
+End If
+
+End Sub</code></pre>
+                </article>
+                <article>
+                    <h2 id="analyse_donnees_VBA">Analysez vos données avec VBA :</h2>
+                    <p>Précédemment, vous avez vu comment mettre en place un <span class="em">reporting automatisé</span> et comment vous pouvez interagir avec d'autres logiciels de la suite Office. Pour fininir, nous avons fait un point sur la sécurité de nos macros et nous avons vu comment il faut les sauvegarder.</p>
                     
                 </article>
             <!-- fin de section -->
