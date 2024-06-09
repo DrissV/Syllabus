@@ -753,6 +753,97 @@ End Sub</code></pre>
                 <article>
                     <h2 id="analyse_donnees_VBA">Analysez vos données avec VBA :</h2>
                     <p>Précédemment, vous avez vu comment mettre en place un <span class="em">reporting automatisé</span> et comment vous pouvez interagir avec d'autres logiciels de la suite Office. Pour fininir, nous avons fait un point sur la sécurité de nos macros et nous avons vu comment il faut les sauvegarder.</p>
+                    <p>Dans la suite, nous vons proposons d'aller plus loin dans l'analyse et le reporting. Maintenant que vous savez comment concaténer des fichiers, nous allons les analyser. Dans un premier temps, nous allons réaliser des <span class="em">analyses descriptives</span> et nous passerons du temps sur les <span class="em">séries temporelles</span>. Puis, dans un second temps, nous allons nous attarder sur les <span class="em">analyses bivariées</span> et <span class="em">multivariées</span> avec les tests statistiques (Pearson, Khi2 ou encore ANOVA) ainsi que sur les <span class="em">modélisations</span> comme la régression linéaire.</p>
+                    <p>Commençons par apprendre à faire une analyse descriptive de vos données. Une fois que votre fichier de données est consolidé, il va vous falloir le comprendre pour pouvoir l'analyser.</p>
+                    <p>Posez-vous alors deux questions :</p>
+                    <ul>
+                        <li>
+                            <p>Quelles données mon fichier contient-il exactement ?</p>
+                        </li>
+                        <li>
+                            <p>Est-ce que les données sont justes ?</p>
+                        </li>
+                    </ul>
+                    <p>Mais ce sont nos données, donc nous les connaissons déjà, non ? Et puis elles viennent de notre entreprise, donc c'est forcément bon. Concernant votre premier point, effectivement, si cela fait plusieurs mois ou années que vous êtes dans la même entreprise, vous êtes peut-être très à l'aise avec les données. Mais un jour, vous aurez certainement à ajouter de nouvelles données, comment allez-vous faire pour les comprendre ? C'est pour cela que nous faisons de l'analyse descriptive sur nos données.</p>
+                    <p>Pour votre second point, qui est de dire que vos données sont justes, nous n'en savons rien du tout. En effet, vos données sont peut-être bonnes aujourd'hui, mais qui vous dit que cela sera toujours le cas demain ? Et s'il y avait eu un bug dans le chargement de la base de données, une erreur de saisie, des modifications des scripts sur la base de données, etc. ?</p>
+                    <p>Il est préférable de toujours partir du principe que les données ne sont pas "justes". Je veux dire par là que vos données contiennent potentiellement des erreurs (peu importe la source de l'erreur).</p>
+                    <p>Demain, c'est vous qui allez mettre à disposition des données agrégées ou présenter une anamyse s'appuyant sur les données que vous avez extraites. Que va-t-il se passer si vos données sont fausses ?</p>
+                    <p>Effectivement, ce n'est pas de tout repos l'analyse de données ! C'est une routine qu'il faut mettre en place quand nous recevons des données. Et vous avez déjà vu comment mettre en place ce type de routine précédemment. Nous allons simplement étoffer cette analyse.</p>
+                    <p>Gardez en têye que, en analyse de données, il est nécessaire de vous rassurer sur vos données en mettant en place des <span class="em">routines</span> qui vous permettent de comprendre et de trouver des erreurs potentielles. C'est justement ce que nous allons voir ensemble dans la suite de ce cours avec les <span class="em">variables numériques et catégorielles</span> !</p>
+                    <h3>Décrivez un fichier de données :</h3>
+                    <p>Pour commencer, nous allons maintenant décrire un fichier (connaître le nombre de colonnes et de lignes par exemple) et tester l'unicité de la clé du fichier (c'est la clé qui ne doit pas contenir de doublon).</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Valeurs recherchées</th>
+                                <th>Formule à utiliser dans Excel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Le nombre total de lignes</td>
+                                <td>=LIGNES(A1:A4844)</td>
+                            </tr>
+                            <tr>
+                                <td>Le nombre total de colonnes</td>
+                                <td>=COLONNES(A1:U1)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Nous pouvons également faire la même chose, mais directement en VBA, sans passer par les formules Excel :</p>
+<pre><code>Sub test_doublons()
+
+Dim rng As Range
+Dim cell As Range
+Dim dict As Object
+Dim doublons As Range
+
+Set rng = Range("A2:A4844")
+Set dict = CreateObject("Scripting.Dictionary")
+
+'   Teste les doubles pour chaque cellule dans la range
+For Each cell In rng
+    If dict.Exists(cell.Value) Then
+        If doublons Is Nothing Then
+            Set doublons = cell
+        Else
+            Set doublons = Union(doublons, cell)
+        End If
+    Else
+        dict.Add cell.Value, 1
+    End If
+Next cell
+
+'   MsgBox pour l'utilisateur
+If Not doublons Is Nothing Then
+    '   Sélectionne les cellules en doublon dans la range
+    doublons.Select
+    MsgBox "Doublons trouvés dans la place " & rng.Address & "."
+Else
+    MsgBox "Aucun doublon trouvé dans la page " & rng.Address & "."
+End If
+
+End Sub</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>L'objet <span class="html">Scripting.Dictionry</span> permet d'instancier une petite base de données afin de stocker des éléments. Dans notre cas, nous allons ajouter à notre dictionnaire toutes les valeurs uniques que nous allons trouver dans la sélection que nous avons faite (de A2 à A4844 en utilisant le <span class="html">For Each</span> pour balayer l'intégralité des valeurs).</p>
+                    </div>
+                    <p>Comme vous avez pu le remarquer, je n'ai pas testé l'unicité de la clé avec une formule Excel, car celle-ci n'existe pas. Nous pouvons cependant utiliser la fonction "Supprimer les doublons" de l'onglet "Données" dans Excel. Le problème de cette fonction, c'est qu'elle supprime directement les doublons sans nous les montrer, mais cela peut être une autre solution.</p>
+                    <h3>Analysez des variables numériques :</h3>
+                    <p>Faisons maintenant l'<span class="em">analyse descriptive</span> de nos données sur des variables numériques (analyses quantitatives).</p>
+                    <p>Comment ça, analyses quantitatives ? La notion de "quantitatives" fait seulement référence à des données numériques qui sont statistiquement intéressantes à analyser. Nous allons donc parler de <span class="em">données discrètes ou continues</span>.</p>
+                    <p>Une donnée discrète, c'est une donée timide ? Je vais vous donner une définition des deux mots, cela sera plus facile à comprendre.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Les <span class="em">données discrètes</span> sont des nombres entiers finis (il est possible de compter les éléments), comme les notes des clients sur votre page Google ou le nombre d'enfants par famille. Il y a un nombre fini de valeurs possibles (votre entreprise ne peut être notée que de 0 à 5 par exemple).</p>
+                        <p>Une <span class="em">donnée continue</span>, c'est exactemnt l'inverse, les données peuvent prendre n'importe quelle valeur possible. On retrouve par exemple la taille, le poids, les ventes, les stocks, etc.</p>
+                    </div>
+                    <p>C'est important de bien comprendre ce point, car en fonction des valeurs nous n'allons pas regarder la même chose.</p>
+                    <p>Imaginons par exemple que nous regardons une colonne et qu'il y a dedans les valeurs :</p>
+                    <p>2; 1; 2; 1; 1; 2; 2; 2,36; 2; 1; 0.</p>
+                    <p>Si je vous dis maintenant que cette colonne contient un nombre d'enfants, qu'en pensez-vous ? Est-ce que cette colonne est juste ?</p>
+                    <p>Le nombre d'enfants étant une donnée discrète, on ne s'attend pas à avoir un nombre à virgule, c'est donc qu'il y a une erreur dans cette colonne.</p>
+                    <p>Commençons par définir ce que nous souhaitons connaître sur vos valeurs :</p>
                     
                 </article>
             <!-- fin de section -->
