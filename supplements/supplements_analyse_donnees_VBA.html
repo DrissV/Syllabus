@@ -844,6 +844,155 @@ End Sub</code></pre>
                     <p>Si je vous dis maintenant que cette colonne contient un nombre d'enfants, qu'en pensez-vous ? Est-ce que cette colonne est juste ?</p>
                     <p>Le nombre d'enfants étant une donnée discrète, on ne s'attend pas à avoir un nombre à virgule, c'est donc qu'il y a une erreur dans cette colonne.</p>
                     <p>Commençons par définir ce que nous souhaitons connaître sur vos valeurs :</p>
+                    <ul>
+                        <li>
+                            <p>le nombre de valeurs non vides;</p>
+                        </li>
+                        <li>
+                            <p>le nombre de valeurs vides;</p>
+                            <li>
+                                <p>le nombre de valeurs à 0;</p>
+                            </li>
+                            <li>
+                                <p>la valeur minimum;</p>
+                            </li>
+                            <li>
+                                <p>la valeur maximum;</p>
+                            </li>
+                            <li>
+                                <p>la valeur moyenne;</p>
+                            </li>
+                            <li>
+                                <p>la valeur médiane.</p>
+                            </li>
+                        </li>
+                    </ul>
+                    <p>Il existe deux méthodes principales pour faire cela : soit on utilise des formules dans Excel, soit on vient utiliser des formules en VBA.</p>
+                    <p>Nous allons commencer par Excel, je vais utiliser des formules dans la colonne R, qui contient le nombre de lots. Je vais simplement appliquer des formules sur une plage de données, elles vont me renvoyer directement les valeurs que je cherche.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Valeurs recherchées</th>
+                                <th>Formule à utiliser dans Excel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Le nombre de valeurs non vides</td>
+                                <td>=NBVAL(Paris!$R2:$R4844)</td>
+                            </tr>
+                            <tr>
+                                <td>Le nombre de valeurs vides</td>
+                                <td>=NB.SI(Paris!$R2:$R4844;"")</td>
+                            </tr>
+                            <tr>
+                                <td>Le nombre de valeurs à 0</td>
+                                <td>=NB.SI(Paris!$R2:$R4844;0)</td>
+                            </tr>
+                            <tr>
+                                <td>La valeur minimum</td>
+                                <td>=MIN(Paris!$R2:$R4844)</td>
+                            </tr>
+                            <tr>
+                                <td>La valeur maximum</td>
+                                <td>=MAX(Paris!$R2:$R4844)</td>
+                            </tr>
+                            <tr>
+                                <td>La valeur moyenne</td>
+                                <td>=MOYENNE(Paris!$R2:$R4844)</td>
+                            </tr>
+                            <tr>
+                                <td>La valeur médiane</td>
+                                <td>=MEDIANE(Paris!$R2:$R4844)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Comme vous le voyez, c'est assez simple de le faire dans Excel avec des formules qui existent déjà.</p>
+                    <figure>
+                        <img src="../images/exemple_reporting_colonne_nombre_lot_formules_Excel.png" alt="">
+                        <figcaption>Exemple de reporting sur la colonne nombre de lot en utilisant les formules d'Excel</figcaption>
+                    </figure>
+                    <p>Pour automatiser cela, vous pouvez soit demander à votre code d'écrire les formules automatiquement, comme nous l'avons fait à la main, soit de calculer lui-même ces différentes valeurs directement dans le code, puis de le stocker dans une variable :</p>
+<pre><code>Sub indicateurs()
+
+Dim nbre_nonvide As Integer
+Dim nbre_vide As Double
+Dim nbre_0 As Integer
+Dim min As String
+Dim max As Integer
+Dim moyenne As String
+Dim mediane As Integer
+Dim test As String
+
+nbre_nonvide = WorksheetFunction.CountA(Range("R2:R4844"))
+nbre_vide = WorksheetFunction.CountBlank(Range("R2:R4844"))
+min = WorksheetFunction.min(Range("R2:R4844"))
+max = WorksheetFunction.max(Range("R2:R4844"))
+moyenne = WorksheetFunction.Average(Range("R2:R4844"))
+mediane = WorksheetFunction.Median(Range("R2:R4844"))
+
+nbre_0 = 0
+For i = 2 To 4844
+
+    If Range("R" & i).Value = "0" Then
+        nbre_0 = nbre_0 + 1
+    End If
+
+Next i
+
+End Sub</code></pre>
+                    <p>Souvent en VBA, il y a des fonctions assez similaires à celles d'Excel, comme le minimum, le maximum, la médiane, etc. Par contre, certaines méthodes d'objet n'existent pas en VBA, et c'est le cas ici du nombre de 0 que nous souhaitons compter.</p>
+                    <p>Pour ce faire, j'ai juste ajouté un "For" avec un "If" qui vient incrémenter la variable "nbre_0". Nous aurions également pu créer un sous-programme pour pouvoir l'appeler, si nous devions l'utiliser souvent.</p>
+                    <p>Dans la Méthodologie d'analyse, que ce soient des valeurs discrètes ou continues, il n'y a pas vraiment de changeemnt analytique. Si nous connaissons les données, nous pouvons aussi, pour des valeurs discètes, regarder les valeurs uniques de la colonne. Cela peut nous permettre d'en apprendre un peu plus sur nos données. Nous allons aborder cette méthodologie dans le prochain paragraphe qui est justement dédié à cette technique avec les variables catégorielles.</p>
+                    <h3>Analysez des variables catégorielles :</h3>
+                    <p>Nous allons continuer avec les variables catégorielles.</p>
+                    <p>Une variable catégorielle, cela ressemble à quoi</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Une variable catégorielle (ou qualitative), c'est une variable qui sert à catégoriser les données en fonction de certains critères. On retrouve par exemple la forme, la couleur, le type, la situation familiale, le sexe, etc.</p>
+                    </div>
+                    <p>Pour ce type d'analyse, c'est un peu plus simple, car nous allons chercher à avoir principalement deux informations :</p>
+                    <ul>
+                        <li>
+                            <p>le nombre de valeurs uniques (et la liste des valeurs uniques potentiellement);</p>
+                        </li>
+                        <li>
+                            <p>le mode (la valeur la plus représentée).</p>
+                        </li>
+                    </ul>
+                    <p>Pour les valeurs uniques, nous allons utiliser la formule Excel <span class="html">UNIQUE</span> (=UNIQUE(Paris!$S$2:$S$4844)) et, pour le mode, la formule <span class="html">MODE</span> (=MODE(Paris!$S$2:$S$4844)) sur la colonne "Type Local".</p>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>La fonction <span class="html">UNIQUE</span> fonctionne seulement avec Office 365, les versions précédentes ne prennent pas en charge cette formule.</p>
+                    </div>
+                    <p>Nous aurions également pu utiliser la fonction de suppression des doublons dans Excel, puis compter le nombre de valeurs uniques (et nous aurions également obtenu la liste).</p>
+                    <p>Nous pouvons faire la même chose directement en VBA avec le code suivant :</p>
+<pre><code>Sub indicateurs_quanti()
+Dim mode As String
+Dim plage As Range
+Dim cellule As Range
+Dim test As String
+
+mode = WorksheetFunction.mode(Range("R2:R4844"))
+
+'   Utilisation de l'objet dictionary
+Dim valeursUniques As Object
+Dim valeurs Uniques = CreateObject("Scripting.Dictionary")
+
+'   Teste chaque cellule pour trouver toutes les valeurs possibles
+For Each cellule In Range("S2:S4844")
+    valeursUniques(cellule.Value) = Empty
+Next cellule
+
+'   MsgBox des valeurs uniques
+For Each valeurUnique In valeursUniques.keys
+    MsgBox (valeurUnique)
+Next valeurUnique
+
+End Sub<code></pre>
+                    <h3>Identifiez des anomalies dans un fichier :</h3>
+                    <p>Vous venez de voir comment réaliser une analyse descriptive de vos données. Cela vous donne une meilleure connaissance des données, mais est-ce qu'il y a des anomalies dans vos données</p>
+                    <p>Vous pensez que non, vu qu'on a réalisé l'analyse descriptive et qu'elle n'a rien trouvé. Effectivement, nous n'avons rien vu de spécial avec cette analyse, mais cela ne veut pas dire qu'il n'y a pas de problèmes. Par exemple, si nous prenons la colonne "Département", nous pouvons rapidement voir avec l'analyse descriptive que certaines cellules sont manquantes. Vous devez alors vous demander à ce stade, si c'est important dans votre analyse et si vous êtes en mesure de les corriger ?</p>
                     
                 </article>
             <!-- fin de section -->
