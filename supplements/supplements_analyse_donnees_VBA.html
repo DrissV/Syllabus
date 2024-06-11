@@ -52,6 +52,7 @@
                         <li><a href="#gestion_securite_application_VBA">Gestion de la sécurité de l'application VBA</a></li>
                         <li><a href="#analyse_donnees_VBA">Analyse des données avec VBA</a></li>
                         <li><a href="#analyse_series_temporelles">Analyse de séries temporelles</a></li>
+                        <li><a href="#analyse_bivariee">L'analyse bivariée</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1181,14 +1182,200 @@ End Sub</code></pre>
                     <p>Nous allons reprendre notre exemple, mais, cette fois, à la pla place de la moyenne des valeurs foncières par jour, nous allons mettre le nombre total de transactions par jour.</p>
                     <figure>
                         <img src="../images/repretation_nombre_actes_achat_jour_Paris_Excel.png" alt="">
-                        <figcaption>Représentation du nombre d'achat par jour à Paris</figcaption>
+                        <figcaption>Représentation du nombre d'actes d'achat par jour à Paris</figcaption>
                     </figure>
                     <div class="information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Contrairement au premier graphique, celui-là est plus compliqué à comprendre. On peut dire que dans le graphique nos valeurs vont de 20 à 80 avec des maximums à plus de 100 et des minimums proches de 0. Il n'y a pas de tendance claire qui se dégage de ce graphique.</p>
                     </div>
                     <p>Nous observons cependant qu'un <span class="em">pattern</span> revient tout le temps : un chiffre proche de 0, puis cela remonte doucement pour atteindre un maximum et cela redescend. Cette forme se répète de façon plus ou moins intense tout au long de notre graphique.</p>
-                    <p>En regardant de plus près, nous voyons que les minimums tombent toujours les samedis, et il n'y a pas de données les dimanches.</p>
+                    <p>En regardant de plus près, nous voyons que les minimums tombent toujours les samedis, et il n'y a pas de données les dimanches. Si nous mettons un peu de contexte, nous savons que les notaires sont les plus souvent fermés le samedi ou ouverts le samedi matin, cela est donc logique qu'il y ait un peu de transactions. De même, tous les notaires sont fermés le dimanche, c'est ainsi normal que nous n'ayons pas de transactions.</p>
+                    <p>Ajoutons à présent le numéro des semaines dans une nouvelle colonne avec la formule <span class="html">JOURSEM</span> (=JOURSEM("votre date"), "choix début"). Cette fonction permet de renvoyer le numéro du premier de la semaine. Ce premier jour est paramétrable avec le deuxième argument dans la formule. De mon côté, j'ai choisi le numéro 2 qui permet de renvoyer un 1 pour le lundi, un 2 pour le mardi, etc.</p>
+                    <figure>
+                        <img src="../images/ajout_colonne_jour_semaine_Excel.png" alt="">
+                        <figcaption>Ajout de la colonne "Jour_semaine" dans Excel</figcaption>
+                    </figure>
+                    <p>Nous allons mainteant refaire le graphique, toujours à l'aide de notre TCD, mais cette fois en affichant seulemnt les numéros des semaines et les jours de la semaine.</p>
+                    <figure>
+                        <img src="../images/repretation_nombre_actes_achat_semaine_numero_jour_semaine_Excel.png" alt="">
+                        <figcaption>Représentation du nombre d'actes d'achat par semaine et numéro du jour de la semaine</figcaption>
+                    </figure>
+                    <p>Nous voyons très bien dans ce cas qu'il y a une saisonnalité dans nos données, car le schéma se répète chaque semaine.</p>
+                    <p>Ce n'est pas mal cet exemple, mais vous ne savez pas vraiment où on veut en venir. Nous y arrivons, je peux vous demander maintenant de me dire ce que vous pensez de cette courbe et quelle est sa tendance, mais, personnellement, j'ai du mal visuellement à savoir ce qu'il se passe.</p>
+                    <p>Il existe une méthode pour lisser les courbes qui s'appelle la <span class="em">moyenne mobile</span>. Je vous laisse me suivre dans les explications ci-dessous pour la création de cette moyenne :</p>
+                    <p>Pour commencer, on va toujours récupérer notre dataset classique dans lequel nous allons toujours créer un TCD.</p>
+                    <p>Cette fois, nous allons utiliser les semaines et les jours de la semaine en lignes et utiliser la clé que nous allons passer en nombres afin de visualiser dans le TCD, ici, le nombre de transactions qui ont été faites par jour de la semaine et donc par semaine.</p>
+                    <p>Je vais mettre ce graphique croisé dynamique en courbe. Ce que j'observe de loin, c'est que ma courbe a l'air d'avoir une certaine forme qui se répète un petit peu tout le temps.</p>
+                    <p>Pour essayer de voir ça d'un détail, je vais venir filtrer sur des mois. Je vais prendre par exemple deux mois en particulier, on va prendre janvier et février. Là, c'est assez flagrant, on voit facilement que notre courbe commencer par augmenter sur les premiers jours de la semaine et vient s'écraser sur le sixième jour de la semaine.</p>
+                    <p>Le problème, c'est que cette courbe, à la lecture, elle est difficile de savoir si je suis en train d'augmenter le nombre de ventes ou si je reste stable.</p>
+                    <p>Pour essayer de mieux comprendre ça, on utilise des moyennes mobiles. Pour créer une moyenne mobile, on vient "Ajouter une courbe de tendance" et on vient cliquer sur "Moyenne mobile", ici.</p>
+                    <p>On voit qu'on a une période. La période qu'on doit paramétrer ici correspond à la périodicité de notre phénomène. Comme c'est tous les six jours, on va mettre la périodicité à la valeur "6".</p>
+                    <p>Et qu'est-ce que nous avons ? QUand on met une période à 6, on voit que notre courbe se lisse énormément.</p>
+                    <p>On a donc une saisonnalité sur notre jeu de données, une forme qui revient tout le temps, tous les six jours.</p>
+                    <p>Dans notre exemple, nous avons fait une moyenne mobile visuelle sur un graphique. Nous aurions également pu fabriquer nous-mêmes cette moyenne mobile avec la formule <span class="html">MOYENNE</span>. Chaque jour, vous allez faire la moyenne des six derniers jours. Alors, vous allez me demander pourquoi nous ne faisons pas la moyenne des sept derniers jours, vu que c'est une récurrence sur chaque semaine. Car il n'y a pas de données pour le dimanche, la ligne n'existe pas, donc je ne peux pas compter ce jour-là.</p>
+                    <h3>Effectuez une prévision temporelle dans Excel :</h3>
+                    <p>Maintenant que nous avons analysé en détail notre série temporelle, nous souhaitons faire une <span class="em">modélisation</span>. Nous désirons faire une <span class="em">prévision</span> sur les trois prochains mois du nombre de transactions qu'il va y avoir à Paris.</p>
+                    <p>Pour cela, nous allons utiliser les mêmes données, à savoir, le nombre de transactions par jour. Il y a dans Excel un module de prévision directement intégré, que vous pouvez retrouver en allant dans "Données", puis en cliquant sur "Feuille de prévision". Je vous laisse me rejoindre les explications suivantes pour que nous paramétrions ensemble cette prévision :</p>
+                    <p>Pour ce faire, on va commencer par remodeler nos données en faisant un TCD. Nous allons utiliser la date, avec la vraie date cette fois, puis nous allons compter le nombre de clés. À l'écran sera affiché un TCD contenant d'une part les date et de l'autre le nombre de clés.</p>
+                    <p>On crée le graphique croisé dynamique et là, on voit le nombre de ventes par jour sur notre graphique avec pas mal de ventes sur les deux premiers mois de l'année, moins de ventes au mois de mars et une reprise du nombre de ventes.</p>
+                    <p>Ce qu'on veut faire, c'est prédire ce qui va se passer potentiellement après. Nous allons choisir toutes nos données, sans le total général, puis on va dans "Données", "Feuille de prévision".</p>
+                    <p>On vot que nous avons notre prévision qui a été faite en rouge sur le côté droit de la feuille.</p>
+                    <p>Nous, on veut une fin de prévision au 31/07/2023, un début de prévision bien au 01/07, un intervalle de confiance à 95%, le caractère saisonnier, je préfère le maintenir à bien 7 mais moi-même, la plage de chronologie et la plage de valeur sont les bonnes plages, ce sont les plages A et B et on clique sur "Créer".</p>
+                    <p>On voit maintenant qu'on a notre graphique avec la prévision qui a été faite du nombre de transactions qu'on pourrait théoriquement venir faire sur le mois de juillet.</p>
+                    <p>On va vouloir maintenant lancer automatiquement ce genre d'analyse. On va repasser dans notre code et dans notre code, on a la fonction <span class="html">CreateForecastSheet</span>, on va venir lui spécifier les feuilles.</p>
+<pre><code>Sub prevision()
+
+ActiveWorkbook.CreateForecastSheet Timeline:Sheets("Feuil5").Range( _
+    "A4:A159"), Values:=Sheets("Feuil5").Range("B4:B159"), ForecastEnd _
+    :="31/07/2023", ConfInt:=0.95, Seasonality=7; ChartType:= _
+    xlForecastChartTypeLine, Aggregation:=xlForecastChartTypeLine, _
+    DataCompletion:=xlForecastDataCompletionInterpolate, ShowStatsTable:=False
+
+End Sub</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>La prévision n'est pas parfaite. Cela reste une prévision simple dans Excel sur des données qui ne varient pas énormément.</p>
+                    </div>
+                    <figure>
+                        <img src="../images/prevision_nombre_transactions_mois_juillet_Excel.png" alt="">
+                        <figcaption>Prévision du nombre de transactions pour le mois de juillet</figcaption>
+                    </figure>
+                    <p>Nous pouvons également lancer l'outil de simulation directement en VBA en utilisnt "Workbook.CreateForeCastSheet" avec les différents paramètres de cette fonction.</p>
+<pre><code>ActiveWorkbook.CreateForecastSheet Timeline:Sheets("P2C2 graph").Range( _
+    "A490:A645"), Values:=Sheets("P2C2 graph").Range("B490:B645"), ForecastEnd _
+    :="30/09/2023", ConfInt:=0.95, Seasonality=7; ChartType:= _
+    xlForecastChartTypeLine, Aggregation:=xlForecastAggregationAverage, _
+    DataCompletion:=xlForecastDataCompletionInterpolate, ShowStatsTable:=False</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p><a href="https://learn.microsoft.com/fr-fr/office/vba/api/excel.workbook.createforecastsheet" target="_blank">Voici un lien vers le site de Microsoft avec les différents paramètres de la fonction "CreateForecastSheet".</a></p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="analyse_bivariee">Réalisez une anlayse bivariée :</h2>
+                    <p>Vous venez de voir comment comprendre et analyser une série temporelle.</p>
+                    <p>Cherchons à présent à comprendre comment analyser :</p>
+                    <ul>
+                        <li>
+                            <p>deux variables numériques;</p>
+                        </li>
+                        <li>
+                            <p>une variable numérique avec une variable catégorielle;</p>
+                        </li>
+                        <li>
+                            <p>deux variables catégorielles.</p>
+                        </li>
+                    </ul>
+                    <p>Pour chaque anamyse, nous allons voir comment trouver la meilleure visualisation, et surtout comment nous pouvons réaliser un test statistique sur les données.</p>
+                    <p>Un test statistique, mais pourquoi doit-on faire cela ? Pour plusieurs raisons, premièrement, car <span class="em">nous ne pouvons nous limiter à une seule analyse graphique</span> pour prendre une décision. Ensuite, il est toujours bien de pouvori <span class="em">confirmer une hypothèse</span> sur la base de notre test statistique.</p>
+                    <h3>Analysez deux variables numériques :</h3>
+                    <p>Comemnçons par les tests numériques. Quand nous parlons de test numérique, nous parlons de test sur deux variables <span class="Em">quantitatives</span>.</p>
+                    <p>Pour ce test, nous allons nous intéresser au lien de dépendance entre les deux variables quantitatives :</p>
+                    <ul>
+                        <li>
+                            <p>le nombre de pièces dans un appartement;</p>
+                        </li>
+                        <li>
+                            <p>le prix des appartements au mètre carré.</p>
+                        </li>
+                    </ul>
+                    <p>Transformons tout d'abord nos données pour créer un tableau exploitable. Pour ce faire, nous allons refaire un TCD avec en ligne la variable "Nombre de pièces principales" et en valeur la "Moyenne de la surface Carrez au mètre carré".</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p><a href="https://www.nexity.fr/guide-immobilier/conseils-achat/definir-son-projet/surface-privative-loi-carrez#:~:text=Le%20calcul%20de%20surface%20loi,m%20sont%20prises%20en%20compte." target="_blank">Si vous vous demander ce qu'est la surface Carrez, vous pouvez consulter ce site d'une agence immobilière.</a></p>
+                    </div>
+                    <p>Dans cette analyse, nous allons supprimer les valeurs extrêmes qui n'ont pas vraiment de sens, avec le nombre de pièces à 0 ainsi que le nombre de pièces égal à 10, car cela correspond à une surface Carrez de 15 m² (ce qui fait de petites pièces).</p>
+                    <figure>
+                        <img src="../images/TCD_affichant_moyenne_surface_Carrez_nombre_pieces_Excel.png" alt="">
+                        <figcaption>TCD affichant la moyenne de la surface Carrez par nombre de pièces.</figcaption>
+                    </figure>
+                    <p>Maintenant que nous avons nos données, nous allons créer un nuage de points pour les visualiser plus facilement.</p>
+                    <figure>
+                        <img src="../images/nuage_points_montrant_moyenne_surface_Carrez_nombre_pieces_Excel.png" alt="">
+                        <figcaption>Nuage de points montrant la moyenne de la surface Carrez par nombre de pièces</figcaption>
+                    </figure>
+                    <p>Comme nous pouvons le voir sur ce graphique, tous les points ont l'air d'être assez logiques, en suivant une courbe que nous pourrions tracer entre tous les points; c'est la courbe en pointillé que j'ai ajoutée. C'est une courbe de tendance linéaire que nous pouvons directement ajouter à notre graphique. Au lieu d'insérer une courbe de moyenne mobile comme précédemment, nous ajoutons plutôt une courbe linéaire.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Cette courbe de tendance essaye de passer au maximum par tous les points ou au plus près de tous les points pour réduire au maximum l'écart entre les points.</p>
+                    </div>
+                    <p>Visuellement, nous pouvons supposer qu'il y a une <span class="em">corrélation entre les deux variables</span>. En effet, la surface moyenne augmente bien proportionnellement au nombre de pièces. Mais à quel point cette corrélation est-elle forte ? C'est exactement ce que nous souhaitons savoir.</p>
+                    <p>Pour connaître la valeur de la corrélation, nous allons utiliser <span class="em">le test statistique de Pearson</span>. Ce test va nous donner la force de la corrélation entre les deux variables, sous la forme du coefficient de corrélation de Pearson. Le résultat de ce test peut aller de -1 jusqu'à 1 en passant bien sûr par le 0 :</p>
+                    <ul>
+                        <li>
+                            <p>plus le chiffre est proche de 0 et moins il y a une corrélation;</p>
+                        </li>
+                        <li>
+                            <p>plus le chiffre s'approche de 1 ou de -1 et plus la corrélation est forte.</p>
+                        </li>
+                    </ul>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Il n'y a pas de consensus clair, mais nous pouvons dire qu'un coefficient de -0,5 ou +0,5 est une corrélation moyenne et, à partir de -0,75 ou +0,75, la corrélation est forte.</p>
+                    </div>
+                    <p>Je vous explique la réalisation du test et l'interprétation du résultat : le test de Pearson permet donc de confirmer ce que nous avions supposé visuellement. Nous avons fait ici ce test dans Excel, mais nous pouvons également le faire en VBA avec le code suivant, avec toujours "WorksheetFunction.Pearson" :</p>
+<pre><code>Sub test_pearson()
+
+Dim test_pearson As Single
+
+test_pearson = WorksheetFunction.Pearson(Range("A4:A12"), Range("B4:B12"))
+MsgBox ("le coefficient de Pearson est de : " & test_pearson)
+
+End Sub</code></pre>
+                    <h3>Analysez une variable catégorielle et une variable numérique :</h3>
+                    <p>Vous comprenez maintenant l'importance d'un test statistique, il va vous permettre de <span class="em">confirmer une corrélation ou une hypothèse</span>. En fonction des variables, nous allons avoir des tests différents. Lançons-nous donc dans la réalisation d'un test statistique entre une variable numérique (quantitative) et une variable catégorielle (qualitative).</p>
+                    <p>Pour ce faire, analysons la différence entre deux moyennes. Dans notre cas, nous allons faire l'analyse de la moyenne du prix des appartements et de celle des maisons. Ce test s'appelle le <span class="em">test t de Student</span>. Il permet de mesurer s'il y a une égalité entre les moyennes.</p>
+                    <p>Pour commencer à faire ce test, nous avons besoin de modeler nos données afin d'avoir deux colonnes :</p>
+                    <ul>
+                        <li>
+                            <p>une colonne avec le prix des appartements;</p>
+                        </li>
+                        <li>
+                            <p>une colonne avec le prix des maisons.</p>
+                        </li>
+                    </ul>
+                    <p>Je vous laisse choisir la technique que vous préférez : utiliser des filtres ou encore faire deux TCD différents. Pour ma part, j'ai fait des filtres et j'ai collé les données sur une nouvelle feuille :</p>
+                    <figure>
+                        <img src="../images/donnees_maisons_appartements_colonnes_differentes_Excel.png" alt="">
+                        <figcaption>Données des maisons et appartements dans deux colonnes différentes</figcaption>
+                    </figure>
+                    <p>Mais pourquoi faut-il faire cela en fait ? Étant donné que nous souhaitons analyser les moyennes des deux jeux de données (appartement et maison), nous devons les séparer pour en faire deux variables qui ne sont pas dans le même groupe.</p>
+                    <p>Avant de continuer, nous avons besoin de faire un point sur un nouvel indicateur que nous allons suivre : la <span class="em">variance</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>La variance, c'est une mesure de dispersion (c'est le carré de l'écart type). Pour faire très simple, nous pouvons dire que cela mesure la dispersion autour de la moyenne.</p>
+                    </div>
+                    <p>Le test t de Student a deux versions possibles :</p>
+                    <ul>
+                        <li>
+                            <p>une version pour les variances égales;</p>
+                        </li>
+                        <li>
+                            <p>une autre version pour les variances différentes.</p>
+                        </li>
+                    </ul>
+                    <p>Dans notre cas, nous ne savons pas si les variances sont égales ou non pour le moment. C'est pourquoi nous allons réaliser un <span class="em">test préliminaire</span> pour comprendre nos jeux de données, il s'appelle le <span class="em">test f de Fisher</span>. Ce test a pour but de nous dire si les variances entre les deux de données sont égales ou non.</p>
+                    <p>Pour réaliser ce test, ainsi que le test de Student associé, je vous propose de me suivre dans les explications suivantes.</p>
+                    <p>Dans un premier temps, on va commencer par transformer nos données. Pour transformer nos données, comme d'habitude, nous allons utiliser un TCD dans lequel nous allons mettre les ID, puis les prix des maisons, et nous allons utilser le type local pour pouvoir splitter appartements ou maisons.</p>
+                    <p>Dans un cas, je commence par copier tous mes appartements dans une nouvelle feuille. Puis je vais faire la même chose avec les maisons.Je vais garder tous les appartements et les maisons qui ont bien des prix (c'est-à-dire pas de valeurs vides).</p>
+                    <p>Je vais maintenant faire un premier test de Fisher qui va me permettre de voir s'il y a une égalité ou non entre mes variances.</p>
+                    <p>Pour faire ce test, ce sera le test F de Fisher, donc F.test, qui me demande les deux matrices de prix.</p>
+                    <p>Plus mon résultat de mon test est proche de zéro, plus je peux rejeter l'hypothèse d'égalité des variances.</p>
+                    <p>Donc, je peux conclure qu'il n'y a pas d'égalité entre mes deux variances.</p>
+                    <p>Je vais maintenant passer au test de Student, avec toujours la même chose. La formule est <span class="em">=T.TEST</span> avec comme premiers arguments les deux matrices de prix. Je choisis une distribution unilatérale dans mon cas. Et le type, ça va être, est-ce que mes deux variances sont égales ? Donc, non, elles ne sont pas égales. Je vais prendre variances inégales à deux exemples.</p>
+                    <p>Je vois que ce test est également très petit, très inférieur à 0,05. Donc, on peut rejeter le fait que nos moyennes soient égales et le test est très robuste vu que ce résultat de4,43 * 10<sup>-102</sup> est très, très inférieur à notre intervalle de confiance de 0,05. Il y a donc très peu de chance que ce soit aléatoire d'avoir ce résultat.</p>
+                    <p>Le résultat de nos moyennes entre nos maisons et nos appartements sont bien des résultats différents entre les deux.</p>
+                    <p>Vous savez mainteant comment faire un test statistique pour savoir si les deux moyennes (et variances) sont égales ou non.</p>
+                    <figure>
+                        <img src="../images/utilisation_tests_Student_Fisher_Excel.png" alt="">
+                        <figcaption>L'utilisation des tests de Student et de Fisher</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p><a href="https://s3.eu-west-1.amazonaws.com/course.oc-static.com/courses/8017296/L%E2%80%99utilisation+des+tests+de+Student+et+de+Fisher.rtf" target="_blank">Description alternative de l'illustration sur l'utilisation des tests de Student et de Fisher.</a></p>
+                    </div>
+                    <h3>Analysez deux variables catégorielles :</h3>
+                    <p></p>
                 </article>
             <!-- fin de section -->
             </section>
