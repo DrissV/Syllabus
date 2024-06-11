@@ -51,6 +51,7 @@
                         <li><a href="#programmation_execution_automatique_traitements_donnees_VBA">Programmation de l'exécution automatique des traitements de données avec VBA</a></li>
                         <li><a href="#gestion_securite_application_VBA">Gestion de la sécurité de l'application VBA</a></li>
                         <li><a href="#analyse_donnees_VBA">Analyse des données avec VBA</a></li>
+                        <li><a href="#analyse_series_temporelles">Analyse de séries temporelles</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -993,7 +994,201 @@ End Sub<code></pre>
                     <h3>Identifiez des anomalies dans un fichier :</h3>
                     <p>Vous venez de voir comment réaliser une analyse descriptive de vos données. Cela vous donne une meilleure connaissance des données, mais est-ce qu'il y a des anomalies dans vos données</p>
                     <p>Vous pensez que non, vu qu'on a réalisé l'analyse descriptive et qu'elle n'a rien trouvé. Effectivement, nous n'avons rien vu de spécial avec cette analyse, mais cela ne veut pas dire qu'il n'y a pas de problèmes. Par exemple, si nous prenons la colonne "Département", nous pouvons rapidement voir avec l'analyse descriptive que certaines cellules sont manquantes. Vous devez alors vous demander à ce stade, si c'est important dans votre analyse et si vous êtes en mesure de les corriger ?</p>
-                    
+                    <p>Dans le cas de la colonne "Département", nous pouvons seulement utiliser la formule <span class="html">GAUCHE</span> d'Excel (ou LEFT en anglais), qui va récupérer les deux premiers caractères de gauche du code postal pour compléter les données (dans Excel : =GAUCHE(J49;2)).</p>
+                    <p>Si vous aviez plusieurs fois cette erreir dans vos données, vous pourriez alors venir tester chaque cellule et, pour chaque cellule vide, la remplir avec cette formule ou une formulaire en VBA.</p>
+<pre><code>Sub valeurs_manquantes_departement()
+
+Dim ligne_max As String
+Range("A1").Select
+Range(Selection, Selection.End(xlDown)).Select
+ligne_max = ActiveCell.Row
+
+'   Teste toutes les cellules
+For i = 1 To 4484
+    If Range("L" & i) = "" Then
+        Range("L" & i).Select
+        '   Écriture avec la méthode VBA
+        ActiveCell.FormulaR1C1 = Left(Range("J" & i).Value, 2)
+        '   Écriture avec la fonction Excel
+        ActiveCell.FormulaR1C1 = "=LEFT(RC[-2],2)"
+    End If
+Next i
+
+End Sub</code></pre>
+                    <p>Comme vous le voyez dans l'exemple, chaque colonne va demander un code spécifique en fonction des données de la correction que vous souhaitez réaliser. Dans ce premier cas, nous avons une solution simple avec le code postal. Parfois, il n'y a pas vraiment de solution, comme lorsque vous avez des valeurs foncières vides. Il est difficile de les remplir, car il manque trop d'informations pour "fabriquer" le prix du logement.</p>
+                    <p>Cela peut prendre un peu de temps au début de créer le code pour le nettoyage, mais cela va voir faire gagner beaucoup de temps par la suite quand vous n'aurez plus à le faire manuellement.</p>
+                    <p>Nous allons maintenant nous concentrer sur les valeurs aberrantes ou atypiques.</p>
+                    <p>C'est quoi des valeurs aberrantes ? C'est une très bonne question ! À partir de quand une valeur est-elle aberrante ? Si je vous dit qu'il y a un appartement vendu à Paris pour 750000€, est-ce une valeur aberrante ?</p>
+                    <p>Regardons ensemble le résultat de l'analyse numérique ci-dessous :</p>
+                    <figure>
+                        <img src="../images/resultat_analyse_numerique_VBA.png" alt="">
+                        <figcaption>Résultat de l'analyse numérique</figcaption>
+                    </figure>
+                    <p>En regardant notre tableau, nous pouvons nous dire qu'un appartement à 750000, ce n'est pas une valeur aberrante pour Paris, car la moyenne est à 614440€ et la médiane à 445000€. Nous sommes, certes, au-dessus, mais cela reste largement acceptable (+22% par rapport à la moyenne).</p>
+                    <p>Si nous prenons maintenant une valeur de 3,5 millions d'euros. Est-ce une valeur aberrante ?</p>
+                    <p>Aucune idée, si ça se trouve, il y a plein d'appartements à ce prix-là, et puis avec un maximum à 9 millions d'euros... On pense que non, ce n'est pas aberrant. Nous puvons effectivement réfléchir comme cela, mais nous pouvons également nous tourner du côté des mathématiques, car il y a des techniques toutes prêtes qui vont nous aider !</p>
+                    <p>Une des méthodes les plus utilisées est la méthode de l'<span class="em">écart interquartile</span>.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Vous vous souvenez de la médiane ? C'est la valeur au-dessous de laquelle se trouvent la moitié des valeurs.</p>
+                        <p>Un <span class="em">quartile</span>, c'est la même chose, mais avec la proportion d'un quart. Il existe 3 quartiles, notés <span class="em">Q<sub>1</sub></span> (premier quartile), <span class="em">Q<sub>2</sub></span> (deuxième quartile) et <span class="em">Q<sub>3</sub></span> (troisième quartile). Ainsi :</p>
+                        <ul>
+                            <li>
+                                <p>1/4 des valeurs se trouvent en dessous de <span class="em">Q<sub>1</sub></span> et 3/4 au-dessus;</p>
+                            </li>
+                            <li>
+                                <p>2/4 se trouvent en dessous de <span class="em">Q<sub>2</sub></span>, et 2/4 au-dessus (<span class="em">Q<sub>2</sub></span> est la médiane !);</p>
+                            </li>
+                            <li>
+                                <p>3/4 se trouvent en dessous de <span class="em">Q<sub>3</sub></span>, et 1/4 au-dessus.</p>
+                            </li>
+                        </ul>
+                        <p>La généralisation de ce concept s'appelle le <span class="em">quantile d'ordre &alpha;</span>. Ainsi, la médiane est le quantile d'ordre 0,5, Q<sub>1</sub> le quantile d'ordre 0,25, Q<sub>3</sub> le quantile d'ordre 0,75. Il y a également les <span class="em">déciles</span> (quantiles d'ordre 0.1, 0.2, etc.), ou les <span class="em">centiles</span>, aussi appelés percentiles (quantiles d'ordre 0.01, 0.02, etc.).</p>
+                        <p>L'écart interquartile est la différence entre le 3e quartile et le 1er quartile :</p>
+                        <p class="em">IQ = Q<sub>3</sub> - Q<sub>1</sub></p>
+                    </div>
+                    <p>Pour faire simple, cette méthode permet de calculer un palier bas et un palier haut. Nous allons estimer que si nos valeurs sont en dessous ou au-dessus des paliers, alors nous pouvons les considérer comme des valeurs aberrantes. Le terme "bornes" peut aussi être utilisé pour nommer les paliers.</p>
+                    <p>Pour ce faire, nous devons commencer par calculer l'IQ. C'est l'écart interquartile, qui est donc la différence entre le quartile 3 et le quartile 1 :</p>
+                    <p>IQ = Q<sub>3</sub> - Q<sub>1</sub></p>
+                    <p>Puis pour trouver nos bornes, nous allons :</p>
+                    <ul>
+                        <li>
+                            <p>chercher le 1er quartile;</p>
+                        </li>
+                        <li>
+                            <p>lui soustraire 1,5 * l'IQ pour la borne basse;</p>
+                        </li>
+                        <li>
+                            <p>ajouter 1,5 * l'IQ au 3e quartile pour la borne haute.</p>
+                        </li>
+                    </ul>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Voici la formule :</p>
+                        <ul>
+                            <li>
+                                <p>Palier bas : Q<sub>1</sub> - 1.5 * l'IQ</p>
+                            </li>
+                            <li>
+                                <p>Palier haut : Q<sub>3</sub> + 1.5 * l'IQ</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <p>Dans notre cas, nous allons tout faire en utilisant le VBA, mais vous pouvez également le faire avec Excel en utilisant la formule quartile.</p>
+<pre><code>Sub ecart_interquartile()
+
+Dim Q1 As Double
+Dim Q3 As Double
+Dim IQ As Double
+Dim borne_basse As Double
+Dim borne_haute As Double
+
+Q1 = WorksheetFunction.Quartile(Range("E2;E4844"), 1)
+Q3 = WorksheetFunction.Quartile(Range("E2;E4844"), 3)
+IQ = Q3 - Q1
+
+borne_basse = Round(Q1 - (1.5 * IQ), 0)
+borne_haute = Round(Q3 + (1.5 * IQ), 0)
+
+If borne_basse &lt; 0 Then
+    borne_basse : 0
+    MsgBox ("attention borne basse inférieure à 0")
+    Range("$B$1:$V$5000").AutoFIlter Field:=4, Criterial:="&gt;" & borne_haute, _blank
+        Operator:=xlAnd
+    test = "&gt;" & borne_haute
+End If
+
+End Sub</code></pre>
+                    <p>Dans notre cas, la borne basse est négative. Vu qu'elle est négative, j'ai préféré la mettre à 0 et faire un filtre seulement sur les valeurs hautes dans le tableau. Les différentes bornes se calculent toutes seules. Et, en plus, le code filtre automatiquement votre tableau sur les valeurs dites "aberrantes". L'utilisateur pourra par la suite modifier, supprimer ou garder les valeurs qui ne sont peut-être pas des erreurs (surtout dans l'immobilier). Pour réduire les données, vous pourriez faire le calcul de la surface, puis refaire les bornes sur le prix du mètre carré qui sera plus juste.</p>
+                    <p>Vous pouvez également changer les bornes et dire que ce n'est pas 1,5 fois l'IQ, mais 2 fois ou 3 fois, en fonction de votre domaine et de vos données. Il faut adapter l'analyse à votre milieur professionnel.</p>
+                </article>
+                <article>
+                    <h2 id="analyse_series_temporelles">Analysez des séries temporelles :</h2>
+                    <p>Vous avez vu précédemment comment réaliser une analyse descriptive de vos données. Ce type d'analyse permet de comprendre les données avant de réaliser d'autres types d'analyses.</p>
+                    <p>Comme nous avons des dates dans nos données, nous pouvons réaliser une analyse temporelle, qui va se décomposer en <span class="em">série temporelle</span> et en <span class="em">moyenne mobile</span>. Pour finir, nous utiliserons la feuille de prévision d'Excel pour prédire des valeurs.</p>
+                    <h3>Appréhendez la spécificité des séries temporelles :</h3>
+                    <p>Les séries temporelles sont monnaie courante dans les différentes analyses que vous allez faire. Pour faire une analyse temporelle, vous aurez besoin d'une variable de temps.</p>
+                    <p>C'est facile, on va utiliser des dates ! Effectivement, nous allons souvent utiliser des dates, mais surtout toutes les déclinaisons des dates. Cette variable temporelle va pouvoir prendre plusieurs formes par exemple :</p>
+                    <ul>
+                        <li>
+                            <p>des secondes;</p>
+                        </li>
+                        <li>
+                            <p>des minutes;</p>
+                        </li>
+                        <li>
+                            <p>des jours;</p>
+                        </li>
+                        <li>
+                            <p>des semaines;</p>
+                        </li>
+                        <li>
+                            <p>des mois;</p>
+                        </li>
+                        <li>
+                            <p>des années;</p>
+                        </li>
+                        <li>
+                            <p>etc.</p>
+                        </li>
+                    </ul>
+                    <p>Vous pouvez également ajouter d'autres formes de variables temporelles, telles que les numéros des semaines, les jours de la semaine ou encore des plages horaires. Il y a assez peu de limites à la variable temporelle que vous allez prendre.</p>
+                    <p>Certaines entreprises utilisent les clôtures des comptes, qui peuvent arriver le 30 avril, comme variables temporelles. Ce n'est pas un trimestre, ce n'est pas un semestre, c'est juste une période définie par l'entreprise, qui va aller du 1er au 30 avril de l'année suivante. Cette période est une variable temporelle pour l'entreprise.</p>
+                    <p>La majorité du temps, vous allez vous retrouver avec des variables sous la forme de dates ou de timestamp (ou horodatage en français).</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="information" class="float_left">
+                        <p>Le timestamp est un système temporel qui s'écrit comme cela : 1686167081. Ce timestamp par exemple donne la date du 07-06-2023 à 21h44 et 41 secondes. Ce chiffre de 1686147081 est le nombre de secondes depuis la date du 1er janvier 1970 à 00h00 et 00 seconde. Si on ajoute 1686167081 secondes à cette date, on tombe sur le 07-06-2023 à 21h44 et 41 secondes.</p>
+                    </div>
+                    <p>Souvent, vous allez devoir modifier votre fichier pour calculer les semaines, les mois ou encore les jours.</p>
+                    <p>Dans notre cas, j'ai ajouté une formule Excel dans la colonne "mois (=MOIS("votre date")) et dans la colonne "semaine" (=NO.SEMAINE("votre date"),11).</p>
+                    <figure>
+                        <img src="../images/ajout_colonnes_mois_semaine_Excel.png" alt="">
+                        <figcaption>Ajout des colonnes mois et semaine dans Excel</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Bien sûr, dans le cadre de l'automatisation de votre fichier d'analyse, vous auriez pu faire cela en VBA. Je vous laisse le faire si vous le souhaitez.</p>
+                    </div>
+                    <p>La particularité des données temporelles, c'est quelles s'apprécient dans un <span class="em">certain ordre</span>. Si vous regardez l'évolution des ventes du mois de janvier, vous soihaitez commencer par le 1er janvier, puis le 2 janvier, puis le 3 janvier, etc.</p>
+                    <p>Il faut donc que vos données soient initialement triées afin que vous puissiez voir leur évolution dans le temps. Contrairement aux autres données, si celles-ci ne sont pas triées, elles ne sont pas vraiment exploitables. Contrairement aux autres données, si celles-ci ne sont pas triées, elles ne sont pas vraiment exploitables, car ce que nous recherchons dans ce genre d'analyse, c'est <span class="em">l'évolution dans le temps</span> des données.</p>
+                    <p>Maintenant que nous avons transformé nos données temporelles, nous allons pouvoir les exploiter plus facilement.</p>
+                    <p>Pour commencer, nous allons faire un premier graphique à partir d'un <span class="em">tableau croisé dynamique</span> (TCD pour les intimes). L'avantage du TCD, c'est qu'il permet d'agréger les données par jour.</p>
+                    <p>En effet, si nous regardons nos données, nous allons nous apercevoir que pour le 2 janvier, nous avons eu 20 ventes. Nous, nous souhaitons n'avoir qu'une seule donnée pour ce jour-là et pas 20 données. Nous pouvons alors choisir la façon de les agréger en utilisant par exemple une somme, une moyenne, un minimum, une médiane, le nombre de transactions, etc. Dans notre cas, nous allons choisir dans un premier temps de regarder la moyenne des valeurs foncières par jour. Je vous explique ci-dessous comment faire un TCD en affichant les jours et la moyenne des valeurs foncières.</p>
+                    <p>Pour ce faire, nous allons commencer par sélectionner l'ensemble du data set, puis nous allons aller dans "Insertion", cliquer sur "Tableau croisé dynamique" et faire "OK" pour le pmettre dans une nouvelle feuille de calcul.</p>
+                    <p>Dans cette nouvelle feuille, nous allons créer notre TCD en utilisant les dates de mutation que nous souhaitons voir.</p>
+                    <p>On va ensuite utiliser la valeur foncière que nous allons paramétrer pour afficher la moyenne.</p>
+                    <p>Nous allons ensuite ouvrir l'ensemble de notre TCD afin d'avoir toutes les valeurs, puis je vais venir supprimer la partie jour parce que je voudrais avoir, en lecture directe, la vraie date.</p>
+                    <p>À partir de là, on voit qu'on a un TCD qui contient l'ensemble de nos données moyennes de vente par jour à Paris.</p>
+                    <p>Il nous reste simplement à venir cliquer sur "Graphique croisé dynamique", puis à choisir une courbe et faire "OK".</p>
+                    <p>On se retrouve maintenant avec un graphique croisé dynamique qui a été généré en quelques clics par nous-mêmes, puis on a juste besoin de potentiellement écrire un morceau de code, si un jour, on venait à changer les valeurs, pour mettre à jour notre TCD.</p>
+                    <p>Donc, ça vous montre une première série temporelle avec les jours, auxquels nous avons ajouté les mois afin de mieux découper l'analyse.</p>
+                    <p>Nous pouvons voir que cette moyenne oscille le plus souvent entre 40000€ et 800000€. Nous notons égalemnt de gros pics à 1,4 million et des minimums autour des 100000 à 200000€. Ce graphique nous montre les transactions moyennes sur Paris par jour :</p>
+                    <figure>
+                        <img src="../images/analyse_temporelle_moyenne_valeurs_foncieres_jour_Excel.png" alt="">
+                        <figcaption>Analyse temporelle de la moyenne des valeurs foncières par jour dans Excel</figcaption>
+                    </figure>
+                    <p>Nous pouvons retirer la notion de jour pour avoir un graphique plus lisible avec seulement la valeur foncière moyenne par mois.</p>
+                    <figure>
+                        <img src="../images/analyse_temporelle_moyenne_valeurs_foncieres_mois_Excel.png" alt="">
+                        <figcaption>Analyse temporelle de la moyenne des valeurs foncières par mois dans Excel</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Les deux graphiques utilisent les mêmes données, à savoir la moyenne des valeurs foncières. Dans un cas, cela nous permet de voir les variations qu'il peut y avoir avec le premier graphique, alors que le deuxième, plus simple, nous permet de mieux comprendre les tendances.</p>
+                    </div>
+                    <h3>Maîtrisez le concept de moyenne mobile :</h3>
+                    <p>Nous avons vu précedemment comment faire une analyse temporelle. Cependant, il arrive parfois que cette analyse ne soit pas suffisante pour comprendre facilement nos données.</p>
+                    <p>Nous allons reprendre notre exemple, mais, cette fois, à la pla place de la moyenne des valeurs foncières par jour, nous allons mettre le nombre total de transactions par jour.</p>
+                    <figure>
+                        <img src="../images/repretation_nombre_actes_achat_jour_Paris_Excel.png" alt="">
+                        <figcaption>Représentation du nombre d'achat par jour à Paris</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Contrairement au premier graphique, celui-là est plus compliqué à comprendre. On peut dire que dans le graphique nos valeurs vont de 20 à 80 avec des maximums à plus de 100 et des minimums proches de 0. Il n'y a pas de tendance claire qui se dégage de ce graphique.</p>
+                    </div>
+                    <p>Nous observons cependant qu'un <span class="em">pattern</span> revient tout le temps : un chiffre proche de 0, puis cela remonte doucement pour atteindre un maximum et cela redescend. Cette forme se répète de façon plus ou moins intense tout au long de notre graphique.</p>
+                    <p>En regardant de plus près, nous voyons que les minimums tombent toujours les samedis, et il n'y a pas de données les dimanches.</p>
                 </article>
             <!-- fin de section -->
             </section>
