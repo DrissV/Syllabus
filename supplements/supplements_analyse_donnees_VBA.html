@@ -53,6 +53,7 @@
                         <li><a href="#analyse_donnees_VBA">Analyse des données avec VBA</a></li>
                         <li><a href="#analyse_series_temporelles">Analyse de séries temporelles</a></li>
                         <li><a href="#analyse_bivariee">L'analyse bivariée</a></li>
+                        <li><a href="#realisation_modelisation">Réalisation d'une modélisation</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -945,7 +946,7 @@ Next i
 End Sub</code></pre>
                     <p>Souvent en VBA, il y a des fonctions assez similaires à celles d'Excel, comme le minimum, le maximum, la médiane, etc. Par contre, certaines méthodes d'objet n'existent pas en VBA, et c'est le cas ici du nombre de 0 que nous souhaitons compter.</p>
                     <p>Pour ce faire, j'ai juste ajouté un "For" avec un "If" qui vient incrémenter la variable "nbre_0". Nous aurions également pu créer un sous-programme pour pouvoir l'appeler, si nous devions l'utiliser souvent.</p>
-                    <p>Dans la Méthodologie d'analyse, que ce soient des valeurs discrètes ou continues, il n'y a pas vraiment de changeemnt analytique. Si nous connaissons les données, nous pouvons aussi, pour des valeurs discètes, regarder les valeurs uniques de la colonne. Cela peut nous permettre d'en apprendre un peu plus sur nos données. Nous allons aborder cette méthodologie dans le prochain paragraphe qui est justement dédié à cette technique avec les variables catégorielles.</p>
+                    <p>Dans la Méthodologie d'analyse, que ce soient des valeurs discrètes ou continues, il n'y a pas vraiment de changement analytique. Si nous connaissons les données, nous pouvons aussi, pour des valeurs discètes, regarder les valeurs uniques de la colonne. Cela peut nous permettre d'en apprendre un peu plus sur nos données. Nous allons aborder cette méthodologie dans le prochain paragraphe qui est justement dédié à cette technique avec les variables catégorielles.</p>
                     <h3>Analysez des variables catégorielles :</h3>
                     <p>Nous allons continuer avec les variables catégorielles.</p>
                     <p>Une variable catégorielle, cela ressemble à quoi</p>
@@ -1375,7 +1376,139 @@ End Sub</code></pre>
                         <p><a href="https://s3.eu-west-1.amazonaws.com/course.oc-static.com/courses/8017296/L%E2%80%99utilisation+des+tests+de+Student+et+de+Fisher.rtf" target="_blank">Description alternative de l'illustration sur l'utilisation des tests de Student et de Fisher.</a></p>
                     </div>
                     <h3>Analysez deux variables catégorielles :</h3>
-                    <p></p>
+                    <p>Nous avons vu ensemble comment nous pouvons analyser deux variables quantitatives, puis une variable quantitative et une variable qualitative. Il nous reste maintenant un dernier test pour deux variables quantitatives, c'est le test du khi2.</p>
+                    <p>Pour réaliser ce test, nous allons analyser la variable "Nature de la mutation" et la variable "Type de bien" (qui peut avoir comme valeur "maison" ou "appartement"). Concernant la variable "nature de la mutation", elle peut avoir comme valeur "Échange", "Vente" et "Adjudication" (cente aux enchères).</p>
+                    <p>Nous voulons savoir s'il y a une relation entre les deux variables. Nous allons faire <span class="em">un test du Khi2</span>. Pour commencer, nous devons faire ce qui s'appelle un <span class="em">tableau de contingence</span> avec les valeurs. Pour ce faire, vous devez faire un TCD avec le type de bien en ligne et la nature de mutation en colonne. Comme valeur, nous allons compter le nombre de clés.</p>
+                    <figure>
+                        <img src="../images/TCD_nombre_type_bien_fonction_natire_mutation_Excel.png" alt="">
+                        <figcaption>TCD avec le nombre du type de bien en fonction de la nature de la mutation</figcaption>
+                    </figure>
+                    <div class="information">
+                        <img src="../images/information.png" alt="" class="float_left">
+                        <p>Excel n'étant pas spécialisé dans les tests statistiques, nous allons devoir passer par des étapes intermédiaires pour faire ce calcul.</p>
+                    </div>
+                    <p>Je vous laisse me suivre dans les explications suivantes pour voir la procédure et le résultat :</p>
+                    <p>Nous allons voir ensemeble comment faire un test du khi2 dans Excel. Pour rappel, le test du khi2 vise à comprendre s'il y a une dépendance ou une indépendance entre nos variables. Dans notre cas, nous allons regarder les variables type local et nature mutation et essayer de comprendre s'il y a un lien de dépendance ou d'indépendance entre ces deux variables.</p>
+                    <p>Pour commencer, nous allons toujours créer un TCD, dans lequel nous allons mettre notre nature mutation en colonne, notre type local en ligne et nous allons mettre le nombre de ventes. Nous avons donc un TCD qui nous donne le nombre, par exemple de ventes d'appartements ou de maisons, d'échanges et d'Adjudications.</p>
+                    <p>Nous allons copier toutes ces informations, car nous allons devoir faire des modifications pour avoir les effectifs ovservés et les effectifs théoriques et ensuite appliquer notre test du khi2.</p>
+                    <p>Les tests du khi2 dans Excel ne se font pas aussi facilement que les autres tests, il y a de la manipulation à faire avant.</p>
+                    <p>Je copie donc mon tableau, je viens le coller en valeur et donc je vais venir dire ici que ça, c'est la partie Observé. Je nettpie mon tableau et donc ça, c'est le réel, c'est ce qui s'est réellement passé et ce que je vois dans mes données.</p>
+                    <p>Je copie encore une fois tout ce tableau que je vais mettre en dessous et là, ça va être la partie Théorie.</p>
+                    <p>Dans la partie Théorie, je supprime toutes mes valeurs et je viens calculer théoriquement ce que j'aurais dû avoir en pourcentage comme Adjudications, échanges et ventes.</p>
+                    <p>Pour ce faire, ça, c'est un premier calcul assez simple, je prends les adjudications, que je divise par le nombre total que je bloque, et je vois rapidement que j'ai 6% d'adjudications, 4% d'échanges, 90% de ventes.</p>
+                    <p>Moi, ce que je vais vouloir calculer maintenant, c'est, théoriquement, combien j'aurais dû avoir de ventes, par exemple, pour avoir ce chiffre-là.</p>
+                    <p>Je vais venir calculer encore une fois en fonction de mon tableau que je viens de faire, de mes 6%, je vais venir multiplier par mon total général.</p>
+                    <p>Qu'est-ce que je vois ici ? Je vois que, théoriquement, j'aurais dû avoir 277 adjudications quand, en réalité, j'en ai eu 280.</p>
+                    <p>Je vais bloquertoutes ces formules et je vais passer cette formule juste à côté. Je vois que pareil, théoriquement, j'aurais dû avoir 176 échanges en théorie et 3949 ventes, quand j'en ai eu, par exemple, 3943.</p>
+                    <p>Je vais faire la même chose en dessous en changeant légèrement ma formule.</p>
+                    <p>Et voilà la théorie. Normalement, si tout va bien, la somme de tout ça doit toujours égal à 4844. Donc je vérifie, je vois que j'ai exacteemnt la même somme, mais j'ai des écarts entre les observations et la théorie.</p>
+                    <p>Maintenant, je vais appliquer mes tests de khi2. Le premier test que je vais faire, c'est le test de comparaison entre les observations et la théorie. Donc ça sera un test qui va s'appeler <span class="html">=TEST.KHIDEUX</span> et donc je lui donne ma plage réelle de données et je lui donne ma plage attendue théorique. Là, j'obtiens un chiffre de 0,53. Je vais venir réutiliser ce chiffre dans un autre test statistique.</p>
+                    <p>Donc, avant de faire ça, je vais calculer le degré de liberté. Le dégré de liberté est un calcul qui dit que c'est le nombre de colonnes, donc à savoir 3, vu que j'ai adjudications, échanges et ventes, moins 1, multiplié par le nombre de lignes, donc dans mon cas c'est 2, j'ai appartement et maison, fois 1. Et donc je tombe sur un degré de liberté de 2.</p>
+                    <p>Maintenant, je viens calculer la valeur de mon khi2 avec la formule qui s'appelle <span class="html">=KHIDEUX.INVERSE</span>. Elle me demande la probabilité, qui est ce que j'ai calculé, 0.53, et le degré de lieberté que j'ai calculé. Et là, j'ai ma valeur de khi2.</p>
+                    <p>La valeur de mon khi2, je vais la comparer à la valeur critique de mon khi2 à 5%, qui est, toujours la même chose, mon khi2 avec ma probabilité de 0.05 et avec mon degré de liberté. Je vois que ma valeur critique est de 5,99.</p>
+                    <p>Je peux donc maintenant regarder les probabilités et me dire que si la valeur de mon khi, donc 1.25, est supérieure à ma valeur critique, 5.99, alors mes deux variables sont dépendantes. Si ce n'est pas le cas, alors mes deux variables sont bien indépendantes. C'est que je peux voir ici, c'est-à-dire que ma valeur de khi2 est inférieure à ma valeur critique à 5%. Donc je valide l'hypothèse H0 qui dit que les deux variables sont donc indépendantes.</p>
+                    <p>Nous en avons enfin fini avec les tests statistiques de chaque type de variable.</p>
+                    <p>Ah cool, ce n'était pas si compliqué en fait et il n'y a que trois tests ! Hum... Je vous arrête tout de suite sur ce dernier point, il n'y a pas que trois tests, bien au contraire. Il y a beaucoup d'autres tests statistiques ! C'est ce que nous allons brièvement voir.</p>
+                    <h3>Allez plus loin grâce aux tests statistiques :</h3>
+                    <p>Dans ce paragraphe, opubliez la vision d'Excel pour les tests statistiques. En effet, Excel n'est pas l'outil parfait pour faire des tests, même si certains tests sont désormais natifs dans l'outil. Le plus souvent, pour faire des tests statistiques, on a tendance à utiliser des logiciels dédiées à la statistique comme R ou encore Python. Si nous souhaitez pas utiliser un langage de programmation, vous pouvez utiliser une <span class="em">extension (payante) d'Excel</span> qui s'appelle <span class="em">XLSTAT</span>. Elle permet de réaliser une plus grande variété de tests avec une interface plus travaillée.</p>
+                    <p>Mais pourquoi devez-vous faire d'autres tests ? Car, en réalité, il existe de nombreuses autres solutions à tous les tests. Si nous reprenons notre premier exemple, nous avons testé la corrélation de Pearson entre deux variables quantitatives. Mais ce test de corrélation peut se faire seulement avec des données qui suivent une loi normale.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>C'est la différence entre un test paramétrique (données qui suivent une loi normale) et non paramétrique (données qui ne suivent pas une loi normale).</p>
+                    </div>
+                    <p>Dans notre exemple, Pearson, c'est le test paramétrique, alors que Spearman est le test non paramétrique.</p>
+                    <p>Pourquoi ne pas en avoir parlé avant ? Simplement car Excel ne permet pas de faire le test de Spearman, il est seulement possible d'utiliser le test de Pearson.</p>
+                    <p>Voici la liste des tests statistiques qui sont intéressants à connaître si vous avez envie de vous former :</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Type de test</th>
+                                <th>Version paramétrique</th>
+                                <th>Version non paramétrique</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Test de corrélation entre deux variables quantitatives</td>
+                                <td>Pearson</td>
+                                <td>Spearman</td>
+                            </tr>
+                            <tr>
+                                <td>Test d'association entre deux variables qualitatives</td>
+                                <td>Khi2 avec tableau de contingence</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Comparer deux variances</td>
+                                <td>Test f de Fisher</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Comparer deux moyennes</td>
+                                <td>Test t de Student</td>
+                                <td>Mann-Whitney</td>
+                            </tr>
+                            <tr>
+                                <td>Comparer plusieurs moyennes</td>
+                                <td>ANOVA</td>
+                                <td>Kruskal-Wallis</td>
+                            </tr>
+                            <tr>
+                                <td>Test de normalité</td>
+                                <td>Shapiro-Wilk</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Toutes les versions paramétriques des tests ci-dessus sont disponibles dans Excel (avec quelques variations comme le test de normalité).</p>
+                </article>
+                <article>
+                    <h2 id="realisation_modelisation">Réalisez une modélisation :</h2>
+                    <p>Nous allons voir maintenant comment nous pouvons utiliser la <span class="em">régression linéaire</span> pour faire des prévisions ou encore pour trouver des valeurs manquantes. Pour commencer, explorons les <span class="em">valeurs atypiques</span> de notre jeu de données avec la technique de l'<span class="em">@cart interquartile</span>.</p>
+                    <h3>Effectuez des modélisations performantes :</h3>
+                    <p>Nous allons faire une régression linéaire afin de <span class="em">prédire la valeur</span> d'un bien en fonction des mètres carrés des appartements pour Paris.</p>
+                    <p>Commençons donc par extraire tous les appartements avec leurs valeurs foncières et les surfaces Carrez en faisant un filtre sur Paris.</p>
+                    <figure>
+                        <img src="../images/extraction_DB_appartements_valeurs_foncieres_surface_Carrez_Paris_Excel.png" alt="">
+                        <figcaption>Extraction de la base de données de tous les appartements avec les valeurs foncières et la surface Carrez pour Paris</figcaption>
+                    </figure>
+                    <p>Nous avons donc un tableau de 4401 lignes. Créez un graphique sous forme de nuage de points afin de visualiser toutes les données.</p>
+                    <figure>
+                        <img src="../images/nuage_points_valeurs_foncieres_surface_Carrez_Paris_Excel.png" alt="">
+                        <figcaption>Nuage de points sur les valeurs foncières par la surface Carrez à Paris</figcaption>
+                    </figure>
+                    <p>Comme nous pouvons le voir psur le graphique, il y a une grosse concentration des données à gauche, puis quelques points se baladent un peu partout sur notre nuage de points.</p>
+                    <p>En calculant notre coefficient de Pearson (avec la formule Pearson), nous constatons un coefficient de 0,63. Il y a donc une corrélation postive entre le prix et la surface.</p>
+                    <p>Le problème, c'est que les modèles n'aiment pas vraiment les valeurs dites aberrantes ou atypiques.</p>
+                    <p>Prenons par exemple le cas de notre point tout en bas à droite du graphique. Nous pouvons voir que c'est un appartement qui fait 9 m² Carrez pour un prix de 9 millions d'euros. Pour nous représenter ce chiffre, nous pouvons essayer de calculer le prix au mètre carré pour ce bien. Il est de 1 million d'euros. Sans être un spécialiste, nous pouvons facilement nous dire que ce n'est pas vraiment le prix moyen dans la capitale française.</p>
+                    <p>Ok, vous voyez où on veut en venir, mais vous n'êtes pas un spécialiste de l'immobilier parisien et vous n'avez pas envie de me questionner sur tous les appartements. Je suis complètement d'accord avec vous, et c'est pour cela qu'il existe plusieurs techniques pour trouver des valeurs aberrantes ou atypiques. Dans notre cas, nous allons utiliser l'écart interquartile, que nous avons vu précédemment dans ce cours.</p>
+                    <p>Voici le code pour la colonne "Valeur foncière" :</p>
+<pre><code>Sub ecart_interquartile()
+
+Dim Q1 As Double
+Dim Q3 As Double
+Dim IQ As Double
+Dim borne_basse As Double
+Dim borne_haute As Double
+
+Q1 = WorksheetFunction.Quartile(Range("B2:B4402"), 1)
+Q3 = WorksheetFunction.Quartile(Range("B2:B4402"), 3)
+IQ = Q3 - Q1
+
+borne_basse = Round(Q1 - (1.5 * IQ), 0)
+borne_haute = Round(Q3 + (1.5 * IQ), 0)
+
+If borne_basse &lt; O Then
+    borne_basse = 0
+    MsgBox ("attention borne basse inférieure à 0")
+    Range("$A$1:$C$4845").AutoFilter Field:=1, Criteria1:="&gt;" & borne_haute, _Operator:=xlAnd
+    test = "&gt;" & borne_haute
+End If
+
+End Sub</code></pre>
+                    <p>Nous voyons qu'il y a 137 valeurs qui sont considérées comme des valeurs aberrantes, nous allons les supprimer pour améliorer notre modélisation.</p>
+                    <p>Je vous laisse faire la même chose pour la colonne "Surface Carrez", en supprimant également les données : normalement 11 valeurs.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
