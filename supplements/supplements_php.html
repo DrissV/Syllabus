@@ -642,7 +642,7 @@
         $file = $dir . basename($_FILES['mon_fichier']['name']);
 
         if ($_FILES['mon_fichier']['type'] != 'image/png') {
-            print 'Erreur ! seul les png sont autorisés.';
+            print 'Erreur ! Seul les png sont autorisés.';
             exit;
         }
 
@@ -1385,7 +1385,7 @@ DB_PASSWORD=</code></pre>
     &lt;/body&gt;
 &lt;/html&gt;</code></pre>
                     <h4 id="gabarits_blade_laravel">Gabarits et Blade :</h4>
-                    <p>Blade permet aussi de spéarer une vue en plusieurs modules, afin de ne pas devoir rééccrire plusieurs fois du code HTML sur plusieurs pages.</p>
+                    <p>Blade permet aussi de spéarer une vue en plusieurs modules, afin de ne pas devoir réécrire plusieurs fois du code HTML sur plusieurs pages.</p>
                     <p>En tant que moteur de rendu, Blade simplifie en outre grandement l'utilisation d'un <span class="em">gabarit</span> (un fichier Blade reprenant du code HTML lacunaire) en utilisant un système d'héritage. Notre template est une vue comme les autres, possédant des appels à l'instruction @yield('nom') au sein de sa structure :</p>
 <pre><code>&lt;!DOCTYPE html&gt;
 &lt;html lang="fr"&gt;
@@ -1418,6 +1418,39 @@ DB_PASSWORD=</code></pre>
     @endif
 @endsection
 </code></pre>
+                    <p>On peut utiliser Laravel Miw pour gérer les assets. Laravel Mix fournit uen API propre et expressive pour définir les étapes de construction de Webpack pour vos assets. Vous pouvez l'utiliser pour compiler et gérer vos fichiers CSS et JavaScript</p>
+                    <p>Laravel Mix est déjà inclus dans un nouveau projet Laravel. Vous pouvons l'installer en exécutant :</p>
+<pre><code>npm install</code></pre>
+                    <p>Pour compiler vos assets, on doit faire :</p>
+<pre><code>npm run dev</code></pre>
+                    <p>Ça a permet de créer les dossiers ainsi que les fichiers suivants : `<span class="em">public/css/app.css</span>` et `<span class="em">public/js/app.js</span>`.</p>
+                    <p>Pour une version de production optimisée, exécutez :</p>
+<pre><code>npm run production</code></pre>
+                    <p>On peut également utiliser du SASS au lieu du CSS en modifiant le fichier `<span class="em">webpack.mix.js</span>` se trouvant à la racine du projet aevc le contenu suivant :</p>
+<pre><code>mix.js('resources/js/app.js', 'public/js')
+    .sass('resources/scss/app.scss', 'public/css', [
+        //
+    ]);</code></pre>
+                    <p>Pour cela, il faut avant tout vérifier que le fichier `<span class="em">resources/scss/app.scss</span>` existe, sinon on le crée avec, par exemple, le contenu suivant :</p>
+<pre><code>$bg : #bcbcbc;
+
+body {
+    background-color: $bg;
+}</code></pre>
+                    <p>On peut donc relancer la commande `<span class="html">npm run dev</span>` pour recompiler ou alors utiliser la commande `<span class="html">npm run watch</span>` qui le fait automatiquement lorsque l'on modifie dans le dossier `<span class="em">resources/</span>`.</p>
+                    <p>Comme j'ai fait appel à SASS, il va faire la commande suivante et il nous demandera de relancer la commande `<span class="html">npm run watch</span>` :</p>
+<pre><code>nom install sass-loader@^11.0.1 sass resolve-url-loader@^3.1.2 --save-dev --legacy-peer-deps</code></pre>
+                    <p>Une fois les fichiers CSS et JS compilés, on peut les utiliser dans notre vue Blade en utilisant la fonction `<span class="html">asset()</span>` et en plaçant les lignes suivantes au bon endroit :</p>
+<pre><code>&lt;!-- dans la balise &lt;head&gt; --&gt;
+&lt;link rel="stylesheet" href="{{ asset('css/app.css') }}"&gt;
+&lt;!-- avant la fermeture de la balise &lt;body&gt; --&gt;
+&lt;script src="{{ asset('css/app.js') }}"&gt;&lt;/script&gt;</code></pre>
+                    <p>Laravel 9 a introduit le support pour Vite, qui est une alternative moderne à Webpack pour la gestion des assets.</p>
+                    <p>On configure Vite dans le fichier `<span class="em">vite.config.js</span>` à la racine de votre projet.</p>
+                    <p>Pour compiler vos assets, on fait toujours un `<span class="html">npm run dev</span>` et pour la version de production optimisée, on utilise `<span class="html">npm run build</span>`.</p>
+                    <p>Voici les directives Blade spécifiques à Vite pour inclure les assets :</p>
+<pre><code>@vite('resources/css/app.css')</code></pre>
+<pre><code>@vite('resources/js/app.js')</code></pre>
                     <h2 id="exemple_concret_laravel">Un exemple concret :</h2>
                     <p>Nous allons monter ici la réalisation d'une application basique implémentant un blog, inspiré de "Évoluer vers une architecture MVC en PHP" de Baptiste Pesquet, par l'intermédiaire de M. Codutti et N. Richard.</p>
                     <p>Ce blog possède la base de données suivante, nommée <span class="em">monblog</span> sur le serveur de base de données :</p>
