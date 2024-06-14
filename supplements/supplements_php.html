@@ -1327,6 +1327,201 @@ DB_PASSWORD=</code></pre>
                     <p>Collez la ligne suivante juste après la configuration de la base de données dans le fichier <span class="em">.env</span>.</p>
 <pre><code>DB_HOST=localhost;unix_socket=/Applications/MAMP/tmp/mysql/mysql.sock</code></pre>
                     <p>Ces variables incluent le moteur de base de données, le serveur sur lequel elle se trouve, le port via lequel il est possible d'y accéder, ainsi que le nom de la base de données sur le serveur et les droits d'accès (nom d'utilisateur et mot de passe). Il sera approprié de mettre ces données à jour dès la mise en place de l'application.</p>
+                    <p>Les migrations Laravel sont un moyen de versionner et de gérer la structure de votre base de données. Elles permettent de définir et de modifier les tables et les colonnes de votre base de données de manière programmatique et traçable.</p>
+                    <p>Premièrement, qu'est-ce qu'une migration ? Une migration est donc un fichier PHP contenant des instructions pour créer, modifier ou supprimer des tables et des colonnes dans votre base de données. Les migrations permettent de sychroniser les changements dans la base de données avec le code source de votre application, facilitant ainsi le déploiement et le travail en équipe.</p>
+                    <p>Pour créer une nouvelle migration, vous utilisez la commande `<span class="html">make:migration</span>`. Par convention, le nom de la migration doit décrire l'action qu'elle réalise. Par exemple, pour créer la table "Users", on utilise la commande suivante :</p>
+<pre><code>php artisan make:migration create_users_table</code></pre>
+                    <p>Cela crée un fichier de mogration dans le répertoire `<span class="em">database/migrations</span>` avec une structure de base.</p>
+                    <p>Voici un exemple de fichier de migration généré :</p>
+<pre><code>&lt;?php
+
+    namespace Database\Migrations;
+
+    use Illuminate\Database\Migrations\Migration;
+    use Illuminate\Database\Schema\Blueprint;
+    use Illuminate\Support\Facades\Schema;
+
+    class CreateUsersTable extends Migration
+    {
+        /**
+        * Exécute les migrations.
+        *
+        * @return void
+        */
+        public function up()
+        {
+            Schema::create('users', function (Blueprint $table) {
+                $table-&gt;id();
+                $table-&gt;string('name');
+                $table-&gt;string('email')-&gt;unique();
+                $table-&gt;timestamp('email_verified_at')-&gt;nullable();
+                $table-&gt;string('password');
+                $table-&gt;rememberToken();
+                $table-&gt;timestamps();
+            });
+        }
+
+        /**
+        * Annuler les migrations.
+        *
+        * @return void
+        */
+        public function down()
+        {
+            Schema::dropIfExists('users');
+        }
+    }
+
+?&gt;</code></pre>
+                    <ul>
+                        <li>
+                            <p><span class="html">up()</span> : Cette méthode est utilisée pour définir les modifications à appliquer à la base de données lors de l'exécution de la migration.</p>
+                        </li>
+                        <li>
+                            <p><span class="html">down()</span> : Cette méthode est utilisée pour définir les actions à exécuter pour annuler la migration.</p>
+                        </li>
+                    </ul>
+                    <p>Pour appliquer les migrations et mettre à jour la base de données, utilisez la commande `<span class="html">migrate</span>` :</p>
+<pre><code>php artisan migrate</code></pre>
+                    <p>Pour annuler la dernière série de mogrations, utilisez la commande `<span class="html">migrate:rollback</span>` :</p>
+<pre><code>php artisan migrate:rollback</code></pre>
+                    <p>Pour annuler toutes les migrations et les réexécuter, utilisez la commande `<span class="html">migrate:reset</span>` suivie de `<span class="html">migrate</span>` :</p>
+<pre><code>php artisan migrate:reset
+php artisan migrate</code></pre>
+                    <p>Pour annuler toutes les migrations et les réexécuter en une seule commande, utilisez `<span class="html">migrate:refresh</span>` :</p>
+<pre><code>php artisan migrate:refresh</code></pre>
+                    <p>Pour actualiser les migrations et exécuter les seeders, ajoutez l'option `<span class="html">--seed</span>` :</p>
+<pre><code>php artisan migrate:refresh --seed</code></pre>
+                    <p>Pour supprimer toutes les tables de la base de données et exécuter toutes les migrations à partir de zéro, utilisez `<span class="html">migrate:fresh</span>` :</p>
+<pre><code>php artisan migrate:fresh</code></pre>
+                    <p>Pour exécuter les seeders après avoir recréé toutes les tables, ajoutez l'option `<span class="html">--seed</span>` :</p>
+<pre><code>php artisan migrate:fresh --seed</code></pre>
+                    <p>Pour voir une liste de toutes les migrations, utilisez la commande `<span class="html">migrate:status</span>` :</p>
+<pre><code>php artisan migrate:status</code></pre>
+                    <p>En conclusion, les migrations Laravel sont un outil puissant pour gérer la structure de votre base de données de manière versionnée et contrôlée. En utilisant les commandes artisan appropriées, vous pouvez créer, modifier, et supprimer des tables et des colonnes avec facilité, tout en gardant un historique clair des changements appaortés.</p>
+                    <p>Les seeders dans Laravel sont utilisés pour insérer des données initiales ou de test dans la base de données. Ils permettent de peupler les tables avec des données prédéfinies, ce qui est particulièrement utile pour le développement et les tests.</p>
+                    <p>Pour créer un seeder, utilisez la commande `<span class="html">make:seeder</span>`. Par convention, le nom du seeder doit réfléter la table ou les données qu'il va peupler.</p>
+<pre><code>php artisan make:seeder UsersTableSeeder</code></pre>
+                    <p>Cette commande crée un fichier de seeder dans le répertoire `<span class="em">database/seeders</span>`.</p>
+                    <p>Voici un exemple de fichier de seeder généré :</p>
+<pre><code>&lt;?php
+
+    namespace Database\Seeders;
+
+    use Illuminate\Database\Seeder;
+    use Illuminate\Support\Facades\DB;
+    use Illuminate\Support\Facades\Hash;
+    use Illuminate\Suppory\Str;
+
+    class UsersTableSeeder extends Seeder
+    {
+        /**
+        * Exécute le seeder.
+        *
+        * @return void
+        */
+        public function run()
+        {
+            Db::table('users')-&gt;([
+                'name' =&gt; Str::random(10),
+                'email' =&gt; Str::random(10) . '@example.com',
+                'password' =&gt; Hash::make('password')
+            ]);
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Pour exécuter un seeder spécifique, utilisez la commande `<span class="html">db:seed</span>` avec l'option `<span class="html">--class</span>` pour spécifier le seeder à exécuter :</p>
+<pre><code>php artisan db:seed --class=UsersTableSeeder</code></pre>
+                    <p>Pour exécuter tous les seefers définis dans `<span class="em">DatabaseSeeder</span>`, utilisez la commande `<span class="html">db:seed</span>` :</p>
+<pre><code>php artisan db:seed</code></pre>
+                    <p>Le fichier `<span class="em">DatabaseSeeder</span>` (situé dans `<span class="em">database/seeders/DatabaseSeeder.php</span>` est utilisé pour appeler d'autres seeders. Vous pouvez le modifier pour inclure les seeders que vous souhaitez exécuter.</p>
+                    <p>Exemple :</p>
+<pre><code>&lt;?php
+
+    namespace Database\Seeders;
+
+    use Illuminate\Database\Seeder;
+
+    class DatabaseSeeder extends SearchOrder
+    {
+        /**
+        * Exécute les seeders.
+        *
+        * @return void
+        */
+        public function run()
+        {
+            $this-&gt;call([
+                UsersTableSeeder::class,
+                PostsTableSeeder::class,
+            ]);
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Laravel fournit des factories pour générer facilement des modèles de données factices. Vous pouvez les utiliser dans vos seeders pour insérer des données de manière plus réaliste.</p>
+                    <p>Pour créer une factory, utilisez la commande `<span class="html">make:factory</span>` :</p>
+<pre><code>php artisan make:factory UserFactory --model=User</code></pre>
+                    <p>Cette commande crée un fichier de factory dans le répertoire `<span class="em">database/factories</span>`.
+                    <p>Voici un exemple de définition de factory pour le modèle `<span class="em">User</span>` :</p>
+<pre><code>&lt;?php
+
+    namespace Database\Factories;
+
+    use App\Models\User;
+    use Illuminate\Database\Eloquent\Factories\Factory;
+    use Illuminate\Support\Str
+
+    class UserFactory extends Factory
+    {
+        /**
+        * Le nom du modèle correspondant.
+        *
+        * @var string
+        */
+        protected $model = User::class;
+
+        /**
+        * Définir l'état par défaut du modèle.
+        *
+        * @return array
+        */
+        public function definition()
+        {
+            return [
+                'name' =&gt; $this-&gt;faker-&gt;name,
+                'email' =&gt; $this-&gt;fake-&gt;unique()-&gt;safeEmail,
+                'email_verified_at' =&gt; now(),
+                'password' =&gt; bcrypt('password'), // ou Hash::make('password')
+                'remember_token' =égt; Str:random(10),
+            ];
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Voici comment utiliser la factory dans un seeder pour insérer plusieurs utilisateurs :</p>
+<pre><code>&lt;?php
+
+    namespace Database\Seeders;
+
+    use Illuminate\Database\Seeder;
+    use App\Models\User;
+
+    class UsersTableSeeder extends Seeder
+    {
+        /**
+        * Exécute le seeder.
+        *
+        * @return void
+        */
+        public function run()
+        {
+            User::factory()-&gt;count(50)-&gt;create();
+        }
+    }
+
+?&gt;</code></pre>
                     <p>Une fois la base de données configurée, les classes héritant de <span class="em">Model</span> possèdent des méthodes permettant la mise en lien automatique avec les tables de la base de données. Par défaut :</p>
                     <ul>
                         <li>Une classe correspond à une table ayant le même nom, au pluriel : la classe <span class="em">User</span> correspond à la table <span class="em">Users</span>.</li>
@@ -1451,6 +1646,7 @@ body {
                     <p>Voici les directives Blade spécifiques à Vite pour inclure les assets :</p>
 <pre><code>@vite('resources/css/app.css')</code></pre>
 <pre><code>@vite('resources/js/app.js')</code></pre>
+                    <p>En suivant ces étapes, vous pouvez efficacement gérer et inclure vos fichiers CSS et JavaScript dans vos vues Blade Laravel, que vous utilisez Laravel Mix ou Vite pour la gestion des assets.</p>
                     <h2 id="exemple_concret_laravel">Un exemple concret :</h2>
                     <p>Nous allons monter ici la réalisation d'une application basique implémentant un blog, inspiré de "Évoluer vers une architecture MVC en PHP" de Baptiste Pesquet, par l'intermédiaire de M. Codutti et N. Richard.</p>
                     <p>Ce blog possède la base de données suivante, nommée <span class="em">monblog</span> sur le serveur de base de données :</p>
