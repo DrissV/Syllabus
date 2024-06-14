@@ -130,7 +130,7 @@
                     <p>PHP offre trois niveaux de visibilité pour ses variables :</p>
                     <ul>
                         <li>Les variables <span class="em">locales</span> sont visibles uniquement dans le bloc de code où elles sont déclarées. Le nom d'une variable locale commence par le symbole <span class="html">$</span>, par exemple <span class="html">$var</span>.</li>
-                        <li>Les variables <span class="em">globales</span>sont visibles partout dans le code. Celles-ci peuvent être définies de deux façons : soit avec le mot-clé <span class="html">global</span>, par exemple <span class="html">global $var</span>, soit en l'ajoutant au tableau <span class="html">$GLOBALS</span> via <span class="html">$GLOBALS['var']</span>.</li>
+                        <li>Les variables <span class="em">globales</span> sont visibles partout dans le code. Celles-ci peuvent être définies de deux façons : soit avec le mot-clé <span class="html">global</span>, par exemple <span class="html">global $var</span>, soit en l'ajoutant au tableau <span class="html">$GLOBALS</span> via <span class="html">$GLOBALS['var']</span>.</li>
                         <li>
                             <p>Les variables <span class="em">superglobales</span> sont des variables visibles partout dans le code, déjà prédéfinies par PHP, avec des rôles bien définis. Il s'agit également de tableaux, qui pourront recevoir des champs nommés. On notera en particulier :</p>
                             <ul>
@@ -178,7 +178,7 @@
                         <li>Destruction manuelle de variable : via la méthode <span class="html">unset()</span>.</li>
                     </ul>
                     <h5 id="operateur$_variables_dyamiques">Opérateur $ et variables dynamiques :</h5>
-                    <p>En dehors de la déclaration d'une variable, $ est un opérateur qui permet de retourner la valeur contenue dans la variable dont le nom est renseigné juste après le symbole $. Par exemple, dans <span class="em">login.php</span> ci-dessus, dans l'expression <span class="html">"Bienvenue 1login"</span>; l'opérateur <span class="em">$loin</span> est évalué en premier, et la valeur contenue dans cette variable est concaténée à la chaîne adjacente.</p>
+                    <p>En dehors de la déclaration d'une variable, $ est un opérateur qui permet de retourner la valeur contenue dans la variable dont le nom est renseigné juste après le symbole $. Par exemple, dans <span class="em">login.php</span> ci-dessus, dans l'expression <span class="html">"Bienvenue $login"</span>; l'opérateur <span class="em">$login</span> est évalué en premier, et la valeur contenue dans cette variable est concaténée à la chaîne adjacente.</p>
                     <p>Un usage particulier de cette capacité en PHP est l'emploi de <span class="em">variables dynamiques</span> : si on souhaite à accéder à une variable dont le nom est lui-même contenu dans une autre variable, on pourra se servir de cet opérateur pour procéder rapidement :</p>
 <pre><code>&lt;?php
     // appel d'une variable dynamique
@@ -1102,6 +1102,149 @@ try {
                     <h3 id="installation_demarrage_laravel">Installation et démarrage :</h3>
                     <p>Un projet Laravel peut être créé via Composer via la commande :<span class="html">composer create-project --prefer-dist laravel/laravel nomDuProjet</span>. L'option <span class="em">`--prefer-dist`</span> est une option de la commande <span class="em">`composer create-project`</span> qui spécifie à Composer de télécharger les dépendances sous forme d'archives compressées (distributions) plutôt que de les cloner depuis un dépôt Git. Cela peut accélérer le processus de téléchargementet d'installation des dépendances, car il évite le processus de clonage de chaque dépôt Git, surtout lorsque les dépendances sont volumineuses.</p>
                     <p>Cette commande crée un répertoire <span class="em">nomDuProjet</span> qui servira de racine au projet Laravel. Une arborescence de fichier est automatiquementcréée pour vous, ainsi que des fichiers pré-remplis permettant de faire tourner une version minimale d'une application web utilisant Laravel. Notamment, vous pouvez noter que les fichiers de Composer (<span class="em">composer.json</span> et <span class="em">composer.lock</span>) sont présents.</p>
+                    <p>Un projet Laravel est organisé de manière structurée pour sépare les différentes responsabilités et faciliter le développement et la maintenance. Voici un aperçu des différents dossiers d'un projet Laravel et leur utilisation :</p>
+                    <dl>
+                        <dt><span class="em">app/</span> :</dt>
+                        <dd>
+                            <p>Le dossier <span class="em">app/</span> contient le coeur de votre application. Il est subdivisé en plusieurs sous-dossiers :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Console/</span> : Contient les commandes artisan personnalisées.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Exceptions/</span> : Contient les exceptions personnalisées et les gestionnaires d'exception.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Http/</span> : Contient les contrôleurs (dossier <span class="em">Controllers/</span>) de l'application, les middlewares (dossier <span class="em">Middleware/</span>) qui peuvent être appliqués aux routes ou aux groupes de routes et les requêtes (form requests) (dossier <span class="em">Requests/</span> contenant les classes de validation des requêtes HTTP).</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Models/</span> Contient les modèles de l'application.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Providers/</span> : Contient les fournisseurs de services (service providers) qui configurent les différentes parties de l'application.</p>
+                                </li>
+                            </ul>
+                        </dd>
+                        <dt><span class="em">bootstrap/</span> :</dt>
+                        <dd>
+                            <p>Le dossier <span class="em">bootstrap/</span> contient le fichier <span class="em">app.php</span>, qui initialise le framework. Le sous-dossier <span class="em">cache/</span> contient les fichiers générés pour optimiser les performances, comme les fichiers de cache des configurations et des services.</p>
+                        </dd>
+                        <dt><span class="em">config/</span> :</dt>
+                        <dd>
+                            <p>Le dossier <span class="em">config/</span> contient les fichiers de configuration de l'application. Chaque fichier correspond à une partie différente de la configuration, comme <span class="em">app.php</span>, <span class="em">database.php</span>, <span class="em">mail.php</span>, etc.</p>
+                        </dd>
+                        <dt><span class="em">database/</span> :</dt>
+                        <dd>
+                            <p>Le dossier <span class="em">database</span> contient tout ce qui est lié à la base de donénes :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">factories/</span> : Contient les classes de définition de modèle d'usine.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">migrations/</span> : Contient les fichiers de migration de base de données.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">seeders/</span> : Contient les fichiers de seeding de base de données.</p>
+                                </li>
+                            </ul>
+                        </dd>
+                        <dt><span class="em">public/</span> :</dt>
+                        <dd>
+                            <p>Le dossier <span class="em">public/</span> contient le fichier <span class="em">index.php</span>, qui est le point d'entrée de toutes les requêtes web. Il contient également les actifs web accessibles publiquement, comme les images, les fichiers JavaScript et CSS.</p>
+                        </dd>
+                        <dt><span class="em">resources/</span> :</dt>
+                        <dd>
+                            <p>Le dossier <span class="em">resources/</span> contient les vues (dossier <span class="em">views/</span> contenant les fichiers de vue Blade), les fichiers de langue (dossier <span class="em">lang/</span>) et les assets non compilés (dossiers <span class="em">js/</span>, <span class="em">css/</span>, <span class="em">sass/</span>) pour les compilateurs comme Laravel Mix.</p>
+                        </dd>
+                        <dt><span class="em">routes/</span> :</dt>
+                        <dd>
+                            <p>Le dossier <span class="em">routes/</span> contient les fichiers de définition des routes :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">web.php</span> : Contient les routes web.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">api.php</span> : Contient les routes API.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">console.php</span> : Contient les définitions de commandes console.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">channels.php</span> : Contient les routes de diffusion pour les notifications et les événements.</p>
+                                </li>
+                            </ul>
+                        </dd>
+                        <dt><span class="em">storage/</span> :</dt>
+                        <dd>
+                            <p>Le dossier <span class="em">storage/</span> contient les fichiers générés par l'application :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">app/</span> : Contient les fichiers générés par l'application.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">framework/</span> : Contient les fichiers générés par le framework (cache, sessions, views compilées).</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">logs/</span> : Contient les fichiers de log de l'application.</p>
+                                </li>
+                            </ul>
+                        </dd>
+                        <dt><span class="em">tests/</span> :</dt>
+                        <dd>
+                            <p>Le dossier <span class="em">tests/</span> contient les unitaires (dossier <span class="em">Unit/</span>) et fonctionnels (dossier <span class="em">Feature/</span> contenant les tests d'intégration) de l'application.</p>
+                        </dd>
+                        <dt><span class="em">vendor/</span> :</dt>
+                        <dd>Le dossier<span class="em">vendor/</span> contient les dépendances de l'application installées via Composer. Il ne faut pas modifier directement ce dossier.</dd>
+                        <dt><span class="em">.env</span> :</dt>
+                        <dd>
+                            <p>Le fichier <span class="em">.env</span> contient les variables d'environnement spécifiques à votre configuration locale, comme les paramètres de base de données, les clés API, etc.</p>
+                        </dd>
+                        <dt><span class="em">composer.json</span> :</dt>
+                        <dd>
+                            <p>Le fichier <span class="em">composer.json</span> contient les informations de configuration pour Composer, y compris les dépendances du projet.</p>
+                        </dd>
+                        <dt><span class="em">artisan</span> :</dt>
+                        <dd>
+                            <p>Le fichier <span class="em">artisan</span> est l'outil de ligne de commande de Laravel. Il permet d'exécuter différentes commandes pour faciliter le développement.</p>
+                        </dd>
+                    </dl>
+                    <p>Exemple d'arborescence :</p>
+<pre><code>├── app/
+│   ├── Console/
+│   ├── Exceptions/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   ├── Middleware/
+│   │   ├── Requests/
+│   ├── Models/
+│   ├── Providers/
+├── bootstrap/
+│   ├── cache/
+├── config/
+├── database/
+│   ├── factories/
+│   ├── migrations/
+│   ├── seeders/
+├── public/
+├── resources/
+│   ├── js/
+│   ├── css/
+│   ├── sass/
+│   ├── lang/
+│   ├── views/
+├── routes/
+├── storage/
+│   ├── app/
+│   ├── framework/
+│   ├── logs/
+├── tests/
+│   ├── Feature/
+│   ├── Unit/
+├── vendor/
+├── .env
+├── artisan
+├── composer.json</code></pre>
+                    <p>Cette structure permet de bien organiser le code et de suivre les meilleures pratiques en manière de développement web avec Laravel.</p>
                     <h4 id="demarrage_serveur_tests_laravel">Démarrage en serveur de tests :</h4>
                     <p>Pour faire tourner l'application, un script PHP exécutable en console <span class="html">artisan</span> nous sera utile : la commande <span class="html">php artisan serve</span> permettra de lancer un <span class="em">serveur de tests</span>, accessible à l'adresse <a href="http://localhost:8000/" class="html" target="_blank">http://localhost:8000/</a> par défaut. Ce serveur nous permettra d'éviter de devoir configurer un serveur Apache; le terminal affiche alors aussi un log des interactions avec ce serveur de test.</p>
                     <p>Si l'installation a réussi avec succès, en vous rendant à l'adresse renseignée par <span class="em">artisan</span>, vous arriverez à une page d'accueil pré-définie par Laravel.</p>
