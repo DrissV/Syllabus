@@ -1311,7 +1311,7 @@ try {
                     <p>L'objet User est converti en objet JSON, et seuls ses attributs tirés de la base de données sont transmis, les autres attributs (tirés de <span class="em">Model</span>) sont cachés par le processus, assurant une protection des données.</p>
                     <h3 id="gestion_modeles_laravel">Gestion des modèles :</h3>
                     <p>Le dossier <span class="em">app/Models</span> contient les classes de modèle de Laravel. Il s'agit de classes PHP, et il est donc possible de leur ajouter des attributs et méthodes si c'est nécessaire au fonctionnement de l'application Web.</p>
-                    <p>La classe <a href="https://laravel.com/docs/9.x/eloquent" target="_blank">Model</a>, présente dans le namespace <span class="html">Illminate\Database\Eloquent</span>, implémentant des méthodes d'interfaçage avec une base de données. Cela permet de traduire facilement une ligne d'une table de base de données en objet PHP. Des méthodes statiques sont aussi fournies pour effecter des requêtes à la base de données directementvia des appels de fonction, sans devoir écrire des requêtes SQL.</p>
+                    <p>La classe <a href="https://laravel.com/docs/9.x/eloquent" target="_blank">Model</a>, présente dans le namespace <span class="html">Illuminate\Database\Eloquent</span>, implémentant des méthodes d'interfaçage avec une base de données. Cela permet de traduire facilement une ligne d'une table de base de données en objet PHP. Des méthodes statiques sont aussi fournies pour effecter des requêtes à la base de données directementvia des appels de fonction, sans devoir écrire des requêtes SQL.</p>
                     <p>Le script <span class="em">artisan</span> fournit une commande permettant de générer facilement une nouvelle classe de modèle <span class="html">php artisan make:model &lt;nom&gt;</span>.</p>
                     <p>Pour rappel, le modèle est la représenation des données et des règles de la base de données dans votre application Laravel.</p>
                     <h4 id="interactions_db_laravel">Interactions avec la base de données :</h4>
@@ -1648,6 +1648,56 @@ body {
 <pre><code>@vite('resources/css/app.css')</code></pre>
 <pre><code>@vite('resources/js/app.js')</code></pre>
                     <p>En suivant ces étapes, vous pouvez efficacement gérer et inclure vos fichiers CSS et JavaScript dans vos vues Blade Laravel, que vous utilisez Laravel Mix ou Vite pour la gestion des assets.</p>
+                    <h2>Ajouter un élément dans la base de données via un formulaire :</h2>
+                    <p>Pour ajouter un tuple supplémentaire dans la table "Posts" de la base de données via un formulaire, on peut ajouter une nouvelle route pour afficher la page contenant le formulaire d'ajout :</p>
+<pre><code>Route::get('/posts/create', [PostController::class, 'create'])-&gt;name('posts.create');</code></pre>
+                    <p>Voici le contenu de notre fichier Blade :</p>
+<pre><code>@extends('layouts.app')
+
+@section('content')
+    &lt;h1&gt;Créer un nouveau post&lt;/h1&gt;
+
+    &lt;form method="POST" action="#"&gt;
+        @csrf
+        &lt;label for="title"&gt;Titre&lt;/label&gt;
+        &lt;input type="text" name="title" id="title"&gt;
+        &lt;label for="content"&gt;Contenu&lt;/label&gt;
+        &lt;textarea name="content" id="content" cols="30" rows="10"&gt;&lt;/textarea&gt;
+        &lt;button type="submit"&gt;Créer&lt;/button&gt;
+    &lt;/form&gt;
+@endsection</code></pre>
+                    <p>Maintenant qu'on clique sur le bouton, ça doit se lancer dans une nouvelle route en "POST" qu'on va créer maintenant :</p>
+<pre><code>Route::post('/posts/create', [PostController::class, 'store'])-&gt;name('posts.store');</code></pre>
+                    <p>Ensuite, dans le formulaire, on modifie l'attribut <span class="html">action</span> comme ceci :</p>
+<pre><code>&lt;form method="POST" action="{{ route('posts.store') }}&gt;</code></pre>
+                    <p>Enfin, on va créer cette fonction <span class="em">store</span> dans le PostController :</p>
+<pre><code>public function store(Request $request)
+{
+    $post = new Post();
+    $post-&gt;title = $request-&gt;title;
+    $post-&gt;content = $request-&gt;content;
+    $post-&gt;save();
+}</code></pre>
+                    <p>Mais la manière la plus optimisée de faire est la suivante :</p>
+<pre><code>public function store(Request $request)
+{
+    Post::create([
+        'title' =&gt; $request-&gt;title,
+        'content' =&gt; $request-&gt;content
+    ]);
+}</code></pre>
+                    <p>S'il y a une erreur, il faut rajouter ou modifier la variable <span class="html">$fillable</span> dans le fichier "Model" avec les champs correspondants :</p>
+<pre><code>protected $fillable = ['title', 'content'];</code></pre>
+                    <p>Pour récupérer la liste des posts classés par ordre alphabétique des titres, on peut utiliser la fonction <span class="html">orderBy</span> d'Eloquent comme ceci :</p>
+<pre><code>$posts = Post::orderBy('title')-&gt;get();</code></pre>
+                    <p>Pour mettre à jour un post, on peut utiliser la fonction <span class="html">update()</span> comme cela :</p>
+<pre><code>$post = Post::find(1);
+$post-&gt;update([
+    'title' =&gt; 'Titre édité'
+]);</code></pre>
+                    <p>Pour supprimer un post, comme son nom l'indique, on va utiliser la méthode <span class="html">delete()</span> comme ça :</p>
+<pre><code>$post = Post::find(12);
+$post-&gt;delete();</code></pre>
                     <h2 id="exemple_concret_laravel">Un exemple concret :</h2>
                     <p>Nous allons monter ici la réalisation d'une application basique implémentant un blog, inspiré de "Évoluer vers une architecture MVC en PHP" de Baptiste Pesquet, par l'intermédiaire de M. Codutti et N. Richard.</p>
                     <p>Ce blog possède la base de données suivante, nommée <span class="em">monblog</span> sur le serveur de base de données :</p>
@@ -1755,16 +1805,50 @@ body {
                     <p>Le blog est maintenant fonctionnel ! Il est maintenant possible de le lancer via <span class="html">php artisan serve</span>, et de consulter la liste des billets de blog et chacun de ces billets dans son entièreté.</p>
                     <p>Nous vous laisserons compléter ce blog en guise d'exercice en utilisant le reste des données présentes dans la base de données. En particulier, il faut :</p>
                     <ul>
-                        <li>Ajouter une classe représentant les commentaires, et créer une relation (utilisez la relation "One-to-Many") entre cette classe et notre classe <span class="em">Post</span>.</li>
-                        <li>Ajouter les commentaires d'un billet sur la page des détails de celui-ci.</li>
-                        <li>Ajouter le nombre de commentaires sur un billet à côté de son entrée sur la page d'accueil.</li>
-                        <li>Ajouter deux APIs, l'une permettant de récupérer tous les billets de blog,l'autre récupérant uniquement les détails d'un billet.</li>
-                        <li>Ajouter une API permettant de créer un nouveau billet. On ne se souciera pas ici des problèmes d'authentification.</li>
-                        <li>Ajouter une API permettant de commenter un billet.</li>
+                        <li>
+                            <p>Ajouter une classe représentant les commentaires, et créer une relation (utilisez la relation "One-to-Many") entre cette classe et notre classe <span class="em">Post</span>.</p>
+                        </li>
+                        <li>
+                            <p>Ajouter les commentaires d'un billet sur la page des détails de celui-ci.</p>
+                        </li>
+                        <li>
+                            <p>Ajouter le nombre de commentaires sur un billet à côté de son entrée sur la page d'accueil.</p>
+                        </li>
+                        <li>
+                            <p>Ajouter deux APIs, l'une permettant de récupérer tous les billets de blog,l'autre récupérant uniquement les détails d'un billet.</p>
+                        </li>
+                        <li>
+                            <p>Ajouter une API permettant de créer un nouveau billet. On ne se souciera pas ici des problèmes d'authentification.</p>
+                        </li>
+                        <li>
+                            <p>Ajouter une API permettant de commenter un billet.</p>
+                        </li>
                     </ul>
                     <h2 id="et_apres">Et après :</h2>
                     <p>Laravel n'est qu'un seul framework web MVC. Il peut sembler imposer de se familiariser avec de nombreuses notions, mais une fois la prise en main effectuée, il simplifie grandement le travail du développeur Web, car il n'est dès lors plus nécessaire que de se soucier des manipulations propres à l'application, en laissant Laravel se charger des interactions de plus bas niveau.</p>
                     <p>Laravel inclut aussi des outils de développement et de débuggage, et bien plus que les bases que nous avons abordées ici. Comme toujours, vous êtes vivement encouragé.e.s de pousser plus loin votre recherche.</p>
+                    <h2>Foreign Key Constraints :</h2>
+                    <p>Pour créer une clé étrangère dans notre migration, on utilise les lignes suivantes pour qu'il y a une relation "OneToMany" entre la table "Posts" et la table "Comments" :</p>
+<pre><code>$table-&gt;unsignedBigInteger('post_id');
+$table-&gt;foreign('post_id')-&gt;reference('id')-&gt;on('posts');</code></pre>
+                    <p>Depuis Laravel 7, on peut remplacer les deux ligens précédentes par la ligne ci-dessous :</p>
+<pre><code>$table-&gt;foreignId('post_id')-&gt;contrained();</code></pre>
+                    <p>Dans le modèle "Post", on aura une nouvelle fonction dont voici le contenu :</p>
+<pre><code>public function comments()
+{
+    return $this-&gt;hasMany(Comment::class);
+}</code></pre>
+                    <p>Enfin, dans le modèle "Comment", on aura la nouvelle fonction suivante :</p>
+<pre><code>public function post()
+{
+    return $this-&gt;belongsTo(Post::class);
+}</code></pre>
+                    <p>Pour itérer sur les commentaires d'un post et d'afficher un message s'il y en a aucun, on va utiliser le <span class="html">@forelse</span> de Blade comme ceci :</p>
+<pre><code>@forelse($post-&gt;comments as $comment)
+    &lt;div&gt;{{ $comment-&gt;content }} | crée le {{ $comment-&gt;created_at-&gt;format('d/m/Y') }}&lt;/div&gt;
+@empty
+    &lt;div&gt;Aucun commentaire pour ce post.&lt;/div&gt;
+@endforelse</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
