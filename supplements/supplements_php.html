@@ -2003,7 +2003,41 @@ public function store(Request $request)
 <pre><code>Storage::put('avatars', $request-&gt;avatar);</code></pre>
                     <p>Ou encore :</p>
 <pre><code>$request-&gt;file('avatar')-&gt;store('avatars');</code></pre>
-                    
+                    <p>Pour donner un nom précis à notre fichier, on peut faire ça :</p>
+<pre><code>$filename = time() . '.' . $request-&gt;avatar-&gt;extension();
+
+$request-&gt;file('avatar')-&gt;storeAs('avatars', $filename);</code></pre>
+                    <p>Faisons maintenant l'exemple d'enregistrer un fichier pour chaque post :</p>
+<pre><code>public function store(Request $request)
+{
+    // $request-&gt;validate([
+    //     'title' => ['required', 'max:255', 'min:5', 'unique:posts', new Uppercase],
+    //     'content' =&gt; ['required']
+    // ]);
+
+    $filename = time() . '.' . $request-&gt;avatar-&gt;extension();
+
+    $path = $request-&gt;file('avatar')-&gt;storeAs(
+        'avatars',
+        $filename,
+        'public'
+    );
+
+    $post = Post::create([
+        'title' =&gt; $request-&gt;title,
+        'content' =&gt; $request-&gt;content
+    ]);
+
+    $image = new Image();
+    $image-&gt;path = $path;
+    // $image-&gt;post_id = $post-&gt;id;
+
+    $post-&gt;image()-&gt;save($image);
+
+}</code></pre>
+                    <p>Pour afficher l'image dans notre vue Blade, on ajoute :</p>
+<pre><code>&lt;img src="{{ Storage::url($post-&gt;image-&gt;path) }}" alt=""&gt;</code></pre>
+                    <p>Pour terminer, on fait la commande `<span class="html">php artisan storage:link</span>`.</p>
                 </article>
             <!-- fin de section -->
             </section>
