@@ -1827,7 +1827,7 @@ $post-&gt;delete();</code></pre>
                     <h2 id="et_apres">Et après :</h2>
                     <p>Laravel n'est qu'un seul framework web MVC. Il peut sembler imposer de se familiariser avec de nombreuses notions, mais une fois la prise en main effectuée, il simplifie grandement le travail du développeur Web, car il n'est dès lors plus nécessaire que de se soucier des manipulations propres à l'application, en laissant Laravel se charger des interactions de plus bas niveau.</p>
                     <p>Laravel inclut aussi des outils de développement et de débuggage, et bien plus que les bases que nous avons abordées ici. Comme toujours, vous êtes vivement encouragé.e.s de pousser plus loin votre recherche.</p>
-                    <h2>Foreign Key Constraints :</h2>
+                    <h3>Foreign Key Constraints :</h3>
                     <p>Pour créer une clé étrangère dans notre migration, on utilise les lignes suivantes pour qu'il y a une relation "OneToMany" entre la table "Posts" et la table "Comments" :</p>
 <pre><code>$table-&gt;unsignedBigInteger('post_id');
 $table-&gt;foreign('post_id')-&gt;reference('id')-&gt;on('posts');</code></pre>
@@ -1860,7 +1860,7 @@ $table-&gt;foreign('post_id')-&gt;reference('id')-&gt;on('posts');</code></pre>
     return $this-&gt;belongsTo(Post::class);
 }</code></pre>
                     <p>Pour une relation "ManyToMany" entre la table "posts" et la table "tags", on va créer une table pivot "post_tag" avec les champs suivants : "post_id", "tag_id", "created_at" et "updated_at".</p>
-                    <h2>Les différentes fonctionnalités du HTTP Request :</h2>
+                    <h3>Les différentes fonctionnalités du HTTP Request :</h3>
                     <p>Pour vérifier si l'utilisateur a envoyé une adresse mail via un formulaire via un champ avec l'attribut <span class="html">name="email"</span>, on peut faire ceci :</p>
 <pre><code>use Illuminate\Http\Request;
 public function store(Request $request)
@@ -1965,6 +1965,45 @@ public function store(Request $request)
         'content' =&gt; $request-&gt;content
     ]);
 }</code></pre>
+                    <h3>File Storage :</h3>
+                    <p>Laravel met à disposition un système de fichiers très puissant qui est basé sur le package PHP "filesystem" développé par Frank de Jonge.</p>
+                    <p>La configuration du système de fichiers de Laravel est localisé dans le fichier "<span class="em">config/filesystem.php</span>". Avec ce fichier, vous pouvez configurer tous les "disks" de votre système de fichiers.</p>
+                    <p>Pour partager les fichiers du "disk" nommé "public", vous pouvez utiliser la commande <span class="html">storage:link</span> :</p>
+<pre><code>php artisan storage:link</code></pre>
+                    <p>Cela créera un lien symbolique (ou lien virtuel) vers le dossier "<span class="em">public</span>".</p>
+                    <p>Dans notre formulaire de la vue Blade, on rajoute un input:file ainsi que le enctype comme ceci :</p>
+<pre><code>&lt;form method="POST" action={{ route('posts.store') }}" enctype="multipart/form-data"&gt;
+    @csrf
+    
+    &lt;label for="avatar"&gt;Choose a profile picture&lt;/label&gt;
+    &lt;input type="file" id="avatar" name="avatar" accept="image/png, image/jpeg"&gt;
+    
+    &lt;button type="submit"&gt;Créer&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+                    <p>Pour créer un fichier avec un contenu, on peut utiliser la commande suivante en choississant, par exemple, le disque "local", le fichier "example.txt" et "Mon contenu de test" comme contenu :</p>
+<pre><code>Storage::disk('local')-&gt;put('example.txt', 'Mon contenu de test');</code></pre>
+                    <p>Pour ajouter le fichier que l'on a injecté via le formulaire, on peut utiliser la ligne suivante :</p>
+<pre><code>Storage::disk('local')-&gt;put('avatars', $request-&gt;avatar);</code></pre>
+                    <p>Cela permet d'injecter le fichier dans le dossier "storage/app/avatars" avec un nom généré automatiquement par Laravel.</p>
+                    <p>Pour récupérer le chemin relatif de notre fichier, on a qu'à stocker la ligne précédente dans une variable. Ainsi, vous pourrez utiliser ce chemin pour le stocker dans une base de données par exemple si vous voulez.</p>
+                    <p>Pour récupérer le contenu du fichier, on utilise la commande ci-dessous :</p>
+<pre><code>Storage::get('image.png');</code></pre>
+                    <p>Pour déterminer si le existe, on peut faire ceci :</p>
+<pre><code>if (Storage::disk('local')->exists('image.png'))
+{
+    // ...
+}</code></pre>
+                    <p>Ou s'il n'existe pas :</p>
+<pre><code>if (Storage::disk('local')->existing('image.png'))
+{
+    // ...
+}</code></pre>
+                    <p>Pour télécharger un fichier, on peut utiliser la fonction `<span class="html">Storage::download</span>`.</p>
+                    <p>Une autre façon d'enregistrer une image est la suivante :</p>
+<pre><code>Storage::put('avatars', $request-&gt;avatar);</code></pre>
+                    <p>Ou encore :</p>
+<pre><code>$request-&gt;file('avatar')-&gt;store('avatars');</code></pre>
+                    
                 </article>
             <!-- fin de section -->
             </section>
