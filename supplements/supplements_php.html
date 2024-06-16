@@ -1881,7 +1881,90 @@ public function store(Request $request)
                     <p>On peut aussi vérifier le nom de la route avec la fonction <span class="html">routeIs</span> :</p>
 <pre><code>dd($request-&gt;routeIs('posts.store'));</code></pre>
                     <p>On peut utiliser les fonctions <span class="html">url()</span> et <span class="html">fullUrl()</span> pour afficher l'URL sans ou avec les paramètres présents dzns l'URL.</p>
-                    
+                    <p>La fonction <span class="html">boolean()</span> est très intéressante car ça nous facilite beaucoup la vie. Pour les checkbox, lors de la fonction <span class="html">all()</span>, la valeur retournée est toujours égale à "<span class="em">on</span>", donc il n'est même pas à <span class="em">true</span>. Par exemple :</p>
+<pre><code>&lt;input type="checkbox" id="informatique" name="informatique"&gt;
+&lt;label for="informatique&gt;Informatique&lt;/label&gt;</code></pre>
+<pre><code>$request-&gt;boolean('informatique'); // retourne true ou false</code></pre>
+                      <p>Pour valider les données fournies dans le formulaire, on utilise la fonction <span class="html">validate()</span> de l'objet "HTTP Request". Par exemple :</p>
+<pre><code>public function store(Request $request)
+{
+    $request-&gt;validate([
+        'title' =&gt; 'required|min:5|max:255|unique:posts',
+        'content' =&gt; ['required']
+    ]);
+
+    Post::create([
+        'title' =&gt; $request-&gt;title,
+        'content' =&gt; $request-&gt;content
+    ]);
+}</code></pre>
+                    <p>Dans notre vue Blade, on peut afficher les messages d'erreur comme ceci :</p>
+<pre><code>if ($errors-&gt;any())
+    @foreach ($errors-&gt;all() as $error)
+        &lt;p class="text-danger"&gt;{{ $error }}&lt;/p&gt;
+    @endforeach
+@endif</code></pre>
+                    <p>Pour avoir les messages d'erreur en français, on peut remplacer la valeur de la variable "<span class="em">locale</span>" dans le fichier "<span class="em">config/app.php</span> par la valeur "<span class="em">fr</span>".</p>
+                    <p>Pour créer une nouvelle règle de validation, on fait un <span class="html">make:rule</span> comme ceci :</p>
+<pre><code>php artisan make:rule Uppercase</code></pre>
+                   <p>Ça permet de créer le fichier "<span class="em">app/Rules/Uppercase.php</span>" avec le contenu suivant qu'on va modifier à notre guise :</p>
+<pre><code>&lt;?php
+
+    namespace App\Rules;
+
+    use Illuminate\Contracts\Validation\Rule;
+
+    class Uppercase implements Rule
+    {
+        /**
+        * Create a new rule instance.
+        *
+        * @return void
+        */
+        public function __construct()
+        {
+            //
+        }
+
+        /**
+        * Determine if the validation rule passes.
+        *
+        * @param string $attrinute
+        * @param mixed $value
+        * @return bool
+        */
+        public function passes($attribute, $value)
+        {
+            return strtoupper($value) === $value;
+        }
+
+        /**
+        * Get the validation error message
+        *
+        * @return string
+        */
+        public function message()
+        {
+            return "Merci de rentrer un titre en majuscule.";
+        }
+    }
+    
+?&gt;</code></pre>
+                    <p>Donc on modifie notre fonction <span class="em">validate()</span> comme ça :</p>
+<pre><code>use App\Rules\Uppercase;
+
+public function store(Request $request)
+{
+    $request-&gt;validate([
+        'title' =&gt; ['required', 'min:5', 'max:255', 'unique:posts', new Uppercase],
+        'content' =&gt; ['required']
+    ]);
+
+    Post::create([
+        'title' =&gt; $request-&gt;title,
+        'content' =&gt; $request-&gt;content
+    ]);
+}</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
