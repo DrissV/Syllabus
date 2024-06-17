@@ -2038,6 +2038,131 @@ $request-&gt;file('avatar')-&gt;storeAs('avatars', $filename);</code></pre>
                     <p>Pour afficher l'image dans notre vue Blade, on ajoute :</p>
 <pre><code>&lt;img src="{{ Storage::url($post-&gt;image-&gt;path) }}" alt=""&gt;</code></pre>
                     <p>Pour terminer, on fait la commande `<span class="html">php artisan storage:link</span>`.</p>
+                    <h3>Authentification :</h3>
+                    <p>On a plusieurs "starter kits" pour l'authentification comme par exemple <span class="em">Laravel Breeze</span> qui est le connu.</p>
+                    <p>De base, à la création de notre projet Laravel, on a déjà un modèle "User" avec une migration "create_users_table".</p>
+                    <p>Pour installer <span class="em">Laravel Breeze</span>, on nous demande de faire la commande :</p>
+<pre><code>composer require laravel/breeze --dev</code></pre>
+                    <p>Grâce à cette installation, on a accès à une nouvelle commande de `<span class="html">php artisan</span>` :</p>
+<pre><code>php artisan breeze:install</code></pre>
+                    <p>Cela crée donc un nouveau fichier de route dans le dossier `<span class="em">routes</span>` : le fichier `<span class="em">auth.php</span>`.</p>
+                    <p>Pour pouvoir utiliser complètement ce système d'authentification, vous allez avoir besoin de compiler les assets et d'installer les différentes dépendances front que Laravel Breeze va utiliser. Et pour ce faire, on va utiliser <span class="em">npm</span> :</p>
+<pre><code>npm install && npm run dev</code></pre>
+                    <p>Dans notre dossier `<span class="em">app/Http/Controllers/</span>`, il a également créer un dossier `<span class="em">Auth</span>` qui contient toutes les classes qui concernent l'authentification de notre système, ainsi que, dans le dossier `<span class="em">resources/views</span>`, un dossier `<span class="em">auth</span>` avec toutes les vues Blade liées à nos contrôleurs.</p>
+                    <p>On n'oublie pas de migrer nos différentes tables qui concernent l'authentification, c'est-à-dire la table "users", la table "password_resets" et "failed_jobs", en faisant :</p>
+<pre><code>php artisan migrate</code></pre>
+                    <p>Pour ne plus accéder à telle ou telle page si vous n'êtes pas authentifié, on va utiliser le middleware d'autentification qui a été crée, lors de l'installation de <span class="em">Laravel Breeze</span>, dans le fichier `<span class="em">app/Http/Middleware/Authenticate.php</span>` avec la fonction <span class="em">redirectTo</span> permettant de rediriger vers la page "login" si l'utilisateur n'est pas authentifié et voici le contenu :</p>
+<pre><code>&lt;?php
+
+    namespace App\Http\Middleware;
+
+    use Illuminate\Auth\Middleware\Authenticate as Middleware;
+
+    class Authenticate extends Middleware
+    {
+        /**
+        * Get the path the user should be redirected to when they are not autenticated.
+        *
+        * @param \Illuminate\Http\Request $request
+        * @return string null
+        */
+        protected function redirectTo($request)
+        {
+            if (!$request-&gt;expectsJson()) {
+                return route('login');
+            }
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>Dans notre contrôleur, on peut le mettre en place comme ceci dans son constructeur :</p>
+<pre><code>public function __construct()
+{
+    $this-&gt;middleware('auth');
+}</code></pre>
+                    <p>Pour accéder à l'une des routes de notre contrôleur sans être authentification, on peut utiliser la fonction <span class="em">except()</span> comme ceci par exemple :</p>
+<pre><code>$this-&gt;middleware('auth')-&gt;except('bar');</code></pre>
+                    <p>Vous pouvez utiliser <span class="html">@auth</span> et <span class="html">@endauth</span> dans notre vue Blade pour afficher le contenu entre les deux que si l'utilisateur est connecté.</p>
+                    <p>Pour afficher le nom de l'utilisateur connecté dans la vue Blade, on peut faire :</p>
+<pre><code>{{ Auth::user()-&gt;name }}</code></pre>
+                    <p>Pour faire l'inverse de <span class="html">@auth</span> et de <span class="html">@endauth</span>, on utilise <span class="html">@guest</span> et <span class="html">@endguest</span>, c'est-à-dire qu'on affiche dans notre vue Blade le contenu entre les deux que si l'utilisateur n'est pas connecté.</p>
+                    <h3>Autorisation avec les Gates :</h3>
+                    <p>On peut donner accès à une page que si un utilisateur est un adminsitrateur par exemple. Pour cela, on va utiliser les Gates qui sont un moyen de pouvoir définir des autorisations.</p>
+                     <p>Avant d'utiliser les Gates, on va d'abord faire une migration pour ajouter la colonne "admin" dans la table "users" :</p>
+<pre><code>php artisan make:migration add_admin_column_to_users_table --table=users</code></pre>
+                    <p>Dans la fonction <span class="html">up()</span> de notre migration, on fait :</p>
+<pre><code>public function up()
+{
+    Schema::table('users', function (BluePrint $table) {
+        $table-&gt;boolean('admin')-&gt;default(0);
+    });
+}</code></pre>
+                    <p>On n'oublie de migrer tout cela avec :</p>
+<pre><code>php artisan migrate</code></pre>
+                    <p>Pour faire simple, les "Service Provider" dans le dossier `<span class="em">app/Providers</span>` sont un peu les pilliers du framework et démarrent les services core vraiment importants. Par exemple, le `<span class="em">AuthServiceProvider.php</span>` démarre le service d'authentification de Laravel.</p>
+                    <p>Notre Gate est défini dans la fonction <span class="html">boot()</span> de notre "Service Provider" comme ceci :</p>
+<pre><code>/**
+* Register any authentication / authorization services.
+*
+* @return void
+*/
+public function boot()
+{
+    $this-&gt;registerPolicies();
+
+    Gate::define('access-admin', function (User $user) {
+        return $user-&gt;admin;
+    });
+}</code></pre>
+                    <p>Dans notre contrôleur, on peut faire un if dans la fonction qui retourne la vue Blade à afficher si l'utilisateur est adminsitrateur :</p>
+<pre><code>public function foo()
+{
+    if (!Gate::allows('access-admin')) {
+        abort('403');
+    }
+
+    return view('test.foo');
+}</code></pre>
+                    <h3>Envoyer des mails :</h3>
+                    <p>Au niveau de nos tests d'envoi de mails, on va utiliser l'application "<span class="em">mailtrap.io</span>" dont vous deviez créer un compte si vous souhaitez utiliser la même chose que moi.</p>
+                    <p>Laravel utilise l'API "<span class="em">SwiftMailer</span>" dont la configuration se trouve dans le fichier `<span class="em">config/mail.php</span>`.</p>
+                    <p>On va créer une classe "<span class="em">Mailable</span>" en faisant la commande :</p>
+<pre><code>php artisan make:mail TestMail</code></pre>
+                    <p>Cela me permet de créer dans le nouveau dossier `<span class="em">app/Mail</span>` et dedans notre nouvelle classe :</p>
+<pre><code>&lt;?php
+
+    namespace App\Mail;
+
+    class TestMail extends Mailable
+    {
+        use Queueable, SerializeModels;
+
+        /**
+        * Create a new message instance.
+        *
+        * @return void
+        */
+        public function __construct()
+        {
+            //
+        }
+
+        /**
+        * Build the message.
+        *
+        * @return $this
+        */
+        public function build()
+        {
+            return $this-&gt;from('driss.vandenheede.techinfo@gmail.com')
+                        -&gt;view('emails.test');
+        }
+    }
+
+?&gt;</code></pre>
+                    <p>S'il n'existe pas, on va créer le fichier "test.blade.php" dans le dossier "resources/views/emails". Ensuite, dans notre contrôleur, on doit ajouter la ligne suivante pour envoyer un mail :</p>
+<pre><code>Mail::to('test@mail.test')-&gt;send(new TestMail());</code></pre>
+                    <p>Avant de tester notre mail, on vérifie bien que le fichier "<span class="em">.env</span>" contient la bonne configuration de "mailtrap.io".</p>
                 </article>
             <!-- fin de section -->
             </section>
