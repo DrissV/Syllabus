@@ -81,6 +81,7 @@
             <section id="mainSection">
                 <article>
                     <h1>Le langage Vue.js :</h1>
+                    <p>Ce cours est un mélange entre mes connaissances en Vue.js et <a href="https://grafikart.fr/formations/vuejs" target="_blank">la formation de Grafitkart sur Vue.js</a>.</p>
                 </article>
                 <article>
                     <h2 id="introduction">Introduction :</h2>
@@ -1314,6 +1315,143 @@ console.log(route.params.id);</code></pre>
                             <p><a href="https://test-utils.vuejs.org/" target="_blank">Vue test utils</a> qui offre des méthodes utiles pour tester des composants.</p>
                         </li>
                     </ul>
+                    <p>On va installer les différentes dépendances utiles pour les tests :</p>
+<pre><code>npm i -D vitest jsdom @vue/test-utils</code></pre>
+                    <p>On va tester le composant <span class="em">Alert.vue</span> suivant :</p>
+<pre><code>&lt;template&gt;
+    &lt;div :class="classes"&gt;
+        &lt;slot&gt;&lt;/slot&gt;
+        &lt;button aria-label="Close" @click="emits('close')"&gt;&amp;times;&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+    import { computed } from 'vue';
+
+    const props = defineProps({
+        type: String
+    });
+
+    const emits = defineEmits(['close']);
+    const classes = computef(() =&gt; `alert alert-${props.type}`);
+&lt;/script&gt;
+
+&lt;style&gt;
+    .alert {
+        position: relative;
+        padding: 0.75rem 1.25 rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+    }
+&lt;/style&gt;</code></pre>
+                    <p>Pour faire le test de ce fameux composant, on va créer le fichier `<span class="em">test/Alert.test.js</span>` :</p>
+<pre><code>import Alert from '@/components/Alert.vue';
+import { mount } from '@vue/test-utils;
+import { describe, it, expect } from 'vitest';
+    
+describe('&lt;Alert&gt;', () =&gt; {
+    it('should render the correct HTML', () =&gt; {
+        const wrapper = mount(Alert, {
+            props: {
+                type: 'danger',
+            },
+            slots: {
+                default: 'Bonjour'
+            }
+        });
+        expect(wrapper.html()).toMatchInLineSnapshot();
+    });
+});</code></pre>
+                    <p>Dans notre fichier de configuration, `<span class="em">vite.config.js</span>`, on va rajouter la propriété <span class="em">test</span> si elle n'existe pas avec le contenu :</p>
+<pre><code>test: {
+    environment: 'jsdom'
+}</code></pre>
+                    <p>Et le <span class="html">defineConfig</span> ne va plus être importé depuis <span class="html">vite</span>, mais depuis <span class="html">vitest/config</span>.</p>
+                    <p>Au niveau du terminal, on va lancer la commande suivante :</p>
+<pre><code>npx vitest</code></pre>
+                    <p>On va ensuite tester le click sur le bouton "fermer" :</p>
+<pre><code>it('should emit close when closing', async () =&gt; {
+    const wrapper = mount(Alert, {
+        props: {
+            type: 'danger',
+        },
+        slots: {
+            default: 'Bonjour'
+        }
+    });
+    await wrapper.get('[aria-label="Close"]').trigger('click');
+    expect(wrapper.emitted()).toHaveProperty('close');
+    expect(wrapper.emitted().close).toHaveLength(1);
+});</code></pre>
+                    <p>Maintenant, on va tester un composant un plus complexe, le <span class="em">Header.vue</span>, car il contient les <span class="html">RouterLink</span> dans un fichier `<span class="em">test/Header.test.js</span> :</p>
+<pre><code>import Header from '@/components/Header.vue';
+import { routes } from '@/routes.js';
+import { mount, flushPromises } from '@vue/test-utils;
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createMemoryHistory, createRouter } from 'vue-router';
+    
+describe('&lt;Header&gt;', () =&gt; {
+    let router;
+
+    beforeEach(async () =&gt; {
+        router = createRouter({
+            history: createMemoryHistory(),
+            routes
+        });
+        router.push('/');
+        await router.isReady();
+    });
+
+    it('should render correct HTML', async () =&gt; {
+        const wrapper = mount(Header, {
+            global: {
+                plugins: [router],
+            },
+        });
+        expect(wrapper.html()).toMatchInLineSnapshot();
+        router.push('/blog');
+        await router.isReady();
+        await flushPromises();
+        expect(wrapper.html()).toMatchInLineSnapshot();
+    });
+});</code></pre>
+                    <p>Enfin, pour tester le <span class="em">BlogPage</span> qui récupère des données d'une API, <span class="em">BlogPage.test.vue</span> :</p>
+<pre><code>import { useFetch } from '@/composable/useFetch.js';
+import BlogPage from '@/pages/BlogPage.vue';
+import { routes } from '@/routes.js';
+import { mount, flushPromises } from '@vue/test-utils;
+import { describe, beforeEach, it, expect, afterEach } from 'vitest';
+import { createMemoryHistory, createRouter } from 'vue-router';
+
+describe('&lt;BlogPage&gt;, () =&gt; {
+    let router;
+
+    beforeEach(async () =&gt; {
+        router = createRouter({
+            history: createMemoryHistory(),
+            routes
+        });
+        router.push('/');
+        await router.isReady();
+    });
+
+    afterEach(() =&gt; {
+        useFetch.mock = {};
+    });
+    
+    it('should render the right amount of articles', () =&gt; {
+        useFetch.mock = {
+            'https://jsonplaceholder.typicode.com/posts?_limit=26_page=1': () =&gt; Promise.resolve([] ),
+        };
+        const wrapper = mount(BlogPage, {
+            global: {
+                plugins: [router]
+            }
+        });
+        await flushPromises();
+        expect(wrapper.findAll('article')).toHaveLength(4);
+    });
+});</code></pre>
                 </article>
                 <article>
                     <h2 id="gerer_etat_Pinia">Gérer l'état avec Pinia :</h2>
@@ -1337,6 +1475,48 @@ console.log(route.params.id);</code></pre>
                     <p>Au-delà de ces avantages, ce qu'offre surtout Pinia, c'est une manière d'organiser les stores bien spécifiques avec la possibilité de rajouter des extensions (comme par exemple le stockage local afin de persister l'état lors du rechargment). C'est particulièrement intéressant lorsque vous travaillez en équipe car ça permet d'avoir une organisation prédéfinie et connue.</p>
                     <h3>Pas systématique :</h3>
                     <p>Si vous n'êtes pas intéressé par le rendu côté serveur et que vous avez un cas plutôt simple, il n'est pas forcément nécessaire d'utiliser Pinia dans votre application point, même si la librairie est relativement légère, elle apporte un poids supplémentaire qui n'est pas forcément pertinent.</p>
+                    <p>Pour installer Pinia, on utilise la commande suivante :</p>
+<pre><code>bun add pinia</code></pre>
+                    <p>Dans notre application, on va utiliser le <span class="html">createPinia()</span> :</p>
+<pre><code>import { createPinia } from 'pinia';
+
+app.use(createPinia());</code></pre>
+                    <p>On va créer un store pour l'authentification dans le fichier `<span class="em">store/auth.js</span>` :</p>
+<pre><code>import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
+import { useRoute } from 'vue-router';
+
+export const useAuth = defineStore('auth', () =&gt; {
+    const user = ref(null);
+    const isAuthenticated = computed(() =&gt; user !== null);
+    const authenticate = () =&gt; {
+        user.value = {
+            username: 'Jane Doe'
+        };
+    };
+    const route = useRoute();
+    return {
+        user,
+        url: computed(() =&gt; route.fullPath),
+        isAuthenticated,
+        authenticate,
+    };
+});</code></pre>
+                    <p>On va créer un store Pinia pour le thème dans le fichier `<span class="em">store/theme.js</span>` :</p>
+<pre><code>import { defineStore } from 'pinia';
+import { ref } from 'vue';
+
+export const useTheme = defineStore('theme', () =&gt; {
+    const darkTheme = ref(false);
+    const switchTheme = () =&gt; {
+        darkTheme.value = !darkTheme.value;
+    };
+
+    return {
+        isDark: darkTheme,
+        switchTheme,
+    };
+});</code></pre>
                 </article>
                 <article>
                     <h2 id="TypeScript_Vuejs">TypeScript avec Vue.js :</h2>
@@ -1364,10 +1544,12 @@ console.log(route.params.id);</code></pre>
                 <article>
                     <h2 id="Nuxt">Nuxt :</h2>
                     <p><a href="https://nuxt.com/" target="_blank">Nuxt</a> est un framework open source qui permet de créer des applications plus facilement en utilisant des composants Vue.js. Son principal objectif est de fournir une structure de projet prête à l'emploi avec le support du rendu côté serveur afin d'améliorer l'expérience utilisateur et le référencement de site développés avec Vue.js.</p>
+                    <p>Pour commencer à utiliser Nuxt, il faut initialiser un projet avec Nuxt avec la commande suivante :</p>
+<pre><code>bun x nuxi@latest init nomProjet</code></pre>
                     <h3>Avantages :</h3>
                     <p>Nuxt offre deux avantages principaux :</p>
                     <p>Une <span class="em">structure imposée</span> qui permet de se concentrer sur le code. Il intègre vue-router mais vous n'aurez pas à définir les routes vous même. La position est le nom des fichiers vue permet à Nuxt de <a href="https://nuxt.com/docs/getting-started/views" target="_blank">générer les routes</a> pour vous.</p>
-                    <p>Le rendu <span class="em">côté serveur</span> permet à Nuxt d'utiliser vos composants vue pour générer le code HTML des pages qui composent votre site. Cela permet aux visiteurs de ne pas avoir à attendre le JavaScript pour voir la page s'afficher, mais permet aussi aux moteurs de recherche de pouvoir référencer votre site convenablement. Si avez besoin de plus d'information sur les différents modes de rendu, je vous renvoie vers cette <a href="https://grafikart.fr/tutoriels/render-ssr-csr-2012"> vidéo qui explique la différence entre le rendu côté client et le rendu côté serveur</a>.</p>
+                    <p>Le rendu <span class="em">côté serveur</span> permet à Nuxt d'utiliser vos composants vue pour générer le code HTML des pages qui composent votre site. Cela permet aux visiteurs de ne pas avoir à attendre le JavaScript pour voir la page s'afficher, mais permet aussi aux moteurs de recherche de pouvoir référencer votre site convenablement. Si avez besoin de plus d'information sur les différents modes de rendu, je vous renvoie vers cette <a href="https://grafikart.fr/tutoriels/render-ssr-csr-2012" target="_blank"> vidéo qui explique la différence entre le rendu côté client et le rendu côté serveur</a>.</p>
                     <h3>Plusieurs modes de rendu :</h3>
                     <p>Avec Nuxt, il est donc possible de générer des pages HTML qui vont être renvoyées à l'utilisateur. Ce rendu HTML peut être fait de plusieurs manières et il est impératif de les comprendre pour bénéficier au maximum des avantages de Nuxt.</p>
                     <h4>Le rendu côté serveur (SSR) :</h4>
@@ -1505,7 +1687,7 @@ const handleSubmit = async () =&gt; {
     await updatePost(new FormData(e.target));
     // On invalide les données concernant les articles.
     await queryClient.setQueryData(['posts'], (oldData) =&gt; {
-        // Gén§re les nouvelles données et les retourne.
+        // Génère les nouvelles données et les retourne.
         return newData;
     });
 };</code></pre>
