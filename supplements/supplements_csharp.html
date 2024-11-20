@@ -890,7 +890,7 @@ bool ouFaux = false | false;</code></pre>
 <pre><code>bool ouExVrai = true ^ false;
 bool ouExFaux = true ^ true;</code></pre>
                     <p>L'opérateur <span class="em">&</span> ou <span class="em">|</span> seul implique que chacune des valeurs sera testée.</p>
-                    <p>Lorsqu'on double l'opérateur (donc <span class="em">&&</span> ou <span class="em">||</span>), l'exécution s'arrêtera dès lors qu'une valeur rend la condition fausse.</p>
+                    <p>Lorsqu'on double l'opérateur (donc <span class="em">&amp;&amp;</span> ou <span class="em">||</span>), l'exécution s'arrêtera dès lors qu'une valeur rend la condition fausse.</p>
                     <p>Par exemple :</p>
 <pre><code>const bool vrai = true;
 const bool faux = false;
@@ -904,7 +904,7 @@ if (faux == true & vrai == true)
 <pre><code>const bool vrai = true;
 const bool faux = false;
 
-if (faux == true && vrai == true)
+if (faux == true &amp;&amp; vrai == true)
 {
 
 }</code></pre>
@@ -1732,7 +1732,7 @@ Console.WriteLine($"Machine : { m.ToString() }");</code></pre>
     public override bool Equals(object? obj) {
         if (obj is Machine m)
         {
-            return Marque == m.Marque && Modele == m.Modele && Capacite == m.Capacite;
+            return Marque == m.Marque &amp;&amp; Modele == m.Modele &amp;&amp; Capacite == m.Capacite;
         }
         return false;
     }
@@ -2426,13 +2426,13 @@ foreach (var c in QueryResult)
                     <h3>Opérateur "SingleOrDefault" :</h3>
                     <p>L'opérateur "SingleOrDefault" retourne un élément unique d'une séquence de type 'T', si la valeur est introuvable, il retourne la valeur de "default(T)".</p>
 <pre><code>Contact QueryResult = Contacts
-    .Where(c =&gt; c.Prenom.Equals("Thierry") && c.Nom.Equals("Morre"))
+    .Where(c =&gt; c.Prenom.Equals("Thierry") &amp;&amp; c.Nom.Equals("Morre"))
     .SingleOrDefault();
 
 Console.WriteLine("{0} {1}", QueryResult.Nom, QueryResult.Prenom);</code></pre>
                     <h4>Utilisation avec une expression de requête :</h4>
 <pre><code>Contact QueryResult = (from c in Contacts
-                                 where c.Prenom.Equals("Thierry") && c.Nom.Equals("Morre")
+                                 where c.Prenom.Equals("Thierry") &amp;&amp; c.Nom.Equals("Morre")
                                  select c).SingleOrDefault();
 
 Console.WriteLine("{0} {1}", QueryResult.Nom, QueryResult.Prenom);</code></pre>
@@ -2837,7 +2837,7 @@ foreach (Customer cust in custs) {
 NorthwindEntities context = new NorthwindEntities();
 
 IQueryable&lt;Customer&gt; custs = from c in context.Customers
-                                   where c.Country == "UK" && c.City == "London"
+                                   where c.Country == "UK" &amp;&amp; c.City == "London"
                                    orderby c.CustomerID
                                    select c;
                                 
@@ -2851,7 +2851,7 @@ foreach (Customer cust in custs) {
                     <p>Le lazy loading est une technique dans laquelle les données associées à une entité ne sont chargées depuis la base de données que lorsque vous accédez explicitement à ces données.</p>
                     <h4>Eager Loading :</h4>
 <pre><code>IQueryable custs = from c in context.Customers.Include("Orders")
-                              where c.Country == "UK" && c.City == "London"
+                              where c.Country == "UK" &amp;&amp; c.City == "London"
                               orderby c.CustomerID
                               select c;
 
@@ -6219,7 +6219,7 @@ public async Task&lt;IActionResult&gt; Create([Bind("Id,Titre,Annee")] Film film
 
         foreach(var item in modele)
         {
-            var m = await _contexte.FilmsUtilisateur.FirstOrDefaultAsync(x =&gt; x.IdUtilisateur == idUtilisateur && x.IdFilm = item.IdFilm);
+            var m = await _contexte.FilmsUtilisateur.FirstOrDefaultAsync(x =&gt; x.IdUtilisateur == idUtilisateur &amp;&amp; x.IdFilm = item.IdFilm);
 
             if (m != null)
             {
@@ -6255,7 +6255,7 @@ public async Task&lt;JsonResult&gt; AjouterSupprimer()
     {
         // s'il existe un enregistrement dans FilmsUtilisateur qui contient à la fois l'identifiant de l'utilisateur
         // et celui du film, alors le film existe dans la liste de films et peut être supprimé
-        var film = _contexte.FilmsUtilisateur.FirstOrDefault(x =&gt; x.IdFilm == id && x.IdUtilisateur == idUtilisateur);
+        var film = _contexte.FilmsUtilisateur.FirstOrDefault(x =&gt; x.IdFilm == id &amp;&amp; x.IdUtilisateur == idUtilisateur);
         if (film != null)
         {
             _contexte.FilmsUtilisateur.Remove(film);

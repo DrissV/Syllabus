@@ -678,6 +678,20 @@ public function index(IngredientRepository $repository) : Response
         
     &lt;/div&gt;
 {% endblock %}</code></pre>
+                    <p>Pour récupérer toutes les recettes avec une durée plus petite ou égale à un certain nombre de minutes, on peut créer une nouvelle méthode dans le repository de l'entité <span class="em">Recipe</span>, c'est-à-dire le <span class="em">RecipeRepository</span> :</p>
+<pre><code>/**
+* return Recipe[]
+*/
+public function findWithDurationLowerThan(int $duration): array
+{
+    return $this-&gt;createQueryBuilder('r')
+                -&gt;where('r.duration &lt;= :duration')
+                -&gt;orderBy('r.duration', 'ASC')
+                -&gt;setMaxResults(10)
+                -&gt;setParameter('duration', $duration)
+                -&gt;getQuery()
+                -&gt;getResult();
+}</code></pre>
                     <p>Pour la pagination dans la page, on va utiliser le bundle "KnpPaginatorBundle" en l'instalalnt avec la commande :</p>
 <pre><code>composer require knplabs/knp-paginator-bundle</code></pre>
                     <p>On va créer le fichier <span class="em">`config/packages/knp_paginator.yaml`</span> avec le contenu suivant :</p>
@@ -898,6 +912,8 @@ public function new(Request $request, EntityManagerInterface $manager): Response
         {{ form_end(form) }}
     &lt;/div&gt;
 {% endblock %}</code></pre>
+                    <p>Si on met en style quelques champs du formulaire, on peut utiliser le code ci-dessous pour afficher le reste du formulaire :</p>
+<pre><code>{{ form_rest(form) }}</code></pre>
                     <p>On va afficher un message FLASH dans l'index pour dire que la création d'un ingrédient a eu un statut de succès ainsi qu'un lien qui permet d'accéder à la page de création d'un nouvel ingrédient. Voici le code à rajouter :</p>
 <pre><code>&lt;a href="{{ path('ingredient.new') }} class="btn btn-primary"&gt;Créer un ingrédient&lt;/a&gt;
 
@@ -905,6 +921,12 @@ public function new(Request $request, EntityManagerInterface $manager): Response
 {% for message in app.flashes('success') %}
     &lt;div class="alert alert-success mt-4"&gt;
         {{ message }}
+    &lt;/div&gt;
+{% endfor %}</code></pre>
+                    <p>Comme ça peut être des messages flash génériques qui peuvent être utilisés dans plusieurs autres pages, on peut créer un nouveau fichier qu'on va nommer `<span class="em">_partials/flash.html.twig</span>` :</p>
+<pre><code>{% for type, messages in app.flashes %}
+    &lt;div class="alert alert-{type}"&gt;
+        {{ messages | join('. ') }}
     &lt;/div&gt;
 {% endfor %}</code></pre>
                     <p>Dans la navbar, on oublie pas de rajouter un lien vers "ingredient.index" pour accéder plus facilement à la liste des ingrédients.</p>
@@ -928,7 +950,7 @@ public function edit(IngredientRepository $repository, int $id, Request $request
 
     $form-&gt;handleRequest($request);
 
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         $ingredient = $form-&gt;getData();
         
         $manager-&gt;persist($ingredient);
@@ -943,6 +965,8 @@ public function edit(IngredientRepository $repository, int $id, Request $request
         'form' =&gt; $form-&gt;createView()
     ]);
 }</code></pre>
+                    <p>On peut utiliser directement la méthode <span class="html">find</span> du repository au lieu de la méthode <span class="html">findBy</span> :</p>
+<pre><code>$ingredient = $repository-&gt;find($id);</code></pre>
                     <p>Ça c'est ce que la plupart des gens font d'habitude, mais nous on va utiliser un <span class="html">@ParamConverter</span> comme ceci :</p>
 <pre><code>/**
 *
@@ -960,7 +984,7 @@ public function edit(Ingredient $ingredient, Request $request, Entity $manager) 
 
     $form-&gt;handleRequest($request);
 
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         $ingredient = $form-&gt;getData();
         
         $manager-&gt;persist($ingredient);
@@ -972,7 +996,7 @@ public function edit(Ingredient $ingredient, Request $request, Entity $manager) 
     }
 
     return $this-&gt;render('pages/ingredient/edit.html.twig', [
-        'form' =&gt; $form-&gt;createView()
+        'form' =&gt; $form-&gt;createView(),
     ]);
 }</code></pre>
                     <p>Ensuite, dans le "edit.html.twig", on va copier le contenu du "new.html.twig" et modifier "Création" par "Modification".</p>
@@ -999,6 +1023,48 @@ public function delete(EntityManagerInterface $manager, Ingredient $ingredient) 
 &lt;td&gt;
     &lt;a href="{{ path('ingredient.delete', { id: ingredient.id }) }}" class="btn btn-danger"&gt;Supprimer&lt;/a&gt;
 &lt;/td&gt;</code></pre>
+                    <p>Pour faire que ce soit une méthode <span class="html">DELETE</span>, on doit remplacer le lien par un formulaire :</p>
+<pre><code>&lt;form action="{{ path('ingredient.delete', { id: ingredient.id }) }}" method="post"&gt;
+    &lt;input type="hidden" name="_method" value="DELETE"&gt;
+    &lt;button type="submit" class="btn btn-danger btn-danger"&gt;Supprimer&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+                    <p>Et on doit également modifier le fichier de configuration <span class="em">`package/framework.yaml`</span>, on va rajouter le code suivant dans la partie <span class="em">framework</span> :</p>
+<pre><code>http_method_override: true</code></pre>
+                    <p>On peut utiliser un système d'événements au niveau des formulaires, les <span class="em">Form Events</span>. Lorsqu'on soumet un formulaire, il y a différents événements qui sont envoyés : <span class="html">PRE_SUBMIT</span>, <span class="html">SUBMIT</span> et <span class="html">POST_SUBMIT</span>.</p>
+                    <p>Dans notre formulaire, on rajoute l'événement :</p>
+<pre><code>... {
+
+    $builder
+        // ...
+        -&gt;addEventListener(FormEvents::PRE_SUBMIT, $this-&gt;autoSlug(...))
+        -&gt;addEventListener(FormEvents::POST_SUBMIT, $this-&gt;attachTimestamps(...))
+}
+
+public function autoSlug(PreSubmitEvent $event): void
+{
+    $data = $event-&gt;getData();
+
+    if (empty($data['slug'])) {
+        $slugger = new AsciiSlugger();
+        $data['slug'] = strtolower($slugger-&gt;slug($data['title']));
+        $event-&gt;setData($data);
+    }
+}
+
+public function attachTimestamps(PostSubmitEvent $event): void
+{
+    $data = $event-&gt;getData();
+
+    if (!($data instanceof Recipe)) {
+        return;
+    }
+
+    $data-&gt;setUpdatedAt(new \DateTimeImmutable());
+
+    if (!$data-&gt;getId()) {
+        $data-&gt;setCreatedAt(new \DateTimeImmutable());
+    }
+}</code></pre>
                     <h3>Étape 12 : CRUD pour la table "Recipe" :</h3>
                     <p>Maintenant, on va faire le CRUD pour la table "Recipe". Pour information, une recette sera définie par :</p>
                     <ul>
@@ -1377,7 +1443,7 @@ public function new(Request $request, EntityManagerInterface $manager): Response
     $form = $this-&gt;createForm(RecipeType::class, $recipe);
 
     $form-&gt;handleRequest($request);
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         $recipe = $form-&gt;getData();
 
         $manager-&gt;persist($recipe);
@@ -1407,7 +1473,7 @@ public function edit(Recipe $recipe, Request $request, EntityManagerInterface $m
     $form = $this-&gt;createForm(RecipeType::class, $recipe);
     $form-&gt;handleRequest($request);
 
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         $recipe = $form-&gt;getData();
 
         $manager-&gt;persist($recipe);
@@ -1831,7 +1897,7 @@ public function registration(Request $request, EntityManagerInterface $manager):
     $form = $this-&gt;createForm(RegistrationType::class, $user);
 
     $form-&gt;handleRequest($request);
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         $user = $form-&gt;getData();
 
         $manager-&gt;persist($user);
@@ -1933,7 +1999,7 @@ public function edit(User $user, Request $request, EntityManagerInterface $manag
     $form = $this-&gt;createForm(UserType::class, $user);
 
     $form-&gt;handleRequest($request);
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         if ($hasher-&gt;isPasswordValid($user, $form-&gt;getData()-&gt;getPlainPassword()))
         {
             $user = $form-&gt;getData();
@@ -2028,7 +2094,7 @@ public function editPassword(User $user, Request $request, EntityManagerInterfac
 
     $form-&gt;handleRequest($request);
 
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         if ($hasher-&gt;isPasswordValid($user, $form-&gt;getData()['plainPassword'])) {
             $user-&gt;setUpdatedAt(new \DateTimeImmutable());
             $user-&gt;setPlainPassword($form-&gt;getData()['newPassword']);
@@ -2388,7 +2454,7 @@ public function show(Recipe $recipe, Request $request, MarkRepository $markRepos
     $form = $this-&gt;createForm(MarkType::class, $mark);
 
     $form-&gt;handleRequest($request);
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         $mark-&gt;setUser($this-&gt;getUser())
             -&gt;setRecipe($recipe);
 
@@ -2668,7 +2734,7 @@ public function index(Request $request, EntityManagerInterface $manager): Respon
 
     $form-&gt;handleRequest($request);
 
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         $contact = $form-&gt;getData();
 
         $manager-&gt;persist($contact);
@@ -2700,7 +2766,7 @@ public function index(Request $request, EntityManagerInterface $manager, MailerI
 
     $form-&gt;handleRequest($request);
 
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         $contact = $form-&gt;getData();
 
         $manager-&gt;persist($contact);
@@ -2812,7 +2878,7 @@ public function index(Request $request, EntityManagerInterface $manager, MailSer
 
     $form-&gt;handleRequest($request);
 
-    if ($form-&gt;isSubmitted() && $form-&gt;isValid()) {
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
         $contact = $form-&gt;getData();
 
         $manager-&gt;persist($contact);
