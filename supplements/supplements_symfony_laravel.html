@@ -233,8 +233,9 @@ symfony serve</code></pre>
                         <li>
                             <p>Créez le contrôleur nommé <span class="em">DefaultController</span> en utilisant la commande suivante :</p>
 <pre><code>php bin/console make:controller DefaultController</code></pre>
-                            <p>Ou encore on utilise la syntaxe suivante qui fait la même chose :</p>
+                            <p>Ou encore, si et seulement si on a bien configuré le PATH de Windows, on utilise la syntaxe suivante qui fait la même chose :</p>
 <pre><code>symfony console make:controller DefaultController</code></pre>
+                            <p>En résumé, <span class="html">php bin/console</span> peut être remplacé par <span class="html">symfony console</span>.</p>
                         </li>
                         <li>
                             <p>Ouvrez le fichier <span class="em">`src/Controller/DefaultController.php`</span> avec votre éditeur de code préféré et voici le code généré par la commande :</p>
@@ -360,6 +361,10 @@ home:
                         <li>
                             <p>Les routes peuvent aussi être définies en utilisant des attributs PHP directement au niveau des méthodes de notre contrôleur comme dans le code du DefaultController ci-dessus.</p>
                         </li>
+                        <li>
+                            <p>Pour lister la liste des routes utilisées dans notre application, on utilise la commande :</p>
+<pre><code>php bin/console debug:router</code></pre>
+                        </li>
                     </ol>
                     <h3>Étape 6 : Accéder à votre application :</h3>
                     <p>Ouvrez votre navigateur web et accédez à l'URL : <span class="em">`http://localhost:8000`</span>. Vous devriez voir le message "Bienvenur sur Mon Projet Symfony !" sur la page d'accueil.</p>
@@ -393,7 +398,7 @@ home:
                     <p>Maintenant, ce qu'on aimerait bien faire c'est avoir des URLs qui soient plus proches de la réalité. Par exemple, si je me rends sur un blog, souvent les URLs des articles contiennt un slug suivi d'un ID.</p>
 <pre><code>https://drissv.github.io/Syllabus/mon-premier-article-32</code></pre>
                     <p>Et on aimerait bien faire pareil avec notre Routing, pour cela on va déclarer une nouvelle route qui aura des paramètre mis entre accolades.</p>
-<pre><code>#[Route('/recettes/{slug}-{id}', name: 'recipe.show', requirements: ['id' =&gt; '\d+', 'slug' =&gt; '[a-z0-9]+'])]
+<pre><code>#[Route('/recettes/{slug}-{id}', name: 'recipe.show', requirements: ['id' =&gt; Requirement::DIGITS, 'slug' =&gt; '[a-z0-9]+'])]
 public function index (Request $request): Response
 {
 
@@ -413,7 +418,7 @@ public function index (Request $request, string $slug, int $id): Response
                     <p>On doit remplacer "db_user", "db_password" et "db_name" par les valeurs que l'on a définies. Vous pouvez vous inspirer des lignes en commentaire pour adapter à votre SGBD. Le numéro de version est important car cela permet à doctrine de générer des requêtes SQL compatibles avec votre version. Si la base de données avec le nom stocké dans "db_name" n'est pas encore dans PHP My Admin, on peut la créer avec la commande suivante :</p>
 <pre><code>php bin/console doctrine:database:create</code></pre>
                     <p>Ou on peut utiliser la commande abrégée :</p>
-<pre><code>php bin/console d:d:c</code></pre>
+<pre><code>symfony console d:d:c</code></pre>
                     <p>Remarque : Ça lance une erreur si la base de données existe déjà. On verra sûrement un peu plus tard comment faire pour la supprimer.</p>
                     <p>L'ORM permet de représenter nos données sous forme d'objets qui pourront ensuite être persistés en base de données grâce à des méthodes spécifiques. Il se chargera de générer les requêtes SQL et de s'adapter au système de gestion de base de données utilisé.</p>
                     <p>Dans un projet de recettes de cuisine, on a besoin d'une entité pour l'ingrédient qui sera définie par :</p>
@@ -628,7 +633,7 @@ public function index (Request $request, string $slug, int $id): Response
                     <p>Ensuite, on va les charger avec la commande :</p>
 <pre><code>php bin/console doctrine:fixtures:load</code></pre>
                     <p>Ou encore avec la commande abrégée :</p>
-<pre><code>php bin/console d:f:l</code></pre>
+<pre><code>symfony console d:f:l</code></pre>
                     <h3>Étape 11 : CRUD sur la table "Ingredient" :</h3>
                     <p>Maintenant, on va enfin faire des CRUD sur la table "Ingredient". D'abord, on va afficher la liste des ingrédients.</p>
                     <p>Premièrement, on va créer un nouveau contrôleur "IngredientController" avec la commande :</p>
@@ -1200,11 +1205,11 @@ public function attachTimestamps(PostSubmitEvent $event): void
 
 ?&gt;</code></pre>
                     <p>Dans ma solution, je vais d'abord "DROP" toute la base de données avec la commande :</p>
-<pre><code>php bin/console d:d:d --force</code></pre>
+<pre><code>symfony console d:d:d --force</code></pre>
                     <p>Avant de la recréer avec la commande :</p>
-<pre><code>php bin/console d:d:c</code></pre>
+<pre><code>symfony console d:d:c</code></pre>
                     <p>Afin de créer une nouvelle migration avec la commande :</p>
-<pre><code>php bin/console make:migration</code></pre>
+<pre><code>symfony console make:migration</code></pre>
                     <p>Et de migrer dans la base de données toutes les migrations avec la commande :</p>
 <pre><code>php bin/console d:m:m</code></pre>
                     <p>Deuxièmement, on va créer les fixtures en modifiant le fichier <span class="em">`src/DataFixtures/AppFixtures.php`</span> comme ceci :</p>
@@ -1267,10 +1272,13 @@ public function attachTimestamps(PostSubmitEvent $event): void
 
 ?&gt;</code></pre>
                     <p>Et on va pouvoir charger les nouvelles données factives avec la commande :</p>
-<pre><code>php bin/console d:f:l</code></pre>
+<pre><code>symfony console d:f:l</code></pre>
                     <p>Troisièmement, on va commencer le CRUD par lister toutes les recettes. Pour cela, on va créer le contrôleur "RecipeController" avec la commande :</p>
 <pre><code>php bin/console make:controller RecipeController</code></pre>
-                    <p>Remarque : On oublie pas de déplacer le dossier templates "recipe" dans le dossier "pages" et d'ajouter un lien vers cette page dans la navbar.</p>
+                    <p>Remarque : On oublie pas de déplacer le dossier templates "recipe" dans le dossier "pages" et d'ajouter un lien vers cette page dans la navbar :</p>
+<pre><code>&lt;li class="nav-item"&gt;
+    &lt;a class="nav-link {{ app.current_route === 'recipe.' ? 'active' : '' }}" href="{{ path('recipe.index') }}"&gt;Recettes&lt;/a&gt;
+&lt;/li&gt;</code></pre>
                     <p>Maintenant, modifions la fonction "index" du contrôleur comme ceci :</p>
 <pre><code>/**
 * This controller display all recipes
@@ -3401,7 +3409,7 @@ $manager-&gt;persist($admin);</code></pre>
             $client = static::createClient();
 
             /** @var urlGeneratorInterface $urlGenerator */
-            $urlGenerator = $client-&gt;getContainer()-&gt;get("router");
+            $urlGenerator = $client-&gt;getContainer()-&gt;get('router');
 
             $crawler = $client-&gt;request('GET', $urlGenerator-&gt;generate('security.login'));
 
@@ -3425,7 +3433,7 @@ $manager-&gt;persist($admin);</code></pre>
         $client = static::createClient();
 
             /** @var urlGeneratorInterface $urlGenerator */
-            $urlGenerator = $client-&gt;getContainer()-&gt;get("router");
+            $urlGenerator = $client-&gt;getContainer()-&gt;get('router');
 
             $crawler = $client-&gt;request('GET', $urlGenerator-&gt;generate('security.login'));
 
@@ -3476,7 +3484,7 @@ tests:
             $client = static::createClient();
 
             // Recup urlGenerator
-            $urlGenerator = $client-&gt;getContainer()-&gt;('router');
+            $urlGenerator = $client-&gt;getContainer()-&gt;get('router');
 
             // Recup entity manager
             $entityManager = $client-&gt;getContainer()-&gt;get('doctirne.orm.entity_manager');
@@ -3511,7 +3519,7 @@ tests:
         {
             $client = static::createClient();
 
-            $urlGenerator = $client-&gt;getContainer()-&gt;('router');
+            $urlGenerator = $client-&gt;getContainer()-&gt;get('router');
 
             $entityManager = $client-&gt;getContainer()-&gt;get('doctirne.orm.entity_manager');
 
@@ -3530,7 +3538,7 @@ tests:
         {
             $client = static::createClient();
 
-            $urlGenerator = $client-&gt;getContainer()-&gt;('router');
+            $urlGenerator = $client-&gt;getContainer()-&gt;get('router');
 
             $entityManager = $client-&gt;getContainer()-&gt;get('doctirne.orm.entity_manager');
 
@@ -3568,7 +3576,7 @@ tests:
         {
             $client = static::createClient();
 
-            $urlGenerator = $client-&gt;getContainer()-&gt;('router');
+            $urlGenerator = $client-&gt;getContainer()-&gt;get('router');
 
             $entityManager = $client-&gt;getContainer()-&gt;get('doctirne.orm.entity_manager');
 
