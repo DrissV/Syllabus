@@ -251,7 +251,7 @@ symfony serve</code></pre>
         #[Route('/default', name: 'app_default')]
         public function index(): Response
         {
-            return $this->render('default/index.html.twig', [
+            return $this-&gt;render('default/index.html.twig', [
                 'controller_name' =&gt; 'DefaultController',
             ]);
         }
@@ -470,7 +470,7 @@ public function index (Request $request, string $slug, int $id): Response
 
         public function __construct()
         {
-            $this->createdAt = new \DateTimeImmutable();
+            $this-&gt;createdAt = new \DateTimeImmutable();
         }
 
         public function __toString()
@@ -544,7 +544,7 @@ public function index (Request $request, string $slug, int $id): Response
 
         public function __construct()
         {
-            $this->createdAt = new \DateTimeImmutable();
+            $this-&gt;createdAt = new \DateTimeImmutable();
         }
 
         public function __toString()
@@ -639,7 +639,7 @@ public function index (Request $request, string $slug, int $id): Response
 <pre><code>#[Route('/ingredient', name: 'ingredient.index', methods: ['GET'])]
 public function index(IngredientRepository $repository) : Response
 {
-    $ingredients = $repository->findAll();
+    $ingredients = $repository-&gt;findAll();
     // dd($ingredients);
 
     return $this-&gt;render('pages/ingredient/index.html.twig', [
@@ -726,7 +726,7 @@ public function index(IngredientRepository $repository, PaginatorInterface $pagi
 {
 
     $ingredients = $paginator-&gt;paginate(
-        $repository->findAll(),
+        $repository-&gt;findAll(),
         $request-&gt;query-&gt;getInt('page', 1),
         10    
     );
@@ -1032,7 +1032,7 @@ public function delete(EntityManagerInterface $manager, Ingredient $ingredient) 
 <pre><code>http_method_override: true</code></pre>
                     <p>On peut utiliser un système d'événements au niveau des formulaires, les <span class="em">Form Events</span>. Lorsqu'on soumet un formulaire, il y a différents événements qui sont envoyés : <span class="html">PRE_SUBMIT</span>, <span class="html">SUBMIT</span> et <span class="html">POST_SUBMIT</span>.</p>
                     <p>Dans notre formulaire, on rajoute l'événement :</p>
-<pre><code>... {
+<pre><code>// ... {
 
     $builder
         // ...
@@ -2159,7 +2159,7 @@ public function index(IngredientRepository $repository, PaginatorInterface $pagi
 {
 
     $ingredients = $paginator-&gt;paginate(
-        $repository->findBy(['user' =&gt; $this-&gt;getUser()]),
+        $repository-&gt;findBy(['user' =&gt; $this-&gt;getUser()]),
         $request-&gt;query-&gt;getInt('page', 1),
         10    
     );
@@ -2580,7 +2580,7 @@ class Recipe
     &lt;img style="max-width: 500px;" src="{{ vich_uploader_asset(recipe, 'imageFile') }}"&gt;
 &lt;/div&gt;</code></pre>
                     <h3>Étape 22 : Formulaire de contact, email et reCaptcha v3 :</h3>
-                    <p>Cette fonctionnalité consiste en l'implémentation d'un formulaire de contact classique.</p>
+                    <p>Maintenant que l'on a vu les concepts de base, je vous propose d'attaquer un premier cas pratique : un formulaire de contact.</p>
                     <p>Ce formulaire contiendra :</p>
                     <ul>
                         <li>
@@ -2654,6 +2654,76 @@ for ($i = 0; $i &lt; 5; $i++) {
 
     $manager-&gt;persist($contact);
 }</code></pre>
+                    <p>Si on ne veut pas sauvegarder en base de données, on ne crée pas une entité mais bien un objet "ContactFormDTO" pour représenter les données de ce formulaire ("DTO" est l'abréviation de "Data Transfer Object") :</p>
+<pre><code>&lt;?php
+
+    namespace App\DTO;
+
+    use Symfony\Component\Validator\Constraints as Assert;
+
+    class ContactDTO
+    {
+
+        #[Assert\NotBlank]
+        #[Assert\Length(min: 3, max: 200)]
+        public string $name = '';
+
+        #[Assert\NotBlank]
+        #[Assert\Email]
+        public string $email = '';
+
+        #[Assert\NotBlank]
+        #[Assert\Length(min: 3, max: 200)]
+        public string $message = '';
+
+    }
+
+?&gt;</code></pre>
+<pre><code>&lt;?php
+
+    namespace App\Form;
+
+    namespace App\Form;
+
+    use App\DTO\ContactDTO;
+    use Symfony\Component\Form\AbstractType;
+    use Symfony\Component\Form\Extension\Core\Type\TextType;
+    use Symfony\Component\Form\Extension\Core\Type\EmailType;
+    use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+    use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+    use Symfony\Component\Form\FormBuilderInterface;
+    use Symfony\Component\Form\OptionsResolver;
+
+    use Symfony\Component\Validator\Constraints as Assert;
+
+    class ContactType AbstractType
+    {
+        public function buildForm(FormBuilderInterface $builder, array $options): void
+        {
+            $builder
+                -&gt;add('name', TextType::class, [
+                    'empty_data' =&gt; '',
+                ])
+                -&gt;add('email', EmailType::class, [
+                    'empty_data' =&gt; '',
+                ])
+                -&gt;add('message', TextareaType::class, [
+                    'empty_data' =&gt; '', 
+                ])
+                -&gt;add('save', SubmitType::class, [
+                    'label' =&gt; 'Envoyer',
+                ]);
+        }
+
+        public function configureOptions(OptionsResolver $resolver): void
+        {
+            $resolver-&gt;setDefaults([
+              'data_class' =&gt; ContactDTO::class,  
+            ]);
+        }
+    }
+
+?&gt;</code></pre>
                     <p>On va créer un contrôleur "ContactController" avec la commande :</p>
 <pre><code>php bin/console make:controller ContactController</code></pre>
                     <p>On va créer un formulaire de contact nommé "ContactType" avec la commande :</p>
@@ -2749,9 +2819,48 @@ public function index(Request $request, EntityManagerInterface $manager): Respon
         'form' =&gt; $form-&gt;createView()
     ]);
 }</code></pre>
-                    <p>Pour envoyer un email à chaque soumission du formulaire de contact, on va utiliser le composant "Mailer" avec le fichier de configuration <span class="em">`config/packages/mailer.yaml`</span>. Dans notre fichier ".env", on doit définir le système de transport d'email via la variable "MAILER_DSN" avec la syntaxe suivante :</p>
+                    <p>Pour envoyer un email à chaque soumission du formulaire de contact, on va utiliser le composant "Mailer" avec le fichier de configuration <span class="em">`config/packages/mailer.yaml`</span>.</p>
+                    <p>Pour tester l'envoi des emails en local, vous pouvez utiliser un de ces outils :</p>
+                    <ul>
+                        <li>
+                            <p><a href="https://github.com/axllent/mailpit" target="_blank">Mailpit</a>, disponible sous forme de simple exécutable.</p>
+                        </li>
+                        <li>
+                            <p><a href="https://github.com/maildev/maildev" target="_blank">Maildev</a>, disponible sous forme d'image Docker.</p>
+                        </li>
+                        <li>
+                            <p><a href="https://mailtrap.io/" target="_blank">Mailtrap</a> qui est un service tiers avec une formule gratuite limitée à 100 emails / mois.</p>
+                        </li>
+                    </ul>
+                    <p>Dans le dossier `<span class="em">bin/</span>` de notre projet, on va mettre l'exécutable de Mailpit par exemple au même niveau que <span class="em">console</span> et <span class="em">phpunit</span>. On peut le lancer avec la commande :</p>
+<pre><code>./bin/mailpit</code></pre>
+                    <p>Cette commande va automatiquement démarrer un serveur sur le port 8025, c'est-à-dire accessible via l'url <a href="http://localhost:1025" target="_blank">http://localhost:1025</a>, avec la variable d'environnement <span class="em">MAILER_DSN</span> à la valeur de l'url du serveur.</p>
+                    <p>Dans notre fichier ".env", on doit définir le système de transport d'email via la variable "MAILER_DSN" avec la syntaxe suivante :</p>
 <pre><code>MAILER_DSN=smtp://user:pass@smtp.example.com:port</code></pre>
-                    <p>Pour avoir une configuration SMTP, on peut utiliser <a href="https://mailtrap.io/">l'outil "mailtrap"</a>. Ensuite, on va modifier la fonction "index" de notre contrôleur :</p>
+                    <p>Et on va modifier la configuration <span class="em">messenger.yaml</span> pour que l'envoi des emails se fasse de manière synchrone.</p>
+<pre><code>framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    use_notify: true
+                    check_delayed_interval: 60000
+                retry_strategy:
+                    max_retries: 3
+                    multiplier: 2
+            failed: 'doctrine://default?queue_name=failed'
+            sync: 'sync://'
+        
+        routing:
+            Symfony\Component\Mailer\Messenger\SendEmailMessage: sync
+            Symfony\Component\Notifier\Message\ChatMessage: sync
+            Symfony\Component\Notifier\Message\SmsMessage: sync
+</code></pre>
+                    <p><a href="https://symfony.com/doc/current/mailer.html" target="_blank">Documentation sur le composant Mailer</a></p>
+                    <p>Ensuite, on va modifier la fonction "index" de notre contrôleur :</p>
 <pre><code>#[Route('/contact', name: 'contact.index')]
 public function index(Request $request, EntityManagerInterface $manager, MailerInterface $mailer): Response
 {
@@ -2799,7 +2908,7 @@ public function index(Request $request, EntityManagerInterface $manager, MailerI
 &lt;html&gt;
     &lt;head&gt;
         &lt;meta charset="UTF-8"&gt;
-    &lt;/head&gt;
+     &lt;/head&gt;
     &lt;body&gt;
         &lt;h1&gt;Demande de {{ contact.fullName }}&lt;/h1&gt;
 
@@ -2819,14 +2928,92 @@ public function index(Request $request, EntityManagerInterface $manager, MailerI
     'constraints' =&gt; new Recaptcha3(),
     'action_name' =&gt; 'contact',
 ])</code></pre>
+                    <p>Si on veut contacter un service en particulier, on peut rajouter une propriété <span class="em">service</span> dans notre DTO :</p>
+<pre><code>#[Assert\NotBlank]
+public string $service = '';</code></pre>
+                    <p>On va ensuite ajouter dans le formulaire un <span class="em">select</span> pour sélectionner le bon service, donc dans notre <span class="em">ContactType</span> on va rajouter un <span class="em">ChoiceType</span> dans le <span class="em">builder</span> du formulaire :</p>
+<pre><code>-&gt;add('service', ChoiceType::class, [
+    'choices' =&gt; [
+        'Compta' =&gt; 'compta@demo.com',
+        'Support' =&gt; 'support@demo.com',
+        'marketing' =&gt; 'marketing@demo.com',
+    ],
+])</code></pre>
+                    <p>On peut également récupérer les erreurs lors de l'envoi d'un email :</p>
+<pre><code>try {
+    $email = (new TemplatedEmail())
+        -&gt;to($contact-&gt;service)
+        -&gt;from($contact-&gt;email)
+        -&gt;subject('Demande de contact')
+        -&gt;htmlTemplate('emails/contact.html.twig')
+        -&gt;context(['contact' =&gt; $contact]);
+
+    $mailer-&gt;sender($email);
+    $this-&gt;addFlash('success', 'Votre email a bien été envoyé !');
+    return $this-&gt;redirectToRoute('contact.index');
+} catch (\Exception $e) {
+    $this-&gt;addFlash('danger', 'Impossible d\'envoyer votre email !');
+}</code></pre>
                     <h3>Étape 23 : Les services :</h3>
+                    <p>Le système de services et d'injection de dépendances de Symfony est un outil puissant qui permet de découpler les composants de son application et de les rendre plus testables et maintenables.</p>
                     <p>Les services sont simplement des objets PHP qui vont remplir une fonction particulière. Précédemment, on a déjà utilisé des services sans le savoir comme le service "EntityManager" ou encore le service "Mailer".</p>
                     <p>Tous ces services sont à l'intérieur d'une classe PHP qui est assez spéciale et qui s'appelle le container de services et va centraliser tous les services au sein de notre application Symfony.</p>
-                    <p>Pour visualiser tous les services présents au sein de Symfony, on utilise la commande :</p>
+                    <p>En gros, un service est un objet qui fournit une fonctionnalité spécifique à l'application. Ce n'est qu'une classe qui peut être plus ou moins complexe en fonction de la situation.</p>
+                    <p>Au coeur de Symfony se cache un conteneur d'inversion de contrôle (IoC) qui permet de gérer les services de votre application. C'est un objet qui permet de construire des objets en fonction des besoins en indexant les objets avec une clef particulière.</p>
+                    <p>Si on regarde le code source de la fonction <span class="html">render()</span> que l'on utilise depuis le début de ce cours, on retrouve le code suivant :</p>
+<pre><code>$twig = $this-&gt;container-&gt;get('twig');</code></pre>
+                    <p>Symfony demande au conteneur une instance de l'objet Twig qui gère le rendu HTML.</p>
+                    <h4>L'injection de dépendances :</h4>
+                    <p>L'injection de dépendances est un principe de conception qui consiste à fournir aux objets les dépendances dont ils ont besoin pour fonctionner. Cela se fait en injectant les dépendances dans le constructeur de l'objet (ou plus rarement via un setter).</p>
+<pre><code>class MailNotification
+{
+
+    public function __construct(private readonly MailerInterface $mailer)
+    {
+
+    }
+
+    // ...
+
+}</code></pre>
+                    <p>L'avantage est que le conteneur va être capable de résoudre les dépendances d'un objet automatiquement et injecter les services nécessaires automatiquement.</p>
+                    <p>Pour visualiser tous les services disponibles par défaut et câblés automatiquement, on utilise la commande :</p>
 <pre><code>php bin/console debug:autowiring --all</code></pre>
                     <p>Si on cherche un service en particulier, on peut utiliser :</p>
 <pre><code>php bin/console debug:autowiring mailer.mailer</code></pre>
-                    <p>Ce qui est aussi très intéressant, c'est que nous pouvons également nos propres services car ça permettra d'utiliser une fonctionnalité précise à plusieurs endroits de notre code.</p>
+                    <p>Les contrôleurs sont des classes spéciales qui bénéficient aussi de ce système d'injection dans leurs actions. C'est ce qui permet par exemple de récupérer le manageur d'entité ou les repositories.</p>
+<pre><code>&lt;?php
+
+    namespace App\Controller\Admin;
+
+    use App\Form\RecipeType;
+    use App\Repository\RecipeRepository;
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\HttpFoundation\Request;
+    use Symfony\Component\HttpFoundation\response;
+    use Symfont\Component\Routing\Attribute\Route;
+
+    #[Route('/admin/recettes', name: 'admin.recipe.')]
+    class RecipeController extends AbstractController
+    {
+
+        #[Route('/', name: 'index')]
+        public function index(
+            RecipeRepository $repository,
+            Request $request,
+        ): Response
+        {
+            $page = $request-&gt;query-&gt;getInt('page', 1);
+            $recipes = $repository-&gt;paginateRecipes($page);
+            return $this-&gt;render('admin/recipe/index.html.twig', [
+                'recipes' =&gt; $recipes,
+            ]);
+        }
+    }
+    
+?&gt;</code></pre>
+                    <p><a href="https://symfony.com/doc/current/service_container.html" target="_blank">Documentation sur le Service Container</a></p>
+                    <p>Ce qui est également très intéressant, c'est que nous pouvons également nos propres services car ça permettra d'utiliser une fonctionnalité précise à plusieurs endroits de notre code.</p>
                     <p>Par exemple, chaque fichier a son rôle à jouer et il faut un service email pour être cohérent avec ce système car actuellement l'envoi est géré au sein du contrôleur et on doit mettre le moins de logique dans le contrôleur.</p>
                     <p>On va créer le dossier <span class="em">`src/Service`</span> et dedans on y insère le fichier "MailService.php" avec le contenu suivant :</p>
 <pre><code>&lt;?php
@@ -3997,11 +4184,11 @@ DATABASE_URL="postgresql://symfony:ChangeMe@127.0.0.1:5432/app?serverVersion=13&
     // This file was generated by running "composer dump-env dev"
 
     return array (
-        'APP_ENV' => 'dev',
-        'APP_SECRET' => 'd039c490ad66d067877186a6640183ab',
-        'MESSENGER_TRANSPORT_DSN' => 'doctrine://default?auto_setup=0',
-        'DATABASE_URL' => 'postgresql://symfony:ChangeMe@127.0.0.1:5432/app?serverVersion=13&charset=utf8',
-        'DEMO' => 'Ceci est une démo depuis le fichier .env.dev.local',
+        'APP_ENV' =&gt; 'dev',
+        'APP_SECRET' =&gt; 'd039c490ad66d067877186a6640183ab',
+        'MESSENGER_TRANSPORT_DSN' =&gt; 'doctrine://default?auto_setup=0',
+        'DATABASE_URL' =&gt; 'postgresql://symfony:ChangeMe@127.0.0.1:5432/app?serverVersion=13&charset=utf8',
+        'DEMO' =&gt; 'Ceci est une démo depuis le fichier .env.dev.local',
     );
 
 ?&gt;</code></pre>
@@ -4011,11 +4198,11 @@ DATABASE_URL="postgresql://symfony:ChangeMe@127.0.0.1:5432/app?serverVersion=13&
     // This file was generated by running "composer dump-env dev"
 
     return array (
-        'APP_ENV' => 'dev',
-        'APP_SECRET' => 'd039c490ad66d067877186a6640183ab',
-        'MESSENGER_TRANSPORT_DSN' => 'doctrine://default?auto_setup=0',
-        'DATABASE_URL' => 'postgresql://symfony:ChangeMe@127.0.0.1:5432/app?serverVersion=13&charset=utf8',
-        'DEMO' => 'Ceci est une démo depuis le fichier .env.local.php',
+        'APP_ENV' =&gt; 'dev',
+        'APP_SECRET' =&gt; 'd039c490ad66d067877186a6640183ab',
+        'MESSENGER_TRANSPORT_DSN' =&gt; 'doctrine://default?auto_setup=0',
+        'DATABASE_URL' =&gt; 'postgresql://symfony:ChangeMe@127.0.0.1:5432/app?serverVersion=13&charset=utf8',
+        'DEMO' =&gt; 'Ceci est une démo depuis le fichier .env.local.php',
     );
 
 ?&gt;</code></pre>
