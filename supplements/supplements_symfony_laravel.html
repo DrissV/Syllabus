@@ -322,7 +322,7 @@ public function homepage() : Response {
                                     <p>Si on a juste du texte dans un bloc comme ceci :</p>
 <pre><code>{% block title %}Toutes mes recettes{% endblock %}</code></pre>
                                     <p>On peut le remplacer avec cela :</p>
-<pre><code>{% block title "Toutes mes recettes" %}</code></pre>
+<pre><code>{% block title 'Toutes mes recettes' %}</code></pre>
                                 </li>
                             </ul>
                             <p>On peut concaténer plusieurs variables via le <span class="html">~</span> dans une vue <span class="em">Twig</span> :</p>
@@ -1037,39 +1037,111 @@ public function delete(EntityManagerInterface $manager, Ingredient $ingredient) 
 <pre><code>http_method_override: true</code></pre>
                     <p>On peut utiliser un système d'événements au niveau des formulaires, les <span class="em">Form Events</span>. Lorsqu'on soumet un formulaire, il y a différents événements qui sont envoyés : <span class="html">PRE_SUBMIT</span>, <span class="html">SUBMIT</span> et <span class="html">POST_SUBMIT</span>.</p>
                     <p>Dans notre formulaire, on rajoute l'événement :</p>
-<pre><code>// ... {
+<pre><code>&lt;?php
 
-    $builder
+    namespace App\Form;
+
+    use Symfony\Component\Form\Event\PreSubmitEvent;
+    use Symfony\Component\Form\Event\PostSubmitEvent;
+    use Symfony\Component\String\Slugger\AsciiSlugger;
+
+    // ...
+
+    // ... {
+
+        $builder
+            // ...
+            -&gt;addEventListener(FormEvents::PRE_SUBMIT, $this-&gt;autoSlug(...))
+            -&gt;addEventListener(FormEvents::POST_SUBMIT, $this-&gt;attachTimestamps(...))
+    }
+
+    public function autoSlug(PreSubmitEvent $event): void
+    {
+        $data = $event-&gt;getData();
+
+        if (empty($data['slug'])) {
+            $slugger = new AsciiSlugger();
+            $data['slug'] = strtolower($slugger-&gt;slug($data['title']));
+            $event-&gt;setData($data);
+        }
+    }
+
+    public function attachTimestamps(PostSubmitEvent $event): void
+    {
+        $data = $event-&gt;getData();
+
+        if (!($data instanceof Recipe)) {
+            return;
+        }
+
+        $data-&gt;setUpdatedAt(new \DateTimeImmutable());
+
+        if (!$data-&gt;getId()) {
+            $data-&gt;setCreatedAt(new \DateTimeImmutable());
+        }
+    }
+
+    // ...
+
+?&gt;</code></pre>
+                    <p>Pour rendre générique notre listener, on peut créer la classe `<span class="em">FormListenerFactory</span>` :</p>
+<pre><code>&lt;?php
+
+    namespace App\Form;
+
+    use Symfony\Component\Form\Event\PreSubmitEvent;
+    use Symfony\Component\Form\Event\PostSubmitEvent;
+    use Symfony\Component\String\Slugger\AsciiSlugger;
+
+    class FormListenerFactory
+    {
+
+        public function autoSlug(string $field): callable
+        {
+            return function (PreSubmitEvent $event) us ($field) {
+                $data = $event-&gt;getData();
+
+                if (empty($data['slug'])) {
+                    $slugger = new AsciiSlugger();
+                    $data['slug'] = strtolower($slugger-&gt;slug($data[$field]));
+                    $event-&gt;setData($data);
+                }
+            };
+        }
+
+        public funtion timestamps(): callable
+        {
+            return function (PostSubmitEvent $event) {
+                $data = $event-&gt;getData();
+
+                $data-&gt;setUpdatedAt(new \DateTimeImmutable());
+
+                if (!$data-&gt;getId()) {
+                    $data-&gt;setCreatedAt(new \DateTimeImmutable());
+                }
+            };
+        }
+
+    }
+
+?&gt;</code></pre>
+                    <p>On va pouvoir modifier notre formulaire <span class="em">RecipeType</span> :</p>
+<pre><code>&lt;?php
+
+    // ...
+
+    public function __construct(private FormListenerFactory $listenerFactory)
+    {
+
+    }
+
+    // ... {
         // ...
-        -&gt;addEventListener(FormEvents::PRE_SUBMIT, $this-&gt;autoSlug(...))
-        -&gt;addEventListener(FormEvents::POST_SUBMIT, $this-&gt;attachTimestamps(...))
-}
-
-public function autoSlug(PreSubmitEvent $event): void
-{
-    $data = $event-&gt;getData();
-
-    if (empty($data['slug'])) {
-        $slugger = new AsciiSlugger();
-        $data['slug'] = strtolower($slugger-&gt;slug($data['title']));
-        $event-&gt;setData($data);
-    }
-}
-
-public function attachTimestamps(PostSubmitEvent $event): void
-{
-    $data = $event-&gt;getData();
-
-    if (!($data instanceof Recipe)) {
-        return;
+        -&gt;addEventListener(FormEvents::PRE_SUBMIT, $this-&gt;listenerFactory-&gt;autoSlug('title'))
+        -&gt;addEventListener(FormEvents::POST_SUBMIT, $this-&gt;listenerFactory-&gt;timestamps());
     }
 
-    $data-&gt;setUpdatedAt(new \DateTimeImmutable());
-
-    if (!$data-&gt;getId()) {
-        $data-&gt;setCreatedAt(new \DateTimeImmutable());
-    }
-}</code></pre>
+?&gt;</code></pre>
                     <h3>Étape 12 : CRUD pour la table "Recipe" :</h3>
                     <p>Maintenant, on va faire le CRUD pour la table "Recipe". Pour information, une recette sera définie par :</p>
                     <ul>
@@ -1105,8 +1177,10 @@ public function attachTimestamps(PostSubmitEvent $event): void
                         </li>
                     </ul>
                     <p>Remarque : La date de création et la date de mise à jour seront générées automatiquement une fois la recette créée et/ou modifiée.</p>
+                    <p>Jusqu'à maintenant, nous n'avons travaillé qu'avec une seule entité à la fois mais, dans un cas réel, on a souvent besoin de lier des données ensemble pour par exemple mettre en place un système de catégorie pour les recettes.</p>
                     <p>Premièrement, on doit créer l'entité "Recipe" avec les propriétés "name" de type "string" non nullable, "time" de type "integer" nullable, "nbPeople" de type "integer" nullable, "difficulty" de type "integer" nullable, "description" de type "text" non nullable, "price" de type "float" nullable, "isFavorite" de type "boolean" non nullable, "createdAt" de type "datetime_immutable" non nullable, "updatedAt" de type "datetime_immutable" non nullable.</p>
                     <p>Pour la propriété "ingredients" qui définit la liste des ingrédients, on va dire qu'il est de type "relation" lié à l'entité "Ingredient" dont le type de relation est "ManyToMany" et on veut pas récupérer depuis les ingrédients les recettes qui ont cet ingrédient.</p>
+                    <p>Au niveau de la gestion, l'ORM fait abstraction de la relation et, si vous souhaitez modifier des données croisées, il vous suffit de manipuler des objets de manière traditionnelle.</p>
                     <p>Voici donc le code généré par la commande <span class="html">php bin/console make:entity Recipe</span> sans tous les getters et les setters et qu'on va modifier en ajoutant les <span class="em">Assert</span> :</p>
 <pre><code>&lt;?php
 
@@ -1277,7 +1351,7 @@ public function attachTimestamps(PostSubmitEvent $event): void
 <pre><code>php bin/console make:controller RecipeController</code></pre>
                     <p>Remarque : On oublie pas de déplacer le dossier templates "recipe" dans le dossier "pages" et d'ajouter un lien vers cette page dans la navbar :</p>
 <pre><code>&lt;li class="nav-item"&gt;
-    &lt;a class="nav-link {{ app.current_route === 'recipe.' ? 'active' : '' }}" href="{{ path('recipe.index') }}"&gt;Recettes&lt;/a&gt;
+    &lt;a class="nav-link {{ app.current_route starts with 'recipe.' ? 'active' : '' }}" href="{{ path('recipe.index') }}"&gt;Recettes&lt;/a&gt;
 &lt;/li&gt;</code></pre>
                     <p>Maintenant, modifions la fonction "index" du contrôleur comme ceci :</p>
 <pre><code>/**
@@ -1514,6 +1588,15 @@ public function delete(EntityManagerInterface $manager, Recipe $recipe): Respons
 
     return $this-&gt;redirectToRoute('recipe.index');
 }</code></pre>
+                    <h4>Liens utiles :</h4>
+                    <ul>
+                        <li>
+                            <a href="https://www.doctrine-project.org/projects/doctrine-orm/en/3.0/reference/working-with-associations.html" target="_blank">Documentation Doctrine</a>
+                        </li>
+                        <li>
+                            <a href="https://symfony.com/doc/current/reference/forms/types/entity.html" target="_blank">EntityType pour créer un champs de sélection</a>
+                        </li>
+                    </ul>
                     <h3>Étape 13 : Sécurité &amp; compte utilisateur :</h3>
                     <p>Un compte utilisateur sera défini par :</p>
                     <ul>
@@ -2999,7 +3082,7 @@ public string $service = '';</code></pre>
     use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\HttpFoundation\response;
-    use Symfont\Component\Routing\Attribute\Route;
+    use Symfony\Component\Routing\Attribute\Route;
 
     #[Route('/admin/recettes', name: 'admin.recipe.')]
     class RecipeController extends AbstractController
