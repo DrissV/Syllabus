@@ -1625,7 +1625,7 @@ private Collection $recipes;</code></pre>
                             <p>Une date de modificaton sera également générée seule lors de la modification du profil utilisateur.</p>
                         </li>
                     </ul>
-                    <p>Pour cela, on utilise le bundle "Security" déjà installé et qui a généré le fichier <span class="em">`config/packages/security.yaml`</span>. Dans Symfony, il y a une façon très simple de générer une classe utilisateur pour gérer la sécurité avec la commande :</p>
+                    <p>Pour cela, on utilise le composant <span class="em">Security</span> de Symfony déjà installé, qui est un outil puissant et flexible qui permet de mettre en place un système d'authentification et d'autorisation et qui a généré le fichier <span class="em">`config/packages/security.yaml`</span>. Dans Symfony, il y a une façon très simple de générer une entité qui permettra de représenter un utilisateur pour gérer la sécurité avec la commande :</p>
 <pre><code>php bin/console make:user</code></pre>
                     <p>On nomme notre classe utilisateur "User", on la stocke dans la DB via Doctrine, on dit que la propriété "email" doit être unique et on a besoin de hasher les mots de passe. Voici le code généré (sans les getters et les setters) et que je modifie un peu :</p>
 <pre><code>&lt;?php
@@ -2601,15 +2601,18 @@ public function show(Recipe $recipe, Request $request, MarkRepository $markRepos
 ])</code></pre>
                     <p><span class="html">mapped</span> permet d'indiquer que le champs n'est pas relié à une donnée de l'entité (il n'essaiera pas de récupérer la valeur ni de trouver le setter qui correspondra).</p>
                     <p>Ensuite, du côté du contrôleur, on peut récupérer le fichier envoyé en utilisant la donnée contenue dans le formulaire.</p>
-<pre><code>$file = $form-&gt;get('thumbnailFile')-&gt;getData(); // UploadedFile
+<pre><code>/** @var UploadedFile $file */
+$file = $form-&gt;get('thumbnailFile')-&gt;getData(); // UploadedFile
 if ($file) {
     $file-&gt;move(sprintf(
         "%s/public/image/monfichier.%s",
         $this-&gt;getParameter('kernel.project_dir'),
-        $file-&gt;getOriginalExtension()
+        $file-&gt;getClientOriginalExtension()
     ));
 }</code></pre>
                     <p>Si le dossier de destination n'existe pas, il sera automatiquement créé par Symfony.</p>
+                    <p>Pour afficher tous les services contenus dans les containers avec leurs valeurs associées, on peut utiliser la commande suivante :</p>
+<pre><code>php bin/console debug:container --parameters</code></pre>
                     <p>À vous ensuite d'ajouter la logique pour persister le nom du fichier en base de données et gérer la suppression lorsque l'entité est supprimée. Pour interagir avec le système de fichiers, il est possible d'utiliser <a href="https://symfony.com/doc/current/components/filesystem.html" target="_blank">le composant FileSystem</a>.</p>
                     <h4>Exemple :</h4>
                     <p>Pour gérer plus facilement le système d'envoi de fichier, il est possible d'utiliser le bundle "<a href="https://github.com/dustin10/VichUploaderBundle" target="_blank">VichUploaderBundle</a>" qui permet d'attacher automatiquement un système d'upload de fichier aux événements de notre entité.</p>
@@ -2628,29 +2631,30 @@ if ($file) {
             namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
 </code></pre>
                     <p>On va rajouter des informations pour l'upload des images dans l'entité "Recipe" :</p>
-<pre><code>...
+<pre><code>// ...
 
 use Symfony\Component\HttpFoundation\File\File;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
-...
+// ...
 
 #[Vich\Uploadable]
 class Recipe
 {
 
-    ...
+    // ...
 
     /**
     * NOTE : This is not a mapped field of entity metadata, just a simple property.
     */
     #[Vich\UploadableField(mapping: 'recipe_images', fileNameProperty: 'imageName')]
+    // #[Assert\Image()]
     private ?File $imageFile = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
     private ?string $imageName = null;
 
-    ...
+    // ...
 
     /**
     * If manually uploading a file (i.e. not using Symfony Form) ensure an instance
@@ -2661,7 +2665,7 @@ class Recipe
     *
     * @param File|\Symfony\Component\HttpFoundation\File\UpdloadedFile|null $imageFile
     */
-    public function setImageFile(?File $imageFile = null): void
+    public function setImageFile(?File $imageFile = null): static
     {
         $this-&gt;imageFile = $imageFile;
 
@@ -2670,6 +2674,8 @@ class Recipe
             // otherwise the event listeners won't be called and the file is lost
             $this-&gt;updatedAt = new \DateTimeImmutable();
         }
+
+        return $this;
     }
 
     public function getImageFile(): ?File
@@ -2677,12 +2683,14 @@ class Recipe
         return $this-&gt;imageFile;
     }
 
-    public function setImageName(?string $imageName): void
+    public function setImageName(?string $imageName): static
     {
         $this-&gt;imageName = $imageName;
+
+        return $this;
     }
 
-    ...
+    // ...
     
 }</code></pre>
                     <p>Dans le formulaire de création d'une recette, on va rajouter un champ "imageFile" comme ceci :</p>
@@ -2696,8 +2704,15 @@ class Recipe
 <pre><code>{{ form_row(form.imageFile) }}</code></pre>
                     <p>On oublie pas de créer la migration et de la migrer. Pour afficher l'image dans le détail de la recette (show), on fait :</p>
 <pre><code>&lt;div class="recipe_image"&gt;
-    &lt;img style="max-width: 500px;" src="{{ vich_uploader_asset(recipe, 'imageFile') }}"&gt;
+    &lt;img style="max-width: 500px;" src="{{ vich_uploader_asset(recipe, 'imageFile') }}" alt=""&gt;
 &lt;/div&gt;</code></pre>
+                    <p>Si on veut récupérer le chemin du fichier depuis un contrôleur, on a un helper que l'on peut injecter :</p>
+<pre><code>// ...
+public function edit(// ..., UploaderHelper $helper)
+{
+    dd($helper-&gt;asset($recipe, 'imageFile'));
+    // ...
+}</code></pre>
                     <h3>Étape 22 : Formulaire de contact, email et reCaptcha v3 :</h3>
                     <p>Maintenant que l'on a vu les concepts de base, je vous propose d'attaquer un premier cas pratique : un formulaire de contact.</p>
                     <p>Ce formulaire contiendra :</p>
@@ -4019,9 +4034,10 @@ public function index(): Response
 <pre><code>symfony console make:migration</code></pre>
                     <p>Et bien sûr de migrer cette migration avec :</p>
 <pre><code>symfony console d:m:m</code></pre>
-                    <p>On va ensuite créer une page d'authentification avec la commande :</p>
+                    <p>On va ensuite initialiser l'<span class="em">Authenticator</span> qui créera une page d'authentification avec la commande :</p>
 <pre><code>symfony console make:auth</code></pre>
-                    <p>On va donc créer un login form authenticator dans une classe "AppAuthenticator". On peut également créer une page d'inscription avec la commande :</p>
+                    <p>On va donc créer un login form authenticator dans une classe "AppAuthenticator". Vous pourrez ensuite personnaliser la classe générée par la commande pour personnaliser le processus de connexion.</p>
+                    <p>Pour la partie enregistrement des utilisateurs, on peut également la commande qui créera un contrôleur et un formulaire pour gérer l'inscription des utilisateurs :</p>
 <pre><code>symfony console make:registration-form</code></pre>
                     <p>Grâce à la commande précédente, on peut ajouter une validation "<span class="em">@UniqueEntity</span>" à l'entité "User". Ça peut également envoyer un email pour vérifier l'adresse email de l'utilisateur après l'inscription ainsi qu'authentifier l'utilisateur après l'inscription. Après l'inscription, on veut être redirigé vers la page "home".</p>
                     <p>Pour mettre en place l'authentification à double facteur, on doit installer le bundle "2FA" avec la commande :</p>
