@@ -1501,7 +1501,8 @@ public function new(): Response
             ],
             'choice_label' =&gt; 'name',
             'multiple' =&gt; true,
-            'expanded' =&gt; true
+            'expanded' =&gt; true,
+            // 'by_reference' =&gt; false
         ])
         -&gt;add('submit', SubmitType::class, [
             'attr' =&gt; [
@@ -1588,6 +1589,11 @@ public function delete(EntityManagerInterface $manager, Recipe $recipe): Respons
 
     return $this-&gt;redirectToRoute('recipe.index');
 }</code></pre>
+                    <p>Dans notre entité, on peut persister ou supprimer une relation en cascade comme par exemple :</p>
+<pre><code>#[ORM\ManyToOne(inversedBy: 'recipes', cascade: ['persist'])]
+private ?Category $category = null;</code></pre>
+<pre><code>#[ORM\OneToMany(targetEntity: Recipe::class, mappedBy: 'category', cascade: ['remove'])]
+private Collection $recipes;</code></pre>
                     <h4>Liens utiles :</h4>
                     <ul>
                         <li>
@@ -2585,7 +2591,29 @@ public function show(Recipe $recipe, Request $request, MarkRepository $markRepos
     {{ form(form) }}
 &lt;/div&gt;</code></pre>
                     <h3>Étape 21 : Upload une image :</h3>
-                    <p>Pour uploader une image pour chaque recette, on va d'abord utiliser le bundle "VichUploaderBundle" et on va l'installer avec la commande suivante :</p>
+                    <p>Symfony permet la gestion de fichier avec une classe qui permet de représenter les fichiers envoyés. Cette classe contiendra une méthode <span class="html">move()</span> qui permettra de le déplacer dans le système de fichier du serveur.</p>
+                    <h4>Via le formulaire :</h4>
+                    <p>Du côté du formulaire, on peut définir un champs qui accueillera le fichier.</p>
+<pre><code>-&gt;add('thumbnailFile', FileType::class, [
+    'required' =&gt; false,
+    'constraints' =&gt; [new Image()],
+    'mapped' =&gt; false,
+])</code></pre>
+                    <p><span class="html">mapped</span> permet d'indiquer que le champs n'est pas relié à une donnée de l'entité (il n'essaiera pas de récupérer la valeur ni de trouver le setter qui correspondra).</p>
+                    <p>Ensuite, du côté du contrôleur, on peut récupérer le fichier envoyé en utilisant la donnée contenue dans le formulaire.</p>
+<pre><code>$file = $form-&gt;get('thumbnailFile')-&gt;getData(); // UploadedFile
+if ($file) {
+    $file-&gt;move(sprintf(
+        "%s/public/image/monfichier.%s",
+        $this-&gt;getParameter('kernel.project_dir'),
+        $file-&gt;getOriginalExtension()
+    ));
+}</code></pre>
+                    <p>Si le dossier de destination n'existe pas, il sera automatiquement créé par Symfony.</p>
+                    <p>À vous ensuite d'ajouter la logique pour persister le nom du fichier en base de données et gérer la suppression lorsque l'entité est supprimée. Pour interagir avec le système de fichiers, il est possible d'utiliser <a href="https://symfony.com/doc/current/components/filesystem.html" target="_blank">le composant FileSystem</a>.</p>
+                    <h4>Exemple :</h4>
+                    <p>Pour gérer plus facilement le système d'envoi de fichier, il est possible d'utiliser le bundle "<a href="https://github.com/dustin10/VichUploaderBundle" target="_blank">VichUploaderBundle</a>" qui permet d'attacher automatiquement un système d'upload de fichier aux événements de notre entité.</p>
+                    <p>Pour uploader une image pour chaque recette, on va d'abord utiliser ce fameux bundle et on va l'installer avec la commande suivante :</p>
 <pre><code>composer require vich/uploader-bundle</code></pre>
                     <p>Cette commande va générer le fichier <span class="em">`config/packages/vich_uploader.yaml`</span> qui est le fichier de configuration de ce bundle qu'on va modifier :</p>
 <pre><code>vich_uploader:
