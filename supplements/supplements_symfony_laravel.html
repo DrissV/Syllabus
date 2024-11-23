@@ -1705,13 +1705,27 @@ private Collection $recipes;</code></pre>
     }
 
 ?&gt;</code></pre>
+                    <p>Dans le <span class="em">UserRepository</span>, il a crée une méthode utilisée pour rehashé le mot de passe au fil du temps :</p>
+<pre><code>/**
+* Used to upgrade (rehash) to user's password Automatically over time.
+*/
+public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
+{
+    if (!$user instanceof User) {
+        throw new UnsupportedUserException(sprintf('Instance of "%s" are not supported.', $user::class));
+    }
+
+    $user-&gt;setPassword($newHashedPassword);
+    $this-&gt;getEntityManager()-&gt;persist($user);
+    $this-&gt;getEntityManager-&gt;flush();
+}</code></pre>
                     <p>Avant de créer une migration pour cette entité et de la migrer, il faut modifier l'entité "User" avec la commande :</p>
 <pre><code>php bin/console make:entity User</code></pre>
                     <p>On va rajouter les propriétés "fullName" de taille "50" non nullable, "pseudo" de taille "50" nullable, "createdAt" de type "datetime_immutable" non nullable et "updatedAt" de type "datetime_immutable" non nullable.</p>
                     <p>Donc, avec la commande `<span class="html">php bin/console make:migration</span>` on crée la migration et avec `<span class="em">php bin/console d:m:m</span>` pour la migrer.</p>
                     <p>Ensuite, dans le fichier "<span class="em">security.yaml</span>", on va rajouter le provider comme suit :</p>
 <pre><code>providers:
-        # used to reload user from session & other features (e.g. switch user)
+        # used to reload user from session &amp; other features (e.g. switch user)
         app_user_provider:
             entity:
                 class: App\Entity\User
@@ -1719,6 +1733,8 @@ private Collection $recipes;</code></pre>
                     <p>Pour hasher le mot de passe, on va définir un <span class="em">password_hashers</span> s'il n'est pas défini dans le fichier <span class="em">security.yaml</span> :</p>
 <pre><code>password_hashers:
     Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: "auto"</code></pre>
+                    <p>Dans nos contrôleurs, si on veut limiter l'accès à certaines routes, on peut utiliser :</p>
+<pre><code>$this-&gt;denyAccessUnlessGranted('ROLE_USER');</code></pre>
                     <p>Dans notre fixture, on va créer des utilisateurs fictifs :</p>
 <pre><code>// Users
 $users = [];
@@ -4034,9 +4050,94 @@ public function index(): Response
 <pre><code>symfony console make:migration</code></pre>
                     <p>Et bien sûr de migrer cette migration avec :</p>
 <pre><code>symfony console d:m:m</code></pre>
+                    <p>Dans notre <span class="em">UserRepository</span>, on va créer une nouvelle méthode pour trouver l'utilisateur selon l'email ou le username :</p>
+<pre><code>public function findUserByEmailOrUsername(string $emailOrUsername): ?User
+{
+    return $this-&gt;createQueryBuilder('u')
+                -&gt;where('u.email = :identifier')
+                -&gt;orWhere('u.username = :identifier')
+                -&gt;setParameter('identifier', $emailOrUsername)
+                -&gt;setMaxResults(1)
+                -&gt;getQuery()
+                -&gt;getSingleResults();
+}</code></pre>
                     <p>On va ensuite initialiser l'<span class="em">Authenticator</span> qui créera une page d'authentification avec la commande :</p>
 <pre><code>symfony console make:auth</code></pre>
                     <p>On va donc créer un login form authenticator dans une classe "AppAuthenticator". Vous pourrez ensuite personnaliser la classe générée par la commande pour personnaliser le processus de connexion.</p>
+<pre><code>&lt;?php
+
+    namespace App\Security;
+
+    use // ...
+
+    class AppAuthenticator extends AbstractLoginFormAuthenticator
+    {
+        use TargetPathTrait;
+
+        public const LOGIN_ROUTE = 'app_login';
+
+        public function __construct(private UrlGeneratorInterface $urlGenerator, private UserRepository $UserRepository)
+        {
+
+        }
+
+        public function authenticate(Request $request): Passport
+        {
+            $username = $request-&gt;request-&gt;get('username', '');
+
+            $request-&gt;getSession()-&gt;set(SecurityRequestAttributes::LAST_USERNAME, $username);
+
+            return new Passport(
+                new UserBadge($username, fn (string $identifier) =&gt; $this-&gt;UserRepository-&gt;findUserByEmailOrUsername($identifier)),
+                new PasswordCredentials($request-&gt;request-&gt;get('password', '')),
+                [
+                    new CsrfTokenBadge('authenticate', $request-&gt;request-&gt;get('_csrf_token')),
+                    new RememberBadge(),
+                ]
+            );
+        }
+
+        public function onAuthenticationSuccess(Request $request, TokenInterface, string $firewallName): ?Response
+        {
+            if ($targetPath = $this-&gt;getTargetPath($request-&gt;getSession(), $firewallName)) {
+                return new RedirectResponse($argetPath);
+            }
+
+            // For example :
+            // return new RedirectResponse($this-&gt;urlGenerator-&gt;generate('same_route'));
+            // throw new \Exception('TODO: provide a valid redirect inside ' . __FILE__);
+            return new RedirectResponse('/');
+        }
+
+        protected function getLoginUrl(Request $request): string
+        {
+            return $this-&gt;urlGenerator-&gt;generate(self::LOGIN_ROUTE);
+        }
+
+    }
+
+?&gt;</code></pre>
+                    <p>Dans le <span class="em">security.yaml</span>, il y a maintenant ceci :</p>
+<pre><code>main:
+        lazy: true
+        provider: app_user_provider
+        custom_authenticator: App\Security\AppAuthenticator
+        logout:
+            path: app_logout
+            # where to redirect after logout
+            # target: app_any_route
+
+        remember_me:
+            secret: '%kernel.secret%'
+            lifetime: 684800
+            path: /
+            # always_remeber_me: true
+</code></pre>
+                    <p>Si l'option <span class="em">always_remeber_me</span> est décommentée, alors, dans notre vue <span class="em">login.html.twig</span>, on rajoute le champ <span class="em">remember_me</span> :</p>
+<pre><code>&lt;label&gt;
+    &lt;input type="checkbox" name="_remember_me" checked"&gt;
+    Keep me logged in
+&lt;/label&gt;</code></pre>
                     <p>Pour la partie enregistrement des utilisateurs, on peut également la commande qui créera un contrôleur et un formulaire pour gérer l'inscription des utilisateurs :</p>
 <pre><code>symfony console make:registration-form</code></pre>
                     <p>Grâce à la commande précédente, on peut ajouter une validation "<span class="em">@UniqueEntity</span>" à l'entité "User". Ça peut également envoyer un email pour vérifier l'adresse email de l'utilisateur après l'inscription ainsi qu'authentifier l'utilisateur après l'inscription. Après l'inscription, on veut être redirigé vers la page "home".</p>
