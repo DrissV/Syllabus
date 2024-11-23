@@ -697,7 +697,18 @@ public function findWithDurationLowerThan(int $duration): array
                 -&gt;getQuery()
                 -&gt;getResult();
 }</code></pre>
-                    <p>Pour la pagination dans la page, on va utiliser le bundle "KnpPaginatorBundle" en l'instalalnt avec la commande :</p>
+                    <p>Jusqu'à maintenant, nous avons utilisé un <span class="html">findAll()</span> pour lister l'ensemble des résultats. Mais, dans un cas réel, on va vouloir imposer une limite sur le nombre de résultats à afficher et on va souhaiter mettre en place un système de pagination.</p>
+                    <p>Doctrine dispose d'une classe permettant de gérer la pagination.</p>
+<pre><code>use Doctrine\ORM\Tools\Pagination\Paginator;
+
+$queryBuilder = $this
+                    -&gt;createQueryBuilder('r')
+                    -&gt;setFirstResult(($page -1) * $limit)
+                    -&gt;setMaxResults($limit);
+
+$paginator = new Paginator($query, fetchJoinCollection: false);</code></pre>
+                    <p>Cet objet <span class="em">paginator</span> implémente les interfaces <span class="html">Countable</span> et <span class="html">IteratorAggregate</span>. Lors du <span class="html">count()</span>, il génèrera une requête permettant de compter l'ensemble des résultats.</p>
+                    <p>Pour la pagination dans la page, on va utiliser le bundle <a href="https://github.com/KnpLabs/KnpPaginatorBundle" target="_blank">KnpPaginatorBundle</a> qui offre plus de fonctionnalités avec la possibilité de gérer l'organisation mais aussi la partie template avec la structure HTML d'une pagination. Aussi, si votre objectif est de paginer des résultats dans une page Web, je vous conseille d'utiliser ce bundle. On peut l'installer avec la commande :</p>
 <pre><code>composer require knplabs/knp-paginator-bundle</code></pre>
                     <p>On va créer le fichier <span class="em">`config/packages/knp_paginator.yaml`</span> avec le contenu suivant :</p>
 <pre><code>knp_paginator:
@@ -4117,7 +4128,7 @@ public function index(): Response
     }
 
 ?&gt;</code></pre>
-                    <p>Dans le <span class="em">security.yaml</span>, il y a maintenant ceci :</p>
+                    <p>Dans le <span class="em">security.yaml</span>, il y a maintenant le code ci-dessus :</p>
 <pre><code>main:
         lazy: true
         provider: app_user_provider
@@ -4140,7 +4151,91 @@ public function index(): Response
 &lt;/label&gt;</code></pre>
                     <p>Pour la partie enregistrement des utilisateurs, on peut également la commande qui créera un contrôleur et un formulaire pour gérer l'inscription des utilisateurs :</p>
 <pre><code>symfony console make:registration-form</code></pre>
-                    <p>Grâce à la commande précédente, on peut ajouter une validation "<span class="em">@UniqueEntity</span>" à l'entité "User". Ça peut également envoyer un email pour vérifier l'adresse email de l'utilisateur après l'inscription ainsi qu'authentifier l'utilisateur après l'inscription. Après l'inscription, on veut être redirigé vers la page "home".</p>
+                    <p>Grâce à la commande précédente, on peut ajouter une validation "<span class="html">@UniqueEntity</span>" à l'entité <span class="em">User</span>. Ça peut également envoyer un email pour vérifier l'adresse email de l'utilisateur après l'inscription ainsi qu'authentifier l'utilisateur après l'inscription. Après l'inscription, on veut être redirigé vers la page "home".</p>
+                    <p>La première étape est d'installer le package manquant :</p>
+<pre><code>composer require symfonycasts/verify-email-bundle</code></pre>
+                    <p>Voyons voir le code généré dans le <span class="em">RegistrationController</span> :</p>
+<pre><code>&lt;?php
+
+    namespace App\Controller;
+
+    use // ...
+
+    class RegistrationController extends AbstractController
+    {
+
+        private EmailVerifier $emailVerifier;
+
+        public function __construct(EmailVerifier $emailVerifier)
+        {
+            $this-&gt;emailVerifier = $emailVerifier;
+        }
+
+        #[Route('/register', name: 'app_register')]
+        public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, UserAuthenticatorInterface $userAuthenticator, AppAuthenticator $authenticator, EntityManagerInterface $entityManager): Response
+        {
+            $user = new User();
+            $form = $this-&gt;createForm(RegistrationFormType::class, $user);
+            $form-&gt;handleRequest($request);
+
+            if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
+                // encode the plain password
+                $user-&gt;setPassword(
+                    $userPasswordHasher-&gt;hashPassword(
+                        $user,
+                        $form-&gt;get('plainPassword')-&gt;getData()
+                    )
+                );
+
+                $entityManager-&gt;persist($user);
+                $entityManager-&gt;flush();
+
+                // generate a signed url and email it to the user
+                $this-&gt;emailVerifier-&gt;sendEmailConfirmation('app_verify_email', $user,
+                    (new TemplatedEmail())
+                        -&gt;from(new Address('support@demo.fr', 'Support'))
+                        -&gt;to($user-&gt;getEmail())
+                        -&gt;subject('Please confirm your email')
+                        -&gt;htmlTemplate('registration.confirmation_email')
+                );
+
+                // do anything else you need here, like send an email
+
+                return $userAuthenticator-&gt;authenticateUser(
+                    $use,
+                    $authenticator,
+                    $request
+                );
+            }
+
+            return $this-&gt;render('registration/register', [
+                'registrationForm' =&gt; $form-&gt;createView(),
+            ]);
+        }
+
+        #[Route('/verify/email', name: 'app_verify_email')]
+        public function verifyUserEmail(Request $request, TranslatorInterface $translate): Response
+        {
+            $this-&gt;denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+            // validate email confirmation link, sets User::isVerified=true and persists
+            try {
+                $this-&gt;emailVerifier-&gt;handleEmailConfirmation($request, $this-&gt;getUser());
+            } catch (VerifyEmailExceptionInterface $exception) {
+                $this-&gt;addFlash('verify_email_error', $translator($exception-&gt;getReason(), [], 'VerifyEmailBundle'));
+
+                return $this-&gt;redirectToRoute('/register');
+            }
+
+            // @TODO Change the redirect on success and handle or remove the flash message in your templates
+            $this-&gt;addFlash('success', 'your email address has been verified.');
+
+            return $this-&gt;redirectToRoute('/register');
+        }
+
+    }
+
+?&gt;</code></pre>
                     <p>Pour mettre en place l'authentification à double facteur, on doit installer le bundle "2FA" avec la commande :</p>
 <pre><code>composer require 2fa</code></pre>
                     <p>On va aussi installer une extension à ce bundle qui est "scheb/2fa-email" avec la commande suivante :</p>
