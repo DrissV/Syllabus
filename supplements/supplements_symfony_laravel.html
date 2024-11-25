@@ -68,6 +68,8 @@
             <section id="mainSection">
                 <article>
                     <h1>Symfony et Laravel :</h1>
+                    <p>Ce cours est un mélange de ce que je connais et que j'ai appris et <a href="https://grafikart.fr/formations/apprendre-symfony-7" target="_blank">la formation de Grafikart sur Symfony 7</a>.</p>
+                    <p>* Si certaines notions existent mais que les notations sont anciennes dans ce cours, je vous conseille de toujours suivre la documentation.</p>
                 </article>
                 <article>
                     <p>Pour ceux qui utilisent Visual Studio Code, vous devez installer les extensions "PHP Namespace Resolver" et "PHP Docblocker" pour PHP mais également "PHP Intelephense" et "PHP Getters &amp; Setters" si besoin.</p>
@@ -82,7 +84,7 @@
                             <p>Il est hautement personnalisable et modulaire, vous permettant de choisir les composants dont vous avez besoin pour votre projet spécifique.</p>
                         </li>
                         <li>
-                            <p>Symfony est connu pour sa stabilité, sa documentaion détaillée et sa grande communauté de développeurs. Il est souvent préféré pour les projets d'entreprise de grande envergure.</p>
+                            <p>Symfony est connu pour sa stabilité, sa documentation détaillée et sa grande communauté de développeurs. Il est souvent préféré pour les projets d'entreprise de grande envergure.</p>
                         </li>
                         <li>
                             <p>Il met l'accent sur la réutilisation du code grâce à ses composants réutilisables, ce qui peut accélérer le processus de développement.</p>
@@ -587,7 +589,8 @@ public function index (Request $request, string $slug, int $id): Response
                         <li><a href="https://symfony.com/doc/current/reference/constraints.html" target="_blank">Liste des contraintes disponibles dans Symfony</a></li>
                     </ul>
                     <h3>Étape 10 : Création des Fixtures :</h3>
-                    <p>Dans la suite de ce tutoriel, on va créer des fixtures qui permettent de nous générer un jeu de fausses données comme un Faker.</p>
+                    <p>Quand on travaille sur une application, on a souvent besoin de données pour tester nos fonctionnalités. Dans la suite de ce cours, on va créer des fixtures qui permettent de nous générer un jeu de fausses données de test comme un Faker.</p>
+<pre><code>php bin/console make:fixture</code></pre>
                     <p>Pour faire cela, on va installer les packages en développement :</p>
 <pre><code>composer require --dev orm-fixtures</code></pre>
                     <p>Ainsi que la commande :</p>
@@ -634,6 +637,7 @@ public function index (Request $request, string $slug, int $id): Response
 <pre><code>php bin/console doctrine:fixtures:load</code></pre>
                     <p>Ou encore avec la commande abrégée :</p>
 <pre><code>symfony console d:f:l</code></pre>
+                    <p>Cette commande va commencer par effacer les enregistrements de votre base de données, et la remplira ensuite avec les données définies dans les fixtures.</p>
                     <h3>Étape 11 : CRUD sur la table "Ingredient" :</h3>
                     <p>Maintenant, on va enfin faire des CRUD sur la table "Ingredient". D'abord, on va afficher la liste des ingrédients.</p>
                     <p>Premièrement, on va créer un nouveau contrôleur "IngredientController" avec la commande :</p>
@@ -699,15 +703,45 @@ public function findWithDurationLowerThan(int $duration): array
 }</code></pre>
                     <p>Jusqu'à maintenant, nous avons utilisé un <span class="html">findAll()</span> pour lister l'ensemble des résultats. Mais, dans un cas réel, on va vouloir imposer une limite sur le nombre de résultats à afficher et on va souhaiter mettre en place un système de pagination.</p>
                     <p>Doctrine dispose d'une classe permettant de gérer la pagination.</p>
-<pre><code>use Doctrine\ORM\Tools\Pagination\Paginator;
+<pre><code>&lt;?php
 
-$queryBuilder = $this
-                    -&gt;createQueryBuilder('r')
-                    -&gt;setFirstResult(($page -1) * $limit)
-                    -&gt;setMaxResults($limit);
+    namespace App\Repository;
 
-$paginator = new Paginator($query, fetchJoinCollection: false);</code></pre>
+    use Doctrine\ORM\Tools\Pagination\Paginator;
+
+    // ...
+
+    class RecipeRepository extends ServiceEntityRepository
+    {
+
+        public function paginateRecipes(int $page, int $limit): Paginator
+        {
+            $query = $this
+                        -&gt;createQueryBuilder('r')
+                        -&gt;setFirstResult(($page -1) * $limit)
+                        -&gt;setMaxResults($limit)
+                        -&gt;getQuery()
+                        -&gt;setHint(Paginator::HINT_ENABLE_DISTINCT, false);
+
+            $paginator = new Paginator($query, fetchJoinCollection: false);
+        }
+
+    }
+
+?&gt;</code></pre>
                     <p>Cet objet <span class="em">paginator</span> implémente les interfaces <span class="html">Countable</span> et <span class="html">IteratorAggregate</span>. Lors du <span class="html">count()</span>, il génèrera une requête permettant de compter l'ensemble des résultats.</p>
+                    <p>Voici le code dans notre contrôleur :</p>
+<pre><code>$page = $request-&gt;query-&gt;getInt('page', 1);
+$limit = 2;
+$recipes = $repository-&gt;paginateRecipes($page, $limit);
+$maxPage = ceil($recipes-&gt;count() / $limit);</code></pre>
+                    <p>Voilà le code dans ma vue :</p>
+<pre><code>{% if page &gt; 1 %}
+    &lt;a href="{{ path('recipe.index', {page: page - 1}) }}" class="btn btn-secondary"&gt;Page précédente&lt;/a&gt;
+{% endif %}
+{% if page &lt; maxPage %}
+    &lt;a href="{{ path('recipe.index', {page: page + 1}) }}" class="btn btn-secondary"&gt;Page suivante&lt;/a&gt;
+{% endif %}</code></pre>
                     <p>Pour la pagination dans la page, on va utiliser le bundle <a href="https://github.com/KnpLabs/KnpPaginatorBundle" target="_blank">KnpPaginatorBundle</a> qui offre plus de fonctionnalités avec la possibilité de gérer l'organisation mais aussi la partie template avec la structure HTML d'une pagination. Aussi, si votre objectif est de paginer des résultats dans une page Web, je vous conseille d'utiliser ce bundle. On peut l'installer avec la commande :</p>
 <pre><code>composer require knplabs/knp-paginator-bundle</code></pre>
                     <p>On va créer le fichier <span class="em">`config/packages/knp_paginator.yaml`</span> avec le contenu suivant :</p>
@@ -722,9 +756,9 @@ $paginator = new Paginator($query, fetchJoinCollection: false);</code></pre>
         filter_value_name: filterValue  # filter value query parameter name
     template:
         pagination: '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig'     # sliding pagination controls template
-        rel_links: '@KnpPaginator/Pagination/rel_links.html.twig'     # &lt;link rel=...&gt; tags template
-        sortable: '@KnpPaginator/Pagination/sortable_link.html.twig' # sort link template
-        filtration: '@KnpPaginator/Pagination/filtration.html.twig'  # filters template</code></pre>
+        # rel_links: '@KnpPaginator/Pagination/rel_links.html.twig'     # &lt;link rel=...&gt; tags template
+        sortable: '@KnpPaginator/Pagination/bootstrap_v5_bi_sortable_link.html.twig' # sort link template
+        filtration: '@KnpPaginator/Pagination/bootstrap_v5_filtration.html.twig'  # filters template</code></pre>
                     <p>Modifions notre fonction "index" de notre cotrôleur pour qu'elle prenne en compte la pagination :</p>
 <pre><code>use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -744,13 +778,30 @@ public function index(IngredientRepository $repository, PaginatorInterface $pagi
     $ingredients = $paginator-&gt;paginate(
         $repository-&gt;findAll(),
         $request-&gt;query-&gt;getInt('page', 1),
-        10    
+        10,
+        [
+            'distinct' =&gt; false,
+            'sortFieldAllowList' =&gt; ['r.id', 'r.title']
+        ]
     );
     // dd($ingredients);
 
     return $this-&gt;render('pages/ingredient/index.html.twig', [
         'ingredients' =&gt; $ingredients
     ]);
+}</code></pre>
+                    <p>Ou on peut placer ce code dans le repository :</p>
+<pre><code>public function paginateRecipes(int $page): PaginatorInterface
+{
+    return $this-&gt;paginator-&gt;paginate(
+        $this-&gt;createQueryBuilder('r')-&gt;leftJoin('r.category', 'c')-&gt;select('r', 'c'),
+        $page,
+        20,
+        [
+            'distinct' =&gt; false,
+            'sortFieldAllowList' =&gt; ['r.id', 'r.title']
+        ]
+    );
 }</code></pre>
                     <p>On va modifier également le fichier TWIG en ajoutant ceci :</p>
 <pre><code>&lt;div class="count mt-4"&gt;
@@ -761,6 +812,17 @@ public function index(IngredientRepository $repository, PaginatorInterface $pagi
     {{ knp_pagination_render(ingredients) }}
 &lt;/div&gt;</code></pre>
                     <p>On peut faire un <span class="html">{% if not ingredients.items is same as([]) %}</span> pour vérifier que la liste n'est pas vide.</p>
+                    <p>On peut également trier le tableau :</p>
+<pre><code>&lt;table class="table"&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;{{ knp_pagination_sortable(recipes, 'ID', 'r.id') }}&lt;/th&gt;
+            &lt;th&gt;{{ knp_pagination_sortable(recipes, 'Titre', 'r.title') }}&lt;/th&gt;
+            // ...
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    // ...
+&lt;/table&gt;</code></pre>
                     <h4>Créer un nouvel ingrédient :</h4>
                     <p>La gestion des formulaires se faire au travers de classes qui étendent de <span class="em">Symfony\Component\Form\AbstractType</span> et qui vont décrire la structure du formulaire.</p>
                     <p>Pour la création d'un nouvel ingrédient, on va créer un nouveau formulaire "IngredientType" avec l'entité "Ingredient" via la commande :</p>
@@ -4751,6 +4813,54 @@ DEMO_SECRET   "Ceci est un secret"   "Ceci est un secret local"
 <pre><code>php bin/console secrets:remove DEMO_SECRET</code></pre>
         </li>
     </ul>
+    <h3>Étape 32 : Doctrine avancé (select partiel, DTO &amp; DQL) :</h3>
+    <p>Dans cette partie, je vous propose de voir quelques notions avancés concernant Doctrine qui vous permettront d'améliorer les performances et d'écrire des requêtes plus complexes.</p>
+    <h4>Select partiel :</h4>
+    <p>Doctrine est pensé par défaut pour hydrater des entités et ses requêtes sélectionneront systématiquement l'ensemble des champs de l'entité. Cependant, dans certaines situations, on n'a pas besoin de forcément tout récupérer. Dans cette situation, il est possible d'utiliser la méthode <span class="html">select()</span> sur le queryBuilder pour spécifier les champs souhaités.</p>
+<pre><code>$recipes = $this
+                        -&gt;createQueryBuilder('r')
+                        -&gt;select('r.id', 'r.name')
+                        -&gt;getQuery()
+                        -&gt;getResult();</code></pre>
+    <p>Dans ce cas-là, chaque enregistrement sera renvoyé sous forme de tableau associatif. Mais, on va aussi pouvoir construire des objets qui serviront à représenter nos données (ce qui permet ensuite un typage). Pour cela, on peut utiliser <a href="https://www.doctrine-project.org/projects/doctrine-orm/en/2.17/reference/dql-doctrine-query-language.html#new-operator-syntax" target="_blank">l'opérateur NEW de Doctrine.</a></p>
+<pre><code>$recipes = $this
+                        -&gt;createQueryBuilder('r')
+                        -&gt;select('NEW App\\DTO\\LightRecipeDTO(r.id, r.name)')
+                        -&gt;getQuery()
+                        -&gt;getResult();</code></pre>
+    <p>Cela utilisera le constructeur de l'objet en lui passant les champs sélectionnés (on ne peut utiliser que des données scalaires).</p>
+    <h4>DQL : Doctrine Query Language :</h4>
+    <p>Doctrine offre aussi un langage appelé <a href="https://www.doctrine-project.org/projects/doctrine-orm/en/3.0/reference/dql-doctrine-query-language.html#doctrine-query-language" target="_blank">DQL</a> qui est un langage proche du SQL mais qui permet les requêtes sur les objets plutôt que les tables.</p>
+<pre><code>&lt;?php
+    $query = $em-&gt;createQuery('SELECT u FROM MyProject\Model\User u WHERE u.age &gt; 20');
+    $users = $query-&gt;getResult();
+?&gt;</code></pre>
+    <p>Pour plus de détails sur les fonctionnalités du DQL, n'hésitez pas à vous rendre sur <a href="https://www.doctrine-project.org/projects/doctrine-orm/en/3.0/reference/dql-doctrine-query-language.html" target="_blank">la documentation de Doctrine</a>.</p>
+    <h3>Étape 33 : Asset Mapper :</h3>
+    <p>Parlons maintenant un peu de la partie front-end et de la gestion des assets dans le cadre d'une application Symfont. Même si, pour des besoins de base, il est est possible de placer nos ressources dans le dossier <span class="em">public</span>, le dossier <span class="em">assets</span> offre plusieurs avantages :</p>
+    <ul>
+        <li>
+            <p>Le <span class="em">versionning</span>, qui ajoutera un suffixe après le nom des fichiers qui permet de configurer un cache longue durée sur les fichiers CSS, JS, images...</p>
+        </li>
+        <li>
+            <p>Le <span class="em">mapping</span>, qui permettra de faire référence à un fichier par son chemin original.</p>
+        </li>
+        <li>
+            <p><span class="em">Importmaps</span> qui permettra d'importer une ressource depuis un import JavaScript.</p>
+        </li>
+    </ul>
+    <p>Pendant le développement, les ressources sont automatiquement distribuées si vous utilisez le serveur disponible via la commande Symfony <span class="html">symfony serve</span>.</p>
+    <p>Quand on passera en production, il faudra utiliser la commande <span class="html">asset-map:compile</span> pour compiler les assets dans le dossier <span class="em">public</span> afin de les rendre accessibles.</p>
+<pre><code>php bin/console asset-map:compile</code></pre>
+    <h4>Librairie tierce :</h4>
+    <p>Il est aussi possible d'importer des librairies tierces à l'aide de la commande <span class="html">importmap:require</span> qui téléchargera le fichier du module et qui mettra à jour l'<span class="em">importmap</span>.</p>
+<pre><code>php bin/console importmap:require canvas-confetti</code></pre>
+    <p>On peut ensuite utiliser la librairie classiqueemnt dans notre code JS.</p>
+<pre><code>import confetti from 'canvas-confetti';
+
+document.body.addEventListener('click', () =&gt; {
+    confetti();
+});</code></pre>
     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
 </article>
 <article>
