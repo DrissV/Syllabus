@@ -1327,7 +1327,7 @@ public function delete(EntityManagerInterface $manager, Ingredient $ingredient) 
         }
 
         #[ORM\PrePersist]
-        public function setUpdatedAtValue()
+        public function setUpdatedAt()
         {
             $this-&gt;updatedAt = new \DateTimeImmutable();
         }
@@ -4837,7 +4837,7 @@ DEMO_SECRET   "Ceci est un secret"   "Ceci est un secret local"
 ?&gt;</code></pre>
     <p>Pour plus de détails sur les fonctionnalités du DQL, n'hésitez pas à vous rendre sur <a href="https://www.doctrine-project.org/projects/doctrine-orm/en/3.0/reference/dql-doctrine-query-language.html" target="_blank">la documentation de Doctrine</a>.</p>
     <h3>Étape 33 : Asset Mapper :</h3>
-    <p>Parlons maintenant un peu de la partie front-end et de la gestion des assets dans le cadre d'une application Symfont. Même si, pour des besoins de base, il est est possible de placer nos ressources dans le dossier <span class="em">public</span>, le dossier <span class="em">assets</span> offre plusieurs avantages :</p>
+    <p>Parlons maintenant un peu de la partie front-end et de la gestion des assets dans le cadre d'une application Symfony. Même si, pour des besoins de base, il est est possible de placer nos ressources dans le dossier <span class="em">public</span>, le dossier <span class="em">assets</span> offre plusieurs avantages :</p>
     <ul>
         <li>
             <p>Le <span class="em">versionning</span>, qui ajoutera un suffixe après le nom des fichiers qui permet de configurer un cache longue durée sur les fichiers CSS, JS, images...</p>
@@ -4861,6 +4861,216 @@ DEMO_SECRET   "Ceci est un secret"   "Ceci est un secret local"
 document.body.addEventListener('click', () =&gt; {
     confetti();
 });</code></pre>
+    <h3>Étape 34 : Le serializer :</h3>
+    <p>Dans cette partie, nous allons voir comment on peut utiliser Symfony dans le cadre de la création d'une API. On a vu lors de la découverte des contrôleurs que l'on disposait d'une méthode <span class="html">json()</span> sur le <span class="em">AbstractController</span> qui permet de renvoyer du JSON.</p>
+<pre><code>class RecipesController extends AbstractController
+{
+
+    #[Route('/api/recipes', methods: ['GET'])]
+    public function index(
+        RecipeRepository $repository,
+    )
+    {
+        $recipes = $repository-&gt;findAll();
+        return $this-&gt;json($recipes);
+    }
+
+}</code></pre>
+    <p>Par défaut, cette méthode va nous renvoyer un tableau contenant l'ensemble des champs de nos recettes. Cela est rendu possible par le système de sérialisation du framework qui repose sur deux composants :</p>
+    <ul>
+        <li>
+            <p>Le <span class="em">normalizer</span> qui va convertir un objet en tableau PHP classique.</p>
+        </li>
+        <li>
+            <p>L'<span class="em">encodeur</span> qui va convertir un tableau dans le format choisi (JSON, CSV, XML...).</p>
+        </li>
+    </ul>
+    <p>Dans notre cas, c'est l'<span class="em">ObjectNormalizer</span> qui va être capable de scanner notre objet pour en extirper les informations. Si on souhaite contrôler les champs à exposer, on peut utiliser le contexte de normalisation et notamment les groupes.</p>
+<pre><code>return $this-&gt;json($recipes, 200, [], [
+    'groups' =&gt; ['recipes.index'],
+]);</code></pre>
+    <p>Ensuite, dans notre entité, on pourra annoter les propriétés que l'on souhaite assigner au groupe.</p>
+<pre><code>use Symfony\Component\Serializer\Attribute\Groups;
+
+class Recipe
+{
+    #[Groups(['recipes.index'])]
+    private ?int $id = null;
+
+    #[Groups(['recipes.index', 'recipes.create'])]
+    private string $title = '';
+
+    #[Groups(['recipes.show', 'recipes.create'])]
+    private string $content = '';
+
+    // ...
+}</code></pre>
+    <p>Ces groupes marchent aussi pour les entités imbriquées.</p>
+    <h4>Normalizer personnalisé :</h4>
+    <p>Pour des cas plus complexes, il est aussi possible de créer un normalizer personnalisé.</p>
+<pre><code>php bin/console make:serializer:normalizet</code></pre>
+    <p>Ce normalizer sera automatiquement enregistré grâce au système d'autoconfiguration du gestionnaire de services de Symfony.</p>
+<pre><code>&lt;?php
+
+    namespace App\Normalizer;
+
+    use App\Entity\Recipe;
+    use Knp\Component\Pager\Pagination\PaginationInterface;
+    use Symfony\Component\DependencyInjection\Attribute\Autowire;
+    use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+
+    class PaginationNormalizer implements NormalizerInterface
+    {
+
+        public function __construct(
+            #[Autowire(service: 'serializer.normalizer.object')]
+            private readonly NormalizerInterface $normalizer
+        )
+        {
+
+        }
+
+        public function normalize(mixed $object, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
+        {
+            if (!($object instanceof PaginationInterface)) {
+                throw new \RuntimeException();
+            }
+
+            return [
+                'items' =&gt; array_map(fn (Recipe $recipe) =&gt; $this-&gt;normalizer-&gt;normalize($recipe, $format, $context), $object-&gt;getItems()),
+                'total' =&gt; $object-&gt;getTotalItemCount(),
+                'page' =&gt; $object-&gt;getCurrentPageNumber(),
+                'lastPage' =&gt; ceil($object-&gt;getTotalItemCount() / $object-&gt;getItemNumberPerPage())
+            ];
+        }
+
+        public function supportsNormalization(miwed $data, ?string $format = null, array $context = []): bool
+        {
+            return $data instanceof PaginationInterface;
+        }
+
+        public function getSupportedTypes(?string $format): array
+        {
+            return [
+                PaginationInterface::class =&gt; true,
+            ];
+        }
+
+    }
+
+?&gt;</code></pre>
+    <h3>Étape 35 : Désérialisation et MapRequestPayload :</h3>
+    <p>La désérialisation est le fonctionnement inverse à celui que l'on a vu précédemment. L'objectif est de convertir les données fournies dans un certain format dans un objet de notre application.</p>
+<pre><code>public function index(
+    Request $request,
+    SerializerInterface $serializer
+): Response
+{
+    $recipe = $serializer-&gt;deserialize($request-&gt;getContent(), Recipe::class, 'json');
+}</code></pre>
+    <p>Le fonctionnement est similaire à celui que l'on a vu pour le Serializer (on peut utiliser les groupes pour définir les champs à sérialiser).</p>
+    <h4>MapRequestPayload :</h4>
+    <p>Il existe un raccourci permettant de gérer la sérialisation d'une requête dès les arguments du contrôleur. Cela se fait à l'aide de l'attribut <a href="https://symfony.com/doc/current/controller.html#mapping-request-payload" target="_blank">MapRequestPayload</a>.</p>
+<pre><code>#[Route('/api/recipes', methods: ['POST'])]
+public function create(
+    Request $request,
+    #[MapRequestPayload(
+        serializationContext: [
+            'groups' =&gt; ['recipes.create']
+        ]
+    )]
+    Recipe $recipe,
+    EntityManagerInterface $em
+)
+{
+    $recipe-&gt;setCreatedAt(new \DateTimeImmutable());
+    $recipe-&gt;setUpdatedAt(new \DateTimeImmutable());
+    $em-&gt;persist($recipe);
+    $em-&gt;flush();
+    return $this-&gt;json($recipe, 200, [], [
+        'groups' =&gt; ['recipes.index', 'recipes.show'],
+    ]);
+}</code></pre>
+    <p>Cet attribut va aussi utiliser la validation et, si les données soumises ne sont pas valides, une erreur sera directement renvoyée à l'utilisateur.</p>
+    <p>Il existe aussi un équivalent pour générer un objet à partir des informations provenant de l'URL à l'aide de <a href="https://symfony.com/doc/current/controller.html#mapping-the-whole-query-string" target="_blank">MapQueryString</a>.</p>
+    <h3>Étape 36 : Authenticator stateless :</h3>
+    <p>Dans cette partie, je vous propose de revenir sur le composant <span class="em">Security</span> et on va découvrir comment créer un système d'authentification stateless pour notre partie API.</p>
+    <p>Le composant <span class="em">Security</span> est composé de plusieurs éléments :</p>
+    <ul>
+        <li>
+            <p>Le <a href="https://github.com/symfony/security-core/blob/7.0/User/UserProviderInterface.php" target="_blank">UserProvider</a> permet de trouver un utilisateur à partir de son identifier.</p>
+        </li>
+        <li>
+            <p>L'<a href="https://github.com/symfony/symfony/blob/7.1/src/Symfony/Component/Security/Http/Authenticator/AuthenticatorInterface.php" target="_blank">Authenticator</a> qui lui se charge d'authentifier l'utilisateur lors de certaines requêtes.</p>
+        </li>
+    </ul>
+    <p>Dans le cadre d'une API, on aura en général une enquête particulière <span class="html">Authorization</span> qui nous permet d'identifier l'utilisateur qui est à l'origine de la requête.</p>
+<pre><code>&lt;?php
+
+    namespace App\Security;
+
+    use Symfony\Component\HttpFoundation\JsonResponse;
+    use Symfony\Component\HttpFoundation\Request;
+    use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+    use Symfony\Component\Security\Core\Exception\AuthenticationException;
+    use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
+    use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+    use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
+    use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+
+    class APIAuthenticator extends AbstractAuthenticator
+    {
+
+        public function supports(Request $request): ?bool
+        {
+            return $request-&gt;headers-&gt;has('Authorization') &amp;&amp; str_contains($request-&gt;headers-&gt;get('Authorization'), 'Bearer ');
+        }
+
+        public function authenticate(Request $request): Passport
+        {
+            $identifier = str_replace('Bearer ', '', $request-&gt;headers-&gt;get('Authorization'));
+            return new SelfValidatingPassport(
+                new UserBadge($identifier),
+            );
+        }
+
+        public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
+        {
+            return null;
+        }
+
+        public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
+        {
+            return new JsonResponse([
+                'message' =&gt; $exception-&gt;getMessage(),
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+    }
+
+?&gt;</code></pre>
+    <p>Dans notre cas, on crée un passeport qui contient comme identifier la clef d'API. Il faudra ensuite modifier la configuration pour ajouter cet authenticator sur les URLs qui commencent par <span class="em">/api</span>.</p>
+<pre><code>security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+    providers:
+        api_user_provider:
+            entity:
+                class: App\Entity\user
+                property: apiToken
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|xss|images|js)/
+            security: false
+        api:
+            pattern: ^/api/
+            provider: api_user_provider
+            custom_authenticator: App\Security\APIAuthenticator
+            stateless: true
+            lazy: true
+</code></pre>
+    <p>Dans mon cas, je me contente de chercher l'utilisateur qui a la propriété <span class="em">apiToken</span> qui correspond à la clef d'Authorization. Pour des cas plus complexes, vous pouvez <a href="https://symfony.com/doc/current/security/user_providers.html#creating-a-custom-user-provider" target="_blank">utiliser un provider personnalisé</a>.</p>
     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
 </article>
 <article>
