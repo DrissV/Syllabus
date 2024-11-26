@@ -4022,7 +4022,7 @@ public function indexPublic(RecipeRepository $repository, PaginatorInterface $pa
                     <p>Ça permet de compiler tous nos fichiers dans le dossier "assets" dans le dossier "public/build". Dans ce nouveau dossier, on aura les fichiers "app.css" et "app.js". Dans le fichier "webpack.config.js", on a des "entry".</p>
                     <p>Grâce à "<span class="em">{{ encore_entry_link_tags('app') }}</span>" et à "<span class="em">{{ encore_entry_script_tags('app') }}</span>", Symfony sait qu'on utilise Webpack Encore.</p>
                     <h3>Étape 29 : Les Event Listener &amp; Event Subscriber :</h3>
-                    <p>Dans le cadre d'une application complexe, on a souvent besoin de rajouter de la logique supplémentaire sur des logiques déjà existantes. Pour répondre à cette problématique, Symfont propose un système d'événements qui permettra d'ajouter des écouteurs pour venir greffer la logique que l'on souhaite.</p>
+                    <p>Dans le cadre d'une application complexe, on a souvent besoin de rajouter de la logique supplémentaire sur des logiques déjà existantes. Pour répondre à cette problématique, Symfony propose un système d'événements qui permettra d'ajouter des écouteurs pour venir greffer la logique que l'on souhaite.</p>
                     <p>Durant l'exécution d'une application Symfony, plusieurs notifications d'évènements sont déclenchées. Par exemple, plusieurs évènements sont déclenchés lors d'une requête HTTP classique.</p>
                     <p>Un événement est une simple classe PHP que l'on va en général construire avec les éléments significatifs.</p>
                     <p>La façon la plus commune pour écouter un évènement est d'enregistrer un "event listener". Dans le dossier "src", on crée le dossier "EventListener" et créer le fichier "ExceptionListener.php" ou avec la commande suivante :</p>
@@ -5346,6 +5346,364 @@ public function remove(Recipe $recipe)
 
 ?&gt;</code></pre>
     <p>Cela permet de ne pas polluer les autres voters tout en créant une règle qui outrepasse toutes les autres.</p>
+    <h3>Étape 38 : Symfony UX :</h3>
+    <p><a href="https://ux.symfony.com/" target="_blank">Symfony UX</a> est une initiative de l'équipe de Symfony pour fournir un ensemble de bibliothèques visant à simplifier l'intégration d'outils JavaScript dans vos applications Symfony.</p>
+    <h4>Comment ça marche ?</h4>
+    <p>Symfony UX s'appuie sur le framework JavaScript <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>, qui permet d'ajouter des comportements interactifs aux éléments HTML de manière automatique. Lorsque l'on va installer un paquet, une nouvelle ligne sera ajoutée au fichier <span class="em">assets/controller.json</span> pour enregistrer automatiquement le contrôleur associé au module. Ce fichier sera lu par l'asset mapper et chargera le fichier JavaScript associé dans votre page de manière automatique.</p>
+    <h3>Étape 39 : Formulaires imbriqués :</h3>
+    <p>Dans cette partie, je vous propose de découvrir comment gérer un système de formulaire imbriqué. Cela sera l'occassion de découvrir le type <span class="html">CollectionType</span> qui permet par exemple de gérer les données du relation <span class="html">OneToMany</span>.</p>
+    <p>Pour commencer, on va créer une classe de formulaire pour la donnée liée, classe que l'on pourra utiliser dans notre formulaire principal.</p>
+<pre><code>-&gt;add('quantites', CollectionType::class, [
+    'entry_type' =&gt; QuantityType::class,
+    'allow_add' =&gt;true,
+    'allow_delete' =&gt; true,
+    'by_reference' =&gt; false,
+    'entry_options' =&gt; [
+        'label' =&gt; false,
+    ],
+    'attr' =&gt; [
+        'data-controller' =&gt; 'form-collection',
+    ],
+])</code></pre>
+    <ul>
+        <li>
+            <p><span class="html">allow_add</span> permet l'ajout de nouvel élément, cela ajoutera un attribut <span class="html">data-prototype</span> au niveau du conteneur HTML.</p>
+        </li>
+        <li>
+            <p><span class="html">allow_delete</span> permet de supprimer un élément à la volée.</p>
+        </li>
+        <li>
+            <p><span class="html">by_reference</span> indique qu'on ne modifie pas directement la collection, mais que l'on doit appeler les méthodes addXXX / removeXXX sur notre entité à la place.</p>
+        </li>
+    </ul>
+    <p>On doit ensuite ajouter du code JavaScript pour ajouter les boutons d'action.</p>
+<pre><code>// assets/controller/form-collection_controller.js
+import { Controller } from '@hotwired/stimulus';
+
+export default class extends Controller {
+
+    static values = {
+        addLabel: String,
+        deleteLabel: String,
+    };
+
+    /**
+    * Injecte dynamiquement le bouton "Ajouter" et les boutons "Supprimer"
+    */
+    connect() {
+        this.index = this.element.childElementCount;
+        const btn = document.createElement('button');
+        btn.setAttribute('class', 'btn btn-secondary');
+        btn.innerText = this.addLabelValue || 'Ajouter un élément';
+        btn.setAttribute('type', 'button');
+        btn.addEventListener('click', this.addElement);
+        this.element.childNodes.forEach(this.addDeleteButton);
+        this.element.append(btn);
+    };
+
+    /**
+    * AJoute une nouvelle entrée dans la structure HTML
+    *
+    * @param {MouseEvent} e
+    */
+    addElement = () =&gt; {
+        e.preventDefault();
+        const element = document.createRange().createContextualFragment(
+            this.element.dataset['prototype'].replaceAll('__name__', this.index)
+        ).firstElementChild;
+        this.addDeleteButton(element);
+        this.index++;
+        e.currentTarget.insertAdjacentElement('beforebegin', element);
+    };
+
+    /**
+    * Ajoute le bouton pour supprimer une ligne
+    *
+    * @param {HTMLElement} item
+    */
+    addDeleteButton = (item) =&gt; {
+        const btn = document.createElement('button');
+        btn.setAttribute('class', 'btn btn-secondary');
+        btn.innerText = this.deleteLabelValue || Supprimer;
+        btn.setAttribute('type', 'button');
+        item.append(btn);
+        btn.addEventListener('click', (e) =&gt; {
+            e.preventDefault();
+            item.remove();
+        });
+    };
+
+};</code></pre>
+    <p>Et voilà, notre entité sera automatiquement hydratée et Doctrine saura porter les modifications en base de données.</p>
+    <h3>Étape 40 : Tâche asynchrone avec Messenger :</h3>
+    <p>Dans cette partie, je vous propose de découvrir comment gérer un système de <a href="https://symfony.com/doc/current/messenger.html" target="_blank">fil d'attente sur Symfony avec Messenger</a>.</p>
+    <h3>Étape 41 : Internationnalisation :</h3>
+    <p>Dans cette partie, nous allons voir comment gérer l'internationalisation d'une application web avec Symfony.</p>
+    <h4>Traduction de chaîne :</h4>
+    <p>Pour les chaînes présentes dans le code source, il est possible de les traduire de différentes manières en fonction de la situation.</p>
+<pre><code>&lt;!-- Via un filtre --&gt;
+{{ 'Welcome' | trans }}
+
+&lt;!-- Via un tag --&gt;
+{% trans %}Welcome{% endtrans %}</code></pre>
+    <p>Dans les contrôleurs et les services, il est possible d'utiliser le service de traduction pour obtenir la version traduite d'une chaîne.</p>
+<pre><code>use Symfony\Contracts\Translation\TranslatorInterface;
+
+public function index(TranslatorInterface $translator): Response
+{
+    $translated = $translator-&gt;trans('Welcome');
+}</code></pre>
+    <p>Ensuite, les traductions de nos chaînes seront placées dans le dossier <span class="em">translations</span> au format yaml. Ce dossier, et la locale à utiliser par défaut sont configurés dans le fichier de configuration <span class="em">translation.yaml</span>.</p>
+<pre><code># messages.fr.yaml
+welcome: Bienvenue</code></pre>
+    <p>Pour des traductions plus complexes (genre et pluralisation), il est possible d'utiliser le <a href="https://symfony.com/doc/current/reference/formats/message_format.html" target="_blank">format ICU pour les messages</a>.</p>
+    <h4>Sélection de la langue :</h4>
+    <p>Maintenant que nous avons nos traductions, il faut pouvoir passer d'une traduction à l'autre. Cela peut se faire de plusieurs manières.</p>
+    <h5>Via l'URL :</h5>
+    <p>Le cas classique est de préfixer nos URL avec la langue choisie par l'utilisateur.</p>
+<pre><code># config/routes.yaml
+controllers:
+    prefix: "{_locale}"
+    requirements:
+        _locale: en|fr|de
+    resource:
+        path: .../src/Controller/
+        namespace: App\Controller
+    type: attribute</code></pre>
+    <p>L'attribut <span class="em">_locale</span> sera automatiquement pris en compte par le système de traduction qui appliquera la locale associée à ce paramètre. Vous pouvez utiliser cet attribut n'importe où dans votre application.</p>
+    <h5>Via une prédérence utilisateur :</h5>
+    <p>Une autre possibilité est d'utiliser une préférence utilisateur pour définir la langue de l'interface. Dans ce cas-là, il sera possible d'utiliser un écouteur d'événement et d'utiliser le service <span class="html">LocaleSwitcher</span> pour changer la locale du site.</p>
+<pre><code>&lt;?php
+
+    namespace App\EventListener;
+
+    use App\Entity\User;
+    use Symfony\Bundle\SecurityBundle\Security;
+    use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+    use Symfony\Component\HttpKernel\Event\RequestEvent;
+    use Symfony\Component\HttpKernel\KernelEvents;
+    use Symfony\Component\Translation\LocaleSwitcher;
+
+    final class UserLocaleListener
+    {
+
+        public function __construct(
+            private readonly Security $security,
+            private readonly LocaleSwitcher $LocaleSwitcher
+        )
+        {
+
+        }
+
+        #[AsEventListener(event: KernelEvents::REQUEST)]
+        public function onKernelRequest(RequestEvent $event): void
+        {
+            $user = $this-&gt;security-&gt;getUser();
+            if ($user &amp;&amp; $user instanceof User) {
+                $this-&gt;LocaleSwitcher-&gt;setLocale($user-&gt;getLocale());
+            }
+        }
+    }
+
+?&gt;</code></pre>
+    <h4>Traduction des entités :</h4>
+    <p>En revanche, Symfony n'intègre pas d'outil interne pour la traduction des champs de votre base de données. Cependant, il est possible d'utiliser le module <a href="https://github.com/doctrine-extensions/DoctrineExtensions" target="_blank">DoctrineExtension</a> qui permet l'ajout de comportements supplémentaires. Pour simplifier son intégration au sein de Symfony, on pourra utiliser le bundle <a href="https://symfony.com/bundles/StofDoctrineExtensionsBundle/current/index.html" target="_blank">StofDoctrineExtensionsBundle</a>.</p>
+<pre><code>composer require stof/doctrine-extensions-bundle</code></pre>
+    <p>Vous pourrez ensuite suivre <a href="https://symfony.com/bundles/StofDoctrineExtensionsBundle/current/configuration.html" target="_blank">les instructions de la documentation pour activer l'extension <span class="em">gedmo_translatable</span></a>.</p>
+    <h3>Étape 42 : Les ValueResolver :</h3> 
+    <p>Dans Symfony, les contrôleurs sont au coeur de la logique de notre application. Les méthodes peuvent recevoir des paramètres qui sont automatiquement résolue par le système de <a href="https://symfony.com/doc/current/controller/value_resolver.html" target="_blank">Value Resolver</a>. Ce système peut aussi être étendu avec des attribus pour rajouter de la logique supplémentaire.</p>
+<pre><code>// ...
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Component\Routing\Attribute\Route;
+
+class BlogController
+{
+    #[Route('/post/{$post}')]
+    public function create(
+        #[MapEntity] Post $post,
+        #[MapRequestPayload] CreatePostDTO $data,
+    ): Response
+    {
+
+    }
+}</code></pre>
+    <p>Ce système peut être étendu pour créer votre propre système de résolution de paramètre. Pour cela, il suffit de créer une classe qui implémente l'interface <span class="em">Symfony\Component\HttpKernel\Controller\ValueResolverInterface</span>.</p>
+    <h4>Exemple :</h4>
+    <p>Par exemple, voici un exemple de <span class="html">ValueResolver</span> que j'utilise pour fusionner la logique d'un <span class="html">MapEntity</span> et d'un <span class="html">MapRequestPayload</span>.</p>
+    <p>Pour commencer, je crée un attribut qui me permettra de marquer le paramètre de mon contrôler comme hydratable.</p>
+<pre><code>&lt;?php
+
+    namespace App\Http\ValueResolver\Attribute;
+
+    use App\Http\ValueResolver\EntityHydratorValueResolver;
+    use Symfony\Component\HttpKernel\Attribute\ValueResolver;
+    use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
+    use Symfony\Component\Validator\Constraints\GroupSequence;
+
+    /**
+    * Attribut permettant une fusion entre MapEntity &amp; MapRequestPayload
+    * - Récupère l'entité depuis la base de données (comme MapEntity)
+    * - Injecte les données provenant de la requête
+    * - Valide les données.
+    */
+    #[\Attribute(\Attribute::TARGET_PARAMETER)]
+    final readonly class MapHydratedEntity extends ValueResolver
+    {
+
+        public function __construct(
+            public array $groups = [],
+            public string|GroupSequence|array|null $validationGroups = null,
+        )
+        {
+          parent::__construct(EntityHydratorValueResolver::class);  
+        }
+    }
+
+?&gt;</code></pre>
+    <p>Ensuite, on crée un <span class="html">ValueResolver</span> qui ne déclenchera sa logique que pour les paramètres avec l'attribut <span class="html">MapHydratedEntity</span>. Cette classe doit implémenter une méthode <span class="html">resolve()</span> qui devra renvoyer un tableau contenant l'élément à injecter dans le contrôleur (ou renvoyer un tableau vide pour passer au <span class="html">ValueResolver</span> suivant).</p>
+<pre><code>&lt;?php
+
+    namespace App\Http\ValueResolver;
+
+    use App\Http\ValueResolver\Attribute\MapHydratedEntity;
+    use Doctrine\Persistence\ManagerRegistry;
+    use Symfony\Bridge\Doctrine\ArgumentResolver\EntityValueResolver;
+    use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
+    use Symfony\Component\HttpFoundation\Request;
+    use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
+    use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
+    use Symfony\Component\HttpKernel\Exception\HttpException;
+    use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+    use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+    use Symfony\Component\Serializer\SerializerInterface;
+    use Symfony\Component\Validator\Exception\ValidationFailedException;
+    use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+    /**
+    * Récupère une entité (comme MapEntity), l'hydrate et la valide
+    * Agit comme une combinaison entre MapEntity &amp; MapRequestPayload.
+    */
+    final readonly class EntityHydratorValueResolver implements ValueResolverInterface
+    {
+        private EntityValueResolver $entityValueResolver;
+
+        public function __construct(
+            private SerializerInterface $serializer,
+            private ValidatorInterface $validator,
+            ManagerRegistry $registry,
+            ?ExpressionLanguage $expressionLanguage = null,
+        )
+        {
+            $this-&gt;entityValueResolver = new EntityHydratorValueResolver($registry, $expressionLanguage);
+        }
+
+        public function resolve(Request, ArgumentMetadata $argument): iterable
+        {
+            // On ne s'active que sur les paramètres avec l'attribut MapHydratedEntity
+            $attribute = $argument-&gt;getAttributes(MapHydratedEntity::class, ArgumentMetadata::IS_INSTANCEOF)[0] ?? null;
+
+            if (!($attribute instanceof MapHydratedEntity)) {
+                return [];
+            }
+
+            // Agit comme un MapEntity
+            $entity = $this-&gt;entityValueResolver-&gt;resolve($request, $argument)[0] ?? null;
+            if (!$entity::class || $entity::class !== $argument-&gt;getType()) {
+                throw new NotFoundHttpException(sprintf('"%s" object not found by "%s".', $argument-&gt;getType(), self::class));
+            }
+
+            // Hydrate l'objet avec le contenu de la requête
+            $this-&gt;serialize-&gt;deserialize($request-&gt;getContent(), $entity::class, $request-&gt;getContentTypeFormat() ?? 'json', [
+                'groups' =&gt; $attribute-&gt;groups,
+                AbstractNormalizer::OBJECT_TO_POPULATE =&gt; $entity,
+            ]);
+            $violations = $this-&gt;validator-&gt;validate($entity, groups: $attribute-&gt;validationGroups);
+
+            if (\count($violations)) {
+                throw HttpException::fromStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, implode("\n", array_map(static fn ($e) =&gt; $e-&gt;getMessage(), iterator_to_array($violations))), new ValidationFailedException($entity, $violations));
+            }
+
+            return [
+                $entity,
+            ];
+        }
+
+    }
+
+?&gt;</code></pre>
+    <h3>Étape 43 : Héberger Symfony sur un mutualisé O2Switch (via SSH / Git) :</h3>
+    <p>Dans cette partie, nous allons voir comment déployer notre application Symfony sur un hébergeur qui utilise l'interface CPanel. Ici, nous utiliserons l'hébergement <a href="https://osw.yt/r/o2switch-site" target="_blank">O2Swith</a>.</p>
+    <div class="information">
+        <img src="../images/information.png" alt="Information" class="float_left">
+        <p>Pour intéragir avec le serveur, nous utiliserons le protocole SSH. Vous pouvez voir <a href="https://grafikart.fr/tutoriels/clef-ssh-server-2203" target="_blank">comment utiliser une clef SSH</a>.</p>
+    </div>
+    <h4>Préparation de l'environnement :</h4>
+    <p>La première étape est de préparer le serveur pour accueillir notre site :</p>
+    <ul>
+        <li>
+            <p>On ajoute notre IP à la liste des IPs autorisées à se connecter en SSH au serveur via <span class="em">Autorisation SSH</span>.</p>
+        </li>
+        <li>
+            <p>On commence par <span class="em">Ajouter un domaine</span> que l'on fait pointer vers un possible spécifique (on pensera à ponter vers le dossier public). Par exemple :<span class="em">~/sites/mondomaine.tld/public</span>.</p>
+        </li>
+        <li>
+            <p>On génère un certificat SSL, depuis "<span class="em">Lets Encrypt<sup>TM</sup> SSL</span>".</p>
+        </li>
+        <li>
+            <p>On crée une base de données avec son utilisateur associé (vous pouvez utiliser l'option "assistant" pour faire cette opération en une fois).</p>
+        </li>
+        <li>
+            <p>Sur "<span class="em">Sélectionner une version de PHP</span>", on activera la version 8.2 nécessaire au fonctionnement de <span class="em">Symfony</span>.</p>
+        </li>
+    </ul>
+    <h4>Préparation du site :</h4>
+    <p>Pour que l'application Symfony soit déployée, il faut faire pointer les liens vers le fichier <span class="em">index.php</span> du dossier public. Les hébergeurs utilisent souvent Apache et il faudra ajouter un fichier de configuration <span class="html">.htaccess</span>. Cela peut se faire facilement à l'aide de <span class="em">symfony/apache-pack</span>.</p>
+<pre><code>composer require symfony/apache-pack</code></pre>
+    <p>Maintenant que notre serveur est configuré, on va devoir copier le code source de notre site sur le serveur. Dans notre cas, nous allons cloner notre projet depuis le dépôt distant git.</p>
+<pre><code>cd ~/sites
+git clone git@github.com:DrissV/mondomaine.tld</code></pre>
+    <p>Ensuite, on va modifier la configuration du site en créant un fichier <span class="em">.env.local</span>. À adapter en fonction de votre environnement.</p>
+<pre><code>APP_ENV=prod
+DATABASE_URL="mysql://user:password@127.0.0.1:3306/monsite?serverVersion=11.2.2-MariaDB&charset=utf8mb4"
+MAILER_DSN=native://default</code></pre>
+    <p>Enfin, on installe les dépendances, et on lance les migrations pour mettre à jour notre base de données.</p>
+<pre><code>composer install --no-dev --optimize-autoloader
+composer dump-env prod
+php bin/console importmap:install
+php bin/console asset-map:compile
+php bin/console doctrine:migrations:migrate
+APP_ENV=prod APP_DEBUG=0 php bin/console cache:clear</code></pre>
+    <p>Et voilà ! Le site devrait maintenant être visible et fonctionnel.</p>
+    <h4>AUtomatiser avec Make :</h4>
+    <p>Pour automatiser le processus de déploiement d'une nouvelle version, il est possible d'utiliser un fichier <span class="html">Makefile</span>.</p>
+    <div class="information">
+        <img src="../images/information.png" alt="Information" class="float_left">
+        <p><a href="https://grafikart.fr/tutoriels/makefile-953" target="_blank">Connaissance de Makefile</a></p>
+    </div>
+<pre><code>server := "user@mondomain.ltd"
+domain := "mondomain.ltd"
+
+.PHONY: install deploy
+
+deploy:
+    ssh -A $(server)$ 'cd sites/$(domain) &amp;&amp; git pull origin main &amp;&amp; make install'
+
+install: vendor/autoload.php
+    php bin/console doctrine:migrations:migrate -n
+    php bin/console importmap:install
+    php bin/console asset-map:compile
+    composer dump-env prod
+    php bin/console cache:clear
+
+vendor/autoload.php: composer.lock composer.json
+    composer install --no-dev --optimize-autoloader
+    touch vendor/autoload.php</code></pre>
+    <p>Si vous souhaitez déployer une mise à jour, il vous suffira de taper la commande <span class="html">make deploy</span>.</p>
+    <h4>Messenger :</h4>
+    <p>Malheureusement, il n'est pas possible d'utiliser un superviseur pour faire fonctionner <span class="em">Messenger</span>. Une solution alternative est d'utiliser une tâche récurrente qui traitera les tâches toutes les 5 minutes.</p>
+<pre><code>/usr/local/bin/php /home/USER/sites/mondomain.ltd/bin/console messenger:consume --time-limit=295 --memory-limit=128M async &gt; /home/USER/sites/mondomain.ltd/var/log/cron.log 2&gt;&amp;1</code></pre>
     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
 </article>
 <article>
