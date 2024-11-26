@@ -4136,7 +4136,7 @@ public function index(): Response
 }</code></pre>
                     <p>On va ensuite initialiser l'<span class="em">Authenticator</span> qui créera une page d'authentification avec la commande :</p>
 <pre><code>symfony console make:auth</code></pre>
-                    <p>On va donc créer un login form authenticator dans une classe "AppAuthenticator". Vous pourrez ensuite personnaliser la classe générée par la commande pour personnaliser le processus de connexion.</p>
+                    <p>On va donc créer un login form authenticator dans une classe "<span class="em">AppAuthenticator</span>". Vous pourrez ensuite personnaliser la classe générée par la commande pour personnaliser le processus de connexion.</p>
 <pre><code>&lt;?php
 
     namespace App\Security;
@@ -4993,6 +4993,49 @@ public function create(
 }</code></pre>
     <p>Cet attribut va aussi utiliser la validation et, si les données soumises ne sont pas valides, une erreur sera directement renvoyée à l'utilisateur.</p>
     <p>Il existe aussi un équivalent pour générer un objet à partir des informations provenant de l'URL à l'aide de <a href="https://symfony.com/doc/current/controller.html#mapping-the-whole-query-string" target="_blank">MapQueryString</a>.</p>
+    <p>On peut créer des DTO à la volée. Par exemple, dans le code suivant, si on rentre un numéro de page négatif, ça va lancer une erreur :</p>
+<pre><code>#[Route('/api/recipes', methods: ['GET'])]
+public function index(RecipeRepository $repository, Request $request)
+{
+    $recipes = $repository-&gt;paginateRecipes($request-&gt;query-&gt;getInt('page', 1));
+    return $this-&gt;json($recipes, 200, [], [
+        'groups' =&gt; ['recipes.index'],
+    ]);
+}</code></pre>
+    <p>Pour corriger cette erreur, on va créer le DTO <span class="em">PaginationDTO</span> :</p>
+<pre><code>&lt;?php
+
+    namespace App\DTO;
+
+    use Symfony\Component\Validator\Constraints as Assert;
+
+    class PaginationDTO
+    {
+
+        public function __construct(
+            #[Assert\Positive()]
+            public readonly ?int $page = 1
+        )
+        {
+
+        }
+
+    }
+
+?&gt;</code></pre>
+    <p>On modifiera donc notre code pour utiliser ce DTO :</p>
+<pre><code>#[Route('/api/Recipes', methods: ['GET'])]
+public function index(
+    RecipeRepository $repository,
+    #[MapQueryString]
+    ?PaginationDTO $paginationDTO = null;
+)
+{
+    $recipes = $repository-&gt;paginateRecipes($paginationDTO?-&gt;page);
+    return $this-&gt;json($recipes, 200, [], [
+        'groups' =&gt; ['recipes.index'],
+    ]);
+}</code></pre>
     <h3>Étape 36 : Authenticator stateless :</h3>
     <p>Dans cette partie, je vous propose de revenir sur le composant <span class="em">Security</span> et on va découvrir comment créer un système d'authentification stateless pour notre partie API.</p>
     <p>Le composant <span class="em">Security</span> est composé de plusieurs éléments :</p>
@@ -5070,7 +5113,131 @@ public function create(
             stateless: true
             lazy: true
 </code></pre>
-    <p>Dans mon cas, je me contente de chercher l'utilisateur qui a la propriété <span class="em">apiToken</span> qui correspond à la clef d'Authorization. Pour des cas plus complexes, vous pouvez <a href="https://symfony.com/doc/current/security/user_providers.html#creating-a-custom-user-provider" target="_blank">utiliser un provider personnalisé</a>.</p>
+    <p>Dans mon cas, je me contente de chercher l'utilisateur qui a la propriété <span class="em">apiToken</span> qui correspond à la clef d'<span class="em">Authorization</span>. Pour des cas plus complexes, vous pouvez <a href="https://symfony.com/doc/current/security/user_providers.html#creating-a-custom-user-provider" target="_blank">utiliser un provider personnalisé</a>.</p>
+    <h3>Étape 37 : Permissions avancées avec les Voter :</h3>
+    <p>Dans cette partie, nous allons revenir sur l'aspect sécurité et voir comment gérer des permissions plus fines qu'un simple système de rôle. Pour cela, on va se reposer sur l'utilisation de <a href="https://symfony.com/doc/current/security/voters.html" target="_blank">Voters</a> qui permettent de juger de l'accès de l'utilisateur à certaines opérations.</p>
+    <h4>Exemple :</h4>
+    <p>Par exemple, on permet à tout le monde de lister ses propres recettes, mais il faut être l'autre d'une recette pour l'éditer.</p>
+<pre><code>&lt;?php
+    
+    namespace App\Security\Voter;
+
+    use App\Entity\Recipe;
+    use App\Entity\User;
+    use Symfony\Bundle\SecurityBundle\Security;
+    use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+    use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+    use Symfony\Component\Security\Core\User\UserInterface;
+
+    class RecipeVoter extends Voter
+    {
+        public const EDIT = 'RECIPE_EDIT';
+        public const DELETE = 'RECIPE_DELETE';
+        public const VIEW = 'RECIPE_VIEW';
+        public const CREATE = 'RECIPE_CREATE';
+        public const LIST = 'RECIPE_LIST';
+        public const LIST_ALL = 'RECIPE_ALL';
+
+        protected function supports(string $attribute, mixed $subject): bool
+        {
+            return
+                in_array($attribute, [self::CREATE, self::LIST, self::LIST_ALL]) || (
+                    in_array($attribute, [self::EDIT, self::VIEW])
+                    &amp;&amp; $subjet instanceof \App\Entity\Recipe
+                );
+        }
+
+        /**
+        * @param Recipe|null $subject
+        */
+        protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+        {
+            $user = $token-&gt;getUser();
+            // if the user is anonymous, do not grant access_control
+            if (!$user instanceof User) {
+                return false;
+            }
+
+            switch($attribute) {
+                case self::EDIT:
+                case self::DELETE:
+                    return $subject-&gt;getUser()-&gt;getId() === $user-&gt;getId();
+                    break;
+                case self::LIST:
+                case self::CREATE:
+                case self::VIEW:
+                    return true;
+                    break;
+            }
+
+            return false;
+        }
+    }
+
+?&gt;</code></pre>
+    <p>Ensuite, dans mon contrôleur, je peux utiliser l'attribut <span class="html">IsGranted</span> pour valider le niveau de permission de l'utilisateur.</p>
+<pre><code>#[Route('/', name: 'index')]
+#[IsGranted(RecipeVoter::LIST)]
+public function index(Security $security): Response {
+    $page = $request-&gt;query-&gt;getInt('page', 1);
+    $userId = $security-&gt;getUser()-&gt;getId();
+    $canListAll = $security-&gt;isGranted(RecipeVoter::LIST_ALL);
+    // On limite la liste des recettes à celle de l'utilisateur s'il n'a pas les permissions de tout voir
+    $recipes = $repository-&gt;paginateRecipes($page, $canListAll ? null : $userId);
+    // ...
+}
+
+#[Route('/create', name: 'create')]
+#[IsGranted(RecipeVoter::CREATE)]
+public function create(Request $request): Response
+{
+    // ...
+}
+
+#[Route('/{id}', name: 'edit', methods: ['GET', 'POST'], requirements: ['id' =&gt; Requirement::DIGITS])]
+#[IsGranted(RecipeVoter::EDIT, subject: 'recipe')]
+public function edit(Recipe $recipe, Request $request $request): Response
+{
+    // ...
+}
+
+#[Route('/{id}', name: 'delete', methods: ['DELETE'], requirements: ['id' =&gt; Requirement::DIGITS])]
+public function remove(Recipe $recipe)
+{
+    // ...
+}</code></pre>
+    <h4>Super admin :</h4>
+    <p>Par défaut, le système est affirmative, il suffit d'un seul voter qui vote "oui" pour donner l'accès à l'utilisateur à un système. Aussi, on peut créer un voter basé sur le rôle qui répondra "oui" à tout si l'utilisateur a le rôle administrateur.</p>
+<pre><code>&lt;?php
+
+    namespace App\Security\Voter;
+
+    use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+    use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+    use Symfony\Component\Security\Core\User\UserInterface;
+
+    class AdminVoter extends Voter
+    {
+
+        protected function supports(string $attribute, mixed $subject): bool
+        {
+            return true;
+        }
+
+        protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+        {
+            $user = $token-&gt;getUser();
+            if (!user instanceof UserInterface) {
+                return false;
+            }
+
+            return in_array('ROLE_ADMIN', $user-&gt;getRoles());
+        }
+
+    }
+
+?&gt;</code></pre>
+    <p>Cela permet de ne pas polluer les autres voters tout en créant une règle qui outrepasse toutes les autres.</p>
     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
 </article>
 <article>
