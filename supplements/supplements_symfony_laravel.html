@@ -5633,7 +5633,7 @@ class BlogController
     }
 
 ?&gt;</code></pre>
-    <h3>Étape 43 : Héberger Symfony sur un mutualisé O2Switch (via SSH / Git) :</h3>
+    <h3>Étape 43 : Héberger Symfony sur un hébergement mutualisé O2Switch (via SSH / Git) :</h3>
     <p>Dans cette partie, nous allons voir comment déployer notre application Symfony sur un hébergeur qui utilise l'interface CPanel. Ici, nous utiliserons l'hébergement <a href="https://osw.yt/r/o2switch-site" target="_blank">O2Swith</a>.</p>
     <div class="information">
         <img src="../images/information.png" alt="Information" class="float_left">
@@ -5704,6 +5704,75 @@ vendor/autoload.php: composer.lock composer.json
     <h4>Messenger :</h4>
     <p>Malheureusement, il n'est pas possible d'utiliser un superviseur pour faire fonctionner <span class="em">Messenger</span>. Une solution alternative est d'utiliser une tâche récurrente qui traitera les tâches toutes les 5 minutes.</p>
 <pre><code>/usr/local/bin/php /home/USER/sites/mondomain.ltd/bin/console messenger:consume --time-limit=295 --memory-limit=128M async &gt; /home/USER/sites/mondomain.ltd/var/log/cron.log 2&gt;&amp;1</code></pre>
+    <h3>Étape 44 : Héberger Symfony sur un hébergement mutualisé Infomaniak (SSH / Git) :</h3>
+    <p>Dans cette partie, nous allons voir comment héberger notre application Symfony sur un hébergement mutualisé qui supporte SSH. Ici, je vais utiliser l'offre d'hébergement <a href="https://www.infomaniak.com/goto/fr/hosting.classic?utm_term=59f74db50448d" target="_blank">Infomaniak</a> mais vous pouvez reproduire ce que l'on va faire sur n'importe quel hébergeur qui vous laisse un accès SSH sur le serveur.</p>
+    <div class="information">
+        <img src="../images/information.png" alt="Information" class="float_left">
+        <p>Pour intéragir avec le serveur, nous utiliserons le protocole SSH. Vous pouvez voir <a href="https://grafikart.fr/tutoriels/clef-ssh-server-2203" target="_blank">comment utiliser une clef SSH</a>.</p>
+    </div>
+    <h4>Préparation du site :</h4>
+    <p>Pour que l'application Symfony soit déployée, il faut faire pointer les liens vers le fichier <span class="em">index.php</span> du dossier <span class="em">public</span>. Les hébergeurs utilisent souvent Apache et il faudra ajouter un fichier de configuration <span class="html">.htaccess</span>. Cela peut se faire facilement à l'aide de <span class="em">symfony/apache-pack</span>.</p>
+<pre><code>composer require symfony/apache-pack</code></pre>
+    <h4>Clonage du projet en ligne :</h4>
+    <p>Pour déployer le code source, nous allons utiliser git et cloner le dépôt distant. Pour m'organiser, je met les sites dans un dossier <span class="em">sites</span> mais vous être libres de suivre la convention que vous préférez.</p>
+<pre><code>cd ~/sites
+git clone git@github.com:DrissV/DemoSF.git</code></pre>
+    <p>On modifiera ensuite les variables d'environnements en créant un fichier <span class="em">.env.local</span> qui contiendra les variables spécifiques à notre environnement.</p>
+    <p>Pour la base de données, <a href="https://www.infomaniak.com/goto/fr/hosting.classic?utm_term=59f74db50448d" target="_blank">Infomaniak</a> utilise MariaDB et vous pouvez créer une base depuis votre espace d'Administration. Je vous conseille de créer un utilisateur en même temps pour limiter l'accès à cette base de données seulement.</p>
+<pre><code>APP_ENV=prod
+APP_SECRET=descaracteresaleatoireici
+
+DATABASE_URL="mysql://user:pass@user.myd.infomaniak.com:3306/database?serverVersion=10.4.25-MariaDB&charset=utf8mb4"
+
+MAILER_DSN=native://default</code></pre>
+    <p>Une fois l'environnement modifié, on pourra lancer l'installation des dépendances.</p>
+<pre><code>/opt/php8.2/bin/composer install --no-dev --optimize-autoloader
+/opt/php8.2/bin/composer dump-env prod
+/opt/php8.2/bin/php bin/console importmap:install
+/opt/php8.2/bin/php bin/console asset-map:compile
+/opt/php8.2/bin/php bin/console doctrine:migrations:migrate
+APP_ENV=prod APP_DEBUG=0 /opt/php8.2/bin/php bin/console cache:clear</code></pre>
+    <h4>Configuration de l'hébergement :</h4>
+    <p>Maintenant que nos sources sont en ligne, il va falloir configurer l'hébergeur afin de lui dire comment résoudre notre nom de domaines. Pour Infomaniak, cela se passe dans la partie <span class="em">Mes sites &gt; Gestion des sites &gt; Ajouter un site</span>. Sélectionnez l'option "Continuez sans installer d'outil". Ensuite, vous pouvez sélectionner le domaine (ou le sous-domaine) à associer à ce nouveau site et cliquer sur <span class="em">continuer</span> pour finaliser la création du site.</p>
+    <p>Une fois le site créé, vous devrez faire plusieurs changements :</p>
+    <ul>
+        <li>
+            <p>Modifier la version de PHP pour correspondre au besoin de Symfony (version 8.2 minimum) et activer des extensions supplémentaires si nécessaire.</p>
+        </li>
+        <li>
+            <p>Installer le certificat avec Let's encrypt (en un clic).</p>
+        </li>
+        <li>
+            <p>Aller dans les <span class="em">Paramètres avancés</span> pour modifier le dossier du site et pointer vers le dossier public de Symfony <span class="em">/sites/monsite.tld/public</span>.</p>
+        </li>
+        <li>
+            <p>Dans les <span class="em">Paramètres avancés</span> puis dans l'onglet <span class="em">Apache</span>, vous pourrez activer la compression des fichiers mais aussi gérer des variables d'environnement que vous souhaitez ajouter à votre application Symfony.</p>
+        </li>
+    </ul>
+    <p>À partir de cette étape, votre site devrait fonctionner et être visible lorsque vous tapez votre nom de domaine.</p>
+    <h4>Automatiser avec Make :</h4>
+    <p>Pour automatiser le processus de déploiement d'une nouvelle version, il est posssible d'utiliser un fichier <span class="html">Makefile</span>.</p>
+    <div class="information">
+        <img src="../images/information.png" alt="Information" class="float_left">
+        <p><a href="https://grafikart.fr/tutoriels/makefile-953" target="_blank">Connaissance de Makefile</a></p>
+    </div>
+<pre><code>server := "user@mondomain.ltd"
+domain := "mondomain.ltd"
+
+.PHONY: install deploy
+
+deploy:
+    ssh -A $(server)$ 'cd sites/$(domain) &amp;&amp; git pull origin main &amp;&amp; make install'
+
+install: vendor/autoload.php
+    /opt/php8.2/bin/php bin/console d:m:m -n
+    /opt/php8.2/bin/composer dump-env prod
+    /opt/php8.2/bin/php bin/console cache:clear
+
+vendor/autoload.php: composer.json composer.lock
+    /opt/php8.2/bin/composer install --no-dev --optimize-autoloader
+    touch vendor/autoload.php</code></pre>
+    <p>Si vous souhaitez déployer une mise à jour, il vous suffira de taper la commande <span class="html">make deploy</span>.</p>
     <p>Dans le tutoriel suivant, nous aborderons Laravel, un autre framework PHP populaire pour le développement web.</p>
 </article>
 <article>
