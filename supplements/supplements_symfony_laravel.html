@@ -154,7 +154,6 @@
                     <p>Symfony a besoin de la version 8.2 ou supérieure de PHP. Pour vérifier la version de votre PHP et de votre Composer, vous pouvez utiliser les commandes suivantes :</p>
 <pre><code>php --version</code></pre>
 <pre><code>composer --version</code></pre>
-                    <p></p>
                     <ol>
                         <li>
                             <p>Ouvrez une ligne de commande ou un terminal.</p>
@@ -4023,7 +4022,9 @@ public function indexPublic(RecipeRepository $repository, PaginatorInterface $pa
                     <p>Ça permet de compiler tous nos fichiers dans le dossier "assets" dans le dossier "public/build". Dans ce nouveau dossier, on aura les fichiers "app.css" et "app.js". Dans le fichier "webpack.config.js", on a des "entry".</p>
                     <p>Grâce à "<span class="em">{{ encore_entry_link_tags('app') }}</span>" et à "<span class="em">{{ encore_entry_script_tags('app') }}</span>", Symfony sait qu'on utilise Webpack Encore.</p>
                     <h3>Étape 29 : Les Event Listener &amp; Event Subscriber :</h3>
+                    <p>Dans le cadre d'une application complexe, on a souvent besoin de rajouter de la logique supplémentaire sur des logiques déjà existantes. Pour répondre à cette problématique, Symfont propose un système d'événements qui permettra d'ajouter des écouteurs pour venir greffer la logique que l'on souhaite.</p>
                     <p>Durant l'exécution d'une application Symfony, plusieurs notifications d'évènements sont déclenchées. Par exemple, plusieurs évènements sont déclenchés lors d'une requête HTTP classique.</p>
+                    <p>Un événement est une simple classe PHP que l'on va en général construire avec les éléments significatifs.</p>
                     <p>La façon la plus commune pour écouter un évènement est d'enregistrer un "event listener". Dans le dossier "src", on crée le dossier "EventListener" et créer le fichier "ExceptionListener.php" ou avec la commande suivante :</p>
 <pre><code>php bin/console make:listener ExceptionListener</code></pre>
                     <p>On va modifier le contenu de cette classe comme ceci :</p>
@@ -4091,6 +4092,111 @@ public function indexPublic(RecipeRepository $repository, PaginatorInterface $pa
         public function onKernelRequest(RequestEvent $event)
         {
             dd($event-&gt;getRequest()-&gt;getPathInfo());
+        }
+    }
+
+?&gt;</code></pre>
+                    <h4>Exemples :</h4>
+<pre><code>&lt;?php
+
+    namespace App\Event;
+
+    use App\DTO\ContactDTO;
+
+    class ContactRequestEvent
+    {
+
+        public function __construct(public readonly ContactDTO $data)
+        {
+
+        }
+
+    }
+
+?&gt;</code></pre>
+                    <p>Ensuite, on pourra émettre cet événement via l'EventDispatcher.</p>
+<pre><code>#[Route('/contact', name: 'contact')]
+public function contact(Request $request, MailerInterface $mailer, EventDispatcherInterface $dispatcher): Response
+{
+    $data = new ContactDTO();
+    $form = $this-&gt;createForm(ContactType::class, $data);
+    $form-&gt;handleRequest($request);
+
+    if ($form-&gt;isSubmitted() &amp;&amp; $form-&gt;isValid()) {
+        try {
+            $dispatcher-&gt;dispatch(new ContactRequestEvent($data));
+            $this-&gt;addFlash('success', 'Votre email a bien été envoyé !');
+        } catch(\Exception $e) {
+            $this-&gt;addFlash('danger', 'Impossible d\'envoyer votre email !');
+        }
+    }
+
+    return $this-&gt;render('contact/contact/contact.html.twig', [
+        'form' =&gt; $form-&gt;createView(),
+    ]);
+}</code></pre>
+                    <p>Maintenant, si on souhaite ajouter de la logique lorsque cet événement se produit, on peut créer un listener. Cela peut se faire facilement à l'aide l'attribut <a href="https://symfony.com/doc/current/event_dispatcher.html#defining-event-listeners-with-php-attributes" target="_blank">AsEventListener</a>.</p>
+<pre><code>#[AsEventListener]
+fincal class ContactListener
+{
+    publc function __invoke(ContactRequestEvent $event): void
+    {
+        // ...
+    }
+}</code></pre>
+                    <p>Il est aussi possible de définir un Subscriber dans le cas où on veut pouvoir ajouter une logique similaire à plusieurs événements.</p>
+<pre><code>&lt;?php
+
+    namespace App\EventSubscriber;
+
+    use App\Entity\User;
+    use App\Event\ContactRequestEvent;
+    use Symfonyy\Bridge\Twig\Mime\TemplatedEmail;
+    use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+    use Symfony\Component\Mailer\MailerInterface;
+    use Symfony\Component\Mime\Email;
+    use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
+
+    class MailingSubscriber implements EventSubscriberInterface
+    {
+        public function __construct(private readonly MailerInterface $mailer)
+        {
+
+        }
+
+        public function onContactRequestEvent(ContactRequestEvent $event): void
+        {
+            $data = $event-&gt;data;
+            $mail = (new TemplatedEmail())
+                        -&gt;to($data-&gt;service)
+                        -&gt;from($data-&gt;email)
+                        -&gt;subject('Demande de contact')
+                        -&gt;htmlTemplate('emails/contact.html.twig')
+                        -&gt;context(['data' =&gt; $data]);
+            $this-&gt;mailer-&gt;send($mail);
+        }
+
+        public function onLogin(InteractiveLoginEvent $event) {
+            $user = $event-&gt;getLastAuthenticationToken()-&gt;getUser();
+            
+            if (!$user instanceof User) {
+                return;
+            }
+
+            $mail = (new Email())
+                        -&gt;to($user-&gt;getEmail())
+                        -&gt;from('support@demo.fr')
+                        -&gt;subject('Connexion')
+                        -&gt;text('Vous vous êtes connecté !');
+            $this-&gt;mailer-&gt;send($mail);
+        }
+
+        public static function getSubscribedEvents(): array
+        {
+            return [
+                ContactRequestEvent::class =&gt; 'onContactRequestEvent',
+                InteractiveLoginEvent::class =&gt; 'onLogin',
+            ];
         }
     }
 
