@@ -4223,8 +4223,9 @@ fincal class ContactListener
             $this-&gt;mailer-&gt;send($mail);
         }
 
-        public function onLogin(InteractiveLoginEvent $event) {
-            $user = $event-&gt;getLastAuthenticationToken()-&gt;getUser();
+        public function onLogin(InteractiveLoginEvent $event): void
+        {
+            $user = $event-&gt;getAuthenticationToken()-&gt;getUser();
             
             if (!$user instanceof User) {
                 return;
@@ -4267,7 +4268,7 @@ fincal class ContactListener
 
         }
 
-        #[AsEventListener(event: ContactRequestEvent::class, method: 'onContactRequestEvent')]
+        #[AsEventListener(event: ContactRequestEvent::class)]
         public function onContactRequestEvent(ContactRequestEvent $event): void
         {
             $data = $event-&gt;data;
@@ -4280,9 +4281,10 @@ fincal class ContactListener
             $this-&gt;mailer-&gt;send($mail);
         }
 
-        #[AsEventListener(event: InteractiveLoginEvent::class, method: 'onLogin')]
-        public function onLogin(InteractiveLoginEvent $event) {
-            $user = $event-&gt;getLastAuthenticationToken()-&gt;getUser();
+        #[AsEventListener(event: InteractiveLoginEvent::class)]
+        public function onLogin(InteractiveLoginEvent $event): void
+        {
+            $user = $event-&gt;getAuthenticationToken()-&gt;getUser();
             
             if (!$user instanceof User) {
                 return;
