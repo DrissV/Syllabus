@@ -5471,6 +5471,81 @@ public function remove(Recipe $recipe)
                     <p><a href="https://ux.symfony.com/" target="_blank">Symfony UX</a> est une initiative de l'équipe de Symfony pour fournir un ensemble de bibliothèques visant à simplifier l'intégration d'outils JavaScript dans vos applications Symfony.</p>
                     <h4>Comment ça marche ?</h4>
                     <p>Symfony UX s'appuie sur le framework JavaScript <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>, qui permet d'ajouter des comportements interactifs aux éléments HTML de manière automatique. Lorsque l'on va installer un paquet, une nouvelle ligne sera ajoutée au fichier <span class="em">assets/controller.json</span> pour enregistrer automatiquement le contrôleur associé au module. Ce fichier sera lu par l'asset mapper et chargera le fichier JavaScript associé dans votre page de manière automatique.</p>
+                    <p>On va devoir ajouter les dépendances de Symfony UX Turbo avec la commande :</p>
+<pre><code>composer require symfony/ux-turbo</code></pre>
+                    <p>On peut utiliser la balise <span class="html">&lt;turbo-frame id="..."&gt;</span> pour intégrer le formulaire d'édition lorsqu'on clique sur le lien d'édition.</p>
+                    <p>On peut également utiliser la condition suivante :</p>
+<pre><code>if ($request-&gt;getPreferredFormat() == TurboBundle::STREAM_FORMAT)
+{
+    // ...
+    $request-&gt;setRequestFormat(TurboBundle::STREAM_FORMAT);
+    return $this-&gt;render('admin/recipe/delete.html.twig', ['recipeId' =&gt; $recipeId, 'message' =&gt; $message]);
+}</code></pre>
+                    <p>Voici le code de la page TWIG qui va être retournée :</p>
+<pre><code>&lt;turbo-stream action="remove" target="row_recipe_{{ recipeId }}"&gt;
+&lt;/turbo-stream&gt;
+&lt;turbo-stream action="append" target="flash"&gt;
+    &lt;template&gt;
+        &lt;div class="alert alert-success"&gt;
+            {{ message }}
+        &lt;/div&gt;
+    &lt;/template&gt;
+&lt;/turbo-stream&gt;</code></pre>
+                    <p>On peut aussi installer les dépendances de Symfony UX Autocomplete avec la commande :</p>
+<pre><code>composer require symfony/ux-autocomplete</code></pre>
+                    <p>Grâce à cette installation, on peut rajouter, comme son nom le laisse supposer, un système d'autocomplétion dans nos formulaires en rajoutant <span class="html">'autocomplete' =&gt; true,</span> dans les propriétés de nos <span class="em">AbstractForm</span>.</p>
+                    <p>On peut utiliser la commande suivante pour créer un champ d'autocomplétion pour l'entité <span class="em">Category</span> dans notre formulaire :</p>
+<pre><code>php bin/console make:autocomplete-field</code></pre>
+                    <p>Voici le code généré par cette commande :</p>
+<pre><code>&lt;?php
+
+    // ...
+
+    // use ...
+
+    #[AsEntityAutocompleteField]
+    class CategoryAutocompleteField extends AbstractType
+    {
+        public function configureOptions(OptionsResolver $resolver): void
+        {
+            $resolver-&gt;setDefaults({
+                'class' =&gt; Category::class,
+                'placeholder' =&gt; 'Choose a Category',
+                'choice_label' =&gt; 'name',
+                'query_builder' =&gt; function (CategoryRepository $categoryRepository) {
+                    return $categoryRepository-&gt;createQueryBuilder('category');
+                },
+                // 'security' =&gt; 'ROLE_SOMETHING',
+            });
+        }
+
+        public function getParent: string
+        {
+            return ParentEntityAutocompleteType::class;
+        }
+
+    }
+
+?&gt;</code></pre>
+                    <p>Dans notre <span class="em">RecipeForm</span>, on va remplacer l'<span class="em">EntityType</span> pour nos catégories par ceci :</p>
+<pre><code>-&gt;add('category', CategoryAutocompleteField::class)</code></pre>
+                    <p>Enfin, pour installer les dépendances de Symfony UX Toggle Password, on utilise la commande :</p>
+<pre><code>composer require symfony/ux-toggle-password</code></pre>
+                    <p>Ce composant permet, comme son nom l'indique, d'afficher ou de masquer le mot de passe dans un formulaire en ajoutant la propriété <span class="html">'toggle' =&gt; true,</span> au champ <span class="em">password</span> du <span class="em">AbstractForm</span> correspondant comme ceci :</p>
+<pre><code>$builder
+    // ...
+    -&gt;add('password', PasswordType::class, [
+        'toggle' =&gt; true,
+        'hidden_label' =&gt; 'Masquer',
+        'visible_label' =&gt; 'Afficher',
+        // 'visible_icon' =&gt; null,
+        // 'hidden_icon' =&gt; null,
+        // 'button_classes' =&gt; ['toggle-password-button', 'btn', 'btn-primary', 'my-custom-class'],
+        // 'toggle' =&gt; ['input-group-text', 'my-custom-container'],
+    ])
+    // ...
+;</code></pre>
+                    <p>Il y a d'autres packages de Symfony UX que vous pouvez voir dans <a href="https://ux.symfony.com/packages" target="_blank">la documentation de Symfony UX</a>.</p>
                     <h3>Étape 39 : Formulaires imbriqués :</h3>
                     <p>Dans cette partie, je vous propose de découvrir comment gérer un système de formulaire imbriqué. Cela sera l'occassion de découvrir le type <span class="html">CollectionType</span> qui permet par exemple de gérer les données du relation <span class="html">OneToMany</span>.</p>
                     <p>Pour commencer, on va créer une classe de formulaire pour la donnée liée, classe que l'on pourra utiliser dans notre formulaire principal.</p>
@@ -5574,10 +5649,32 @@ public function index(TranslatorInterface $translator): Response
 {
     $translated = $translator-&gt;trans('Welcome');
 }</code></pre>
-                    <p>Ensuite, les traductions de nos chaînes seront placées dans le dossier <span class="em">translations</span> au format yaml. Ce dossier, et la locale à utiliser par défaut sont configurés dans le fichier de configuration <span class="em">translation.yaml</span>.</p>
+                    <p>Ensuite, les traductions de nos chaînes seront placées dans le dossier <span class="em">translations</span> au format yaml. Ce dossier, et la locale à utiliser par défaut sont configurés dans le fichier de configuration <span class="em">translation.yaml</span>. Voici le contenu de ce fichier :</p>
+<pre><code>framework:
+   default_locale: fr
+   translator:
+    default_path: '%kernel.project_dir%/translations'
+    fallbacks:
+        - en
+    providers:</code></pre>
 <pre><code># messages.fr.yaml
 welcome: Bienvenue</code></pre>
+                    <p>On a également la possibilité de générer de manière dynamique les traductions avec la commande suivante :</p>
+<pre><code>php bin/console translation:extract --force fr --format=yaml</code></pre>
+                    <p>Cela ne permet pas de traduire les formulaires créés via <span class="html">make:form</span>. on va utiliser une fonction globale de PHP pour les labels <span class="html">t()</span> qui permet de créer un nouvel objet qui est un <span class="html">TranslatableMessage</span>.</p>
                     <p>Pour des traductions plus complexes (genre et pluralisation), il est possible d'utiliser le <a href="https://symfony.com/doc/current/reference/formats/message_format.html" target="_blank">format ICU pour les messages</a>.</p>
+<pre><code>&lt;p&gt;{{ 'home_recipe_count' | trans({count: 100}) }}&lt;/p&gt;</code></pre>
+<pre><code># translations/messages+intl_icu.fr.yaml
+Welcome: __Welcome
+home_recipe_count: &gt;-
+    {count, plural,
+        =0 {Aucune recette}
+        =1 {Une recette}
+        other {&#35; recettes !}
+    }</code></pre>
+<pre><code>&lt;h1&gt;{{ 'welcome' | trans({':name': 'John'}) }}&lt;/h1&gt;</code></pre>
+<pre><code># translations/messages/fr/yaml
+welcome: Bienvenue :name</code></pre>
                     <h4>Sélection de la langue :</h4>
                     <p>Maintenant que nous avons nos traductions, il faut pouvoir passer d'une traduction à l'autre. Cela peut se faire de plusieurs manières.</p>
                     <h5>Via l'URL :</h5>
@@ -5631,6 +5728,49 @@ controllers:
                     <p>En revanche, Symfony n'intègre pas d'outil interne pour la traduction des champs de votre base de données. Cependant, il est possible d'utiliser le module <a href="https://github.com/doctrine-extensions/DoctrineExtensions" target="_blank">DoctrineExtension</a> qui permet l'ajout de comportements supplémentaires. Pour simplifier son intégration au sein de Symfony, on pourra utiliser le bundle <a href="https://symfony.com/bundles/StofDoctrineExtensionsBundle/current/index.html" target="_blank">StofDoctrineExtensionsBundle</a>.</p>
 <pre><code>composer require stof/doctrine-extensions-bundle</code></pre>
                     <p>Vous pourrez ensuite suivre <a href="https://symfony.com/bundles/StofDoctrineExtensionsBundle/current/configuration.html" target="_blank">les instructions de la documentation pour activer l'extension <span class="em">gedmo_translatable</span></a>.</p>
+                    <p>Dans le fichier de configuration de Doctrine, <span class="em">config/packages/doctrine.yaml</span>, il faut rajouter le <span class="em">mapping</span> suivant :</p>
+<pre><code>gedmo_translatable:
+    type: attribute
+    prefix: Gedmo\Translatable\Entity
+    dir: '%kernel.projet_dir%/vendor/gedmo/doctrine-extensions/src/Translatable/Entity'
+    alias: GedmoTranslatable # (optional) it will default to the name set for the mapping
+    is_bundle: false</code></pre>
+                    <p>Dans le fichier de configuration du bundle, <span class="em">stof_doctrine_extensions.yaml</span>, on rajoute ceci :</p>
+<pre><code>stof_doctrine_extensions:
+    default_locale: fr
+    orm:
+        default:
+            translatable: true</code></pre>
+                    <p>Dans notre entity, on peut rajouter l'annotation <span class="html">#[Translatable]</span> à nos différents champs.</p>
+                    <p>On peut créer une migration qui va créer la table <span class="em">ext_translations</span> qui contient l'ensemble des traductions qui sont associées à nos modèles. Seules les traductions qui sont pas dans la langue de la locale par défaut seront sauvées dans cette fameuse table.</p>
+                    <p>Dans la QueryBuilder, on peut rajouter ceci pour permettre aussi les traductions :</p>
+<pre><code>-&gt;setHint(
+    Query::HINT_CUSTOM_OUTPUT_WALKER,
+    TranslationWalker::class
+)</code></pre>
+                    <p>On peut également traduire dans une locale donnée en mettant cela à la place :</p>
+<pre><code>-&gt;setHint(
+    TranslatableListener::HINT_TRANSLATABLE_LOCALE,
+    'en'
+)</code></pre>
+                    <p>On peut enfin activer ou désactiver le fallback en utilisant ce code-ci et ça permet de récupérer ce qui a été sauvé en base de données :</p>
+<pre><code>-&gt;setHint(
+    TranslatableListener::HINT_FALLBACK,
+    1
+)</code></pre>
+                    <p>Pour la pagination, c'est la même chose :</p>
+<pre><code>$paginator = $this-&gt;paginator-&gt;paginate(
+    $builder-&gt;getQuery()-&gt;setHint(
+        Query::HINT_CUSTOM_OUTPUT_WALKER,
+        TranslationWalker::class
+    ),
+    $page,
+    20,
+    [
+        'distinct' =&gt; false,
+        'sortFieldAllowList' =&gt; ['r.id', 'r.title']
+    ]
+);</code></pre>
                     <h3>Étape 42 : Les ValueResolver :</h3> 
                     <p>Dans Symfony, les contrôleurs sont au coeur de la logique de notre application. Les méthodes peuvent recevoir des paramètres qui sont automatiquement résolue par le système de <a href="https://symfony.com/doc/current/controller/value_resolver.html" target="_blank">Value Resolver</a>. Ce système peut aussi être étendu avec des attribus pour rajouter de la logique supplémentaire.</p>
 <pre><code>// ...

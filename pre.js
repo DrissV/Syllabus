@@ -5,7 +5,9 @@ preElements.forEach(preElement => {
     preElement.setAttribute('role', 'button'); // Indiquer son rôle
     preElement.setAttribute('aria-label', 'Copier le contenu dans le pressePapier');
 
-    preElement.addEventListener('click', copyPreContent);
+    preElement.addEventListener('click', (event) => {
+        copyPreContent(event);
+    });
     preElement.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
