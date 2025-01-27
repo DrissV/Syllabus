@@ -54,6 +54,7 @@
                         <li><a href="#premier_composant">Premier composant</a></li>
                         <li><a href="#premier_exercice">Premier exercice</a></li>
                         <li><a href="#templates">Les templates</a></li>
+                        <li><a href="#directives">Les directives</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -521,6 +522,8 @@ export class AppComponent implements OnInit {
                                 <td>Propriété d'éléments</td>
                                 <td>
 <pre><code>&lt;img [src]='someImageUrl"&gt;</code></pre>
+                                    <p>Ce code se traduit comme ceci avec l'interpolation :</p>
+<pre><code>&lt;img src="{{ someImageUrl }}"&gt;</code></pre>
                                 </td>
                                 <td>
                                     <p>On utilise les crochets pour lier directement la source de l'image à la propriété du composant <span class="em">someImageUrl</span>.</p>
@@ -535,9 +538,217 @@ export class AppComponent implements OnInit {
                                     <p>On lie l'attribut <span class="em">for</span> de l'élément label avec la propriété de notre composant <span class="em">someLabelId</span>.</p>
                                 </td>
                             </tr>
-                            
+                            <tr>
+                                <td>Propriété de la classe</td>
+                                <td>
+<pre><code>&lt;div [class.special]="isSpecial"&gt;Special&lt;/div&gt;</code></pre>
+                                </td>
+                                <td>
+                                    <p>Fonctionnement similaire, pour attribuer ou non la classe <span class="em">special</span> à l'élément <span class="html">div</span>.</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Propriété de style</td>
+                                <td>
+<pre><code>&lt;button [style.color]="isSpecial?'red':'green'"&gt;
+    Special
+&lt;/button&gt;</code></pre>
+                                </td>
+                                <td>
+                                    <p>On peut également définir un style pour nos éléments de manière dynamique : ici on définit la couleur de notre bouton en fonction de la propriété <span class="">isSpecial</span>, soit rouge, soit vert (c'est un opérateur ternaire que l'on utilise comme expression).</p>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
+                    <p>Maintenant, on va gérer les interactions avec l'utilisateur comme les clics par exemple. Voici un exemple simple de l'utilisation d'un click sur le premier pokémon :</p>
+<pre><code>&lt;h1&gt;Liste de Pokémons&lt;/h1&gt;
+&lt;p (click)="selectPokemon(pokemonList[0])"&gt;{{ pokemonList[0].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[1].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[2].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[3].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[4].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[5].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[6].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[7].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[8].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[9].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[10].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[11].name }}&lt;/p&gt;</code></pre>
+                    <p>Voyons à présent comment intercepter tous les événements du DOM et pas que le click. On va ajouter un input dans notre vue et on va modifier le paramètre de notre méthode <span class="em">selectPokemon</span> :</p>
+<pre><code>&lt;h1&gt;Liste de Pokémons&lt;/h1&gt;
+&lt;input type="number" (click)="selectPokemon($event)"&gt;
+
+&lt;p&gt;{{ pokemonList[0].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[1].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[2].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[3].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[4].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[5].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[6].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[7].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[8].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[9].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[10].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[11].name }}&lt;/p&gt;</code></pre>
+<pre><code>selectPokemon(event: MouseEvent) {
+    const index: number = +(event.target as HTMLInputElement).value;
+    console.log(`Vous avez cliqué sur le pokémon ${this.pokemonList[index].name}`);
+}</code></pre>
+                    <p>Attention, n'oubliez pas que <span class="em">null</span> casté en <span class="em">number</span> est égal à <span class="em">0</span>.</p>
+                    <p>Ensuite, on va parler des variables référencées dans le template car c'est super cool de travailler avec le <span class="html">$event</span>. On utilise le <span class="html">#</span> dans le template pour référencer une nouvelle variable.</p>
+<pre><code>&lt;h1&gt;Liste de Pokémons&lt;/h1&gt;
+&lt;input #input (keyup)="0" type="number"&gt;
+&lt;p&gt;Nombre saisi : {{ input.value }}&lt;/p&gt;
+
+&lt;p&gt;{{ pokemonList[0].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[1].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[2].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[3].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[4].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[5].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[6].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[7].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[8].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[9].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[10].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[11].name }}&lt;/p&gt;</code></pre>
+                    <p>On va faire un petit exercice pour créer un flux de données bidirectionnel. On va avoir une nouvelle variable nommée <span class="em">pokemonSelected</span>.</p>
+<pre><code>import { Component, OnInit } from '@angular/core';
+import { POKEMONS } from './mock-pokemon-list';
+import { Pokemon } from './pokemon';
+
+@Component({
+    selector: 'app-root',
+    templateUrl: 'app.component.html'
+})
+
+export class AppComponent implements OnInit {
+    pokemonList: Pokemon[] = POKEMONS;
+    pokemonSelected: Pokemon|undefined;
+
+    ngOnInit() {
+        console.table(this.pokemonList);
+    }
+
+    selectPokemon(pokemonId: string) {
+        const pokemon: Pokemon|undefined = this.pokemonList.find(pokemon =&gt; pokemon.id == +pokemonId);
+
+        if (pokemon) {
+            console.log(`Vous avez demandé le pokémon ${pokemon.name}`);
+            this.pokemonSelected = pokemon;
+        } else {
+            console.log(`Vous avez demandé un pokémon qui n'existe pas.`);
+            this.pokemonSelected = pokemon;
+        }
+    }
+}</code></pre>
+<pre><code>&lt;h1&gt;Liste de Pokémons&lt;/h1&gt;
+&lt;input #input (keyup)="selectPokemon(input.value)" type="number"&gt;
+&lt;p&gt;Vous avez sélectionné le pokémon : {{ pokemonSelected?.name }}&lt;/p&gt;
+
+&lt;p&gt;{{ pokemonList[0].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[1].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[2].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[3].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[4].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[5].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[6].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[7].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[8].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[9].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[10].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[11].name }}&lt;/p&gt;</code></pre>
+                    <p>Peut importe quelles touches on appuie, ça fonctionne. Enfin, on voudrait qu'une fois la touche "Enter" ou "Entrée" est appuyée ça fonctionne. Pour cela, on rajoute le mot <span class="em">enter</span> au <span class="em">keyup</span> dans notre vue :</p>
+<pre><code>&lt;h1&gt;Liste de Pokémons&lt;/h1&gt;
+&lt;input #input (keyup.enter)="selectPokemon(input.value)" type="number"&gt;
+&lt;p&gt;Vous avez sélectionné le pokémon : {{ pokemonSelected?.name }}&lt;/p&gt;
+
+&lt;p&gt;{{ pokemonList[0].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[1].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[2].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[3].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[4].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[5].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[6].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[7].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[8].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[9].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[10].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[11].name }}&lt;/p&gt;</code></pre>
+                    <p>Ce sont des pseudo-évenments d'Angular. Enfin, je vais vous monter comment conditionner un affichage avec <span class="html">ngIf</span> et le boucler avec <span class="html">ngFor</span> :</p>
+<pre><code>&lt;h1&gt;Liste de Pokémons&lt;/h1&gt;
+&lt;input #input (keyup.enter)="selectPokemon(input.value)" type="number"&gt;
+&lt;p *ngIf="pokemonSelected"&gt;
+    Vous avez sélectionné le pokémon : {{ pokemonSelected?.name }}
+&lt;/p&gt;
+&lt;p *ngIf="!pokemonSelected"&gt;
+    Aucun pokémon n'a pas été trouvé.
+&lt;/p&gt;
+
+&lt;p&gt;{{ pokemonList[0].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[1].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[2].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[3].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[4].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[5].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[6].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[7].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[8].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[9].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[10].name }}&lt;/p&gt;
+&lt;p&gt;{{ pokemonList[11].name }}&lt;/p&gt;</code></pre>
+                    <p>Attention, l'astéristique <span class="em">*</span> est très importante. Il faut pas oublier la mettre devant <span class="html">ngIf</span> et <span class="html">ngFor</span> ou même devant n'importe quelle autre directive structurelle.</p>
+<pre><code>&lt;h1&gt;Liste de Pokémons&lt;/h1&gt;
+&lt;input #input (keyup.enter)="selectPokemon(input.value)" type="number"&gt;
+&lt;p *ngIf="pokemonSelected"&gt;
+    Vous avez sélectionné le pokémon : {{ pokemonSelected?.name }}
+&lt;/p&gt;
+&lt;p *ngIf="!pokemonSelected"&gt;
+    Aucun pokémon n'a pas été trouvé.
+&lt;/p&gt;
+
+&lt;p *ngFor="let pokemon of pokemonList"&gt;
+    {{ pokemon.name }}
+&lt;/p&gt;</code></pre>
+                    <p>Pour la partie CSS de notre application, on peut intégrer dans notre fichier <span class="em">index.html</span> Materialize dans une balise <span class="html">link</span> :</p>
+<pre><code>&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"&gt;</code></pre>
+<pre><code>&lt;h1 class="center"&gt;&gt;Liste de Pokémons&lt;/h1&gt;
+
+&lt;div class="container"&gt;
+    &lt;div class="row"&gt;
+        &lt;div *ngFor="let pokemon of pokemonList" class="col m4 s6"&gt;
+            &lt;div class="card horizontal"&gt;
+                &lt;div class="card-image"&gt;
+                    &lt;img [src]="pokemon.picture"&gt;
+                &lt;/div&gt;
+                &lt;div class="card-stacked"&gt;
+                    &lt;div class="card-content"&gt;
+                        &lt;p&gt;{{ pokemon.name }}&lt;/p&gt;
+                        &lt;p&gt;&lt;small&gt;{{ pokemon.created }}&lt;/small&gt;&lt;/p&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                </article>
+                <article>
+                    <h2 id="directives">Les directives :</h2>
+                    <p>La première question à se poser, c'est qu'est-ce qu'une directive ? Une directive est une classe Angular qui ressemble beaucoup à un composant sauf qu'elle n'a pas de template. D'ailleurs, au sein du framework, la classe <span class="html">Component</span> hérite de la classe <span class="html">Directive</span>. Voici les trois types de directives qui existent :</p>
+                    <ol>
+                        <li>
+                            <p>Les composants</p>
+                        </li>
+                        <li>
+                            <p>Les directives d'attributs</p>
+                        </li>
+                        <li>
+                            <p>Les directives structurelles</p>
+                        </li>
+                    </ol>
+                    <p>On va créer une directive d'attribut pour notre application. Ce type de directive va nous permettre de changer l'apparence ou le comportement d'un élément.</p>
+                    <p>Par exemple, on va créer la directive <span class="em">BorderCardDirective</span> qui, comme son nom l'indique, permettra d'ajouter une bordure de couleur sur les pokémons de notre liste lorsque l'utilisateur les survolera avec son curseur.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
