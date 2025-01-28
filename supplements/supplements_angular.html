@@ -748,7 +748,147 @@ export class AppComponent implements OnInit {
                     </ol>
                     <p>On va créer une directive d'attribut pour notre application. Ce type de directive va nous permettre de changer l'apparence ou le comportement d'un élément.</p>
                     <p>Par exemple, on va créer la directive <span class="em">BorderCardDirective</span> qui, comme son nom l'indique, permettra d'ajouter une bordure de couleur sur les pokémons de notre liste lorsque l'utilisateur les survolera avec son curseur.</p>
-                    
+                    <p>On va utiliser Angular CLI pour générer la directive avec la commande suivante :</p>
+<pre><code>ng generate directive border-card</code></pre>
+                    <p>Cette commande permet de créer le fichier <span class="em">border-card.directive.ts</span> et à modifier le fichier <span class="em">app.module.ts</span> pour déclarer la directive. Voici le code généré :</p>
+<pre><code>import { Directive } from '@angular/core';
+
+@Directive({
+    selector: '[appBorderCard]'
+})
+
+export class BorderCardDirective {
+
+    constructor() { }
+
+}</code></pre>
+                    <p>On va récupérer la card du pokémon à laquelle on rajoute la bordure dans le constructeur de notre directive :</p>
+<pre><code>import { Directive, ElementRef } from '@angular/core';
+
+@Directive({
+    selector: '[pokemonBorderCard]'
+})
+
+export class BorderCardDirective {
+
+    constructor(private el: ElementRef) {
+        this.setBorder('#F5F5F5');
+        this.setHeight(180);
+    }
+
+    private setHeight(height: number) {
+        this.el.nativeElement.style.height = `${height}px`;
+    }
+
+    private setBorder(color: string) {
+        this.el.nativeElement.style.border = `solid 4px ${color}`;
+    }
+
+}</code></pre>
+                    <p>Pour détecter un événement tel que le survol d'un élément, on va utiliser une nouvelle annotation nommée <span class="html">@HostListener</span> qui permet de lier notre directive à un élément donné :</p>
+<pre><code>import { Directive, ElementRef, HostListener } from '@angular/core';
+
+@Directive({
+    selector: '[pokemonBorderCard]'
+})
+
+export class BorderCardDirective {
+
+    constructor(private el: ElementRef) {
+        this.setBorder('#F5F5F5');
+        this.setHeight(180);
+    }
+
+    @HostListener('mouseenter') onMouseEnter() {
+        this.setBorder('#009688');
+    }
+
+    @HostListener('mouseleave') onMouseLeave() {
+        this.setBorder('#F5F5F5');
+    }
+
+    private setBorder(color: string) {
+        this.el.nativeElement.style.border = `solid 4px ${color}`;
+    }
+
+    private setHeight(height: number) {
+        this.el.nativeElement.style.height = `${height}px`;
+    }
+
+}</code></pre>
+                    <p>Dans le template, on rajoute l'attribut <span class="em">pokemonBorderCard</span> dans notre <span class="html">div</span> contenant la card :</p>
+<pre><code>&lt;div class="card horizontal" ... pokemonBorderCard&gt;</code></pre>
+                    <p>Pour le moment, notre directive <span class="em">pokemonBorderCard</span> n'est pas personnalisable. À chaque utilisation, cette directive impose une couleur unique aux bordures. On va préciser une propriété d'entrée dans notre directive via l'annotation <span class="html">@Input</span> :</p>
+<pre><code>import { Directive, ElementRef, HostListener, Input } from '@angular/core';
+
+@Directive({
+    selector: '[pokemonBorderCard]'
+})
+
+export class BorderCardDirective {
+
+    constructor(private el: ElementRef) {
+        this.setBorder('#F5F5F5');
+        this.setHeight(180);
+    }
+
+    @Input('pokemonBorderCard') borderColor: string;
+
+    @HostListener('mouseenter') onMouseEnter() {
+        this.setBorder(this.borderColor || '#009688');
+    }
+
+    @HostListener('mouseleave') onMouseLeave() {
+        this.setBorder('#F5F5F5');
+    }
+
+    private setBorder(color: string) {
+        this.el.nativeElement.style.border = `solid 4px ${color}`;
+    }
+
+    private setHeight(height: number) {
+        this.el.nativeElement.style.height = `${height}px`;
+    }
+
+}</code></pre>
+                    <p>Dans notre template, on remodifie la <span class="html">div</span> contenant notre card comme ceci afin que cette fois-ci la bordure soit <span class="em">red</span> au survol :</p>
+<pre><code>&lt;div class="card horizontal" ... pokemonBorderCard="red"&gt;</code></pre>
+                    <p>Il y a deux façons de déclarer une propriété d'entrée : avec ou sans alias. Voici la différence :</p>
+<pre><code>@Input('pokemonBorderCard') borderColor: string; // avec alias
+@Input() pokemonBorderCard: string; // sans alias</code></pre>
+                    <p>Enfin, pour terminer le développement de notre directive, on va remplacer les valeurs entrées en dur par des propriétés telles que <span class="em">initialColor</span>, <span class="em">defaultColor</span> et <span class="em">defaultHeight</span>.</p>
+<pre><code>import { Directive, ElementRef, HostListener, Input } from '@angular/core';
+
+@Directive({
+    selector: '[pokemonBorderCard]'
+})
+
+export class BorderCardDirective {
+
+    constructor(private el: ElementRef) {
+        this.setBorder('#F5F5F5');
+        this.setHeight(180);
+    }
+
+    @Input('pokemonBorderCard') borderColor: string;
+
+    @HostListener('mouseenter') onMouseEnter() {
+        this.setBorder(this.borderColor || '#009688');
+    }
+
+    @HostListener('mouseleave') onMouseLeave() {
+        this.setBorder('#F5F5F5');
+    }
+
+    private setBorder(color: string) {
+        this.el.nativeElement.style.border = `solid 4px ${color}`;
+    }
+
+    private setHeight(height: number) {
+        this.el.nativeElement.style.height = `${height}px`;
+    }
+
+}</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
