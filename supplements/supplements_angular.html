@@ -55,6 +55,8 @@
                         <li><a href="#premier_exercice">Premier exercice</a></li>
                         <li><a href="#templates">Les templates</a></li>
                         <li><a href="#directives">Les directives</a></li>
+                        <li><a href="#pipes">Les pipes</a></li>
+                        <li><a href="#routes">Les routes</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -865,19 +867,23 @@ export class BorderCardDirective {
 
 export class BorderCardDirective {
 
+    private initialColor: string = 'F5F5F5';
+    private defaultColor: string = '#009688';
+    private defaultHeight: number = 180;
+
     constructor(private el: ElementRef) {
-        this.setBorder('#F5F5F5');
-        this.setHeight(180);
+        this.setBorder(this.initialColor);
+        this.setHeight(this.defaultColor);
     }
 
     @Input('pokemonBorderCard') borderColor: string;
 
     @HostListener('mouseenter') onMouseEnter() {
-        this.setBorder(this.borderColor || '#009688');
+        this.setBorder(this.borderColor || this.defaultColor);
     }
 
     @HostListener('mouseleave') onMouseLeave() {
-        this.setBorder('#F5F5F5');
+        this.setBorder(this.initialColor);
     }
 
     private setBorder(color: string) {
@@ -889,6 +895,310 @@ export class BorderCardDirective {
     }
 
 }</code></pre>
+                </article>
+                <article>
+                    <h2 id="pipes">Les pipes :</h2>
+                    <p>Maintenant, on va modifier la date affichée dans notre card pour qu'elle ait un bon format via le pipe (ou |).</p>
+<pre><code>&lt;p&gt;&lt;small&gt;{{ pokemon.created | date }}&lt;/small&gt;&lt;/p&gt;</code></pre>
+                    <p>Angular possède d'autres pipes disponibles dans tous nos templates tels que le <span class="html">DatePipe</span> qu'on vient d'utiliser, le <span class="html">UpperCasePipe</span>, le <span class="html">LowerCasePipe</span>, le <span class="html">CurrencyPipe</span> pour les devises, et le <span class="html">PercentPipe</span>.</p>
+                    <p>On peut même combiner plusieurs pipes ensemble comme ceci par exemple :</p>
+<pre><code>&lt;p&gt;&lt;small&gt;{{ pokemon.created | date | uppercase }}&lt;/small&gt;&lt;/p&gt;</code></pre>
+                    <p>Attention, l'ordre des pipes est important. Cela se lit de la gauche vers la droite.</p>
+                    <p>On peut également paramétrer notre pipe comme le format de la date par exemple :</p>
+<pre><code>&lt;p&gt;&lt;small&gt;{{ pokemon.created | date:"dd/MM/yyyy" }}&lt;/small&gt;&lt;/p&gt;</code></pre>
+                    <p>Angular permet de créer notre pipe personnalisé pour des besoins spécifiques à notre application. Par exemple, on va créer le pipe <span class="em">PokemonTypeColorPipe</span> dans notre application avec Angular CLI avec la commande suivante :</p>
+<pre><code>ng generate pipe pokemon-type-color</code></pre>
+                    <p>Cette commande crée un fichier <span class="em">pokemon-type-color.pipe.ts</span> et modifier le fichier <span class="em">app.module.ts</span> pour déclarer le pipe. Voici le contenu généré :</p>
+<pre><code>import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({
+    name: 'pokemonTypeColor'
+})
+
+export class PokemonTypeColorPipe implements PipeTransform {
+    
+    transform(value: unknown, ...args: unknown[]): unknown {
+        return null;
+    }
+
+}</code></pre>
+                    <p>On va modifier le code généré afin d'implémenter la logique pour afficher la couleur correspondant au type du pokémon :</p>
+<pre><code>import { Pipe, PipeTransform } from '@angular/core';
+
+/*
+* Affiche la couleur correspondant au type du pokémon.
+* Prend en argument le type du pokémon.
+* Exemple d'utilisation:
+*   {{ pokemon.type | pokemonTypeColor }}
+*/
+@Pipe({
+    name: 'pokemonTypeColor'
+})
+
+export class PokemonTypeColorPipe implements PipeTransform {
+
+    transform(type: string): string {
+    
+        let color: string;
+        
+        switch (type) {
+            case 'Feu':
+                color = 'red lighten-1';
+                break;
+            case 'Eau':
+                color = 'blue lighten-1';
+                break;
+            case 'Plante':
+                color = 'green lighten-1';
+                break;
+            case 'Insecte':
+                color = 'brown lighten-1';
+                break;
+            case 'Normal':
+                color = 'grey lighten-3';
+                break;
+            case 'Vol':
+                color = 'blue lighten-3';
+                break;
+            case 'Poison':
+                color = 'deep-purple accent-1';
+                break;
+            case 'Fée':
+                color = 'pink lighten-4';
+                break;
+            case 'Psy':
+                color = 'deep-purple darken-2';
+                break;
+            case 'Electrik':
+                color = 'lime accent-1';
+                break;
+            case 'Combat':
+                color = 'deep-orange';
+                break;
+            default:
+                color = 'grey';
+                break;
+        }
+        
+        return 'chip ' + color;
+    }
+}</code></pre>
+                    <p>On va utiliser ce nouveau pipe dans notre template en rajoutant dans le contenu de la card la liste des types de chaque pokémon :</p>
+<pre><code>&lt;span *ngFor="let type of pokemon.types" class="{{ type | pokemonTypeColor }}"&gt;
+    {{ type }}
+&lt;/span&gt;</code></pre>
+                </article>
+                <article>
+                    <h2 id="routes">Les routes :</h2>
+                    <p>Pour l'instant, notre application est assez limitée car elle est constituée d'un seul composant accessible par défaut au démarrage de l'application. Nous ne pouvons donc pas développer une application plus complexe avec plusieurs composants et une navigation avec des URLs différentes. Je vous propose de remédier à ce problème en dotant notre application d'un système de navigation digne de ce nom. La question <q>Comment mettre en place plusieurs pages dans mon application Angular ?</q> n'aura plus de secret pour vous.</p>
+                    <p>Tout d'abord, vous devez savoir que le système de naviagtion fourni par Angular simule parfaitement la navigation auprès de votre navigateur.</p>
+                    <p>Pour pouvoir mettre en place un système de navigation dans notre application, on va donc avoir besoin d'au moins deux composants. On va créer deux nouveaux composants via Angular CLI :</p>
+<pre><code>ng generate component list-pokemon --inline-template=false</code></pre>
+                    <p>Le paramètre <span class="html">--inline-template=false</span> de notre commande permet de séparer la vue de la logique de notre composant, c'est-dire que cette commande créera deux fichiers, <span class="em">list-pokemon.component.html</span> et <span class="em">list-pokemon.component.ts</span>, dans le dossier <span class="em">src/app/list-pokemon</span>. Il a déclaré ce composant dans notre <span class="em">app.module.ts</span>. On va créer le deuxième composant, <span class="em">detail-pokemon</span>, comme ceci :</p>
+<pre><code>ng generate component detail-pokemon --inline-template=false</code></pre>
+                    <p>On va déclarer les nouvelles routes dans le fichier <span class="em">app-routing.module.ts</span> :</p>
+<pre><code>import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { ListPokemonComponent } from './list-pokemon/list-pokemon.component';
+import { DetailPokemonComponent } from './detail-pokemon/detail-pokemon.component';
+
+const routes: Routes = [
+    { path: 'pokemons', component: ListPokemonComponent },
+    { path: 'pokemon/:id', component: DetailComponent },
+    { path: '', redirectTo: 'pokemons', pathMatch: 'full' }
+];
+
+@NgModule({
+    imports: [RouterModule.forRoot(routes)],
+    exports: [RouterModule]
+})
+
+export class AppRoutingModule { }</code></pre>
+                    <p>Il nous manque un petit quelque chose pour mettre en place un système de routes avec nos deux composants. Pour commencer, ce qu'il faut comprendre, c'est que côté template, dans notre composant racine, on va devoir ajouter un élément qui s'appelle <span class="html">router-outlet</span> et qui va venir en fait permettre de relier les routes qu'on a définies avec notre template.</p>
+                    <p>Donc, dans notre fichier <span class="em">app.component.html</span>, on va modifier son contenu comme ceci :</p>
+<pre><code>&lt;router-outlet&gt;&lt;/router-outlet&gt;</code></pre>
+                    <p>On va également modifier la logique du composant par défaut, <span class="em">AppComponent</span> :</p>
+<pre><code>import { Component } from '@angular/core';
+
+@Component({
+    selector: 'app-root',
+    templateUrl: 'app.component.html'
+})
+
+export class AppComponent {}</code></pre>
+                    <p>On va modifier le composant et le template de notre liste de pokémons dans le dossier <span class="em">src/app/list-pokemon</span> :</p>
+<pre><code>&lt;h1 class="center"&gt;Liste de Pokémons&lt;/h1&gt;
+
+&lt;div class="container"&gt;
+    &lt;div class="row"&gt;
+        &lt;div *ngFor="let pokemon of pokemonList" class="col m4 s6"&gt;
+            &lt;div class="card horizontal"&gt;
+                &lt;div class="card-image"&gt;
+                    &lt;img [src]="pokemon.picture"&gt;
+                &lt;/div&gt;
+                &lt;div class="card-stacked"&gt;
+                    &lt;div class="card-content"&gt;
+                        &lt;p&gt;{{ pokemon.name }}&lt;/p&gt;
+                        &lt;p&gt;&lt;small&gt;{{ pokemon.created }}&lt;/small&gt;&lt;/p&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<pre><code>import { Component } from '@angular/core';
+import { POKEMONS } from './mock-pokemon-list';
+import { Pokemon } from './pokemon';
+
+@Component({
+    selector: 'app-list-pokemon',
+    templateUrl: './list-pokemon.component.html'
+})
+
+export class ListPokemonComponent {
+
+    pokemonList: Pokemon[] = POKEMONS;
+
+}</code></pre>
+                    <p>Enfin, on va modifier le template et le composant <span class="em">detail-pokemon</span> dans le dossier <span class="em">src/app/detail-pokemon</span> afin de le dynamiser :</p>
+<pre><code>import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { POKEMONS } from '../mock-pokemon-list';
+import { Pokemon } from '../pokemon';
+
+@Component({
+    selector: 'app-detail-pokemon',
+    templateUrl: './detail-pokemon.component.html'
+})
+
+export class DetailPokemonComponent implements OnInit {
+
+    pokemonList: Pokemon[];
+    pokemon: Pokemon|undefined;
+
+    constructor(private route: ActivatedRoute) { }
+
+    ngOnInit() {
+        this.pokemonList = POKEMONS;
+        const pokemonId: string|null = this.route.snapshot.paramMap.get('id');
+        
+        if (pokemonId) {
+            this.pokemon = this.pokemonList.find(pokemon =&gt; pokemon.id == +pokemonId);
+        }
+    }
+
+}</code></pre>
+<pre><code>&lt;div *ngIf="pokemon" class="row"&gt;
+    &lt;div class="col s12 m8 offset-m2"&gt;
+        &lt;h2 class="header center"&gt;{{ pokemon.name }}&lt;/h2&gt;
+        &lt;div class="card horizontal hoverable"&gt;
+            &lt;div class="card-image"&gt;
+                &lt;img [src]="pokemon.picture"&gt;
+            &lt;/div&gt;
+            &lt;div class="card-stacked"&gt;
+                &lt;div class="card-content"&gt;
+                    &lt;table class="bordered striped"&gt;
+                        &lt;tbody&gt;
+                            &lt;tr&gt;
+                                &lt;td&gt;Nom&lt;/td&gt;
+                                &lt;td&gt;&lt;strong&gt;{{ pokemon.name }}&lt;/strong&gt;&lt;/td&gt;
+                            &lt;/tr&gt;
+                            &lt;tr&gt;
+                                &lt;td&gt;Points de vie&lt;/td&gt;
+                                &lt;td&gt;&lt;strong&gt;{{ pokemon.hp }}&lt;/strong&gt;&lt;/td&gt;
+                            &lt;/tr&gt;
+                            &lt;tr&gt;
+                                &lt;td&gt;Dégâts&lt;/td&gt;
+                                &lt;td&gt;&lt;strong&gt;{{ pokemon.cp }}&lt;/strong&gt;&lt;/td&gt;
+                            &lt;/tr&gt;
+                            &lt;tr&gt;
+                                &lt;td&gt;Types&lt;/td&gt;
+                                &lt;td&gt;
+                                    &lt;span *ngFor="let type of pokemon.types" class="{{ type | pokemonTypeColor }}"&gt;{{ type }}&lt;/span&gt;
+                                &lt;/td&gt;
+                            &lt;/tr&gt;
+                            &lt;tr&gt;
+                                &lt;td&gt;Date de création&lt;/td&gt;
+                                &lt;td&gt;&lt;em&gt;{{ pokemon.created | date:"dd/MM/yyyy" }}&lt;/em&gt;&lt;/td&gt;
+                            &lt;/tr&gt;
+                        &lt;/tbody&gt;
+                    &lt;/table&gt;
+                &lt;/div&gt;
+                &lt;div class="card-action"&gt;
+                    &lt;a&gt;Retour&lt;/a&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 *ngIf='!pokemon' class="center"&gt;Aucun pokémon à afficher !&lt;/h2&gt;</code></pre>
+                    <p>On va maintenant voir comment relier les deux composants entre eux et la page d'erreur 404 lorsqu'on arrive sur une URL inconnue. Pour commencer, on va ajouter une barre de navigation dans le template de notre composant par défaut :</p>
+<pre><code>&lt;nav&gt;
+    &lt;div class="now-wrapper teal"&gt;
+        &lt;a href="#" class="brand-logo center"&gt;
+            Pokédex
+        &lt;/a&gt;
+    &lt;/div&gt;
+&lt;/nav&gt;
+
+&lt;router-outlet&gt;&lt;/router-outlet&gt;</code></pre>
+                    <p>Deuxièmement, on va rajouter un click sur le bouton "Retour" du composant <span class="em">detail-pokemon</span> :</p>
+<pre><code>&lt;a (click)="goToPokemonList()"&gt;Retour&lt;/a&gt;</code></pre>
+                    <p>Comme la méthode <span class="em">goToPokemonList</span> n'existe pas, il faut la rajouter dans la logique du composant :</p>
+<pre><code>import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { POKEMONS } from '../mock-pokemon-list';
+import { Pokemon } from '../pokemon';
+
+@Component({
+    selector: 'app-detail-pokemon',
+    templateUrl: './detail-pokemon.component.html'
+})
+
+export class DetailPokemonComponent implements OnInit {
+
+    pokemonList: Pokemon[];
+    pokemon: Pokemon|undefined;
+
+    constructor(private route: ActivatedRoute, private router : Router) { }
+
+    ngOnInit() {
+        this.pokemonList = POKEMONS;
+        const pokemonId: string|null = this.route.snapshot.paramMap.get('id');
+        
+        if (pokemonId) {
+            this.pokemon = this.pokemonList.find(pokemon =&gt; pokemon.id == +pokemonId);
+        }
+    }
+
+    goToPokemonList() {
+        this.router.navigate(['/pokemons']);
+    }
+
+}</code></pre>
+                    <p>Troisièmement, on va ajouter un click sur la card d'un pokémon pour accéder à son détail. Cette-fois-ci, on commence par la logique du composant :</p>
+<pre><code>import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { POKEMONS } from './mock-pokemon-list';
+import { Pokemon } from './pokemon';
+
+@Component({
+    selector: 'app-list-pokemon',
+    templateUrl: './list-pokemon.component.html'
+})
+
+export class ListPokemonComponent {
+
+    pokemonList: Pokemon[] = POKEMONS;
+
+    constructor(private router: Router) {}
+
+    goToPokemon(pokemon: Pokemon) {
+        this.router.navigate(['/pokemon', pokemon.id]);
+    }
+
+}</code></pre>
+<pre><code>&lt;div class="card horizontal" pokemonBorderCard (click)="goToPokemon(pokemon)"&gt;</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
