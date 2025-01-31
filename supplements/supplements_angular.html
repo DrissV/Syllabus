@@ -58,6 +58,8 @@
                         <li><a href="#pipes">Les pipes</a></li>
                         <li><a href="#routes">Les routes</a></li>
                         <li><a href="#modules">Les modules</a></li>
+                        <li><a href="#services">Les services</a></li>
+                        <li><a href="#formulaires">Les formulaires</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1225,6 +1227,393 @@ export class PageNotFoundComponent { }</code></pre>
                 </article>
                 <article>
                     <h2 id="modules">Les modules :</h2>
+                    <p>Les applications Angular sont modulaires et possèdent leurs propres systèmes de modules.</p>
+                    <p>Chaque application possède au minimum un module : c'est le module racine qui est nommé <span class="em">app.module</span> par convention.</p>
+                    <p>La plupart des projets ont besoin de plusieurs modules. On parle souvent de modules de fonctionnalités car, pour chaque fonctionnalité dans le projet, on va rajouter un nouveau module.</p>
+                    <p>Un module de fonctionnalités est un ensemble de classes et d'éléments lié à un domaine spécifique de votre application.</p>
+                    <p>Quelque soit la nature du module, un module est toujours une classe avec le décorateur <span class="html">@NgModule</span>. Par exemple, voici le code de <span class="em">app.module.ts</span> :</p>
+<pre><code>import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppRoutingModule } from './app-routing.module';
+
+import { AppComponent } from './app.component';
+import { ListPokemonComponent } from './list-pokemon.component';
+import { DetailPokemonComponent } from './detail-pokemon.component';
+import { PageNotFoundComponent } from './page-not-found.component';
+
+import { BorderCardDirective } from './border-card.directive';
+import { PokemonTypeColorPipe } from './pokemon-type-color.pipe';
+
+@NgModule({
+    imports: [BrowserModule, AppRoutingModule],
+    declarations: [
+        AppComponent,
+        BorderCardDirective,
+        PokemonTypeColorPipe,
+        ListPokemonComponent,
+        DetailPokemonComponent,
+        PageNotFoundComponent
+    ],
+    bootstrap: [AppComponent]
+})
+
+export class AppModule { }</code></pre>
+                    <p>Dans la propriété <span class="html">declarations</span> de <span class="html">@NgModule</span>, on met dans un tableau les classes de vues qui appartiennent à ce module. Angular a trois types de classes de vues : les <span class="em">composants</span>, les <span class="em">directives</span> et les <span class="em">pipes</span>.</p>
+                    <p>Il existe également la propriété <span class="html">exports</span> de <span class="html">@NgModule</span> qui contient un sous-ensemble de classes de vues à exporter dans des templates de composant d'autres modules.</p>
+                    <p>La propriété <span class="html">imports</span> de <span class="html">@NgModule</span> contient toutes les classes exportées depuis d'autres modules qu'on a besoin dans ce module-ci.</p>
+                    <p>La propriété <span class="html">providers</span> de <span class="html">@NgModule</span> concerne les services et l'injection de dépendances qu'on traitera un peu plus tard dans ce cours.</p>
+                    <p>La propriété <span class="html">bootstrap</span> de <span class="html">@NgModule</span> concerne que le module racine pour y renseigner le composant racine, c'est-à-dire le composant qui sera affiché au lancement de l'application.</p>
+                    <p>JavaScript a son propre système de modules qui complètement différent et sans rapport avec le système de modules d'Angular.</p>
+                    <p>En JavaScript, chaque fichier est un module et tous les objets définis dans ce fichier appartiennent au module. Le module JavaScript déclare certains objes <span class="html">public</span> en les déclarant avec le mot-clé <span class="html">export</span>. Ensuite, d'autres modules JavaScript utilise le mot-clé <span class="html">import</span> pour accéder à ces objets.</p>
+                    <p>C'est ce mécanisme que l'on utilise lorsqu'on fait par exemple <span class="html">export class AppComponent</span> et qu'ensuite, ailleurs dans notre application, nous faisons <span class="html">import AppComponent from ...</span>.</p>
+                    <p>Les systèmes de modules de JavaScript et d'Angular sont différents mais complémentaires et nous utilisons bien les deux pour écrire notre application.</p>
+                    <p>Passons maintenant à la pratique ! On va créer un nouveau module Angular permettant de centraliser tous les éléments qui concernent la gestion des Pokémons dans notre application.</p>
+                    <p>Pour créer ce module <span class="em">pokemon</span>, on va utiliser Angular CLI avec la commande :</p>
+<pre><code>ng generate module pokemon</code></pre>
+                    <p>Cette commande a permis de créer un fichier <span class="em">src/app/pokemon/pokemon.module.ts</span>. On va déplacer tous les éléments que nous avons déjà développés dans le dossier du module et de venir brancher ces éléments dans le <span class="html">@NgModule</span> du nouveau module.</p>
+                    <p>Donc, on a le composant qui permet d'afficher la liste des Pokémons. On a celui qui qui affiche le détail de la liste des Pokémons. On a aussi développé un pipe pour la coloration des types. On a également une directive : la <span class="em">BorderCardDirective</span>. Puis, on a le modèle <span class="em">pokemon.ts</span> et le fichier de mock, <span class="em">mock-pokemon.ts</span>.</p>
+                    <p>On va mettre à jour les importations dans chaque fichier pour que les chemins relatifs de nos fichiers sont bien corrects vu qu'on a déplacer tous nos éléments liés à nos pokémons.</p>
+                    <p>Normalement, on doit couper <span class="html">ng serve</span> avant les modifications et le relancer juste après.</p>
+                    <p>Dans notre nouveau module, on voit qu'Angular a par défaut importer le <span class="html">CommonModule</span> de <span class="html">@angular/common</span> qui est, en fait, une base que vous allez avoir besoin dans n'importe quel module et qui comprend par exemple les directives structurelles <span class="html">ngIf</span> et <span class="html">ngFor</span>, c'est-à-dire que, dans tous nos composants rattachés à ce module, vous pourrez utiliser ces directives sans avoir à les importer.</p>
+                    <p>Dans les <span class="em">declarations</span> de notre module, on va rajouter nos deux composants, notre directive et notre pipe pour pouvoir les utiliser dans le <span class="em">PokemonModule</span>. L'intérêt de les déclarer dans ce module et pas à la racine est que ce sont des éléments que l'on a besoin qu'au niveau de la fonctionnalité des Pokémons.</p>
+                    <p>Voici donc le contenu de notre fichier <span class="em">pokemon.module.ts</span> une fois que tous les éléments ont été déclarés :</p>
+<pre><code>import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ListPokemonComponent } from './list-pokemon.component';
+import { DetailPokemonComponent } from './detail-pokemon.component';
+import { BorderCardDirective } from './border-card.directive';
+import { PokemonTypeColorPipe } from './pokemon-type-color.pipe';
+
+@NgModule({
+    declarations: [
+        BorderCardDirective,
+        PokemonTypeColorPipe,
+        ListPokemonComponent,
+        DetailPokemonComponent
+    ],
+    imports: [
+        CommonModule
+    ]
+})
+
+export class PokemonModule { }</code></pre>
+                    <p>Puis, on va venir déclarer les routes propres à la fonctionnalité des Pokémons et bien directement au niveau de ce module plutôt que de passer par les routes racines.</p>
+                    <p>Donc, dans notre <span class="em">app-routing.module.ts</span>, on va supprimer les deux routes liées aux Pokémons. Dans notre module, <span class="em">pokemon.module.ts</span>, on va déclarer ces routes supprimées :</p>
+<pre><code>import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ListPokemonComponent } from './list-pokemon.component';
+import { DetailPokemonComponent } from './detail-pokemon.component';
+import { BorderCardDirective } from './border-card.directive';
+import { PokemonTypeColorPipe } from './pokemon-type-color.pipe';
+import { RouterModule, Routes } from '@angular/router';
+
+const pokemonRoutes: Routes = [
+    { path: 'pokemons', component: ListPokemonComponent },
+    { path: 'pokemon/:id', component: DetailPokemonComponent }
+];
+
+@NgModule({
+    declarations: [
+        BorderCardDirective,
+        PokemonTypeColorPipe,
+        ListPokemonComponent,
+        DetailPokemonComponent
+    ],
+    imports: [
+        CommonModule,
+        RouterModule.forChild(pokemonRoutes)
+    ]
+})
+
+export class PokemonModule { }</code></pre>
+                    <p>On va importer notre <span class="em">PokemonModule</span> dans notre module racine comme ceci :</p>
+<pre><code>import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { PageNotFoundComponent } from './page-not-found.component';
+import { PokemonModule } from './pokemon/pokemon.module';
+
+@NgModule({
+    declarations: [
+        AppComponent,
+        PageNotFoundComponent
+    ],
+    imports: [
+        BrowserModule,
+        PokemonModule,
+        AppRoutingModule
+    ],
+    providers: [],
+    bootstrap: [AppComponent]
+})
+
+export class AppModule { }</code></pre>
+                    <p>Voilà toutes les modifications sont finies. On va relancer notre <span class="html">ng serve</span>. Attention à l'ordre des routes car, si on met le <span class="em">AppRoutingModule</span> avant le <span class="em">PokemonModule</span>, on arrivera tout le temps sur la page d'erreurs 404.</p>
+                    <p>Je vous propose maintenant de réfléchir à l'architecture finale de notre application. Nous voulons créer un simple gestionnaire de Pokémon qui permettra à l'utilsiateur de se connecter et de modifier les Pokémons à sa guise. On va devoir créer un <span class="em">LoginComponent</span> à la racine de notre application pour permettre à l'utilisateur de se connecter.</p>
+                    <p>Ce que nous aurions pu faire depuis le début, c'est anticiper la conception de notre application en déterminant quelles fonctionnalités allaient dans quel module.</p>
+                </article>
+                <article>
+                    <h2 id="services">Les services :</h2>
+                    <p>On va enrichir notre application avec des services. Nos deux composants vont avoir besoin d'accéder au Pokémon et d'effectuer des opérations dessus. Nous allons donc centraliser ces données et ces opérations dans un service. Ce service sera utilisavle pour tous les composants du <span class="em">PokemonModule</span> afin de leur fournir un accès et des méthodes prêtes à l'emploi pour gérer les Pokémons.</p>
+                    <p>Nous allons créer un service qui s'occupe de fournir des données et des méthodes pour gérer nos Pokémons à tous les composants de notre <span class="em">PokemonModule</span>. L'objectif est de masquer à nos composants la façon dont nous récupérons les données et le fonctionnement interne de certaines méthodes. Puis, ça va nous permettre aussi de factoriser des comportements communs entre plusieurs composants.</p>
+                    <p>On va utiliser Angular CLI pour générer notre service avec la commande suivante :</p>
+<pre><code>ng generate service pokemon/pokemon</code></pre>
+                    <p>Cette commande va créer le fichier <span class="em">src/app/pokemon.pokemon.service.ts</span> avec le contenu suivant :</p>
+<pre><code>import { Injectable } form '@angular/core';
+
+@Injectable({
+    providedIn: 'root'
+})
+
+export class PokemonService {
+
+    constructor() { }
+
+}</code></pre>
+                    <p>Dans ce code, on voit pas de décorateur nommé <span class="html">@Service</span> comme on aurait pu penser comme les pipes ou les directives. On a la place le décoration <span class="html">@Injectable</span> qui permet d'indiquer à Angular que notre service <span class="em">PokemonService</span> peut lui-même avoir d'autres dépendances.</p>
+                    <p>Même si pour l'instant notre service n'a pas de dépendances, on doit quand même ajouter ce décorateur pour venir en fait brancher ce service avec le mécanisme d'injection de dépendances d'Angular.</p>
+                    <p>Cela va nous permettre à la fois d'utiliser ce service ailleurs dans notre application et de venir importer dans ce service d'autres services. Pour rappel, on pouvait injecter des services dans les constructeurs de nos composants grâce à <span class="html">@Injectable</span>.</p>
+                    <p>La propriété <span class="html">providedIn</span> du décorateur avec la valeur <span class="em">root</span> va permettre d'indiquer à Angular qu'on veut utiliser la même instance du service à travers toute l'application. C'est-à-dire qu'on va jamais créer une instance du <span class="em">PokemonService</span> en faisant un <span class="em">new PokemonService()</span> nous-même.</p>
+                    <p>Nos composants ont aussi des dépendances et pourtant on écrit <span class="html">@Component</span> et non <span class="html">@Injectable</span> car, en fait, le <span class="html">@Injectable</span> est déjà caché dans le <span class="html">@Component</span>.</p>
+                    <p>On va créer un service avec des vraies méthodes qui va nous service ailleurs dans notre application. On va soulager nos composants en utilisant les méthodes que l'on va écrire dans notre service. L'avantage de ces méthodes vont pouvoir être utilisées à la fois par le <span class="em">ListPokemonComponent</span> et également par le <span class="em">DetailPokemonComponent</span>.</p>
+                    <p>Dans notre <span class="em">PokemonService</span>, on va créer trois méthodes : <span class="em">getPokemonList()</span> qui, comme son nom l'indique, renverra la liste des Pokémons, <span class="em">getPokemonById(id)</span> qui renverra, comme son nom l'indique, le Pokémon selon l'id et <span class="em">getPokemonTypeList()</span> qui renverra en fait tous les types de Pokémon qui sont autorisés dans l'application :</p>
+<pre><code>import { Injectable } form '@angular/core';
+import { POKEMONS } from './mock-pokemon-list';
+import { Pokemon } from './pokemon';
+
+@Injectable({
+    providedIn: 'root'
+})
+
+export class PokemonService {
+
+    getPokemonList(): Pokemon[] {
+        return POKEMONS;
+    }
+
+    getPokemonById(pokemonId: number): Pokemon|undefined {
+        return POKEMONS.find(pokemon =&gt; pokemon.id == pokemonId);
+    }
+
+    getPokemonTypeList(): string[] {
+        return [
+            'Plante',
+            'Feu',
+            'Eau',
+            'Insecte',
+            'Normal',
+            'Electrik',
+            'Poison',
+            'Fée',
+            'Vol',
+            'Combat',
+            'Psy'
+        ];
+    }
+
+}</code></pre>
+                    <p>On va voir maintenant comment injecter ce service dans nos composants pour utiliser qu'on vient de créer. Voici la modification du contenu de <span class="em">list-pokemon.component.ts</span> :</p>
+<pre><code>import { Component, OnInit } from '@angular/core;
+import { Router } from '@angular/router';
+import { Pokemon } from '../pokemon';
+import { PokemonService } from '../pokemon.service';
+
+@Component({
+    selector: 'app-list-pokemon',
+    templateUrl: './list-pokemon.component.html'
+})
+
+export class ListPokemonComponent implements OnInit {
+    
+    pokemonList: Pokemon[];
+
+    constructor(
+        private router: Router,
+        private pokemonService: PokemonService
+    ) { }
+
+    ngOnInit() {
+        this.pokemonList = this.pokemonService.getPokemonList();
+    }
+
+    getPokemonTypeList(pokemon: Pokemon) {
+        this.router.navigate(['/pokemon', pokemon.id]);
+    }
+}</code></pre>
+                    <p>On va aussi modifier le contenu de <span class="em">detail-pokemon.component.ts</span> :</p>
+<pre><code>import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Pokemon } from '../pokemon';
+import { PokemonService } from '../pokemon.service';
+
+@Component({
+    selector: 'app-detail-pokemon',
+    templateUrl: './detail-pokemon.component.html'
+})
+
+export class DetailPokemonComponent implements OnInit {
+    
+    pokemon: Pokemon|undefined;
+
+    constructor(
+        private route: ActivatedRoute,
+        private router: Router,
+        private pokemonService: PokemonService
+    ) { }
+
+    ngOnInit() {
+        const pokemonId: string|null = this.route.snapshot.paramMap.get('id');
+        
+        if (pokemonId) {
+            this.pokemon = this.pokemonService.getPokemonById(+pokemonId);
+        }
+    }
+
+    goToPokemonList() {
+        this.router.navigate(['/pokemons']);
+    }
+}</code></pre>
+                    <p>Enfin, on va voir comment délimiter un espace dans notre application dans lequel le service sera disponible. Angular dispose de son propre framework d'injections. On ne peut pas développer cette application sans cet outil.</p>
+                    <p>L'injection de dépendances est un modèle de développement ou <span class="em">design pattern</span> en anglais dans lequel chaque classe reçoit ses dépendances d'une source externe ou en les créant elle-même.</p>
+                    <p>Si on veut que notre <span class="em">PokemonService</span> soit uniquement lié à notre <span class="em">PokemonModule</span> et non à toute notre application, on va supprimer la propriété <span class="html">providedIn</span> du <span class="html">@Injectable()</span> de notre service et rajouter notre service dans le tableau de la propriété <span class="html">providers</span> du <span class="html">@NgModule</span> de notre module.</p>
+                    <p>On peut égalemnt fournir notre service au niveau de nos composants directement. Cela a peu d'intérêt car, si on fait cela, chaque composant aura une instance différente de notre service donc on perd un peu le <span class="em">pattern Singleton</span>. On peut utiliser la propriété <span class="html">providers</span> dans <span class="html">@Component</span>. On utilise rarement ce code mais il faut juste savoir qu'il existe.</p>
+                </article>
+                <article>
+                    <h2 id="formulaires">Les formulaires :</h2>
+                    <p>Les formulaires sont omnis présents dans les applications. Cependant, la gestion des formulaires a souvent été complexe. Entre le traitement des données de l'utilisateur, la validation, l'affichae de messages d'erreur ou de succès, il faut souvent beaucoup de travail aux développeurs pour offrir une expérience complète et agréable aux utilisateurs.</p>
+                    <p>Heureusement, Angular peut nous permettre de créer des formulaires et nous faciliter le travail.</p>
+                    <p>On va créer un formulaire qui va permettre à un utilisateur de modifier un pokémon avec un bouton "éditer" sur la fiche du pokémon en question.</p>
+                    <p>Lorsque vous souhaitez créer un formulaire avec Angular, vous avez la possibilité d'utiliser deux modules différents : <span class="html">Form</span> et <span class="html">ReactiveForm</span>. Ils répondent au même besoin mais avec une approche différente.</p>
+                    <p>Le premier, le <span class="html">FormsModule</span>, développe une partie importante du formulaire dans le template. On parle de <span class="Em">template-drive form</span>.</p>
+                    <p>Le second, le <span class="html">ReactiveFormsModule</span>, est plus centré sur le développeement du formulaire côté composant.</p>
+                    <p>Il n'y a pas une méthode mieux qu'une autre dans l'absolu. Cependant, le <span class="html">FormsModule</span> est plus adapté pour les petits formulaires et pour les débutants. Pour information, ces deux modules proviennent de la même librairie : <span class="html">@angular/forms</span>.</p>
+                    <p>Avant d'aborder le vif du sujet, il y a deux directives que je dois vous présenter : <span class="html">ngForm</span> et <span class="html">ngModel</span>. Ces deux directives proviennent du <span class="html">FormsModule</span>.</p>
+                    <p>Pour chaque formulaire où la directive <span class="html">ngForm</span> est appliquée, elle va créer une instance d'un objet nommé <span class="html">FormGroup</span> au niveau global du formulaire. En tout cas, sachez qu'une référence à cette directive nous permet de savoir si le formulaire que remplit l'utilisateur est valide ou non au fur et à mesure que l'utilisateur complète ce formulaire. De plus, on peut être notifié lorsque l'utilisateur déclenchera la soumission du formulaire.</p>
+                    <p>La directive <span class="html">ngModel</span> doit s'appliquer sur chacun des champs du formulaire et ce pour plusieurs raisons. Premièrement, cette directive créera une instance d'un objet nommé <span class="html">FormControl</span> pour chaque champ de votre formulaire comme par exemple <span class="html">input</span> ou <span class="html">select</span>. Ensuite, chaque instance de <span class="html">FormControl</span> constituera une brique élémentaire du formulaire qui encapsulera l'état donné d'un champ. Il a pour rôle de traquer la valeur du champ, les interactions avec l'utilisateur, la validité des données saisies et de garder la vue synchronisée avec les données. Troisièmement, chaque <span class="html">FormControl</span> doit être définie avec un nom et, pour cela, il suffit d'ajouter l'attribut <span class="html">name</span> à la balise HTML associée. Quatrièmement, lorsque cette directive est utilisée au sein d'une balise <span class="html">&lt;form&gt;</span>, la directive s'occuper pour nous de l'enregistrer auprès du formulaire comme un élément fils de ce formulaire.</p>
+                    <p>En combinant ces deux directives, on peut donc savour en temps réel si le formulaire est valide ou non. Enfin, dernier point, on peut aussi utiliser la directive <span class="html">ngModelGroup</span> pour créer des sous-groupes de champs à l'intérieur du formulaire.</p>
+                    <p>En plus, la directive <span class="html">ngModel</span> s'occupe de mettre en place une liaison de données bidirectionnelle pour chacun des champs du formulaire. On aura souvent de cette liaison pour gérer les interactions de l'utilisateur côté template et traiter les données saisies côté composant. Ce n'est pas tout car cette directive s'occupe également d'ajouter ou de retirer des classes spécifiques sur chaque champ. Nous pouvons ainsi savoir si l'utilisateur a cliqué sur un champ, si la valeur du champ a changé ou s'il est devenu invalide. En fonction de ces informations, nous pourrons changer l'apparence d'un champ et faire apparaître un message d'erreur ou de succès à l'utilisateur.</p>
+                    <p>On va devoir injecter le <span class="html">FormsModule</span> dans notre module racine pour rendre utilisable ces deux directives dans nos composants. Attention à l'ordre des importations même si ça change presque rien mais on préfère nos propres modules en tout dernier et ceux de Angular en premier, c'est-à-dire que le <span class="html">FormsModule</span> doit être entre le <span class="html">BrowserModule</span> et le <span class="html">PokemonModule</span>. On va également l'importer dans notre <span class="em">PokemonModule</span> malgré qu'il est importé à la racine.</p>
+                    <p>On doit savoir ce qu'on avoir besoin dans ce formulaire avant de créer celui-ci. Le formulaire que l'on va créer en premier va permettre d'éditer certaines propriétés d'un Pokémon, c'est-à-dire que l'id et la date de création d'un pokémon ne sont appelés à être modifier.</p>
+                    <p>Un truc à prendre en compte est que notre formulaire sera un composant à part entière chargé de gérer les données saisies par l'utilisateur et qui permettra d'éditer un Pokémon.</p>
+                    <p>Nous allons découper le template et le composant du formulaire dans deux fichiers séparés dans le dossier <span class="em">src/app/pokemon/pokemon-form</span> : <span class="em">pokemon-form.component.ts</span> et <span class="em">pokemon-form.component.html</span>. Pour créer ces fichiers, on utilise Angular CLI avec la commande :</p>
+<pre><code>ng generate component pokemon/pokemon-form --inline-template=false</code></pre>
+                    <p>Suite à cette commande, ce composant nouvellement créé est déclaré dans le <span class="em">PokemonModule</span>. Voici le contenu du template de notre formulaire :</p>
+<pre><code>&lt;form *ngIf="pokemon" (ngSubmit)="onSubmit()" #pokemonForm="ngForm"&gt;
+    &lt;div class="row"&gt;
+        &lt;div class="col s8 offset-s2"&gt;
+            &lt;div class="card-panel"&gt;
+        
+                &lt;!-- Pokemon name --&gt;
+                &lt;div class="form-group"&gt;
+                    &lt;label for="name"&gt;Nom&lt;/label&gt;
+                    &lt;input type="text" class="form-control" id="name" required pattern="^[a-zA-Z0-9àéèç]{1,25}$" [(ngModel)]="pokemon.name" name="name" #name="ngModel"&gt;
+                    &lt;div [hidden]="name.valid || name.pristine" class="card-panel red accent-1"&gt;
+                        Le nom du pokémon est requis (1-25).
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            
+                &lt;!-- Pokemon hp --&gt;
+                &lt;div class="form-group"&gt;
+                    &lt;label for="hp"&gt;Point de vie&lt;/label&gt;
+                    &lt;input type="number" class="form-control" id="hp" required pattern="^[0-9]{1,3}$" [(ngModel)]="pokemon.hp" name="hp" #hp="ngModel"&gt;
+                    &lt;div [hidden]="hp.valid || hp.pristine" class="card-panel red accent-1"&gt;
+                        Les points de vie du pokémon sont compris entre 0 et 999.
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            
+                &lt;!-- Pokemon cp --&gt;
+                &lt;div class="form-group"&gt;
+                    &lt;label for="cp"&gt;Dégâts&lt;/label&gt;
+                    &lt;input type="number" class="form-control" id="cp" required pattern="^[0-9]{1,2}$" [(ngModel)]="pokemon.cp" name="cp" #cp="ngModel"&gt;
+                    &lt;div [hidden]="cp.valid || cp.pristine" class="card-panel red accent-1"&gt;
+                        Les dégâts du pokémon sont compris entre 0 et 99.
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            
+                &lt;!-- Pokemon types --&gt;
+                &lt;form class="form-group"&gt;
+                    &lt;label for="types"&gt;Types&lt;/label&gt;
+                    &lt;p *ngFor="let type of types"&gt;
+                    &lt;label&gt;
+                        &lt;input type="checkbox" class="filled-in" id="{{ type }}" [value]="type" [checked]="hasType(type)" [disabled]="!isTypesValid(type)" (change)="selectType($event, type)"&gt;
+                        &lt;span [attr.for]="type"&gt;
+                            &lt;div class="{{ type | pokemonTypeColor }}"&gt;
+                                {{ type }}
+                            &lt;/div&gt;
+                        &lt;/span&gt;
+                    &lt;/label&gt;
+                    &lt;/p&gt;
+                &lt;/form&gt;
+            
+                &lt;!-- Submit button --&gt;
+                &lt;div class="divider"&gt;&lt;/div&gt;
+                &lt;div class="section center"&gt;
+                    &lt;button type="submit" class="waves-effect waves-light btn" [disabled]="!pokemonForm.form.valid"&gt;
+                        Valider
+                    &lt;/button&gt;
+                &lt;/div&gt;
+
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/form&gt;
+&lt;h2 *ngIf="!pokemon" class="center"&gt;Aucun pokémon à éditer...&lt;/h2&gt;</code></pre>
+                    <p>On va maintenant implémenter la logique dans le fichier <span class="em">pokemon-form.component.ts</span> comme ceci :</p>
+<pre><code>import { Component, OnInit, Input } from '@angular/core';
+import { Router } from '@angular/router';
+import { Pokemon } from '../pokemon';
+import { PokemonService } from '../pokemon.service';
+
+@Component({
+    selector: 'app-pokemon-form',
+    templateUrl: './pokemon-form.component.html',
+    styleUrls: [
+    ]
+})
+
+export class PokemonFormComponent implements OnInit {
+
+    @Input() pokemon: Pokemon;
+    pokemonTypeList: string[];
+
+    constructor(
+        private pokemonService: PokemonService,
+        private router: Router
+    ) { }
+
+    ngOnInit() {
+        this.pokemonTypeList = this.pokemonService.getPokemonTypeList();
+    }
+
+    hasType(type: string): boolean {
+        return this.pokemon.types.includes(type);
+    }
+
+    selectType($event: Event, type: string) {
+        const isChecked: boolean = ($event.target as HTMLInputElement).checked;
+
+        if (isChecked) {
+            this.pokemon.types.push(type);
+        } else {
+            const index = this.pokemon.types.indexOf(type);
+            this.pokemon.types.splice(index, 1);
+        }
+    }
+
+    onSubmit() {
+        console.log('Submit Form !');
+        this.router.navigate(['/pokemon', this.pokemon.id]);
+    }
+
+}</code></pre>
+                    <p>L'évenement <span class="html">ngSubmit</span> dans notre formulaire est un évenement généré par Angular qui est construit par dessus l'évenement <span class="html">submit</span> natif du DOM dans le navigateur, mais qui fait exactement la même chose, c'est-à-dire ça déclenche cette méthode lorsque l'utilisateur va soumettre notre formulaire.</p>
+                    <p>Le <span class="em">#pokemonForm="ngForm"</span> est une variable référencée par le template vers mon élément du DOM (ici, c'est <span class="html">form</span>) à laquelle j'attribue le résultat de la directive <span class="html">ngForm</span>. Cette variable va devenir un objet géré par Angular avec juste beaucoup d'informations que juste la balise HTML 5. Par exemple, ça va nous permettre d'avoir accès à l'état de validité du formulaire en temps réel.</p>
+                    <p>On va lier nos attributs HTML 5 de validation de nos champs à Angular pour qu'il sache en temps réel que le champ est valide ou non en se basant sur ces règles de validation HTML 5.</p>
+                    <p>La partie <span class="em">[(ngModel)]="pokemon.name"</span> contient à la fois des crochets, c'est-à-dire du property binding qui permet de pousser des données de la classe du composant vers le template, et, en même temps, on a aussi des parenthèses qui est la syntaxe de liaison d'évenements, c'est-à-dire pour remonter des évenements du template du composant vers sa classe. Donc, en combinaisant les deux, c'est-à-dire avec cette syntaxe crochet et à l'intérieur des parenthèses, ça nous permet de mettre en place une liaison de données bidirectionnelle. Quand l'utilisateur va modifier le nom d'un Pokémon, on va être informé de ça côté composant et, du côté composant, si on pilote le Pokémon et son nom, la vue va aussi se mettre à jour automatiquement.</p>
+                    <p>Le <span class="html">.pristine</span> veut dire que le champ n'a pas été touché ou n'a pas encore été bougé par l'utilisateur. Par exemple, au chargement du formulaire, on pourrait avoir un champ vide où on attend que l'utilisateur rentre quelque chose et même si le champ vide n'est pas une donnée valide puisque c'est <span class="html">required</span>.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
