@@ -60,6 +60,8 @@
                         <li><a href="#modules">Les modules</a></li>
                         <li><a href="#services">Les services</a></li>
                         <li><a href="#formulaires">Les formulaires</a></li>
+                        <li><a href="#programmation_reactive">La programmation réactive</a></li>
+                        <li><a href="#requetes_HTTP">Les requêtes HTTP</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -1613,6 +1615,157 @@ export class PokemonFormComponent implements OnInit {
                     <p>On va lier nos attributs HTML 5 de validation de nos champs à Angular pour qu'il sache en temps réel que le champ est valide ou non en se basant sur ces règles de validation HTML 5.</p>
                     <p>La partie <span class="em">[(ngModel)]="pokemon.name"</span> contient à la fois des crochets, c'est-à-dire du property binding qui permet de pousser des données de la classe du composant vers le template, et, en même temps, on a aussi des parenthèses qui est la syntaxe de liaison d'évenements, c'est-à-dire pour remonter des évenements du template du composant vers sa classe. Donc, en combinaisant les deux, c'est-à-dire avec cette syntaxe crochet et à l'intérieur des parenthèses, ça nous permet de mettre en place une liaison de données bidirectionnelle. Quand l'utilisateur va modifier le nom d'un Pokémon, on va être informé de ça côté composant et, du côté composant, si on pilote le Pokémon et son nom, la vue va aussi se mettre à jour automatiquement.</p>
                     <p>Le <span class="html">.pristine</span> veut dire que le champ n'a pas été touché ou n'a pas encore été bougé par l'utilisateur. Par exemple, au chargement du formulaire, on pourrait avoir un champ vide où on attend que l'utilisateur rentre quelque chose et même si le champ vide n'est pas une donnée valide puisque c'est <span class="html">required</span>.</p>
+                    <p>Dans notre template, le <span class="html">isTypesValid(type)</span> de nos checkbox est en rouge dans Visual Studio Code car cette méthode n'a pas encore été implémentée dans notre composant car on a pas encore regardé la validation du formulaire.</p>
+                    <p>Avant de comment ajouter les règles de validation, je vous propose de définir quelle restruction nous souhaitons implémenter sur chaque champ. On a les attributs HTML 5 <span class="html">required</span> et <span class="html">pattern</span> qui permet de rendre les champs obligatoires et utilisant une certaine expression régulière.</p>
+                    <p>Comme on n'aura pas recours aux attributs HTML 5 pour la validation des types, on va devoir définir une méthode de validation côté composant :</p>
+<pre><code>isTypesValid(type: string): boolean {
+    
+    if (this.pokemon.types.length == 1 &amp;&amp; thiS.hasType(type)) {
+        return false;
+    }
+
+    if (this.pokemon.types.length &gt; 2 &amp;&amp; !this.hasType(type)) {
+        return false;
+    }
+
+    return true;
+}</code></pre>
+                    <p>Pour les messages d'erreur ou de succès, il faut rajouter à notre composant au minimum une feuille de style, c'est-à-dire un fichier CSS. On va devoir créer un fichier et puis, on devra rajoute la propriété <span class="html">styleUrls</span> à notre <span class="html">@Component</span> comme ceci :</p>
+<pre><code>@Component({
+    selector: 'app-pokemon-form',
+    templateUrl: './pokemon-form.component.html',
+    styleUrls: ['./pokemon-form.component.css']
+})</code></pre>
+                    <p>Voici le contenu de notre fichier CSS en interceptant les classes fournies par Angular :</p>
+<pre><code>.ng-valid[required] {
+    border-left: 5px solid #42A948;
+}
+
+.ng-invalid:not(form) {
+    border-left: 5px solid #A94442;
+}</code></pre>
+                    <p>Cela permet de mettre sur nos champs une bordure à gauche en vert ou en rouge selon la validation de chaque champs.</p>
+                    <p>On va intégrer notre formulaire dans les routes de notre module afin d'y accéder et aussi créer un bouton "Éditer" dans le détail d'un pokémon pour y accéder. Pour faire cela, on va créer un nouveau composant <span class="em">EditPokemonComponent</span> qui va matcher à la route qu'on va créer avec Angular CLI avec la commande suivante :</p>
+<pre><code>ng generate component pokemon/edit-pokemon</code></pre>
+                    <p>Cette commande créera le fichier <span class="em">src/app/pokemon/edit-pokemon/edit-pokemon.component.ts</span> dont on va modifier le contenu comme ci-dessous :</p>
+<pre><code>import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Pokemon } from '../pokemon';
+import { PokemonService } from '../pokemon.service';
+
+@Component({
+    selector: 'app-edit-pokemon',
+    template: `
+        &lt;h1 class="center"&gt;Éditer {{ pokemon?.name }}&lt;/h1&gt;
+        &lt;p *ngIf="pokemon" class="center"&gt;
+            &lt;img [src]=pokemon.picture"&gt;
+        &lt;/p&gt;
+        &lt;app-pokemon-form *ngIf="pokemon" [pokemon]="pokemon"&gt;&lt;/app-pokemon-form&gt;
+    `,
+    styles: [
+    ]
+})
+
+export class EditPokemonComponent implements OnInit {
+    
+    pokemon: Pokemon|undefined;
+
+    constructor(
+        private route: ActivatedRoute,
+        private pokemonService: PokemonService
+    ) { }
+
+    ngOnInit() {
+        const pokemonId: string|null = this.route.snapshot.paramMap.get('id');
+
+        if (pokemonId) {
+            this.pokemon = this.pokemonService.getPokemonById(+pokemonId);
+        }
+    }
+
+}</code></pre>
+                    <p>Vous vous posez sûrement la question pourquoi on n'a pas développé directement notre formulaire dans le <span class="em">EditPokemonComponent</span>. Il est possible de le faire mais il y a deux choses qui nous font savoir que c'est mieux ainsi : premièrement, par la suite, on peut réutiliser le formulaire qu'on a créé pour gérer le cas d'ajout d'un nouveau pokémon dans l'application et, deuxièmement, l'avantage est la séparation des objectifs, c'est-à-dire le découpage. Le formulaire en soit est déjà une tâche suffisament conséquente pour mériter d'avoir son propre composant.</p>
+                    <p>On va rajouter la route dans le fichier <span class="em">pokemon.module.ts</span> :</p>
+<pre><code>{ path : 'edit/pokemon/:id', component: EditPokemonComponent }</code></pre>
+                    <p>L'ordre des routes est important : la route la plus spécifique en haut et les routes globales en dessous.</p>
+                    <p>On va rajouter le fameux bouton "Éditer" avec une méthode <span class="em">goToEditPokemon(pokemon)</span> dans notre <span class="em">DetailPokemonComponent</span> :</p>
+<pre><code>goToEditPokemon(pokemon: Pokemon) {
+    this.router.navigate(['/edit/pokemon', pokemon.id]);
+}</code></pre>
+<pre><code>&lt;a (click)="goToEditPokemon(pokemon)"&gt;Éditer&lt;/a&gt;</code></pre>
+                </article>
+                <article>
+                    <h2 id="programmation_reactive">La programmation réactive :</h2>
+                    <p>Il y a un élément indispensable à la plupart des applications qu'on a pas encore aborder: <q>Comment communiquer avec un serveur distant ?</q>. Comme pour les formulaires, il y a plusieurs manières de faire. On peut faire des appels sur le réseau avec des <span class="html">Promise</span> ou avec des <span class="html">Observable</span> et la programmation réactive.</p>
+                    <p>Nous verrons quels sont les outils existants pour intéragir avec un serveur distant et comment ils fonctionnent. Les promesses (ou <span class="html">Promise</span> en anglais) sont natives en JavaScript depuis l'arrivée de ES6. Les promesses sont quand même là pour simplifier la programmation asynchrone. Cette dernière desssigne un mode de fonctionnement dans lequel les opérations sont non-bloquantes. Voici quelques exemples de <span class="html">Promise</span> :</p>
+<pre><code>/***************************
+* Exemple n°1
+* Cet exemple permet de récupérer un utilisateur depuis un serveur distant
+* à partir de son identifiant.
+***************************/
+let recupererUtilisateur = function(idUtilisateur) {
+    return new Promise(function(resolve, reject) {
+        // App assynchrone au serveur pour récupérer les informations d'un utilisateur.
+        // À partir de la réponse du serveur, on extrait les données de l'utilisateur.
+        let utilisateur = response.data.utilisateur;
+
+        if (response.status === 200) {
+            resolve(utilisateur);
+        } else {
+            reject('Cet utilisateur n\'existe pas !');
+        }
+    });
+};
+
+/***************************
+* Exemple n°2
+* Cet exemple est une fonction qui renvoie une promesse
+* contenant les informations de l'utilisateur.
+***************************/
+recupererUtilisateur(idUtilisateur)
+    .then(function(utilisateur) { // success
+        console.log(utilisateur);
+        this.user = utilisateur;
+    }, function(error) { // error
+        console.log(error);
+    });
+
+/***************************
+* Exemple n°3
+* Même exemple que le n°2, mais avec l'utilisation des 'Arrow functions'.
+***************************/
+recupererUtilisateur(idUtilisateur)
+    .then(utilisateur =&gt; { // success
+        console.log(utilisateur);
+        this.user = utilisateur;
+    }, error =&gt; consolelog(error));</code></pre>
+                    <p>On dit alors que la programmation réactive est égale à la programmation avec des flux de données asynchrones.</p>
+                    <p>Un flux est une séquence d'évenements en cours qui sont ordonnés dans le temps. La succession de clics peut être modélisée comme un flux d'évenements. Ce qui est intéressant est qu'on peut appliquer des opérations sur ce flux d'évenements.</p>
+                    <p>Par exemple, on peut détecter les double-clics de l'utilisateur et ignorer les clics simples. On peut considérer qu'il y a double-clic s'il y a moins de 250 ms d'écart entre deux clics.</p>
+                    <p>On peut faire plus que s'abonner à un flux. Les flux peuvent émettre trois types de réponses différentes et pour chaque type on peut définir une fonction exécutée. Premièrement, une fonction peut traitée les différentes valeurs de la réponse : un nombre, un tableau, des objets, etc. Ensuite, une fonction pour traiter le cas d'erreur et, enfin, une fonction pour traiter le signal de fin, c'est-à-dire que le flux est terminé et n'émettra plus d'évenements.</p>
+                    <p>Ce qu'il faut retenir c'est que les évenements du flux représentent soit les valeurs de la réponse en cas de succès, soit des erreurs ou alors des terminaisons. Il y a donc que trois cas possibles.</p>
+                    <p>Pour faciliter l'implémentation de la programmation réactive, on utilise souvent des librairies spécifiques. La plus populaire dans l'écosystème JavaScript est RxJS et c'est celle choisie par les développeurs d'Angular.</p>
+                    <p>Dans RxJS, un flux est représenté par un objet appelé <span class="html">Observable</span>. Ils sont très similaires à des tableaux car ils contiennent une collection de valeurs.</p>
+                    <p>Cet objet ajoute juste la notion de valeur reportée dans le temps. On peut traiter celui-ci avec des opérateurs similaires à ceux des tableaux.</p>
+                    <p>Voici un exemple d'<span class="html">Observable</span> :</p>
+<pre><code>Observable.fromArray([1, 2, 3, 4, 5])
+    .filter(x =&gt; x &gt; 2) // 3, 4, 5
+    .map(x =&gt; x * 2) // 6, 8, 10
+    .subscribe(x =&gt; console.log(x)); // affiche le résultat</code></pre>
+                    <p>Les <span class="html">Observable</span> sont différents des promesses même s'ils sont se ressemblent sur certains aspects comme la gestion de valeurs asynchrones. Un <span class="html">Observable</span> n'est pas quelque chose à usage unique. Il continuera d'émettre des évenements jusqu'à ce qu'il émette un évenement de terminaison ou que l'on se désabonne de lui. Globalement, l'utilisation des promesses est plus simple et, dans de nombreux cas, elles sont suffisantes pour répondre aux besoins de votre application. Enfin, il est possible de transformer un <span class="html">Observable</span> en une promesse très simplement grâce à la méthode <span class="em">toPromise()</span> de RxJS comme ceci :</p>
+<pre><code>import 'rxjs/add/operator/toPromise';
+
+function giveMePromiseFromObservable() {
+    return Observable.fromArray([1, 2, 3, 4, 5])
+        .filter(x =&gt; x &gt; 2) // 3, 4, 5
+        .map(x =&gt; x * 2) // 6, 8, 10
+        .toPromise();
+}</code></pre>
+                </article>
+                <article>
+                    <h2 id="requetes_HTTP">Les requêtes HTTP :</h2>
+                    <p>Revenons sur notre application de gestions de Pokémon. Pour rappel, une API est une interface de programmation.</p>
+                    <p>Pour commencer, on va mettre en place le client via le <span class="em">HttpClientModule</span> compris dans Angular.</p>
                     
                 </article>
             <!-- fin de section -->
