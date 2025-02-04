@@ -65,7 +65,7 @@
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
-                <aside id="aside">
+                <aside id="aside" role="complementary">
                     <p>Liens utiles :</p>
                     <ul>
                         <li><a href="https://www.youtube.com/c/LeDesignerduWeb/videos">Le Designer du web</a></li>
@@ -1766,7 +1766,41 @@ function giveMePromiseFromObservable() {
                     <h2 id="requetes_HTTP">Les requêtes HTTP :</h2>
                     <p>Revenons sur notre application de gestions de Pokémon. Pour rappel, une API est une interface de programmation.</p>
                     <p>Pour commencer, on va mettre en place le client via le <span class="em">HttpClientModule</span> compris dans Angular.</p>
-                    
+                    <p>Le <span class="em">HttpClientModule</span> ne fournit pas d'éléments au niveau de la vue, c'est-à-dire pas de directives, de composants ou de pipes. On va l'injecter une seule fois à la racine de notre projet afin d'être disponible pour tous nos composants.</p>
+                    <p>Donc, dans le fichier <span class="em">app.module.ts</span>, on va l'importer avant nos modules mais après les modules Angular déjà importés :</p>
+<pre><code>import { HttpClientModule } from '@angular/common/http';</code></pre>
+                    <p>Jusqu'à maintenant, nous avons stocké et récupérer nos données depuis le <span class="em">PokemonService</span>. On va simuler maintenant une API sans utiliser de base de données ni d'API RESTful.</p>
+                    <p>Pour faire cela, on va installer un nouveau package de dépendances via la commande suivante :</p>
+<pre><code>npm install angular-in-memory-web-api --save-dev</code></pre>
+                    <p>Ensuite, on va créer un service pour simuler une base de données dans notre application Angular via Angular CLI avec la commande ci-dessous :</p>
+<pre><code>ng generate service in-memory-data</code></pre>
+                    <p>Cela crée à la racine de notre dossier <span class="em">app</span> le fichier <span class="em">in-memory-data.service.ts</span> avec le contenu modifié suivant :</p>
+<pre><code>import { Injectable } from '@angular/core';
+import { InMemoryDbService } from 'angular-in-memory-web-api':
+import { POKEMONS } from './pokemon/mock-pokemon-list';
+
+@Injectable({
+    providedIn: 'root'
+})
+
+export class InMemoryDataService implements InMemoryDbService {
+
+    createDb() {
+        return { POKEMONS };
+    }
+
+}</code></pre>
+                    <p>On va importer, dans le <span class="em">app.module.ts</span>, juste en dessous du <span class="em">HttpClientModule</span> le nouveau module :</p>
+<pre><code>// ...
+import { HttpClientInMemoryWebApiModule } from 'angular-in-memory-web-api';
+import { InMemonyDataService } from './in-memory-data.service';
+
+// ...
+
+        HttpClientInMemoryWebApiModule.forRoot(InMemoryDataService, { dataEncapsulation: false }),
+
+// ...</code></pre>
+                    <p></p>
                 </article>
             <!-- fin de section -->
             </section>
