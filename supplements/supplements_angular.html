@@ -1273,7 +1273,7 @@ export class AppModule { }</code></pre>
                     <p>Pour créer ce module <span class="em">pokemon</span>, on va utiliser Angular CLI avec la commande :</p>
 <pre><code>ng generate module pokemon</code></pre>
                     <p>Cette commande a permis de créer un fichier <span class="em">src/app/pokemon/pokemon.module.ts</span>. On va déplacer tous les éléments que nous avons déjà développés dans le dossier du module et de venir brancher ces éléments dans le <span class="html">@NgModule</span> du nouveau module.</p>
-                    <p>Donc, on a le composant qui permet d'afficher la liste des Pokémons. On a celui qui qui affiche le détail de la liste des Pokémons. On a aussi développé un pipe pour la coloration des types. On a également une directive : la <span class="em">BorderCardDirective</span>. Puis, on a le modèle <span class="em">pokemon.ts</span> et le fichier de mock, <span class="em">mock-pokemon.ts</span>.</p>
+                    <p>Donc, on a le composant qui permet d'afficher la liste des Pokémons. On a celui qui qui affiche le détail de la liste des Pokémons. On a aussi développé un pipe pour la coloration des types. On a également une directive : la <span class="em">BorderCardDirective</span>. Puis, on a le modèle <span class="em">pokemon.ts</span> et le fichier de mock, <span class="em">mock-pokemon-list.ts</span>.</p>
                     <p>On va mettre à jour les importations dans chaque fichier pour que les chemins relatifs de nos fichiers sont bien corrects vu qu'on a déplacer tous nos éléments liés à nos pokémons.</p>
                     <p>Normalement, on doit couper <span class="html">ng serve</span> avant les modifications et le relancer juste après.</p>
                     <p>Dans notre nouveau module, on voit qu'Angular a par défaut importer le <span class="html">CommonModule</span> de <span class="html">@angular/common</span> qui est, en fait, une base que vous allez avoir besoin dans n'importe quel module et qui comprend par exemple les directives structurelles <span class="html">ngIf</span> et <span class="html">ngFor</span>, c'est-à-dire que, dans tous nos composants rattachés à ce module, vous pourrez utiliser ces directives sans avoir à les importer.</p>
@@ -1786,7 +1786,8 @@ import { POKEMONS } from './pokemon/mock-pokemon-list';
 export class InMemoryDataService implements InMemoryDbService {
 
     createDb() {
-        return { POKEMONS };
+        const pokemons = POKEMONS;
+        return { pokemons };
     }
 
 }</code></pre>
@@ -1800,7 +1801,206 @@ import { InMemonyDataService } from './in-memory-data.service';
         HttpClientInMemoryWebApiModule.forRoot(InMemoryDataService, { dataEncapsulation: false }),
 
 // ...</code></pre>
-                    <p></p>
+                    <p>On met le <span class="em">dataEncapsulation</span> à <span class="em">false</span> car sinon, par défaut, cette librairie, à chaque fois qu'on va la requêter, va encapsuler toutes nos réponses dans un élément <span class="em">data</span>.</p>
+                    <p>Dans notre <span class="em">PokemonServive</span>, on va faire un certain nombre de modifications. Par exemple, dans la méthode <span class="em">getPokemonList()</span>, on va faire une requête réseau même si elle est simulée auprès d'un serveur distant et ensuite récupérer les données. Cette méthode deviendra asynchrone.</p>
+                    <p>Voici les différentes modifications de ce service :</p>
+<pre><code>import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable, tap, of } from 'rxjs';
+import { Pokemon } from './pokemon';
+
+@Injectable()
+export class PokemonService {
+
+    constructor(private http: HttpClient) { }
+
+    getPokemonList: Observable&lt;Pokemon[]&gt; {
+        return this.http.get&lt;Pokemon[]&gt;('api/pokemons').pipe(
+            tap((response) =&gt; this.log(response)),
+            catchError((error) =&gt; this.handleError(error, []))
+        );
+    }
+
+    getPokemonById(pokemonId: number): Observable&lt;Pokemon|undefined&gt; {
+        return this.http.get&lt;Pokemon&gt;(`api/pokemons/${pokemonId}`).pipe(
+            tap((response) =&gt; this.log(response)),
+            catchError((error) =&gt; this.handleError(error, undefined))
+        );
+    }
+
+    private log(response: any) {
+        console.table(response);
+    }
+
+    privae handleError(error: Error, errorValue: any) {
+        console.error(error);
+        return of(errorValue);
+    }
+
+    getPokemonTypeList(): string[] {
+        return [
+            'Plante',
+            'Feu',
+            'Eau',
+            'Insecte',
+            'Normal',
+            'Electrik',
+            'Poison',
+            'Fée',
+            'Vol',
+            'Combat',
+            'Psy'
+        ];
+    }
+}
+</code></pre>
+                    <p>On va adapter nos composants pour accéder à ces nouvelles données asynchrones. Premièrement, modifions le <span class="em">ListPokemonComponent</span> :</p>
+<pre><code>ngOnInit() {
+    this.pokemonService.getPokemonList()
+        .subscribe((pokemonList) =&gt; this.pokemonList = pokemonList);
+}</code></pre>
+                    <p>Deuxièmement, on va modifier le <span class="em">DetailPokemonComponent</span> et le <span class="em">EditPokemonComponent</span> avec le contenu suivant :</p>
+<pre><code>ngOnInit() {
+    const pokemonId: string|null = this.route.snapshot.paramMap.get('id');
+
+    if (pokemonId) {
+        this.pokemonService.getPokemonById(+pokemonId)
+            .subscribe((pokemon) =&gt; this.pokemon = pokemon);
+    }
+}</code></pre>
+                    <p>Quand notre application utilisait une liste de données issue d'un fichier statique, les modifications étaient répercutées directement au Pokémon de cette liste unique commune à toute l'application. Mais, maintenant que nous extrayons les données à partir d'une API, si nous voulons persister nos changements nous aurions besoin de les écrire sur le serveur, c'est-à-dire de faire une requête HTTP pour enregistrer nos modifications.</p>
+                    <p>Pour cela, on va créer une méthode de modification dans notre <span class="em">PokemonService</span> :</p>
+<pre><code>import { HttpClient, HttpHeaders } from '@angular/common/http';
+
+// ...
+
+    updatePokemon(pokemon: Pokemon): Observable&lt;null&gt; {
+        const httpOptions = {
+            headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+        };
+
+        return this.http.put('api/pokemons', pokemon, httpOptions).pipe(
+            tap((response) =&gt; this.log(response)),
+            catchError((error) =&gt; this.handleError(error, null));
+        );
+    }
+
+// ...</code></pre>
+                    <p>On va se servir de cette méthode dans notre <span class="em">PokemonFormComponent</span> :</p>
+<pre><code>onSubmit() {
+    this.pokemonService.updatePokemon(this.pokemon)
+        .subscribe(() =&gt; this.router.navigate(['/pokemon', this.pokemon.id]));
+}</code></pre>
+                    <p>On va essayer de supprimer un pokémon. Dans notre <span class="em">PokemonService</span>, on va créer une nouvelle méthode :</p>
+<pre><code>deletePokemonById(pokemonId: number): Observable&lt;null&gt; {
+    return this.http.delete(`api/pokemons/${pokemonId}`).pipe(
+        tap((response) =&gt; this.log(response)),
+        catchError((error) =&gt; this.handleError(error, null))
+    );
+}</code></pre>
+                    <p>Dans notre <span class="em">DetailPokemonComponent</span>, on va rajouter le bouton "Supprimer" :</p>
+<pre><code>deletePokemon(pokemon: Pokemon) {
+    this.pokemonService.deletePokemonById(pokemon.id)
+        .subscribe(() =&gt; this.goToPokemonList());
+}</code></pre>
+<pre><code>&lt;a (click)="deletePokemon(pokemon)"&gt;Supprimer&lt;/a&gt;</code></pre>
+                    <p>Maintenant qu'on a vidé notre pokédex, on va permettre à l'utilisateur d'ajouter un nouveau Pokémon. Premièrement, on va bien sûr ajouter une méthode dans notre <span class="em">PokemonService</span> qui va permettre de persister le nouveau Pokémon niveau serveur :</p>
+<pre><code>addPokemon(pokemon: Pokemon): Observable&lt;Pokemon&gt; {
+    cons httpOptions = {
+        headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    };
+    
+    return this.http.post&lt;Pokemon&gt;('api/pokemons', pokemon, httpOptions).pipe(
+        tap((response) =&gt; this.log(response)),
+        catchError((error) =&gt; this.handleError(error, null))
+    );
+}</code></pre>
+                    <p>Ensuite, on va créer un composant <span class="em">AddPokemon</span> qui va réutiliser notre formulaire de Pokémon mais pour en créer un nouveau. Avec Angular CLI, on utilise la commande suivante :</p>
+<pre><code>ng generate component pokemon/add-pokemon</code></pre>
+                    <p>Cela crée le fichier <span class="em">app/pokemon/add-pokemon/add-pokemon.component.ts</span> avec le contenu modifié suivant :</p>
+<pre><code>import { Component, OnInit } from '@angular/core';
+
+@Component({
+    selector: 'app-add-pokemon',
+    template: `
+        &lt;h1 class="center"&gt;Ajouter un pokémon&lt;/h1&gt;
+        &lt;app-pokemon-form [pokemon]="pokemon"&gt;&lt;/appp-pokemon-form&gt;
+    `
+})
+
+export class AddPokemonComponent implements OnInit {
+
+    pokemon: Pokemon;
+
+    ngOnInit() {
+        this.pokemon = new Pokemon();
+    }
+
+}</code></pre>
+                    <p>On va modifier notre modèle <span class="em">Pokemon</span> pour créer un pokémon avec des valeurs par défaut :</p>
+<pre><code>export class Pokemon {
+
+    id: number;
+    name: string;
+    hp: number;
+    cp: number;
+    picture: string;
+    types: string[];
+    created: Date;
+
+    constructor(
+        name: string = 'Entrez un nom...',
+        hp: number = 100,
+        cp: number= 10,
+        picture: string = 'https://assets.pokemon.com/assets/cms2/img/pokedex/detail/xxx.png',
+        types: string[] = ['Normal'],
+        created: Date = new Date()
+    ) {
+        this.name = name;
+        this.hp = hp;
+        this.cp = cp;
+        this.picture = picture;
+        this.types = types;
+        this.created = created;
+    }
+}</code></pre>
+                    <p>Troisièmement, on va modifier ce formulaire pour qu'il puisse gérer à la fois l'ajout d'un nouveau Pokémon et la modification d'un Pokémon :</p>
+<pre><code>// ...
+    
+isAddForm: boolean;
+
+// ...
+
+ngOnInit() {
+    this.types = this.pokemonService.getPokemonTypeList();
+    this.isAddForm = this.router.url.includes('add');
+}
+
+onSubmit() {
+    if (isAddForm) {
+        this.pokemonService.addPokemon(this.pokemon)
+            .subscribe((pokemon: Pokemon) =&gt; this.router.navigate(['/pokemon', pokemon.id]));
+    } else {
+        this.pokemonService.updatePokemon(this.pokemon)
+            .subscribe(() =&gt; this.router.navigate(['/pokemon', this.pokemon.id]));
+    }
+}
+
+// ...</code></pre>
+<pre><code>&lt;!-- Pokemon picture --&gt;
+&lt;div *ngIf="isAddForm" class="form-group"&gt;
+    &lt;label="picture"&gt;Image&lt;/label&gt;
+    &lt;input type="url" class="form-control" id="picture" required [(ngModel)]="pokemon.picture" name="picture" #picture="ngModel"&gt;
+
+    &lt;div [hidden]="picture.valid || picture.pristine" class="card-panel red accent-1"&gt;
+        L'image du pokémon est requise.
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                    <p>Enfin, on va rajouter un bouton "Ajouter" qui va rediriger vers la page qui crée le nouveau Pokémon, c'est-à-dire déclarer une route et un lien vers cette route :</p>
+<pre><code>{ path: 'pokemon/add', component: AddPokemonComponent },</code></pre>
+<pre><code>&lt;a class="btn-floating btn-large waves-effect waves-light red 2-depth-3" style="position: fixed; bottom: 25px; right: 25px;" routerLink="/pokemon/add"&gt;
+    +
+&lt;/a&gt;</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
