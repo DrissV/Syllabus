@@ -64,6 +64,7 @@
                         <li><a href="#requetes_HTTP">Les requêtes HTTP</a></li>
                         <li><a href="#librairie_RxJS">La librairie RxJS</a></li>
                         <li><a href="#authentification_securite">Authentification et sécurité</a></li>
+                        <li><a href="#deployer_application">Déployer votre application</a></li>
                     </ol>
                 </nav>
                 <!-- aside lié à la page et pas à l'article donc pas à l'intérieur de article -->
@@ -2082,7 +2083,7 @@ export class SearchPokemonComponent implements OnInit {
         &lt;/div&gt;
     &lt;/div&gt;
 &lt;/div&gt;</code></pre>
-                    <p>Le <span class="em">pokemons$ | async</span> va faire exactement pareil que le <span class="em">this.pokemons$.subscribe(pokemons =&gt; this.pokemons = pokemons);</span> dans le <span class="html">ngOnInit</span>. On va rajouter le rajouter dans le template de notre <span class="em">ListPokemon</span> juste avant la liste :</p>
+                    <p>Le <q class="em">pokemons$ | async</q> va faire exactement pareil que le <q class="em">this.pokemons$.subscribe(pokemons =&gt; this.pokemons = pokemons);</q> dans le <span class="html">ngOnInit</span>. On va rajouter le rajouter dans le template de notre <span class="em">ListPokemon</span> juste avant la liste :</p>
 <pre><code>&lt;app-search-pokemon&gt;&lt;/app-search-pokemon&gt;</code></pre>
                     <p>On va ajouter une icône de chargementcar l'application est un peu plus lente depuis qu'elle utilise l'API. Pour cela, on va créer un nouveau composant avec Angular CLI avec la commande suivante :</p>
 <pre><code>ng generate component pokemon/loader</code></pre>
@@ -2147,7 +2148,182 @@ export class LoaderComponent { }</code></pre>
                         </li>
                     </ul>
                     <p>Bien sûr, on peut avoir différents <span class="em">Guard</span> à tous les niveaux du système de navigation. Cependendant, si à un moment un <span class="em">Guard</span> retourne <span class="html">false</span>, tous les autres <span class="em">Guard</span> en attente seront annulés et la navigation sera bloquée.</p>
-                    
+                    <p>Il est très courant pour les applications web de devoir restreindre l'accès à certaines fonctionnalités en fonction si l'utilisateur est connecté ou non. Pour cela, on va mettre en place un <span class="em">Guard</span> de type <span class="html">CanActivate</span> avec Angular CLI avec la commande suivante :</p>
+<pre><code>ng generate guard auth</code></pre>
+                    <p>Cela crée le fichier <span class="em">src/app/auth.guard.ts</span> avec le contenu modifié suivant :</p>
+<pre><code>import { Injectable } from '@angular/core';
+import { CanActivate } from '@angular/router';
+
+@Injectable({
+    providedIn: 'root'
+})
+
+export class AuthGuard implements CanActivate {
+
+    canActivate(): boolean {
+        console.log('Le guard a été appelé !');
+        return true;
+    }
+
+}</code></pre>
+                    <p>Dans le <span class="em">PokemonModule</span>, on va importer le <span class="em">Guard</span> afin de l'appliquer à la route d'édition :</p>
+<pre><code>// ...
+import { AuthGuard } from '../auth.guard';
+// ...
+    { path: 'edit/pokemon/:id', component: EditPokemonComponent, canActivate: [AuthGuard] },
+// ...</code></pre>
+                    <p>On va également sécuriser toutes les routes de notre <span class="em">PokemonModule</span>.</p>
+                    <p>On aura besoin d'un nouveau service dédié à l'authentification qui va permettre de dire si oui ou non l'utilisateur est connecté en fonction d'un email et d'un mot de passe. C'est pas le rôle du <span class="em">Guard</span> de faire ça car ce dernier pilote le routing. On va créer ce service à la racine de notre application avec Angular CLI :</p>
+<pre><code>ng generate service auth</code></pre>
+                    <p>Ce service aura un rôle différent du <span class="em">Guard</span> qu'on a mis en place malgré qu'ils ont le même nom. On va modifier le fichier <span class="em">auth.service.ts</span> avec le contenu suivant :</p>
+<pre><code>import { Injectable } from '@angular/core';
+import { Observable, of, delay, tap } from 'rxjs';
+
+@Injectable({
+    providedIn: 'root'
+})
+
+export calss AuthService {
+
+    isLoggedIn: boolean = false;
+    redirectUrl: string;
+
+    login(name: string, password: string): Observable&lt;boolean&gt; {
+        const isLoggedIn = (name == 'pikachu' && password == 'pikachu');
+
+        return of(isLoggedIn).pipe(
+            delay(1000),
+            tap((isLoggedIn) =&gt; this.isLoggedIn = isLoggedIn)
+        );
+    }
+
+    logout() {
+        this.isLoggedIn = false;
+    }
+
+}</code></pre>
+                    <p>On va injecter le nouveau service dans le <span class="em">Guard</span> comme ceci :</p>
+<pre><code>import { Injectable } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
+import { AuthService } from './auth.service';
+
+@Injectable({
+    providedIn: 'root'
+})
+
+export class AuthGuard implements CanActivate {
+
+    constructor(
+        private authService: AuthService,
+        private router: Router
+    ) { }
+
+    canActivate(): boolean {
+        if (this.authService.isLoggedIn) {
+            return true;
+        }
+
+        this.router.navigate(['/login']);
+        return false;
+    }
+
+}</code></pre>
+                    <p>On va maintenant créer cette fameuse <span class="em">/login</span>. Mais avant tout, on va créer la page de connexion afin de relier cette route avec le <span class="em">LoginComponent</span> créé via Angular CLI avec la commande suivante :</p>
+<pre><code>ng generate component login --inline-template</code></pre>
+                    <p>Cela créera donc les fichiers <span class="em">login.component.ts</span> et <span class="em">login.component.html</span> dans le dossier <span class="em">src/app/login</span> avec les contenus modifiés suivants :</p>
+<pre><code>import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../auth.service';
+
+@Component({
+    selector: 'app-login',
+    templateUrl: './login.component.html',
+    styles: [
+    ]
+})
+
+export class LoginComponent implements OnInit {
+
+    message: string = 'Vous êtes déconnecté (pikachu/pikachu)';
+    name: string;
+    password: string;
+    auth: authService
+
+    constructor(
+        private authService: AuthService,
+        private router: Router
+    ) { }
+
+    ngOnInit() {
+        this.auth = this.authService;
+    }
+
+    setMessage() {
+        if (this.auth.isLoggedIn) {
+            this.message = 'Vous êtes connecté.';
+        } else {
+            this.message = 'Identifiant ou mot de passe incorrect.';
+        }
+    }
+
+    login() {
+        this.message = 'Tentative de connexion en cours...';
+        this.auth.login(this.name, this.password)
+            .subscribe((isLoggedIn: boolean) =&gt; {
+                this.setMessage();
+                if (isLoggedIn) {
+                    this.router.navigate(['/pokemons']);
+                } else {
+                    this.password = '';
+                    this.router.navigate(['/login']);
+                }
+            });
+    }
+
+    logout() {
+        this.auth.logout();
+        this.message = 'Vous êtes déconnecté.';
+    }
+
+}</code></pre>
+<pre><code>&lt;div class="row"&gt;
+    &lt;div class="col s12 m4 offset-m4"&gt;
+        &lt;div class="card hoverable"&gt;
+            &lt;div class="card-content center"&gt;
+                &lt;span class="card-title"&gt;Page de connexion&lt;/span&gt;
+                &lt;p&gt;&lt;em&gt;{{message}}&lt;/em&gt;&lt;/p&gt;
+            &lt;/div&gt;
+            &lt;form #loginForm="ngForm"&gt;
+                &lt;div&gt;
+                    &lt;label for="name"&gt;Name&lt;/label&gt;
+                    &lt;input type="text" id="name" [(ngModel)]="name" name="name" required&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                    &lt;label for="password"&gt;Password&lt;/label&gt;
+                    &lt;input type="password" id="password" [(ngModel)]="password" name="password" required&gt;
+                &lt;/div&gt;
+            &lt;/form&gt;
+            &lt;div class="card-action center"&gt;
+                &lt;a (click)="login()" class="waves-effect waves-light btn"  *ngIf="!auth.isLoggedIn"&gt;
+                    Se connecter
+                &lt;/a&gt;
+                &lt;a (click)="logout()" *ngIf="auth.isLoggedIn"&gt;
+                    Se déconnecter
+                &lt;/a&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                    <p>Dans le <span class="em">app.module.ts</span>, on modifie les routes comme ceci :</p>
+<pre><code>const routes: Routes = [
+    { path: '', redirectTo: 'login', pathMatch: 'full' },
+    { path: 'login', component: LoginComponent },
+    { path: '**', component: PageNotFoundComponent }
+];</code></pre>
+                </article>
+                <article>
+                    <h2 id="deployer_application">Déployer votre application :</h2>
+                    <p></p>
                 </article>
             <!-- fin de section -->
             </section>
