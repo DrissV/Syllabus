@@ -2228,7 +2228,7 @@ export class AuthGuard implements CanActivate {
     }
 
 }</code></pre>
-                    <p>On va maintenant créer cette fameuse <span class="em">/login</span>. Mais avant tout, on va créer la page de connexion afin de relier cette route avec le <span class="em">LoginComponent</span> créé via Angular CLI avec la commande suivante :</p>
+                    <p>On va maintenant créer cette fameuse route <span class="em">/login</span>. Mais avant tout, on va créer la page de connexion afin de relier cette route avec le <span class="em">LoginComponent</span> créé via Angular CLI avec la commande suivante :</p>
 <pre><code>ng generate component login --inline-template</code></pre>
                     <p>Cela créera donc les fichiers <span class="em">login.component.ts</span> et <span class="em">login.component.html</span> dans le dossier <span class="em">src/app/login</span> avec les contenus modifiés suivants :</p>
 <pre><code>import { Component, OnInit } from '@angular/core';
@@ -2323,7 +2323,41 @@ export class LoginComponent implements OnInit {
                 </article>
                 <article>
                     <h2 id="deployer_application">Déployer votre application :</h2>
-                    <p></p>
+                    <p>On va déployer notre application en production sur <span class="em">Firebase Hosting</span>, entreprise appartenant à Google proposant d'héberger gratuitement des sites statiques en dessous d'un certain quota d'utilisation.</p>
+                    <p>Premièrement, nous devons préparer notre projet en local pour le déploiement. Nous verrons quels sont les éléments les plus importants à optimiser.</p>
+                    <p>En fait, il faut d'abord permettre à Angular d'optimiser tout un tas de choses en local comme supprimer les dépendances inutiles en production comme <span class="em">TypeScript</span>. Le navigateur ne comprend que le JavaScript. On doit demander à Angular de compiler tout notre code <span class="em">TypeScript</span> en fichiers JavaScript compréhensibles par le navigateur. On va pas faire cela à la main mais Angular CLI possède la commande suivante :</p>
+<pre><code>ng build</code></pre>
+                    <p>On va utiliser le dossier <span class="em">dist/ng-pokemon-app</span> qui contient le code généré par la commande précédente.</p>
+                    <p>Ensuite, nous créerons notre projet sur Firebase. Cela nous donnera accès à une console d'administration où vous pourrez consulter l'historique de vos déploiements, revenir à une version plus ancienne de notre projet, etc.</p>
+                    <p>On va devoir installer <span class="em">Firebase CLI</span> en local. Il s'agit d'une sorte de boîte à outils mise à disposition par Firebase pour vous permettre de déployer votre application en une seule ligne de commandes sur leur serveur. Ensuite, nous devrions configurer notre projet auprès de Firebase pour préparer les éléments spécifiques au déploiement.</p>
+<pre><code>npm install -g firebase-tools</code></pre>
+                    <p>Pour vérifier que l'installation s'est bien passée, on va faire la commande suivante :</p>
+<pre><code>firebase --version</code></pre>
+                    <p>Pour lier notre compte Google, on utilise la commande :</p>
+<pre><code>firebase login</code></pre>
+                    <p>On va relier nos fichiers en local avec notre projet Firebase avec la commande :</p>
+<pre><code>firebase init</code></pre>
+                    <p>On va choisir "Hosting", on choisit le dossier "dist/ng-pokemon-app" et on pointe tout vers <span class="em">index.html</span> pour une Single Page Application. Pas de "github" et ne pas modifier le fichier <span class="em">index.html</span>. Firebase a créé deux nouveaux fichiers dans notre projet local : <span class="em">.firebase.rc</span> et <span class="em">firebase.json</span>.</p>
+<pre><code>{
+    "hosting": {
+        "public": "dist/ng-pokemon-app",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "rewrites": [
+            {
+                "source": "**",
+                "destination": "/index.html"
+            }
+        ]
+    }
+}</code></pre>
+                    <p>Enfin, nous déploierons notre application sur Firebase pour de bon.</p>
+                    <p>On va déployer notre projet avec Firebase CLI avec la commande :</p>
+<pre><code>firebase deploy</code></pre>
+                    <p>Il nous donne deux URLs : le back-office de notre projet Firebase et le lien vers notre projet en ligne.</p>
                 </article>
             <!-- fin de section -->
             </section>
