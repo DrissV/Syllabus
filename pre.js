@@ -3,7 +3,7 @@ const preElements = document.querySelectorAll('pre');
 preElements.forEach(preElement => {
     preElement.setAttribute('tabindex', '0'); // Rendre focusable
     preElement.setAttribute('role', 'button'); // Indiquer son rôle
-    preElement.setAttribute('aria-label', 'Copier le contenu dans le pressePapier');
+    preElement.setAttribute('aria-label', 'Copier le contenu dans le presse-papier');
 
     preElement.addEventListener('click', (event) => {
         copyPreContent(event);
