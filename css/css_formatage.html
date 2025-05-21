@@ -196,6 +196,81 @@
     }
 }</code></pre>
                     <p>Remarque : bien que la media query <span class="em">prefers-color-scheme</span> appartienne aux Media Queries Level 5 qui sont encore à l'état de brouillon au moment de l'écriture de ces lignes, elle est déjà bien supportée par la plupart des navigateurs modernes.</p>
+                    <p><span class="html">:root</span> est un sélecteur CSS qui cible l'élément racine du document, c'est-à-dire <span class="html">&lt;html&gt;</span>.</p>
+                    <p>Mais son intérêt principal est de permettre de définir des variables CSS globales. Par exemple :</p>
+<pre><code>:root {
+    --couleur-fond: white;
+    --couleur-texte: black;
+}</code></pre>
+                    <p>Ensuite, vous pouvez réutiliser ces variables partout :</p>
+<pre><code>body {
+    background-color: var(--couleur-fond);
+    color: var(--couleur-texte);
+}</code></pre>
+                    <p>Les avantages de <span class="html">:root</span> sont :</p>
+                    <ul>
+                        <li>
+                            <p>Centalisation des couleurs/html</p>
+                        </li>
+                        <li>
+                            <p>Plus facile à modifier ou thématiser</p>
+                        </li>
+                        <li>
+                            <p>Moins de répétition dans le code</p>
+                        </li>
+                    </ul>
+                    <p>Voici une méthode propre et moderne pour gérer deux thèmes en associant <span class="html">:root</span> et <span class="html">prefers-color-scheme</span> :</p>
+<pre><code>:root {
+    --bg: #fff;
+    --text: #000;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #121212;
+        --text: #F0F0F0;
+    }
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+}</code></pre>
+                    <p>Le résultat du code ci-dessus pemet au thème sombre de s'activer automatiquement si l'utilisateur l'a défini dans son OS. Le reste du site continue d'utiliser des variables.</p>
+                    <p>Si vous voulez que l'utilisateur puisse choisir lui-même entre sombre et clair, on peut forcer un thème avec JavaScript :</p>
+<pre><code>document.documentElement.setAttribute('data-theme', 'dark');</code></pre>
+                    <p>Et en CSS :</p>
+<pre><code>:root[data-theme="dark"] {
+    --bg: black;
+    --text: white;
+}</code></pre>
+                    <p>En résumé :</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Élément</th>
+                                <th>Rôle</th>
+                                <th>Avantages</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="html">:root</span></td>
+                                <td>Stocker des variables CSS globales</td>
+                                <td>Réutilisabilité, maintenabilité</td>
+                            </tr>
+                            <tr>
+                                <td><span class="html">prefers-color-scheme</span></td>
+                                <td>Réagir aux préférences système</td>
+                                <td>Accessibilité, UX</td>
+                            </tr>
+                            <tr>
+                                <td><span class="html">var(--nom)</span></td>
+                                <td>Utiliser une variable CSS</td>
+                                <td>Code DRY</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     <p>En HTML, deux façons de préciser une couleur coexistent :</p>
                     <ul>
                         <li>
