@@ -63,7 +63,7 @@ var jeu = function () {
         }
         var nbC= (ligne * nbrColonnes) + colonne;
         td[nbC].style.backgroundColor = joueurCourant;
-        setTimeOut(function() {
+        setTimeout(function() {
             animer(max, ligne + 1, colonne);
         }, 10);
     }

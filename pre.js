@@ -1,6 +1,6 @@
 const preElements = document.querySelectorAll('pre');
 
-preElements.forEach(preElement => {
+preElements.forEach((preElement) => {
     preElement.setAttribute('tabindex', '0'); // Rendre focusable
     preElement.setAttribute('role', 'button'); // Indiquer son rôle
     preElement.setAttribute('aria-label', 'Copier le contenu dans le presse-papier');
@@ -27,3 +27,23 @@ const copyPreContent = (event) => {
             console.error('Erreur pour copie du texte : ', err);
         });
 };
+
+const gifs = document.querySelectorAll('img[src=".gif"]');
+
+gifs.forEach((img) => {
+    const src = img.src;
+    img.style.cursor = 'pointer';
+    img.onclick = () => (img.src = '', img.src = src);
+});
+
+/*
+gifs.forEach((img) => {
+    img.dataset.src = img.src;
+    img.style.cursor = 'pointer';
+    img.addEventListener('click', () => {
+        img.src = '';
+        img.src = img.dataset.src;
+        img.dataset.playing = (img.dataset.playing === 'true') ? 'false' : 'true';
+    });
+});
+*/
