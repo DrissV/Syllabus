@@ -7,6 +7,7 @@ var jetonCourant = jetonRouge;
 var joueurCourant = 'red';
 var suite = 4;
 var info = document.getElementById('information');
+var info_joueur = document.getElementById('information_joueur');
 var td = document.body.getElementsByTagName('td');
 
 var jeu = function () {
@@ -171,7 +172,7 @@ var button = '<br><button onclick="location.reload();" id="reload">Recharger la 
 
 function joue(i) {
     game.jouer(i);
-    info.innerHTML = joueurCourant;
+    info_joueur.innerHTML = joueurCourant;
     game.afficher();
     if (game.grilleRemplie()) {
         info.innerHTML = 'C\'est égalité !' + button;
