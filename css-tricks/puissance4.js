@@ -2,6 +2,7 @@ var nbrLignes = 6;
 var nbrColonnes = 7;
 var caseVide = ' ';
 var jetonRouge = 'O';
+var jetonJaune = 'X';
 var jetonCourant = jetonRouge;
 var joueurCourant = 'red';
 var suite = 4;
@@ -172,7 +173,7 @@ function joue(i) {
     game.jouer(i);
     info.innerHTML = joueurCourant;
     game.afficher();
-    if (game.grilleRemplie) {
+    if (game.grilleRemplie()) {
         info.innerHTML = 'C\'est égalité !' + button;
     }
     if ((gagnant = game.gagnant()) !== false) {
