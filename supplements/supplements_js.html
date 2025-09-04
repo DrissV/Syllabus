@@ -2248,11 +2248,12 @@ button #reload {
 var nbrColonnes = 7;
 var caseVide = ' ';
 var jetonRouge = 'O';
-var jetonRouge = 'X';
+var jetonJaune = 'X';
 var jetonCourant = jetonRouge;
 var joueurCourant = 'red';
 var suite = 4;
 var info = document.getElementById('information');
+var info_joueur = document.getElementById('information_joueur');
 var td = document.body.getElementsByTagName('td');
 
 var jeu = function () {
@@ -2279,8 +2280,8 @@ var jeu = function () {
             console.log(ligneAAfficher);
         }
     }
-
-    function jouer(colonne, couleur) {
+    
+    function jouer(colonne) {
         colonne--;
         var ligne;
         for (ligne = 0; ligne &lt; nbrLignes; ligne++) {
@@ -2292,7 +2293,7 @@ var jeu = function () {
             return false;
         }
         ligne--;
-        grille[ligne][colonne] = couleur;
+        grille[ligne][colonne] = jetonCourant;
         /* var nb = (ligne * nbrColonnes) + colonne;
         td[nb].style.backgroundColor = joueurCourant; */
         animer(ligne, 0, colonne);
@@ -2308,9 +2309,8 @@ var jeu = function () {
             var nbO = ((ligne - 1) * nbrColonnes) + colonne;
             td[nbO].style.backgroundColor = 'white';
         }
-        var nbC = (ligne * nbrColonnes) + colonne;
+        var nbC= (ligne * nbrColonnes) + colonne;
         td[nbC].style.backgroundColor = joueurCourant;
-
         setTimeout(function() {
             animer(max, ligne + 1, colonne);
         }, 10);
@@ -2319,7 +2319,7 @@ var jeu = function () {
     function checkedColonne() {
         for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
             for (var ligne = 0; ligne &lt;= nbrLignes - suite; ligne++) {
-                if (grille[ligne][colonne] !== caseVide &amp;&amp; grille[ligne][colonne] === grille[ligne + 1][colonne] &amp;&amp; grille[ligne][colonne] === grille[ligne + 2][colonne] &amp;&amp; grille[ligne][colonne] === grille[ligne + 3][colonne]) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne + 1][colonne] && grille[ligne][colonne] === grille[ligne + 2][colonne] && grille[ligne][colonne] === grille[ligne + 3][colonne]) {
                     return grille[ligne][colonne];
                 }
             }
@@ -2330,7 +2330,7 @@ var jeu = function () {
     function checkedLigne() {
         for (var colonne = 0; colonne &lt;= nbrColonnes - suite; colonne++) {
             for (var ligne = 0; ligne &lt; nbrLignes; ligne++) {
-                if (grille[ligne][colonne] !== caseVide &amp;&amp; grille[ligne][colonne] === grille[ligne][colonne + 1] &amp;&amp; grille[ligne][colonne] === grille[ligne][colonne + 2] &amp;&amp; grille[ligne][colonne] === grille[ligne][colonne + 3]) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne][colonne + 1] && grille[ligne][colonne] === grille[ligne][colonne + 2] && grille[ligne][colonne] === grille[ligne][colonne + 3]) {
                     return grille[ligne][colonne];
                 }
             }
@@ -2341,25 +2341,25 @@ var jeu = function () {
     function checkedD1() {
         for (var ligne = 0; ligne &lt;= nbrLignes - suite; ligne++) {
             for (var colonne = 0; colonne &lt;= nbrColonnes - suite; colonne++) {
-                if (grille[ligne][colonne] !== caseVide &amp;&amp; grille[ligne][colonne] === grille[ligne - 1][colonne -1] &amp;&amp; grille[ligne][colonne] === grille[ligne - 2][colonne - 2] &amp;&amp; grille[ligne][colonne] === grille[ligne - 3][colonne -3]) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne + 1][colonne + 1] && grille[ligne][colonne] === grille[ligne + 2][colonne + 2] && grille[ligne][colonne] === grille[ligne + 3][colonne + 3]) {
                     return grille[ligne][colonne];
                 }
             }
         }
         return false;
     }
-    
+
     function checkedD2() {
         for (var ligne = 0; ligne &lt;= nbrLignes - suite; ligne++) {
-            for (var colonne = 0; colonne &lt; nbrColonnes; colonne++) {
-                if (grille[ligne][colonne] !== caseVide &amp;&amp; grille[ligne][colonne] === grille[ligne + 1][colonne -1] &amp;&amp; grille[ligne][colonne] === grille[ligne + 2][colonne - 2] &amp;&amp; grille[ligne][colonne] === grille[ligne + 3][colonne -3]) {
+            for (var colonne = suite - 1; colonne &lt; nbrColonnes; colonne++) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne + 1][colonne - 1] && grille[ligne][colonne] === grille[ligne + 2][colonne - 2] && grille[ligne][colonne] === grille[ligne + 3][colonne - 3]) {
                     return grille[ligne][colonne];
                 }
             }
         }
         return false;
     }
-    
+
     function gagnant() {
         var gagnant;
         if ((gagnant = checkedLigne()) !== false) {
@@ -2417,14 +2417,22 @@ var gagnant;
 var button = '&lt;br&gt;&lt;button onclick="location.reload();" id="reload"&gt;Recharger la grille&lt;/button&gt;';
 
 function joue(i) {
+    if (game.grilleRemplie() || game.gagnant() !== false) {
+        return;
+    }
+
     game.jouer(i);
-    info.innerHTML = joueurCourant;
+    info_joueur.innerHTML = joueurCourant;
     game.afficher();
+    
     if (game.grilleRemplie()) {
         info.innerHTML = 'C\'est égalité !' + button;
+        return;
     }
+    
     if ((gagnant = game.gagnant()) !== false) {
         info.innerHTML = 'Le gagnant est les "' + gagnant + '"' + button;
+        return;
     }
 }</code></pre>
                     <h3 id="exercice5">Exercices 5 sur jQuery :</h3>

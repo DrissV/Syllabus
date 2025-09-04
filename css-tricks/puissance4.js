@@ -95,25 +95,25 @@ var jeu = function () {
     function checkedD1() {
         for (var ligne = 0; ligne <= nbrLignes - suite; ligne++) {
             for (var colonne = 0; colonne <= nbrColonnes - suite; colonne++) {
-                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne - 1][colonne -1] && grille[ligne][colonne] === grille[ligne - 2][colonne - 2] && grille[ligne][colonne] === grille[ligne - 3][colonne -3]) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne + 1][colonne + 1] && grille[ligne][colonne] === grille[ligne + 2][colonne + 2] && grille[ligne][colonne] === grille[ligne + 3][colonne + 3]) {
                     return grille[ligne][colonne];
                 }
             }
         }
         return false;
     }
-    
+
     function checkedD2() {
         for (var ligne = 0; ligne <= nbrLignes - suite; ligne++) {
-            for (var colonne = 0; colonne < nbrColonnes; colonne++) {
-                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne + 1][colonne -1] && grille[ligne][colonne] === grille[ligne + 2][colonne - 2] && grille[ligne][colonne] === grille[ligne + 3][colonne -3]) {
+            for (var colonne = suite-1; colonne < nbrColonnes; colonne++) {
+                if (grille[ligne][colonne] !== caseVide && grille[ligne][colonne] === grille[ligne + 1][colonne - 1] && grille[ligne][colonne] === grille[ligne + 2][colonne - 2] && grille[ligne][colonne] === grille[ligne + 3][colonne - 3]) {
                     return grille[ligne][colonne];
                 }
             }
         }
         return false;
     }
-    
+
     function gagnant() {
         var gagnant;
         if ((gagnant = checkedLigne()) !== false) {
@@ -171,13 +171,21 @@ var gagnant;
 var button = '<br><button onclick="location.reload();" id="reload">Recharger la grille</button>';
 
 function joue(i) {
+    if (game.grilleRemplie() || game.gagnant() !== false) {
+        return;
+    }
+
     game.jouer(i);
     info_joueur.innerHTML = joueurCourant;
     game.afficher();
+    
     if (game.grilleRemplie()) {
         info.innerHTML = 'C\'est égalité !' + button;
+        return;
     }
+    
     if ((gagnant = game.gagnant()) !== false) {
         info.innerHTML = 'Le gagnant est les "' + gagnant + '"' + button;
+        return;
     }
 }
