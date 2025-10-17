@@ -54,6 +54,7 @@
                     <li><a href="#faille_securite">Faille de sécurité</a></li>
                     <li><a href="#reduire_vulnerabilites_logicielles">Réduire les vulnérabilités logicielles</a></li>
                     <li><a href="#programmation_defensive">Programmation défensive</a></li>
+                    <li><a href="#lab1">Lab 1 : Environnement d'exécution</a></li>
                 </ol>
             </nav>
             
@@ -368,6 +369,192 @@
                         </li>
                         <li>
                             <p>Chaîne de compilation en C.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="lab1">Lab 1 : Environnement d'exécution :</h2>
+                    <p>Objectif : comprendre comment un programme vit en mémoire.</p>
+                    <p>Qu'est-ce qu'un environnement d'exécution ?</p>
+                    <p>C'est un ensemble des ressources allouées à un programme (mémoire, registres CPU, pile, tas...).</p>
+                    <h3>Vue d'ensemble de la mémoire d'un processus :</h3>
+                    <img src="../images/vue_ensemble_memoire_processus.PNG" alt="">
+                    <h3>Les registres CPU :</h3>
+                    <img src="../images/registres_CPU.PNG" alt="">
+                    <h3>Vue d'ensemble de la mémoire d'un processus :</h3>
+                    <img src="../images/vue_ensemble_memoire_processus.PNG" alt="">
+                    <h3>Le segmentde code :</h3>
+                    <ul>
+                        <li>
+                            <p>Contient les instructions compilées du programme.</p>
+                        </li>
+                        <li>
+                            <p>En lecture seule.</p>
+                        </li>
+                        <li>
+                            <p>Exemple : sections ELF (.text, .rodata).</p>
+                        </li>
+                        <li>
+                            <p>Exercice : compiler et vérifier les sections dans un exécutable (<span class="em">readelf</span>, <span class="em">objdump</span>).</p>
+                        </li>
+                    </ul>
+                    <h3>Les segments de données (Data & BSS) :</h3>
+                    <ul>
+                        <li>
+                            <p>Data : variables globales initialisées.</p>
+                        </li>
+                        <li>
+                            <p>BSS : variables non initialisées.</p>
+                        </li>
+                        <li>
+                            <p>Exemple C :</p>
+<pre><code>int global_init = 10; // Data
+int global_uninit; // BSS</code></pre>
+                        </li>
+                    </ul>
+                    <h3>Le tas (Heap) :</h3>
+                    <ul>
+                        <li>
+                            <p>Zone mémoire dynamique (malloc, calloc, new...).</p>
+                        </li>
+                        <li>
+                            <p>Croît vers le haut.</p>
+                        </li>
+                        <li>
+                            <p>Vulnérabilités : Heap overflow, Use-After-Free, Double Free.</p>
+                        </li>
+                    </ul>
+                    <h3>La pile (Stack) :</h3>
+                    <ul>
+                        <li>
+                            <p>Stocke les variables locales et le contexte d'appel.</p>
+                        </li>
+                        <li>
+                            <p>Croît vers le bas.</p>
+                        </li>
+                        <li>
+                            <p>Structure d'une stack frame :</p>
+                            <img src="../images/pile_stack.PNG" alt="">
+                            <img src="../images/pile_stack_1.PNG" alt="">
+                        </li>
+                    </ul>
+                    <h3>Les registres CPU :</h3>
+                    <ul>
+                        <li>
+                            <p>EIP/RIP : pointeur d'instruction</p>
+                        </li>
+                        <li>
+                            <p>ESP/RSP : pointeur de pile</p>
+                        </li>
+                        <li>
+                            <p>EBP/RBP : base frame</p>
+                        </li>
+                        <li>
+                            <p>EAX, EBX... : registres de travail</p>
+                        </li>
+                        <li>
+                            <p>Exemple ASM :</p>
+                            <div>
+                                <img src="../images/registres_CPU_1.PNG" class="float_right" alt="">
+<pre><code>push ebp
+mov ebp, esp
+sub esp, 0x10
+mov eax, [ebp+8]
+leave
+ret</code></pre>
+                            </div>
+                        </li>
+                    </ul>
+                    <h3>Stack vs Heap :</h3>
+                    <ul>
+                        <li>
+                            <p>Stack : allocation auto, rapide, taille limitée, vulnérable aux overflows.</p>
+                        </li>
+                        <li>
+                            <p>Heap : allocation dynamique, grande, lente, vulnérable aux use-after-free.</p>
+                        </li>
+                    </ul>
+                    <h3>Mécanismes de protection mémoire :</h3>
+                    <ul>
+                        <li>
+                            <p>ASLR : randomisation des adresses</p>
+                        </li>
+                        <li>
+                            <p>DEP/NX bit : empêche exécution sur pile/tas.</p>
+                        </li>
+                        <li>
+                            <p>Stack canaries : détecte les écrasments de pile.</p>
+                        </li>
+                    </ul>
+                    <h3>Étude pratique :</h3>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int global = 5;
+int main() {
+    in local = 10;
+    int *p = malloc(sizeof(int));
+    *p = 20;
+    printf("%p %p %p\n", &amp;global, &amp;local, p);
+    free(p);
+}</code></pre>
+                    <h3>Exemple pratique : sections mémoire d'un programme C :</h3>
+                    <p>Voici un exemple simple en C illustrant les différentes sections mémoire :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/*gcc -o env_mem_demo env_mem_demo.c
+./env_mem_demo */
+
+int global_init = 42; // Segment Data
+int global_uninit; // Segment BSS
+
+void function_demo() {
+    int local_var = 5; // Stack
+    int *heap_var = malloc(sizeof(int));
+    *heap_var = 99; // Heap
+
+    printf("Adresse Code (function_demo) : %p\n", function_demo);
+    printf("Adresse Data (global_init) : %p\n", &amp;global_init);
+    printf("Adresse BSS (global_uninit) : %p\n", &amp;global_uninit);
+    printf("Adresse Stack (local_var) : %p\n", &amp;local_var);
+    printf("Adresse Heap (*heap_var) : %p\n", heap_var);
+
+    free(heap_var);
+}
+
+int main() {
+    function_demo();
+    return 0;
+}</code></pre>
+                    <h3>Analyse et visualisation mémoire :</h3>
+                    <ul>
+                        <li>
+                            <p>Exemple de sortie de commande :</p>
+<pre><code>$ size env_mem_demo
+text data bss dec  hex filename
+1024 12   8   1044 414 env_mem_demo</code></pre>
+                            <p>`.text` : code exécutable (instructions)</p>
+                            <p>`.data` : variables globales initialisées</p>
+                            <p>`.bss` : variables globales non initialisées</p>
+                        </li>
+                        <li>
+                            <p>Heap : mémoire dynamique via malloc()</p>
+                        </li>
+                        <li>
+                            <p>Stack : variables locales et adresses de retour</p>
+                        </li>
+                    </ul>
+                    <h3>Conclusion :</h3>
+                    <ul>
+                        <li>
+                            <p>L'environnement d'exécution est la base de la sécurité mémoire.</p>
+                        </li>
+                        <li>
+                            <p>Comprendre le CPU, la pile et le tas.</p>
+                        </li>
+                        <li>
+                            <p>Indispensable pour debugging, reverse engineering et exploitation.</p>
                         </li>
                     </ul>
                 </article>
