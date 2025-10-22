@@ -1061,27 +1061,37 @@ CN = client.com</code></pre>
                     <ul>
                         <li>
                             <p>Extraire l'image Docker nommée nginx.</p>
+<pre><code>docker pull nginx</code></pre>
                         </li>
                         <li>
                             <p>Vérifier l'ID de l'image (<span class="em">docker inspect nginx:latest | grep _VERSION</span>).</p>
+<pre><code>docker ps -a</code></pre>
                         </li>
                         <li>
                             <p>Extraire l'image Docker nommée nginx et étiquetée 1.29.2.</p>
+<pre><code>docker pull nginx:1.29.2</code></pre>
                         </li>
                         <li>
                             <p>Vérifier l'identifiant de l'image.</p>
+<pre><code>docker ps --all</code></pre>
                         </li>
                         <li>
                             <p>Extraire l'image Docker nommée nginx et étiquetée 1.29.1.</p>
+<pre><code>docker pull nginx:1.29.1</code></pre>
                         </li>
                         <li>
                             <p>Vérifier l'identifiant de l'image.</p>
+<pre><code>docker ps -a</code></pre>
                         </li>
                         <li>
                             <p>Qu'est-ce que cela signifie ?</p>
+                            <p class="em">Cela signifie que la version 1.29.2 a le même identifiant que la version :latest.</p>
                         </li>
                         <li>
                             <p>Supprimer des images (<span class="em">docker rmi x</span>).</p>
+<pre><code>docker rmi nginx:1.29.1</code></pre>
+<pre><code>docker rmi nginx:1.29.2</code></pre>
+<pre><code>docker rmi nginx:latest</code></pre>
                         </li>
                     </ul>
                     <h3>Dernier modèle : anti pattern :</h3>
@@ -1209,6 +1219,19 @@ CN = client.com</code></pre>
                             <p>Supprimer le conteneur.</p>
                         </li>
                     </ul>
+<pre><code># Use nginx as base image
+FROM nginx:alpine
+
+# Copy HTML files to nginx webserver directory
+COPY index.html /usr/share/nginx/html/
+
+# expose port 80
+EXPOSE 80
+
+# Start nginx server
+CMD ["ngnx", "-g", "daemon off;"]</code></pre>
+<pre><code>docker build -t my-nginx .</code></pre>
+<pre><code>docker run -d --name my-nginx-container -p 8091:80 my-nginx</code></pre>
                     <p class="em">Nous exécutons une application NGINX...</p>
                     <p class="em">Mais nous voulons déployer notre propre code personnalisé...</p>
                     <p class="em">Comment pouvons-nous y parvenir ?</p>
