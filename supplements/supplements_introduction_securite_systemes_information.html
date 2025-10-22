@@ -866,7 +866,414 @@ CN = client.com</code></pre>
                     </ul>
                 <article>
                     <h2 id="Docker">Docker :</h2>
-                    <p></p>
+                    <h3>Introduction :</h3>
+                    <p>Les containers sont des paquets logiciels légers et autonomes qui incluent tout ce dont vous avez besoin pour exécuter une application :</p>
+                    <ul>
+                        <li>
+                            <p>le code</p>
+                        </li>
+                        <li>
+                            <p>le runtime</p>
+                        </li>
+                        <li>
+                            <p>les outils système</p>
+                        </li>
+                        <li>
+                            <p>etc.</p>
+                        </li>
+                    </ul>
+                    <p>Ils fournissent un environnement cohérent sur différents systèmes, garantissant que l'application se comporte de la même manière quel que soit l'endroit où il est déployé.</p>
+                    <h3>Sans Docker : Web :</h3>
+                    <div>
+                        <img src="../images/without_docker_web.PNG" alt="" class="float_right">
+                        <ul>
+                            <li>
+                                <p>Documentation incomplète ou incohérente</p>
+                            </li>
+                            <li>
+                                <p>Écarts environnementaux</p>
+                            </li>
+                            <li>
+                                <p>Gestion des dépendances</p>
+                            </li>
+                            <li>
+                                <p>Lacunes de communication entre les développeurs et les opérateurs</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <h3>Docker : Web :</h3>
+                    <div>
+                        <img src="../images/docker_web.PNG" alt="" class="float_right">
+                        <ul>
+                            <li>
+                                <p>Documentation cohérente et reproductible</p>
+                            </li>
+                            <li>
+                                <p>Élimine les divergences environnementales</p>
+                            </li>
+                            <li>
+                                <p>Gestion simplifiée des dépendances</p>
+                            </li>
+                            <li>
+                                <p>Collaboration améliorée entre les développeurs et les opérations</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <h3>Quels sont les avantages d'utiliser des conteneurs ?</h3>
+                    <h4>Avantages spécifiques au rôle de la conteneurisation :</h4>
+                    <p>Développeur :</p>
+                    <ul>
+                        <li>
+                            <p>Cohérence entre les environnements : garantit que l'application fonctionne de la même manière à toutes les étapes (développement, tests, production).</p>
+                        </li>
+                        <li>
+                            <p>Gestion facile des dépendances : regroupe les dépendances dans des conteneurs, évitant ainsi les conflits de versions.</p>
+                        </li>
+                        <li>
+                            <p>Architecture de microservices : facilite la conception modulaire en permettant à chaque service de s'exécuter dans son propre conteneur.</p>
+                        </li>
+                    </ul>
+                    <p>Ingénieurs de sécurité :</p>
+                    <ul>
+                        <li>
+                            <p>Environnements de test isolés : exécutez en toute sécurité des tests et des applications vulnérables sans affecter le système hôte.</p>
+                        </li>
+                        <li>
+                            <p>Reproductibilité des tests : partagez et reproduisez facilement des configurations de tests exactes à l'aide d'images de conteneurs.</p>
+                        </li>
+                    </ul>
+                    <h4>Avantages des conteneurs :</h4>
+                    <ul>
+                        <li>
+                            <p>Cohérence de l'environnement : <q>Cela fonctionne sur ma machine</q> signifie souvent des dépendances manquantes.</p>
+                        </li>
+                        <li>
+                            <p>Type de package : les formats varient : par exemple, Java utilise des JAR, .NET utilise des EXE.</p>
+                        </li>
+                        <li>
+                            <p>Gestion des dépendances : des versions de dépendances conflictuelles peuvent entraîner des problèmes entre les applications.</p>
+                        </li>
+                        <li>
+                            <p>Efficacité des ressources : les machines virtuelles sont lourdes puisque chacune inclut un système d'exploitation complet.</p>
+                        </li>
+                        <li>
+                            <p>Évolutivité et déploiement : l'ajout d'un conteneur est plus rapide que le provisionnement d'une nouvelle machine.</p>
+                        </li>
+                        <li>
+                            <p>Isolation et sécurité : les applications sur l'hôte peuvent interférer les unes avec les autres; les conteneurs isolent les processus, réduisant ainsi les risques.</p>
+                        </li>
+                        <li>
+                            <p>Portabilité : les applications liées à des environnements spécifiques sont difficiles à déplacer; les conteneurs standardisent l'emballage, facilitant ainsi les transferts entre les systèmes.</p>
+                        </li>
+                        <li>
+                            <p>Modernisation héritée : les conteneurs permettent aux applications héritées de s'exécuter sur une infrastructure moderne sans modifications majeures du code.</p>
+                        </li>
+                        <li>
+                            <p>Productivité du développement : les conteneurs rationalisent la configuration de l'environnement de développement, reflétant fidèlement les paramètres de production.</p>
+                        </li>
+                    </ul>
+                    <h3>Comment ça marche : Linux :</h3>
+                    <p>Les conteneurs sous Linux utilisent des fonctionnalités clés telles que les espaces de noms, les groupes de contrôle et les systèmes de fichiers union pour l'isolation et le contrôle des ressources :</p>
+                    <ul>
+                        <li>
+                            <p>Les espaces de noms assurent l'isolation en séparant les processus, les interfaces réseau et les systèmes de fichiers, de sorte que chaque conteneur semble avoir son propre environnement.</p>
+                        </li>
+                        <li>
+                            <p>Les Cgroups (groupes de contrôle) gèrent et limitent l'utilisation des ressources (CPU, mémoire, etc.) des conteneurs pour éviter que l'un d'entre eux ne consomme toutes les ressources. Ces fonctionnalités permettent aux conteneurs de fonctionner de manière sécurisée et efficace sans interférer les uns avec les autres.</p>
+                        </li>
+                        <li>
+                            <p>Les systèmes de fichiers union (par exemple, OverlayFS) permettent aux conteneurs de partager des fichiers et des couches communs tout en conservant leurs propres modifications séparément. Cela rend les conteneurs légers et efficaces en réutilisant les couches entre les conteneurs, réduisant ainsi l'utilisation de l'espace disque.</p>
+                        </li>
+                    </ul>
+                    <h3>Comment ça marche : Windows :</h3>
+                    <p>Sous Windows, les conteneurs sont gérés via des conteneurs Windows Server ou des conteneurs Hyper-V :</p>
+                    <ul>
+                        <li>
+                            <p>Les conteneurs Windows Server utilisent des techniques d'isolation similaires à celles de Linux, en séparant les processus, les fichiers et les entrées de registre.</p>
+                        </li>
+                        <li>
+                            <p>Les conteneurs Hyper-V offrent une isolation supplémentaire en exécutant chaque conteneur dans une machine virtuelle légère, améliorant ainsi la sécurité. Les deux systèmes garantissent l'isolation des processus et une utilisation efficace des ressources, mais Windows exploite également sa virtualisation Hyper-V pour une sécurité plus stricte si nécessaire.</p>
+                        </li>
+                    </ul>
+                    <h3>VM vs Container :</h3>
+                    <img src="../images/VM_VS_Docker.PNG" alt="">
+                    <p>Les conteneurs remplaceront-ils les machines virtuelles ?</p>
+                    <h3>VM et conteneur :</h3>
+                    <p>Non, ils répondent à des objectifs différents et peuvent coexister, car chacun a ses propres atouts et cas d'utilisation.</p>
+                    <img src="../images/VM_Container.PNG" alt="">
+                    <h3>Moteur (Engine) VS CLI :</h3>
+                    <p>Moteur (Engine) :</p>
+                    <ul>
+                        <li>
+                            <p>Composant principal du moteur de conteneur : le moteur de conteneur est le moteur d'exécution principal chargé de gérer le cycle de vie des conteneurs. Il gère des tâches telles que la création, le démarrage, l'arrêt et la suppression de conteneurs.</p>
+                        </li>
+                        <li>
+                            <p>Gère les conteneurs et les images : le moteur extrait les images de conteneurs, les exécute en tant que conteneurs et gère leur état. Il gère également des tâches de bas niveau telles que la mise en réseau, le stockage et l'allocation de ressources pour les conteneurs.</p>
+                        </li>
+                        <li>
+                            <p>Ex : docker, conteneur</p>
+                        </li>
+                    </ul>
+                    <p>CLI :</p>
+                    <ul>
+                        <li>
+                            <p>Outil d'interaction utilisateur : la CLI est un outil qui permet aux utilisateurs d'interagir avec le moteur de conteneur via des commandes en ligne de commandes. Il envoie des commandes au moteur qui les exécute ensuite.</p>
+                        </li>
+                        <li>
+                            <p>Simplifie la gestion des conteneurs : les utilisateurs peuvent effectuer des tâches telles que la création d'images, l'exécution de conteneurs, la gestion de réseaux et la gestion de volume via des commandes simples (par exemple, <span class="em">docker build</span>, <span class="em">docker run</span>, <span class="em">docker ps</span>).</p>
+                        </li>
+                        <li>
+                            <p>Ex : docker, podman</p>
+                        </li>
+                    </ul>
+                    <h3>Commandes de base :</h3>
+                    <h4>Images Docker :</h4>
+                    <p>La commande <span class="em">docker images</span> répertorie toutes les images Docker sur votre système local. Par défaut, il affiche des colonnes telles que le référentiel (repository), la balise (tag), l'ID de l'image, la date de création et la taille.</p>
+                    <p>Le commutateur le plus couramment utilisé est <span class="em">-a</span> ou <span class="em">--all</span>, qui affiche toutes les images, y compris les images intermédiaires qui sont généralement masquées dans la sortie par défaut. Cela peut être utile pour nettoyer les images inutilisées ou pour le débogage.</p>
+                    <p>Ex : <span class="em">docker images -a</span></p>
+                    <ul>
+                        <li>
+                            <p>Référentiel (repository) : le nom de la source de l'image, généralement un registre Docker (par exemple, Docker Hub ou un registre privé).</p>
+                        </li>
+                        <li>
+                            <p>Balise (tag) : une étiquette qui différencie les versions de l'image (par exemple, la dernière, v1.0).</p>
+                        </li>
+                        <li>
+                            <p>ID d'image : un identifiant unique pour l'image (dans un format de hachage).</p>
+                        </li>
+                        <li>
+                            <p>Créé : la date et l'heure auxquelles l'image a été créée.</p>
+                        </li>
+                        <li>
+                            <p>Taille : La taille de l'image stockée</p>
+                        </li>
+                    </ul>
+                    <h3>Extraction du docker :</h3>
+                    <p>La commande <span class="em">docker pull</span> est utilisée pour télécharger des images Docker depuis un registre vers votre ordinateur local. Il récupère l'image spécifiée dans la commande et la rend disponible pour une utilisation dans les conteneurs Docker.</p>
+                    <p>Ex : <span class="em">docker pull ubuntu:latest</span> (si vous omettez le tag, Docker utilise par défaut la dernière).</p>
+                    <h3>D'où viennent les images ?</h3>
+                    <h4>Registres Docker :</h4>
+                    <p>Un registre Docker est un service qui stocke et gère les images Docker, facilitantl'organisation et le déploiement d'applications conteneurisées.</p>
+                    <p>Docker Hub est le plus grand repository cloud d'images de conteneurs fourni par Docker. Il fournit plus de 100000 images pouvant être utilisées et créées par des projets open source, des éditeurs de logiciels et la communauté Docker.</p>
+                    <p>La plateforme vous permet de diffuser rapidement vos applications n'importe où, de collaborer avec vos coéquipiers et d'automatiser les builds pour une intégration plus rapide à un pipeline de développement.</p>
+                    <p>URL : <a href="https://hub.docker.com/" target="_blank">https://hub.docker.com/</a></p>
+                    <h3>Laboratoire :</h3>
+                    <ul>
+                        <li>
+                            <p>Extraire l'image Docker nommée nginx.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier l'ID de l'image (<span class="em">docker inspect nginx:latest | grep _VERSION</span>).</p>
+                        </li>
+                        <li>
+                            <p>Extraire l'image Docker nommée nginx et étiquetée 1.29.2.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier l'identifiant de l'image.</p>
+                        </li>
+                        <li>
+                            <p>Extraire l'image Docker nommée nginx et étiquetée 1.29.1.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier l'identifiant de l'image.</p>
+                        </li>
+                        <li>
+                            <p>Qu'est-ce que cela signifie ?</p>
+                        </li>
+                        <li>
+                            <p>Supprimer des images (<span class="em">docker rmi x</span>).</p>
+                        </li>
+                    </ul>
+                    <h3>Dernier modèle : anti pattern :</h3>
+                    <p>Le dernier tag dans Docker fait référence au tag par défaut qui est appliqué à une image si aucun tag spécifique n'est fournie lors des commandes <span class="em">docker pull</span>, <span class="em">docker run</span> ou <span class="em">docker build</span>. Il s'agit pas d'un tag spécial ou magique, mais simplement d'un tag conventionnel utilisé pour pointer vers une version particulière d'une image.</p>
+                    <ul>
+                        <li>
+<pre><code>docker pull ubuntu</code></pre>
+                        </li>
+                        <li>
+<pre><code>docker pull ubuntu:latest</code></pre>
+                        </li>
+                    </ul>
+                    <p>Le tag <span class="em">:latest</span> ne pointe pas nécessairement vers la version la plus récente d'une image. Il s'agit simplement d'un tag par défaut appliqué aux images qui n'ont pas de tag spécifié. Ces deux commandes créeront une nouvelle image et la marqueront comme <span class="em">:latest</span>.</p>
+                    <p>Si vous <span class="em">push</span> une nouvelle image avec un tag qui n'est ni vide ni "latest", <span class="em">:latest</span> ne sera ni affecté ni créé.</p>
+                    <h3>Image VS conteneur :</h3>
+                    <p>Les images Docker sont des templates utilisés pour créer des conteneurs.</p>
+                    <p>Comme les instantanés (snapshots) pour les machines virtuelles, les images Docker sont des fichiers immuables en lecture seule qui comprennent le code source, les bibliothèques, les dépendances, les outils et tout autre fichier nécessaire à l'exécution d'une application.</p>
+                    <p>Chaque image est créée à partir d'un Dockerfile, qui contient des instructions spécifiques pour créer une image Docker particulière. Les conteneurs d'état ont deux états : au repos et en cours d'exécution.</p>
+                    <ul>
+                        <li>
+                            <p>Au repos : le conteneur existe sous la forme d'une image : un template immuable en lecture seule stocké sous forme de fichiers de configuration et de couches de système de fichiers.</p>
+                        </li>
+                        <li>
+                            <p>En cours d'exécution : l'image devient un conteneur : une instance active et exécutable avec des processus en cours d'exécution et une couche inscriptible au-dessus des couches d'image en lecture seule.</p>
+                        </li>
+                    </ul>
+                    <h3>docker create :</h3>
+                    <p>La commande <span class="em">docker create</span> permet de créer un nouveau conteneur à partir d'une image Docker spécifique (sans la démarrer).</p>
+<pre><code>docker create --name proxy-reverse nginx</code></pre>
+                    <h3>docker start :</h3>
+                    <p>La commande <span class="em">docker start</span> est utilisée pour démarrer un ou plusieurs conteneurs arrêtés précédemment créés.</p>
+<pre><code>docker start id/name</code></pre>
+                    <h3>docker ps :</h3>
+                    <p>La commande <span class="em">docker ps</span> est utilisée pour répertorier les conteneurs actuellement en cours d'exécution sur votre hôte Docker. Il fournit des informations sur chaque conteneur en cours d'exécution, notamment son ID, son nom, son statut, etc.</p>
+                    <ul>
+                        <li>
+                            <p>ID de conteneur : un identifiant attribué à chaque conteneur en cours d'exécution.</p>
+                        </li>
+                        <li>
+                            <p>Image : l'image Docker utilisée pour créer le conteneur.</p>
+                        </li>
+                        <li>
+                            <p>Commande : la commande en cours d'exécution à l'intérieur du conteneur.</p>
+                        </li>
+                        <li>
+                            <p>Créé : l'heure à laquelle le conteneur a été démarré.</p>
+                        </li>
+                        <li>
+                            <p>Statut : l'état actuel du conteneur (par exemple, en cours d'exécution, quitté).</p>
+                        </li>
+                        <li>
+                            <p>Port : mappages de ports entre la machine hôte et le conteneur.</p>
+                        </li>
+                        <li>
+                            <p>Nom : le nom convivial attribué au conteneur.</p>
+                        </li>
+                    </ul>
+                    <h3>docker stop :</h3>
+                    <p>La commande <span class="em">docker stop</span> est utilisée pour arrêter un conteneur Docker en cours d'exécution. Lorsque cette commande est émise, Docker envoie un signal <span class="em">SIGTERM</span> au processus principal à l'intérieur du conteneur, lui donnant la possibilité de s'arrêter correctement.</p>
+<pre><code>docker stop id/name</code></pre>
+                    <h3>docker rm :</h3>
+                    <p>La commande <span class="em">docker rm</span> est utilisée pour supprimer un ou plusieurs conteneurs Docker. Cette commande supprime les conteneurs spécifiés de l'hôte Docker, libérant ainsi toutes les ressources qu'ils utilisaient, telles que l'espace disque.</p>
+                    <p>Vous pouvez uniquement supprimer les conteneurs arrêtés; essayer de supprimer un conteneur en cours d'exécution entraînera une erreur, sauf si vous utilisez l'option <span class="em">-f</span> pour le supprimer de force.</p>
+<pre><code>docker rm id/nom</code></pre>
+                    <h3>docker run :</h3>
+                    <p>La commande <span class="em">docker run</span> est une commande unique qui combine plusieurs actions Docker en une seule.</p>
+                    <p>Voici un aperçu de ce qui se passe lorsque vous exécutez <span class="em">docker run</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Extrait l'image (si nécessaire)</p>
+                        </li>
+                        <li>
+                            <p>Crée un conteneur</p>
+                        </li>
+                        <li>
+                            <p>Démarre le conteneur</p>
+                        </li>
+                        <li>
+                            <p>S'attache à la sortie du conteneur.</p>
+                        </li>
+                    </ul>
+                    <p>Options supplémentaires :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">-d</span> : exécute le conteneur en arrière-plan (mode détaché).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">-it</span> : mode interactif qui permet d'ouvrir une session de terminal à l'intérieur du conteneur (utile pour le débogage ou l'exécution de commandes interactives).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">-p</span> : publie les ports du conteneur vers l'hôte (par exemple, <span class="em">-p 8080:80</span> mappe le port 80 du conteneur vers le port 8080 sur l'hôte).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">--name</span> : attribuez un nom personnalisé au conteneur au lieu d'un nom généré aléatoirement.</p>
+                        </li>
+                    </ul>
+<pre><code>docker run -d -p 8080:80 --name mywebapp nginx</code></pre>
+                    <h3>docker logs :</h3>
+                    <p>La commande <span class="em">docker logs</span> est un outil puissant qui vous aide à surveiller et déboguer les conteneurs en vous donnant accès à la sortie du conteneur, même après l'arrêt du conteneur.</p>
+<pre><code>docker logs id/name</code></pre>
+                    <h3>Laboratoire :</h3>
+                    <ul>
+                        <li>
+                            <p>Créer un conteneur nommé test</p>
+                        </li>
+                        <li>
+                            <p>Démarrer le conteneur test</p>
+                        </li>
+                        <li>
+                            <p>Vérifier quand le conteneur a démarré</p>
+                        </li>
+                        <li>
+                            <p>Arrêter le conteneur</p>
+                        </li>
+                        <li>
+                            <p>Vérifier quand le conteneur s'est arrêté</p>
+                        </li>
+                        <li>
+                            <p>Relancer le conteneur test et exposer le sur le port 8989.</p>
+                        </li>
+                        <li>
+                            <p>Ouvrir l'application conteneur sur le navigateur.</p>
+                        </li>
+                        <li>
+                            <p>Supprimer le conteneur.</p>
+                        </li>
+                    </ul>
+                    <p class="em">Nous exécutons une application NGINX...</p>
+                    <p class="em">Mais nous voulons déployer notre propre code personnalisé...</p>
+                    <p class="em">Comment pouvons-nous y parvenir ?</p>
+                    <h3>Dockerfile :</h3>
+                    <p>Un Dockerfile est un fichier texte qui contient un ensemble d'instructions utilisées pour créer une image Docker.</p>
+                    <p>Il sert de <span class="em">blueprint</span> pour créer des conteneurs Docker, définissant tout ce qui est nécessaire pour configurer l'environnement dans lequel votre application s'exécutera.</p>
+                    <h4>Instructions :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">FROM</span> : spécifie l'image de base à utiliser pour le conteneur Docker.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">RUN</span> : exécute les commandes pendant le processus de création de l'image Docker.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">CMD</span> : spécifie la commande par défaut à exécuter au démarrage d'un conteneur. Contrairement à <span class="em">RUN</span>, il s'exécute au moment de l'exécution et non pendant la construction.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ENTRYPOINT</span> : similaire à <span class="em">CMD</span>, mais il configure la commande qui s'exécute toujours.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">COPY</span> : copie les fichiers et répertoires du système de fichiers local dans l'image Docker.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ADD</span> : similaire à <span class="em">COPY</span>, mais avec des fonctionnalités supplémentaires. Il peut extraire des fichiers compressés (par exemple, <span class="em">.tar</span>, <span class="em">.gz</span>) et récupérer des fichiers à partir d'URL distantes.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">WORKDIR</span> : définit le répertoire de travail pour les instructions ultérieures. Si le répertoire n'existe pas, il sera créé.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">EXPOSE</span> : informe Docker que le conteneur écoute sur un port réseau spécifique au moment de l'exécution. Il ne publie pas réellement le port mais sert de documentation.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ENV</span> : définit les variables d'environnement dans le conteneur, qui peuvent être utilisées par les processus exécutés à l'intérieur du conteneur.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">USER</span> : spécifie l'utilisateur sous lequel exécuter le conteneur. Par défaut, les conteneurs s'exécutent en tant que <span class="em">root</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">LABEL</span> : ajoute des métadonnées à l'image. Les étiquettes (labels) peuvent être utilisées pour stocker des informations telles que la version, la description ou le responsable de l'image.</p>
+                        </li>
+                    </ul>
+                    <h3>Couches :</h3>
+                    <div>
+                        <img src="../images/layers_Docker.PNG" alt="" class="float_right">
+                        <p>Docker utilise une architecture en couches pour créer des images.  Chaque instruction d'un Dockerfile crée une couche dans l'image finale. Ces couches sont empilées les uns sur les autres pour former l'image complète. Le principe de superposition offre plusieurs avantages, notamment l'efficacité, la réutilisabilité et la mise en cache.</p>
+                        <p>Avantages de l'architecture en couches :</p>
+                        <ul>
+                            <Li>
+                                <p>Efficacité</p>
+                            </Li>
+                            <li>
+                                <p>Réutilisabilité</p>
+                            </li>
+                            <li>
+                                <p>Petites mises à jour</p>
+                            </li>
+                        </ul>
+                        <p class="em">Attention à la commande !</p>
+                    </div>
+                    <h3>Build :</h3>
+                    <p>La commande <span class="em">docker build</span> est utilisée pour créer une image Docker à partir d'un Dockerfile et de son contexte (les fichiers et répertoires disponibles au chemin spécifié). Cette commande compile toutes les instructions spécifiées dans le Dockerfile dans une image qui peut ensuite être utilisée pour créer des conteneurs.</p>
+                    <h3>Dockerfile :</h3>
+                    <p>Un Dockerfile est un script qui consiste en un ensemble d'instructions sur la façon de créer une image Docker. Ces instructions incluent la spécification du système d'exploitation, des langues, des variables d'environnement Docker, des emplacements des fichiers, des ports réseau et d'autres composants nécessaires à l'exécution de l'image. Toutes les commandes du fichier sont regroupées et exécutées automatiquement.</p>
+                    <p>Une image comporte plusieurs couches. Une fois que vous exécutez une image Docker pour créer un conteneur, une nouvelle couche en lecture-écriture est ajoutée. C'est ce qu'on appelle parfois la couche conteneur. La couche supplémentaire vous permet d'apporter des modifications à l'image de base, que vous pouvez valider pour créer une nouvelle image Docker pour une utilisation future.</p>
                 </article>
                 <article>
                     <h2 id="creation_environnement_pentest_Docker">Création d'un environnement de pentest avec Docker :</h2>
