@@ -268,7 +268,7 @@
                     </figure>
                 </article>
                 <article>
-                    <h2 id="faille_securite">Faille de sécurité</h2>
+                    <h2 id="faille_securite">Faille de sécurité :</h2>
                     <p>Chaque faille représente un écart entre l'intention du développeur et le comportement réel du logiciel face à un attaquant.</p>
                     <figure>
                         <img src="../images/vulnerabilities_by_type.PNG" alt="">
@@ -383,7 +383,7 @@
                     <img src="../images/registres_CPU.PNG" alt="">
                     <h3>Vue d'ensemble de la mémoire d'un processus :</h3>
                     <img src="../images/vue_ensemble_memoire_processus.PNG" alt="">
-                    <h3>Le segmentde code :</h3>
+                    <h3>Le segment de code :</h3>
                     <ul>
                         <li>
                             <p>Contient les instructions compilées du programme.</p>
@@ -557,6 +557,150 @@ text data bss dec  hex filename
                             <p>Indispensable pour debugging, reverse engineering et exploitation.</p>
                         </li>
                     </ul>
+                    <p>Le fichier `<span class="em">en_mem_demo.c</span>` :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* gcc -o env_mem_demo env_mem_demo.c
+./env_mem_demo */
+
+int global_init = 42; // Segment Data
+int global_uninit; // Segment BSS
+
+void function_demo() {	
+	int local_var = 5; // Stack
+	int *heap_var = malloc(sizeof(int));
+	*heap_var = 99; // Heap
+
+	printf("Adresse Code (function_demo) : %p\n", function_demo);
+	printf("Adresse Data (global_init) : %p\n", &global_init);
+	printf("Adresse BSS (global_uninit) : %p\n", &global_uninit);
+	printf("Adresse Stack (local_var) : %p\n", &local_var);
+	printf("Adresse Heap (*heap_var) : %p\n", heap_var);
+
+	free(heap_var);
+}
+
+
+int main() {
+	function_demo();
+	return 0;
+}</code></pre>
+                    <p>Le fichier <span class="em">banner.c</span> :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void print_banner(const char *name) {
+	char buffer[16];
+	strcpy(buffer, name); // vulnérable
+	printf("Hello, %s", buffer);
+}
+
+int main(int argc, char *argv[]) {
+	int secret = 0x41424344;
+	print_banner(argv[1]);
+	printf("Secret after call: 0x%X", secret);
+}</code></pre>
+                    <p>Le fichier <span class="em">mem_layout_demo.c</span> :</p>
+<pre><code>/* mem_layout_demo.c
+ * Petit programme pédagogique pour afficher adresses mémoire
+ * (text / rodata / data / bss / heap / stack / adresses de fonctions).
+ *
+ * Compilez avec : gcc -g -O0 mem_layout_demo.c -o mem_layout_demo
+ * (l'option -g permet l'inspection avec gdb ; -O0 évite les optimisations qui
+ *  déplaceraient ou supprimeraient certaines variables locales).
+ */
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Segments globaux */
+int initialized_global = 0x11223344;   /* segment .data (initialisé) */
+int uninitialized_global;              /* segment .bss (non-initialisé) */
+
+const char *const_string = "Hello, readonly data (rodata)";
+
+void callee(int depth);
+
+/* fonction utile pour afficher adresses de fonctions */
+void dummy_function(void) { /* vide */ }
+
+int main(void) {
+    int local_main = 0xdeadbeef;      /* variable locale (stack) */
+    void *heap_ptr = malloc(64);      /* alloue sur le heap */
+
+    printf("=== Disposition mémoire (exemple) ===\n\n");
+
+    /* adresses du segment code / fonctions */
+    printf("Adresse de la fonction main()      : %p\n", (void*)main);
+    printf("Adresse de la fonction callee()    : %p\n", (void*)callee);
+    printf("Adresse de dummy_function()        : %p\n", (void*)dummy_function);
+
+    /* rodata / data / bss */
+    printf("\nSegments statiques:\n");
+    printf(" Adresse de la chaîne (rodata)     : %p -> \"%s\"\n", (void*)const_string, const_string);
+    printf(" Adresse initialized_global (.data) : %p -> 0x%X\n", (void*)&initialized_global, initialized_global);
+    printf(" Adresse uninitialized_global (.bss) : %p -> 0x%X\n", (void*)&uninitialized_global, uninitialized_global);
+
+    /* heap et stack */
+    printf("\nHeap & Stack:\n");
+    printf(" Adresse heap (malloc 64 bytes)     : %p\n", heap_ptr);
+    printf(" Adresse variable locale main (stack): %p -> 0x%X\n", (void*)&local_main, local_main);
+
+    /* adresse retour approximative (non portable mais pédagogique) */
+    void *ret_addr = __builtin_return_address(0);
+    printf("\nAdresse de retour (valeur fournie par __builtin_return_address(0)) : %p\n", ret_addr);
+
+    /* appeler callee qui fera afficher adresses supplémentaires (empilement) */
+    callee(1);
+
+    free(heap_ptr);
+    return 0;
+}
+
+void callee(int depth) {
+    int local_callee = 0xfeedface;
+    printf("\n-- dans callee(depth=%d) --\n", depth);
+    printf(" Adresse local callee (stack)       : %p -> 0x%X\n", (void*)&local_callee, local_callee);
+    printf(" Adresse return (callee) via builtin: %p\n", __builtin_return_address(0));
+
+    if (depth &lt; 2) {
+        /* récursion contrôlée pour montrer plusieurs frames */
+        callee(depth + 1);
+    }
+}</code></pre>
+                    <p>Le fichier <span class="em">vuln.c</span> :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void secret() {
+    printf("Bravo !  - vous avez decouvert secret()!\n");
+    fflush(stdout);
+}
+
+void vuln() {
+    char buf[16];
+    printf("Tapez quelque chose:\n");
+    fgets(buf, 512, stdin); // vulnérabilité intentionelle overflow
+    printf("Vous avez introduit : %s\n", buf);
+}
+
+int main() {
+    setvbuf(stdout, NULL, _IONBF, 0);
+    vuln();
+    return 0;
+}</code></pre>
+                    <p>Le fichier <span class="em">lab1_buffer_overflow.md</span> :</p>
+<pre><code># Lab 1 — Buffer Overflow (C)
+## Objectifs
+- Comprendre la pile, ret address overwrite
+## Environnement
+- Compiler: `gcc vuln.c -o vuln -fno-stack-protector -z execstack -no-pie`
+- Outils: gdb, pwntools
+## Étapes (résumé)
+1. Trouver offset (pattern_create/pattern_offset)
+2. Overwrite retour avec adresse de `secret()`
+3. Vérifier protections (ASLR) et disabled protections pour la démo</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
