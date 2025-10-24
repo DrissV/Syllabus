@@ -557,7 +557,10 @@ text data bss dec  hex filename
                             <p>Indispensable pour debugging, reverse engineering et exploitation.</p>
                         </li>
                     </ul>
-                    <p>Le fichier `<span class="em">en_mem_demo.c</span>` :</p>
+                    <h4>Les différents fichiers du labo 1 sont :</h4>
+                    <ol>
+                        <li>
+                            <p>Le fichier `<span class="em">en_mem_demo.c</span>` :</p>
 <pre><code>#include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
 
@@ -573,20 +576,21 @@ void function_demo() {
 	*heap_var = 99; // Heap
 
 	printf("Adresse Code (function_demo) : %p\n", function_demo);
-	printf("Adresse Data (global_init) : %p\n", &global_init);
-	printf("Adresse BSS (global_uninit) : %p\n", &global_uninit);
-	printf("Adresse Stack (local_var) : %p\n", &local_var);
+	printf("Adresse Data (global_init) : %p\n", &amp;global_init);
+	printf("Adresse BSS (global_uninit) : %p\n", &amp;global_uninit);
+	printf("Adresse Stack (local_var) : %p\n", &amp;local_var);
 	printf("Adresse Heap (*heap_var) : %p\n", heap_var);
 
 	free(heap_var);
 }
 
-
 int main() {
 	function_demo();
 	return 0;
 }</code></pre>
-                    <p>Le fichier <span class="em">banner.c</span> :</p>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">banner.c</span>` :</p>
 <pre><code>#include &lt;stdio.h&gt;
 #include &lt;string.h&gt;
 
@@ -601,7 +605,9 @@ int main(int argc, char *argv[]) {
 	print_banner(argv[1]);
 	printf("Secret after call: 0x%X", secret);
 }</code></pre>
-                    <p>Le fichier <span class="em">mem_layout_demo.c</span> :</p>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">mem_layout_demo.c</span>` :</p>
 <pre><code>/* mem_layout_demo.c
  * Petit programme pédagogique pour afficher adresses mémoire
  * (text / rodata / data / bss / heap / stack / adresses de fonctions).
@@ -638,14 +644,14 @@ int main(void) {
 
     /* rodata / data / bss */
     printf("\nSegments statiques:\n");
-    printf(" Adresse de la chaîne (rodata)     : %p -> \"%s\"\n", (void*)const_string, const_string);
-    printf(" Adresse initialized_global (.data) : %p -> 0x%X\n", (void*)&initialized_global, initialized_global);
-    printf(" Adresse uninitialized_global (.bss) : %p -> 0x%X\n", (void*)&uninitialized_global, uninitialized_global);
+    printf(" Adresse de la chaîne (rodata)     : %p -&gt; \"%s\"\n", (void*)const_string, const_string);
+    printf(" Adresse initialized_global (.data) : %p -&gt; 0x%X\n", (void*)&initialized_global, initialized_global);
+    printf(" Adresse uninitialized_global (.bss) : %p -&gt; 0x%X\n", (void*)&uninitialized_global, uninitialized_global);
 
     /* heap et stack */
     printf("\nHeap & Stack:\n");
     printf(" Adresse heap (malloc 64 bytes)     : %p\n", heap_ptr);
-    printf(" Adresse variable locale main (stack): %p -> 0x%X\n", (void*)&local_main, local_main);
+    printf(" Adresse variable locale main (stack): %p -&gt; 0x%X\n", (void*)&local_main, local_main);
 
     /* adresse retour approximative (non portable mais pédagogique) */
     void *ret_addr = __builtin_return_address(0);
@@ -661,7 +667,7 @@ int main(void) {
 void callee(int depth) {
     int local_callee = 0xfeedface;
     printf("\n-- dans callee(depth=%d) --\n", depth);
-    printf(" Adresse local callee (stack)       : %p -> 0x%X\n", (void*)&local_callee, local_callee);
+    printf(" Adresse local callee (stack)       : %p -&gt; 0x%X\n", (void*)&local_callee, local_callee);
     printf(" Adresse return (callee) via builtin: %p\n", __builtin_return_address(0));
 
     if (depth &lt; 2) {
@@ -669,7 +675,9 @@ void callee(int depth) {
         callee(depth + 1);
     }
 }</code></pre>
-                    <p>Le fichier <span class="em">vuln.c</span> :</p>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">vuln.c</span>` :</p>
 <pre><code>#include &lt;stdio.h&gt;
 #include &lt;string.h&gt;
 
@@ -690,17 +698,21 @@ int main() {
     vuln();
     return 0;
 }</code></pre>
-                    <p>Le fichier <span class="em">lab1_buffer_overflow.md</span> :</p>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">lab1_buffer_overflow.md</span>` :</p>
 <pre><code># Lab 1 — Buffer Overflow (C)
 ## Objectifs
 - Comprendre la pile, ret address overwrite
 ## Environnement
-- Compiler: `gcc vuln.c -o vuln -fno-stack-protector -z execstack -no-pie`
-- Outils: gdb, pwntools
+- Compiler: `<span class="em">gcc vuln.c -o vuln -fno-stack-protector -z execstack -no-pie</span>`
+- Outils: <span class="em">gdb</span>, <span class="em">pwntools</span>
 ## Étapes (résumé)
 1. Trouver offset (pattern_create/pattern_offset)
-2. Overwrite retour avec adresse de `secret()`
+2. Overwrite retour avec adresse de `<span class="em">secret()</span>`
 3. Vérifier protections (ASLR) et disabled protections pour la démo</code></pre>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
