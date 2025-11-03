@@ -394,10 +394,26 @@
                 <article>
                     <h2 id="infrastructure_cles_publiques_TLS">L'infrastructure à clés publiques et TLS :</h2>
                     <p>Pour cette partie du cours, on doit installer la dernière version de <a href="https://slproweb.com/products/Win32OpenSSL.html" target="_blank">OpenSSL</a> dans le dossier <span class="em">C:\OpenSSL</span> par exemple.</p>
-                    <p>Ensuite, on rajoute OpenSSL au PATH :</p>
-<pre><code>setx PATH "$($env:PATH);C:\OpenSSL\bin</code></pre>
-                    <p>Enfin, on vérifie l'installation :</p>
+                    <p>Ensuite, on rajoute OpenSSL au PATH via PowerShell avec la commande suivante :</p>
+<pre><code>setx PATH "$($env:PATH);C:\OpenSSL\bin"</code></pre>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Les parenthèses <span class="em">$()</span> indiquent à PowerShell d'évaluer la commande à l'intérieur avant de la convertir en chaîne. Cela force PowerShell à insérer la valeur réelle du <span class="em">$env:PATH</span> sans confusion ni mauvaise expansion. C'est donc la méthode la plus sûre et la plus propre, surtout si ton PATH est long ou complexe.</p>
+                    </div>
+                    <div class="important">
+                        <img src="../images/important.png" alt="" class="float_left">
+<pre><code>setx PATH "$env:PATH;C:\OpenSSL\bin"</code></pre>
+                        <p>Lors de la commande précédente, PowerShell insère directement la valeur brute de la variable d'environnement PATH. Cela fonctionne dans 95% des cas. Mais attention : si <span class="em">$env:PATH</span> contient des caractères spéciaux, PowerShell peut les interpréter (espaces, &amp;, (, etc.) et ça peut casser la commande.</p>
+                    </div>
+                    <p>Ou encore en CMD (invite de commandes Windows) avec la commande suivante :</p>
+<pre><code>setx PATH "%PATH%;C:\OpenSSL\bin"</code></pre>
+                    <p>Enfin, on vérifie l'installation d'OpenSSL avec la commande suivante :</p>
 <pre><code>openssl version</code></pre>
+                    <p>Pour vérifier que la variable d'environnement PATH a été mise à jour, on peut taper la commande suivante dans un PowerShell :</p>
+<pre><code>$env:PATH -split ';'</code></pre>
+                    <p>Cela affiche chaque dossier du PATH ligne par ligne. Ou encore, dans un terminal CMD classique, on peut vérifier avec la commande :</p>
+<pre><code>echo %PATH%</code></pre>
+                    <p>Cesla permet de voir que ton chemin a été ajouté à la fin du PATH.</p>
                     <h3>Sujet du jour : Public Key Infrastructure (PKI) :</h3>
                     <p>La PKI est un ensemble de <span class="em">composants hardware</span>, de <span class="em">procédures humaines</span> (vérifications, validations) et de <span class="em">logiciels</span> destinés à gérer les clés de chiffrement.</p>
                     <p>La PKI offre une communication <span class="em">sécurisée (authentifiée)</span> entre des parties qui ne se sont <span class="em">jamais rencontrées auparavant</span>.</p>
