@@ -600,24 +600,31 @@
                             <p>Révoquer : les certificats sont révoqués lorsque les clés privées associées sont compromises ou ne sont plus nécessaires (CRl et OCSP).</p>
                         </li>
                     </ul>
-                    <h4>Exercice : générer un CSR :</h4>
+                    <h4>Exercice : générer une CSR (Certificate Signing Request) :</h4>
                     <ol>
                         <li>
-                            <p>Générer clé privée/publique :</p>
+                            <p>Générer une clé privée/publique :</p>
 <pre><code>openssl genrsa -out client.key 2048</code></pre>
+                            <p>Cette commande une clé RSA 2048 bits et l'écrit dans `<span class="em">client.key</span>`. On peut aussi utiliser <span class="em">genpkey</span> :</p>
+<pre><code>openssl genpkey -algorithm RSA -out client.key -keyopt rsa_keygen_bits:2048</code></pre>
                         </li>
                         <li>
-                            <p>Générer CSR en passant les attributs en paramètres :</p>
+                            <p>Générer une CSR en passant les attributs en paramètres :</p>
 <pre><code>openssl req -out client.csr -key client.key -new -nodes -subj "/C=BE/CN=client.com"</code></pre>
                         </li>
                         <li>
-                            <p>Générer clé privée + CSR :</p>
+                            <p>Générer une clé privée + une CSR :</p>
 <pre><code>openssl req -newkey rsa:2048 -nodes -keyout client.key -out client.csr -subj "/C=BE/CN=client.com"</code></pre>
+                            <p>Cette commande crée une CSR (<span class="em">client.csr</span>) à partir d'une clé existante (<span class="em">-key client.key</span>).</p>
+                            <p>L'option <span class="em">-nodes</span> n'encrypte pas la clé privée sur le disque, c'est-à-dire pas de passphrase.</p>
                         </li>
                         <li>
-                            <p>Générer clé privée + CSR avec fichier de configuration :</p>
+                            <p>Générer une clé privée + une CSR avec fichier de configuration :</p>
 <pre><code>openssl req -newkey rsa:2048 -nodes -keyout client.key -out client.csr -config csr.txt</code></pre>
+                            <p>Cette commande génère simultanément une nouvelle clé privée RSA 2048 (<span class="em">-newkey rsa:2048 -keyout client.key</span> non chiffrée (<span class="em">-nodes</span>) et une CSR (<span class="em">-out client.csr</span>.</p>
+                            <p>L'option <span class="em">-option csr.txt</span> lit les informations (subject, extensions, etc.) dans le fichier de configuration `<span class="em">csr.txt</span>` pour automatiser la CSR (utile pour SAN, etc.).</p>
                             <p><a href="https://help.switch.ch/pki/manage/request/csr-openssl/" target="_blank">https://help.switch.ch/pki/manage/request/csr-openssl/</a></p>
+                            <p>Le fichier `<span class="em">csr.txt</span>` :</p>
 <pre><code>[ req ]
 prompt = no
 encrypt_key = no
@@ -711,15 +718,18 @@ CN = client.com</code></pre>
                             <p>Let's Encrypt : solution gratuite mais limitée en terme de fonctionnalités (durée, périphériques, domaine).</p>
                         </li>
                     </ul>
-                    <h3>Exercice : crée CA certificat :</h3>
+                    <h3>Exercice : créer un certificat CA :</h3>
                     <ol>
                         <li>
-                            <p>Générer clé privée/publique CA :</p>
+                            <p>Générer une clé privée/publique CA :</p>
 <pre><code>openssl genrsa -out ca.key 2048</code></pre>
+                            <p>Cette commande génère une clé RSA de 2048 bits et l'écrit dans `<span class="em">ca.key</span>`.</p>
                         </li>
                         <li>
-                            <p>Générer CA certificat :</p>
+                            <p>Générer un certificat CA :</p>
 <pre><code>openssl req -x509 -new -nodes -key ca.key -sha256 -days 1825 -out ca.cert -subj "/C=BE/CN=ca.com"</code></pre>
+                            <p>Cette commande crée un certificat auto-signé (<span class="em">-x509</span>) et une clé privée (si `<span class="em">ca.key</span>` indique d'utiliser/écrire cette clé).</p>
+                            <p>L'option <span class="em">-new -odes</span> crée un nouvel objet sans chiffrage de la clé (pas passphrase).</p>
                         </li>
                     </ol>
                     <h3>TLS : définition :</h3>
@@ -839,15 +849,19 @@ CN = client.com</code></pre>
                             <p>Révoquer plus rapidement un certificat.</p>
                         </li>
                     </ul>
-                    <h3>Exercice : Signer CSR avec clé CA :</h3>
+                    <h3>Exercice : Signer une CSR avec une clé CA :</h3>
                     <ol>
                         <li>
-                            <p>Signer CSR :</p>
-<pre><code>openssl x509 -req -in client.csr -CA CA.cert -CAkey car.key -CAcreateserial -out client.crt</code></pre>
+                            <p>Signer une CSR :</p>
+<pre><code>openssl x509 -req -in client.csr -CA CA.cer -CAkey ca.key -CAcreateserial -out client.crt</code></pre>
+                            <p>Cette commande prend une CSR, `<span class="em">client.csr</span>`, et la signe avec la clé CA (<span class="em">-CAkey ca.key</span>) pour produire le certificat client, `<span class="em">client.crt</span>`.</p>
+                            <p>Grâce à l'option <span class="em">-CAcreateserial</span>, si aucun fichier `<span class="em">CA.srl</span>` (fichier de numéro de série) n'existe, OpenSSL le crée et y stocke le prochain numéro de série.</p>
                         </li>
                         <li>
-                            <p>Créer PFX :</p>
+                            <p>Créer un PFX :</p>
 <pre><code>openssl pkcs12 -export -out client.pfx -inkey client.key -in client.cer -certfile CA.cer</code></pre>
+                            <p>Cette commande crée un fichier PFCS#12, `<span class="em">client.pfx</span>`, contenant la clé privée (<span class="em">-inkey client.key</span>) et le certificat du client (<span class="em">-in client.cer</span>). Elle ajoute en plus le CA (<span class="em">-certfile CA.cer</span>) ou la chaîne intermédiaire dans le PFCS#12.</p>
+                            <p>À l'exécution, OpenSSl te demandera un mot de passe pour protéger le <span class="em">.pfx</span>.</p>
                         </li>
                     </ol>
                     <h3>Récapitulatif : exemple de questions d'examen :</h3>
@@ -903,7 +917,7 @@ CN = client.com</code></pre>
                             <p>etc.</p>
                         </li>
                     </ul>
-                    <p>Ils fournissent un environnement cohérent sur différents systèmes, garantissant que l'application se comporte de la même manière quel que soit l'endroit où il est déployé.</p>
+                    <p>Ils fournissent un environnement cohérent sur différents systèmes, garantissant que l'application se comporte de la même manière, quel que soit l'endroit où elle est déployée.</p>
                     <h3>Sans Docker : Web :</h3>
                     <div>
                         <img src="../images/without_docker_web.PNG" alt="" class="float_right">
@@ -1375,7 +1389,7 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
                     <h3>Couche 7 : HTTP :</h3>
                     <p>Le protocole HTTP contrôle la façon dont le client formule ses demandes et la façon dont le serveur y répond. Le protocole HTTP connaît différentes méthodes de requêtes. Plus de détails lors des prochains cours.</p>
                     <p>Le protocole n'offre aucune sécurité de communication. En effet, les informations sont transmises "en clair" sur Internet. Ce qui veut dire qu'il est possible pour un pirate informatique de récolter des informations confidentielles.</p>
-                    <h3>Type de Docker Network (driver) :</h3>
+                    <h3>Types de réseaux Docker (drivers) :</h3>
                     <p>Docker fournit plusieurs pilotes réseau intégrés, chacun répondant à différents besoins réseau pour les conteneurs :</p>
                     <ul>
                         <li>
@@ -1528,20 +1542,25 @@ httpd.serve_forever()</code></pre>
                     <ul>
                         <li>
                             <p>Dans le 3<sup>ème</sup> terminal nommé "attacker" :</p>
-<pre><code>apt-get update</code></pre>
 <pre><code>docker run -dit --privileged --name attacker --network lab kalilinux/kali-rolling sh</code></pre>
+                            <p>Sous certaines images, <span class="em">sh</span> ne peut pas existe et on préfère <span class="em">bash</span>. Aussi l'option <span class="em">--privileged</span> donne énormément de droits - c'est intentionnel pour attaque mais il faut l'expliquer (danger).</p>
                         </li>
                         <li>
                             <p>Dans le terminal "attacker" :</p>
-<pre><code>apt-get install ettercap-text-only</code></pre>
+<pre><code>apt-get update</code></pre>
+<pre><code>apt-get install -y ettercap-text-only</code></pre>
                         </li>
                         <li>
                             <p>Dans le terminal "attacker" :</p>
-<pre><code>apt install net-tols</code></pre>
+<pre><code>apt install -y net-tools</code></pre>
+                            <p>Dans <span class="em">Alpine</span>, la commande <span class="em">ifconfig</span> est souvent absente, c'est pour cela qu'on doit installer <span class="em">net-tools</span> ou alors utiliser la commande suivante :</p>
+<pre><code>ip addr show</code></pre>
+                            <p>Ou encore la commande abrégée :</p>
+<pre><code>ip a</code></pre>
                         </li>
                         <li>
                             <p>Dans le terminal "attacker" :</p>
-<pre><code>ettercap -T -q -i eth0 -M arp:remote /172.19.0.2// /172.19.0.2//</code></pre>
+<pre><code>ettercap -T -q -i eth0 -M arp:remote /172.19.0.2// /172.19.0.3//</code></pre>
                         </li>
                         <li>
                             <p>Dans un 4<sup>ème</sup> terminal nommé "attacker2" :</p>
@@ -1584,7 +1603,7 @@ httpd.serve_forever()</code></pre>
                             <p>Chiffrement</p>
                         </li>
                     </ul>
-                    <h3>Switch à TLS :</h3>
+                    <h3>Passer à TLS :</h3>
                     <ul>
                         <li>
                             <p>Générer des certificats</p>
@@ -1597,8 +1616,9 @@ httpd.serve_forever()</code></pre>
                         </li>
                     </ul>
                     <h3>Ajouter le certificat CA :</h3>
-                    <p>Ajoutez le certicat CA dans le client :</p>
-<pre><code>apk add ca-certificates cp ca.crt /usr/local/share/ca-certifcates/ca.crt</code></pre>
+                    <p>Ajoutez le certificat CA dans le client :</p>
+<pre><code>apk add ca-certificates</code></pre>
+<pre><code>cp ca.crt /usr/local/share/ca-certificates/ca.crt</code></pre>
 <pre><code>sudo update-ca-certificates</code></pre>
                 </article>
             <!-- fin de section -->
