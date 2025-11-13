@@ -56,6 +56,7 @@
                     <li><a href="#programmation_defensive">Programmation défensive</a></li>
                     <li><a href="#lab1">Lab 1 : Environnement d'exécution</a></li>
                     <li><a href="#gcc">GCC</a></li>
+                    <li><a href="#OWASP_Top10_Lab_Setup">OWASP Top 10 Lab Setup</a></li>
                 </ol>
             </nav>
             
@@ -873,6 +874,183 @@ int main() {
 3. Vérifier protections (ASLR) et disabled protections pour la démo</code></pre>
                         </li>
                     </ol>
+                </article>
+                <article>
+                    <h2 id="OWASP_Top_10_Lab_Setup">OWASP TOP 10 Lab Setup :</h2>
+                    <h3>Objectif :</h3>
+                    <p>Mettre en place un <span class="em">laboratoire pratique</span> pour comprendre, exploiter et corriger les vulnérabilités les plus courantes selon <span class="em">l'OWASP Top 10</span>.</p>
+                    <h3>Prérequis :</h3>
+                    <p>Outils nécessaires :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">OS</span> : Linux / Mac OS / Windows WSL2</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Docker</span> et <span class="em">Docker Compose</span></p>
+                        </li>
+                        <li>
+                            <p><span class="em">Navigateur</span> : Firefox / Chrome</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Éditeur</span> : VSCode ou PyCharm</p>
+                        </li>
+                        <li>
+                            <p>(Optionnel) <span class="em">Burp Suite Community Edition</span></p>
+                        </li>
+                    </ul>
+                    <h3>Architecture du Lab :</h3>
+                    <p>Chaque vulnérabilité est isolée dans un container ou un dossier distinct.</p>
+                    <img src="../images/architecture_owasp_lab.PNG" alt="">
+                    <h3>Environements vulnérables:</h3>
+                    <ol>
+                        <li>
+                            <h4>DVWA - Damn Vulnerable Web Application :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Cible</span> : Injection SQL, XSS, File Upload, CSRF, etc.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">URL</span> : http://localhost:8080</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Docker run</span> :</p>
+<pre><code>docker run -d -p 8080:80 --name dvwa vulnerables/web-dvwa</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>OWASP Juice Shop :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Cible</span> : Broken Auth, Sensitive Data Exposure, Injection, etc.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">URL</span> : http://localhost:3000</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Docker run</span> :</p>
+<pre><code>docker run -d -p 3000:3000 --name juice-shop bkimminich/juice-shop</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>WebGoat + WebWolf :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Cible</span> : Advanced OWASP lessons (Java, API, Auth, Crypto)</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">URL</span> : http://localhost:8081/WebGoat</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Docker run</span> :</p>
+<pre><code>docker run -d -p 8081:8080 --name webgoat webgoat/webgoat</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Multillidae II :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Cible</span> : OWASP Top 10 complet + API + vulnérabilités business logic</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">URL</span> : http://localhost:8090</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Docker run</span> :</p>
+<pre><code>docker run -d -p 8090:80 --name multillidae citizenstig/nowasp</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <h3>Docker Compose simplifié :</h3>
+                    <p>Crée un fichier <span class="em">docker-compose.yml</span> :</p>
+<pre><code>version: '3'
+ services:
+  dvwa:
+    image: vulnerables/web-dvwa
+    ports:
+        - "8080:80"
+  juice-shop:
+    image: bkimminich/juice-shop
+    ports:
+        - "3000:3000"
+  webgoat:
+    image: webgoat/webgoat
+    ports:
+        - "8081:8080"
+  mutillidae:
+    image: citizenstig/nowasp
+    ports:
+        - "8090:80"</code></pre>
+                    <p>Lancer :</p>
+<pre><code>docker compose up -d</code></pre>
+                    <h3>Schénarios de pratiques OWASP Top 10 :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>OWASP Top 10</th>
+                                <th>Application</th>
+                                <th>Exemple d'exercice</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>A01 - Broken Access Control</td>
+                                <td>Juice Shop</td>
+                                <td>Accès à un profil admin via IDOR</td>
+                            </tr>
+                            <tr>
+                                <td>A02 - Cryptographic Failures</td>
+                                <td>WebGoat</td>
+                                <td>Mauvais stockage de mot de passe</td>
+                            </tr>
+                            <tr>
+                                <td>A03 - Injection</td>
+                                <td>DVWA</td>
+                                <td>Injection SQL et Command Injection</td>
+                            </tr>
+                            <tr>
+                                <td>A04 - Insecure Design</td>
+                                <td>Mutillidae</td>
+                                <td>Mauvaise logique d'authentification</td>
+                            </tr>
+                            <tr>
+                                <td>A05 - Security Misconfiguration</td>
+                                <td>DVWA</td>
+                                <td>Exposition des pages d'admin</td>
+                            </tr>
+                            <tr>
+                                <td>A06 - Vulnerable & Outdated Components</td>
+                                <td>WebGoat</td>
+                                <td>Exploitation de dépendances</td>
+                            </tr>
+                            <tr>
+                                <td>A07 - Identification & Auth Failures</td>
+                                <td>Juice Shop</td>
+                                <td>Session hijacking</td>
+                            </tr>
+                            <tr>
+                                <td>A08 - Software & Data Integrity Failures</td>
+                                <td>WebGoat</td>
+                                <td>Manipulation de code signé</td>
+                            </tr>
+                            <tr>
+                                <td>A09 - Logging & Monitoring Failures</td>
+                                <td>Mutillidae</td>
+                                <td>Attaques non détectées</td>
+                            </tr>
+                            <tr>
+                                <td>A10 - SSRF</td>
+                                <td>Juice Shop / DVWA</td>
+                                <td>Accès à ressource interne</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Documentation pour les étudiants :</h3>
+                    <p><span class="em">GUIDE.md</span> (avec toutes les sections) :</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
