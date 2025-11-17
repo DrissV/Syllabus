@@ -420,7 +420,7 @@
                     </div>
                     <h3>Exercices sur le chiffrement symétrique :</h3>
                     <h4>OpenSSL :</h4>
-                    <blockquoteb cite="https://fr.wikipedia.org/wiki/OpenSSL">
+                    <blockquote cite="https://fr.wikipedia.org/wiki/OpenSSL">
                         <p>OpenSSL est une boîte à outils de chiffrement comportant deux bibliothèques, <span class="em">libcrypto</span> et <span class="em">libssl</span>, fournissant respectivement une implémentation des algorithmes cryptographiques et du protocole de communication SSL/TLS, ainsi qu'une interface en ligne de commande, <span class="em">openssl</span>. Développée en C, OpenSSL est disponible sur les principaux systèmes d'exploitation et dispose de nombreux wrappers ce qui la rend utilisable dans une grande variété de langages informatiques.</p>
                     </blockquote>
                     <ol>
@@ -445,15 +445,37 @@
                             <ul>
                                 <li>
                                     <p>À quoi correspondent les paramètres -e, -in, -out, -K ? (nous reviendrons sur -aes-128-ecb plus tard)</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">-e</span> &#8594; <span class="em">encrypt</span> : chiffrement.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">-in texte_clair.txt</span> : fichier d'entrée (texte clair).</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">-out texte_chiffre.enc</span> : fichier chiffré en sortie.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">-K KEY</span> : clé <span class="em">en hexadécimal</span> donnée manuellement.</p>
+                                        </li>
+                                    </ul>
                                 </li>
                                 <li>
                                     <p>Quelle est la taille de clé utilisée ?</p>
+                                    <p>La clé <span class="em">0102030405060708090A0B0C0D0E0F00</span> contient <span class="em">32 caractères hexadécimaux</span>, soit <span class="em">128 bits</span> (car 2 hex = 1 octet = 8 bits).</p>
+                                    <p>Réponse : <span class="em">clé AES-128 bits</span>.</p>
                                 </li>
                                 <li>
                                     <p>Comment déchiffrer le fichier ainsi produit ?</p>
+<pre><code>openssl enc -d -aes-128-ecb -in texte_chiffre.enc -out texte_dechiffre.txt -K 0102030405060708090A0B0C0D0E0F00</code></pre>
+                                    <p>L'option <span class="em">-d</span> (<span class="em">decrypt</span>) permet de déchiffrer.</p>
                                 </li>
                                 <li>
                                     <p>Essayez de chiffrer/déchiffrer un fichier avec une clé de 256 bits.</p>
+                                    <p>Il suffit d'utiliser AES-256-ECB pour chiffrer/déchiffrer :</p>
+<pre><code>openssl enc -e -aes-256-ecb -in texte.txt -out texte.enc -K &lt;clé 64 hex&gt;</code></pre>
+<pre><code>openssl enc -d -aes-256-ecb -in texte.enc -out texte_dechiffre.txt -K &lt;clé 64 hex&gt;</code></pre>
+                                    <p>64 hex = <span class="em">256 bits</span>.</p>
                                 </li>
                             </ul>
                         </li>
@@ -464,9 +486,14 @@
                                 <li>
                                     <p>Observez attentivement le fichier chiffré (ce sera sans doute plus aisé avec un éditeur hexadécimal, comme par exemple <a href="https://hexed.it/" target="_blank">https://hexed.it/</a>). Que constatez-vous ? Essayez de reproduire le phénomène avec d'autres textes.</p>
                                     <img src="../images/anticonstitutionnellement.png" alt="">
+                                    <p>Les blocs identiques donnent <span class="em">des blocs chiffrés identiques</span>.</p>
+                                    <p>Donc on voit des <span class="em">répétitions évidentes</span> dans l'hexadécimal.</p>
+                                    <p>C'est une fuite d'information !</p>
                                 </li>
                                 <li>
                                     <p>Ceci est-il quelque chose que l'on attendrait d'un bon système de chiffrement ?</p>
+                                    <p>ECB = <span class="em">pas sûr du tout</span>, car il n'utilise pas d'aléa.</p>
+                                    <p>Ce n'est PAS ce qu'on attend d'un bon chiffrement.</p>
                                 </li>
                             </ul>
                         </li>
@@ -475,90 +502,170 @@
                             <ul>
                                 <li>
                                     <p>À nouveau, ceci est-il quelque chose que l'on peut attendre d'un bon système de chiffrement ?</p>
+                                    <p>Le résultat sera strictement <span class="em">identique</span> à chaque fois.</p>
+                                    <p>C'est une faille grave : un attaquant voit les répétitions.</p>
                                 </li>
                             </ul>
                             <p>Ce constat va nous permettre d'introduire un concept très important en matière de <span class="em">block ciphers</span> : les modes d'opération.</p>
                         </li>
                     </ol>
-                    </article>
-                    <article>
-                        <h2 id="modes_operation">Les modes d'opération :</h2>
-                        <p>Les chiffrements par blocs fonctionnent par blocs.</p>
-                        <img src="../images/block_ciphers_operate.PNG" alt="">
-                        <ul>
-                            <li>
-                                <p>Les blocs de texte en clair donnent les mêmes blocs de texte chiffré.</p>
-                            </li>
-                            <li>
-                                <p>La détection de patterns est possible.</p>
-                            </li>
-                        </ul>
-                        <p>Nous ne pouvons pas accepter cela : la qualité du cryptage ne doit pas dépendre de la structure du texte en clair.</p>
-                        <p>&#8594; <span class="em">Les modes d'opération</span> peuvent résoudre le problème.</p>
-                        <h3>Image cryptée dans ECB :</h3>
-                        <div>
-                            <img src="../images/image_chiffree_ECB.jpg" alt="">
-                            <img src="../images/image_chiffree_ECB_1.jpg" alt="" class="float_right">
-                        </div>
-                        <h3>Mode CBC :</h3>
-                        <img src="../images/CBC_mode.PNG" alt="">
-                        <h4>Comment décrypter ?</h4>
-                        <img src="../images/CBC_mode_1.PNG" alt="">
-                        <h3>IV :</h3>
-                        <p>C'est un "paramètre de diversification", garantissant que les messages avec le même en-tête et ne génèrent pas le même texte chiffré.</p>
-                        <p>Il est généralement transmis avec un texte chiffré.</p>
-                        <p>&#8594; Il n'a pas besoin d'être secret.</p>
-                        <p>Mais il doit changer à chaque fois et doit être imprévisible.</p>
-                        <h3>Mode CTR :</h3>
-                        <img src="../images/CTR_mode.PNG" alt="">
-                        <h3>Chiffrement symétrique : résumé :</h3>
-                        <p>Il assure la confidentialité des données sur la base d'une clé secrète partagée.</p>
-                        <p>Il est défini par :</p>
-                        <ul>
-                            <li>
-                                <p>Un chiffrement par bloc (AES, Twofish, Serpent, ... Mais <span class="em">pas</span> DES !)</p>
-                            </li>
-                            <li>
-                                <p>Un mode d'opération (CBC, OFB, CFB, ... Mais <span class="em">pas</span> ECB !)</p>
-                            </li>
-                        </ul>
-                        <p>Il utilise une norme et l'utilise exactement comme décrit.</p>
-                        <h3>Exercices sur le chiffrement symétrique :</h3>
-                        <h4>OpenSSL et les modes d'opérations :</h4>
-                        <p>Tentez à nouveau de chiffrer différents fichiers, en utilisant cette fois un mode d'opération tel que AES-CBC ou AES-CTR.</p>
-                        <p>Comment résoudre le message d'erreur "iv undefined" ?</p>
-                        <p>Les problèmes ci-dessus se manifestent-ils à nouveau ?</p>
-                        <p>Que se passe-t-il si on chiffre plusieurs fois le même fichier avec la même clé et le même IV ? Lequel de ces paramètres doit-il impérativement changer à chaque nouveau chiffrement ?</p>
-                        <p>Note : <a href="https://wiki.openssl.org/index.php/Enc" target="_blank">la documentation (imparfaite) relative au chiffrement symétrique sous openssl</a>.</p>
-                        <h4>Chiffrement symétrique pour le stockage de données : VeraCrypt :</h4>
-                        <ol>
-                            <li>
-                                <p><a href="https://veracrypt.io/en/Home.html" target="_blank">Installez le logiciel VeraCrypt</a></p>
-                            </li>
-                            <li>
-                                <p>Testez l'outil de benchmarking : quel est le débit du chiffrement AES sur votre machine ?</p>
-                            </li>
-                            <li>
-                                <p>Créez un volume chiffré ("encrypted file container, standard").</p>
-                                <ul>
-                                    <li>
-                                        <p>Pourquoi faut-il bouger la souris durant la création ?</p>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li>
-                                <p>Essayez de monter le volume, d'y ajouter des fichiers, de le démonter...</p>
-                                <ul>
-                                    <li>
-                                        <p>Pourquoi le montage est-il si lent, alors que les benchmarks sont excellents ?</p>
-                                    </li>
-                                    <li>
-                                        <p>Que se passe-t-il si le mot de passe est incorrect ?</p>
-                                    </li>
-                                </ul>
-                                <p>Un volume VeraCrypt doit-il obligatoirement porter l'extension <span class="em">.hc</span> ? Pourquoi ?</p>
-                                <p>Que se passera-t-il si vous oubliez votre mot de passe ?</p>
-                            </li>
+                </article>
+                <article>
+                    <h2 id="modes_operation">Les modes d'opération :</h2>
+                    <p>Les chiffrements par blocs fonctionnent par blocs.</p>
+                    <img src="../images/block_ciphers_operate.PNG" alt="">
+                    <ul>
+                        <li>
+                            <p>Les blocs de texte en clair donnent les mêmes blocs de texte chiffré.</p>
+                        </li>
+                        <li>
+                            <p>La détection de patterns est possible.</p>
+                        </li>
+                    </ul>
+                    <p>Nous ne pouvons pas accepter cela : la qualité du cryptage ne doit pas dépendre de la structure du texte en clair.</p>
+                    <p>&#8594; <span class="em">Les modes d'opération</span> peuvent résoudre le problème.</p>
+                    <h3>Image cryptée dans ECB :</h3>
+                    <div>
+                        <img src="../images/image_chiffree_ECB.jpg" alt="">
+                        <img src="../images/image_chiffree_ECB_1.jpg" alt="" class="float_right">
+                    </div>
+                    <h3>Mode CBC :</h3>
+                    <img src="../images/CBC_mode.PNG" alt="">
+                    <h4>Comment décrypter ?</h4>
+                    <img src="../images/CBC_mode_1.PNG" alt="">
+                    <h3>IV :</h3>
+                    <p>C'est un "paramètre de diversification", garantissant que les messages avec le même en-tête et ne génèrent pas le même texte chiffré.</p>
+                    <p>Il est généralement transmis avec un texte chiffré.</p>
+                    <p>&#8594; Il n'a pas besoin d'être secret.</p>
+                    <p>Mais il doit changer à chaque fois et doit être imprévisible.</p>
+                    <h3>Mode CTR :</h3>
+                    <img src="../images/CTR_mode.PNG" alt="">
+                    <h3>Chiffrement symétrique : résumé :</h3>
+                    <p>Il assure la confidentialité des données sur la base d'une clé secrète partagée.</p>
+                    <p>Il est défini par :</p>
+                    <ul>
+                        <li>
+                            <p>Un chiffrement par bloc (AES, Twofish, Serpent, ... Mais <span class="em">pas</span> DES !)</p>
+                        </li>
+                        <li>
+                            <p>Un mode d'opération (CBC, OFB, CFB, ... Mais <span class="em">pas</span> ECB !)</p>
+                        </li>
+                    </ul>
+                    <p>Il utilise une norme et l'utilise exactement comme décrit.</p>
+                    <h3>Exercices sur le chiffrement symétrique :</h3>
+                    <h4>OpenSSL et les modes d'opérations :</h4>
+                    <p>Tentez à nouveau de chiffrer différents fichiers, en utilisant cette fois un mode d'opération tel que AES-CBC ou AES-CTR.</p>
+                    <p>Comment résoudre le message d'erreur "iv undefined" ?</p>
+                    <p>Parce que CBC/CTR <span class="em">ont besoin d'un IV</span> (vecteur dinitialisation).</p>
+                    <p>On doit donc ajouter :</p>
+<pre><code>-iv &lt;IV en hex&gt;</code></pre>
+                    <p>Par exemple :</p>
+<pre><code>openssl enc -e -aes-128-cbc -in texte.txt -out texte.enc -K &lt;clé&gt; -iv 000102030405060708090A0B0C0D0E</code></pre>
+                    <p>Les problèmes ci-dessus se manifestent-ils à nouveau ?</p>
+                    <p>Non les problèmes précédents disparaissent.</p>
+                    <p>CBC masque les répétitions grâce à l'IV.</p>
+                    <p>CTR transforme AES en flux cryptographique.</p>
+                    <p>&#8594; Les motifs ne réappareissent plus.</p>
+                    <p>Que se passe-t-il si on chiffre plusieurs fois le même fichier avec la même clé et le même IV ? Lequel de ces paramètres doit-il impérativement changer à chaque nouveau chiffrement ?</p>
+                    <p>On retrouve le <span class="em">même résultat</span>, comme en ECB.</p>
+                    <p>&#9888; <span class="em">Interdit</span> en cryptographie.</p>
+                    <p>Note : <a href="https://wiki.openssl.org/index.php/Enc" target="_blank">la documentation (imparfaite) relative au chiffrement symétrique sous openssl</a>.</p>
+                    <p class="em">L'IV doit obligatoirement changer.</p>
+                    <p>La clé peut être réutilisée (dans certaines limites), l'IV <span class="em">jamais</span>.</p>
+                    <h4>Chiffrement symétrique pour le stockage de données : VeraCrypt :</h4>
+                    <ol>
+                        <li>
+                            <p><a href="https://veracrypt.io/en/Home.html" target="_blank">Installez le logiciel VeraCrypt</a></p>
+                        </li>
+                        <li>
+                            <p>Testez l'outil de benchmarking : quel est le débit du chiffrement AES sur votre machine ?</p>
+                            <p>Cela dépend de ton CPU. Typiquement :</p>
+                            <ul>
+                                <li>
+                                    <p>1 GB/s (anciens)</p>
+                                </li>
+                                <li>
+                                    <p>3-5 GB/s (modernes Intel/AMD)</p>
+                                </li>
+                                <li>
+                                    <p>8-10 GB/s (AES-NI)</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Créez un volume chiffré ("encrypted file container, standard").</p>
+                            <ul>
+                                <li>
+                                    <p>Pourquoi faut-il bouger la souris durant la création ?</p>
+                                    <p>Pour récolter de l'<span class="em">entropie</span> (aléa) utilisée pour générer :</p>
+                                    <ul>
+                                        <li>
+                                            <p>la clé maîtresse</p>
+                                        </li>
+                                        <li>
+                                            <p>les algorithmes internes</p>
+                                        </li>
+                                    </ul>
+                                    <p>Plus tu bouges, plus l'aléa est bon &#8594; meilleure sécurité.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Essayez de monter le volume, d'y ajouter des fichiers, de le démonter...</p>
+                            <ul>
+                                <li>
+                                    <p>Pourquoi le montage est-il si lent, alors que les benchmarks sont excellents ?</p>
+                                    <p>Parce que VeraCrypt doit :</p>
+                                    <ul>
+                                        <li>
+                                            <p>dériver ta clé (fonction très lente de type PBKDF2)</p>
+                                        </li>
+                                        <li>
+                                            <p>vérifier l'en-tête du volume</p>
+                                        </li>
+                                    </ul>
+                                    <p>D'où la lenteur &#8594; c'est normal.</p>
+                                </li>
+                                <li>
+                                    <p>Que se passe-t-il si le mot de passe est incorrect ?</p>
+                                    <p>VéraCrypt <span class="em">prétend juste que le volume est invalide</span>.</p>
+                                    <p>Il ne dit jamais "mauvais mot de passe". C'est volontaire pour ne donner aucune information à un attaquant.</p>
+                                </li>
+                            </ul>
+                            <p>Un volume VeraCrypt doit-il obligatoirement porter l'extension <span class="em">.hc</span> ? Pourquoi ?</p>
+                            <p>Non car un volume VeraCrtpt peut avoir :</p>
+                            <ul>
+                                <li>
+                                    <p>.hc</p>
+                                </li>
+                                <li>
+                                    <p>.dat</p>
+                                </li>
+                                <li>
+                                    <p>.bin</p>
+                                </li>
+                                <li>
+                                    <p>ou <span class="em">aucune extension</span></p>
+                                </li>
+                            </ul>
+                            <p>L'extension sert juste pour l'utilisateur.</p>
+                            <p>Que se passera-t-il si vous oubliez votre mot de passe ?</p>
+                            <p class="em">&#8594; Perte définitive des données.</p>
+                            <p>Il n'y a <span class="em">aucun moyen</span> de récupérer le volume.</p>
+                        </li>
+                    </ol>
+                    <p>D'accord, alors...</p>
+                    <p>Nous avons essentiellement résolu le problème de confidentialité, <span class="em">à condition que</span> les deux parties partagent une clé secrète.</p>
+                    <p>Comment peuvent-elles obtenir un tel secret ?</p>
+                    <p>Fondamentalement, il existe deux options :</p>
+                    <ul>
+                        <li>
+                            <p>Trouver un moyen de le transmettre : <span class="em">le cryptage asymétrique</span>.</p>
+                        </li>
+                        <li>
+                            <p>La construire ensemble : <span class="em">les protocoles d'accord de clé</span>.</p>
+                        </li>
+                    </ul>
                 </article>
             <!-- fin de section -->
             </section>
