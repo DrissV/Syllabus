@@ -52,6 +52,8 @@
                     <li><a href="#cryptographie_moderne">La cryptographie moderne</a></li>
                     <li><a href="#cryptage_symetrique">Cryptage symétrique</a></li>
                     <li><a href="#modes_operation">Les modes d'opération</a></li>
+                    <li><a href="#chiffrement_asymetrique">Le chiffrement asymétrique</a></li>
+                    <li><a href="#protocoles_accord_cle">Les protocoles d'accord de clé</a></li>
                 </ol>
             </nav>
             
@@ -633,7 +635,7 @@
                                 </li>
                             </ul>
                             <p>Un volume VeraCrypt doit-il obligatoirement porter l'extension <span class="em">.hc</span> ? Pourquoi ?</p>
-                            <p>Non car un volume VeraCrtpt peut avoir :</p>
+                            <p>Non car un volume VeraCrypt peut avoir :</p>
                             <ul>
                                 <li>
                                     <p>.hc</p>
@@ -666,6 +668,230 @@
                             <p>La construire ensemble : <span class="em">les protocoles d'accord de clé</span>.</p>
                         </li>
                     </ul>
+                </article>
+                <article>
+                    <h2 id="chiffrement_asymetrique">Le chiffrement asymétrique :</h2>
+                    <img src="../images/chiffrement_asymetrique_1.PNG" alt="">
+                    <p>Deux clés par utilisateur : une privée et une publique.</p>
+                    <p>La clé publique permet uniquement de chiffrer les messages.</p>
+                    <p>Pour envoyer un message à quelqu'un :</p>
+                    <ul>
+                        <li>
+                            <p>Obtenez sa clé publique (par exemple : à partir d'un repository)</p>
+                        </li>
+                        <li>
+                            <p>Utilisez-la pour chiffrer le message</p>
+                        </li>
+                    </ul>
+                    <h3>Arithmétique modulaire :</h3>
+                    <p>Vous l'utilisez tous les jours, même si vous ne le savez pas.</p>
+                    <p>Supposons qu'il soit 11h00. Quelle heure sera-t-il dans 26 heures ?</p>
+                    <ul>
+                        <li>
+                            <p>37h00 ? &#8594; mmm... non.</p>
+                        </li>
+                        <li>
+                            <p>L'heure sera de 13h00.</p>
+                        </li>
+                        <li>
+                            <p>Mais comment est-on arrivé à ce résultat ?</p>
+                        </li>
+                    </ul>
+                    <p>Il n'y a que 24 heures dans une journée, puis on recommence.</p>
+                    <p>Lorsque le résultat est supérieur à 24, soustrayez 24.</p>
+                    <p>C'est de l'arithmétique modulaire (modulo 24).</p>
+                    <ul>
+                        <li>
+                            <p>Considérons uniquement l'ensemble des entiers.</p>
+                        </li>
+                        <li>
+                            <p>Divisez-le en intervalles de taille 24.</p>
+                        </li>
+                        <li>
+                            <p>Deux valeurs sont dites égales si elles correspondent à la même position dans un intervalle.</p>
+                        </li>
+                        <li>
+                            <p>Autrement dit, si leur différence est un multiple de 24.</p>
+                        </li>
+                    </ul>
+                    <p>Soit n, a, b des nombres entiers :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Congruence</span> : a &#8801; b mod n &#8660; n | (a-b)</p>
+                        </li>
+                        <li>
+                            <p>On note <span class="em">Z<sub>n</sub></span> les entiers modulo n.</p>
+                        </li>
+                        <li>
+                            <p>Les opérations arithmétiques classiques peuvent être transférées vers Z<sub>n</sub>, par exemple :</p>
+                            <p>11 * (7 + 12) &#8801; 11 * 7 + 11 * 12 &#8801; 4 &#8801; 11 * 2 + 1 * 12 (mod 5)</p>
+                        </li>
+                    </ul>
+                    <p>De nombreux algorithmes cryptographiques sont basés sur des entiers arithmétiques modulo grands (disons 2048 bits).</p>
+                    <p>Pratiquons un peu...</p>
+                    <p>9 + 5 (mod 10)</p>
+                    <p>&#8801; 14 (mod 10)</p>
+                    <p>&#8801; 4 (mod 10)</p>
+                    <p class="em">or</p>
+                    <p>9 * 5 (mod 7) &#8801; 2 * 5 (mod 7)</p>
+                    <p>&#8801; 45 (mod 7) &#8801; 10 (mod 7)</p>
+                    <p>&#8801; 3 (mod 7) &#8801; 3 (mod 7)</p>
+                    <p>On essaie ?</p>
+                    <p>8 * 7 + 17 * (2 + 8) + 11<sup>2</sup> (mod 6)</p>
+                    <p>&#8801; 2 * 1 + 5 * (2 + 2) + 11<sup>2</sup> (mod 6)</p>
+                    <p>&#8801; 2 + 20 + 121 (mod 6)</p>
+                    <p>&#8801; 2 + 2 + 1 (mod 6)</p>
+                    <p>&#8801; 5 (mod 6)</p>
+                    <p>6 * 5 + 11 * 31 + 2 * 9 (mod 5)</p>
+                    <h3>Fonction totiente d'Euler :</h3>
+                    <p>a est <span class="em">premier à n</span> si pgcd(a,n) = 1.</p>
+                    <h3>Cryptage asymétrique : en pratique :</h3>
+                    <ul>
+                        <li>
+                            <p>Plusieurs schémas de cryptage ont été conçus dont le plus connu est le RSA.</p>
+                        </li>
+                        <li>
+                            <p>Sécurité basée sur l'hypothèse qu'un problème mathématique donné est difficile.</p>
+                            <ul>
+                                <li>
+                                    <p>Factorisation du produit de deux grands nombres premiers.</p>
+                                </li>
+                                <li>
+                                    <p>Calculer le logarithme discret d'un nombre dans un groupe.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Cryptographie symétrique ou asymétrique :</h3>
+                    <p>Cryptographie asymétrique :</p>
+                    <ul>
+                        <li>
+                            <p>Aucun problème de transmission de clé.</p>
+                        </li>
+                        <li>
+                            <p>Beaucoup plus lent.</p>
+                        </li>
+                    </ul>
+                    <p>Habituellement, un système hybride est utilisé :</p>
+                    <ul>
+                        <li>
+                            <p>Transmettre une clé de session par crypto asymétrique.</p>
+                        </li>
+                        <li>
+                            <p>Transmettre des données par crypto symétrique.</p>
+                        </li>
+                    </ul>
+                    <p>Attention : ne comparez pas les tailles de clés symétriques et asymétriques !</p>
+                    <h3>Exercices sur le chiffrement asymétrique :</h3>
+                    <p>OpenSSL, que nous avons déjà utilisé, supporte également le chiffrement asymétrique. Le but de cet exercice est d'en manipuler quelques exemples, sans nullement prétendre en couvrir toute la documentation. <a href="https://wiki.openssl.org/index.php/Command_Line_Utilities" target="_blank">Pour plus d'infos</a>.</p>
+                    <ol>
+                        <li>
+                            <h4>Génération de paire de clés :</h4>
+                            <p>Générez une paire de clés RSA au moyen de la commande suivante (en remplaçant XY par vos initiales) :</p>
+<pre><code>openssl genpkey -algorithm RSA -out rsa_PrivAndPub_XY.pem -pkeyopt rsa_keygen_bits:4096 -aes-128-cbc</code></pre>
+                            <div class="information">
+                                <img src="../images/information.png" alt="Information" class="float_left">
+                                <p>L'option <span class="em">-aes-128-cbc</span> permet de chiffrer le fichier contenant les clés. La clé de chiffrement AES est dérivée d'un mot de passe qui vous est demandé à l'exécution de la commande.</p>
+                            </div>
+                            <p>À quoi servent les autres options ?</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">openssl genpkey</span> : utilitaire d'OpenSSL pour générer des clés privées (remplace <span class="em">genrsa</span> dans les versions récentes).</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">-algorithm RSA</span> : on demande une clé RSA.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">-out rsa_PrivAndPub_XY.pem</span> : fichier de sortie contenant la <span class="em">clé privée</span> (ici protégé par mot de passe et encodé en PEM).</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">-pkeyopt rsa_keygen_bits:4096</span> : taille de la clé <span class="em">&#8594; 4096 bits</span> (sécurité élevée).</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">-aes-128-cbc</span> : <span class="em">chiffre la clé privée sur disque</span> avec AES-128-CBC. OpenSSL demandera une passphrase. Important : si tu oublies la passphrase, tu perds la clé privée.</p>
+                                </li>
+                            </ul>
+                            <p>Remarque : le fichier créé <span class="em">contient uniquement la clé privée</span> (dans un format PEM chiffré). Il ne contient pas automatiquement la clé publique séparée.</p>
+                            <p>Il est maintenant important d'exécuter une commande telle que (à nouveau, remplacez XY par vos initiales) :</p>
+<pre><code>openssl pkey -in rsa_PrivAndPub_XY.pem -pubout -out rsa_pub_XY.pem</code></pre>
+                            <p>En quoi cette commande est-elle importante ? Quelle est la différence entre les deux fichiers ?</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">rsa_PrivAndPub_XY.pem</span> &#8594; contient la <span class="em">clé privér</span> (chiffrée sur disque si tu as utilisé <span class="em">-aes-128-cbc</span>).</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">rsa_pub_XY.pem</span> &#8594; contient la <span class="em">clé publique</span> extraite de la clé privée.</p>
+                                </li>
+                            </ul>
+                            <p><span class="em">Différence fondamentale</span> : la clé publique peut être partagée librement; la clé privée <span class="em">ne doit jamais sortir</span> de ton contrôle.</p>
+                            <p>Examinez le contenu du fichier rsa_pub_XY.pem. Quels moyens pourriez-vous utiliser pour le transmettre à quelqu'un d'autre ?</p>
+                            <p>Tu peux transmettre ce fichier (ou copier/coler son contenu) pour que quelqu'un puisse t'envoyer des messages chiffrés.</p>
+                            <p>À quoi correspond "pem" ? Faites une recherche internet (sans y passer trop de temps).</p>
+                            <p><span class="em">Format PEM</span> : c'est un encodage base64 d'un DER binaire, encadré par des en-têtes. Lisible avec un éditeur de texte.</p>
+                            <p>Transmettez votre clé publique à un autre étudiant.</p>
+                        </li>
+                        <li>
+                            <h4>Chiffrement/déchiffrement RSA :</h4>
+                            <p>Écrivez un court message dans un fichier texte_clair.txt et chiffrez-le à destination d'un autre étudiant au moyen de la commande suivante (attention à la clé publique à utiliser).</p>
+<pre><code>openssl pkeyutl -encrypt -pubin -inkey rsa_pub_XY.pem -in Texte_clair.txt -out texte_chiffre.enc -pkeyopt rsa_padding_mode:oaep</code></pre>
+                            <p><span class="em">OAEP</span> est un mode d'encodage/padding moderne et sécurisé (préférable à PKCS#1 v1.5 pour le chiffrement).</p>                            
+                            <p>Déchiffrez un message au moyen de la commande :</p>
+<pre><code>openssl pkeyutl -decrypt -inkey rsa_PrivAndPub_XY.pem -in texte_chiffre.enc -out Texte_dechiffre.txt -pkeyopt rsa_padding_mode:oaep</code></pre>
+                            <p>Essayez ensuite de chiffrer un fichier plus gros. Que se passe-t-il ? Quelle serait la bonne manière de chiffrer un tel fichier avec RSA ?</p>
+                            <p><span class="em">RSA ne chiffre que des petits blocs</span> : la taille maximale de données chiffrables <span class="em">key_size_in_bytes - padding_overhead</span>.</p>
+                            <p>Si tu essayes de chiffrer un fichier de plusieurs Mo directement avec RSA, <span class="em">la commande échouera</span> ou ne chiffrera qu'une partie et produira une erreur.</p>
+                            <p>La bonne pratique est le chiffrement hybride :</p>
+                            <ol>
+                                <li>
+                                    <p>Générer une clé symétrique aléatoire (exemple : 32 octets pour AES-256) :</p>
+<pre><code>openssl rand -out symkey.bin 32</code></pre>
+                                </li>
+                                <li>
+                                    <p>Chiffrer le fichier avec AES (symétrique) en utilisant cette clé :</p>
+<pre><code>openssl enc -aes-256-cbc -salt -in fichier_original -out fichier.enc -pass file:./symkey.bin</code></pre>
+                                    <p>(ou utiliser AES-GCM si tu veux intégrité + chiffrement authentifié)</p>
+                                </li>
+                                <li>
+                                    <p>Chiffrer la clé symétrique avec RSA (la petite clé) :</p>
+<pre><code>openssl pkeyutl -encrypt -pubin -inkey rsa_pub_XY.pem -in symkey.bin -out symkey.bin.enc -pkeyopt rsa_padding_mode:oaep</code></pre>
+                                </li>
+                                <li>
+                                    <p>Envoyer <span class="em">fichier.enc</span> + <span class="em">symkey.bin.enc</span> au destinataire.</p>
+                                </li>
+                                <li>
+                                    <p>Le destinataire déchiffre <span class="em">symkey.bin.enc</span> avec sa clé privée :</p>
+<pre><code>openssl pkeyutl -decrypt -inkey rsa_PrivAndPub_XY.pem -in symkey.bin.enc -out symkey.bin -pkeyopt rsa_padding_mode:oaep</code></pre>
+                                    <p>Puis déchifffre le fichier AES :</p>
+<pre><code>openssl enc -d -aes-256-cbc -in fichier.enc -out fichier_dechiffre -pass file:./symkey.bin</code></pre>
+                                </li>
+                            </ol>
+                            <p>Pourquoi ? RSA protège la petite clé symétrique; AES chiffre efficacement les gros volumes. C'est la méthode standard utilisée dans TLS, PGP, S/MIME, etc.</p>
+                            <p><a href="https://www.czeskis.com/random/openssl-encrypt-file.html" target="_blank">Divers exemples de cette procédure peuvent être trouvés sur le net.</a></p>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="protocoles_accord_cle">Les protocoles d'accord de clé :</h2>
+                    <p>Cela permet à deux parties de générer conjointement une clé secrète connue d'eux seuls.</p>
+                    <p>Cela fonctionne même si toutes les communications ont lieu sur un canal public.</p>
+                    <img src="../images/protocoles_accord_cle.PNG" alt="">
+                    <h3>Une analogie non mathématique :</h3>
+                    <p>Supposons qu'Alice et Bob soient peintres et souhaitent se mettre d'accord sur une couleur commune et secrète.</p>
+                    <p>La couleur ne les dérange pas, ils veulent juste la même et possédée uniquement par eux.</p>
+                    <img src="../images/protocoles_accord_cle_1.PNG" alt="">
+                    <h3>En pratique :</h3>
+                    <p>Plusieurs schémas "mathématiques" existent pour générer une clé commune. Le plus connu est Diffie-Hellman.</p>
+                    <p>Comme pour le chiffrement asymétrique, la sécurité repose sur l'hypoth!se qu'un problème mathématique est difficile (typiquement les mêmes problèmes, en fait).</p>
+                    <h3>Attaque man-in-the-middle :</h3>
+                    <img src="../images/man_in_the_middle.PNG" alt="">
+                    <h3>Authenticité/intégrité :</h3>
+                    <p>Jusqu'à présent, nous avons discuté du problème de confidentialité.</p>
+                    <p>Mais pouvons-nous aussi garantir l'authenticité ?</p>
+                    <p>Autrement dit, empêcher les adversaires de modifier les données.</p>
+                    <p>Ou, au moins, assurez-vous que nous le remarquerons s'ils le font.</p>
+                    <p>Bonnes nouvelles : la cryptographie symétrique / asymétrique permet de répondre à cette problématique.</p>
+                    <h3>Cas symétrique : Message Authentication Code (MAC) :</h3>
+                    <img src="../images/message_authentication_code.PNG" alt="">
                 </article>
             <!-- fin de section -->
             </section>
