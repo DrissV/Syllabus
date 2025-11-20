@@ -57,6 +57,7 @@
                     <li><a href="#lab1">Lab 1 : Environnement d'exécution</a></li>
                     <li><a href="#gcc">GCC</a></li>
                     <li><a href="#OWASP_Top10_Lab_Setup">OWASP Top 10 Lab Setup</a></li>
+                    <li><a href="laboC">Labo C - Compilation, édition de liens, debugging & sécurité mémoire</a></li>
                 </ol>
             </nav>
             
@@ -559,9 +560,169 @@ text data bss dec  hex filename
                             <p>Indispensable pour debugging, reverse engineering et exploitation.</p>
                         </li>
                     </ul>
-                    <h4 id="GCC">GCC :</h4>
+                    <h4>Les différents fichiers du labo 1 sont :</h4>
+                    <ol>
+                        <li>
+                            <p>Le fichier `<span class="em">env_mem_demo.c</span>` :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* gcc -o env_mem_demo env_mem_demo.c
+./env_mem_demo */
+
+int global_init = 42; // Segment Data
+int global_uninit; // Segment BSS
+
+void function_demo() {	
+    int local_var = 5; // Stack
+    int *heap_var = malloc(sizeof(int));
+    *heap_var = 99; // Heap
+
+    printf("Adresse Code (function_demo) : %p\n", function_demo);
+    printf("Adresse Data (global_init) : %p\n", &amp;global_init);
+    printf("Adresse BSS (global_uninit) : %p\n", &amp;global_uninit);
+    printf("Adresse Stack (local_var) : %p\n", &amp;local_var);
+    printf("Adresse Heap (*heap_var) : %p\n", heap_var);
+
+    free(heap_var);
+}
+
+int main() {
+    function_demo();
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">banner.c</span>` :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void print_banner(const char *name) {
+    char buffer[16];
+    strcpy(buffer, name); // vulnérable
+    printf("Hello, %s", buffer);
+}
+
+int main(int argc, char *argv[]) {
+    int secret = 0x41424344;
+    print_banner(argv[1]);
+    printf("Secret after call: 0x%X", secret);
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">mem_layout_demo.c</span>` :</p>
+<pre><code>/* mem_layout_demo.c
+* Petit programme pédagogique pour afficher adresses mémoire
+* (text / rodata / data / bss / heap / stack / adresses de fonctions).
+*
+* Compilez avec : gcc -g -O0 mem_layout_demo.c -o mem_layout_demo
+* (l'option -g permet l'inspection avec gdb ; -O0 évite les optimisations qui
+*  déplaceraient ou supprimeraient certaines variables locales).
+*/
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Segments globaux */
+int initialized_global = 0x11223344;   /* segment .data (initialisé) */
+int uninitialized_global;              /* segment .bss (non-initialisé) */
+
+const char *const_string = "Hello, readonly data (rodata)";
+
+void callee(int depth);
+
+/* fonction utile pour afficher adresses de fonctions */
+void dummy_function(void) { /* vide */ }
+
+int main(void) {
+    int local_main = 0xdeadbeef;      /* variable locale (stack) */
+    void *heap_ptr = malloc(64);      /* alloue sur le heap */
+
+    printf("=== Disposition mémoire (exemple) ===\n\n");
+
+    /* adresses du segment code / fonctions */
+    printf("Adresse de la fonction main()      : %p\n", (void*)main);
+    printf("Adresse de la fonction callee()    : %p\n", (void*)callee);
+    printf("Adresse de dummy_function()        : %p\n", (void*)dummy_function);
+
+    /* rodata / data / bss */
+    printf("\nSegments statiques:\n");
+    printf(" Adresse de la chaîne (rodata)     : %p -&gt; \"%s\"\n", (void*)const_string, const_string);
+    printf(" Adresse initialized_global (.data) : %p -&gt; 0x%X\n", (void*)&initialized_global, initialized_global);
+    printf(" Adresse uninitialized_global (.bss) : %p -&gt; 0x%X\n", (void*)&uninitialized_global, uninitialized_global);
+
+    /* heap et stack */
+    printf("\nHeap & Stack:\n");
+    printf(" Adresse heap (malloc 64 bytes)     : %p\n", heap_ptr);
+    printf(" Adresse variable locale main (stack): %p -&gt; 0x%X\n", (void*)&local_main, local_main);
+
+    /* adresse retour approximative (non portable mais pédagogique) */
+    void *ret_addr = __builtin_return_address(0);
+    printf("\nAdresse de retour (valeur fournie par __builtin_return_address(0)) : %p\n", ret_addr);
+
+    /* appeler callee qui fera afficher adresses supplémentaires (empilement) */
+    callee(1);
+
+    free(heap_ptr);
+    return 0;
+}
+
+void callee(int depth) {
+    int local_callee = 0xfeedface;
+    printf("\n-- dans callee(depth=%d) --\n", depth);
+    printf(" Adresse local callee (stack)       : %p -&gt; 0x%X\n", (void*)&local_callee, local_callee);
+    printf(" Adresse return (callee) via builtin: %p\n", __builtin_return_address(0));
+
+    if (depth &lt; 2) {
+        /* récursion contrôlée pour montrer plusieurs frames */
+        callee(depth + 1);
+    }
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">vuln.c</span>` :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void secret() {
+    printf("Bravo !  - vous avez decouvert secret()!\n");
+    fflush(stdout);
+}
+
+void vuln() {
+    char buf[16];
+    printf("Tapez quelque chose:\n");
+    fgets(buf, 512, stdin); // vulnérabilité intentionelle overflow
+    printf("Vous avez introduit : %s\n", buf);
+}
+
+int main() {
+    setvbuf(stdout, NULL, _IONBF, 0);
+    vuln();
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">lab1_buffer_overflow.md</span>` :</p>
+<pre><code># Lab 1 — Buffer Overflow (C)
+## Objectifs
+- Comprendre la pile, ret address overwrite
+## Environnement
+- Compiler: `<span class="em">gcc vuln.c -o vuln -fno-stack-protector -z execstack -no-pie</span>`
+# -z execstack est une option du linker ELF (Linux) qui demande une pile exécutable.
+# Sous Windows (format PE) la notion est différente et lld/ld du toolchain MinGW ne reconnaît pas le-z.
+- Outils: <span class="em">gdb</span>, <span class="em">pwntools</span>
+## Étapes (résumé)
+1. Trouver offset (pattern_create/pattern_offset)
+2. Overwrite retour avec adresse de `<span class="em">secret()</span>`
+3. Vérifier protections (ASLR) et disabled protections pour la démo</code></pre>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="gcc">GCC :</h2>
                     <p>Pour utiliser GCC avec MinGW, il faut d'abord installer <a href="https://code.visualstudio.com/download" target="_blank">Visual Studio Code</a> et installer <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools" target="_blank">l'extension C/C++ pour VS Code</a>.</p>
-                    <p>Ensuite, vous devez télécharger et installer la dernière version du logiciel <span class="em">MSYS2</span>. Notez que MSYS2 requiert la version 64 bits de Windows 8.1 ou plus récent.</p>
+                    <p>Ensuite, vous devez télécharger et installer la dernière version du logiciel <a href="https://www.msys2.org/" target="_blank">MSYS2</a>. Notez que MSYS2 requiert la version 64 bits de Windows 8.1 ou plus récent.</p>
                     <p>Une fois l'installation finie, dans le nouveau terminal, installer la toolchain MinGW-w64 en exécutant la commande suivante :</p>
 <pre><code>pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain</code></pre>
                     <p>Il faut accepter la sélection par défaut de paquets et procéder à l'installation.</p>
@@ -716,164 +877,6 @@ text data bss dec  hex filename
                             </tr>
                         </tbody>
                     </table>
-                    <h4>Les différents fichiers du labo 1 sont :</h4>
-                    <ol>
-                        <li>
-                            <p>Le fichier `<span class="em">env_mem_demo.c</span>` :</p>
-<pre><code>#include &lt;stdio.h&gt;
-#include &lt;stdlib.h&gt;
-
-/* gcc -o env_mem_demo env_mem_demo.c
-./env_mem_demo */
-
-int global_init = 42; // Segment Data
-int global_uninit; // Segment BSS
-
-void function_demo() {	
-	int local_var = 5; // Stack
-	int *heap_var = malloc(sizeof(int));
-	*heap_var = 99; // Heap
-
-	printf("Adresse Code (function_demo) : %p\n", function_demo);
-	printf("Adresse Data (global_init) : %p\n", &amp;global_init);
-	printf("Adresse BSS (global_uninit) : %p\n", &amp;global_uninit);
-	printf("Adresse Stack (local_var) : %p\n", &amp;local_var);
-	printf("Adresse Heap (*heap_var) : %p\n", heap_var);
-
-	free(heap_var);
-}
-
-int main() {
-	function_demo();
-	return 0;
-}</code></pre>
-                        </li>
-                        <li>
-                            <p>Le fichier `<span class="em">banner.c</span>` :</p>
-<pre><code>#include &lt;stdio.h&gt;
-#include &lt;string.h&gt;
-
-void print_banner(const char *name) {
-	char buffer[16];
-	strcpy(buffer, name); // vulnérable
-	printf("Hello, %s", buffer);
-}
-
-int main(int argc, char *argv[]) {
-	int secret = 0x41424344;
-	print_banner(argv[1]);
-	printf("Secret after call: 0x%X", secret);
-}</code></pre>
-                        </li>
-                        <li>
-                            <p>Le fichier `<span class="em">mem_layout_demo.c</span>` :</p>
-<pre><code>/* mem_layout_demo.c
- * Petit programme pédagogique pour afficher adresses mémoire
- * (text / rodata / data / bss / heap / stack / adresses de fonctions).
- *
- * Compilez avec : gcc -g -O0 mem_layout_demo.c -o mem_layout_demo
- * (l'option -g permet l'inspection avec gdb ; -O0 évite les optimisations qui
- *  déplaceraient ou supprimeraient certaines variables locales).
- */
-
-#include &lt;stdio.h&gt;
-#include &lt;stdlib.h&gt;
-
-/* Segments globaux */
-int initialized_global = 0x11223344;   /* segment .data (initialisé) */
-int uninitialized_global;              /* segment .bss (non-initialisé) */
-
-const char *const_string = "Hello, readonly data (rodata)";
-
-void callee(int depth);
-
-/* fonction utile pour afficher adresses de fonctions */
-void dummy_function(void) { /* vide */ }
-
-int main(void) {
-    int local_main = 0xdeadbeef;      /* variable locale (stack) */
-    void *heap_ptr = malloc(64);      /* alloue sur le heap */
-
-    printf("=== Disposition mémoire (exemple) ===\n\n");
-
-    /* adresses du segment code / fonctions */
-    printf("Adresse de la fonction main()      : %p\n", (void*)main);
-    printf("Adresse de la fonction callee()    : %p\n", (void*)callee);
-    printf("Adresse de dummy_function()        : %p\n", (void*)dummy_function);
-
-    /* rodata / data / bss */
-    printf("\nSegments statiques:\n");
-    printf(" Adresse de la chaîne (rodata)     : %p -&gt; \"%s\"\n", (void*)const_string, const_string);
-    printf(" Adresse initialized_global (.data) : %p -&gt; 0x%X\n", (void*)&initialized_global, initialized_global);
-    printf(" Adresse uninitialized_global (.bss) : %p -&gt; 0x%X\n", (void*)&uninitialized_global, uninitialized_global);
-
-    /* heap et stack */
-    printf("\nHeap & Stack:\n");
-    printf(" Adresse heap (malloc 64 bytes)     : %p\n", heap_ptr);
-    printf(" Adresse variable locale main (stack): %p -&gt; 0x%X\n", (void*)&local_main, local_main);
-
-    /* adresse retour approximative (non portable mais pédagogique) */
-    void *ret_addr = __builtin_return_address(0);
-    printf("\nAdresse de retour (valeur fournie par __builtin_return_address(0)) : %p\n", ret_addr);
-
-    /* appeler callee qui fera afficher adresses supplémentaires (empilement) */
-    callee(1);
-
-    free(heap_ptr);
-    return 0;
-}
-
-void callee(int depth) {
-    int local_callee = 0xfeedface;
-    printf("\n-- dans callee(depth=%d) --\n", depth);
-    printf(" Adresse local callee (stack)       : %p -&gt; 0x%X\n", (void*)&local_callee, local_callee);
-    printf(" Adresse return (callee) via builtin: %p\n", __builtin_return_address(0));
-
-    if (depth &lt; 2) {
-        /* récursion contrôlée pour montrer plusieurs frames */
-        callee(depth + 1);
-    }
-}</code></pre>
-                        </li>
-                        <li>
-                            <p>Le fichier `<span class="em">vuln.c</span>` :</p>
-<pre><code>#include &lt;stdio.h&gt;
-#include &lt;string.h&gt;
-
-void secret() {
-    printf("Bravo !  - vous avez decouvert secret()!\n");
-    fflush(stdout);
-}
-
-void vuln() {
-    char buf[16];
-    printf("Tapez quelque chose:\n");
-    fgets(buf, 512, stdin); // vulnérabilité intentionelle overflow
-    printf("Vous avez introduit : %s\n", buf);
-}
-
-int main() {
-    setvbuf(stdout, NULL, _IONBF, 0);
-    vuln();
-    return 0;
-}</code></pre>
-                        </li>
-                        <li>
-                            <p>Le fichier `<span class="em">lab1_buffer_overflow.md</span>` :</p>
-<pre><code># Lab 1 — Buffer Overflow (C)
-## Objectifs
-- Comprendre la pile, ret address overwrite
-## Environnement
-- Compiler: `<span class="em">gcc vuln.c -o vuln -fno-stack-protector -z execstack -no-pie</span>`
-# -z execstack est une option du linker ELF (Linux) qui demande une pile exécutable.
-# Sous Windows (format PE) la notion est différente et lld/ld du toolchain MinGW ne reconnaît pas le-z.
-- Outils: <span class="em">gdb</span>, <span class="em">pwntools</span>
-## Étapes (résumé)
-1. Trouver offset (pattern_create/pattern_offset)
-2. Overwrite retour avec adresse de `<span class="em">secret()</span>`
-3. Vérifier protections (ASLR) et disabled protections pour la démo</code></pre>
-                        </li>
-                    </ol>
                 </article>
                 <article>
                     <h2 id="OWASP_Top10_Lab_Setup">OWASP TOP 10 Lab Setup :</h2>
@@ -1050,6 +1053,427 @@ services:
                     </table>
                     <h3>Documentation pour les étudiants :</h3>
                     <p><span class="em">GUIDE.md</span> (avec toutes les sections) :</p>
+                </article>
+                <article>
+                    <h2 id="laboC">Labo C - Compilation, édition de liens, debugging & sécurité mémoire :</h2>
+                    <p>Les fichiers du Labo C sont :</p>
+                    <ol>
+                        <li>
+                            <p>Le fichier `<span class="em">README.md</span>` est :</p>
+<pre><code># Labo C - Compilation, Édition de liens, Debugging & Sécurité mémoire
+
+Ce laboratoire complet en langage C permet d'apprendre :
+
+- Le processus de compilation (`.c → .o`)
+- L'édition de liens (archives statiques `.a`, bibliothèques `.so`)
+- L'analyse des binaires (`nm`, `objdump`, `readelf`, `file`)
+- Le debugging avancé avec `gdb`
+- L'observation des sections mémoire (stack / heap / .text / GOT / PLT)
+- Les vulnérabilités mémoire :
+  - Stack buffer overflow
+  - Heap Use-After-Free
+  - Format String
+  - Overwrite de fonction (function pointer)
+  - Ret2libc / ROP (initiation)
+- Les mécanismes de protection :
+  - ASLR, PIE
+  - NX
+  - Stack canaries
+  - RELRO
+
+ **IMPORTANT**  
+Toutes les manipulations sont à exécuter **uniquement dans une VM isolée**.
+
+---
+
+# 1. Arborescence
+
+src/
+main.c
+util.c / util.h
+mathlib.c / mathlib.h
+vuln.c / vuln.h
+heap.c
+fmtstr.c
+Makefile
+
+---
+
+# 2. Compilation
+
+## Tout compiler
+
+Génère :
+
+- `bin/main` : programme principal
+- `bin/vuln_nosafe` : version vulnérable (sans protections)
+- `lib/libmath.a` : archive statique
+- `lib/libmath.so` : bibliothèque partagée
+
+---
+
+# 3. Utilisation
+
+./bin/main vuln "AAAA"
+./bin/main callfp
+./bin/main heap "HELLO"
+./bin/main fmt "%p %p %p"
+
+Version vulnérable pour exploitation :
+
+./bin/vuln_nosafe vuln $(python3 -c "print('A'*200)")
+
+---
+
+# 4. Analyse des binaires
+
+nm -C bin/main
+nm -C lib/libmath.a
+readelf -h bin/main
+objdump -d bin/main | less
+objdump -d lib/libmath.so | less
+
+---
+
+# 5. Debugging GDB
+
+gdb --args bin/main vuln AAAAAAAAAA
+(gdb) break vuln_input
+(gdb) run
+(gdb) info frame
+(gdb) disassemble
+(gdb) x/40x $rsp
+
+---
+
+# 6. Exercices sécurité
+
+### Buffer overflow (stack)
+- Calculer l'offset jusqu'au RIP
+- Overwrite du retour pour exécuter `secret_admin()`
+- Comparer comportements avec / sans PIE et stack-protector
+
+### Overwrite d'un function pointer
+- Trouver l'adresse de `global_fp`
+- L'écraser via un overflow
+
+### Format String
+- Lire la stack via `%p %p %p ...`
+- Écrire en mémoire via `%n`
+
+### Heap Use-After-Free
+- Observer réutilisation de chunk
+- Corrompre données réallouées
+
+### Ret2libc (initiation)
+- Trouver l'adresse de `system()` dans libc
+- Construire un payload simple
+
+---
+
+# 7. Protections & durcissement
+
+Construire un binaire protégé :
+
+gcc -g -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,relro,-z,now -fPIE -pie -o main_hardened src/*.c
+
+Désactiver ASLR temporairement (root) :
+
+echo 0 | sudo tee /proc/sys/kernel/randomize_va_space
+
+Ou exécuter sans ASLR :
+
+setarch uname -m -R ./bin/vuln_nosafe
+
+---
+
+# 8. Avertissement
+
+Ce labo ne doit être utilisé **que pour l'apprentissage**.  
+Ne jamais appliquer ces techniques hors environnement autorisé.
+
+---
+
+# 9. Mots de l'Auteur
+
+Labo conçu pour la formation *Software Security / Sécurité logicielle*.</code></pre>
+                            <p>Un fichier <span class="em">.a</span> est une archive qui contient des objets compilés (<span class="em">.o</span>). Ces objets sont composés directement dans le binaire final au moment du linking.</p>
+                            <p>Un fichier <span class="em">.so</span> (shared object) est chargé à l'exécution, pas intégré au binaire.</p>
+                            <p>Pour utliser la commande <span class="em">file</span>, soit on utilise Git Bash pour Windows ou sinon l'installe via MSYS2 avec la commande suivante :</p>
+<pre><code>pacman -S file</code></pre>
+                            <p>Ou alors utiliser la commande <span class="em">certutil -dump</span> dans Windows pour fournir le type MIME.</p>
+                            <p>Windows n'a pas d'équivalent direct de <span class="em">readelf</span> parce qu'il n'utilise pas ELF. Mais tu peux analyser un binaire PE avec <span class="em">dumpbin</span>.</p>
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th>readelf</th>
+                                        <th>dumpbin</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>readelf -h</td>
+                                        <td>dumpbin /headers</td>
+                                    </tr>
+                                    <tr>
+                                        <td>readelf -s</td>
+                                        <td>dumpbin /symbols</td>
+                                    </tr>
+                                    <tr>
+                                        <td>readelf -r</td>
+                                        <td>dumpbin /imports</td>
+                                    </tr>
+                                    <tr>
+                                        <td>readelf -d</td>
+                                        <td>dumpbin /exports</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+<pre><code>gcc util.c -o util.o</code></pre>
+                            <p>La commande précédente lance une erreur car il manque le paramètre <span class="em">-c</span> afin de compiler. Cela donne ceci :</p>
+<pre><code>gcc -c util.c -o util.o</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">Makefile</span>` est :</p>
+<pre><code>CC = gcc
+CFLAGS = -g -Wall -fno-omit-frame-pointer
+SRC = src
+OBJDIR = obj
+
+all: bin/main bin/vuln_nosafe lib/libmath.a lib/libmath.so
+
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+$(OBJDIR)/util.o: $(SRC)/util.c $(SRC)/util.h | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $&lt; -o $@
+
+$(OBJDIR)/mathlib.o: $(SRC)/mathlib.c $(SRC)/mathlib.h | $(OBJDIR)
+	$(CC) $(CFLAGS) -fPIC -c $&lt; -o $@
+
+$(OBJDIR)/vuln.o: $(SRC)/vuln.c $(SRC)/vuln.h | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $&lt; -o $@
+
+$(OBJDIR)/heap.o: $(SRC)/heap.c | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $&lt; -o $@
+
+$(OBJDIR)/fmtstr.o: $(SRC)/fmtstr.c | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $&lt; -o $@
+
+lib/libmath.a: $(OBJDIR)/mathlib.o
+	mkdir -p lib
+	ar rcs $@ $^
+
+lib/libmath.so: $(SRC)/mathlib.c
+	mkdir -p lib
+	$(CC) -shared -fPIC -o $@ $&lt;
+
+bin/main: $(OBJDIR)/util.o $(OBJDIR)/vuln.o $(OBJDIR)/heap.o $(OBJDIR)/fmtstr.o $(SRC)/main.c lib/libmath.a
+	mkdir -p bin
+	$(CC) $(CFLAGS) -no-pie -o $@ $(OBJDIR)/util.o $(OBJDIR)/vuln.o $(OBJDIR)/heap.o $(OBJDIR)/fmtstr.o $(SRC)/main.c -Llib -lmath -Wl,-rpath,'$$ORIGIN/../lib'
+
+bin/vuln_nosafe: $(SRC)/vuln.c $(SRC)/util.c $(SRC)/main.c
+	mkdir -p bin
+	$(CC) -g -fno-stack-protector -z execstack -no-pie -o $@ $(SRC)/main.c $(SRC)/vuln.c $(SRC)/util.c -Llib -lmath -Wl,-rpath,'$$ORIGIN/../lib'
+
+clean:
+	rm -rf obj bin lib</code></pre>
+                            <p>Voici quelques explications :</p>
+<pre><code>CC = gcc <span class="em">&#8594; compilateur utilisé</span>
+CFLAGS = -g -Wall -fno-omit-frame-pointer
+<span class="em"># -g &#8594; inclut les symboles de debug</span>
+<span class="em"># -Wall &#8594; active tous les warnings</span>
+<span class="em"># -fno-omit-frame-pointer &#8594; nécessaire pour l'analyse en debug/gdb/exploit</span>
+SRC = src <span class="em">&#8594; dossier où sont les sources</span>
+OBJDIR = obj <span class="em">&#8594; dossieroù seront placés les .o</span></code></pre>
+                            <p><span class="em">make</span> pour construire le programme principal <span class="em">bin/main</span>, une version vulnérable <span class="em">bin/vuln_no-safe</span>, la lib statique, la lib dynamique.</p>
+                            <p>Pour installer <span class="em">make</span> sur Windows, on peut utiliser la commande :</p>
+<pre><code>pacman -S make</code></pre>
+<pre><code>$(OBJDIR):
+    mkdir -p $(OBJDIR)</code></pre>
+                            <p>Make crée automatiquement le dossier obj avant de compiler.</p>
+                            <p>Chaque règle compile un fichier <span class="em">.c</span> du dossier <span class="em">src/</span> en <span class="em">.o</span> dans <span class="em">obj/</span>.</p>
+                            <p>L'option <span class="em">-fPIC</span> est nécessaire pour créer une bibliothèque partagée (<span class="em">.so</span>).</p>
+<pre><code>lib/libmath.a: $(OBJDIR)/matlib.o
+    mkdir -p lib
+    ar rcs $@ $&lt;</code></pre>
+                            <p>Ce code crée une biblio statique (<span class="em">.a</span>), <span class="em">lib/libmath.a</span>, qui contient <span class="em">mathlib.o</span> et qui utilise <span class="em">ar</span> pour créer l'archive.</p>
+                            <p><span class="em">$@</span> représente le fichier à construire, c'est-à-dire la cible de la règle. Ici, <span class="em">$@ = lib/libmath.a</span>.</p>
+                            <p><span class="em">$&lt;</span> représente la première dépendance arpès le deux-points, c'est-à-dire le premier fichier listé dans les dépendances. Ici, <span class="em">$&lt; = obj/mathlib.o</span>.</p>
+                            <p><span class="em">$^</span> représente toutes les dépendances (sans duplicata).</p>
+                            <p><span class="em">$+</span> représente toutes les dépendances (avec duplicata).</p>
+                            <p><span class="em">$?</span> représente les dépendances plus récentes que la cible.</p>
+<pre><code>lib/liblath.so: $(SRC)/mathlib.c
+    mkdir -p lib
+    $(CC) -shared -fPIC -o $@ $&lt;</code></pre>
+                            <p>Ce code crée compile directement mathlib.c (pas libmath.o, mais possible) et produit une bibliothèque partagée <span class="em">libmath.so</span>.</p>
+<pre><code>clean:
+    rm -rf obj bin lib</code></pre>
+                            <p>Ce code supprime tout ce qui a été généré.</p>
+                            <p>On peut installer ollydbg avec la commande suivante :</p>
+<pre><code>sudo apt install ollydbg</code></pre>
+                            <p>Pour mettre à jor MSYS2 avant d'installer des paquets :</p>
+<pre><code>pacman -Syu</code></pre>
+                            <p>Fermer le terminal et dans le nouveau terminal :</p>
+<pre><code>pacman -u</code></pre>
+                            <p>Pour installer GCC dans MSYS2 :</p>
+<pre><code>pacman -S mingw-w64-x86_64-gcc</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">util.h</span>` est :</p>
+<pre><code>#ifndef UTIL_H
+#define UTIL_H
+
+void print_banner(void);
+
+#endif</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">util.c</span>` est :</p>
+<pre><code>#include "util.h"
+#include &lt;stdio.h&gt;
+
+void print_banner(void) {
+    puts("=== Labo C : compilation & sécurité ===");
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">mathlib.h</span>` est :</p>
+<pre><code>#ifndef MATHLIB_H
+#define MATHLIB_H
+
+int add(int a, int b);
+int secret(void);
+
+#endif</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">mathlib.c</span>` est :</p>
+<pre><code>#include "mathlib.h"
+#include &lt;stdio.h&gt;
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int secret(void) {
+    puts("You reached secret()");
+    return 42;
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">vuln.h</span>` est :</p>
+<pre><code>#ifndef VULN_H
+#define VULN_H
+
+void vuln_input(char *s);
+void call_funcptr(void);
+
+#endif</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">vuln.c</span>` est :</p>
+<pre><code>#include "vuln.h"
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void secret_admin() {
+    puts("Secret admin function: privileged action!");
+}
+
+void (*global_fp)() = NULL;
+
+void vuln_input(char *s) {
+    char buf[64];
+    strcpy(buf, s);  // vulnérabilité volontaire
+    printf("You entered: %s\n", buf);
+}
+
+void call_funcptr(void) {
+    if (global_fp) {
+        puts("Calling function pointer global_fp()");
+        global_fp();
+    } else {
+        puts("global_fp is NULL");
+    }
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">fmtstr.c</span>` est :</p>
+<pre><code>#include &lt;stdio.h&gt:
+
+void fmt_demo(char *user) {
+    char buf[128];
+    snprintf(buf, sizeof(buf), user);  // vuln format string volontaire
+    printf("formatted: %s\n", buf);
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">heap.c</span>` est :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+void heap_demo(const char *input) {
+    char *p = malloc(64);
+    if (!p) return;
+    strcpy(p, "initial");
+    printf("Before free: %s\n", p);
+    free(p);
+
+    // Use-after-free volontaire
+    printf("After free (UAF): %s\n", p);
+
+    if (input) {
+        char *q = malloc(64);
+        if (!q) return;
+        strcpy(q, input);
+        printf("New chunk content: %s\n", q);
+        free(q);
+    }
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">main.c</span>` est :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#include "util.h"
+#include "mathlib.h"
+#include "vuln.h"
+
+void heap_demo(const char *input);
+void fmt_demo(char *user);
+
+int main(int argc, char **argv) {
+    print_banner();
+    printf("add(2,3) = %d\n", add(2,3));
+    printf("secret() addr maybe: %p\n", (void*)secret);
+
+    if (argc &gt;= 2) {
+        if (!strcmp(argv[1], "vuln") &amp;&amp; argc &gt;= 3) {
+            vuln_input(argv[2]);
+        }
+        else if (!strcmp(argv[1], "callfp")) {
+            call_funcptr();
+        }
+        else if (!strcmp(argv[1], "heap") &amp;&amp; argc &gt;= 3) {
+            heap_demo(argv[2]);
+        }
+        else if (!strcmp(argv[1], "fmt") &amp;&amp; argc &gt;= 3) {
+            fmt_demo(argv[2]);
+        }
+        else {
+            printf("Usage: %s [vuln &lt;str&gt; | callfp | heap &lt;str&gt; | fmt &lt;fmt&gt;]\n", argv[0]);
+        }
+    } else {
+        printf("No action specified. Try: vuln, callfp, heap, fmt\n");
+    }
+    return 0;
+}</code></pre>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
