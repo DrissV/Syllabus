@@ -745,6 +745,40 @@
                     <p>6 * 5 + 11 * 31 + 2 * 9 (mod 5)</p>
                     <h3>Fonction totiente d'Euler :</h3>
                     <p>a est <span class="em">premier à n</span> si pgcd(a,n) = 1.</p>
+                    <p>Fonction totiente d'Euler : &#966;(n) = # { i &lt;= n | gcd(i,n) = 1}</p>
+                    <p>En particulier :</p>
+                    <ul>
+                        <li>
+                            <p>Pour un p premier : &#966;(p) = p - 1</p>
+                        </li>
+                        <li>
+                            <p>Pour p, q premiers, n : &#966;(n) = (p - 1) * (q - 1)</p>
+                        </li>
+                    </ul>
+                    <h4>Théorème d'Euler :</h4>
+                    <p>Si pgcd(a,n) = 1, alors a<sup>&#966;(n)</sup> &#8801; 1 (mod n)</p>
+                    <h4>RSA : configuration des clés :</h4>
+                    <ul>
+                        <li>
+                            <p>Choisissez deux grands nombres premiers <span class="em">p, q</span> (disons, 1024 bits).</p>
+                        </li>
+                        <li>
+                            <p>Calculez <span class="em">n</span> = <span class="em">p * q</span>.</p>
+                        </li>
+                        <li>
+                            <p>Choisissez <span class="em">d</span> &lt;= &#966;(n).</p>
+                        </li>
+                        <li>
+                            <p>Calculez <span class="em">e</span> = <span class="em">d</span><sup>-1</sup></p>
+                            <p>(&#8660;<span class="em">e</span> * <span class="em">d</span> = 1 mod &#966;(n)</p>
+                            <p>&#8660; <span class="em">e</span> * <span class="em">d</span> = k * &#966;(n)+1)</p>
+                        </li>
+                    </ul>
+                    <h4>RSA : chiffrage / déchiffrage :</h4>
+                    <img src="../images/RSA_chiffrage_dechiffrage.PNG" alt="">
+                    <h4>Problème de factorisation :</h4>
+                    <p>Si p, q peuvent êre récupérés à partir de n, alors RSA est rompu.</p>
+                    <p>C'est ce qu'on appelle le <span class="em">problème de factorisation</span> qui est <span class="em">considéré</span> comme étant difficile.</p>
                     <h3>Cryptage asymétrique : en pratique :</h3>
                     <ul>
                         <li>
@@ -879,6 +913,12 @@
                     <p>Supposons qu'Alice et Bob soient peintres et souhaitent se mettre d'accord sur une couleur commune et secrète.</p>
                     <p>La couleur ne les dérange pas, ils veulent juste la même et possédée uniquement par eux.</p>
                     <img src="../images/protocoles_accord_cle_1.PNG" alt="">
+                    <h3>Problème de logarithme discret :</h3>
+                    <p>Étant donné g, a, p, il est facile de calculer <span class="em">A</span> = <span class="em">g<sup>a</sup></span> mod <span class="em">p</span>.</p>
+                    <p>D'un autre côté, trouver b tel que <span class="em">B</span> = <span class="em">g<sup>b</sup></span> mod <span class="em">p</span> <span class="em">semble</span> être difficile.</p>
+                    <p>C'est ce qu'on appelle le <span class="em">problème du logarithme discret</span>.</p>
+                    <h3>L'accord de clés Diffie-Hellman "avec les mathématiques" :</h3>
+                    <img src="../images/Diffie_Hellman.PNG" alt="">
                     <h3>En pratique :</h3>
                     <p>Plusieurs schémas "mathématiques" existent pour générer une clé commune. Le plus connu est Diffie-Hellman.</p>
                     <p>Comme pour le chiffrement asymétrique, la sécurité repose sur l'hypothèse qu'un problème mathématique est difficile (typiquement les mêmes problèmes, en fait).</p>
@@ -892,6 +932,39 @@
                     <p>Bonnes nouvelles : la cryptographie symétrique / asymétrique permet de répondre à cette problématique.</p>
                     <h3>Cas symétrique : Message Authentication Code (MAC) :</h3>
                     <img src="../images/message_authentication_code.PNG" alt="">
+                    <h4>MAC : principe :</h4>
+                    <ul>
+                        <li>
+                            <p>Le tag d'authenticité dépend du message et d'une clé secrète calculée et annexée au message.</p>
+                        </li>
+                        <li>
+                            <p>Surcharge de taille fixe : la longueur du tag ne dépend de la longueur du message (le tag typique est de 128 bits). Ça peut poser un problème pour les messages très courts (par exemple : IoT).</p>
+                        </li>
+                    </ul>
+                    <h4>Sécurité MAC :</h4>
+                    <p>Un bon MAC garantit qu'un attaquant qui ne connaît pas la clé ne peut pas modifier le message sans être détecté.</p>
+                    <p>Cependant, la vérification MAC nécessite la connaissance de la clé. Toute personne pouvant <span class="em">vérifier</span> les canaux MAC pour en <span class="em">forger</span> un.</p>
+                    <p>Un bon outil pour garantir l'intégrité dans une <span class="em">communauté fermée</span>.</p>
+                    <h4>Cryptage authentifié :</h4>
+                    <p>Nous avons discuté séparément de la confidentialité et de l'authenticité.</p>
+                    <p>Et si nous voulons les deux en même temps ?</p>
+                    <ul>
+                        <li>
+                            <p>Possible, mais doit être manipulé avec précaution.</p>
+                        </li>
+                        <li>
+                            <p>De nombreuses idées intuitives sont mauvaises.</p>
+                        </li>
+                    </ul>
+                    <figure>
+                        <img src="../images/authenticated_encryption.png" alt="">
+                        <figcaption>Source : <a href="http://www.dummies.com/how-to/content/understanding-wep-weaknesses.html" target="_blank">http://www.dummies.com/how-to/content/understanding-wep-weaknesses.html</a></figcaption>
+                    </figure>
+                    <h4>MAC, chiffrer : dans quel ordre ?</h4>
+                    <figure>
+                        <img src="../images/MAC_encrypt_in_which_order.png" alt="">
+                        <figcaption>Source : P. Rogaway, <a href="https://crypto.stanford.edu/RealWorldCrypto/slides/phil.pdf" target="_blank">https://crypto.stanford.edu/RealWorldCrypto/slides/phil.pdf</a></figcaption>
+                    </figure>
                 </article>
             <!-- fin de section -->
             </section>
