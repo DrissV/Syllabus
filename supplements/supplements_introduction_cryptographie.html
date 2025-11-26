@@ -54,6 +54,9 @@
                     <li><a href="#modes_operation">Les modes d'opération</a></li>
                     <li><a href="#chiffrement_asymetrique">Le chiffrement asymétrique</a></li>
                     <li><a href="#protocoles_accord_cle">Les protocoles d'accord de clé</a></li>
+                    <li><a href="#authenticite_integrite">Authenticité/intégrité</a></li>
+                    <li><a href="#fonctions_hachage">Les fonctions de hachage</a></li>
+                    <li><a href="#certificats_PKI">Les certificats et la PKI</a></li>
                 </ol>
             </nav>
             
@@ -924,7 +927,9 @@
                     <p>Comme pour le chiffrement asymétrique, la sécurité repose sur l'hypothèse qu'un problème mathématique est difficile (typiquement les mêmes problèmes, en fait).</p>
                     <h3>Attaque man-in-the-middle :</h3>
                     <img src="../images/man_in_the_middle.PNG" alt="">
-                    <h3>Authenticité/intégrité :</h3>
+                </article>
+                <article>
+                    <h2 id="authenticite_integrite">Authenticité/intégrité :</h2>
                     <p>Jusqu'à présent, nous avons discuté du problème de confidentialité.</p>
                     <p>Mais pouvons-nous aussi garantir l'authenticité ?</p>
                     <p>Autrement dit, empêcher les adversaires de modifier les données.</p>
@@ -965,20 +970,254 @@
                         <img src="../images/MAC_encrypt_in_which_order.png" alt="">
                         <figcaption>Source : P. Rogaway, <a href="https://crypto.stanford.edu/RealWorldCrypto/slides/phil.pdf" target="_blank">https://crypto.stanford.edu/RealWorldCrypto/slides/phil.pdf</a></figcaption>
                     </figure>
+                    <h4>Cryptage authentifié (AE, AEAD) :</h4>
+                    <p>Un primitif assurant conjointement confidentialité et authenticité.</p>
+                    <ul>
+                        <li>
+                            <p>Saisie : clé, texte en clair, données associées. Les données associées ne seront pas cryptées, mais authentifiées.</p>
+                        </li>
+                        <li>
+                            <p>Sortie : texte chiffré, balise d'authentification.</p>
+                        </li>
+                        <li>
+                            <p>Assure</p>
+                            <ul>
+                                <li>
+                                    <p>La confidentialité du texte brut.</p>
+                                </li>
+                                <li>
+                                    <p>Le texte brut et l'authenticité des données associées.</p>
+                                </li>
+                                <li>
+                                    <p>Des propriétés supplémentaires : résistance aux abus, reconnaissance du texte en clair...</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Peut s'appuyer sur des primitives dédiées, ou des modes de fonctionnement (CCM, GCM...)</p>
+                        </li>
+                    </ul>
+                    <p>C'est sécurisé et souvent plus efficace que les solutions ad hoc.</p>
+                    <p>La référence actuelle pour garantir la confidentialité et l'authenticité dans un contexte de cryptographie symétrique. Par exemple : TLS 1.3.</p>
+                    <img src="../images/NIST_Issues.png" alt="">
+                    <p>L'appel du NIST est lancé en 2018.</p>
+                    <p><q>Chaque dossier de soumission doit décrire un algorithme unique, ou un ensemble d'algorithmes, qui implémente la fonctionnalité de cryptage authentifié avec données associés (AEAD).</q> 56 soumissions acceptées.</p>
+                    <p>Sélection finale en février 2023 : <span class="em">Ascon family</span>.</p>
+                    <h3>Authenticité/intégrité : signature digital :</h3>
+                    <img src="../images/digitale_signature.PNG" alt="">
+                    <p>Ça garantit l'authenticité des données.</p>
+                    <p>Plus précisément, ça confirme que les données ont été générées par le propriétaire de la clé publique et les données n'ont pas été modifiées.</p>
+                    <p>Asymétrique : Les rôles du prouveur et du vérificateur sont bien distingués (le vérificateur n'a pas de clé de signature).</p>
+                    <p>Ça peut être utilisé dans un grand groupe, transféré...</p>
                 </article>
                 <article>
+                    <h2 id="fonctions_hachage">Les fonctions de hachage :</h2>
+                    <p>Les Big Data sont difficiles à gérer.</p>
+                    <ul>
+                        <li>
+                            <p>La signature numérique coûte cher.</p>
+                        </li>
+                        <li>
+                            <p>La transmission et la lecture humaine sont inefficaces.</p>
+                        </li>
+                        <li>
+                            <p>Autres problèmes, plus complexes : attaques multiplicatives contre RSA, ...</p>
+                        </li>
+                    </ul>
+                    <p>Pouvons-nous générer un "résumé" des données ?</p>
+                    <ul>
+                        <li>
+                            <p>Plus facile à manipuler.</p>
+                        </li>
+                        <li>
+                            <p>Relié au document original.</p>
+                        </li>
+                    </ul>
+                    <p>&#8594; Un autre outil est nécessaire : <span class="em">les fonctions de hachage</span>.</p>
+                    <p>Une fonction de compression mappant une longueur arbitraire à une longueur fixe.</p>
+                    <p>C'est facile à calculer, mais difficile à inverser (concept proche de la fonction unidirectionnelle).</p>
+                    <img src="../images/fonctions_hachage.PNG" alt="">
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Une fonction de hachage est une <span class="em">fonction publique</span>. Pas de clés, ...</p>
+                    </div>
+                    <h3>Les propriétés de la fonction de hachage :</h3>
+                    <p>Plus précisément :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">résistance pré-image</span> : étan donné x, difficile de trouver m tel que h(m) = x.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">deuxième résistance pré-image</span> : étant donné m, difficile de trouver m' tel que h(m) = h(m').</p>
+                        </li>
+                        <li>
+                            <p><span class="em">résistance aux collisions</span> : difficile de trouver m et m' tel que h(m) = h(m').</p>
+                        </li>
+                    </ul>
+                    <h3>Les fonctions de hachage en pratique :</h3>
+                    <p>Les fonctons de hachage les plus connues sont :</p>
+                    <ul>
+                        <li>
+                            <p>MD5 : ne doit plus être utilisé !</p>
+                        </li>
+                        <li>
+                            <p>SHA-1 : des attaques existent.</p>
+                        </li>
+                        <li>
+                            <p>SHA-256, SHA-384, SHA-512</p>
+                        </li>
+                        <li>
+                            <p>SHA-3 : nouveau standard (2012)</p>
+                        </li>
+                    </ul>
+                    <h3>Signé avec des fonctions de hachage :</h3>
+                    <img src="../images/signe_fonctions_hachage.PNG" alt="">
+                    <h3>Pourquoi la résistance aux collisions est importante ?</h3>
+                    <img src="../images/collision_resistance_important.PNG" alt="">
+                    <h3>Remarques importantes :</h3>
+                    <p>C'est juste l'idée intuitive.</p>
+                    <ul>
+                        <li>
+                            <p>Les normes sécurisées actuelles (PKCS #1, ISO, ...) utilisent cette idée ou des idées similaires, mais pas seulement.</p>
+                        </li>
+                        <li>
+                            <p>De nombreuses autres problématiques complexes apparaissent (randomisation, ...).</p>
+                        </li>
+                        <li>
+                            <p>&#854; Utilisez un standard, ne construisez pas le vôtre !</p>
+                        </li>
+                    </ul>
+                    <p>Gardez à l'esprit que RSA, DES, AES, ... sont <span class="em">des primitives</span> à partir desquelles de bons schémas de chiffrement/signature/... peuven (probablement) être construits. Ce ne sont <span class="em">PAS</span> des systèmes sécurisés !</p>
+                    <h3>Application: stockage des mots de passe sur un serveur :</h3>
+                    <p>Ne stockez jamais les mots de passe en clair !</p>
+                    <p>Stockez (login,H(pw)) et recalculez H(pw) lorsque l'utilisateur arrive ?</p>
+                    <ul>
+                        <li>
+                            <p>Le piratage du serveur ne divulgue pas les mots de passe stockés.</p>
+                        </li>
+                        <li>
+                            <p>Mais la recherche par force brute à partir de mots de passe courants est assez simple.</p>
+                        </li>
+                        <li>
+                            <p>Calculer H(x) pour x &#8712; {123456, password, 12345678, qwerty, 123456789, 12345, 1234, 111111, 1234567, dragon } vous fait déjà repérer 1,6 % des mots de passe.</p>
+                        </li>
+                    </ul>
+                    <p>[WP Engine]</p>
+                    <p>Stockez (login,salt,H(salt||pw)) pour du sel aléatoire ? La recherche par force brute se fait désormais avec un mot de passe à la fois !</p>
+                    <p>Remplacez H(.) par H(H(H(...H(.)...))) : Ralentit la recherche exhaustive (Bcrypt, PBKDF2, ..).</p>
+                    <p>D'autres raffinements existent : consommation importante de RAM, gêne pour le parallélisme...</p>
+                    <p>Constructions recommandées : <span class="em">PBKDF2, bcrypt, scrypt</span>...</p>
+                    <p><a href="https://crackstation.net/hashing-security.htm" target="_blank">Une discussion intéressante sur le sujet</a></p>
                     <h3>Exercices sur les fonctions de hachage :</h3>
                     <p>Téléchargez un logiciel et vérifiez que son hash est bien celui annoncé sur le site web du fournisseur.</p>
                     <ul>
                         <li>
-                            <p>Vous pouvez par exemple <a href="https://notepad-plus-plus.org/" target="_blank">télécharger NotePad++</a>.</p>
+                            <p>Vous pouvez par exemple <a href="https://curl.se/windows/" target="_blank">télécharger curl</a>.</p>
                         </li>
                         <li>
-                            <p>Pour calculer un hash avec openssl, utilisez <span class="em">openssl gst</span> (à vous de voir la commande exacte : <span class="em">openssl gst -help</span> vous fournira un point de départ).</p>
+                            <p>Pour calculer un hash avec openssl, utilisez <span class="em">openssl dgst</span> (à vous de voir la commande exacte : <span class="em">openssl dgst -help</span> vous fournira un point de départ).</p>
                         </li>
                     </ul>
+<pre><code>openssl dgst -sha256 &lt;fichier&gt;</code></pre>
                 </article>
                 <article>
+                    <h2 id="certificats_PKI">Les certificats et la PKI :</h2>
+                    <p>Souvenez-vous qu'on avait dit que, dans la signature digitale, les données ont été générées par le propriétaire de la clé publique.</p>
+                    <h3>Faire confiance aux clés publiques :</h3>
+                    <img src="../images/trusting_public_keys.png" alt="">
+                    <h3>Authenticité/intégrité : signature digitale :</h3>
+                    <img src="../images/digitale_signature_1.PNG" alt="">
+                    <h3>Les certicats :</h3>
+                    <img src="../images/certificates.PNG" alt="">
+                    <h3>La chaîne de certification :</h3>
+                    <img src="../images/certificates_chain.PNG" alt="">
+                    <h3>Les certificats et la PKI :</h3>
+                    <p>L'autorité de certification (CA - Certification Authority) est la partie chargé de délivrer les certificats, c'est-à-dire vérifier l'identité du sujet (mais pas vérifier s'il est digne de confiance).</p>
+                    <p>L'infrastructure à clé publique (PKI - Public Key Infrastructure) est l'ensemble de composants, politiques, logiciels, ... utilisés pour gérer les certificats :</p>
+                    <ul>
+                        <li>
+                            <p>Vérification d'identité</p>
+                        </li>
+                        <li>
+                            <p>Génération/révocation de certificats</p>
+                        </li>
+                        <li>
+                            <p>Format, règles de vérification</p>
+                        </li>
+                        <li>
+                            <p>...</p>
+                        </li>
+                    </ul>
+                    <h3>Chaînes de certification : hiérarchie (par exemple : Verisign) :</h3>
+                    <img src="../images/certificates_chain_hierarchy.PNG" alt="">
+                    <h3>Chaînes de certification : peer-to-peer(par exemple : PGP) :</h3>
+                    <img src="../images/certificates_chain_peer_to_peer.PNG" alt="">
+                    <h3>Chemin de certification :</h3>
+                    <p>Donc, nous faisons confiance à une clé publique car elle est intégrée dans un certificat auquel nous faisons confiance...</p>
+                    <p>... et nous faisons confiance à ce certificat car il est signé par (une clé publique intégrée dans) un certificat auquel nous faisons confiance...</p>
+                    <p>... et ainsi de suite...</p>
+                    <p>C'est ce qu'on appelle un <span class="em">chemin de certification</span>, c'est-à-dire le chemin allant du certificat que nous voulons vérifier à un certificat auquel nous faisons confiance et ainsi chaque certificat sur le chemin est signé par le prochain.</p>
+                    <h3>Résumé :</h3>
+                    <p>La signature digitale garantit que le document a été généré par le propriétaire de la clé publique.</p>
+                    <p>Le certificat garantit l'identité du propriétaire de cette clé publique. La garantie est fournie par l'autorité de certification (CA).</p>
+                    <p>OK, mais nous avons besoin d'un point de départ.</p>
+                    <h3>Le certificat racine :</h3>
+                    <p>C'est un certificat que nous faisons confiance "par définition". Il est directement transmis via un canal sécurisé. Il est installé par défaut. Il est utilisé comme point de départ pour la ou les chaînes de certification.</p>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Double question :</p>
+                        <ul>
+                            <li>
+                                <p>Dans quelle mesure ai-je confiance en cette autorité ?</p>
+                            </li>
+                            <li>
+                                <p>Comment le certificat a-t-il été transmis ?</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <p>En pratique, un grand nombre de certificats sont préinstallés (navigateur, ...). Un mauvais certificat suffit pour perdre toute sécurité.</p>
+                    <h3>Listes de révocaion de certificats (CRL - Certificate Revocation Lists) :</h3>
+                    <p>Que se passe-t-il si ma clé privée est volée ?</p>
+                    <ul>
+                        <li>
+                            <p>Clé de cryptage :</p>
+                            <ul>
+                                <li>
+                                    <p>L'adversaire pourra lire mes messages précédents.</p>
+                                </li>
+                                <li>
+                                    <p>Je dois en générer une nouvelle et dire à tout le monde de l'utiliser.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Clé de de signature :</p>
+                            <ul>
+                                <li>
+                                    <p>L'adversaire est capable de signer des messages en mon nom, <span class="em">dès maintenant</span> et jusqu'à l'expiration de la clé !</p>
+                                </li>
+                                <li>
+                                    <p>Je dois dire à tout le monde d'arrêter de <span class="em">faire confiance à cette clé</span>, et je dois le faire <span class="em">rapidement</span> !</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>&#8594; Nous avons besoin d'un moyen de diffuser ces informations.</p>
+                    <p>La CRL est une liste horodatée identifiant les certificats révoqués. Elle est signée par une CA (ou un émetteur de CRL). Elle est mise à disposition dans un répertoire public.</p>
+                    <p>Chaque certificat révoqué est identifié dans une CRL par son numéro de série de certificat.</p>
+                    <p>Lorsqu'un certificat est vérifié, nous devons vérifier les signatures tout au long du chemin de certification et que le numéro de série du certificat ne figure pas sur la CRL la plus récente.</p>
+                    <p>... et ce n'est qu'une partie de l'histoire.</p>
+                    <img src="../images/PKI_logical_architecture_overview.png" alt="">
+                    <h3>PKI en situation réelle : quelques exemples :</h3>
+                    <img src="../images/lets_encrypt.png" alt="">
+                    <h4>Faire confiance au certificat racine :</h4>
+                    <img src="../images/trust_root_certificate_1.png" alt="">
+                    <img src="../images/trust_root_certificate_2.png" alt="">
+                    <h4>Problèmes de sécurité avec les autorités de certification :</h4>
+                    <img src="../images/security_issues_with_CAs.png" alt="">
+                    <img src="../images/security_issues_with_CAs_2.png" alt="">
+                    <h4>Certificat auto-signé :</h4>
+                    <img src="../images/self_signed_certificate.png" alt="">
                     <h3>Exercices sur les certificats :</h3>
                     <ol>
                         <li>
