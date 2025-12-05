@@ -59,6 +59,7 @@
                     <li><a href="#gcc">GCC</a></li>
                     <li><a href="#OWASP_Top10_Lab_Setup">OWASP Top 10 Lab Setup</a></li>
                     <li><a href="#laboC">Labo C - Compilation, édition de liens, debugging & sécurité mémoire</a></li>
+                    <li><a href="#memlab">Labo memlab</a></li>
                 </ol>
             </nav>
             
@@ -1619,6 +1620,244 @@ int main(int argc, char **argv) {
 }</code></pre>
                         </li>
                     </ol>
+                </article>
+                <article>
+                    <h2 id="memlab">Labo memlab :</h2>
+                    <p>Ce que ce combo permet d'apprendre :</p>
+                    <ol>
+                        <li>
+                            <p>Structure mémoire d'un processus</p>
+                        </li>
+                        <li>
+                            <p>Stack vs Heap vs .data vs .rodata</p>
+                        </li>
+                        <li>
+                            <p>Inspecter les adresses avec GDB</p>
+                        </li>
+                        <li>
+                            <p>Lire/écrire dans la mémoire (sans exploitation)</p>
+                        </li>
+                        <li>
+                            <p>VIsualiser plusieurs variables dans des régions différentes</p>
+                        </li>
+                        <li>
+                            <p>Comprendre comment le programme est chargé en mémoire</p>
+                        </li>
+                    </ol>
+                    <ol>
+                        <li>
+                            <h3>Code C simple : memlab.c :</h3>
+                            <p>Copier-collez ce fichier tel quel.</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+int global_var = 123;          // Stockée dans .data
+const int const_global = 999;  // Stockée dans .rodata
+
+void show_addresses() {
+    int local_var = 42;        // Stack
+    int *heap_var = malloc(sizeof(int));
+    *heap_var = 777;           // Heap
+
+    static int static_var = 555; // .data
+
+    printf("=== Memory Regions ===\n");
+    printf("Address of global_var     : %p\n", (void*)&amp;global_var);
+    printf("Address of const_global   : %p\n", (void*)&amp;const_global);
+    printf("Address of static_var     : %p\n", (void*)&amp;static_var);
+    printf("Address of local_var      : %p\n", (void*)&amp;local_var);
+    printf("Address of heap_var (ptr) : %p\n", (void*)&amp;heap_var);
+    printf("Address of *heap_var      : %p\n", (void*)heap_var);
+
+    printf("\nValues:\n");
+    printf("global_var = %d\n", global_var);
+    printf("local_var  = %d\n", local_var);
+    printf("*heap_var  = %d\n", *heap_var);
+
+    printf("\nEnter something to stop program (PID inspectable)...\n");
+    getchar();
+
+    free(heap_var);
+}
+
+int main() {
+    show_addresses();
+    return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <h3>Compilation :</h3>
+                            <p>Compiler en conservant les symboles :</p>
+<pre><code>gcc -g -O0 memlab.c -o memlab</code></pre>
+                        </li>
+                        <li>
+                            <h3>Lancer dans GDB :</h3>
+<pre><code>gdb ./memlab</code></pre>
+                            <p>Puis exécuter :</p>
+<pre><code>break show_addresses</code></pre>
+<pre><code>run</code></pre>
+                        </li>
+                        <li>
+                            <h3>Inspecter les adresses :</h3>
+                            <p>Quand l'exécution s'arrête dans <span class="em">show_addresses</span>, on peut inspecter les variables :</p>
+                            <ul>
+                                <li>
+                                    <p>Lister les variables locales :</p>
+<pre><code>info locals</code></pre>
+                                </li>
+                                <li>
+                                    <p>Voir leur adresse :</p>
+<pre><code>p &amp;local_var</code></pre>
+<pre><code>p &amp;heap_var</code></pre>
+<pre><code>p heap_var</code></pre>
+                                </li>
+                                <li>
+                                    <p>Voir la mémoire brute :</p>
+<pre><code>x/20x &amp;local_var</code></pre>
+                                </li>
+                                <li>
+                                    <p>Voir la mémoire du heap :</p>
+<pre><code>x/10x heap_var</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Modifier la mémoire (en toute sécurité) :</p>
+                            <ul>
+                                <li>
+                                    <p>Modifier la valeur de <span class="em">local_var</span> :</p>
+<pre><code>set variable local_var = 999</code></pre>
+                                </li>
+                                <li>
+                                    <p>Modifier la valeur dans le heap :</p>
+<pre><code>set {int}heap_var = 5555</code></pre>
+                                </li>
+                                <li>
+                                    <p>Modifier un octet en mémoire :</p>
+<pre><code>set {char}heap_var = 0x41</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h3>Voir les sections mémoire :</h3>
+                            <p>Pour comprendre où se trouvent les variables :</p>
+<pre><code>info proc mappings</code></pre>
+                            <p>Ou en Windows :</p>
+<pre><code>maintenance info sections</code></pre>
+                        </li>
+                        <li>
+                            <h3>Trouver l'emplacement exact des segments :</h3>
+                            <p>Tu peux afficher les valeurs imprimées par le programme :</p>
+<pre><code>continue</code></pre>
+                            <p>Puis quand il s'arrête au <span class="em">getchar()</span>, GDB reste ataché.</p>
+                        </li>
+                        <li>
+                            <h3>Exercices pédagogiques (sécurisés) :</h3>
+                            <ul>
+                                <li>
+                                    <h4>Exercice 1 :</h4>
+                                    <p>Trouver l'adresse du <span class="em">global_var</span> dans GDB et vérifier avec <span class="em">printf</span>.</p>
+<pre><code>p &amp;global_var</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Exercice 2 :</h4>
+                                    <p>Afficher 16 octets autour de la variable locale.</p>
+<pre><code>x/16x &amp;local_var</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Exercice 3 :</h4>
+                                    <p>Modifier la valeur de <span class="em">*heap_var</span></p>
+<pre><code>set {int} heap_var = 5555</code></pre>
+                                    <p>Ensuite, continuer l'exécution :</p>
+<pre><code>continue</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Exercice 4 :</h4>
+                                    <p>Afficher les sections (stack, heap, .data, .text) et identifier chaque variable.</p>
+<pre><code>info proc mappings</code></pre>
+                                    <p>Ou sur Windows :</p>
+<pre><code>maintenance info sections</code></pre>
+                                </li>
+                                <li>
+                                    <h4>Exercice 5 :</h4>
+                                    <p>Trouver l'adresse de la fonction <span class="em">show_addresses</span> :</p>
+<pre><code>p show_addresses</code></pre>
+                                    <p>Et afficher quelques instructions :</p>
+<pre><code>disas show_addresses</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <h3>Commandes GDB utiles (cheat-sheet) :</h3>
+                    <table class="tableBalises">
+                        <tbody>
+                            <tr>
+                                <td>break &lt;func&gt;</td>
+                                <td>breakpoint à la fonction</td>
+                            </tr>
+                            <tr>
+                                <td>break *0x401234</td>
+                                <td>breakpoint addr</td>
+                            </tr>
+                            <tr>
+                                <td>run [args]</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>start</td>
+                                <td>démarre le programme et stoppe à la fn main</td>
+                            </tr>
+                            <tr>
+                                <td>next / step</td>
+                                <td>step over/ into (exécution pas à pas)</td>
+                            </tr>
+                            <tr>
+                                <td>finish</td>
+                                <td>run until current function returns</td>
+                            </tr>
+                            <tr>
+                                <td>info functions</td>
+                                <td>lister les fonctions</td>
+                            </tr>
+                            <tr>
+                                <td>info address secret</td>
+                                <td>adresse d'une fonction</td>
+                            </tr>
+                            <tr>
+                                <td>p &amp;var</td>
+                                <td>print adresse d'une var</td>
+                            </tr>
+                            <tr>
+                                <td>p/x var</td>
+                                <td>afficher var en hex</td>
+                            </tr>
+                            <tr>
+                                <td>x/x &lt;addr&gt;</td>
+                                <td>examiner mémoire (hex)</td>
+                            </tr>
+                            <tr>
+                                <td>disassemble &lt;func&gt;</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>layout asm</td>
+                                <td>mode TUI asm</td>
+                            </tr>
+                            <tr>
+                                <td>info frame</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>backtrace</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>set pagination off</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </article>
             <!-- fin de section -->
             </section>
