@@ -1730,133 +1730,187 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                         </li>
                         <li>
                             <p>On va ouvrir les consoles (GUI) et entrer les commandes IOS. Pour cela, on clique sur l'élément &#8594; "Console" (ou double-clic) pour ouvrir une console.</p>
+                            <div class="important">
+                                <img src="../images/important.png" alt="Important" class="float_left">
+                                <p>Chaque fois que tu enres en <span class="em">configuration terminal</span> ou dans une <span class="em">interface</span>, pense à :</p>
+                                <ul>
+                                    <li>
+                                        <p>sortir de l'interface : <span class="em">exit</span></p>
+                                    </li>
+                                    <li>
+                                        <p>sortir du mode global : <span class="em">end</span> (ou <span class="em">exit</span> plusieurs fois)</p>
+                                    </li>
+                                    <li>
+                                        <p>sauvegarder : <span class="em">write memory</span> ou <span class="em">copy running-config startup-config</span></p>
+                                    </li>
+                                </ul>
+                            </div>
                             <ul>
                                 <li>
-                                    <p>Pour le Router1, on entre en mode privilégié puis conf t :</p>
-<pre><code>enable
+                                    <h3>Configuration du routeur (Router1) :</h3>
+                                    <h4>Interface vers Internet (e0/0) :</h4>
+                                    <p>On entre en mode privilégié puis conf t :</p>
+<pre><code>
+enable
 configure terminal
+interface e0/0
+    ip address dhcp
+    ip nat outside
+    no shutdown
+exit
+</code></pre>
+                                    <h4>Interface vers le switch (e0/1) + Subinterfaces dot1Q :</h4>
+<pre><code>interface e0/1
+    no shutdown
+    exit
 
-! Interfaces
-interface GigabitEthernet0/0
- ip address dhcp
- no shutdown
+interface e0/1.2
+    encapsulation dot1Q 2
+    ip address 192.168.2.1 255.255.255.0
+    exit
 
-interface GigabitEthernet0/1
- no shutdown
-
-interface GigabitEthernet0/1.2
- encapsulation dot1Q 2
- ip address 192.168.2.1 255.255.255.0
-
-interface GigabitEthernet0/1.3
- encapsulation dot1Q 3
- ip address 192.168.3.1 255.255.255.0
-
-! DHCP pools
-ip dhcp pool POOL_UTILISATEURS
- network 192.168.2.0 255.255.255.0
- default-router 192.168.2.1
- dns-server 8.8.8.8
-!
+interface e0/1.3
+    encapsulation dot1Q 3
+    ip address 192.168.3.1 255.255.255.0
+    exit</code></pre>
+                                    <h4>DHCP Server (dans les deux VLANs) :</h4>
+<pre><code>ip dhcp pool POOL_UTILISATEURS
+    network 192.168.2.0 255.255.255.0
+    default-router 192.168.2.1
+    dns-server 8.8.8.8
+    exit
 
 ip dhcp pool POOL_ADMINS
- network 192.168.3.0 255.255.255.0
- default-router 192.168.3.1
- dns-server 8.8.8.8
-!
-
-! NAT - mark e0/0 as outside, e0/1 as inside (ajuster si interfaces différentes)
-interface GigabitEthernet0/0
- ip nat outside
-
-interface GigabitEthernet0/1
- ip nat inside
-
-access-list 1 permit 192.168.2.0 0.0.0.255
+    network 192.168.3.0 255.255.255.0
+    default-router 192.168.3.1
+    dns-server 8.8.8.8
+    exit</code></pre>
+                                    <h4>NAT Overload (Internet) :</h4>
+<pre><code>access-list 1 permit 192.168.2.0 0.0.0.255
 access-list 1 permit 192.168.3.0 0.0.0.255
 
-ip nat inside source list 1 interface GigabitEthernet0/0 overload
+ip nat inside source 1 interface e0/0 overload</code></pre>
+                                    <h4>Récap NATcôté interfaces :</h4>
+<pre><code>interface e0/0
+    ip nat outside
+    exit
 
-! Save
-end
+interface e0/1
+    ip nat inside
+    exit</code></pre>
+                                    <h4>Sauvegarde :</h4>
+<pre><code>end
 write memory</code></pre>
                                     <p>Si tes interfaces ont d'autres noms (E0/1 etc.), adapte. Sur IOS L3 les noms peuvent être Ethernet0/1 ou GigabitEthernet0/1; vérifie avec :</p>
 <pre><code>show ip interface brief</code></pre>
                                 </li>
                                 <li>
-                                    <p>Dans la console de Switch1 :</p>
+                                    <h3>Configuration du switch (Switch1) :</h3>
+                                    <h4>Création des VLANs :</h4>
 <pre><code>enable
 configure terminal
 
-! Create VLANs
 vlan 2
- name UTILISATEURS
+    name UTILISATEURS
+    exit
+
 vlan 3
- name ADMINS
+    name ADMINS
+    exit</code></pre>
+                                    <h4>Désactiver le VLAN (sécurité) :</h4>
+<pre><code>interface Vlan1
+    shutdown
+    exit</code></pre>
+                                    <h4>Trunk vers le routeur (e0/0) :</h4>
+<pre><code>interface e0/0
+    switchport trunk encapsulation dot1q
+    switchport mode trunk
+    switchport trunk allowed vlan 2,3
+    no shutdown
+    exit</code></pre>
+                                    <h4>Ports Access VLAN 2 (PC1 / PC2) :</h4>
+<pre><code>interface e0/1
+    switchport mode access
+    switchport access vlan 2
+    no shutdown
+    exit
 
-! Disable VLAN1 interface
-interface Vlan1
- shutdown
-
-! Trunk to router (port e0/0)
-interface Ethernet0/0
- switchport trunk encapsulation dot1q
- switchport mode trunk
- switchport trunk allowed vlan 2,3
- no shutdown
-
-! Access ports
-interface Ethernet0/1
- switchport mode access
- switchport access vlan 2
- switchport port-security
- switchport port-security maximum 1
- switchport port-security mac-address sticky
-
-interface Ethernet0/2
- switchport mode access
- switchport access vlan 2
- switchport port-security
- switchport port-security maximum 1
- switchport port-security mac-address sticky
-
-interface Ethernet0/3
- switchport mode access
- switchport access vlan 3
- switchport port-security
- switchport port-security maximum 1
- switchport port-security mac-address sticky
-
-! Spanning Tree best practice
-spanning-tree mode pvst
-spanning-tree extend system-id
-
-end
+interface e0/2
+    switchport mode access
+    switchport access vlan 2
+    no shutdown
+    exit</code></pre>
+                                    <h4>Port Access VLAN 3 (PC3) :</h4>
+<pre><code>interface e0/3
+    switchport mode access
+    switchport access vlan 3
+    exit</code></pre>
+                                    <h4>Spanning Tree (bonne pratique) :</h4>
+<pre><code>spanning-tree mode pvst
+spanning-tree extend system-id</code></pre>
+                                    <h4>Sauvegarde :</h4>
+<pre><code>end
 write memory</code></pre>
                                 </li>
                                 <li>
-                                    <p>Ouvrir chaque PC et dans la console VPCS tapez ceci :</p>
-<pre><code># pour demander une IP via DHCP
-dhcp
-# vérifier adresse
-show ip
-# ping gateway
-ping 192.168.2.1  (sur PC1/PC2)
-ping 192.168.3.1  (sur PC3)</code></pre>
+                                    <h3>Configuration des PCS (PC1, PC2, PC3) :</h3>
+                                    <p>Dans la console VPCS :</p>
+<pre><code>ip dhcp</code></pre>
+                                    <p>Vérifier :</p>
+<pre><code>show ip</code></pre>
+                                    <p>Tester la passerelle :</p>
+<pre><code>ping 192.168.2.1 (depuis PC1/PC2)
+ping 192.168.3.1 (depuis PC3)</code></pre>
+                                    <p>Tester Internet :</p>
+<pre><code>ping 8.8.8.8</code></pre>
                                 </li>
                                 <li>
-                                    <p>On va mettre en place ACL pour empêcher PC1/PC2 d'accéder à PC3 sur le Router 1 :</p>
+                                    <h3>ACL - Bloquer PC1 &amp; PC2 d'acéder à PC3 :</h3>
+                                    <p>Sur le Router1 :</p>
 <pre><code>configure terminal
 access-list 100 deny ip 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255
 access-list 100 permit ip any any
 
-interface GigabitEthernet0/1.2
- ip access-group 100 in
+interface e0/1.2
+    ip access-group 100 in
+    exit
 
 end
 write memory</code></pre>
                                     <p>On peut tester depuis PC1 la commande suivante et ça doit échouer et idem depuis le PC2 :</p>
 <pre><code>ping &lt;IP PC3&gt;</code></pre>
+                                    <p>Du PC3 vers les PC1 et PC2, c'est possible grâce à l'ACL asymétrique.</p>
+                                    <p>Le PC1 et le PC2 peuvent quand même aller sur Internet.</p>
+                                </li>
+                                <li>
+                                    <h3>Sécurité supplémentaire requise :</h3>
+                                    <p>Tu dois aussi appliquer sur le switch : Port Security :</p>
+<pre><code>interface e0/1
+    switchport port-security
+    switchport port-security maximum 1
+    switchport port-security mac-address sticky
+    exit
+
+interface e0/2
+    switchport port-security
+    switchport port-security maximum 1
+    switchport port-security mac-address sticky
+    exit
+
+interface e0/3
+    switchport port-security
+    switchport port-security maximum 1
+    switchport port-security mac-address sticky
+    exit</code></pre>
+                                </li>
+                                <li>
+                                    <p>Pour capturer un paquet, dans la topologie GNS3, clique-droit sur le lien "Start capture" et choisit Wireshark si installé. Tu pourras faire des pings depuis PC1 et tu verras alors ICMP traverser.</p>
+                                    <p>N'oublies pas de "Stop capture" quand tu as fini (dans Wireshark ou dans GNS3).</p>
+                                </li>
+                                <li>
+                                    <p>Dans chaque équipement IOS, il faut taper la commande :</p>
+<pre><code>write memory</code></pre>
+                                    <p>Dans GNS3, il faut faire "File &#8594; Save project".</p>
                                 </li>
                                 <li>
                                     <p>On va faire un DHCP snooping &amp; ARP sur Switch1 (si IOS supporte) :</p>
@@ -1877,15 +1931,6 @@ write memory</code></pre>
                                         <img src="../images/important.png" alt="Important" class="float_left">
                                         <p>Certaines images IOU L2 n'ont pas toutes les features (DHCP snooping/DAI). Si elles manquent, saute ces étapes ou utilise une image plus complète.</p>
                                     </div>
-                                </li>
-                                <li>
-                                    <p>Pour capturer un paquet, dans la topologie GNS3, clique-droit sur le lien "Start capture" et choisit Wireshark si installé. Tu pourras faire des pings depuis PC1 et tu verras alors ICMP traverser.</p>
-                                    <p>N'oublies pas de "Stop capture" quand tu as fini (dans Wireshark ou dans GNS3).</p>
-                                </li>
-                                <li>
-                                    <p>Dans chaque équipement IOS, il faut taper la commande :</p>
-<pre><code>write memory</code></pre>
-                                    <p>Dans GNS3, il faut faire "File &#8594; Save project".</p>
                                 </li>
                             </ul>
                         </li>
