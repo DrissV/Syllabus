@@ -73,6 +73,8 @@
                     <li><a href="#blazor_.NET_8">Blazor en .NET 8</a></li>
                     <li><a href="#ASP.NET_creation_api_web_c#_minimal_apis">ASP.NET : Création d'API Web avec C# et Minimal APIs</a></li>
                     <li><a href="#MVC">Le framework .NET Core MVC</a></li>
+                    <li><a href="#grid">Grid</a></li>
+                    <li><a href="#WCF">WCF</a></li>
                 </ol>
             </nav>
 
@@ -6285,7 +6287,258 @@ public async Task&lt;JsonResult&gt; AjouterSupprimer()
     // cette méthode depuis la page Index
     return Json(valret);
 }</code></pre>
-                    <p></p>
+                </article>
+                <article>
+                    <h2 id="grid">Grid :</h2>
+                    <p>Grid est l'élément le plus employé car les composants peuvent s'adapter.</p>
+<pre><code>ShowGridLines = true</code></pre>
+<pre><code>&lt;Grid&gt;
+ &lt;Grid.ColumnDefinitions&gt;
+  &lt;ColumnDefinition Width="50"/&gt;
+  &lt;ColumnDefinition Width="*"/&gt;
+ &lt;/Grid.ColumnDefinitions&gt;
+ &lt;Grid.RowDefinitions&gt;
+  &lt;RowDefinition Height="50"/&gt;
+  &lt;RowDefinition Height="*"/&gt;
+ &lt;/Grid.RowDefinitions&gt;
+ &lt;Canvas Background="Red"/&gt;
+ &lt;Canvas Background="Blue" Grid.Column="1"/&gt;
+ &lt;Canvas Background="Yellow" Grid.Row="1"/&gt;
+ &lt;Canvas Background="Green" Grid.Row="1" Grid.Row="1"/&gt;
+&lt;/Grid&gt;</code></pre>
+                    <h3>Séparation en couches :</h3>
+                    <img src="../images/separation_couches.png" alt="">
+                    <p>Attention, le DataContext est hérité. MVVM = Model - View - ViewModel.</p>
+                    <h3>Models :</h3>
+<pre><code>using System;
+using System.Collections.Generic;
+
+namespace NomProjet.Models
+{
+  
+  public partial class Legume
+  {
+    public int Id { get; set; }
+	public string Name { get; set; }
+  }
+}</code></pre>
+                    <h3>Views :</h3>
+<pre><code>using *;
+
+namespace NomProjet
+{
+
+  // Logique d'interaction pour MainWindow.xaml
+  public partial class MainWindow : Window
+  {
+    public MainWindow()
+	{
+	  InitializeComponent();
+	  this.DataContext = new LegumeVM();
+	}
+  }
+
+}</code></pre>
+<pre><code>&lt;Windows x:Class="NomProjet.MainWindow"
+            xmlns:"http://schemas.microsoft.com/winfx/xaml/presentation"
+			xmlns:"http://schemas.microsoft.com/winfx/2006/xaml"
+			Title="MainWindow" Height="350" Width="525"&gt;
+	   &lt;Window.Resources&gt;
+	   &lt;DataTemplate x:Key="ItemTemplate"&gt;
+	     &lt;StackPanel Orientation="Horizontal" Margin="0 5 0 5"&gt;
+		   &lt;Label Content="{Binding Id}" VerticalAlignement="Center" HorizontalAlignement="Center"/&gt;
+		   &lt;Label Content="{Binding Name}" VerticalAlignement="Center" HorizontalAlignement="Center"/&gt;
+		 &lt;/StackPanel&gt;
+	   &lt;/DataTemplate&gt;
+	   &lt;/Window.Resoueces&gt;
+	   &lt;Grid&gt;
+	     &lt;ComboBox HorizontalAlignement="Left" Margin="87, 75, 0, 0" VerticalAlignement="Top" Width="120" ItemsSource="{Binding LegumesList}" ItemTemplate="{StaticResource ItemTemplaten0}" SelectedItem="{Binding SelectedLegume}"/&gt;
+		 &lt;Label Content="Id" HorizontalAlignement="Left" Margin="51, 161, 0, 0" VerticalAlignement="Top"/&gt;
+		 &lt;Label Content="Id" HorizontalAlignement="Left" Margin="51, 192, 0, 0" VerticalAlignement="Top"/&gt;
+		 &lt;TextBox HorizontalAlignement="Left" Height="23" Margin="98, 161, 0, 0" TextWrapping="Wrap" Text="{Binding Id,Mode=OneWay}" DataContext="{Binding SelectedItem.ElementName=combo}" VerticalAlignement Width="120"/&gt;
+		 &lt;TextBox HorizontalAlignement="Left" Height="23" Margin="98, 194, 0, 0" TextWrapping="Wrap" Text="{Binding Name}" DataContext="{Binding SelectedItem.ElementName=combo}" VerticalAlignement Width="120"/&gt;
+		 &lt;Button Content="New" Command="{Binding NewCommand}" HorizontalAlignement="Left" Margin="299, 237, 0, 0" VerticalAlignement="Top" Width="75"/&gt;
+	   &lt;/Grid&gt;
+&lt;/Window&gt;</code></pre>
+                    <h3>ViewModels :</h3>
+<pre><code>using *;
+
+namespace NomProjet.ViewModels
+{
+  class LegumeModel : INotifyPropertyChanged
+  {
+    private readonly Legume _legume;
+	
+	// Property changed standard handling
+	public event PropertyChangedEventHandler PropertyChanged;
+	
+	// La view s'enregistrera autoatiquement sur cet event
+	protected virtual void OnPropertyChanged(string propertyName)
+	{
+	  if (PropertyChanged != null)
+	  {
+	    PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+	  }
+	}
+	
+	public LegumeModel(Legume legume)
+	{
+	  _legume = legume;
+	}
+	
+	public int Id
+	{
+	  get { return _legume.id; }
+	}
+	
+	public string Name
+	{
+	  get { return _legume.name; }
+	  set { _legume.name = value; OnPropertyChanged("Name"); }
+	}
+  }
+}</code></pre>
+<pre><code>using *;
+
+namespace NomProjet.ViewModels
+{
+  class LegumeVM : INotifyPropertyChanged
+  {
+	// ObservableCollection
+    private List&lt;LegumeModel&gt; _legumesList;
+	private PotagerEntities1 context = new PotagerEntities1();
+	private DelegateCommand _addCommand;
+	private LegumeModel  _selectedLegume;
+	
+	// Property changed standard handling
+	public event PropertyChangedEventHandler PropertyChanged;
+	
+	// La view s'enregistrera autoatiquement sur cet event
+	protected virtual void OnPropertyChanged(string propertyName)
+	{
+	  if (PropertyChanged != null)
+	  {
+	    PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+	  }
+	}
+	
+	public List&lt;LegumeModel&gt; LegumesList
+	{
+	  get {
+	    // if (_legumesList == null) _legumesList = LoadLegumes2();
+		return _legumesList;
+		return _legumesList = _legumesList ?? LoadLegumes();
+	  }
+	  set
+	  {
+	   _legumesList = value;
+	   OnPropertyChanged("LegumesList");
+	  }
+	}
+	
+	private List&lt;LegumeModel&gt; LoadLegumes()
+	{
+	  List&lt;LegumeModel&gt; localCollection = new List&lt;LegumeModel&gt;();
+	  foreach (var item in context.Legumes)
+	  {
+	    localCollection.Add(new LegumeModel(item));
+	  }
+	  return localCollection;
+	}
+  }
+  
+  public LegumeModel SelectedLegume
+  {
+    get { return _selectedLegume; }
+	set { _selectedLegume = value; }
+  }
+  
+  public DelegateCommand NewCommand
+  {
+    get { return _addCommand = _addCommand ?? new DelegateCommand(NewLegume); }
+  }
+  
+  private void NewLegume()
+  {
+    MessageBox.Show("new legume");
+	Legume legumeGlobal = new Legume();
+	LegumeModel legumeModel = new LegumeModel(legumeGlobal);
+	LegumesList.Add(legumeModel);
+	OnPropertyChanged("LegumesList");
+	SelectedLegume = legumeModel;
+  }
+}</code></pre>
+<pre><code>using *;
+
+namespace NomProjet.ViewModels
+{
+  
+  public class DelegateCommand : ICommand
+  {
+    private Action _executeMethod;
+	
+	public DelegateCommand(Action executeMethod)
+	{
+	  _executeMethod = executeMethod;
+	}
+	
+	public bool CanExecute(object parameter)
+	{
+	  return true;
+	}
+	
+	public event EventHandler CanExecuteChanged;
+	
+	public void Execute(object parameter)
+	{
+	  _executeMethod.Invoke();
+	}
+  }
+}</code></pre>
+                    <h3>ObservableCollection :</h3>
+                    <p>Problème : mise à jour dans le ViewModel d'une liste utilisée dans la vue &#8594; notifier la vue.</p>
+                    <p>Solution 1 : Notifications (INotifyPropertyChanged et/ou INotifyCollectionChanged).</p>
+                    <p>Solution 2 : ObservableCollection (implémente déjà INotifyCollectionChanged).</p>
+                </article>
+                <article>
+                    <h2 id="WCF">Définition de contrat WCF (Windows Communication Foundation) :</h2>
+                    <p>WCF utilise la sérialisation. Les attributs doivent donc posséder un accesseur en lecture (get) et un accesseur en écriture (set) pour permettre cette sérialisation.</p>
+                    <p>Si certaines classes sont générées avec LINQ to SQL, il faut dire à LINQ d'ajouter l'attribut "DataMember" à toutes les propriétés ainsi que la propriété SerializationMode" à Unidirectionnal pour permettre la sérialisation.</p>
+<pre><code>using System;
+// les trois espaces suivants sont la base de la création d'un service WCF
+using System.Runtime.Serialization;
+using System.ServiceModel;
+using System.ServiceModel.Web;
+
+namespace NomProjet
+{
+  
+  // Cette interface est un contrat de service WCF
+  [ServiceContract]
+  public interface IHelloWorld
+  {
+    // Cette méthode sera exposée au travers du service WCF
+	[OperationContract]
+	string sayHello();
+  }
+}</code></pre>
+                    <h3>Implémentation du contrat WCF :</h3>
+<pre><code>namespace NomProjet
+{
+  
+  public class HelloWorldImpl : IHelloWorld
+  {
+    
+	public string sayHello()
+	{
+	  return string.Format("Hello World !");
+	}
+	
+  }
+}</code></pre>
+                    <h3>Hébergement du service :</h3>
+                    <p>WCF Service Host (FichierImpl.svc) déployé par défaut dans IIS embarqué de Visual Studio 2017 (développement).</p>
+<pre><code>&lt;%@ ServiceHost Language="C#" Debug="true" Service="NomProjet.FichierImpl" CodeBehind="FichierImpl.svc.cs" %&gt;</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
@@ -6308,5 +6561,4 @@ public async Task&lt;JsonResult&gt; AjouterSupprimer()
         </footer>
         <script src="../pre.js"></script>
     </body>
-
 </html>
