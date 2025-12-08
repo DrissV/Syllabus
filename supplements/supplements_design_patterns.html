@@ -11282,6 +11282,7 @@ public class WebService {
                     <ol type="A">
                         <li>
                             <h3>Patterns Structurels :</h3>
+                            <p>But : Gestion de la communication entre les objets.</p>
                             <ol>
                                 <li>
                                     <h4>Flyweight :</h4>
@@ -11323,6 +11324,50 @@ public class WebService {
                                     <p>Mémoire / Nb de classes.</p>
                                     <h5>UML :</h5>
                                     <img src="../images/decorator_uml.png" alt="">
+                                    <h5>But :</h5>
+                                    <p>Modifier le comportement d'un objet en cours d'exécution.</p>
+                                    <p>J'ai un objet en mémoire et j'aimerai modifier son comportement. Il va étendre la classe qu'il décore pour se faire passer pour cette classe. Il pourra ainsi être utilisé à la place.</p>
+                                    <p>On a des new A(new B(new C(new D()))).</p>
+<pre><code>public abstract class Voiture {
+
+    String nom;
+    String marque;
+    abstract int getPrix();
+    abstract int getPoids();
+}
+
+class DS extends Voiture {
+
+    public DS() {
+        this.nom = "DS";
+        this.marque = "Citroën";
+    }
+
+    int getPrix() { return 30000; }
+    int getPoids() { return 1500; }
+}
+
+class VoitureAvecToitOuvrant extends Voiture {
+    Voiture voiture;
+    int getPrix() { return voiture.getPrix() + 10000; }
+    int getPoids() { return voiture.getPoids() + 15; }
+}</code></pre>
+<pre><code>// On garde le nom du pattern Decorator pour savoir qu'on wrap un objet.
+class DSAvecToitOuvrantDecorator extends VoitureAvecToitOuvrant {
+    public DSAvecToitOuvrantDecorator(DS ds) {
+        this.voiture = ds;
+    }
+}
+
+public class Usine {
+    // -----------------------------------------------------------
+    // Implémentation
+    public static void main(String[] args) {
+        Voiture ds = new DS();
+        Voiture dsOption = new DSAvecToitOuvrantDecorator(ds);
+        System.out.println(dsOption.getPoids() + " - " + dsOption.getPrix());
+    }
+}</code></pre>
                                 </li>
                                 <li>
                                     <h4>Adapter :</h4>
@@ -11339,6 +11384,45 @@ public class WebService {
                                     <p>Mémoire / Moins de duplication de code.</p>
                                     <h5>UML :</h5>
                                     <img src="../images/adapter_uml.png" alt="">
+                                    <h5>But :</h5>
+                                    <p>Ce patron convertit l'interface d'une classe en une autre interface exploitée par une application. Permet d'interconnecter des classes qui sans cela seraient incompatibles.</p>
+<pre><code>// Adapter
+public interface BattleShip {
+    // operation()
+    void fire();
+
+    void move(Distance distance);
+}</code></pre>
+<pre><code>// Adaptee
+public class FishingBoat {
+    // adaptedOperation()
+    public void sail(Distance distance) {
+        System.out.println("The Boat is moving " + distance.getDistance());
+    }
+
+    public void fish() {
+        System.out.println("fishing...");
+    }
+}</code></pre>
+<pre><code>// ConcreteAdapter
+public class BattleFishingBoat implements BattleShip {
+
+    private FishingBoat boat;
+
+    public BattleFishingBoat() {
+        boat = new FishingBoat();
+    }
+
+    @Override
+    public void fire() {
+        boat.fish();
+    }
+
+    @Override
+    public void move(Distance distance) {
+        boat.sail(distance);
+    }
+}</code></pre>
                                 </li>
                                 <li>
                                     <h4>Proxy :</h4>
@@ -11356,10 +11440,71 @@ public class WebService {
                                     <p>Sécurité / Contrôle d'accès.</p>
                                     <h5>UML :</h5>
                                     <img src="../images/proxy_uml.png" alt="">
+                                    <h5>But :</h5>
+                                    <p>Représentant d'un autre objet pour :</p>
+                                    <ul>
+                                        <li>
+                                            <p>Contrôle d'accès</p>
+                                        </li>
+                                        <li>
+                                            <p>Réduction de coût</p>
+                                        </li>
+                                        <li>
+                                            <p>Réduction de la complexité</p>
+                                        </li>
+                                    </ul>
+<pre><code>public class Proxy implements Fichier {
+    private Fichier fichier;
+    private boolean liste;
+    private boolean charge;
+    private boolean sauve;
+    private boolean efface;
+
+    public Proxy(Fichier fichier, boolean liste, boolean charge, boolean sauve, boolean efface) {
+        this.fichier = fichier;
+        this.liste = liste;
+        this.charge = charge;
+        this.sauve = sauve;
+        this.efface = efface;
+    }
+
+    @Override
+    public String[] liste(String repertoire) throws IOException {
+        if (!liste) {
+            throw new AccessDeniedException("Interdiction de lister !");
+        }
+        return fichier.liste(repertoire);
+    }
+
+    @Override
+    public byte[] charge(String chemin) throws IOException {
+        if (!charge) {
+            throw new AccessDeniedException("Interdiction de charger !");
+        }
+        return fichier.charge(chemin);
+    }
+
+    @Override
+    public void sauve(String chemin, byte[] donnees) throws IOException {
+        if (!sauve) {
+            throw new AccessDeniedException("Interdiction de sauver !");
+        }
+        return fichier.sauve(chemin, donnees);
+    }
+
+    @Override
+    public void efface(String chemin) throws IOException {
+        if (!efface) {
+            throw new AccessDeniedException("Interdiction d'effacer !");
+        }
+        return fichier.efface(chemin);
+    }
+    
+}</code></pre>
                                 </li>
                                 <li>
                                     <h4>Composite :</h4>
-                                    <h5>utilité :</h5>
+                                    <h5>Utilité :</h5>
                                     <p>Permettre d'avoir la même interface pour deux classes différentes qui traitent sur les mêmes objets et qui ont au moins une méthode similaire. Une classe qui est l'objet et une classe qui a une structure de données qui contient plusieurs de ces objets.</p>
                                     <h5>Exemple :</h5>
                                     <h6>Contexte :</h6>
@@ -11375,6 +11520,79 @@ public class WebService {
                                     <h5>UML :</h5>
                                     <p>Erreur dans l'UML, <span class="em">add</span>, <span class="em">remove</span>, <span class="em">getChild</span> ne sont PAS dans l'interface.</p>
                                     <img src="../images/composite_uml.png" alt="">
+                                    <h5>But :</h5>
+                                    <p>Combine plusieurs objets similaires pour se comporter comme un objet unique. A une forme d'arbre.</p>
+<pre><code>// Composant
+interface Graphic {
+
+    // Imprime le graphique
+    // operation()
+    public void print();
+
+}</code></pre>
+<pre><code>// Composite
+class CompositeGraphic implements Graphic {
+
+    // Collecion de graphiques enfants.
+    private ArrayList&lt;Graphic&gt; mChildGraphics = new ArrayList&lt;Graphic&gt;();
+
+    // Imprime le graphique.
+    // operation()
+    public void print() {
+        for (Graphic graphic : mChildGraphics) {
+            graphic.print();
+        }
+    }
+
+    // Ajoute le graphique à la composition.
+    public void add(Graphic graphic) {
+        mChildGraphics.add(graphic);
+    }
+
+    // Retire le graphique de la composition.
+    public void remove(Graphic graphic) {
+        mChildGraphics.remove(graphic);
+    }
+
+}</code></pre>
+<pre><code>// Feuille
+class Ellipse implements Graphic {
+    
+    // Imprme le graphique.
+    // operation()
+    public void print() {
+        System.out.println("Ellipse");
+    }
+
+}</code></pre>
+<pre><code>public class Program {
+
+    public static void main(String[] args) {
+        // Initialise quatre ellipses
+        Ellipse ellipse1 = new Ellipse();
+        Ellipse ellipse2 = new Ellipse();
+        Ellipse ellipse3 = new Ellipse();
+        Ellipse ellipse4 = new Ellipse();
+
+        // Initialise trois graphiques composites
+        CompositeGraphic graphic1 = new CompositeGraphic();
+        CompositeGraphic graphic2 = new CompositeGraphic();
+        CompositeGraphic graphic3 = new CompositeGraphic();
+
+        // Compose les graphiques
+        graphic2.add(ellipse1);
+        graphic2.add(ellipse2);
+        graphic2.add(ellipse3);
+
+        graphic3.add(ellipse4);
+
+        graphic1.add(graphic2);
+        graphic1.add(graphic3);
+
+        // Imprime le graphique complet (quatre fois la chaîne "Ellipse").
+        graphic1.print();
+    }
+}</code></pre>
                                 </li>
                                 <li>
                                     <h4>Facade :</h4>
@@ -11409,7 +11627,8 @@ appliquerSauceCalmementSurPate();</code></pre>
                             </ol>
                         </li>
                         <li>
-                            <h3>patterns créationnels :</h3>
+                            <h3>Les patterns créationnels :</h3>
+                            <p>But : instancier des objets.</p>
                             <ol>
                                 <li>
                                     <h4>Builder :</h4>
@@ -11426,6 +11645,102 @@ appliquerSauceCalmementSurPate();</code></pre>
                                     <p>Possibilités de création/Mémoire (!!!!!!!)</p>
                                     <h5>UML :</h5>
                                     <img src="../images/builder_uml.png" alt="">
+                                    <h5>But :</h5>
+                                    <p>Construire un objet complexe à partir d'objets plus simples.</p>
+<pre><code>/* "Product" */
+public class Pizza {
+    private String dough = "";
+    private String sauce = "";
+    private String topping = "";
+
+    public void setDough(String dough) {
+        this.dough = dough;
+    }
+
+    public void setSauce(String sauce) {
+        this.sauce = sauce;
+    }
+
+    public void setTopping(String topping) {
+        this.topping = topping;
+    }
+}</code></pre>
+<pre><code>/* "Abstract Builder" */
+public abstract class PizzaBuilder {
+    protected Pizza pizza;
+
+    public Pizza getPizza() {
+        return pizza;
+    }
+
+    public void createNewPizzaProduct() {
+        pizza = new Pizza();
+    }
+
+    public abstract void buildDough();
+    public abstract void buildSauce();
+    public abstract void buildTopping();
+}</code></pre>
+<pre><code>/* "ConcreteBuilder" */
+public class HawaiianPizzaBuilder extends PizzaBuilder {
+    public void buildDough() {
+        pizza.setDough("cross");
+    }
+    
+    public void buildSauce() {
+        pizza.setSauce("mild");
+    }
+
+    public void buildTopping() {
+        pizza.setTopping("ham+pineapple");
+    }
+}</code></pre>
+<pre><code>/* "ConcreteBuilder" */
+public class SpicyPizzaBuilder extends PizzaBuilder {
+    public void buildDough() {
+        pizza.setDough("pan banked");
+    }
+
+    public void buildSauce() {
+        pizza.setSauce("hot");
+    }
+
+    public void buildTopping() {
+        pizza.setTopping("pepperoni+salami");
+    }
+}</code></pre>
+<pre><code>/* "Director" */
+public class Waiter {
+    private PizzaBuilder pizzaBuilder;
+
+    public void setPizzaBuilder(PizzaBuilder pb) {
+        pizzaBuilder = pb;
+    }
+
+    public Pizza getPizza() {
+        return pizzaBuilder.getPizza();
+    }
+
+    public void constructPizza() {
+        pizzaBuilder.createNewPizzaProduct();
+        pizzaBuilder.buildDough();
+        pizzaBuilder.buildSauce();
+        pizzaBuilder.buildTopping();
+    }
+}</code></pre>
+<pre><code>/* A customer ordering a pizza. */
+public class PizzaBuilderDemo {
+    public static void main(String[] args) {
+        Waiter waiter = new Waiter();
+        PizzaBuilder hawaiianPizzaBuilder = new HawaiianPizzaBuilder();
+        PizzaBuilder spicyPizzaBuilder = new SpicyPizzaBuilder();
+
+        waiter.setPizzaBuilder(hawaiianPizzaBuilder);
+        waiter.constructPizza();
+
+        Pizza pizza = waiter.getPizza();
+    }
+}</code></pre>
                                 </li>
                                 <li>
                                     <h4>Factory Method :</h4>
@@ -11455,6 +11770,8 @@ public class MargaritaFactory extends Factory {
                                     <h6>Gain :</h6>
                                     <h5>UML :</h5>
                                     <img src="../images/factory_method_uml.png" alt="">
+                                    <h5>But :</h5>
+                                    <p>Créer un objet sans accéder à la classe concrète. Abstract class qui appelle une méthode abstraite quand elle doit instancier un objet. Les sous-classes spécifient l'objet à instancier en implémentant la méthode. La factory method est une méthode responsable de l'instanciation d'un produit. Les factory (qui extends une classe abstraite et overwrite donc la factory method) peuvent redéfinir cette méthode qui est apelé quand la factory a besoin d'un produit.</p>
                                 </li>
                                 <li>
                                     <h4>Abstract Factory :</h4>
@@ -11472,9 +11789,122 @@ public class MargaritaFactory extends Factory {
                                     <h5>UML :</h5>
                                     <p>Manque des flèches de la ConcreteFactory vers la ConcreteProduct.</p>
                                     <img src="../images/abstract_factory_uml.png" alt="">
+                                    <h5>But :</h5>
+                                    <p>L'abstract factory est une classe à qui on délègue l'instanciation d'objets (il peut y avoir plusieurs méthodes d'instanciation dans une abstract factory) et qui produit un ensemble de produits qui sont liées (plusieurs méthodes de création).</p>
+<pre><code>public interface Article {
+    public String getName();
+    public int getAnneeDeParution();
+    public double getPrix();
+    public void setPrix(double prix);
+}</code></pre>
+<pre><code>public class Livre implementes Article {
+    public static final double PRIX = 14.99;
+    private String name;
+    private int anneeDeParution;
+    private double prix;
+
+    public Livre(String name, int anneeDeParution) {
+        this.name = name;
+        this.anneeDeParution = anneeDeParution;
+        this.prix = PRIX;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getAnneeDeParution() {
+        return anneeDeParution;
+    }
+
+    public double getPrix() {
+        return prix;
+    }
+
+    public void setPrix(double prix) {
+        this.prix = prix;
+    }
+}</code></pre>
+<pre><code>public class DVD implementes Article {
+    public static final double PRIX = 14.99;
+    private String name;
+    private int anneeDeParution;
+    private double prix;
+
+    public DVD(String name, int anneeDeParution) {
+        this.name = name;
+        this.anneeDeParution = anneeDeParution;
+        this.prix = PRIX;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getAnneeDeParution() {
+        return anneeDeParution;
+    }
+
+    public double getPrix() {
+        return prix;
+    }
+
+    public void setPrix(double prix) {
+        this.prix = prix;
+    }
+}</code></pre>
+<pre><code>pubic interface Abstractory {
+    public Article creerArticle(String nom, int anneeDeParution);
+}</code></pre>
+<pre><code>public class ConcreteFactoryDVD implements AbstractFactory {
+    @Override
+    public Article creerArticle(String nom, int anneeDeParution) {
+        return new DVD(nom, anneeDeParution);
+    }
+}</code></pre>
+<pre><code>public class ConcreteFactoryLivre implements AbstractFactory {
+    @Override
+    public Article creerArticle(String nom, int anneeDeParution) {
+        return new Livre(nom, anneeDeParution);
+    }
+}</code></pre>
+<pre><code>public class Magasin {
+    private AbstractFactory factory;
+    private Map&lt;String,Article&gt; etagere = new HashMap&lt;String,Article&gt;();
+
+    public Magasin(AbstractFactory af) {
+        this.factory = af;
+    }
+
+    public void ajouterArticle(String name, int anneeDeParution) {
+        etagere.put(name, factory.creerArticle(name, anneeDeParution));
+    }
+
+    public Article retournerArticle(String name) {
+        return etagere.get(name);
+    }
+}</code></pre>
+<pre><code>public class Main {
+
+    public static void main(String[] args) {
+        Magasin mDVD = new Magasin(new ConcreteFactoryDVD());
+        Magasin mLivre = new Magasin(new ConcreteFactoryLivre());
+
+        mDVD.ajouterArticle("Transformers", 2010);
+        mDVD.ajouterArticle("Transformers 2", 2012);
+        mDVD.ajouterArticle("Transformers 3", 2014);
+        mDVD.ajouterArticle("Transformers 4", 2016);
+
+        mLivre.ajouterArticle("Harry 1", 2001);
+        mLivre.ajouterArticle("Harry 2", 2003);
+        mLivre.ajouterArticle("Harry 3", 2005);
+    }
+
+}</code></pre>
                                 </li>
                                 <li>
                                     <h4>Prototype :</h4>
+                                    <p>La création d'objets est basée sur le clonage d'un objet passé en paramètres.</p>
                                     <h5>Utilité :</h5>
                                     <p>Au lieu de réinstancier à chaque fois un objet, on va copier cet objet le nombre de fois dont on a besoin et juste modifier les valeurs qui doivent changer. En gardant ce qui doit être inchangé.</p>
                                     <h5>Exemple :</h5>
@@ -11505,6 +11935,8 @@ public class MargaritaFactory extends Factory {
                                     <p>Rapidité / Mémoire.</p>
                                     <h5>UML :</h5>
                                     <img src="../images/singleton_uml.png" alt="">
+                                    <h5>But :</h5>
+                                    <p>N'avoir qu'une seule instance pour une classe donnée.</p>
                                 </li>
                             </ol>
                         </li>

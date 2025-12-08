@@ -60,6 +60,7 @@
                     <li><a href="#seance_1">Séance 1</a></li>
                     <li><a href="#seance_2">Séance 2</a></li>
                     <li><a href="#nfs">NFS</a></li>
+                    <li><a href="#examen_theorique_juin_2015">Examen théorique de juin 2015</a></li>
                 </ol>
             </nav>
             
@@ -921,6 +922,98 @@ sudo /etc/init.d/nfs-kernel-server restart</code></pre>
                             <p>La différence est que NFS ne nécessite pas d'un utilisateur et d'un mot de passe mais bien juste sur base d'une identification d'hôte et non pas d'utilisateur.</p>
                             <p>NFS devient dès lors très complexe si on doit bien séparer les dossiers par rapport au home/utilisateurs et l'utilisation de Samba devient plus efficace.</p>
                             <p>Par contre s'il s'agit de logiciels, CD-ROM ou encores des mises à jour, il est plus simple d'utiliser NFS qui reste très simple d'utilisation dans ces cas-ci.</p>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="examen_theorique_juin_2015">Examen théorique de juin 2015 :</h2>
+                    <ol>
+                        <li>
+                            <p>Quelles sont les deux grandes familles de systèmes Unix ?</p>
+                            <p>BSD (Berkeley Software Distribution) et System V.</p>
+                        </li>
+                        <li>
+                            <p>Pourquoi est-il important de connaître la famille de système Unix dans laquelle on travaille lorsqu'on veut utiliser l'appel signal ?</p>
+                            <p>Parce que son comportement varie selon le système Unix (<span class="em">man signal</span> pour les informations détaillées).</p>
+                            <p>La solution la plus simple pour assurer la portabilité d'un programme utilisant des signaux est d'utiliser <span class="em">sigaction</span> plutôt que <span class="em">signal</span>.</p>
+                        </li>
+                        <li>
+                            <p>Quel appel système permet la redirection des fichiers ? Expliquez le mécanisme de fonctionnement de cet appel système.</p>
+                            <p>L'appel système <span class="em">dup2(fd1,fd2)</span> ferme <span class="em">fd2</span> s'il est ouvert puis affecte une copie de <span class="em">fd1</span> à <span class="em">fd2</span> (ces deux opérations sont indivisibles). Cet appel système est appelé dans le cas d'une redirection de <span class="em">fd1</span> vers <span class="em">fd2</span>.</p>
+                        </li>
+                        <li>
+                            <p>Quel est l'appel système qui permet de supprimer un fichier ?</p>
+                            <p>Un fichier est supprimé par l'appel système <span class="em">unlink</span>, à condition que le lien visé soit la dernière référence vers ledit fichier.</p>
+                        </li>
+                        <li>
+                            <p>Quels appels systèmes retournent un file descriptor ? (QCM)</p>
+                            <p><span class="em">open</span>, <span class="em">dup</span>, <span class="em">socket</span>, et sans doute encore d'autres.</p>
+                        </li>
+                        <li>
+                            <p>Qu'est-ce qu'un file descriptor ? À quoi sert-il ?</p>
+                            <p>C'est un petit entier positif (<span class="em">int</span>) permettant d'identifir les ressources associées à un fichier ouvert (ou tout I/O, qui sont sont considérés comme des fichiers).</p>
+                        </li>
+                        <li>
+                            <p>Qu'affiche la commande suivante ?</p>
+<pre><code>echo a b c d e f g h | xargs -n2 echo | xargs -L3 echo</code></pre>
+<pre><code>a b c d e f
+g h</code></pre>
+                            <p>(Le plus efficace pour comprendre <span class="em">xargs</span> est de consulter le man et de jouer avec.)</p>
+                        </li>
+                        <li>
+                            <p>Quels sont les types de liens que l'on retrouve dans un système Unix ? Qu'est-ce qui les différencient ?</p>
+                            <p>Un lien physique est une association entre un alias de fichier et son inode, il ne peut pointer que vers un fichier se trouvant sur le même système de fichier. Ce type de lien n'est pas un fichier et n'a donc pas d'inode propre. Ils sont créés via l'appel système <span class="em">link</span>.</p>
+                            <p>Un lien symbolique est un fichier pointant vers un autre fichier, il a donc son inode propre. Ce type de lien peut très bien pointer vers un fichier situé sur un autre système de fichiers. Ces liens sont créés avec l'appel système <span class="em">symlink</span>.</p>
+                        </li>
+                        <li>
+                            <p>Quelles sont les différences entre les appels systèmes <span class="em">pipe</span> et <span class="em">msgnd</span> ?</p>
+                            <p>Contrairement aux messages envoyés via un pipe, ceux envoyés grâce à <span class="em">msgsnd</span> peuvent être associés directement à une taille et un type.</p>
+                            <p>Les entrées/sorties des pipes sont traitées comme des fichiers (<span class="em">read</span>, <span class="em">write</span>, <span class="em">open</span>, <span class="em">close</span>).</p>
+                            <p>Un message envoyé par <span class="em">msgsnd</span> ne peut être manipulé qu'à la condition de connaître sa clef d'identification.</p>
+                        </li>
+                        <li>
+                            <p>Comment Unix différente-t-il les différents types de programmes (script bash, etc) ? Comment est-ce qu'on peut afficher le type d'un fichier ?</p>
+                            <p>Un fichier commence par des "caractères magiques" spécifiant comment il doit être exécuté. La commande <span class="em">file</span> permet d'afficher ces caractéristiques.</p>
+                        </li>
+                        <li>
+                            <p>Si p1, p2 et p3 sont trois programes, expliquez ce que font :</p>
+                            <ol>
+                                <li>
+<pre><code>p1;p2;p3;</code></pre>
+                                    <p>p1, puis p2, puis p3, successivement.</p>
+                                </li>
+                                <li>
+<pre><code>p1 &amp; p2 &amp; p3;</code></pre>
+                                    <p>p1 et p2 et p3, simultanément (p1 et p2 en tâche de fond, p3 en avant-plan).</p>
+                                </li>
+                                <li>
+<pre><code>p1 &amp;&amp; p2 &amp;&amp; p3;</code></pre>
+                                    <p>p1, puis p2 si p1 s'est exécuté correctement (code de retour = 0), puis p3 si p2 s'est exécuté correctement.</p>
+                                </li>
+                                <li>
+                                    <p>Quel fichier affiche les logins, passwords, type de shell, etc ?</p>
+                                    <p>/etc/passwd</p>
+                                </li>
+                                <li>
+                                    <p>Que faut-il faire juste après un <span class="em">pipe</span> ?</p>
+                                    <p>Fermer le file descriptor inutilisé.</p>
+                                </li>
+                                <li>
+                                    <p>En quoi le <span class="em">sticky bit</span> sur un répertoire permet-il de protéger les fichiers ? Expliquez.</p>
+                                    <p>La présence d'un <span class="em">sticky bit</span> sur un répertoire permet d'interdire la suppression d'un fichier qu'il contient à tout utilisateur autre que le propriétaire du fichier.</p>
+                                    <p>Le sticky bit permet donc d'ajouter de la nuance au droit d'écriture, qui concerne autant la création que la suppression (sticky bit = dernier "x" dans les permissions est remplacé par un "t").</p>
+                                </li>
+                                <li>
+                                    <p>Comment se fait-il qu'un utilisateur puisse modifier son mot de passe avec la commande <span class="em">passwd</span> alors qu'il n'a pas de droits sur le fichier <span class="em">/etc/shadow</span> contenant les mots de passe ?</p>
+                                    <p>Dans les permissions de la commande <span class="em">passwd</span>, on retrouve un "s" à la place d'un "x" habituel pour les permissions de l'utilisateur, ce qui a pour effet de rendre le fichier <span class="em">setuid</span> et donc d'être exécuté avec les permissions accordées au propriétaire du fichier (c'est-à-dire <span class="em">root</span>, qui lui a les droit nécessaires pour modifier passwd).</p>
+                                </li>
+                                <li>
+                                    <p>En quoi stdio.h est-il plus efficace que les appels sytèmes read() et write() ?</p>
+                                    <p>Les appels systèmes sont coûteux, il est donc préférable d'en réduire le nombre autant que possible, c'est ce que permet <span class="em">stdio.h</span>.</p>
+                                    <p>Le stream (<span class="em">FILE*</span>) est une structure qui va permettre de bufferiser le contenu en ne faisant d'appels systèmes qu'à la rencontre d'un <span class="em">'\n'</span>, sauf flush explicite (par exemple via la fonction <span class="em">fflush()</span>).</p>
+                                    <p>La fonction <span class="em">fgets()</span> permet également d'éviter le buffer overfow.</p>
+                                </li>
+                            </ol>
                         </li>
                     </ol>
                 </article>
