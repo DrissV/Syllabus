@@ -1421,6 +1421,300 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                     </ul>
                 </article>
                 <article>
+                    <h2 id="protocole_IP">Protocole IP :</h2>
+                    <h3>Introduction :</h3>
+                    <p class="em">L'IP est le coeur de la suite TCP/IP.</p>
+                    <p>Son rôle est de fournir un <span class="em">service de livraison de paquets</span> entre hôtes sur des réseaux interconnectés.</p>
+                    <p>Ses caractéristiques principales sont :</p>
+                    <ul>
+                        <li>
+                            <p>Service <span class="em">non fiable</span> (best effort).</p>
+                        </li>
+                        <li>
+                            <p>Sans connexion.</p>
+                        </li>
+                        <li>
+                            <p>Livraison d'unité de données appelées <span class="em">datagrammes</span>.</p>
+                        </li>
+                        <li>
+                            <p>Routage de paquets à travers plusieurs réseaux.</p>
+                        </li>
+                    </ul>
+                    <p>L'IP assure :</p>
+                    <ul>
+                        <li>
+                            <p>le <span class="em">transfert</span>des datagrammes entre machines source et destination.</p>
+                        </li>
+                        <li>
+                            <p>l'<span class="em">adressage logique</span> via les adresses IP.</p>
+                        </li>
+                        <li>
+                            <p>le <span class="em">routage</span> entre réseaux hétérogènes interconectés.</p>
+                        </li>
+                    </ul>
+                    <p class="em">L'IP n'assure PAS :</p>
+                    <ul>
+                        <li>
+                            <p>la fiabilité.</p>
+                        </li>
+                        <li>
+                            <p>le contrôle de flux.</p>
+                        </li>
+                        <li>
+                            <p>la détection/correcton d'erreurs (sauf si le checksum d'en-tête).</p>
+                        </li>
+                    </ul>
+                    <p>Ces responsabilités sont prises en charge par les couches supérieures.</p>
+                    <h3>Encapsulation IP :</h3>
+                    <p>L'IP reçoit des données de la couche transport (TCP, UDP) et les encapsule dans un <span class="em">datagramme</span>.</p>
+                    <p class="em">Datagramme = En-tête IP + Données</p>
+                    <p class="em">Encapsulation dans l'ordre :</p>
+                    <ol>
+                        <li>
+                            <p>Données de la couche application</p>
+                        </li>
+                        <li>
+                            <p>Segment TCP / Message UDP</p>
+                        </li>
+                        <li>
+                            <p>Datagramme IP</p>
+                        </li>
+                        <li>
+                            <p>Trame (Ethernet, Token Ring...)</p>
+                        </li>
+                    </ol>
+                    <p>Chaque couche ajoute son propre en-tête.</p>
+                    <h3>Structure du datagramme IP :</h3>
+                    <img src="" alt="">
+                    <p>Un <span class="em">datagramme IP</span> contient :</p>
+                    <ul>
+                        <li>
+                            <p>Version (4 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>Indique la version du protocole IP utilisée.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">4</span> = IPv4.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">6</span> = IPv6.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Header Length (<span class="em">IHL</span>) (4 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>Taille de l'en-tête IP en mots de 32 bits (4 octets).</p>
+                                </li>
+                                <li>
+                                    <p>Minimum = 5 (20 octets), Maximum = 15 (60 octets).</p>
+                                </li>
+                                <li>
+                                    <p>Sert à identifier où commencent les données (couche supérieur TCP, UDP, ...).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Type of Service (<span class="em">TOS</span>) (8 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>Initialement destiné à indiquer la priorité du paquet.</p>
+                                </li>
+                                <li>
+                                    <p>Aujourd'hui utilisé comme :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">DSCP</span> (Differentiated Services Code - 6 bits) pour la qualité de service (QoS).</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">ECN</span> (Explicit Congestion Notification - 2 bits) pour signaler la congestion sans perte de paquets.</p>
+                                        </li>
+                                        <li>
+                                            <p class="em">Exemples : trafic voix, vidéo, best-effort.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Total Legth (16 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>Taille totale du datagramme en octets.</p>
+                                </li>
+                                <li>
+                                    <p>en-tête + données : valeur max = 65535 octets.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Identification (16 octets) :</p>
+                            <ul>
+                                <li>
+                                    <p>Numéro unique attribué à chaque datagramme.</p>
+                                </li>
+                                <li>
+                                    <p>Utilisé lors de la <span class="em">fragmentation</span></p>
+                                </li>
+                                <li>
+                                    <p>Tous les fragments d'un même datagramme partagen tle même identifiant afin que la destination puisse les réassembler.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Flags (3 bits) : Contrôlent la fragmentation.</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">bit 0 : réservé</span>, toujours 0</p>
+                                </li>
+                                <li>
+                                    <p class="em">bit 1 : DF (Don't Fragment) :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">1</span> = ne pas fragmenter</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">0</span> = fragmentation autorisée</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p class="em">bit 2 : MF (More Fragments) :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">1</span> = suite de fragments</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">0</span> = dernier fragment</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Fragment Offset (13 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>Indique la position du fragment dans le datagramme original.</p>
+                                </li>
+                                <li>
+                                    <p>Exprimée en <span class="em">unités de 8 octets (64 bits)</span>.</p>
+                                </li>
+                                <li>
+                                    <p>Permet l'ordre correct des fragments.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Time To Live (TTL) (8 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>Nombre maximal de "sauts" (routeurs) que le paquet peut traverser.</p>
+                                </li>
+                                <li>
+                                    <p>Décrémenté à chaque saut de routeur.</p>
+                                </li>
+                                <li>
+                                    <p>Si TTL = 0 &#8594; le routeur détruit le paquet et envoie ICMP Time Exceeded.</p>
+                                </li>
+                                <li>
+                                    <p>Préserve le réseau des boucles infinies.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Protocol (8 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>Indique le protocole de la couche supérieure encapsulé dans l'IP.</p>
+                                </li>
+                                <li>
+                                    <p>Exemples (RFC 790) :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">6</span> &#8594; TCP</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">17</span> &#8594; UDP</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">1</span> &#8594; ICMP</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">47</span> &#8594; GRE</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">50/51</span> &#8594; IP sec ESP/AH</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>Permet au destinataire de savoir comment interpréter les données</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Header Checksum (166 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>Checksum calculé uniquement sur l'en-tête IP, pas sur les données.</p>
+                                </li>
+                                <li>
+                                    <p>Il permet :</p>
+                                    <ul>
+                                        <li>
+                                            <p>de vérifier l'<span class="em">intégrité de l'en-tête</span></p>
+                                        </li>
+                                        <li>
+                                            <p>aux routeurs de recalculer le checksum à chaque modification du TTL</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Source IP (32 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>Adresse IPv4 de l'expéditeur.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Destination IP (32 bits) :</p>
+                            <ul>
+                                <li>
+                                    <p>Adresse IPv4 du destinateur.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Les options IP :</p>
+                            <ul>
+                                <li>
+                                    <p>Champ <span class="em">facultatif</span> et <span class="em">rarement utilisé</span> dans les réseaux modernes.</p>
+                                </li>
+                                <li>
+                                    <p>Exemples historiques :Record Route, Security, Timestamp, Loose/Strict Source Routing</p>
+                                </li>
+                                <li>
+                                    <p>Les options augmentent la valeur del'en-tête &#8594; IHL &gt; 5.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Padding (!!! Carla longueur du champ Option est <span class="em">variable</span> !!!) :</p>
+                            <ul>
+                                <li>
+                                    <p>Bourrage utilisé pour compléter l'en-tête jusqu'à un multiple de 32 bits.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </article>
+                <article>
                     <h2 id="architecture_normes_protocoles">Architecture, normes (standards) et protocoles :</h2>
                     <h3>Le modèle de référence OSI :</h3>
                     <p>OSI signifie "Open Systems Interconnection" (interconnexion de systèmes ouverts), le terme "Open Systems" faisant référence aux spécifications entourant la structure du modèle ainsi qu'à sa mise à disposition publique non propriétaire.</p>
@@ -1748,17 +2042,13 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                             <ul>
                                 <li>
                                     <h3>Configuration du routeur (Router1) :</h3>
-                                    <h4>Interface vers Internet (e0/0) :</h4>
                                     <p>On entre en mode privilégié puis conf t :</p>
-<pre><code>
-enable
+<pre><code>enable
 configure terminal
 interface e0/0
-    ip address dhcp
-    ip nat outside
+    ip address 192.168.122.2 255.255.255.0
     no shutdown
-    exit
-</code></pre>
+    exit</code></pre>
                                     <h4>Interface vers le switch (e0/1) + Subinterfaces dot1Q :</h4>
 <pre><code>interface e0/1
     no shutdown
@@ -1851,12 +2141,20 @@ ip nat inside source list 1 interface e0/0 overload</code></pre>
                                     <p>&#8594; ACL 100 = règle de sécurité pour contrôler le trafic inter-VLAN.</p>
                                     <p>&#8594; ACL 1 = liste des réseaux internes autorisés au NAT &#8594; pas une règle de sécurité.</p>
                                     <p>Ce sont donc deux usages différents et donc deux ACL différentes.</p>
+                                    <h4>Interface vers Internet (e0/0) :</h4>
+<pre><code>interface e0/0
+    ip nat outside
+    exit</code></pre>
                                     <h4>Récap NAT côté interfaces :</h4>
 <pre><code>interface e0/0
     ip nat outside
     exit
 
-interface e0/1
+interface e0/1.2
+    ip nat inside
+    exit
+
+interface e0/1.3
     ip nat inside
     exit</code></pre>
                                     <h4>Sauvegarde :</h4>
@@ -1913,6 +2211,11 @@ spanning-tree extend system-id</code></pre>
                                     <h4>Sauvegarde :</h4>
 <pre><code>end
 write memory</code></pre>
+                                    <p>Cisco préfère la commande suivante :</p>
+<pre><code>end
+copy running-config startup-config</code></pre>
+                                    <h4>Configuration du Router 1 :</h4>
+                                    <p>Comme NAT se crashe, il faut changer la <span class="em">RAM Size</span> dans la configuration du routeur. Attention, la <span class="em">RAM Size</span> dépend de l'image IOU.</p>
                                 </li>
                                 <li>
                                     <h3>Configuration des PCS (PC1, PC2, PC3) :</h3>
@@ -2003,11 +2306,6 @@ write memory</code></pre>
                                 <li>
                                     <p>Pour capturer un paquet, dans la topologie GNS3, clique-droit sur le lien "Start capture" et choisit Wireshark si installé. Tu pourras faire des pings depuis PC1 et tu verras alors ICMP traverser.</p>
                                     <p>N'oublies pas de "Stop capture" quand tu as fini (dans Wireshark ou dans GNS3).</p>
-                                </li>
-                                <li>
-                                    <p>Dans chaque équipement IOS, il faut taper la commande :</p>
-<pre><code>write memory</code></pre>
-                                    <p>Dans GNS3, il faut faire "File &#8594; Save project".</p>
                                 </li>
                             </ul>
                         </li>
