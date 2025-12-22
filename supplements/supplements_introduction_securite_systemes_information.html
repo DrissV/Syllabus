@@ -1439,7 +1439,7 @@ CN = client.com</code></pre>
                             <p>Les espaces de noms assurent l'isolation en séparant les processus, les interfaces réseau et les systèmes de fichiers, de sorte que chaque conteneur semble avoir son propre environnement.</p>
                         </li>
                         <li>
-                            <p>Les Cgroups (groupes de contrôle) gèrent et limitent l'utilisation des ressources (CPU, mémoire, etc.) des conteneurs pour éviter que l'un d'entre eux ne consomme toutes les ressources. Ces fonctionnalités permettent aux conteneurs de fonctionner de manière sécurisée et efficace sans interférer les uns avec les autres.</p>
+                            <p>Les Cgroups (control groups ou groupes de contrôle) gèrent et limitent l'utilisation des ressources (CPU, mémoire, etc.) des conteneurs pour éviter que l'un d'entre eux ne consomme toutes les ressources. Ces fonctionnalités permettent aux conteneurs de fonctionner de manière sécurisée et efficace sans interférer les uns avec les autres.</p>
                         </li>
                         <li>
                             <p>Les systèmes de fichiers union (par exemple, OverlayFS) permettent aux conteneurs de partager des fichiers et des couches communs tout en conservant leurs propres modifications séparément. Cela rend les conteneurs légers et efficaces en réutilisant les couches entre les conteneurs, réduisant ainsi l'utilisation de l'espace disque.</p>
@@ -1457,6 +1457,8 @@ CN = client.com</code></pre>
                     </ul>
                     <h3>VM vs Container :</h3>
                     <img src="../images/VM_VS_Docker.PNG" alt="">
+                    <p>Contrairement aux machines virtuelles, les conteneurs <span class="em">partagent le noyau du système hôte</span>, ce qui les rend plus légers et plus rapides à démarrer.</p>
+                    <p>Cependant, cette approche implique une <span class="em">surface d'attaque partagée</span>, ce qui nécessite une attention particulière en matière de sécurité.</p>
                     <p>Les conteneurs remplaceront-ils les machines virtuelles ?</p>
                     <h3>VM et conteneur :</h3>
                     <p>Non, ils répondent à des objectifs différents et peuvent coexister, car chacun a ses propres atouts et cas d'utilisation.</p>
@@ -1803,7 +1805,7 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
                     <h3>Rappel : protocole ARP :</h3>
                     <div>
                         <img src="../images/ARP_spoofing_attack.PNG" alt="" class="float_right">
-                        <p>Lors d'une spoofing attack ARP, l'attaquant incite les appareils du réseau à associer leur propre adresse MAC à l'adresse IP d'un autre appareil. Cette tromperie permet à l'attaquant d'intercepter, de modifier ou de bloquer les communications destinées à cette adresse IP, tout comme il pourrait le faire avec le contact téléphonique.</p>
+                        <p>Lors d'une attaque d'ARP spoofing, l'attaquant incite les appareils du réseau à associer leur propre adresse MAC à l'adresse IP d'un autre appareil. Cette tromperie permet à l'attaquant d'intercepter, de modifier ou de bloquer les communications destinées à cette adresse IP, tout comme il pourrait le faire avec le contact téléphonique.</p>
                     </div>
                     <p class="em">Où est le danger ?</p>
                     <h3>Couche 1 : sniffing :</h3>
@@ -1841,6 +1843,7 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
                         <img src="../images/network_bridge.PNG" alt="" class="float_right">
                         <p>C'est le pilote réseau par défaut. Il crée un réseau interne privé sur l'hôte Docker, permettant aux conteneurs sur le même hôte de communiquer les uns avec les autres.</p>
                     </div>
+                    <p>Les réseaux Docker de type <span class="em">bridge</span> reposent sur un switch virtuel logiciel. Ce type de réseau est vulnérable aux attaques ARP spoofing, car il n'implémente pas de mécanismes de protection avancés comme le <span class="em">Dynamic ARP Inspection</span>.</p>
                     <h3>Lab : Docker Network :</h3>
                     <ul>
                         <li>
@@ -1850,6 +1853,8 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
                         <li>
                             <p>Listez tous les réseaux disponibles sur l'hôte Docker :</p>
 <pre><code>docker network list</code></pre>
+                            <p>Ou encore :</p>
+<pre><code>docker network ls</code></pre>
                         </li>
                     </ul>
                     <img src="../images/docker_network.PNG" alt="">
@@ -1968,7 +1973,7 @@ httpd.serve_forever()</code></pre>
                         <li>
                             <p>Dans le 3<sup>ème</sup> terminal nommé "attacker" :</p>
 <pre><code>docker run -dit --privileged --name attacker --network lab kalilinux/kali-rolling sh</code></pre>
-                            <p>Sous certaines images, <span class="em">sh</span> ne peut pas existe et on préfère <span class="em">bash</span>. Aussi l'option <span class="em">--privileged</span> donne énormément de droits - c'est intentionnel pour attaque mais il faut l'expliquer (danger).</p>
+                            <p>Sous certaines images, <span class="em">sh</span> ne peut pas exister et on préfère <span class="em">bash</span>. Aussi l'option <span class="em">--privileged</span> donne énormément de droits - c'est intentionnel pour attaque mais il faut l'expliquer (danger).</p>
                         </li>
                         <li>
                             <p>Dans le terminal "attacker" :</p>
