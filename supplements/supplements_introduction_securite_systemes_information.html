@@ -1327,7 +1327,11 @@ CN = client.com</code></pre>
                     <p>Sur Linux, Docker fonctionne nativement, c'est-à-dire <span class="em">pas besoin de Docker Desktop</span>, il suffit que le service Docker tourne :</p>
 <pre><code>sudo systemctl start docker</code></pre>
                     <h3>Introduction :</h3>
-                    <p>Les containers sont des paquets logiciels légers et autonomes qui incluent tout ce dont vous avez besoin pour exécuter une application :</p>
+                    <p>Pourquoi Docker ?</p>
+                    <p>L'utilisation de Docker vise à mettre en pratique les concepts théoriques abordés précédemment, notamment la PKI, la gestion des certificats, ainsi que l'utilisation d'un reverse proxy.</p>
+                    <p>Dans la suite du cours, on va faire un labo où on va implémenter concrètement ces mécanismes. Ça va permettre de créer des certificats, de les exploiter dans une application, et de voir concrètement l'avantage avant/après, ce que ça change.</p>
+                    <p>Donc voilà, l'idée c'est vraiment d'avoir une expérience pratique qui permet de revoir tout ce qui a été vu. En résumé, cette approche permet de visualiser concrètement les bénéfices de la sécurité, de comprendre les enjeux réels liés au chiffrement et à l'authentification, et de consolider les connaissances théoriques par une expérimentation pratique.</p>
+                    <p>Les conteneurs (containers) sont des paquets logiciels légers et autonomes qui incluent tout ce dont vous avez besoin pour exécuter une application :</p>
                     <ul>
                         <li>
                             <p>le code</p>
@@ -1361,6 +1365,26 @@ CN = client.com</code></pre>
                             </li>
                         </ul>
                     </div>
+                    <p>Donc, si on n'a pas Docker, comment ça se passe ?</p>
+                    <p>Sans Docker, le déploiement d'une application suit généralement un processus dit "classique" ou "traditionnel". Dans ce modèle, Docker n'est pas présent pour encapsuler l'application et son environnement d'exécution.</p>
+                    <p>Docker a pour objectif principal de packager des applications. Il est donc fortement lié aux environnements applicatifs et au cycle de vie d'une application.</p>
+                    <p>Dans un processus de déploiement traditionnel, un développeur commence par compiler et construire l'application, souvent à l'aide d'un pipeline d'intégrité continue. Le résultat de cette étape est un artefact, qui peut prendre différentes formes selon la technologie utilisée : archive ZIP, exécutable, fichier JAR pour les applications Java, etc. Cet artefact représete l'application elle-même, mais pas nécessairement son environnement d'exécution.</p>
+                    <p>Une fois l'arteface produit, il est transmis à une autre personne, généralement un administrateur système ou un ingénieur infrastructure, chargé de le déployer sur un serveur afin qu'il soit accessible aux utilisateurs finaux. Le développement et le déploiement sont donc réalisés par des rôles distincts.</p>
+                    <p>Cependant, cette méthode présente plusieurs limites. L'artefact est souvent accompagné d'une liste d'instructions manuelles précisant, par exemple, le répertoire exact dans lequel il doit être placé, les fichiers de configuration à modifier ou encore les paramètres nécessaires au bon fonctionnement de l'application. À chaque transmission d'informations entre les équipes, des éléments peuvent être oubliés ou mal interprétés, ce qui entraîne des erreurs.</p>
+                    <p>Un problème courant concerne les dépendances de l'application. Par exemple, une application peut avoir été développée et testée avec une version spécifique de Java (Java 8), puis mise à jour pour fonctionne avec une version plus récente (Java 9), sans que cette information ne soit clairement communiquée. L'administrateur déploie alors l'artefact sur un serveur non mis à jour, ce qui empêche l'aplication de démarrer correctement.</p>
+                    <p>Ainsi, l'artefact devient fortement dépendant :</p>
+                    <ul>
+                        <li>
+                            <p>du système d'exploitation sur lequel il est déployé,</p>
+                        </li>
+                        <li>
+                            <p>de l'emplacement des fichiers sur le serveur,</p>
+                        </li>
+                        <li>
+                            <p>de la configuration du serveur web ou applicatif.</p>
+                        </li>
+                    </ul>
+                    <p>Ce mode de fonctionnement repose sur de nombreuses actions manuelles, ce qui augmente le risque d'erreurs, complique les déploiements et rend les environnements difficiles à reproduire de manière fiable.</p>
                     <h3>Docker : Web :</h3>
                     <div>
                         <img src="../images/docker_web.PNG" alt="" class="float_right">
@@ -1379,6 +1403,21 @@ CN = client.com</code></pre>
                             </li>
                         </ul>
                     </div>
+                    <p>L'un des principaux objectifs de Docker est de réduire, voire d'éliminer, les nombreuses actions manuelles liées au déploiement des applications. Bien que Docker ne supprime pas tous les problèmes - notamment ceux pouvant survenir en production - il permet de résoudre une grande partie des difficultés rencontrées avec les méthodes traditionnelles.</p>
+                    <p>Avec Docker, l'application est fournie sous la forme d'un conteneur qui inclut déjà l'ensemble des éléments nécessaires à son exécution :</p>
+                    <ul>
+                        <li>
+                            <p>l'environnement d'exécution (runtime), comme une version spécifique de Java ou de .NET,</p>
+                        </li>
+                        <li>
+                            <p>les fichiers de configuration,</p>
+                        </li>
+                        <li>
+                            <p>ainsi que toutes les dépendances requises.</p>
+                        </li>
+                    </ul>
+                    <p>Le déploiement se résume alors à une action simple : démarrer le conteneur. Aucun autre prérequis n'est nécessaire sur le système hôte. Il n'est plus indispensable de transmettre une longue liste d'instructions à l'équipe en charge de l'infrastructure, ni de s'assurer manuellement que l'environnement est correctement configuré.</p>
+                    <p>Le conteneur devient ainsi une unité autonome, standardisée et reproductible, qui garantit que l'application s'exécutera de la même manière quel que soit l'environnement. Cette approche améliore la fiabilité des déploiements, simplifie la collaboration entre les équipes de développement et d'infrastructure, et réduis significativement les erreurs liées aux différences de configuration.</p>
                     <h3>Quels sont les avantages d'utiliser des conteneurs ?</h3>
                     <h4>Avantages spécifiques au rôle de la conteneurisation :</h4>
                     <p>Développeur :</p>
