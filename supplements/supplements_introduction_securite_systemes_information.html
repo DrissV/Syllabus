@@ -1952,6 +1952,7 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
                         <li>
                             <p>Créez un nouveau réseau nommé "lab" à l'aide du pilote "bridge" :</p>
 <pre><code>docker network create --driver bridge lab</code></pre>
+                            <p>Ça fonctionne comme un <span class="em">switch virtuel</span>.  Tous les conteneurs connectés peuvent communiquer.</p>
                         </li>
                         <li>
                             <p>Listez tous les réseaux disponibles sur l'hôte Docker :</p>
@@ -1988,6 +1989,9 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
                         <li>
                             <p>Trouver les adresses IP des clients :</p>
 <pre><code>ifconfig</code></pre>
+                            <p>Ou encore :</p>
+<pre><code>ip a</code></pre>
+                            <p>Cette commande affiche l'interface l'interface réseau, l'adresse IP, le masque et la MAC.</p>
                         </li>
                         <li>
                             <p>Exécuter le ping :</p>
@@ -1995,10 +1999,12 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
 <pre><code>ping 172.20.0.3</code></pre>
                             <p>Dans le terminal "client2" :</p>
 <pre><code>ping 172.20.0.2</code></pre>
+                            <p>Cette commande vérifie la connectivité réseau, la résolution ARP et la latence.</p>
                         </li>
                         <li>
                             <p>Vérifier les tables ARP :</p>
 <pre><code>arp -a</code></pre>
+                            <p>Cette commande affiche la correspondance IP &#8596; MAC et le cache ARP local.</p>
                         </li>
                     </ul>
                     <h3>Laboratoire : ajouter un serveur HTTP dans le conteneur client 2 :</h3>
@@ -2009,10 +2015,12 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
                         <li>
                             <p>Dans le terminal "client2" :</p>
 <pre><code>apk add --no-cache python3 py3-pip</code></pre>
+                            <p>Cette commande installe Python pour serveur HTTP. L'option <span class="em">--no-cache</span> évite de stocker l'index.</p>
                         </li>
                         <li>
                             <p>Dans le terminal "client2" :</p>
 <pre><code>vi app.py</code></pre>
+                            <p>Cette commande crée ou modifie un fichier Python.</p>
                             <p>Le fichier `<span class="em">app.py</span>` est :</p>
 <pre><code>from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
@@ -2065,7 +2073,9 @@ httpd.serve_forever()</code></pre>
                         <li>
                             <p>Dans le terminal "client1" :</p>
 <pre><code>apk add curl</code></pre>
+                            <p>Cete commande installe l'outil HTTP en ligne de commande.</p>
 <pre><code>curl "http://172.20.0.3:8080/auth?user=root&amp;password=root"</code></pre>
+                            <p>Cette commande envoie une requête HTTP avec un mot de passe visible et aucune protection.</p>
                         </li>
                     </ul>
                     <img src="../images/docker_network_1.PNG" alt="">
@@ -2082,7 +2092,9 @@ httpd.serve_forever()</code></pre>
                         <li>
                             <p>Dans le terminal "attacker" :</p>
 <pre><code>apt-get update</code></pre>
+                            <p>Cette commande met à jour la liste des paquets.</p>
 <pre><code>apt-get install -y ettercap-text-only</code></pre>
+                            <p>Cette commande installe Ettercap (attaque MITM ARP).</p>
                         </li>
                         <li>
                             <p>Dans le terminal "attacker" :</p>
@@ -2095,11 +2107,42 @@ httpd.serve_forever()</code></pre>
                         <li>
                             <p>Dans le terminal "attacker" :</p>
 <pre><code>ettercap -T -q -i eth0 -M arp:remote /172.20.0.2// /172.20.0.3//</code></pre>
+                            <ul>
+                                <li>
+                                    <p><span class="em">-T</span> : mode texte</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">-q</span> : silencieux</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">-i eth0</span> : interface réseau</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">-M arp:remote</span> : attaque ARP spoofing</p>
+                                </li>
+                                <li>
+                                    <p>cibles : client1 &#8596; client2</p>
+                                </li>
+                            </ul>
+                            <p>Donc, l'attaquant devient l'<span class="em">homme du milieu</span>.</p>
                         </li>
                         <li>
                             <p>Dans un 4<sup>ème</sup> terminal nommé "attacker2" :</p>
 <pre><code>docker exec -it attacker sh</code></pre>
 <pre><code>echo 1 &gt; /proc/sys/net/ipv4/ip_forward</code></pre>
+                            <p>Cette commande autorisele routage :</p>
+                            <ul>
+                                <li>
+                                    <p>reçoit</p>
+                                </li>
+                                <li>
+                                    <p>retransmet</p>
+                                </li>
+                                <li>
+                                    <p>espionne sans bloquer</p>
+                                </li>
+                            </ul>
+                            <p>Sans IP forwarding, l'attaquant intercepte les paquets <span class="em">MAIS</span> ne les retransmet pas. Donc, la communication peut se bloquer.</p>
                         </li>
                         <li>
                             <p>Dans le terminal "attacker2" :</p>
@@ -2108,6 +2151,18 @@ httpd.serve_forever()</code></pre>
 <pre><code>tcpdump -i eth0 -n -c 20</code></pre>
                             <img src="../images/docker_network_2.PNG" alt="">
                             <p>La commande précédente sert à capturer et afficher les paquets réseau circulant sur une interface réseau donnée.</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">-i eth0</span> : interface</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">-n</span> : résolution DNS</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">-c 20</span> : limite à 20 paquets</p>
+                                </li>
+                            </ul>
+                            <p>Donc, tu verras <span class="em">user=root&amp;password=root</span></p>
                         </li>
                         <li>
                             <p>Exécuter <span class="em">arp -a</span> dans le terminal "client1" et "client2"</p>
