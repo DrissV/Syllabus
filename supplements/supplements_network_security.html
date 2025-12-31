@@ -2048,9 +2048,10 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
 <pre><code>enable
 configure terminal
 interface e0/0
-    ip address 192.168.122.2 255.255.255.0
+    ip dhcp
     no shutdown
     exit</code></pre>
+                                    <p>On doit metre la commande <span class="em">ip address 192.168.122.2 255.255.255.0</span> si la commande <span class="em">ip dhcp</span> ne fonctionne pas et que DORA ne s'affiche pas.</p>
                                     <h4>Interface vers le switch (e0/1) + Subinterfaces dot1Q :</h4>
 <pre><code>interface e0/1
     no shutdown
@@ -2182,6 +2183,7 @@ vlan 3
 <pre><code>interface Vlan1
     shutdown
     exit</code></pre>
+                                    <p>Le VLAN 1 est désactivé afin de réduire la surface d'attaque, car il est utilisé par défaut pour la gestion et certains protocoles internes (CDP, STP, etc.).</p>
                                     <p>Cisco IOS écrit automatiquement les interfaces VLAN avec un "V" majuscule par convention interne pour nommer les SVI (Switched Virtual Interfaces).</p>
                                     <h4>Trunk vers le routeur (e0/0) :</h4>
 <pre><code>interface e0/0
@@ -2248,6 +2250,7 @@ write memory</code></pre>
 <pre><code>ping &lt;IP PC3&gt;</code></pre>
                                     <p>Du PC3 vers les PC1 et PC2, c'est possible grâce à l'ACL asymétrique.</p>
                                     <p>Le PC1 et le PC2 peuvent quand même aller sur Internet.</p>
+                                    <p>L'ACL est volontairement asymétrique afin de bloquer l'initiation des communications depuis le VLAN 2 vers le VLAN 3, tout en autorisant les réponses et les communications initiées depuis le VLAN 3.</p>
                                 </li>
                                 <li>
                                     <h3>Sécurité supplémentaire requise :</h3>
@@ -2256,25 +2259,67 @@ write memory</code></pre>
 configure terminal
 
 interface e0/1
+    switchport nonegotiate
     switchport port-security
-    switchport port-security maximum 1
+    switchport port-security maximum 2
     switchport port-security mac-address sticky
+    switchport port-security violation restrict
+    switchport port-security aging time 1
+    switchport port-security aging type inactivity
+
+    no cdp enable
+    no lldp transmit
+    no lldp receive
+
+    spanning-tree portfast edge
+    spanning-tree bpduguard enable
     exit
 
 interface e0/2
+    switchport nonegotiate
     switchport port-security
-    switchport port-security maximum 1
+    switchport port-security maximum 2
     switchport port-security mac-address sticky
+    switchport port-security violation restrict
+    switchport port-security aging time 1
+    switchport port-security aging type inactivity
+
+    no cdp enable
+    no lldp transmit
+    no lldp receive
+
+    spanning-tree portfast edge
+    spanning-tree bpduguard enable
     exit
 
 interface e0/3
+    switchport nonegotiate
     switchport port-security
-    switchport port-security maximum 1
+    switchport port-security maximum 2
     switchport port-security mac-address sticky
+    switchport port-security violation restrict
+    switchport port-security aging time 1
+    switchport port-security aging type inactivity
+
+    no cdp enable
+    no lldp transmit
+    no lldp receive
+
+    spanning-tree portfast edge
+    spanning-tree bpduguard enable
     exit
 
 end
 write memory</code></pre>
+                                    <p>La commande <span class="em">switchport nonegotiate</span> désactive le protocole DTP (Dynamic Trunking Protocol). D'un point de vue sécuritaire, cela empêche toute négociation automatique du port en mode trunk et limite ainsi les risques de mauvaise configuration ou d'attaque de type VLAN hopping.</p>
+                                    <p>La commande <span class="em">switchport port-security</span> active le mécanisme de <span class="em">sécurité de port</span>, qui permet de contrôler les équipements autorisés à se connecter sur l'interface.</p>
+                                    <p>La commande <span class="em">switchport port-security maximum 2</span> limite à <span class="em">deux adresses MAC</span> le nombre d'équipements pouvant être connectés simultanément sur ce port.</p>
+                                    <p>En cas de violation de la politique de sécurité, la commande <span class="em">switchport port-security violation restrict</span> permet de bloquer le trafic provenant des adresses non autorisées, d'incrémenter un compteur d'événements, tout en maintenant le port <span class="em">actif</span>.</p>
+                                    <p>La commande <span class="em">switchport port-security aging time 1</span> définit une durée d'expiration des adresses MAC de <span class="em">1 minute</span>.</p>
+                                    <p>Grâce à la commande <span class="em">switchport port-security aging type inactivity</span>, les adresses MAC sont automatiquement supprimées de la table de sécurité lorsqu'elles deviennent <span class="em">inactives</span>.</p>
+                                    <p>Les commandes <span class="em">no cdp enable</span>, <span class="em">no lldp transmit</span> et <span class="em">no lldp receive</span> permettent respectivement de désactiver le protocole <span class="em">CDP</span> (Cisco Discovery Protocol), d'empêcher l'envoi de trames <span class="em">LLDP</span> et d'empêcher la réception de trames <span class="em">LLDP</span>, afin de limiter la divulgation d'informations sur l'infrastructure réseau.</p>
+                                    <p>La commande <span class="em">spanning-tree portfast edge</span> active la fonctionnalité <span class="em">PortFast</span> sur un port connecté à un hôte final, ce qui permet d'accélérer la mise en service de l'interface.</p>
+                                    <p>La commande <span class="em">spanning-tree bpduguard enable</span> provoque la désactivation immédiate du port si une <span class="em">BPDU</span> est reçue, protégeant ainsi le réseau contre le raccordement de commutateurs non autorisés.</p>
                                 </li>
                                 <li>
                                     <h3>DHCP Snooping + DAI (option sécurité avancée) :</h3>
@@ -2294,6 +2339,8 @@ ip arp inspection vlan 2,3
 
 end
 write memory</code></pre>
+                                    <p>DHCP Snooping permet de créer une base de données de correspondance IP-MAC-port, qui est ensuite utilisée par Dynamic ARP Inspection (DAI) pour bloquer les attaques ARP spoofing.</p>
+                                    <p>Tous les ports sont considérés comme <span class="em">untrusted</span> par défaut. Seul le port vers le routeur est configuré comme <span class="em">trusted</span>, car il est légitime pour envoyer des réponses DHCP.</p>
                                     <div class="important">
                                         <img src="../images/important.png" alt="Important" class="float_left">
                                         <p>Certaines images IOU L2 n'ont pas toutes les features (DHCP snooping/DAI). Si elles manquent, saute ces étapes ou utilise une image plus complète.</p>
@@ -2304,12 +2351,25 @@ write memory</code></pre>
                                     </div>
                                 </li>
                                 <li>
+                                    <h3>Vérification / troubleshooting :</h3>
+<pre><code>show vlan brief
+show interfaces trunk
+show ip route
+show ip dhcp binding
+show port-security interface e0/1
+show access-lists
+show ip nat translations
+show ip dhcp snooping
+show ip arp inspection</code></pre>
+                                </li>
+                                <li>
                                     <p>Pour capturer un paquet, dans la topologie GNS3, clique-droit sur le lien "Start capture" et choisit Wireshark si installé. Tu pourras faire des pings depuis PC1 et tu verras alors ICMP traverser.</p>
                                     <p>N'oublies pas de "Stop capture" quand tu as fini (dans Wireshark ou dans GNS3).</p>
                                 </li>
                             </ul>
                         </li>
                     </ol>
+                    <p>Cette configuration met en oeuvre plusieurs mécanismes de sécurité de couche 2 : segmentation par VLAN, Port Security, désactivation des protocoles de découverte, protection STP, DHCP Snooping et DAI, afin de limiter les attaques internes.</p>
                 </article>
             <!-- fin de section -->
             </section>
