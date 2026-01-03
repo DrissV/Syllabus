@@ -2045,10 +2045,9 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                                     <p>Comme NAT va sûrement se crasher, il faut changer la <span class="em">RAM Size</span> dans la configuration du routeur. Attention, la <span class="em">RAM Size</span> dépend de l'image IOU. Voici ma configuration du Router 1 :</p>
                                     <img src="../images/configure_router1.png" alt="">
                                     <p>On entre en mode privilégié puis conf t :</p>
-<pre><code>enable
-configure terminal
+<pre><code>configure terminal
 interface e0/0
-    ip dhcp
+    ip address dhcp
     ip nat outside
     no shutdown
     exit</code></pre>
@@ -2163,12 +2162,16 @@ ip nat inside source list 1 interface e0/0 overload</code></pre>
 copy running-config startup-config</code></pre>
                                     <p>Si tes interfaces ont d'autres noms (E0/1 etc.), adapte. Sur IOS L3 les noms peuvent être Ethernet0/1 ou GigabitEthernet0/1; vérifie avec :</p>
 <pre><code>show ip interface brief</code></pre>
+                                    <div class="important">
+                                        <img src="../images/important.png" alt="Important" class="float_left">
+                                        <p>Le mot <span class="em">do</span> permet d'exécuter une commande du mode EXEC (show, ping, etc.) depuis un mode de configuration.</p>
+                                        <p>Normalement, les commandes <span class="em">show</span> ne fonctionnent que en mode privilégié (<span class="em">#</span>).</p>
+                                    </div>
                                 </li>
                                 <li>
                                     <h3>Configuration du switch (Switch1) :</h3>
                                     <h4>Création des VLANs :</h4>
-<pre><code>enable
-configure terminal
+<pre><code>configure terminal
 
 vlan 2
     name UTILISATEURS
@@ -2236,8 +2239,7 @@ ping 192.168.3.1 (depuis PC3)</code></pre>
                                 <li>
                                     <h3>ACL - Bloquer PC1 &amp; PC2 d'acéder à PC3 :</h3>
                                     <p>Sur le Router1 :</p>
-<pre><code>enable
-configure terminal
+<pre><code>configure terminal
 access-list 100 deny ip 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255
 access-list 100 permit ip any any
 
@@ -2257,8 +2259,7 @@ copy running-config startup-config</code></pre>
                                 <li>
                                     <h3>Sécurité supplémentaire requise :</h3>
                                     <p>Sur le switch, tu dois aussi appliquer Port Security :</p>
-<pre><code>enable
-configure terminal
+<pre><code>configure terminal
 
 interface e0/1
     switchport nonegotiate
@@ -2339,8 +2340,7 @@ no lldp run</code></pre>
                                     <p>Le DHCP Snooping est un mécanisme de sécurité intégré dans les switchs Cisco.</p>
                                     <p>Il sert à empêcher un faux serveur DHCP d'attribuer des adresses IP dans le réseau.</p>
                                     <p>&#8594; C'est un bouclier contre les attaques DHCP.</p>
-<pre><code>enable
-configure terminal
+<pre><code>configure terminal
 ip dhcp snooping
 ip dhcp snooping vlan 2,3
 
@@ -2383,11 +2383,6 @@ copy running-config startup-config</code></pre>
 <pre><code>show ip dhcp snooping</code></pre>
                                     <p>Pour afficher l'état de <span class="em">Dynamic ARP Inspection (DAI)</span> :</p>
 <pre><code>show ip arp inspection</code></pre>
-                                    <div class="important">
-                                        <img src="../images/important.png" alt="Important" class="float_left">
-                                        <p>Le mot <span class="em">do</span> permet d'exécuter une commande du mode EXEC (show, ping, etc.) depuis un mode de configuration.</p>
-                                        <p>Normalement, les commandes <span class="em">show</span> ne fonctionnent que en mode privilégié (<span class="em">#</span>).</p>
-                                    </div>
                                 </li>
                                 <li>
                                     <p>Pour capturer un paquet, dans la topologie GNS3, clique-droit sur le lien "Start capture" et choisit Wireshark si installé. Tu pourras faire des pings depuis PC1 et tu verras alors ICMP traverser.</p>
