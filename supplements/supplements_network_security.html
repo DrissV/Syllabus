@@ -2049,10 +2049,13 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
 configure terminal
 interface e0/0
     ip dhcp
+    ip nat outside
     no shutdown
     exit</code></pre>
                                     <p>L'interface e0/0 du routeur est configurée en DHCP afin d'obtenir automatiquement une adresse IP depuis le cloud NAT de GNS3.</p>
-                                    <p>On doit metre la commande <span class="em">ip address 192.168.122.2 255.255.255.0</span> si la commande <span class="em">ip dhcp</span> ne fonctionne pas et que DORA ne s'affiche pas.</p>
+                                    <p>Si le DHCP ne fonctionne pas :</p>
+<pre><code>ip address 192.168.122.2 255.255.255.0</code></pre>
+                                    <p>L'interface e0/0 représente la connexion vers le réseau externe (Internet) et est donc définie comme interface <span class="em">NAT outside</span>.</p>
                                     <h4>Interface vers le switch (e0/1) + Subinterfaces dot1Q :</h4>
 <pre><code>interface e0/1
     no shutdown
@@ -2061,15 +2064,20 @@ interface e0/0
 interface e0/1.2
     encapsulation dot1Q 2
     ip address 192.168.2.1 255.255.255.0
+    ip nat inside
     exit
 
 interface e0/1.3
     encapsulation dot1Q 3
     ip address 192.168.3.1 255.255.255.0
+    ip nat inside
     exit</code></pre>
                                     <p>Les interfaces e0/1.2 et e0/1.3 <span class="em">ne sont pas visibles dans l'image</span> car elles ne sont pas physiques.</p>
                                     <p>Ce sont des <span class="em">sous-interfaces virtuelles</span> nécessaires pour le routage inter-VLAN.</p>
                                     <h4>DHCP Server (dans les deux VLANs) :</h4>
+                                    <p>On exclue les passerelles :</p>
+<pre><code>ip dhcp excluded-address 192.168.2.1
+ip dhcp excluded-address 192.168.3.1</code></pre>
                                     <p>Un DHCP pool représente le pool des adresses allouées, c'est-à-dire que c'est un ensemble d'adresses.</p>
 <pre><code>ip dhcp pool POOL_UTILISATEURS
     network 192.168.2.0 255.255.255.0
@@ -2146,26 +2154,13 @@ ip nat inside source list 1 interface e0/0 overload</code></pre>
                                     <p>&#8594; ACL 100 = règle de sécurité pour contrôler le trafic inter-VLAN.</p>
                                     <p>&#8594; ACL 1 = liste des réseaux internes autorisés au NAT &#8594; pas une règle de sécurité.</p>
                                     <p>Ce sont donc deux usages différents et donc deux ACL différentes.</p>
-                                    <h4>Interface vers Internet (e0/0) :</h4>
-<pre><code>interface e0/0
-    ip nat outside
-    exit</code></pre>
-                                    <p>L'interface e0/0 représente la connexion vers le réseau externe (Internet) et est donc définie comme interface <span class="em">NAT outside</span>.</p>
-                                    <h4>Récap NAT côté interfaces :</h4>
-<pre><code>interface e0/0
-    ip nat outside
-    exit
-
-interface e0/1.2
-    ip nat inside
-    exit
-
-interface e0/1.3
-    ip nat inside
-    exit</code></pre>
+                                    <p>On vérifie la route par défaut :</p>
+<pre><code>show ip route</code></pre>
+                                    <p>Si elle est absente :</p>
+<pre><code>ip route 0.0.0.0 0.0.0.0 dhcp</code></pre>
                                     <h4>Sauvegarde :</h4>
 <pre><code>end
-write memory</code></pre>
+copy running-config startup-config</code></pre>
                                     <p>Si tes interfaces ont d'autres noms (E0/1 etc.), adapte. Sur IOS L3 les noms peuvent être Ethernet0/1 ou GigabitEthernet0/1; vérifie avec :</p>
 <pre><code>show ip interface brief</code></pre>
                                 </li>
@@ -2193,6 +2188,7 @@ vlan 3
     switchport trunk encapsulation dot1q
     switchport mode trunk
     switchport trunk allowed vlan 2,3
+    switchport nonegotiate
     no shutdown
     exit</code></pre>
                                     <h4>Ports Access VLAN 2 (PC1 / PC2) :</h4>
@@ -2211,6 +2207,7 @@ interface e0/2
 <pre><code>interface e0/3
     switchport mode access
     switchport access vlan 3
+    no shutdown
     exit</code></pre>
                                     <h4>Spanning Tree (bonne pratique) :</h4>
 <pre><code>spanning-tree mode pvst
@@ -2249,7 +2246,7 @@ interface e0/1.2
     exit
 
 end
-write memory</code></pre>
+copy running-config startup-config</code></pre>
                                     <p>Sur l'interface e0/1.2 (subinterface VLAN2), on applique l'ACL 100. En clair, tout ce qui arrive dans VLAN 2 depuis les PC du VLAN 2 est filtré avant d'être routé.</p>
                                     <p>On peut tester depuis PC1 la commande suivante et ça doit échouer et idem depuis le PC2 :</p>
 <pre><code>ping &lt;IP PC3&gt;</code></pre>
@@ -2280,9 +2277,42 @@ interface e0/1
     spanning-tree bpduguard enable
     exit
 
+interface e0/2
+    switchport nonegotiate
+    switchport port-security
+    switchport port-security maximum 2
+    switchport port-security mac-address sticky
+    switchport port-security violation restrict
+    switchport port-security aging time 1
+    switchport port-security aging type inactivity
+
+    no cdp enable
+    no lldp transmit
+    no lldp receive
+
+    spanning-tree portfast edge
+    spanning-tree bpduguard enable
+    exit
+
+interface e0/3
+    switchport nonegotiate
+    switchport port-security
+    switchport port-security maximum 1
+    switchport port-security mac-address sticky
+    switchport port-security violation restrict
+    switchport port-security aging time 1
+    switchport port-security aging type inactivity
+
+    no cdp enable
+    no lldp transmit
+    no lldp receive
+
+    spanning-tree portfast edge
+    spanning-tree bpduguard enable
+    exit
+
 end
-write memory</code></pre>
-                                    <p>Il faut faire la même chose les interfaces <span class="em">e0/2</span> et <span class="em">e0/3</span>.</p>
+copy running-config startup-config</code></pre>
                                     <p>La commande <span class="em">switchport nonegotiate</span> désactive le protocole DTP (Dynamic Trunking Protocol). D'un point de vue sécuritaire, cela empêche toute négociation automatique du port en mode trunk et limite ainsi les risques de mauvaise configuration ou d'attaque de type VLAN hopping.</p>
                                     <p>La commande <span class="em">switchport port-security</span> active le mécanisme de <span class="em">sécurité de port</span>, qui permet de contrôler les équipements autorisés à se connecter sur l'interface.</p>
                                     <p>La commande <span class="em">switchport port-security maximum 2</span> limite à <span class="em">deux adresses MAC</span> le nombre d'équipements pouvant être connectés simultanément sur ce port.</p>
@@ -2311,7 +2341,7 @@ interface e0/0
 ip arp inspection vlan 2,3
 
 end
-write memory</code></pre>
+copy running-config startup-config</code></pre>
                                     <p>DHCP Snooping permet de créer une base de données de correspondance IP-MAC-port, qui est ensuite utilisée par Dynamic ARP Inspection (DAI) pour bloquer les attaques ARP spoofing.</p>
                                     <p>Tous les ports sont considérés comme <span class="em">untrusted</span> par défaut. Seul le port vers le routeur est configuré comme <span class="em">trusted</span>, car il est légitime pour envoyer des réponses DHCP.</p>
                                     <div class="important">
@@ -2325,15 +2355,24 @@ write memory</code></pre>
                                 </li>
                                 <li>
                                     <h3>Vérification / troubleshooting :</h3>
-<pre><code>show vlan brief
-show interfaces trunk
-show ip route
-show ip dhcp binding
-show port-security interface e0/1
-show access-lists
-show ip nat translations
-show ip dhcp snooping
-show ip arp inspection</code></pre>
+                                    <p>Pour afficher la liste des VLANs existants, leur état (active / suspended) et les ports associés à chaque VLAN :</p>
+<pre><code>show vlan brief</code></pre>
+                                    <p>Pour afficher les ports configurés en <span class="em">trunk</span>, le type d'encapsulation (802.1Q) et les VLANs autorisés sur le trunk :</p>
+<pre><code>show interfaces trunk</code></pre>
+                                    <p>Pour afficher la <span class="em">table de routage IP</span> du routeur :</p>
+<pre><code>show ip route</code></pre>
+                                    <p>Pour afficher les adresses IP attribuées par le serveur DHCP, l'adresse MAC associée et la durée du bail :</p>
+<pre><code>show ip dhcp binding</code></pre>
+                                    <p>Pour afficher l'état de la <span class="em">Port Security</span> sur un port précis :</p>
+<pre><code>show port-security interface e0/1</code></pre>
+                                    <p>Pour afficher toutes les ACL configurées sur le routeur :</p>
+<pre><code>show access-lists</code></pre>
+                                    <p>Pour afficher la table de traduction NAT, c'est-à-dire "IP privée &#8594; IP publique" et "ports source traduits" :</p>
+<pre><code>show ip nat translations</code></pre>
+                                    <p>Pour afficher si le DHCP snooping est activé, les VLANs protégés et les ports trusted / untrusted :</p>
+<pre><code>show ip dhcp snooping</code></pre>
+                                    <p>Pour l'état de <span class="em">Dynamic ARP Inspection (DAI)</span> :</p>
+<pre><code>show ip arp inspection</code></pre>
                                 </li>
                                 <li>
                                     <p>Pour capturer un paquet, dans la topologie GNS3, clique-droit sur le lien "Start capture" et choisit Wireshark si installé. Tu pourras faire des pings depuis PC1 et tu verras alors ICMP traverser.</p>
@@ -2342,7 +2381,8 @@ show ip arp inspection</code></pre>
                             </ul>
                         </li>
                     </ol>
-                    <p>Cette configuration met en oeuvre plusieurs mécanismes de sécurité de couche 2 : segmentation par VLAN, Port Security, désactivation des protocoles de découverte, protection STP, DHCP Snooping et DAI, afin de limiter les attaques internes.</p>
+                    <h3>Conclusion :</h3>
+                    <p>Cette configuration met en oeuvre une segmentation réseau sécurisée par VLANs, un routage inter-VLAN contrôlé par ACL, un accès Internet via NAT, et plusieurs mécanismes de sécurité de couche 2 (Port Security, STP, DHCP Snooping, DAI) afin de limiter les attaques internes et l'accès non autorisé.</p>
                 </article>
             <!-- fin de section -->
             </section>
