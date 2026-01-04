@@ -2057,7 +2057,7 @@ interface e0/0
                                     <p>L'interface e0/0 représente la connexion vers le réseau externe (Internet) et est donc définie comme interface <span class="em">NAT outside</span>.</p>
                                     <h4>Interface vers le switch (e0/1) + Subinterfaces dot1Q :</h4>
 <pre><code>interface e0/1
-    no shutdown
+    no ip address
     exit
 
 interface e0/1.2
@@ -2074,20 +2074,17 @@ interface e0/1.3
                                     <p>Les interfaces e0/1.2 et e0/1.3 <span class="em">ne sont pas visibles dans l'image</span> car elles ne sont pas physiques.</p>
                                     <p>Ce sont des <span class="em">sous-interfaces virtuelles</span> nécessaires pour le routage inter-VLAN.</p>
                                     <h4>DHCP Server (dans les deux VLANs) :</h4>
-                                    <p>On exclue les passerelles :</p>
-<pre><code>ip dhcp excluded-address 192.168.2.1
-ip dhcp excluded-address 192.168.3.1</code></pre>
                                     <p>Un DHCP pool représente le pool des adresses allouées, c'est-à-dire que c'est un ensemble d'adresses.</p>
 <pre><code>ip dhcp pool POOL_UTILISATEURS
     network 192.168.2.0 255.255.255.0
     default-router 192.168.2.1
-    dns-server 8.8.8.8
+    dns-server 1.1.1.1 8.8.8.8
     exit
 
 ip dhcp pool POOL_ADMINS
     network 192.168.3.0 255.255.255.0
     default-router 192.168.3.1
-    dns-server 8.8.8.8
+    dns-server 1.1.1.1 8.8.8.8
     exit</code></pre>
                                     <p>L'image ne mentionne pas explicitement la création de deux pools... mais elle l'implique parce que <span class="em">chaque VLAN est un réseau IP séparé</span>.</p>
                                     <p>La règle fondamentale est que <span class="em">1 VLAN = 1 réseau = 1 pool DHCP</span>. Tu ne peux pas faire un pool pour plusieurs réseaux. Donc, si tu as deux VLANs, tu DOIS avoir deux pools.</p>
@@ -2156,7 +2153,9 @@ ip nat inside source list 1 interface e0/0 overload</code></pre>
                                     <p>On vérifie la route par défaut :</p>
 <pre><code>show ip route</code></pre>
                                     <p>Si elle est absente :</p>
-<pre><code>ip route 0.0.0.0 0.0.0.0 dhcp</code></pre>
+<pre><code>ip route 0.0.0.0 0.0.0.0 e0/0 dhcp</code></pre>
+                                    <p>Ou sans DHCP :</p>
+<pre><code>ip route 0.0.0.0 0.0.0.0 e0/0 192.168.122.1</code></pre>
                                     <h4>Sauvegarde :</h4>
 <pre><code>end
 copy running-config startup-config</code></pre>
@@ -2192,7 +2191,6 @@ vlan 3
     switchport trunk encapsulation dot1q
     switchport mode trunk
     switchport trunk allowed vlan 2,3
-    switchport nonegotiate
     no shutdown
     exit</code></pre>
                                     <h4>Ports Access VLAN 2 (PC1 / PC2) :</h4>
@@ -2260,43 +2258,9 @@ copy running-config startup-config</code></pre>
                                 </li>
                                 <li>
                                     <h3>Sécurité supplémentaire requise :</h3>
-                                    <p>Sur le switch, tu dois aussi appliquer Port Security :</p>
+                                    <p>Sur le switch, tu dois aussi appliquer Port Security pour la liaison vers le PC 3 (ADMIN) :</p>
 <pre><code>enable
 configure terminal
-
-interface e0/1
-    switchport nonegotiate
-    switchport port-security
-    switchport port-security maximum 2
-    switchport port-security mac-address sticky
-    switchport port-security violation restrict
-    switchport port-security aging time 1
-    switchport port-security aging type inactivity
-
-    no cdp enable
-    no lldp transmit
-    no lldp receive
-
-    spanning-tree portfast edge
-    spanning-tree bpduguard enable
-    exit
-
-interface e0/2
-    switchport nonegotiate
-    switchport port-security
-    switchport port-security maximum 2
-    switchport port-security mac-address sticky
-    switchport port-security violation restrict
-    switchport port-security aging time 1
-    switchport port-security aging type inactivity
-
-    no cdp enable
-    no lldp transmit
-    no lldp receive
-
-    spanning-tree portfast edge
-    spanning-tree bpduguard enable
-    exit
 
 interface e0/3
     switchport nonegotiate
@@ -2387,6 +2351,10 @@ copy running-config startup-config</code></pre>
 <pre><code>show ip dhcp snooping</code></pre>
                                     <p>Pour afficher l'état de <span class="em">Dynamic ARP Inspection (DAI)</span> :</p>
 <pre><code>show ip arp inspection</code></pre>
+                                    <p>Pour afficher <span class="em">la configuration active</span> d'un équipement réseau :</p>
+<pre><code>show running-config </code></pre>
+                                    <p>Ou encore la version abrégée :</p>
+<pre><code>show run</code></pre>
                                 </li>
                                 <li>
                                     <p>Pour capturer un paquet, dans la topologie GNS3, clique-droit sur le lien "Start capture" et choisit Wireshark si installé. Tu pourras faire des pings depuis PC1 et tu verras alors ICMP traverser.</p>
