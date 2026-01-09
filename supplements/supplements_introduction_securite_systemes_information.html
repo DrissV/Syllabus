@@ -1157,17 +1157,31 @@ CN = client.com</code></pre>
                     </figure>
                     <p>Aujourd'hui, même si <span class="em">TLS 1.3</span> existe, <span class="em">beaucoup d'utilisateurs restent encore sur TLS 1.2</span>.</p>
                     <h3>TLS handshake (1.2) :</h3>
+                    <p>Un <span class="em">handshake</span> est une phase d'échange initiale permettan à deux entités d'établir une communication sécurisée selon des paramètres communs.</p>
+                    <p>Le TLS handshake permet au client et au serveur d'établir une communication sécurisée avant tout échange de données applicatives.</p>
+                    <p>Ses objectifs sont :</p>
+                    <ul>
+                        <li>
+                            <p>négocier les paramètres cryptographiques,</p>
+                        </li>
+                        <li>
+                            <p>authentifier le serveur,</p>
+                        </li>
+                        <li>
+                            <p>établir une clé secrète partagée pour le chiffrement symétrique.</p>
+                        </li>
+                    </ul>
                     <div>
                         <img src="../images/TLS_handshake.PNG" alt="" class="float_right">
                         <ul>
                             <li>
-                                <p>Client Hello : max TLS <span class="em">(Downgrade  attack)</span>, cipher suites, chiffre aléatoire.</p>
+                                <p>Client Hello : version TLS max <span class="em">(Downgrade  attack)</span>, liste des cipher suites, nombre aléatoire (Client Random).</p>
                             </li>
                             <li>
-                                <p>Server Hello : TLS version, cipher suite, chiffre aléatoire.</p>
+                                <p>Server Hello : version TLS, cipher suite, nombre aléatoire (Server Random).</p>
                             </li>
                             <li>
-                                <p>Certificate : clé pub, signature, auth (PKI).</p>
+                                <p>Certificate : clé publique, signature, authentification (PKI).</p>
                             </li>
                             <li>
                                 <p>Server Hello Done : fin étape.</p>
@@ -1180,6 +1194,99 @@ CN = client.com</code></pre>
                             </li>
                         </ul>
                     </div>
+                    <p>Les différentes étapes du TLS handshake sont :</p>
+                    <ol>
+                        <li>
+                            <h4>ClientHello :</h4>
+                            <p>Le client initie la connexion en envoyant un message <span class="em">ClientHello</span> contenant :</p>
+                            <ul>
+                                <li>
+                                    <p>la <span class="em">version maximale de TLS</span> supportée (protection contre les attaques par rétrogradation - downgrade attack)</p>
+                                </li>
+                                <li>
+                                    <p>la liste des <span class="em">cipher suites</span> supportées;</p>
+                                </li>
+                                <li>
+                                    <p>un <span class="em">nombre aléatoire</span> (Client Random).</p>
+                                </li>
+                            </ul>
+                            <p>Ce message permet au client de proposer ses capacités cryptographiques.</p>
+                        </li>
+                        <li>
+                            <h4>ServerHello :</h4>
+                            <p>Le serveur répond par un message <span class="em">ServerHello</span> indiquant :</p>
+                            <ul>
+                                <li>
+                                    <p>la <span class="em">version de TLS choisie</span>;</p>
+                                </li>
+                                <li>
+                                    <p>la <span class="em">cipher suite sélectionnée</span> parmi celles proposées;</p>
+                                </li>
+                                <li>
+                                    <p>un <span class="em">nombre aléatoire</span> (Server Random).</p>
+                                </li>
+                            </ul>
+                            <p>Le client et le serveur s'accordent ainsi sur les algorithmes à utiliser.</p>
+                        </li>
+                        <li>
+                            <h4>Certificate :</h4>
+                            <p>Le serveur envoie ensuite son <span class="em">certificat numérique (X.509)</span>, qui contient :</p>
+                            <ul>
+                                <li>
+                                    <p>la <span class="Em">clé publique</span> du serveur;</p>
+                                </li>
+                                <li>
+                                    <p>l'<span class="em">identité</span> du serveur;</p>
+                                </li>
+                                <li>
+                                    <p>la <span class="em">signature de l'autorité de certification (CA)</span>.</p>
+                                </li>
+                            </ul>
+                            <p>Le client vérifie la validité du certificat à l'aide de la <span class="em">PKI</span> (chaîne de certification, signature, vaidité, révocation).</p>
+                        </li>
+                        <li>
+                            <h4>ServerHelloDone :</h4>
+                            <p>Le message <span class="em">ServerHelloDone</span> indique que le serveur a terminé l'envoi des informations nécessaires à cette phase du handshake.</p>
+                        </li>
+                        <li>
+                            <h4>ClientKeyExchange :</h4>
+                            <p>Le client envoie les informations nécessairesà l'établissement du secret partagé.</p>
+                            <p>Selon la cipher suite utilisée :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">RSA</span> : le client génère un <span class="em">pre-master secret</span>, le chiffre avec la clé publique du serveur et l'envoie;</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">(EC)DHE</span> : le client et le serveur échangent des paramètres Diffie-Hellman et calculent indépendamment le <span class="em">pre-master secret</span> (sans l'échanger directement).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Génération de la Master Secret :</h4>
+                            <p>Le client et le serveur calculent ensuite la <span class="em">master secret</span> à partir :</p>
+                            <ul>
+                                <li>
+                                    <p>du <span class="em">pre-master secret</span>;</p>
+                                </li>
+                                <li>
+                                    <p>du Client Random;</p>
+                                </li>
+                                <li>
+                                    <p>du Server Random.</p>
+                                </li>
+                            </ul>
+                            <p>Cette master secret sert à dériver les clés de chiffrement et d'authentification symétriques.</p>
+                        </li>
+                        <li>
+                            <h4>ChangeCipherSpec (client) :</h4>
+                            <p>Le client envoie le message <span class="em">ChangeCipherSpec</span> pour indiquer que les messages suivants seront proégés à l'aide du chiffrement symétrique négocié.</p>
+                        </li>
+                        <li>
+                            <h4>ChangeCipherSpec (serveur) :</h4>
+                            <p>Le serveur envoie à son tour <span class="em">ChangeCipherSpec</span> et confirme l'établissement du canal sécurisé.</p>
+                            <p>Le handshake TLS est alors terminé et les données applicatives peuvent être échangées de manière chiffrée.</p>
+                        </li>
+                    </ol>
                     <h3>Cipher suite (suite de chiffrement) :</h3>
                     <p>Le "chipher suite" est un ensemble d'algorithmes utilisé lors d'une communication TLS. Il contient les informations suivantes :</p>
                     <ul>
@@ -2241,7 +2348,7 @@ httpd.serve_forever()</code></pre>
                                             <p>générer CSR client;</p>
                                         </li>
                                         <li>
-                                            <p>CA génère le certificat en signantle CSR client</p>
+                                            <p>CA génère le certificat en signant le CSR client.</p>
                                         </li>
                                     </ol>
                                 </li>
