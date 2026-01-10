@@ -2240,23 +2240,64 @@ ping 192.168.3.1 (depuis PC3)</code></pre>
                                 <li>
                                     <h3>ACL - Bloquer PC1 &amp; PC2 d'acéder à PC3 :</h3>
                                     <p>Sur le Router1 :</p>
+                                    <p>Pour autoriser les réponses ICMP (ping reply) du VLAN 3 vers le VLAN 2 et bloquer les requêtes ICMP (ping) de VLAN 2 vers VLAN 3, il faut configurer l'ACL (Access Control List) suivante :</p>
 <pre><code>enable
 configure terminal
-access-list 100 deny ip 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255
-access-list 100 permit ip any any
+ip access-list extended block_icmpecho_in
+    permit icmp 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255 echo-reply
+    deny icmp 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255 echo
+    permit ip any any
+    exit
 
 interface e0/1.2
-    ip access-group 100 in
+    ip access-group block_icmpecho_in in
     exit
 
 end
 copy running-config startup-config</code></pre>
+                                    <p>En résumé, cette configuration <span class="em">bloque uniquement les pings sortants vers le VLAN 3</span>, mais laisse <span class="em">les réponses passer</span> et <span class="em">ne bloque rien d'autre</span>.</p>
+                                    <p>Une <span class="em">ACL seule est juste une liste de règles</span>, elle n'agit <span class="em">nulle part</span> tant qu'on ne l'associe pas à une interface.</p>
+                                    <p>Les ACL nommées sont <span class="em">plus flexibles</span> que les ACL numérotées, car tu peux modifier ou ajouter des lignes sans tout supprimer.</p>
                                     <p>Sur l'interface e0/1.2 (subinterface VLAN2), on applique l'ACL 100. En clair, tout ce qui arrive dans VLAN 2 depuis les PC du VLAN 2 est filtré avant d'être routé.</p>
                                     <p>On peut tester depuis PC1 la commande suivante et ça doit échouer et idem depuis le PC2 :</p>
 <pre><code>ping &lt;IP PC3&gt;</code></pre>
                                     <p>Du PC3 vers les PC1 et PC2, c'est possible grâce à l'ACL asymétrique.</p>
                                     <p>Le PC1 et le PC2 peuvent quand même aller sur Internet.</p>
                                     <p>L'ACL est volontairement asymétrique afin de bloquer l'initiation des communications depuis le VLAN 2 vers le VLAN 3, tout en autorisant les réponses et les communications initiées depuis le VLAN 3.</p>
+                                    <p>Pour contrôler le trafic TCP (handshake) en bloquant le TCP handshake dans un sens et en l'autorisant dans un autre sens, voici l'ACL à configurer :</p>
+<pre><code>enable
+configure terminal
+
+ip access-list extended block_tcpsyn-in
+    permit tcp 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255 ack
+    deny tcp 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255 syn
+    permit ip any any
+    exit
+
+interface e0/1.2
+    ip access-group block_tcpsyn-in in
+    exit
+
+end
+copy running-config startup-config</code></pre>
+                                    <p>Remarque : vous pouvez combiner les des deux ACL, <span class="em">block_icmpecho_in</span> et <span class="em">block_tcpsyn-in</span>, en un seul ACL, <span class="em">block_icmpecho_tcpsyn-in</span> :</p>
+<pre><code>enable
+configure terminal
+
+ip access-list extended block_icmpecho_tcpsyn-in
+    permit tcp 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255 ack
+    deny tcp 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255 syn
+    permit icmp 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255 echo-reply
+    deny icmp 192.168.2.0 0.0.0.255 192.168.3.0 0.0.0.255 echo
+    permit ip any any
+    exit
+
+interface e0/1.2
+    ip access-group block_icmpecho_tcpsyn-in in
+    exit
+
+end
+copy running-config startup-config</code></pre>
                                 </li>
                                 <li>
                                     <h3>Sécurité supplémentaire requise :</h3>
@@ -2346,6 +2387,9 @@ copy running-config startup-config</code></pre>
 <pre><code>show ip dhcp snooping</code></pre>
                                     <p>Pour afficher la <span class="em">table des baux DHCP sécurisés</span> (binding table) :</p>4
 <pre><code>show ip dhcp snooping binding</code></pre>
+                                    <p>Quand un DHCP sooping est activé, le switch peut <span class="em">ajouter automatiquement l'Option 82</span> (DHCP Relay Agent Information) dans les messages DHCP qui sortent du switch. Pour désactiver l'injection de l'Option 82 dans les paquets DHCP, il faut faire la commande suivante :</p>
+<pre><code>no ip dhcp snooping information option</code></pre>
+                                    <p>En gros, cette commande empêche le switch d'ajouter l'Option 82 aux messages DHCP, tout en gardant le filtrage DHCP activé.</p>
                                 </li>
                                 <li>
                                     <h3>Vérification / troubleshooting :</h3>
