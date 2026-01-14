@@ -51,6 +51,7 @@
                     <li><a href="#modele_OSI">Modèle OSI</a></li>
                     <li><a href="#protocoles_TCP_IP">Protocoles TCP/IP</a></li>
                     <li><a href="#architecture_normes_protocoles">Architecture, normes (standards) et protocoles</a></li>
+                    <li><a href="#exercices_analyse_paquets_trames_L2_L3">Exercices : Analyse de paquets et trames - Layer 2 &amp; Layer 3</a></li>
                     <li><a href="#labo1">Labo 1 : construction d'un petit réseau</a></li>
                 </ol>
             </nav>
@@ -1975,6 +1976,290 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                     <p>Si le commutateur est connecté directement à l'appareil de destination, celui-ci accepte la trame de données, répond et la transmission est terminée. Si l'appareil est connecté à un autre commutateur, le commutateur suivant répète le processus de recherche et de transmission jusqu'à ce que la trame atteigne la destination prévue.</p>
                     <p>On dit que les commutateurs agissent au niveau de la couche 2, cela veut dire qu'ils sont capables de modifier la trame Ethernet pour ajouter ou modifier l'un ou l'autre champ de la trame Ethernet. La figure 2-5 montre une insertion du marquage 802.1Q (VLAN Tagging).</p>
                     <img src="../images/trame_EthernetII_802.1Q.PNG" alt="">
+                </article>
+                <article>
+                    <h2 id="exercices_analyse_paquets_trames_L2_L3">Exercices : Analyse de paquets et trames - Layer 2 &amp; Layer 3 :</h2>
+                    <ol>
+                        <li>
+                            <p>À partir de la trame Ethernet fournie, identifiez l'adresse MAC source et destination. Indiquez s'il s'agit d'un trafic unicast, multicast ou broadcast et justifiez.</p>
+                            <p>Dans une trame Ethernet, les 6 premiers octets sont l'adresse MAC de destination et les 6 octets suivants l'adresse MAC source.</p>
+                            <p>On détermine le type à partir de l'adresse MAC de destination :</p>
+                            <ul>
+                                <li>
+                                    <h3>Unicast :</h3>
+                                    <p>Premier octet &#8594; bit de poids faible = 0</p>
+                                    <p>Exemple : 00:1A:2B:3C:4D:5E</p>
+                                </li>
+                                <li>
+                                    <h3>Multicast :</h3>
+                                    <p>Bit de poids faible du premier octet = 1</p>
+                                    <p>Exemple : 01:00:5E:xx:xx:xx (IPv4 multicast)</p>
+                                </li>
+                                <li>
+                                    <h3>Broadcast :</h3>
+                                    <p>FF:FF:FF:FF:FF:FF</p>
+                                </li>
+                            </ul>
+                            <p>En résumé, le bit I/G (Individual/Group) du premier octet de l'adresse MAC de destination indique si l'adresse est individuelle (unicast) ou de groupe (multicast/broadcast).</p>
+                        </li>
+                        <li>
+                            <p>Analysez deux trames différentes et déterminez laquelle utilise Ethernet II et laquelle utilise IEEE 802.3 avec LLC. Quels champs permettent de les différencier ?</p>
+                            <p>Le champ situé après les adresses MAC fait la différence :</p>
+                            <ul>
+                                <li>
+                                    <h3>Ethernet II :</h3>
+                                    <p>Champ = Type (EtherType) &gt;= <span class="em">0x600</span> (1536)</p>
+                                    <p>Exemples : <span class="em">0x0800</span> (IPv4), <span class="em">0x0806</span> (ARP)</p>
+                                </li>
+                                <li>
+                                    <h3>IEEE 802.3 + LLC :</h3>
+                                    <p>Champ = Longueur &lt;= 1500</p>
+                                    <p>Suivi d'un en-tête LLC (DSAP, SSAP, Control)</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Sur la trame VLAN 802.1Q, identifiez le VLAN ID, le champ PCP et le champ DEI. Quelle est la signification de ces champs ?</p>
+                            <p>Après l'adresse MAC source, on trouve un <span class="em">tag VLAN (4 octets)</span>.</p>
+                            <h3>Champs :</h3>
+                            <ul>
+                                <li>
+                                    <p><span class="em">TPID</span> : <span class="em">0x8100</span> (indique présence VLAN)</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">TCI</span> (Tag Control Information) :</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">PCP (3bits)</span> (Priority Code Point) : Priorité QoS (0-7).</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">DEI (1 bit)</span> (Drop Eligible Indicator) : indique qu'une trame peut être supprimée en cas de congestion.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">VLAN ID (12 bits)</span> : Identifiant du VLAN (1 à 4094).</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Pourquoi certaines trames observées sur un lien trunk ne contiennent-elles pas de tag VLAN ? Quel risque de sécurité cela peut-il introduire ?</p>
+                            <p>Parce que les trames appartiennent au <span class="em">VLAN natif</span> et le choix de configuration (compatibilité avec équipements anciens).</p>
+                            <p>Les risques de sécurité sont  la mauvaise isolation des domaines de diffusion et le <span class="em">VLAN hopping</span> (injection de trames non taguées permettant un accès non autorisé à un autre VLAN).</p>
+                            <p>Bonne pratique : VLAN natif inutilisé + tagging systématique.</p>
+                        </li>
+                        <li>
+                            <p>Identifiez des paquets IP fragmentés. Relevez l'identification, les flags et le fragment offset. Combien de fragments composent le paquet original ?</p>
+                            <h3>Champs à observer (en-tête IPv4) :</h3>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Identification</span> : identique pour tous les fragments.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Flags</span> :</p>
+                                    <ul>
+                                        <li>
+                                            <p>MF (More Fragments) = 1 &#8594; autres fragments suivent.</p>
+                                        </li>
+                                        <li>
+                                            <p>DF = 0 (sinon pas de fragmentation).</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p><span class="em">Fragment Offset</span> : Position du fragment (en multiples de 8 octets).</p>
+                                </li>
+                            </ul>
+                            <h3>Nombre de fragments :</h3>
+                            <ul>
+                                <li>
+                                    <p>Dernier fragment : MF = 0.</p>
+                                </li>
+                                <li>
+                                    <p>Nombre total = nombre de fragments observés avec même Identification.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Analysez une trame utilisant LLC/SNAP. Identifiez les champs DSAP, SSAP et Control. Quel protocole de couche supérieure est encapsulé ?</p>
+                            <h3>Champs LLC :</h3>
+                            <ul>
+                                <li>
+                                    <p><span class="em">DSAP</span> : Destination Service Access Point.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">SSAP</span> : Source Service Access Point.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Control</span> : type de trame (souvent <span class="em">0x03</span> &#8594; U-frame).</p>
+                                </li>
+                            </ul>
+                            <h3>SNAP (si DSAP = SSAP = <span class="em">0xAA</span>) :</h3>
+                            <ul>
+                                <li>
+                                    <p><span class="em">OUI</span> (3 octets).</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">PID</span> (2 octets) &#8594; équivalent EtherType.</p>
+                                </li>
+                            </ul>
+                            <p>Exemple : PID <span class="em">0x0800</span> &#8594; IPv4.</p>
+                        </li>
+                        <li>
+                            <p>À partir d'un paquet IPv4, identifiez tous les champs de l'en-tête IP et calculez la taille réelle des données transportées.</p>
+                            <h3>Champs de l'en-tête IP :</h3>
+                            <ul>
+                                <li>
+                                    <p>Version</p>
+                                </li>
+                                <li>
+                                    <p>IHL (Internet Header Length)</p>
+                                </li>
+                                <li>
+                                    <p>DSCP /ECN</p>
+                                </li>
+                                <li>
+                                    <p>Total Length</p>
+                                </li>
+                                <li>
+                                    <p>Identification</p>
+                                </li>
+                                <li>
+                                    <p>Flags</p>
+                                </li>
+                                <li>
+                                    <p>Fragment Offset</p>
+                                </li>
+                                <li>
+                                    <p>TTL</p>
+                                </li>
+                                <li>
+                                    <p>Protocol (TCP=6, UDP=17, ICMP=1)</p>
+                                </li>
+                                <li>
+                                    <p>Header Checksum</p>
+                                </li>
+                                <li>
+                                    <p>IP source</p>
+                                </li>
+                                <li>
+                                    <p>IP destination</p>
+                                </li>
+                                <li>
+                                    <p>Options (si IHL &gt; 5)</p>
+                                </li>
+                            </ul>
+                            <h3>Taille réelle des données :</h3>
+                            <p>Données = Total Length - (IHL * 4)</p>
+                        </li>
+                        <li>
+                            <p>Analysez la valeur du TTL sur plusieurs paquets consécutifs. Que pouvez-vous déduire sur le chemin réseau parcouru ?</p>
+                            <p>TTL diminue de <span class="em">1 à chaque routeur</span>.</p>
+                            <p>Les valeurs initiales courantes sont :</p>
+                            <ul>
+                                <li>
+                                    <p>Linux/Unix : 64</p>
+                                </li>
+                                <li>
+                                    <p>Windows : 128</p>
+                                </li>
+                                <li>
+                                    <p>Cisco : 255</p>
+                                </li>
+                            </ul>
+                            <h3>Déduction :</h3>
+                            <ul>
+                                <li>
+                                    <p>Différence entre TTL initial supposé et TTL observé &#8776; <span class="em">nombre de sauts</span>.</p>
+                                </li>
+                                <li>
+                                    <p>Permet d'estimer la distance réseau (comme traceroute).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>À partir d'échanges ICMP, distinguez les messages de type Query et Error.</p>
+                            <h3>ICMP Query (requête/réponse) :</h3>
+                            <ul>
+                                <li>
+                                    <p>Echo Request (Type 8)</p>
+                                </li>
+                                <li>
+                                    <p>Echo Reply (Type 0)</p>
+                                </li>
+                                <li>
+                                    <p>Timestamp</p>
+                                </li>
+                                <li>
+                                    <p>Address Mask</p>
+                                </li>
+                            </ul>
+                            <p>&#8594; Outils de diagnostic (ping).</p>
+                            <h3>ICMP Error :</h3>
+                            <ul>
+                                <li>
+                                    <p>Destination Unreachable (Type 3)</p>
+                                </li>
+                                <li>
+                                    <p>Time Exceeded (Type 11)</p>
+                                </li>
+                                <li>
+                                    <p>Redirect</p>
+                                </li>
+                                <li>
+                                    <p>Parameter Problem</p>
+                                </li>
+                            </ul>
+                            <p>&#8594; Signalent une anomalie réseau.</p>
+                        </li>
+                        <li>
+                            <p>Analysez un échange ARP. Pourquoi la requête est-elle envoyée en broadcast et la réponse en unicast ?</p>
+                            <h3>Requête ARP :</h3>
+                            <ul>
+                                <li>
+                                    <p>Destination MAC : <span class="em">FF:FF:FF:FF:FF:FF</span></p>
+                                </li>
+                                <li>
+                                    <p>Pourquoi ? &#85954; L'émetteur ne connaît pas l'adresse MAC du destinataire.</p>
+                                </li>
+                            </ul>
+                            <h3>Réponse ARP :</h3>
+                            <ul>
+                                <li>
+                                    <p>Envoyée en <span class="em">unicast</span>.</p>
+                                </li>
+                                <li>
+                                    <p>Le demandeur est maintenant connu.</p>
+                                </li>
+                            </ul>
+                            <p>&#8594; Optimisation du trafic et efficacité réseau.</p>
+                        </li>
+                        <li>
+                            <p>À partir d'un paquet complet, identifiez toutes les couches d'encapsulation présentes (L2 à L4). Expliquez l'ordre d'encapsulation.</p>
+                            <p>Exemple typique :</p>
+                            <ol>
+                                <li>
+                                    <p><span class="em">Ethernet (L2)</span> : MAC source/destination</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">VLAN 802.1Q (optionnel)</span></p>
+                                </li>
+                                <li>
+                                    <p><span class="em">IP (L3)</span> : Adressage logique, routage</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">TCP / UDP / ICMP (L4)</span> : Ports, fiabilité, contrôle</p>
+                                </li>
+                            </ol>
+                            <h3>Ordre d'encapsulation :</h3>
+<pre><code>Données applicatives
+&#8594; L4 (TCP/UDP)
+&#8594; L3 (IP)
+&#8594; L2 (Ethernet)
+&#8594; Bits sur le média</code></pre>
+                            <p>Chaque couche encapsule la précédente en ajoutant son propre en-tête (et parfois un trailer).</p>
+                        </li>
+                    </ol>
                 </article>
                 <article>
                     <h2 id="labo1">Labo 1 : construction d'un petit réseau :</h2>
