@@ -2268,6 +2268,160 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                             <p>Chaque couche encapsule la précédente en ajoutant son propre en-tête (et parfois un trailer).</p>
                         </li>
                     </ol>
+                    <h3>Exemple de trame Ethernet :</h3>
+                    <img src="../images/exemple_trame_Ethernet.PNG" alt="">
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Champ</th>
+                                <th>Octets</th>
+                                <th>Adresse MAC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>MAC destination</td>
+                                <td>00104b30c440</td>
+                                <td>00;10:4B:30:C4:4A</td>
+                            </tr>
+                            <tr>
+                                <td>MAC source</td>
+                                <td>00a0cc30c8db</td>
+                                <td>00:A0:CC:30:C8:DB</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Premier octet de l'adresse MAC de destination : 00 &#8594; 00000000</p>
+                    <p>Bit I/G (LSB) = 0</p>
+                    <p>&#9989; Trafic Unicast.</p>
+                    <p>Champ après les adresses MAC : 0800</p>
+                    <ul>
+                        <li>
+                            <p>Valeur hexadécimale : 0x0800</p>
+                        </li>
+                        <li>
+                            <p>0x0800 = IPv4</p>
+                        </li>
+                        <li>
+                            <p>&gt;= 0x0600 (1536)</p>
+                        </li>
+                    </ul>
+                    <p>&#9989; Il s'agit d'une trame Ethernet II.</p>
+                    <p>Début de l'en-tête IP : <span class="em">450005dc4c1d20002001b010a0063020a000108</span></p>
+                    <h4>Champs IPv4 :</h4>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Champ</th>
+                                <th>Valeur</th>
+                                <th>Interprétation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Version</td>
+                                <td>4</td>
+                                <td>IPv4</td>
+                            </tr>
+                            <tr>
+                                <td>IHL</td>
+                                <th>5</th>
+                                <td>20 octets</td>
+                            </tr>
+                            <tr>
+                                <td>Total Length</td>
+                                <td>0x05dc</td>
+                                <td>1500 octets</td>
+                            </tr>
+                            <tr>
+                                <td>Identification</td>
+                                <td>0x4c1d</td>
+                                <td>ID du paquet</td>
+                            </tr>
+                            <tr>
+                                <td>Flags</td>
+                                <td>001</td>
+                                <td>DF=1,MF=0</td>
+                            </tr>
+                            <tr>
+                                <td>Fragment Offset</td>
+                                <td>0</td>
+                                <td>Pas de fragmentation</td>
+                            </tr>
+                            <tr>
+                                <td>TTL</td>
+                                <td>0x20</td>
+                                <td>32</td>
+                            </tr>
+                            <tr>
+                                <td>Protocol</td>
+                                <td>0x01</td>
+                                <td>ICMP</td>
+                            </tr>
+                            <tr>
+                                <td>IP source</td>
+                                <td>0a.00.63.02</td>
+                                <td>10.0.99.2</td>
+                            </tr>
+                            <tr>
+                                <td>IP destination</td>
+                                <td>0a.00.01.88</td>
+                                <td>10.0.1.8</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>&#10060; Aucune fragmentation.</p>
+                    <ul>
+                        <li>
+                            <p>DF=1 &#8594; fragmentation interdite</p>
+                        </li>
+                        <li>
+                            <p>MF=0</p>
+                        </li>
+                        <li>
+                            <p>Offset=0</p>
+                        </li>
+                    </ul>
+                    <p>Taille réelle des données : Données  Total Length - (IHL * 4) = 1500 - 20 = 1480 octets</p>
+                    <h4>Analyse Layer 4 - ICMP :</h4>
+                    <ul>
+                        <li>
+                            <p>Protocole=1 &#8794; ICMP</p>
+                        </li>
+                        <li>
+                            <p>Payload lisible : séquence ASCII répétée (abcdef...)</p>
+                        </li>
+                    </ul>
+                    <p>&#8594; Très typique d'un ICMP Echo Request/Reply (ping)</p>
+                    <h4>Analyse du TTL - Déduction réseau :</h4>
+                    <ul>
+                        <li>
+                            <p>TTL observé : 32</p>
+                        </li>
+                        <li>
+                            <p>Valeurs initiales probables :</p>
+                            <ul>
+                                <li>
+                                    <p>Linux/Unix &#8594; 64</p>
+                                </li>
+                                <li>
+                                    <p>Windows &#8594; 128</p>
+                                </li>
+                            </ul>
+                            <p>&#8594; Si origine Linux : 64 - 32 = ~32 routeurs.</p>
+                            <p>&#8594; Paquet ayant traversé un nombre significatif de sauts (ou TTL volontairement fixé bas pour tests).</p>
+                            <h4>Résumé des couches d'encapsulation :</h4>
+                            <p>Ethernet II</p>
+                            <p>&#8594; IPv4</p>
+                            <p>&#8594; ICMP</p>
+                            <p>&#8594; Données (payload ASCII)</p>
+                            <h4>Ordre d'encapsulation :</h4>
+                            <p>Données applicatives</p>
+                            <p>&#8594; ICMP (L4)</p>
+                            <p>&#8594; IP (L3)</p>
+                            <p>&#8594; Ethernet (2)</p>
+                        </li>
+                    </ul>
                 </article>
                 <article>
                     <h2 id="labo1">Labo 1 : construction d'un petit réseau :</h2>
@@ -2360,8 +2514,11 @@ interface e0/0
     no shutdown
     exit</code></pre>
                                     <p>L'interface e0/0 du routeur est configurée en DHCP afin d'obtenir automatiquement une adresse IP depuis le cloud NAT de GNS3.</p>
-                                    <p>Si le DHCP ne fonctionne pas :</p>
+                                    <p>Le NAT (Network Address Translation) est le mécanisme réseau qui <span class="em">traduit les adresses IP privées en adresses IP publiques (et inversement)</span> pour permettre à plusieurs machines d'un réseau interne de <span class="em">partager une seule adresse IP publique</span>, tout en <span class="em">masquant la structure interne du réseau</span> (bénéfice de sécurité de base).</p>
+                                    <p>Lorsque l'on exécute la commande <span class="em">show ip interface brief</span> sur le routeur, on constateque l'interface obtient normalement une adresse IP via DHCP.</p>
+                                    <p>Pour utiliser une configuration statique, on supprie l'addressage DHCP et on configure manuellement une adresse IP fixe sur l'interface à l'aide de la commande suivante :</p>
 <pre><code>ip address 192.168.122.2 255.255.255.0</code></pre>
+                                    <p>Le passage à une configuration IP statique garantit une adresse IP permanente sur le routeur, ce qui est indispensable pour assurer la cohérence des règles de sécurité, du routage et des services réseau.</p>
                                     <p>L'interface e0/0 représente la connexion vers le réseau externe (Internet) et est donc définie comme interface <span class="em">NAT outside</span>.</p>
                                     <h4>Interface vers le switch (e0/1) + Subinterfaces dot1Q :</h4>
 <pre><code>interface e0/1
@@ -2381,6 +2538,8 @@ interface e0/1.3
     exit</code></pre>
                                     <p>Les interfaces e0/1.2 et e0/1.3 <span class="em">ne sont pas visibles dans l'image</span> car elles ne sont pas physiques.</p>
                                     <p>Ce sont des <span class="em">sous-interfaces virtuelles</span> nécessaires pour le routage inter-VLAN.</p>
+                                    <p>La commande <span class="em">encapsulation dot1Q 2</span> configure l'encapsulation dot1Q avec le tag VLAN 2.</p>
+                                    <p>La commande <span class="em">ip address 192.168.2.1 255.255.255.0</span> attribue l'adresse IP de passerelle pour le VLAN 2.</p>
                                     <h4>DHCP Server (dans les deux VLANs) :</h4>
                                     <p>Un DHCP pool représente le pool des adresses allouées, c'est-à-dire que c'est un ensemble d'adresses.</p>
 <pre><code>ip dhcp pool POOL_UTILISATEURS
@@ -2459,6 +2618,27 @@ ip nat inside source list 1 interface e0/0 overload</code></pre>
                                     <p>&#8594; ACL 100 = règle de sécurité pour contrôler le trafic inter-VLAN.</p>
                                     <p>&#8594; ACL 1 = liste des réseaux internes autorisés au NAT &#8594; pas une règle de sécurité.</p>
                                     <p>Ce sont donc deux usages différents et donc deux ACL différentes.</p>
+                                    <p>La commande <span class="em">ip nat inside source list 1 interface e0/0 overload</span> permet au NAT de traduire plusieurs adresses internes simultanément en utilisant une seule adresse IP publique.</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">Avant la commande :</span> les machines internes ne pouvaient pas accéder à Internet correctement, car le routeur ne traduisait pas leurs adresses privées.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">Après la commande :</span> toutes les adresses internes autorisées par l'ACL partagent une seule adresse IP publique pour sortir vers Internet.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">Fonctionnement :</span> chaque flux est différencié par les numéros de port, permettant à plusieurs machines de communiquer simultanément avec l'extérieur.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">Bénéfice :</span> les machines internes peuvent désormais envoyer et recevoir des données sur Internet de manière stable et sécurisée.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Après avoir configuré le NAT overload et défini les interfaces inside et outside, une interface NVI (Network Virtual Interface) est créée automatiquement par le routeur.</p>
+                                    <p>Cette commande est visible lorsqu'on exécute la commande suivante :</p>
+<pre><code>show ip interface brief</code></pre>
+                                    <p>Le NVI relie la règle NAT aux interfaces physiques et centralise la traduction des adresses pour simplifier la configuration.</p>
+                                    <p>Aussi bien penser à changer le nuage avec NAT sur GNS3 :</p>
+                                    <img src="../images/NAT_overload.PNG" alt="">
                                     <p>On vérifie la route par défaut :</p>
 <pre><code>show ip route</code></pre>
                                     <p>Si elle est absente :</p>
@@ -2490,6 +2670,8 @@ vlan 3
     name ADMINS
     exit</code></pre>
                                     <h4>Désactiver le VLAN (sécurité) :</h4>
+                                    <p>Lorsque l'on fait <span class="em">show vlan</span>, on constate que l'on a tous les ports par défaut dans le vlan1 et c'est un problème. Si tous les ports inutilisés restent dans le vlan 1, un attaquant physique qui a accès à un port inutilisé peut faire plusieurs choses problématiques comme se connecter au switch, intercepter ou injecter du trafic interne, etc...</p>
+                                    <p>La solution est dnc de créer un SVI (Switched Virtual Interface) pour le vlan en question (ici le vlan 1) : l'interface de management passe sur ce vlan dédié, isolé du vlan par défaut.</p>
 <pre><code>interface Vlan1
     shutdown
     exit</code></pre>
@@ -2502,7 +2684,9 @@ vlan 3
     switchport trunk allowed vlan 2,3
     no shutdown
     exit</code></pre>
-                                    <p>Par défaut, le trafic de tous les VLANs est autorisé à passer dans un lien trunk. Il est conseillé d'autoriser uniquement le trafic des VLANs que nous avons créé (que nous connaissons) à passer dans le lien trunk, le trafic des autres VLANs ne sera pas donc autorisé.</p>
+                                    <p>La commande <span class="em">switchport trunk encapsulation dot1q</span> définit le protocole d'encapsulation 802.1Q pour le trunk. Ce protocole ajoute un tag (étiquette) de 4 octets aux trames Ethernet pour identifier le VLAN auquel elles appartiennent, permettant ainsi de transporter plusieurs VLANs sur un seul lien physique.</p>
+                                    <p>La commande <span class="em">switchport mode trunk</span> configure le port en mode trunk pour transporter plusieurs VLANs.</p>
+                                    <p>Par défaut, le trafic de tous les VLANs est autorisé à passer dans un lien trunk. Il est conseillé d'autoriser uniquement le trafic des VLANs que nous avons créé (que nous connaissons) à passer dans le lien trunk, le trafic des autres VLANs ne sera pas donc autorisé, c'est-à-dire la commande <span class="em">switchport trunk allowed vlan 2,3</span>.</p>
                                     <h4>Ports Access VLAN 2 (PC1 / PC2) :</h4>
 <pre><code>interface e0/1
     switchport mode access
@@ -2511,6 +2695,12 @@ vlan 3
     exit
 
 interface e0/2
+    switchport mode access
+    switchport access vlan 2
+    no shutdown
+    exit</code></pre>
+                                    <p>On peut abréger les commandes précédentes comme ceci :</p>
+<pre><code>interface e0/1-2
     switchport mode access
     switchport access vlan 2
     no shutdown
@@ -2537,6 +2727,9 @@ copy running-config startup-config</code></pre>
                                     <h3>Configuration des PCS (PC1, PC2, PC3) :</h3>
                                     <p>Dans la console VPCS :</p>
 <pre><code>ip dhcp</code></pre>
+                                    <p>Cette commande sert à obtenir automatiquement une adresse IP depuis le routeur.</p>
+                                    <img src="../images/IP_DHCP.PNG" alt="">
+                                    <p>On a DDORA &#8594; 2 D car le PC n'est pas sûr que le premier Discover a été entendu, alors il envoie un deuxième Discover automatiquement après, par sécurité.</p>
                                     <p>Vérifier :</p>
 <pre><code>show ip</code></pre>
                                     <p>Tester la passerelle :</p>
@@ -2547,7 +2740,8 @@ ping 192.168.3.1 (depuis PC3)</code></pre>
                                 </li>
                                 <li>
                                     <h3>ACL - Bloquer PC1 &amp; PC2 d'acéder à PC3 :</h3>
-                                    <p>Sur le Router1 :</p>
+                                    <p>Sur le Router1, l'ACL est configurée afin de bloquer l'initiation de nouvelles connexions TCP depuis le VLAN 2 vers le VLAN 3 en refusant les paquets TCP contenant le flag SYN.</p>
+                                    <p>Les paquets TCP contenant le flag ACK, correspondant à des connexions déjà établies, sont quant à eux autorisés afin de ne pas interrompre les communications légitimes.</p>
                                     <p>Pour autoriser les réponses ICMP (ping reply) du VLAN 3 vers le VLAN 2 et bloquer les requêtes ICMP (ping) de VLAN 2 vers VLAN 3, il faut configurer l'ACL (Access Control List) suivante :</p>
 <pre><code>enable
 configure terminal
@@ -2564,6 +2758,7 @@ interface e0/1.2
 end
 copy running-config startup-config</code></pre>
                                     <p>En résumé, cette configuration <span class="em">bloque uniquement les pings sortants vers le VLAN 3</span>, mais laisse <span class="em">les réponses passer</span> et <span class="em">ne bloque rien d'autre</span>.</p>
+                                    <p>L'objectif est d'empêcher le VLAN 2 de découvrir ou de tester la présence du VLAN 3 via ICMP, tout en conservant les réponses légitimes.</p>
                                     <p>Une <span class="em">ACL seule est juste une liste de règles</span>, elle n'agit <span class="em">nulle part</span> tant qu'on ne l'associe pas à une interface.</p>
                                     <p>Les ACL nommées sont <span class="em">plus flexibles</span> que les ACL numérotées, car tu peux modifier ou ajouter des lignes sans tout supprimer.</p>
                                     <p>Sur l'interface e0/1.2 (subinterface VLAN2), on applique l'ACL 100. En clair, tout ce qui arrive dans VLAN 2 depuis les PC du VLAN 2 est filtré avant d'être routé.</p>
@@ -2588,6 +2783,7 @@ interface e0/1.2
 
 end
 copy running-config startup-config</code></pre>
+                                    <p>L'objectif est d'empêcher les accès directs et les scans de ports TCP depuis le VLAN 2 vers le VLAN 3, tout en maintenant les connexions existantes.</p>
                                     <p>Remarque : vous pouvez combiner les deux ACL, <span class="em">block_icmpecho_in</span> et <span class="em">block_tcpsyn-in</span>, en un seul ACL, <span class="em">block_icmpecho_tcpsyn-in</span> :</p>
 <pre><code>enable
 configure terminal
@@ -2609,6 +2805,8 @@ copy running-config startup-config</code></pre>
                                 </li>
                                 <li>
                                     <h3>Sécurité supplémentaire requise :</h3>
+                                    <p>Le MAC Flooding est une attaque de couche 2 qui consiste à ce que l'attaquant envoie des milliers de fausses adresses MAC sur un port du switch (dont la table CAM c'est-à-dire la table MAC du switch saturé) ce qui lui permettra de pouvoir sniffer le trafic des autres VLANs ou ports.</p>
+                                    <p>Pour contrer cela, la solution est d'activer le port-security sur tous les ports.</p>
                                     <p>Sur le switch, tu dois aussi appliquer Port Security pour la liaison vers le PC 3 (ADMIN) :</p>
 <pre><code>enable
 configure terminal
@@ -2639,6 +2837,15 @@ copy running-config startup-config</code></pre>
                                     <p>En cas de violation de la politique de sécurité, la commande <span class="em">switchport port-security violation restrict</span> permet de bloquer le trafic provenant des adresses non autorisées, d'incrémenter un compteur d'événements, tout en maintenant le port <span class="em">actif</span>.</p>
                                     <p>La commande <span class="em">switchport port-security aging time 1</span> définit une durée d'expiration des adresses MAC de <span class="em">1 minute</span>.</p>
                                     <p>Grâce à la commande <span class="em">switchport port-security aging type inactivity</span>, les adresses MAC sont automatiquement supprimées de la table de sécurité lorsqu'elles deviennent <span class="em">inactives</span>.</p>
+                                    <p>Cette indique au switch que les adresses MAC apprises par le port-security doivent être supprimées (si elles sont âgées), c'est-à-dire si elles n'envoient plus de trafic pendant un certain temps. Donc, si une adresse MAC ne parle plus pendant X minutes, elle est retirée de la table port-security.</p>
+                                    <p>Pour voir la sécurité sur les ports du switch, on utilise la commande suivante :</p>
+<pre><code>do show port-security</code></pre>
+                                    <img src="../images/show_port-security.PNG" alt="">
+                                    <p>On voit pour tous les ports du switch que la sécurité est bien désormais RESTRICT.</p>
+                                    <p>Si on veut vérifier en détails la sécurité d'un port, on fait la commande suivante (e0/0 est l'interface voulue par cet exemple) :</p>
+<pre><code>show port-security interface e0/0</code></pre>
+                                    <p>Nous obtenons le résultat suivant :</p>
+                                    <img src="../images/show_port-security_interface_e0_0.PNG" alt="">
                                     <p>Pour vérifier que CDP est supporté :</p>
 <pre><code>show cdp</code></pre>
                                     <p>Si CDP par interface n'est PAS supporté :</p>
@@ -2650,8 +2857,15 @@ no cdp run</code></pre>
 <pre><code>configure terminal
 no lldp run</code></pre>
                                     <p>Les commandes <span class="em">no cdp enable</span>, <span class="em">no lldp transmit</span> et <span class="em">no lldp receive</span> permettent respectivement de désactiver le protocole <span class="em">CDP</span> (Cisco Discovery Protocol), d'empêcher l'envoi de trames <span class="em">LLDP</span> et d'empêcher la réception de trames <span class="em">LLDP</span>, afin de limiter la divulgation d'informations sur l'infrastructure réseau.</p>
+                                    <p>L'attaque STP (Root Bridge Attack) (L2) consiste à ce que l'attaquant envoie des BPDU forgées avec une priorité très basse et une adresse MAC très faible, afin que l'attaquant soit élu le Root Bridge. Une fois qu'il est considéré comme la racine du spanning-tree, les switches doivent recalcyler toute la topologie autour de lui, ce qui provoque une redirection des chemins habituels en entraîne de l'instabilité ainsi que des perturbations sur le trafic. En prenant la place du Root Bridge, l'attaquant se retrouve au centre du spanning-tree et peut alors influencer ou perturber une partie du réseau qui passe par lui.</p>
+                                    <p>La solution est de configurer les ports comme port Edge pour protéger le réseau STP : le port ne participera pas à STP et toute BPDU reçue est bloquée. Ça empêche l'attaquant de faire élire Root Bridge.</p>
                                     <p>La commande <span class="em">spanning-tree portfast edge</span> active la fonctionnalité <span class="em">PortFast</span> sur un port connecté à un hôte final, ce qui permet d'accélérer la mise en service de l'interface.</p>
                                     <p>La commande <span class="em">spanning-tree bpduguard enable</span> provoque la désactivation immédiate du port si une <span class="em">BPDU (Bridge Protocol Data Unit)</span> est reçue, protégeant ainsi le réseau contre le raccordement de commutateurs non autorisés.</p>
+                                    <p>Pour vérifier le portfast/edge, on utilise la commande suivante :</p>
+<pre><code>show spanning-tree interface e0/1 detail</code></pre>
+                                    <img src="../images/show_spanning-tree_interface_e0_1_detail.PNG" alt="">
+                                    <p>Et aussi visible dans le <span class="em">show run</span> :</p>
+                                    <img src="../images/show_run.PNG" alt="">
                                 </li>
                                 <li>
                                     <h3>DHCP Snooping + DAI (option sécurité avancée) :</h3>
