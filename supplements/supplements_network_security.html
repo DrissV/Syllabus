@@ -1990,6 +1990,7 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                     <ol>
                         <li>
                             <p>À partir de la trame Ethernet fournie, identifiez l'adresse MAC source et destination. Indiquez s'il s'agit d'un trafic unicast, multicast ou broadcast et justifiez.</p>
+                            <img src="../images/trame_Ethernet(1).PNG" alt="">
                             <p>Dans une trame Ethernet, les six premiers octets sont l'adresse MAC de destination et les six octets suivants l'adresse MAC source.</p>
                             <p>On détermine le type à partir de l'adresse MAC de destination :</p>
                             <ul>
@@ -2012,6 +2013,7 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                         </li>
                         <li>
                             <p>Analysez deux trames différentes et déterminez laquelle utilise Ethernet II et laquelle utilise IEEE 802.3 avec LLC. Quels champs permettent de les différencier ?</p>
+                            <img src="../images/trame_Ethernet(2).PNG" alt="">
                             <p>Le champ situé après les adresses MAC fait la différence :</p>
                             <ul>
                                 <li>
@@ -2058,6 +2060,7 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                         </li>
                         <li>
                             <p>Identifiez des paquets IP fragmentés. Relevez l'identification, les flags et le fragment offset. Combien de fragments composent le paquet original ?</p>
+                            <img src="../images/trame_Ethernet(3).PNG" alt="">
                             <h3>Champs à observer (en-tête IPv4) :</h3>
                             <ul>
                                 <li>
@@ -2325,7 +2328,7 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                             </tr>
                             <tr>
                                 <td>IHL</td>
-                                <th>5</th>
+                                <td>5</td>
                                 <td>20 octets</td>
                             </tr>
                             <tr>
@@ -2444,7 +2447,7 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                             <p>Avant d'ajouter quoi que ce soit, vérifier la VM dans le menu "Edit &#8594; Preferences &#8594; GNS3 VM".</p>
                         </li>
                         <li>
-                            <p>Dans la fenêtre du projet, dans le panel "Devices" ou "Nodes", on doit drag & drop les éléments suivants et les positionner sur l'aire de travail :</p>
+                            <p>Dans la fenêtre du projet, dans le panel "Devices" ou "Nodes", on doit faire un drag & drop les éléments suivants et les positionner sur l'aire de travail :</p>
                             <ul>
                                 <li>
                                     <p>IOS ON UNIX / IOU L2 &#8594; place un Switch1.</p>
@@ -2515,8 +2518,8 @@ interface e0/0
     exit</code></pre>
                                     <p>L'interface e0/0 du routeur est configurée en DHCP afin d'obtenir automatiquement une adresse IP depuis le cloud NAT de GNS3.</p>
                                     <p>Le NAT (Network Address Translation) est le mécanisme réseau qui <span class="em">traduit les adresses IP privées en adresses IP publiques (et inversement)</span> pour permettre à plusieurs machines d'un réseau interne de <span class="em">partager une seule adresse IP publique</span>, tout en <span class="em">masquant la structure interne du réseau</span> (bénéfice de sécurité de base).</p>
-                                    <p>Lorsque l'on exécute la commande <span class="em">show ip interface brief</span> sur le routeur, on constateque l'interface obtient normalement une adresse IP via DHCP.</p>
-                                    <p>Pour utiliser une configuration statique, on supprie l'addressage DHCP et on configure manuellement une adresse IP fixe sur l'interface à l'aide de la commande suivante :</p>
+                                    <p>Lorsque l'on exécute la commande <span class="em">show ip interface brief</span> sur le routeur, on constate que l'interface obtient normalement une adresse IP via DHCP.</p>
+                                    <p>Pour utiliser une configuration statique, on supprime l'addressage DHCP et on configure manuellement une adresse IP fixe sur l'interface à l'aide de la commande suivante :</p>
 <pre><code>ip address 192.168.122.2 255.255.255.0</code></pre>
                                     <p>Le passage à une configuration IP statique garantit une adresse IP permanente sur le routeur, ce qui est indispensable pour assurer la cohérence des règles de sécurité, du routage et des services réseau.</p>
                                     <p>L'interface e0/0 représente la connexion vers le réseau externe (Internet) et est donc définie comme interface <span class="em">NAT outside</span>.</p>
@@ -2671,7 +2674,7 @@ vlan 3
     exit</code></pre>
                                     <h4>Désactiver le VLAN (sécurité) :</h4>
                                     <p>Lorsque l'on fait <span class="em">show vlan</span>, on constate que l'on a tous les ports par défaut dans le vlan1 et c'est un problème. Si tous les ports inutilisés restent dans le vlan 1, un attaquant physique qui a accès à un port inutilisé peut faire plusieurs choses problématiques comme se connecter au switch, intercepter ou injecter du trafic interne, etc...</p>
-                                    <p>La solution est dnc de créer un SVI (Switched Virtual Interface) pour le vlan en question (ici le vlan 1) : l'interface de management passe sur ce vlan dédié, isolé du vlan par défaut.</p>
+                                    <p>La solution est donc de créer un SVI (Switched Virtual Interface) pour le vlan en question (ici le vlan 1) : l'interface de management passe sur ce VLAN3 dédié, isolé du vlan par défaut.</p>
 <pre><code>interface Vlan1
     shutdown
     exit</code></pre>
@@ -2837,7 +2840,7 @@ copy running-config startup-config</code></pre>
                                     <p>En cas de violation de la politique de sécurité, la commande <span class="em">switchport port-security violation restrict</span> permet de bloquer le trafic provenant des adresses non autorisées, d'incrémenter un compteur d'événements, tout en maintenant le port <span class="em">actif</span>.</p>
                                     <p>La commande <span class="em">switchport port-security aging time 1</span> définit une durée d'expiration des adresses MAC de <span class="em">1 minute</span>.</p>
                                     <p>Grâce à la commande <span class="em">switchport port-security aging type inactivity</span>, les adresses MAC sont automatiquement supprimées de la table de sécurité lorsqu'elles deviennent <span class="em">inactives</span>.</p>
-                                    <p>Cette indique au switch que les adresses MAC apprises par le port-security doivent être supprimées (si elles sont âgées), c'est-à-dire si elles n'envoient plus de trafic pendant un certain temps. Donc, si une adresse MAC ne parle plus pendant X minutes, elle est retirée de la table port-security.</p>
+                                    <p>Cette commande indique au switch que les adresses MAC apprises par le port-security doivent être supprimées (si elles sont âgées), c'est-à-dire si elles n'envoient plus de trafic pendant un certain temps. Donc, si une adresse MAC ne parle plus pendant X minutes, elle est retirée de la table port-security.</p>
                                     <p>Pour voir la sécurité sur les ports du switch, on utilise la commande suivante :</p>
 <pre><code>do show port-security</code></pre>
                                     <img src="../images/show_port-security.PNG" alt="">
@@ -2857,7 +2860,7 @@ no cdp run</code></pre>
 <pre><code>configure terminal
 no lldp run</code></pre>
                                     <p>Les commandes <span class="em">no cdp enable</span>, <span class="em">no lldp transmit</span> et <span class="em">no lldp receive</span> permettent respectivement de désactiver le protocole <span class="em">CDP</span> (Cisco Discovery Protocol), d'empêcher l'envoi de trames <span class="em">LLDP</span> et d'empêcher la réception de trames <span class="em">LLDP</span>, afin de limiter la divulgation d'informations sur l'infrastructure réseau.</p>
-                                    <p>L'attaque STP (Root Bridge Attack) (L2) consiste à ce que l'attaquant envoie des BPDU forgées avec une priorité très basse et une adresse MAC très faible, afin que l'attaquant soit élu le Root Bridge. Une fois qu'il est considéré comme la racine du spanning-tree, les switches doivent recalcyler toute la topologie autour de lui, ce qui provoque une redirection des chemins habituels en entraîne de l'instabilité ainsi que des perturbations sur le trafic. En prenant la place du Root Bridge, l'attaquant se retrouve au centre du spanning-tree et peut alors influencer ou perturber une partie du réseau qui passe par lui.</p>
+                                    <p>L'attaque STP (Root Bridge Attack) (L2) consiste à ce que l'attaquant envoie des BPDU forgées avec une priorité très basse et une adresse MAC très faible, afin que l'attaquant soit élu le Root Bridge. Une fois qu'il est considéré comme la racine du spanning-tree, les switches doivent recalculer toute la topologie autour de lui, ce qui provoque une redirection des chemins habituels et entraîne de l'instabilité ainsi que des perturbations sur le trafic. En prenant la place du Root Bridge, l'attaquant se retrouve au centre du spanning-tree et peut alors influencer ou perturber une partie du réseau qui passe par lui.</p>
                                     <p>La solution est de configurer les ports comme port Edge pour protéger le réseau STP : le port ne participera pas à STP et toute BPDU reçue est bloquée. Ça empêche l'attaquant de faire élire Root Bridge.</p>
                                     <p>La commande <span class="em">spanning-tree portfast edge</span> active la fonctionnalité <span class="em">PortFast</span> sur un port connecté à un hôte final, ce qui permet d'accélérer la mise en service de l'interface.</p>
                                     <p>La commande <span class="em">spanning-tree bpduguard enable</span> provoque la désactivation immédiate du port si une <span class="em">BPDU (Bridge Protocol Data Unit)</span> est reçue, protégeant ainsi le réseau contre le raccordement de commutateurs non autorisés.</p>
@@ -2909,7 +2912,7 @@ copy running-config startup-config</code></pre>
 <pre><code>show ip dhcp snooping</code></pre>
                                     <p>Pour afficher la <span class="em">table des baux DHCP sécurisés</span> (binding table) :</p>
 <pre><code>show ip dhcp snooping binding</code></pre>
-                                    <p>Quand un DHCP sooping est activé, le switch peut <span class="em">ajouter automatiquement l'Option 82</span> (DHCP Relay Agent Information) dans les messages DHCP qui sortent du switch. Pour désactiver l'injection de l'Option 82 dans les paquets DHCP, il faut faire la commande suivante :</p>
+                                    <p>Quand un DHCP snooping est activé, le switch peut <span class="em">ajouter automatiquement l'Option 82</span> (DHCP Relay Agent Information) dans les messages DHCP qui sortent du switch. Pour désactiver l'injection de l'Option 82 dans les paquets DHCP, il faut faire la commande suivante :</p>
 <pre><code>no ip dhcp snooping information option</code></pre>
                                     <p>En gros, cette commande empêche le switch d'ajouter l'Option 82 aux messages DHCP, tout en gardant le filtrage DHCP activé.</p>
                                 </li>
@@ -2939,7 +2942,7 @@ copy running-config startup-config</code></pre>
 <pre><code>show run</code></pre>
                                 </li>
                                 <li>
-                                    <p>Pour capturer un paquet, dans la topologie GNS3, clique-droit sur le lien "Start capture" et choisit Wireshark si installé. Tu pourras faire des pings depuis PC1 et tu verras alors ICMP traverser.</p>
+                                    <p>Pour capturer un paquet, dans la topologie GNS3, clique-droit sur le lien "Start capture" et choisis Wireshark si installé. Tu pourras faire des pings depuis PC1 et tu verras alors ICMP traverser.</p>
                                     <p>N'oublies pas de "Stop capture" quand tu as fini (dans Wireshark ou dans GNS3).</p>
                                 </li>
                             </ul>
