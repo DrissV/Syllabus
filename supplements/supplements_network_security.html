@@ -53,6 +53,7 @@
                     <li><a href="#architecture_normes_protocoles">Architecture, normes (standards) et protocoles</a></li>
                     <li><a href="#exercices_analyse_paquets_trames_L2_L3">Exercices : Analyse de paquets et trames - Layer 2 &amp; Layer 3</a></li>
                     <li><a href="#labo1">Labo 1 : construction d'un petit réseau</a></li>
+                    <li><a href="#labo2">Labo 2 :construction et sécurisation d'un réseau de taille moyenne</a></li>
                 </ol>
             </nav>
             
@@ -1987,6 +1988,128 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                 </article>
                 <article>
                     <h2 id="exercices_analyse_paquets_trames_L2_L3">Exercices : Analyse de paquets et trames - Layer 2 &amp; Layer 3 :</h2>
+                    <h3>Installation de Scapy :</h3>
+                    <p>Pour cette partie du cours, il faut installer et télécharger <a href="https://www.python.org/downloads/" target="_blank">Python</a> et n'oubliez pas de cocher <q class="em">Add Python to PATH</q> pendant l'installation. Vous pouvez vérifier l'installation :</p>
+<pre><code>python --version</code></pre>
+<pre><code>pip --version</code></pre>
+                    <p>Le dossier `<span class="em">C:\Users\drissAppData\Roaming\Python\Python313\Scripts\</span>` est important car il contient <span class="em">pip</span>, <span class="em">scapy</span>, et autres scripts Python. Ce dossier doit être <span class="em">ajouté au PATH</span> si ce n'est pas fait automatiquement.</p>
+                    <p>Dans un terminal (PowerShell ou CMD), on installe Scapy avec la commande suivante :</p>
+<pre><code>pip install scapy</code></pre>
+                    <p>Pour vérifier l'installation :</p>
+<pre><code>python
+&gt;&gt;&gt; from scapy.all import *
+&gt;&gt;&gt; ls()</code></pre>
+                    <p>Pour envoyer/sniffer des paquets, il faut lancer le terminal <span class="em">en administrateur</span> et installer <a href="https://npcap.com/#download" target="_blank">Npcap</a> (mode WinPcap compatible).</p>
+                    <p>Pour télécharger et installer <a href="https://miktex.org/download" target="_blank">MiKTeX</a> et accepter l'installation automatique des packages LaTeX.</p>
+                    <p>N'oubliez pas de vérifier que le dossier binaire `<span class="em">C:\Users\driss\AppData\Local\Programs\MiKTeX\miktex\bin\x64\</span>` soit bien ajouté dans les variables d'environnement.</p>
+                    <p>Pour vérifier que l'installation de MiXTeX a bien fonctionnée, il faut taper la commande suivante :</p>
+<pre><code>pdflatex --version</code></pre>
+                    <p>Cet outil est utile pour générer des PDF (par exemple : <span class="em">canvas_dump().writePDFfile()</span> dans Scapy).</p>
+                    <h3>Commandes et fonctions Scapy les plus utilisées :</h3>
+                    <h4>Construction des couches :</h4>
+<pre><code>Ether() # Couche Ethernet (L2)
+IP() # Couche IP (L3)
+ICMP() # Protocole ICMP (ping)
+TCP() # Protocole TCP
+UDP() # Protocole UDP
+Raw() # Données brutes</code></pre>
+                    <p>Par exemple :</p>
+<pre><code>paquet = Ether() / IP(dst="8.8.8.8") / ICMP()</code></pre>
+                    <h4>Exploration et aide :</h4>
+<pre><code>ls() # Liste les champs d'une couche
+lsc() # Liste les commandes Scapy disponibles
+help(IP) # Aide détaillée sur IP
+explore() # Explorer les couches (layers) et les contributions (contribs)</code></pre>
+                    <p>Par exemple, la commande <span class="em">ls(IP())</span> affiche tous les champs (fields) de la couche IP avec :</p>
+                    <ul>
+                        <li>
+                            <p>leur nom</p>
+                        </li>
+                        <li>
+                            <p>leur type</p>
+                        </li>
+                        <li>
+                            <p>leur valeur par défaut</p>
+                        </li>
+                    </ul>
+                    <p>En gros, <q>À quoi ressemble un paquet IP et quels paramètres je peux modifier ?</q></p>
+                    <p>La commande <span class="em">lsc()</span> (List Scapy Commands) :</p>
+                    <ul>
+                        <li>
+                            <p>affiche la liste des fonctions/commandes disponibles</p>
+                        </li>
+                        <li>
+                            <p>c'est une aide rapide textuelle</p>
+                        </li>
+                        <li>
+                            <p>ne lance aucune interface, aucun menu interactif</p>
+                        </li>
+                    </ul>
+                    <p>La commande <span class="em">explore()</span> permet une exploration interactive des protocoles :</p>
+                    <ul>
+                        <li>
+                            <p>lance une interface interactive (menus)</p>
+                        </li>
+                        <li>
+                            <p>permet de naviguer dans les couches et champs des paquets</p>
+                        </li>
+                        <li>
+                            <p>très utile pour apprendre la structure de protocoles</p>
+                        </li>
+                    </ul>
+                    <h4>Envoi et réception :</h4>
+<pre><code>send(paquet) # Envoi sans attendre de réponse
+sr(paquet) # Envoi + réponses multiples
+sr1(paquet) # Envoi + une seule réponse</code></pre>
+                    <h4>Analyse et affichage :</h4>
+<pre><code>paquet.show() # Affichage détaillée
+paquet.summary() # Résumé court
+hexdump(paquet) # Contenu hexadécimal</code></pre>
+                    <h4>Export :</h4>
+<pre><code>c = paquet.canvas_dump()
+c.writePDFfile("paquet.pdf")</code></pre>
+                    <h4>Exemple :</h4>
+<pre><code>from scapy.all import *
+
+# Construction du paquet DNS
+dns_packet = (
+    IP(dst="8.8.8.8") /
+    UDP(sport=RandShort(), dport=53) /
+    DNS(
+        rd=1 # Recursion Desired
+        qd=DNSQR(qname="www.ephec.be", qtype="A")
+    )
+)
+
+# Envoi du paquet et réception de la réponse
+response = sr1(dns_packet, verbose=0, timeout=2)
+
+# Affichage du paquet et de la réponse
+dns_packet.show()
+if response :
+    response.show()
+else :
+    print("Aucune réponse DNS reçue")
+
+# c = dns_packet.canvas_dump()
+# c.writePDFfile("dns_packet.pdf")</code></pre>
+                    <p>Que fait le code précédent ?</p>
+                    <ul>
+                        <li>
+                            <p>Il fabrique une requête DNS.</p>
+                        </li>
+                        <li>
+                            <p>Il l'envoie au serveur DNS 8.8.8.8 (Google).</p>
+                        </li>
+                        <li>
+                            <p>Il demande l'adresse IPv4 (A) du domaine www.ephec.be.</p>
+                        </li>
+                        <li>
+                            <p>Il attend la réponse DNS.</p>
+                        </li>
+                    </ul>
+                    <p>En clair, c'est un équivalent de <span class="em">nslookup www.ephec.be 8.8.8.8</span>.</p>
+                    <h3>Questions :</h3>
                     <ol>
                         <li>
                             <p>À partir de la trame Ethernet fournie, identifiez l'adresse MAC source et destination. Indiquez s'il s'agit d'un trafic unicast, multicast ou broadcast et justifiez.</p>
@@ -2423,6 +2546,128 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                             <p>&#8594; ICMP (L4)</p>
                             <p>&#8594; IP (L3)</p>
                             <p>&#8594; Ethernet (2)</p>
+                        </li>
+                    </ul>
+                    <h3>Exercice Scapy :</h3>
+                    <p>À partir d'une <span class="em">trame réseau capturée à l'aide de Wireshark</span>, comme par exemple la trame ci-dessous, vous devez reconstruire le paquet équivalent en utilisant la librairie <span class="em">Scapy (Python)</span>.</p>
+                    <img src="../images/trame_Ethernet(4).PNG" alt="">
+                    <p>La trame observée correspond à une <span class="em">trame Ethernet</span> transportant un paquet <span class="em">IPv4</span> contenant un message <span class="em">ICMP Echo Request</span> avec une charge utile ASCII. Les différents champs des couches Ethernet, IP et ICMP (adresses, identifiant, TTL, type, code, etc.) doivent être identifiés à partir de la capture Wireshark.</p>
+                    <p>À l'aide de Scapy, écrivez un script Python construisant le paquet <span class="em">couche par couche</span> (<span class="em">Ether()</span>, <span class="em">IP()</span>, <span class="em">ICMP()</span>) et y ajoutant la charge utile observée. Le paquet reconstruit devra être affiché avec <span class="em">show()</span> et exporté sous forme graphique au format <span class="em">PDF</span> à l'aide de <span class="em">canvas_dump()</span>. Les valeurs utilisées doivent correspondre fidèlement à celles observées dont la capture initiale.</p>
+                    <p>Voici la solution dans le fichier `<span class="em">test_trame1.py</span>` :</p>
+<pre><code>from scapy.all import *
+# Construction du paquet
+L2 = Ether(dst="00:10:4b:30:c4:4a", src="00:a0:cc:30:c8:db")
+L3 = IP(src="10.0.99.2", dst="10.0.0.1", id=0x4c1d,ttl=32)
+L4 = ICMP()
+
+data = b"abcdefghijklmnopqrstuvwxyz" * 50  # payload
+
+paquet = L2 / L3 / L4 / data
+
+# Envoi du paquet et réception de la réponse
+response = sr1(paquet, verbose=0, timeout=2)
+
+# Affichage du paquet et de la réponse
+paquet.show()
+if response :
+    response.show()
+else :
+    print("Aucune réponse reçue")
+
+c = paquet.canvas_dump()
+c.writePDFfile("test_trame1.pdf")</code></pre>
+                    <h3>Contrôle de flux :</h3>
+                    <img src="../images/controle_flux_TCP.png" alt="">
+                    <p>Ce schéma illustre le mécanisme de <span class="em">contrôle de flux</span> de TCP, utilisant ce qu'on appelle une <span class="em">fenêtre glissante (sliding window)</span>. Il montre comment un récepteur utilise le champ "Window" (WIN) pour indiquer au moteur d'envoi la quantité de données qu'il peut encore accepter dans son tampon (buffer) afin d'éviter d'être submergé.</p>
+                    <p>Voici l'explication étape par étape du diagramme :</p>
+                    <ol>
+                        <li>
+                            <h4>Envoi initial (2K) :</h4>
+                            <ul>
+                                <li>
+                                    <p>L'application de l'expéditeur (Sender) écrit 2 Ko de données.</p>
+                                </li>
+                                <li>
+                                    <p>Le paquet est envoyé avec un numéro de séquence SEQ=0.</p>
+                                </li>
+                                <li>
+                                    <p>À la réception, le tampon du destinataire (Receiver Buffer), qui a une taille de 4K, est à moitié rempli (2K occupés, 2K libres).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Premier Accusé de réception (ACK) :</h4>
+                            <ul>
+                                <li>
+                                    <p>Le récepteur répond avec ACK=2048, confirmant qu'il a bien reçu les 2048 octets (2K) et qu'il attend l'octet suivant à partir de 2048.</p>
+                                </li>
+                                <li>
+                                    <p>Il précise WIN=2048, indiquant qu'il lui reste exactement <span class="em">2K d'espace libre</span> dans son tampon.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Deuxième envoi et saturation (Application writes 3K) :</h4>
+                            <ul>
+                                <li>
+                                    <p>L'expéditeur tente d'écrire 3 Ko, mais comme la fenêtre annoncée précédemment n'était que de 2K, il n'envoie qu'un segment de 2K (SQ=2048).</p>
+                                </li>
+                                <li>
+                                    <p>Une fois ces 2K reçus, le tampon du récepteur est <span class="em">Full (Plein)</span> (4K/4K).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Blocage de l'expéditeur (Sender Blocked) :</h4>
+                            <ul>
+                                <li>
+                                    <p>Le récepteur envoie un ACK=4096 (il a bien reçu les 4K au total) mais annonce une fenêtre WIN=0.</p>
+                                </li>
+                                <li>
+                                    <p>Cela signifie : <q>J'ai tout reçu, mais je n'ai plus de place. Arrête d'envoyer !</q>. L'expéditeur est alors bloqué et ne peut plus transmettre de données.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Libération d'espace (System reads 2K) :</h4>
+                            <ul>
+                                <li>
+                                    <p>L'application côté récepteur lit 2 Ko de données depuis la mémoire tampon, ce qui libère de l'espace.</p>
+                                </li>
+                                <li>
+                                    <p>Le récepteur envoie alors un nouvel accusé de réception (ACK=4096) avec une mise à jour de la fenêtre : WIN=2048.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Reprise de la transmission :</h4>
+                            <ul>
+                                <li>
+                                    <p>L'expéditeur voit qu'il y a de nouveau de la place. Il est autorisé à transmettre ("Sender clear to transmit").</p>
+                                </li>
+                                <li>
+                                    <p>Il envoie le reliquat des données (le 1K restant des 3K initialement prévus) avec SEQ=4096.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <p><span class="em">En résumé,</span> ce schéma démontre que TCP adapte dynamiquement le débit de l'expéditeur en fonction de la capacité de traitement et de stockage du récepteur, garantissant ainsi qu'aucune donnée n'est perdue par débordement de tampon.</p>
+                    <p>À la suite de ce qui est présenté sur l'image, le dialogue se poursuit pour finaliser l'envoi des données et mettre à jour l'état du tampon. Voici la suite logique de l'échange :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Réception du segment de 1K</span> : Le récepteur reçoit le paquet de 1 Ko envoyé avec SEQ=4096.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Mise à jour du tampon</span> : Le tampon du récepteur, qui avait 2 Ko de libre, contient désormais 3 Ko de données (les 2 Ko restants de l'étape précédente + le nouveau 1 Ko). Il reste donc <span class="em">1 Ko d'espace libre</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Envoi d'un nouvel ACK</span> : Le récepteur envoie un accusé de réception pour confirmer la réception totale : <span class="em">ACK=5120</span> (4096 + 1024).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Annonce de la fenêtre (Window)</span> : Dans ce message, il indique <span class="em">WIN=1024</span>, signifiant l'expéditeur qu'il ne peut envoyer qu'un maximum de 1 Ko supplémentaire pour le moment.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Libération continue</span> : Le dialogue continue ainsi jusqu'à ce que l'application cliente ait lu toutes les données du tampon ou que l'expéditeur n'ait plus rien à transmettre.</p>
                         </li>
                     </ul>
                 </article>
@@ -2950,6 +3195,61 @@ copy running-config startup-config</code></pre>
                     </ol>
                     <h3>Conclusion :</h3>
                     <p>Cette configuration met en oeuvre une segmentation réseau sécurisée par VLANs, un routage inter-VLAN contrôlé par ACL, un accès Internet via NAT, et plusieurs mécanismes de sécurité de couche 2 (Port Security, STP, DHCP Snooping, DAI) afin de limiter les attaques internes et l'accès non autorisé.</p>
+                </article>
+                <article>
+                    <h2 id="labo2">Labo 2 : construction et sécurisation d'un réseau de taille moyenne :</h2>
+                    <p>Dans ce laboratoire, nous aborderons la sécurisation d'un réseau au <span class="em">niveau 3 (L3) et niveau 4 (L4)</span> à l'aide de techniques de <span class="em">firewalling classique</span>.</p>
+                    <h3>Sécurisation L3/L4 - Firewalling :</h3>
+                    <p>Nous verrons comment :</p>
+                    <ul>
+                        <li>
+                            <p>Bloquer une adresse IP vers une autre adresse IP</p>
+                        </li>
+                        <li>
+                            <p>Bloquer une adresse IP depuis un port spécifique vers une autre adresse IP</p>
+                        </li>
+                        <li>
+                            <p>Mettre en place des règles de filtrage basées sur différents critères réseau</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Question potientielle</span> : Créer une <span class="em">ACL</span> qui bloque les paquets dont le <span class="em">numéro de séquence est égal à un chiffre donné</span>.</p>
+                    <p><span class="em">OSPF (Open Shortest Path First)</span> est un <span class="em">protocole de routage dynamique</span> utilisé pour l'échange d'informations de routage au sein d'un réseau.</p>
+                    <h3>Les trois axes de la sécurisation réseau :</h3>
+                    <ol>
+                        <li>
+                            <h4>Data Plane :</h4>
+                            <ul>
+                                <li>
+                                    <p>Sécurisation des <span class="em">données des utilisateurs</span></p>
+                                </li>
+                                <li>
+                                    <p>Mise en oeuvre via des <span class="em">policies</span> (politiques de filtrage et de contrôle)</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Management Plane :</h4>
+                            <ul>
+                                <li>
+                                    <p>Sécurisation de l'<span class="em">accès à l'administration des équipements</span></p>
+                                </li>
+                                <li>
+                                    <p>Seules les personnes autorisées (les ingénieurs réseau désignés) peuvent effectuer des actions de configuration ou de gestion</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Control Plane et Forwarding Plane :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Control Plane</span> : définit la mani§re dont les paquets doivent être acheminés (choix des routes, décisions de routage)</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Forwarding Plane</span> : assure l'<span class="em">acheminement effectif des paquets</span> selon les décisions prises par le control plane</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
