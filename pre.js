@@ -47,3 +47,56 @@ gifs.forEach((img) => {
     });
 });
 */
+
+const smartLinkElements = document.querySelectorAll('.smart-link');
+
+smartLinkElements.forEach((link) => {
+
+    let timer = null;
+
+    function openSameTab() {
+        window.location.href = link.href;
+    }
+
+    function openNewTab() {
+        window.open(link.href, "_blank");
+    }
+
+    /* Souris */
+    link.addEventListener('click', (e) => {
+        timer = setTimeout(openSameTab, 250);
+        e.preventDefault();
+    });
+
+    link.addEventListener('dblclick', (e) => {
+        clearInterval(timer);
+        openNewTab();
+        e.preventDefault();
+    });
+
+    /* Clavier */
+    link.addEventListener('keydown', (e) => {
+
+        // Ctrl/Cmd + Enter -> nouvel onglet (standard)
+        if ((e.ctrlKey || e.metaKey) && 'Enter' === e.key) {
+            openNewTab();
+            e.preventDefault();
+            return;
+        }
+
+        // Enter simple / double Enter
+        if ('Enter' === e.key) {
+            if (timer === null)  {
+                timer = setTimeout(() => {
+                    openSameTab();
+                    timer = null;
+                }, 250);
+            } else {
+                clearTimeout(timer);
+                timer = null;
+                openNewTab();
+            }
+            e.preventDefault();
+        }
+    });
+});
