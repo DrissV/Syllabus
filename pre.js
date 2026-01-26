@@ -64,15 +64,20 @@ smartLinkElements.forEach((link) => {
 
     /* Souris */
     link.addEventListener('click', (e) => {
-        timer = setTimeout(openSameTab, 250);
         e.preventDefault();
+
+        if (timer) {
+            clearTimeout(timer);
+            timer = null;
+            openNewTab(); // double clic
+        } else {
+            timer = setTimeout(() => {
+                openSameTab(); // simple clic
+                timer = null;
+            }, 250);
+        }
     });
 
-    link.addEventListener('dblclick', (e) => {
-        clearInterval(timer);
-        openNewTab();
-        e.preventDefault();
-    });
 
     /* Clavier */
     link.addEventListener('keydown', (e) => {
