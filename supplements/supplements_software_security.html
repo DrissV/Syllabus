@@ -1554,7 +1554,7 @@ http://localhost:8080/WebGoat/attack?url=file:///etc/passwd
 ---</code></pre>
                 </article>
                 <article>
-                    <h2>Travaux individuels - OWASP Top 10 (2021) : Analyse de vulnérabilités et contre-mesures applicatives :</h2>
+                    <h2 id="travaux_individuels_OWAP_Top_10">Travaux individuels - OWASP Top 10 (2021) : Analyse de vulnérabilités et contre-mesures applicatives :</h2>
                     <ol>
                         <li>
                             <h3>Contexte :</h3>
@@ -2100,6 +2100,791 @@ http://localhost:8080/WebGoat/attack?url=file:///etc/passwd
                     <ol>
                         <li>
                             <h4>Présentation de la vulnérabilité :</h4>
+                            <p>L'<span class="em">Insecure Design</span> désigne des failles de sécurité résultant de <span class="em">choix de conception applicative insuffisants ou inadaptés</span>, indépendamment de la qualité de l'implémentation technique.</p>
+                            <p>Contrairement aux vulnérabilités liées à des erreurs de code, l'Insecure Design apparaît lorsque la sécurité <span class="em">n'est pas intégrée dès la phase de conception</span> de l'application. Même une implémentation correcte peut alors rester vulnérable.</p>
+                            <p>Cette catégorie concerne notamment :</p>
+                            <ul>
+                                <li>
+                                    <p>l'absence de modélisation des menaces,</p>
+                                </li>
+                                <li>
+                                    <p>des règles métier non sécurisées,</p>
+                                </li>
+                                <li>
+                                    <p>des mécanismes de contrôle incomplets ou inexistants</p>
+                                </li>
+                                <li>
+                                    <p>une mauvaise gestion des flux utilisateurs et des cas d'abus.</p>
+                                </li>
+                            </ul>
+                            <p>Les erreurs de conception courantes incluent :</p>
+                            <ul>
+                                <li>
+                                    <p>Absence de contrôles de sécurité sur des fonctionnalités sensibles.</p>
+                                </li>
+                                <li>
+                                    <p>Hypothèses de confiance irréalistes sur le comportement des utilisateurs.</p>
+                                </li>
+                                <li>
+                                    <p>Manque de séparation entre les niveaux de privilèges.</p>
+                                </li>
+                                <li>
+                                    <p>Absence de limites (quotas, délais, seuils).</p>
+                                </li>
+                            </ul>
+                            <p>Les composants concernés sont principalement :</p>
+                            <ul>
+                                <li>
+                                    <p>la logique métier,</p>
+                                </li>
+                                <li>
+                                    <p>les flux applicatifs,</p>
+                                </li>
+                                <li>
+                                    <p>l'architecture fonctionnelle globale.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Scénario(s) d'exploitation :</h4>
+                            <h5>Scénario : Contournement des règles métier lors d'un processus critique :</h5>
+                            <h6>Hypothèses techniques :</h6>
+                            <ul>
+                                <li>
+                                    <p>L'application permet de modifier une commande après validation.</p>
+                                </li>
+                                <li>
+                                    <p>Aucune règle métier ne limite le nombre ou le type de modifications possibles.</p>
+                                </li>
+                                <li>
+                                    <p>L'utilisateur est authentifié et légitime.</p>
+                                </li>
+                            </ul>
+                            <h6>Étapes générales :</h6>
+                            <ol>
+                                <li>
+                                    <p>Un utilisateur valide une commande avec un prix initial.</p>
+                                </li>
+                                <li>
+                                    <p>Après validation, il modifie manuellement les paramètres de la requête.</p>
+                                </li>
+                                <li>
+                                    <p>L'application accepte la modification sans vérification métier.</p>
+                                </li>
+                                <li>
+                                    <p>Le prix final est réduit de manière frauduleuse.</p>
+                                </li>
+                                <li>
+                                    <p>La commande est traitée avec des données incohérentes.</p>
+                                </li>
+                            </ol>
+                            <p>Ce scénario illustre une <span class="em">faille de conception</span>, où les règles métier n'ont pas été pensées pour résister à des usages abusifs.</p>
+                        </li>
+                        <li>
+                            <h4>Causes racines :</h4>
+                            <p>Les causes racines de l'Insecure Design sont généralement :</p>
+                            <ul>
+                                <li>
+                                    <p>Une absence de <span class="em">prise en compte de la sécurité dès la phase de conception</span>.</p>
+                                </li>
+                                <li>
+                                    <p>L'absence de <span class="em">modélisation des menaces</span> (threat modeling).</p>
+                                </li>
+                                <li>
+                                    <p>Une focalisation excessive sur les fonctionnalités au détriment des abus possibles.</p>
+                                </li>
+                                <li>
+                                    <p>Un manque de collaboration entre équipes métier et sécurité.</p>
+                                </li>
+                                <li>
+                                    <p>L'absence de validation des règles métier côté serveur.</p>
+                                </li>
+                            </ul>
+                            <p>Il s'agit principalement d'un <span class="em">problème organisationnel et conceptuel</span>, plus que technique.</p>
+                        </li>
+                        <li>
+                            <h4>Impacts de sécurité :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Confidentialité</span> : exposition indirecte de données via des flux mal conçus.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Intégrité</span> : altération des données ou contournement des règles métier.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Disponibilité</span> : abus fonctionnels pouvant entraîner un déni de service.</p>
+                                </li>
+                            </ul>
+                            <p>L'impact est considéré comme <span class="em">élevé</span>, car ces vulnérabilités sont souvent <span class="em">difficiles à détecter</span> et peuvent être exploitées de manière légitime.</p>
+                        </li>
+                        <li>
+                            <h4>Contre-mesures logicielles :</h4>
+                            <h5>Niveau code :</h5>
+                            <ul>
+                                <li>
+                                    <p>Implémenter des contrôles stricts des règles métier côté serveur.</p>
+                                </li>
+                                <li>
+                                    <p>Vérifier systématiquement la cohérence des états applicatifs.</p>
+                                </li>
+                                <li>
+                                    <p>Ne pas supposer que l'utilisateur suit le chemin prévu.</p>
+                                </li>
+                            </ul>
+                            <h5>Niveau architecture applicative :</h5>
+                            <ul>
+                                <li>
+                                    <p>Intégrer la sécurité dès la phase de conception (Security by Design).</p>
+                                </li>
+                                <li>
+                                    <p>Réaliser une modélisation des menaces pour chaque fonctionnalité critique.</p>
+                                </li>
+                                <li>
+                                    <p>Séparer clairement les responsabilités et les niveaux de privilèges.</p>
+                                </li>
+                                <li>
+                                    <p>Introduire des mécanismes de limitation (rate limiting, quotas).</p>
+                                </li>
+                            </ul>
+                            <h5>Mesures préventives et détectives :</h5>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Préventives</span> : revues de conception, validation des cas d'abus.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Détectives</span> : journalisation des actions métiers sensibles, alertes sur comportements anormaux.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Limites et risques résiduels :</h4>
+                            <p>Malgré des contre-mesures adaptées :</p>
+                            <ul>
+                                <li>
+                                    <p>Les exigences métier évoluent rapidement.</p>
+                                </li>
+                                <li>
+                                    <p>De nouveaux scénarios d'abus peuvent apparaître.</p>
+                                </li>
+                                <li>
+                                    <p>Les erreurs humaines lors de la conception restent possibles.</p>
+                                </li>
+                            </ul>
+                            <p>La sécurité par la conception implique donc un <span class="em">processus continu d'amélioration</span> et d'adaptation.</p>
+                        </li>
+                        <li>
+                            <h4>Conclusion :</h4>
+                            <p>L'Insecure Design représente une vulnérabilité critique car elle <span class="em">ne peut pas être corrigée uniquement par du code</span>.</p>
+                            <p>Une approche intégrant la sécurité dès la conception, combinée à une analyse rigoureuse des usages et abus possibles, est essentielle pour construire des applications robustes et résilientes.</p>
+                        </li>
+                    </ol>
+                    <h3>A5 - Security Misconfiguration :</h3>
+                    <ol>
+                        <li>
+                            <h4>Présentation de la vulnérabilité :</h4>
+                            <p>La vulnérabilité <span class="em">Security Misconfiguration</span> désigne des failles de sécurité résultant d'une <span class="em">configuration incorrecte, incomplète ou par défaut</span> des composants d'une application.</p>
+                            <p>Elle peut concerner :</p>
+                            <ul>
+                                <li>
+                                    <p>le serveur web,</p>
+                                </li>
+                                <li>
+                                    <p>l'application elle-même,</p>
+                                </li>
+                                <li>
+                                    <p>le framework utilisé,</p>
+                                </li>
+                                <li>
+                                    <p>les bases de données,</p>
+                                </li>
+                                <li>
+                                    <p>les services cloud ou conteneurs.</p>
+                                </li>
+                            </ul>
+                            <p>Cette catégorie apparaît lorsque :</p>
+                            <ul>
+                                <li>
+                                    <p>des fonctionnalités inutiles sont laissées actives,</p>
+                                </li>
+                                <li>
+                                    <p>des paramètres de sécurité par défaut ne sont pas modifiés,</p>
+                                </li>
+                                <li>
+                                    <p>des messages d'erreur trop détaillés sont exposés,</p>
+                                </li>
+                                <li>
+                                    <p>des permissions excessives sont accordées.</p>
+                                </li>
+                            </ul>
+                            <p>Les erreurs de configuration courantes incluent :</p>
+                            <ul>
+                                <li>
+                                    <p>Activation du mode debug en production.</p>
+                                </li>
+                                <li>
+                                    <p>Utilisation de comptes ou mots de passe par défaut.</p>
+                                </li>
+                                <li>
+                                    <p>Absence d'en-têtes de sécurité HTTP.</p>
+                                </li>
+                                <li>
+                                    <p>Mauvaise configuration des permissions ou des accès.</p>
+                                </li>
+                                <li>
+                                    <p>Exposition de fichiers sensibles (backup, logs, fichiers de configuration).</p>
+                                </li>
+                            </ul>
+                            <p>Les composants concernés sont principalement :</p>
+                            <ul>
+                                <li>
+                                    <p>les serveurs web et applicatifs,</p>
+                                </li>
+                                <li>
+                                    <p>les frameworks,</p>
+                                </li>
+                                <li>
+                                    <p>les systèmes de déploiement et d'infrastructure.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Scénario(s) d'exploitation :</h4>
+                            <h5>Scénario : Exploitation d'un mode debug actif en production :</h5>
+                            <h6>Hypothèses techniques :</h6>
+                            <ul>
+                                <li>
+                                    <p>L'application est déployée en environnement de production.</p>
+                                </li>
+                                <li>
+                                    <p>Le mode debug du framework est activé.</p>
+                                </li>
+                                <li>
+                                    <p>Les messages d'erreur sont affichés côté client.</p>
+                                </li>
+                            </ul>
+                            <h6>Étapes générales :</h6>
+                            <ol>
+                                <li>
+                                    <p>Un utilisateur provoque volontairement une erreur applicative.</p>
+                                </li>
+                                <li>
+                                    <p>L'application affiche une page d'erreur détaillée.</p>
+                                </li>
+                                <li>
+                                    <p>Les informations exposées incluent :</p>
+                                    <ul>
+                                        <li>
+                                            <p>la structure interne de l'application,</p>
+                                        </li>
+                                        <li>
+                                            <p>des chemins de fichiers,</p>
+                                        </li>
+                                        <li>
+                                            <p>parfois des secrets ou identifiants.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <p>L'attaquant utilise ces informations pour préparer une attaque ciblée.</p>
+                                </li>
+                                <li>
+                                    <p>Une vulnérabilité plus critique est ensuite exploitée.</p>
+                                </li>
+                            </ol>
+                            <p>Ce scénario illustre une <span class="em">exposition d'informations sensibles due à une mauvaise configuration</span>, facilitant des attaques ultérieures.</p>
+                        </li>
+                        <li>
+                            <h4>Causes racines :</h4>
+                            <p>Les causes racines de la Security Misconfiguration sont généralement :</p>
+                            <ul>
+                                <li>
+                                    <p>Une absence de processus de configuration sécurisé pour les environnements.</p>
+                                </li>
+                                <li>
+                                    <p>L'utilisation de configurations par défaut non durcies.</p>
+                                </li>
+                                <li>
+                                    <p>Un manque de séparation entre environnements (développement, test, production).</p>
+                                </li>
+                                <li>
+                                    <p>Une méconnaissance des paramètres de sécurité des frameworks et serveurs.</p>
+                                </li>
+                                <li>
+                                    <p>L'absence de procédures de durcissement (hardening).</p>
+                                </li>
+                            </ul>
+                            <p>Il s'agit souvent d'un <span class="em">problème opérationnel et organisationnel</span>, plus que d'un défaut de code.</p>
+                        </li>
+                        <li>
+                            <h4>Impacts de sécurité :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Confidentialité</span> : divulgation d'informations sensibles ou internes.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Intégrité</span> : modification non autorisée de paramètres ou de données.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Disponibilité</span> : déni de service dû à une mauvaise configuration.</p>
+                                </li>
+                            </ul>
+                            <p>L'impact global est considéré comme <span class="em">élevé</span>, car ces vulnérabilités sont <span class="em">fréquentes</span>, faciles à exploiter et souvent combinées à d'autres failles.</p>
+                        </li>
+                        <li>
+                            <h4>Contre-mesures logicielles :</h4>
+                            <h5>Niveau code :</h5>
+                            <ul>
+                                <li>
+                                    <p>Désactiver toute fonctionnalité de debug en production.</p>
+                                </li>
+                                <li>
+                                    <p>Ne jamais exposer d'informations sensibles dans les messages d'erreur.</p>
+                                </li>
+                                <li>
+                                    <p>Vérifier systématiquement les paramètres de sécurité fournis par les frameworks.</p>
+                                </li>
+                            </ul>
+                            <h5>Niveau architecture applicative :</h5>
+                            <ul>
+                                <li>
+                                    <p>Mettre en place des configurations distinctes par environnement.</p>
+                                </li>
+                                <li>
+                                    <p>Appliquer des procédures de durcissement des serveurs et services.</p>
+                                </li>
+                                <li>
+                                    <p>Restreindre les permissions aux stricts besoins (principe du moindre privilège).</p>
+                                </li>
+                                <li>
+                                    <p>Automatiser les configurations via des outils d'infrastructure as code.</p>
+                                </li>
+                            </ul>
+                            <h5>Mesures préventives et détectives :</h5>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Préventives</span> : checklists de configuration sécurisée, audits réguliers.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Détectives</span> : scans de configuration, surveillance des changements, alertes.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Limites et risques résiduels :</h4>
+                            <p>Malgré des contre-mesures appropriées :</p>
+                            <ul>
+                                <li>
+                                    <p>Les configurations évoluent avec le temps.</p>
+                                </li>
+                                <li>
+                                    <p>Des erreurs humaines peuvent survenir lors des déploiements.</p>
+                                </li>
+                                <li>
+                                    <p>De nouveaux composants peuvent introduire des paramètres non sécurisés.</p>
+                                </li>
+                            </ul>
+                            <p>La gestion des configurations doit donc être <span class="em">continue et rigoureuse</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Conclusion :</h4>
+                            <p>La <span class="em">Security Misconfiguration</span> est l'une des vulnérabilités les plus courantes dans les applications modernes.</p>
+                            <p>Une approche combinant <span class="em">bonnes pratiques de configuration, automatisation, contrôles réguliers et sensibilisation des équipes</span> est essentielle pour réduire durablement les risques.</p>
+                        </li>
+                    </ol>
+                    <h3>A6 - Vulnerable and Outdated Components :</h3>
+                    <ol>
+                        <li>
+                            <h4>Présentation de la vulnérabilité :</h4>
+                            <p>La catégorie <span class="em">Vulnerable and Outdated Components</span> concerne l'utilisation de <span class="em">bibliothèques, frameworks, composants ou dépendances tierces</span> qui présentent des <span class="em">vulnérabilités connues</span> ou qui ne sont plus maintenus.</p>
+                            <p>Les applications modernes reposent largement sur des composants externes (open source ou propriétaires). Lorsqu'un de ces composants contient une faille de sécurité, <span class="em">toute application qui l'intègre devient potentiellement vulnérable</span>, même si son propre code est correct.</p>
+                            <p>Cette vulnérabilité apparaît notamment lorsque :</p>
+                            <ul>
+                                <li>
+                                    <p>les dépendances ne sont pas mises à jour,</p>
+                                </li>
+                                <li>
+                                    <p>les versions utilisées ne sont plus supportées,</p>
+                                </li>
+                                <li>
+                                    <p>les correctifs de sécurité ne sont pas appliqués,</p>
+                                </li>
+                                <li>
+                                    <p>l'origine ou l'intégrité des composants n'est pas vérifiée.</p>
+                                </li>
+                            </ul>
+                            <p>Les erreurs courantes incluent :</p>
+                            <ul>
+                                <li>
+                                    <p>Utilisation de versions obsolètes de frameworks.</p>
+                                </li>
+                                <li>
+                                    <p>Absence d'inventaire des dépendances.</p>
+                                </li>
+                                <li>
+                                    <p>Ignorance des alertes de vulnérabilités connues (CVE).</p>
+                                </li>
+                                <li>
+                                    <p>Téléchargement de composants depuis des sources non fiables.</p>
+                                </li>
+                            </ul>
+                            <p>Les composants concernés sont principalement :</p>
+                            <ul>
+                                <li>
+                                    <p>les bibliothèques tierces,</p>
+                                </li>
+                                <li>
+                                    <p>les frameworks applicatifs,</p>
+                                </li>
+                                <li>
+                                    <p>les plugins,</p>
+                                </li>
+                                <li>
+                                    <p>les systèmes de gestion de dépendances.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Scénario(s) d'exploitation :</h4>
+                            <h5>Scénario : Exploitation d'une bibliothèque vulnérable :</h5>
+                            <h6>Hypothèses techniques :</h6>
+                            <ul>
+                                <li>
+                                    <p>L'application utilise une bibliothèque tierce contenant une vulnérabilité connue.</p>
+                                </li>
+                                <li>
+                                    <p>Cette vulnérabilité est documentée publiquement (CVE).</p>
+                                </li>
+                                <li>
+                                    <p>Aucun correctif n'a été appliqué.</p>
+                                </li>
+                            </ul>
+                            <h6>Étapes générales :</h6>
+                            <ol>
+                                <li>
+                                    <p>L'attaquant identifie les composants utilisés par l'application (bannières, fichiers publics, signatures).</p>
+                                </li>
+                                <li>
+                                    <p>Il repère une version vulnérable d'une bibliothèque.</p>
+                                </li>
+                                <li>
+                                    <p>Il consulte la documentation publique de la faille.</p>
+                                </li>
+                                <li>
+                                    <p>Il exploite la vulnérabilité pour exécuter une action malveillante.</p>
+                                </li>
+                                <li>
+                                    <p>L'attaque compromet partiellement ou totalement l'application.</p>
+                                </li>
+                            </ol>
+                            <p>Ce scénario illustre une vulnérabilité <span class="em">héritée d'un composant tiers</span>, indépendante du code applicatif.</p>
+                        </li>
+                        <li>
+                            <h4>Causes racines :</h4>
+                            <p>Les causes racines de Vulnerable and Outdated Components sont généralement :</p>
+                            <ul>
+                                <li>
+                                    <p>Une absence de politique de gestion des dépendances.</p>
+                                </li>
+                                <li>
+                                    <p>Un manque de veille sur les vulnérabilités connues.</p>
+                                </li>
+                                <li>
+                                    <p>Une dépendance excessive à des composants non maintenus.</p>
+                                </li>
+                                <li>
+                                    <p>Une méconnaissance des composants réellement utilisés.</p>
+                                </li>
+                                <li>
+                                    <p>Une difficulté à mettre à jour sans impacter l'application.</p>
+                                </li>
+                            </ul>
+                            <p>Il s'agit principalement d'un <span class="em">problème de gouvernance et de maintenance</span>, plus que de développement pur.</p>
+                        </li>
+                        <li>
+                            <h4>Impacts de sécurité :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Confidentialité</span> : fuite de données via l'exploitation d'un composant vulnérable.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Intégrité</span> : modification du comportement applicatif.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Disponibilité</span> : déni de service ou crash de l'application.</p>
+                                </li>
+                            </ul>
+                            <p>L'impact global est considéré comme <span class="em">élevé</span>, car l'exploitation repose sur des failles publiquement connues et facilement exploitables.</p>
+                        </li>
+                        <li>
+                            <h4>Contre-mesures logicielles :</h4>
+                            <h5>Niveau code :</h5>
+                            <ul>
+                                <li>
+                                    <p>Mettre à jour régulièrement les dépendances.</p>
+                                </li>
+                                <li>
+                                    <p>Supprimer les bibliothèques inutilisées.</p>
+                                </li>
+                                <li>
+                                    <p>Vérifier les changements de sécurité lors des mises à jour.</p>
+                                </li>
+                            </ul>
+                            <h5>Niveau architecture applicative :</h5>
+                            <ul>
+                                <li>
+                                    <p>Maintenir un inventaire clair des composants utilisés.</p>
+                                </li>
+                                <li>
+                                    <p>Privilégier des composants maintenus et reconnus.</p>
+                                </li>
+                                <li>
+                                    <p>Isoler les composants critiques lorsque possible.</p>
+                                </li>
+                                <li>
+                                    <p>Mettre en place des mécanismes de validation d'intégrité.</p>
+                                </li>
+                            </ul>
+                            <h5>Mesures préventives et détectives :</h5>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Préventives</span> : gestion des versions, politiques de mises à jour.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Détectives</span> : scanners de dépendances, surveillance des CVE, audits réguliers.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Limites et risques résiduels :</h4>
+                            <p>Malgré des pratiques de gestion rigoureuses :</p>
+                            <ul>
+                                <li>
+                                    <p>Les correctifs peuvent introduire des régressions.</p>
+                                </li>
+                                <li>
+                                    <p>Certaines dépendances critiques sont difficiles à remplacer.</p>
+                                </li>
+                                <li>
+                                    <p>Des vulnérabilités zero-day peuvent apparaître.</p>
+                                </li>
+                            </ul>
+                            <p>La gestion des composants doit donc être <span class="em">continue et intégrée au cycle de vie applicatif</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Conclusion :</h4>
+                            <p>La vulnérabilité <span class="em">Vulnerable and Outdated Components</span> rappelle que la sécurité d'une application dépend aussi de son <span class="em">écosystème logiciel</span>.</p>
+                            <p>Une stratégie combinant <span class="em">veille, mise à jour, inventaire et automatisation</span> est indispensable pour limiter les risques liés aux dépendances tierces.</p>
+                        </li>
+                    </ol>
+                    <h3>A7 - Identification and Authentication Failures :</h3>
+                    <ol>
+                        <li>
+                            <h4>Présentation de la vulnérabilité :</h4>
+                            <p>La vulnérabilité <span class="em">Identification and Authentication Failures</span> regroupe les failles liées à une <span class="em">mauvaise gestion de l'identification des utilisateurs et des mécanismes d'authentification</span>.</p>
+                            <p>Elle apparaît lorsque l'application ne permet pas de garantir correctement :</p>
+                            <ul>
+                                <li>
+                                    <p>l'identité de l'utilisateur,</p>
+                                </li>
+                                <li>
+                                    <p>la confidentialité des identifiants,</p>
+                                </li>
+                                <li>
+                                    <p>la robustesse des mécanismes de connexion et de gestion de session.</p>
+                                </li>
+                            </ul>
+                            <p>Cette catégorie inclut notamment :</p>
+                            <ul>
+                                <li>
+                                    <p>des politiques de mots de passe faibles,</p>
+                                </li>
+                                <li>
+                                    <p>une gestion incorrecte des sessions,</p>
+                                </li>
+                                <li>
+                                    <p>des mécanismes d'authentification contournables,</p>
+                                </li>
+                                <li>
+                                    <p>une absence de protection contre les attaques par force brute.</p>
+                                </li>
+                            </ul>
+                            <p>Les erreurs de développement courantes incluent :</p>
+                            <ul>
+                                <li>
+                                    <p>Mots de passe faibles ou non protégés.</p>
+                                </li>
+                                <li>
+                                    <p>Absence de limitation des tentatives de connexion.</p>
+                                </li>
+                                <li>
+                                    <p>Identifiants transmis ou stockés de manière non sécurisée.</p>
+                                </li>
+                                <li>
+                                    <p>Tokens de session prévisibles ou non renouvelés.</p>
+                                </li>
+                                <li>
+                                    <p>Absence d'authentification multi-facteurs.</p>
+                                </li>
+                            </ul>
+                            <p>Les composants concernés sont principalement :</p>
+                            <ul>
+                                <li>
+                                    <p>les systèmes d'authentification,</p>
+                                </li>
+                                <li>
+                                    <p>la gestion des sessions,</p>
+                                </li>
+                                <li>
+                                    <p>les mécanismes de stockage des identifiants.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Scénario(s) d'exploitation :</h4>
+                            <h5>Scénario : Attaque par force brute sur un compte utilisateur :</h5>
+                            <h6>Hypothèses techniques :</h6>
+                            <ul>
+                                <li>
+                                    <p>L'application ne limite pas le nombre de tentatives de connexion.</p>
+                                </li>
+                                <li>
+                                    <p>Les mots de passe utilisateurs sont faibles.</p>
+                                </li>
+                                <li>
+                                    <p>Aucun mécanisme de verrouillage ou d'alerte n'est en place.</p>
+                                </li>
+                            </ul>
+                            <h6>Étapes générales :</h6>
+                            <ol>
+                                <li>
+                                    <p>L'attaquant identifie une page de connexion accessible publiquement.</p>
+                                </li>
+                                <li>
+                                    <p>Il lance une attaque par force brute ou par dictionnaire.</p>
+                                </li>
+                                <li>
+                                    <p>L'application accepte un grand nombre de tentatives.</p>
+                                </li>
+                                <li>
+                                    <p>L'attaquant devine le mot de passe valide.</p>
+                                </li>
+                                <li>
+                                    <p>Le compte utilisateur est compromis.</p>
+                                </li>
+                            </ol>
+                            <p>Ce scénario illustre une <span class="em">défaillance des mécanismes d'authentification</span>, conduisant à un accès non autorisé.</p>
+                        </li>
+                        <li>
+                            <h4>Causes racines :</h4>
+                            <p>Les causes racines d'Identification and Authentication Failures sont généralement :</p>
+                            <ul>
+                                <li>
+                                    <p>Une mauvaise conception des mécanismes d'authentification.</p>
+                                </li>
+                                <li>
+                                    <p>L'absence de politiques de sécurité claires sur les identifiants.</p>
+                                </li>
+                                <li>
+                                    <p>Une gestion inadéquate des sessions.</p>
+                                </li>
+                                <li>
+                                    <p>Une méconnaissance des attaques courantes (brute force, credential stuffing).</p>
+                                </li>
+                                <li>
+                                    <p>Un manque de tests de sécurité spécifiques à l'authentification.</p>
+                                </li>
+                            </ul>
+                            <p>Il s'agit à la fois d'un <span class="em">problème de conception, d'implémentation et de gouvernance</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Impacts de sécurité :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Confidentialité</span> : accès non autorisé à des comptes utilisateurs.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Intégrité</span> : modification de données ou d'actions sous l'identité d'un autre utilisateur.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Disponibilité</span> : verrouillage de comptes ou abus des ressources.</p>
+                                </li>
+                            </ul>
+                            <p>L'impact global est considéré comme <span class="em">très élevé</span>, car ces vulnérabilités mènent souvent à une <span class="em">compromission complète des comptes</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Contre-mesures logicielles :</h4>
+                            <h5>Niveau code :</h5>
+                            <ul>
+                                <li>
+                                    <p>Appliquer des politiques de mots de passe robustes.</p>
+                                </li>
+                                <li>
+                                    <p>Mettre en place une limitation des tentatives de connexion.</p>
+                                </li>
+                                <li>
+                                    <p>Hacher les mots de passe avec des algorithmes adaptés (bcrypt, Argon2).</p>
+                                </li>
+                                <li>
+                                    <p>Générer des tokens de session aléatoires et non prédictibles.</p>
+                                </li>
+                                <li>
+                                    <p>Renouveler les identifiants de session après authentification.</p>
+                                </li>
+                            </ul>
+                            <h5>Niveau architecture applicative :</h5>
+                            <ul>
+                                <li>
+                                    <p>Implémenter une authentification multi-facteurs (MFA).</p>
+                                </li>
+                                <li>
+                                    <p>Centraliser la gestion de l'authentification.</p>
+                                </li>
+                                <li>
+                                    <p>Séparer les mécanismes d'authentification et de gestion de session.</p>
+                                </li>
+                                <li>
+                                    <p>Forcer l'utilisation de HTTPS pour l'authentification.</p>
+                                </li>
+                            </ul>
+                            <h5>Mesures préventives et détectives :</h5>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Préventives</span> : politiques de sécurité, MFA, gestion des sessions.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Détectives</span> : journalisation des tentatives de connexion, alertes en cas d'anomalie.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Limites et risques résiduels :</h4>
+                            <p>Malgré la mise en place de contre-mesures efficaces :</p>
+                            <ul>
+                                <li>
+                                    <p>Les utilisateurs peuvent choisir des mots de passe faibles.</p>
+                                </li>
+                                <li>
+                                    <p>Les attaques par ingénierie sociale restent possibles.</p>
+                                </li>
+                                <li>
+                                    <p>Les identifiants peuvent être compromis via des services tiers.</p>
+                                </li>
+                            </ul>
+                            <p>La sécurité de l'authentification repose donc sur une <span class="em">combinaison de contrôles techniques et humains</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Conclusion :</h4>
+                            <p>Les <span class="em">Identification and Authentification Failures</span> constituent une menace majeure pour les applications modernes.</p>
+                            <p>Une approche combinant <span class="em">mécanismes d'authentification robustes, bonnes pratiques de gestion des sessions et sensibilisation des utilisateurs</span> est indispensable pour réduire les risques.</p>
+                        </li>
+                    </ol>
+                    <h3>A8 - Software and Data Integrity Failures :</h3>
+                    <ol>
+                        <li>
+                            <h4>Présentation de la vulnérabilité :</h4>
+                            <p>La vulnérabilité <span class="em">Software and Data Integrity Failures</span> concerne les failles liées à l'<span class="em">absence de garanties d'intégrité sur les logiciels, les mises à jour et les données critiques</span>.</p>
+                            <p>Elle survient lorsque l'application :</p>
+                            
                         </li>
                     </ol>
                 </article>
