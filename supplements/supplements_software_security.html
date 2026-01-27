@@ -58,6 +58,7 @@
                     <li><a href="#security_by_design">Security by Design</a></li>
                     <li><a href="#gcc">GCC</a></li>
                     <li><a href="#OWASP_Top10_Lab_Setup">OWASP Top 10 Lab Setup</a></li>
+                    <li><a href="#travaux_individuels_OWAP_Top_10">Travaux individuels - OWASP Top 10 (2021)</a></li>
                     <li><a href="#laboC">Labo C - Compilation, édition de liens, debugging & sécurité mémoire</a></li>
                     <li><a href="#memlab">Labo memlab</a></li>
                 </ol>
@@ -1551,6 +1552,540 @@ http://localhost:8080/WebGoat/attack?url=file:///etc/passwd
 &#8594; SSRF réussie.
 
 ---</code></pre>
+                </article>
+                <article>
+                    <h2>Travaux individuels - OWASP Top 10 (2021) : Analyse de vulnérabilités et contre-mesures applicatives :</h2>
+                    <ol>
+                        <li>
+                            <h3>Contexte :</h3>
+                            <p>Dans le cadre du cours de Software Security, chaque étudiant a sélectionné trois catégories de vulnérabilités issues de l'OWASP Top 10 (2021).</p>
+                        </li>
+                        <li>
+                            <h3>Organisation du travail :</h3>
+                            <p>Pour chaque catégorie OWASP choisie, l'étudiant doit remettre un rapport distinct. Trois rapports sont donc attendus par étudiant.</p>
+                        </li>
+                        <li>
+                            <h3>Structure obligatoire de chaque rapport :</h3>
+                            <ol>
+                                <li>
+                                    <p><span class="em">Présentation de la vulnérabilité</span> : Définition, principe, erreurs de développement associées, composants concernés.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Scénario(s) d'exploitation</span> : Scénarios réalistes, hypothèses techniques, étapes générales.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Causes racines</span> : Analyse des causes techniques (conception, implémentation, contrôles absents).</p>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>Impacts de sécurité :</h3>
+                            <p>Confidentialité, intégrité, disponibilité.</p>
+                        </li>
+                        <li>
+                            <h3>Contre-mesures logicielles :</h3>
+                            <ul>
+                                <li>
+                                    <p>Niveau code</p>
+                                </li>
+                                <li>
+                                    <p>Niveau architecture applicative</p>
+                                </li>
+                                <li>
+                                    <p>Préventives et détectives</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h3>Limites et risques résiduels :</h3>
+                            <p>Une contre-mesure a des limites ? Certaines attaques restent possibles ?</p>
+                            <p>La sécurité applicative repose sur des <span class="em">compromis</span>.</p>
+                        </li>
+                        <li>
+                            <h3>Format attendu :</h3>
+                            <p>Un rapport PDF par catégorie.</p>
+                        </li>
+                        <li>
+                            <h3>Critères d'évaluation :</h3>
+                            <p>Compréhension (30%), analyse (25%), contre-mesures (35%), clarté (10%).</p>
+                        </li>
+                        <li>
+                            <h3>Consignes :</h3>
+                            <p>Travail original, copier-coller interdit.</p>
+                        </li>
+                    </ol>
+                    <h3>A1 - Broken Access Control :</h3>
+                    <ol>
+                        <li>
+                            <h4>Présentation de la vulnérabilité :</h4>
+                            <p>Le <span class="em">Broken Access Control</span> désigne une mauvaise implémentation des mécanismes de contrôle d'accès dans une application.</p>
+                            <p>Il se produit lorsque les restrictions définissant <span class="em">quels utilisateurs peuvent accéder à quelles ressources ou fonctionnalités</span> ne sont pas correctement appliquées côté serveur.</p>
+                            <p>Cette vulnérabilité permet à un attaquant d'accéder à des données sensibles, de modifier des ressources ou d'exécuter des actions réservées à d'autres utilisateurs ou à des administrateurs.</p>
+                            <p>Les erreurs de développement courantes incluent :</p>
+                            <ul>
+                                <li>
+                                    <p>Absence de vérification des autorisations côté serveur.</p>
+                                </li>
+                                <li>
+                                    <p>Confiance excessive dans les contrôles côté client.</p>
+                                </li>
+                                <li>
+                                    <p>Mauvaise gestion des rôles et permissions.</p>
+                                </li>
+                                <li>
+                                    <p>Exposition d'identifiants directs d'objets (IDOR).</p>
+                                </li>
+                            </ul>
+                            <p>Les composants concernés sont principalement les API backend, les contrôleurs applicatifs et la couche d'accès aux données.</p>
+                        </li>
+                        <li>
+                            <h4>Scénario(s) d'exploitation :</h4>
+                            <h5>Scénario : Accès non autorisé aux données d'un autre utilisateur :</h5>
+                            <h6>Hypothèses techniques :</h6>
+                            <p>L'application permet l'accès aux profils utilisateurs via un paramètre <span class="em">userId</span> transmis dans l'URL sans vérification d'autorisation.</p>
+                            <h6>Étapes générales :</h6>
+                            <ol>
+                                <li>
+                                    <p>Un utilisateur authentifié accède à son profil personnel.</p>
+                                </li>
+                                <li>
+                                    <p>L'URL affichée est <span class="em">/profile?userId=120</span>.</p>
+                                </li>
+                                <li>
+                                    <p>L'utilisateur modifie manuellement la valeur du paramètre : <span class="em">/profile?userId=121</span>.</p>
+                                </li>
+                                <li>
+                                    <p>Le serveur retourne les données de l'utilisateur 121 sans contrôle supplémentaire.</p>
+                                </li>
+                            </ol>
+                            <p>Ce scénario illustre une vulnérabilité de type <span class="em">IDOR (Insecure Direct Object Reference)</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Causes racines :</h4>
+                            <p>Les causes racines du Broken Access Control sont principalement :</p>
+                            <ul>
+                                <li>
+                                    <p>Une conception applicative qui ne considère pas la sécurité comme une exigence fondamentale.</p>
+                                </li>
+                                <li>
+                                    <p>L'absence de contrôles d'autorisation systématiques pour chaque requête.</p>
+                                </li>
+                                <li>
+                                    <p>Une logique de sécurité dispersée et non centralisée.</p>
+                                </li>
+                                <li>
+                                    <p>Un manque de tests de sécurité et de revues de code orientées autorisation.</p>
+                                </li>
+                            </ul>
+                            <p>Il s'agit généralement d'un problème de <span class="em">conception et d'architecture</span>, plus que d'une simple erreur de syntaxe.</p>
+                        </li>
+                        <li>
+                            <h4>Impacts de sécurité :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Confidentialité</span> : accès non autorisé à des données personnelles ou sensibles.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Intégrité</span> : modification ou suppression de données sans permission.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Disponibilité</span> : possibilité de bloquer ou supprimer des ressources critiques.</p>
+                                </li>
+                            </ul>
+                            <p>L'impact global est considéré comme <span class="em">élevé</span>, car l'exploitation est souvent simple et les conséquences sévères.</p>
+                        </li>
+                        <li>
+                            <h4>Contre-mesures logicielles :</h4>
+                            <ol>
+                                <li>
+                                    <h5>Niveau code :</h5>
+                                    <ul>
+                                        <li>
+                                            <p>Vérifier les autorisations pour chaque requête côté serveur.</p>
+                                        </li>
+                                        <li>
+                                            <p>Associer explicitement les ressources à l'identité de l'utilisateur authentifié.</p>
+                                        </li>
+                                        <li>
+                                            <p>Ne jamais faire confiance aux paramètres fournis par le client.</p>
+                                        </li>
+                                        <li>
+                                            <p>Utiliser des frameworks ou annotations de contrôle d'accès.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <h5>Niveau architecture applicative :</h5>
+                                    <ul>
+                                        <li>
+                                            <p>Implémenter un modèle RBAC (Role-Based Access Control).</p>
+                                        </li>
+                                        <li>
+                                            <p>Centraliser la gestion des permissions.</p>
+                                        </li>
+                                        <li>
+                                            <p>Séparer clairement les fonctions utilisateur et administrateur.</p>
+                                        </li>
+                                        <li>
+                                            <p>Appliquer le principe du moindre privilège.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <h5>Mesures préventives et détectives :</h5>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">Préventives</span> : contrôles d'accès stricts, tests automatisés.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">Détectives</span> : journalisation des accès, alertes en cas de comportement anormal.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h4>Limites et risques résiduels :</h4>
+                            <p>Malgré la mise en place de contre-mesures efficaces :</p>
+                            <ul>
+                                <li>
+                                    <p>Des erreurs de configuration peuvent subsister.</p>
+                                </li>
+                                <li>
+                                    <p>Les évolutions fonctionnelles peuvent introduire de nouvelles failles.</p>
+                                </li>
+                                <li>
+                                    <p>Les erreurs humaines restent possibles.</p>
+                                </li>
+                            </ul>
+                            <p>La sécurité applicative repose donc sur un <span class="em">équilibre entre sécurité, complexité et maintenabilité</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Conclusion :</h4>
+                            <p>Le Broken Access Control est l'une des vulnérabilités les plus critiques et les plus répandues dans les applications web modernes.</p>
+                            <p>Une approche rigoureuse intégrant la sécurité dès la conception, combinée à des contrôles techniques solides, est indispensable pour réduire les risques.</p>
+                        </li>
+                    </ol>
+                    <h3>A2 - Cryptographic Failures :</h3>
+                    <ol>
+                        <li>
+                            <h4>Présentation de la vulnérabilité :</h4>
+                            <p>Les <span class="em">Cryptographic Failures</span> concernent une mauvaise utilisation ou une absence de mécanismes cryptographiques destinés à protéger les données sensibles.</p>
+                            <p>Elles apparaissent lorsque des informations comme les mots de passe, données personnelles ou financières ne sont pas correctement chiffrées.</p>
+                            <p>Cette vulnérabilité peut entraîner des fuites de données importantes.</p>
+                            <p>Contrairement à une idée répandue, le problème ne réside pas uniquement dans l'algorithme utilisé, mais également dans :</p>
+                            <ul>
+                                <li>
+                                    <p>la <span class="em">gestion des clés</span>,</p>
+                                </li>
+                                <li>
+                                    <p>le <span class="em">choix des protocoles</span>,</p>
+                                </li>
+                                <li>
+                                    <p>et la <span class="em">mise en oeuvre correcte</span> des mécanismes de chiffrement.</p>
+                                </li>
+                            </ul>
+                            <p>Les erreurs de développement courantes incluent :</p>
+                            <ul>
+                                <li>
+                                    <p>Absence de chiffrement des données sensibles (au repos ou en transit).</p>
+                                </li>
+                                <li>
+                                    <p>Utilisation d'algorithmes obsolètes ou faibles (MD5, SHA-1, DES).</p>
+                                </li>
+                                <li>
+                                    <p>Stockage de mots de passe en clair ou avec un hachage non sécurisé.</p>
+                                </li>
+                                <li>
+                                    <p>Mauvaise gestion, rotation ou protection des clés cryptographiques.</p>
+                                </li>
+                                <li>
+                                    <p>Désactivation ou mauvaise configuration de TLS.</p>
+                                </li>
+                            </ul>
+                            <p>Les composants concernés sont principalement la couche réseau (communications client-serveur), les bases de données et les mécanismes d'authentification et de gestion des secrets.</p>
+                        </li>
+                        <li>
+                            <h4>Scénario(s) d'exploitation :</h4>
+                            <h5>Scénario : Interception de données sensibles en transit :</h5>
+                            <h6>Hypothèses techniques :</h6>
+                            <ul>
+                                <li>
+                                    <p>L'application utilise le protocole <span class="em">HTTP</span> au lieu de <span class="em">HTTPS</span>.</p>
+                                </li>
+                                <li>
+                                    <p>Les identifiants utilisateur sont transmis lors de l'authentification sans chiffrement.</p>
+                                </li>
+                                <li>
+                                    <p>L'attaquant se trouve sur le même réseau que la victime (Wi-Fi public, réseau d'entreprise compromis).</p>
+                                </li>
+                            </ul>
+                            <h6>Étapes générales :</h6>
+                            <ol>
+                                <li>
+                                    <p>Un utilisateur se connecte à l'application via un réseau non sécurisé.</p>
+                                </li>
+                                <li>
+                                    <p>Les identifiants (login/mot de passe) sont envoyés en clair au serveur.</p>
+                                </li>
+                                <li>
+                                    <p>L'attaquant intercepte le trafic réseau à l'aide d'un outil de type sniffer.</p>
+                                </li>
+                                <li>
+                                    <p>Les informations sensibles sont récupérées et réutilisées pour accéder au compte de la victime.</p>
+                                </li>
+                            </ol>
+                            <p>Ce scénario illustre une <span class="em">défaillance cryptographique liée à l'absence de chiffrement des communications</span>, entraînant une compromission directe des comptes utilisateurs.</p>
+                        </li>
+                        <li>
+                            <h4>Causes racines :</h4>
+                            <p>Les causes racines de Cryptographic Failures sont généralement :</p>
+                            <ul>
+                                <li>
+                                    <p>Un <span class="em">manque de connaissances en cryptographie appliquée</span> chez les développeurs.</p>
+                                </li>
+                                <li>
+                                    <p>Une mauvaise configuration des protocoles de sécurité (TLS mal configuré, certificats expirés).</p>
+                                </li>
+                                <li>
+                                    <p>L'absence de politiques claires concernant la gestion des clés et des secrets.</p>
+                                </li>
+                                <li>
+                                    <p>Une confiance excessive dans des implémentations par défaut sans validation.</p>
+                                </li>
+                                <li>
+                                    <p>L'absence d'audits de sécurité et de tests cryptographiques.</p>
+                                </li>
+                            </ul>
+                            <p>Ces vulnérabilités résultent souvent de <span class="em">choix de conception inadéquats</span>, plutôt que d'erreurs ponctuelles de code.</p>
+                        </li>
+                        <li>
+                            <h4>Impacts de sécurité :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Confidentialité</span> : fuite de données sensibles (mots de passe, données sensibles).</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Intégrité</span> : possibilité de modification des données si les mécanismes de protection sont insuffisants.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Disponibilité</span> : impact indirect possible (exploitation conduisant à une compromission globale du système).</p>
+                                </li>
+                            </ul>
+                            <p>L'impact global est considéré comme <span class="em">élevé</span>, notamment en raison des conséquences juridiques, financières et réputationnelles associées aux fuites de données.</p>
+                        </li>
+                        <li>
+                            <h4>Contre-mesures logicielles :</h4>
+                            <h5>Niveau code :</h5>
+                            <ul>
+                                <li>
+                                    <p>Utiliser des algorithmes cryptographiques robustes et reconnus (AES-256, SHA-256, bcrypt).</p>
+                                </li>
+                                <li>
+                                    <p>Ne jamais stocker les mots de passe en clair; utiliser un hachage avec salage.</p>
+                                </li>
+                                <li>
+                                    <p>Éviter toute implémentation cryptographique "maison".</p>
+                                </li>
+                            </ul>
+                            <h5>Niveau architecture applicative :</h5>
+                            <ul>
+                                <li>
+                                    <p>Forcer l'utilisation de <span class="em">HTTPS/TLS</span> pour toutes les communications.</p>
+                                </li>
+                                <li>
+                                    <p>Mettre en place une gestion centralisée et sécurisée des clés (HSM, vault).</p>
+                                </li>
+                                <li>
+                                    <p>Séparer les secrets du code source (variables d'environnement, services dédiés).</p>
+                                </li>
+                            </ul>
+                            <h5>Mesures préventives et détectives :</h5>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Préventives</span> : politiques de chiffrement, revues de code orientées sécurité.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Détectives</span> : audits cryptographiques, scans de vulnérabilités, surveillance des certificats.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Limites et risques résiduels :</h4>
+                            <p>Malgré l'implémentation de contre-mesures efficaces :</p>
+                            <ul>
+                                <li>
+                                    <p>Une clé compromise rend le chiffrement inefficace.</p>
+                                </li>
+                                <li>
+                                    <p>Une mauvaise configuration peut annuler les bénéfices de la cryptographie.</p>
+                                </li>
+                                <li>
+                                    <p>Les erreurs humaines et les évolutions applicatives restent des sources de risques.</p>
+                                </li>
+                            </ul>
+                            <p>La cryptographie ne garantit pas une sécurité absolue, mais <span class="em">réduit significativement les risques lorsqu'elle est correctement mise en oeuvre</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Conclusion :</h4>
+                            <p>Les Cryptographic Failures représentent une vulnérabilité critique, souvent sous-estimée, mais aux conséquences potentiellement graves.</p>
+                            <p>Une approche rigoureuse combinant <span class="em">bonnes pratiques cryptographiques, choix technologiques adaptés et contrôles réguliers</span> est indispensable pour assurer la protection des données sensibles.</p>
+                        </li>
+                    </ol>
+                    <h3>A3 - Injection :</h3>
+                    <ol>
+                        <li>
+                            <h4>Présentation de la vulnérabilité :</h4>
+                            <p>Les vulnérabilités d'<span class="em">Injection</span> surviennent lorsque des <span class="em">données fournies par un utilisateur non fiable</span> sont interprétées par une application comme des <span class="em">commandes ou requêtes</span> par un interpréteur (base de données, système d'exploitation, moteur LDAP, etc.).</p>
+                            <p>Le cas le plus connu est l'<span class="em">injection SQL</span>, mais cette catégorie inclut également les injections NoSQL, les injections LDAP, les injections de commandes système et certaines formes d'injection de code.</p>
+                            <p>Cette vulnérabilité apparaît lorsque l'application <span class="em">ne valide pas correctement les entrées utilisateur</span> et construit dynamiquement des requêtes ou commandes en y intégrant directement ces données.</p>
+                            <p>Les composants concernés sont principalement :</p>
+                            <ul>
+                                <li>
+                                    <p>la couche d'accès aux données,</p>
+                                </li>
+                                <li>
+                                    <p>les API backend,</p>
+                                </li>
+                                <li>
+                                    <p>les mécanismes d'authentification et de recherche.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Scénario(s) d'exploitation :</h4>
+                            <h5>Scénario : Injection SQL lors de l'authentification :</h5>
+                            <h6>Hypothèses techniques :</h6>
+                            <ul>
+                                <li>
+                                    <p>L'application utilise une base de données relationnelle.</p>
+                                </li>
+                                <li>
+                                    <p>Les requêtes SQL sont construites dynamiquement par concaténation de chaînes.</p>
+                                </li>
+                                <li>
+                                    <p>Aucune validation ou protection spécifique n'est appliquée aux entrées utilisateur.</p>
+                                </li>
+                            </ul>
+                            <h6>Étapes générales :</h6>
+                            <ul>
+                                <li>
+                                    <p>Un utilisateur accède à un formulaire de connexion.</p>
+                                </li>
+                                <li>
+                                    <p>Il saisit une charge malveillante dans le champ identifiant (par exemple : <span class="em">' OR '1'='1</span>).</p>
+                                </li>
+                                <li>
+                                    <p>L'application insère directement cette entrée dans la requête SQL.</p>
+                                </li>
+                                <li>
+                                    <p>La requête modifiée devient toujours vraie.</p>
+                                </li>
+                                <li>
+                                    <p>L'attaquant est authentifié sans connaître de mot de passe valide.</p>
+                                </li>
+                            </ul>
+                            <p>Ce scénario permet à un attaquant d'accéder à l'application de manière non autorisée et potentiellement d'exécuter des actions critiques.</p>
+                        </li>
+                        <li>
+                            <h4>Causes racines :</h4>
+                            <p>Les causes racines des vulnérabilités d'injection sont principalement :</p>
+                            <ul>
+                                <li>
+                                    <p>L'absence ou l'insuffisance de <span class="em">validation et de filtrage des entrées utilisateur</span>.</p>
+                                </li>
+                                <li>
+                                    <p>La construction dynamique de requêtes SQL ou commandes système.</p>
+                                </li>
+                                <li>
+                                    <p>L'utilisation directe des données utilisateur dans des interpréteurs.</p>
+                                </li>
+                                <li>
+                                    <p>Une méconnaissance des mécanismes de protection fournis par les frameworks.</p>
+                                </li>
+                                <li>
+                                    <p>L'absence de tests de sécurité ciblant les injections.</p>
+                                </li>
+                            </ul>
+                            <p>Il s'agit généralement d'un <span class="em">problème de conception et d'implémentation</span>, et non d'une simple erreur ponctuelle.</p>
+                        </li>
+                        <li>
+                            <h4>Impacts de sécurité :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Confidentialité</span> : accès non autorisé à des données sensibles stockées en base de données.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Intégrité</span> : modification ou suppression de données.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Disponibilité</span> : suppression de tables, corruption de la base de données ou déni de service.</p>
+                                </li>
+                            </ul>
+                            <p>L'impact global est considéré comme <span class="em">très élevé</span>, car les vulnérabilités d'injection peuvent mener à une <span class="em">compromission complète du système</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Contre-mesures logicielles :</h4>
+                            <h5>Niveau code :</h5>
+                            <ul>
+                                <li>
+                                    <p>Utiliser des <span class="em">requêtes préparées</span> ou des ORM sécurisés.</p>
+                                </li>
+                                <li>
+                                    <p>Ne jamais concaténer directement les entrées utilisateur dans une requête.</p>
+                                </li>
+                                <li>
+                                    <p>Valider et filtrer systématiquement les données en entrée.</p>
+                                </li>
+                                <li>
+                                    <p>Échapper correctement les caractères spéciaux lorsque nécessaire.</p>
+                                </li>
+                            </ul>
+                            <h5>Niveau architecture applicative :</h5>
+                            <ul>
+                                <li>
+                                    <p>Séparer clairement la logique métier de l'accès aux données.</p>
+                                </li>
+                                <li>
+                                    <p>Appliquer le principe du moindre privilège pour les comptes de base de données.</p>
+                                </li>
+                                <li>
+                                    <p>Restreindre les droits des utilisateurs techniques (pas de droits administrateur).</p>
+                                </li>
+                            </ul>
+                            <h5>Mesures préventives et détectives :</h5>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Préventives</span> : revues de code, tests automatisés contre les injections.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Détectives</span> : journalisation des erreurs SQL, alertes en cas de requêtes anormales.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Limites et risques résiduels :</h4>
+                            <p>Malgré la mise en place de contre-mesures efficaces :</p>
+                            <ul>
+                                <li>
+                                    <p>Des erreurs de configuration peuvent subsister.</p>
+                                </li>
+                                <li>
+                                    <p>Des injections peuvent apparaître dans des composants tiers vulnérables.</p>
+                                </li>
+                                <li>
+                                    <p>Des évolutions applicatives peuvent introduire de nouveaux points d'entrée.</p>
+                                </li>
+                            </ul>
+                            <p>La sécurité contre les injections repose sur une <span class="em">discipline continue de développement sécurisé</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Conclusion :</h4>
+                            <p>Les vulnérabilités d'injection figurent parmi les menaces les plus anciennes mais restent toujours très présentes dans les applications modernes.</p>
+                            <p>Une approche combinant <span class="em">bonnes pratiques de développement, protections techniques robustes et contrôles réguliers</span> est indispensable pour limiter les risques et garantir la sécurité des applications.</p>
+                        </li>
+                    </ol>
+                    <h3>A4 - Insecure Design :</h3>
                 </article>
                 <article>
                     <h2 id="laboC">Labo C - Compilation, édition de liens, debugging & sécurité mémoire :</h2>
