@@ -2808,6 +2808,9 @@ interface e0/1.3
                                     <p>La commande <span class="em">encapsulation dot1Q 2</span> configure l'encapsulation dot1Q avec le tag VLAN 2.</p>
                                     <p>La commande <span class="em">ip address 192.168.2.1 255.255.255.0</span> attribue l'adresse IP de passerelle pour le VLAN 2.</p>
                                     <h4>DHCP Server (dans les deux VLANs) :</h4>
+                                    <p>On peut exclure des adresse IP du pool DHCP que ceux-ci ne soient pas utilisés dans les offres d'adresse par le serveur DHCP.</p>
+<pre><code>ip dhcp excluded-address 192.168.2.1 192.168.2.2
+ip dhcp excluded-address 192.168.3.1 192.168.3.2</code></pre>
                                     <p>Un DHCP pool représente le pool des adresses allouées, c'est-à-dire que c'est un ensemble d'adresses.</p>
 <pre><code>ip dhcp pool POOL_UTILISATEURS
     network 192.168.2.0 255.255.255.0
@@ -2853,7 +2856,8 @@ ip dhcp pool POOL_ADMINS
                                     <p>Donc, on ne peut pas mutualiser le pool.</p>
                                     <p>La commande <span class="em">network 192.168.2.0 255.255.255.0</span> ne signifie <span class="em">pas</span> <q>donner l'adresse 192.168.2.0</q>, mais signifie <q>ce pool DHCP concerne <span class="em">tout le réseau 192.168.2.0/24</span></q>.</p>
                                     <h4>NAT Overload (Internet) :</h4>
-                                    <p>Il faut configurer les listes d'accès pour les subnets qui peuvent utiliser le NAT et configurer le NAT.</p>
+                                    <p>Le PAT est une forme de NAT (overload) qui traduit non seulement l'adresse IP mais aussi les ports pour permettre à plusieurs clients internes de partager une IP publique.</p>
+                                    <p>Il faut configurer les listes d'accès (ACL) pour les subnets qui peuvent utiliser le NAT et configurer le NAT.</p>
 <pre><code>access-list 1 permit 192.168.2.0 0.0.0.255
 access-list 1 permit 192.168.3.0 0.0.0.255
 
@@ -2926,6 +2930,23 @@ copy running-config startup-config</code></pre>
                                 <li>
                                     <h3>Configuration du switch (Switch1) :</h3>
                                     <h4>Création des VLANs :</h4>
+                                    <h5>Qu'est-ce qu'un VLAN et pouquoi l'utiliser ?</h5>
+                                    <p>Un VLAN (Virtual Local Area Network) est un LAN virtuel (sous-groupe dans un LAN). Il permet aux administrateurs réseau de séparer un réseau commuté (présence de commutateur/switch) unique en plusieurs groupes pour un certain niveau de sécurité des systèmes présent dans le réseau.</p>
+                                    <p>Utiliser un VLAN permet d'avoir :</p>
+                                    <ul>
+                                        <li>
+                                            <p>Une faible latence (comparé à un LAN simple).</p>
+                                        </li>
+                                        <li>
+                                            <p>Segmentation du réseau (avoir plusieurs sous-réseaux dans un même réseau qui permet d'augmenter le nombre d'hôtes dans le réseau).</p>
+                                        </li>
+                                        <li>
+                                            <p>Une isolation entre plusieurs VLANs.</p>
+                                        </li>
+                                        <li>
+                                            <p>Permet une certaine évolutivité (sans rajouter de matériels physiques inutiles et encombrant).</p>
+                                        </li>
+                                    </ul>
 <pre><code>enable
 configure terminal
 
@@ -2945,6 +2966,34 @@ vlan 3
                                     <p>Le VLAN 1 est désactivé afin de réduire la surface d'attaque, car il est utilisé par défaut pour la gestion et certains protocoles internes (CDP, STP, etc.).</p>
                                     <p>Cisco IOS écrit automatiquement les interfaces VLAN avec un "V" majuscule par convention interne pour nommer les SVI (Switched Virtual Interfaces).</p>
                                     <h4>Trunk vers le routeur (e0/0) :</h4>
+                                    <h5>À quoi sert le mode trunk ?</h5>
+                                    <p>Un trunk sert à transporter plusieurs VLANs sur un seul lien physique.</p>
+                                    <ul>
+                                        <li>
+                                            <p>Il tague les trames avec 802.1Q pour indiquer à quel VLAN elles appartiennent.</p>
+                                        </li>
+                                        <li>
+                                            <p>Usage typique : switch &#8596; switch ou switch &#8596; routeur / firewall (inter-VLAN, routeur-on-a-sick).</p>
+                                        </li>
+                                        <li>
+                                            <p>Sans trunk, un lien ne peut porter qu'un seul VLAN (mode access).</p>
+                                        </li>
+                                    </ul>
+                                    <h5>Que contient ce tag 802.1Q ?</h5>
+                                    <p>Le tag 802.1Q contient :</p>
+                                    <ul>
+                                        <li>
+                                            <p>VLAN ID (12 bits) : le numéro de VLAN (1-4094)</p>
+                                        </li>
+                                        <li>
+                                            <p>PCP (3 bits) : priorité (QoS)</p>
+                                        </li>
+                                        <li>
+                                            <p>DEI (1 bit) : indicateur de drop (congestion)</p>
+                                        </li>
+                                    </ul>
+                                    <p>Remarque : Sur un trunk, un VLAN peut être "native" : ses trames passentsans tag (non taguées). Le VLAN natif permet de gérer le trafic non tagué sur un trunk et permet la compatibilité avec des équipements/flux qui ne taggent pas (ancien équipement ou protocole).</p>
+                                    <p>Un bon réflexe de sécurité serait de ne pas utiliser VLAN 1, définir un native VLAN inutilisé et autoriser uniquement les VLANs nécessaires sur le trunk, ce qui permet d'éviter les attaques VLAN hopping (double-tagging).</p>
 <pre><code>interface e0/0
     switchport trunk encapsulation dot1q
     switchport mode trunk
@@ -2997,6 +3046,22 @@ copy running-config startup-config</code></pre>
                                     <p>Cette commande sert à obtenir automatiquement une adresse IP depuis le routeur.</p>
                                     <img src="../images/IP_DHCP.PNG" alt="">
                                     <p>On a DDORA &#8594; 2 D car le PC n'est pas sûr que le premier Discover a été entendu, alors il envoie un deuxième Discover automatiquement après, par sécurité.</p>
+                                    <p>En résumé, le client démarre sans IP et fait un échange en 4 étapes :</p>
+                                    <ol>
+                                        <li>
+                                            <p>Il diffuse une demande (Discover).</p>
+                                        </li>
+                                        <li>
+                                            <p>Le serveur propose une IP (Offer).</p>
+                                        </li>
+                                        <li>
+                                            <p>Le client accepte et demande cette IP (Request).</p>
+                                        </li>
+                                        <li>
+                                            <p>Le serveur valide et "loue" l'IP pour une durée (ACK + bail.)</p>
+                                            <p>Le serveur garde en mémoire les baux pour éviter de donner la même IP à deux machines.</p>
+                                        </li>
+                                    </ol>
                                     <p>Vérifier :</p>
 <pre><code>show ip</code></pre>
                                     <p>Tester la passerelle :</p>
@@ -3073,6 +3138,21 @@ copy running-config startup-config</code></pre>
                                 <li>
                                     <h3>Sécurité supplémentaire requise :</h3>
                                     <p>Le MAC Flooding est une attaque de couche 2 qui consiste à ce que l'attaquant envoie des milliers de fausses adresses MAC sur un port du switch (dont la table CAM c'est-à-dire la table MAC du switch saturé) ce qui lui permettra de pouvoir sniffer le trafic des autres VLANs ou ports.</p>
+                                    <p>Comment fonctionne une attaque par saturation de la table CAM (MAC flooding) ?</p>
+                                    <ol>
+                                        <li>
+                                            <p>L'attaquant envoie rapidement un grand nombre de trames Ethernet contenant des adresses MAC source différentes, généralement générées de manière aléatoire (spoofées).</p>
+                                        </li>
+                                        <li>
+                                            <p>Le commutateur (switch) "apprend" ces adresses MAC et remplit sa table CAM (association MAC &#8596; port) jusqu'à atteindre sa capacité maximale.</p>
+                                        </li>
+                                        <li>
+                                            <p>Une fois la table CAM saturée, quand le switch reçoit une trame vers une adresse MAC "inconnue" ou évincée, il diffuse la trame sur plusieurs ports (flooding) se comportant alors comme un hub.</p>
+                                        </li>
+                                        <li>
+                                            <p>L'attaquant peut alors intercepter et analyser (sniffer) du trafic qui ne lui était pas iniialement destiné, en particulier si les communications ne sont pas chiffrées.</p>
+                                        </li>
+                                    </ol>
                                     <p>Pour contrer cela, la solution est d'activer le port-security sur tous les ports.</p>
                                     <p>Sur le switch, tu dois aussi appliquer Port Security pour la liaison vers le PC 3 (ADMIN) :</p>
 <pre><code>enable
