@@ -52,6 +52,7 @@
                     <li><a href="#protocoles_TCP_IP">Protocoles TCP/IP</a></li>
                     <li><a href="#architecture_normes_protocoles">Architecture, normes (standards) et protocoles</a></li>
                     <li><a href="#exercices_analyse_paquets_trames_L2_L3">Exercices : Analyse de paquets et trames - Layer 2 &amp; Layer 3</a></li>
+                    <li><a href="#TCP">TCP</a></li>
                     <li><a href="#labo1">Labo 1 : construction d'un petit réseau</a></li>
                     <li><a href="#labo2">Labo 2 : construction et sécurisation d'un réseau de taille moyenne</a></li>
                 </ol>
@@ -2557,7 +2558,7 @@ else :
                     </ul>
                     <h3>Exercice Scapy :</h3>
                     <p>À partir d'une <span class="em">trame réseau capturée à l'aide de Wireshark</span>, comme par exemple la trame ci-dessous, vous devez reconstruire le paquet équivalent en utilisant la librairie <span class="em">Scapy (Python)</span>.</p>
-                    <img src="../images/trame_Ethernet(4).PNG" alt="">
+                    <img src="../images/trame_Ethernet(3).PNG" alt="">
                     <p>La trame observée correspond à une <span class="em">trame Ethernet</span> transportant un paquet <span class="em">IPv4</span> contenant un message <span class="em">ICMP Echo Request</span> avec une charge utile ASCII. Les différents champs des couches Ethernet, IP et ICMP (adresses, identifiant, TTL, type, code, etc.) doivent être identifiés à partir de la capture Wireshark.</p>
                     <p>À l'aide de Scapy, écrivez un script Python construisant le paquet <span class="em">couche par couche</span> (<span class="em">Ether()</span>, <span class="em">IP()</span>, <span class="em">ICMP()</span>) et y ajoutant la charge utile observée.</p>
                     <p>Le paquet reconstruit devra être affiché avec <span class="em">show()</span> et exporté sous forme graphique au format <span class="em">PDF</span> à l'aide de <span class="em">canvas_dump()</span>.</p>
@@ -2591,6 +2592,49 @@ c.writePDFfile("test_trame1.pdf")</code></pre>
                         <p>En ASCII, chaque caractère est associé à un <span class="em">nombre</span>. Tout repose sur la <span class="em">table ASCII</span>. L'astuce mnémotechnique très utile en réseau est de savoir que les minuscules ASCII commencent à <span class="em">0x61</span> et les majuscules à <span class="em">0x41</span>.</p>
                         <p>On peut vérifier rapidement en Python (ou Scapy) avec <span class="em">chr(0x61)</span> qui donne <span class="em">'a'</span> ou inversement avec <span class="em">hex(ord('a'))</span> qui donne <span class="em">'0x61'</span>.</p>
                     </div>
+                </article>
+                <article>
+                    <h2 id="TCP">TCP :</h2>
+                    <p>La représentation visuelle/pédagogique de l'en-tête de TCP ci-dessous met l'accent sur la taille des champs et la compréhension globale. Elle est utilisé surtout pour les cours, les slides et les explications théoriques. C'est plus intuitif et moins précis au niveau binaire.</p>
+                    <img src="../images/TCP_HEADER1.png" alt="">
+                    <p>Ou alors la réprésentation bit à bit ci-dessous qui montre exactement la position de chaque bit, l'ordre des flags (URG, ACK, PSH, RST, SYN, FIN) et le Data Offset (taille de l'en-tête). Elle est utilisé pour l'implémentation en C, l'analyse de paquets (Wireshark) et les examens plus techniques. C'est plus technique mais plus proche de la réalité mémoire.</p>
+                    <img src="../images/TCP_HEADER2.png" alt="">
+                    <h3>Communication TCP :</h3>
+                    <p>Pour mettre fin à une connexion, l'indicateur de contrôle FIN (Finish) doit être défini dans l'en-tête de segment. Pour mettre fin à chaque session TCP unidirectionnelle, on utilise un échange en deux étapes, constitué d'un segment FIN et d'un segment ACK. Par conséquent, pour mettre fin à une seule conversation TCP, quatre échanges sont nécessaires pour mettre fin aux deux sessions (voir la figure 1 ci-dessous).</p>
+                    <figure>
+                        <img src="../images/etablissement_fermeture_connexion_TCP.PNG" alt="">
+                        <figcaption>Figure 1 : Établissement et fermeture d'une connexion TCP.</figcaption>
+                    </figure>
+                    <p><span class="em">Remarque</span> : les termes client et serveur sont utilisés ici pour simplifier l'explication, mais le processus d'interruption peut être initié par n'importe lequel des deux hôts ayant une session ouverte.</p>
+                    <p>Voici les différentes étapes :</p>
+                    <ol>
+                        <li>
+                            <p>Quand le client n'a plus de données à envoyer dans le flux, il envoie un segment dont l'indicateur FIN est défini.</p>
+                        </li>
+                        <li>
+                            <p>Le serveur envoie un segment ACK pour informer de la bonne réception du segment FIN, afin de fermer la session du client au serveur.</p>
+                        </li>
+                        <li>
+                            <p>Le serveur envoie un segment FIN au client pour mettre fin à la session du serveur au client.</p>
+                        </li>
+                        <li>
+                            <p>Le client répond à l'aide d'un segment ACK pour accuser réception du segment FIN envoyé par le serveur.</p>
+                        </li>
+                    </ol>
+                    <p>Quand le client n'a plus aucune donnée à transférer, il définit l'indicateur FIN dans l'en-tête d'un segment. Ensuite, le serveur de la connexion envoie un segment normal contenant des données dont l'indicateur ACK est défini en utilisant le numéro d'accusé de réception, confirmant ainsi que tous les octets de données ont été reçus. Quand la réception de tous les segments a été confirmée, la session est fermée.</p>
+                    <p>La session dans l'autre sens est fermée selon le même processus. Le récepteur indique qu'il n'y a plus de données à envoyer en définissant l'indicateur FIN dans l'en-tête d'un segment envoyé à la source. Un accusé de réception confirme que tous les octets de données ont été reçus et que cette session, à son tour, se ferme.</p>
+                    <p>Voir les figures 2 et 3 ci-dessous pour voir les indicateurs de contrôle FIN et ACK définis dans l'en-tête de segment, permettant ainsi l'interruption d'une session HTTP.</p>
+                    <figure>
+                        <img src="../images/interruption_session_TCP_FIN.png" alt="">
+                        <figcaption>Figure 2 : Interruption de session TCP (FIN).</figcaption>
+                    </figure>
+                    <p>Un analyseur de protocole affiche les détails de la trame 16 (requête FIN TCP).</p>
+                    <figure>
+                        <img src="../images/interruption_session_TCP_ACK.png" alt="">
+                        <figcaption>Figure 3 : Interruption de session TCP (ACK)</figcaption>
+                    </figure>
+                    <p>Un analyseur de protocole affiche les détails de la trame 17 (réponse ACK TCP).</p>
+                    <p>Il est également possible de fermer la connexion à l'aide d'une conexion en trois étapes. Quand le client n'a plus de données à envoyer, il envoie un segment FIN au serveur. Si le serveur n'a plus de données à envoyer, il peut répondre en définissant les indicateurs FIN et ACK simultanément et en combinant ainsi deux étapes en une. Le client répond par un segment ACK.</p>
                     <h3>Contrôle de flux :</h3>
                     <img src="../images/controle_flux_TCP.png" alt="">
                     <p>Ce schéma illustre le mécanisme de <span class="em">contrôle de flux</span> de TCP, utilisant ce qu'on appelle une <span class="em">fenêtre glissante (sliding window)</span>.</p>
