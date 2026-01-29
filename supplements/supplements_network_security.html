@@ -2595,17 +2595,45 @@ c.writePDFfile("test_trame1.pdf")</code></pre>
                 </article>
                 <article>
                     <h2 id="TCP">TCP :</h2>
-                    <p>La représentation visuelle/pédagogique de l'en-tête de TCP ci-dessous met l'accent sur la taille des champs et la compréhension globale. Elle est utilisé surtout pour les cours, les slides et les explications théoriques. C'est plus intuitif et moins précis au niveau binaire.</p>
+                    <h3>En-tête TCP :</h3>
+                    <p>La représentation visuelle/pédagogique de l'en-tête de TCP ci-dessous met l'accent sur la taille des champs et la compréhension globale. Elle est surtout utilisée pour les cours, les slides et les explications théoriques. C'est plus intuitif et moins précis au niveau binaire.</p>
                     <img src="../images/TCP_HEADER1.png" alt="">
-                    <p>Ou alors la réprésentation bit à bit ci-dessous qui montre exactement la position de chaque bit, l'ordre des flags (URG, ACK, PSH, RST, SYN, FIN) et le Data Offset (taille de l'en-tête). Elle est utilisé pour l'implémentation en C, l'analyse de paquets (Wireshark) et les examens plus techniques. C'est plus technique mais plus proche de la réalité mémoire.</p>
+                    <p>Ou alors la représentation bit à bit ci-dessous qui montre exactement la position de chaque bit, l'ordre des flags (URG, ACK, PSH, RST, SYN, FIN) et le Data Offset (taille de l'en-tête). Cette seconde représentation est utilisée pour l'implémentation en C, l'analyse de paquets (Wireshark) et les examens plus techniques. C'est plus technique mais plus proche de la réalité en mémoire.</p>
                     <img src="../images/TCP_HEADER2.png" alt="">
+                    <p>Voici les indicateurs (flags) TCP dans l'ordre exact où ils apparaissent dans l'en-tête (bit à bit) :</p>
+                    <ul>
+                        <li>
+                            <h4>URG (Urgent) :</h4>
+                            <p>L'indicateur <span class="em">URG</span> signale la présence de données urgentes dans le segment TCP. Lorsqu'il est activé, le champ <span class="em">Urgent Pointer</span> est valide et indique la fin des données urgentes. Cet indicateur est aujourd'hui rarement utilisé.</p>
+                        </li>
+                        <li>
+                            <h4>ACK (Acknowledgment) :</h4>
+                            <p>L'indicateur <span class="em">ACK</span> confirme la bonne réception des données. Lorsqu'il est positionné, le champ d'accusé de réception est valide et contient le numéro du prochain octet attendu. Après l'établissement de la connexion, ce flag est généralement activé dans la majorité des segments TCP.</p>
+                        </li>
+                        <li>
+                            <h4>PSH (Push) :</h4>
+                            <p>L'indicateur <span class="em">PSH</span> demande au récepteur de transmettre immédiatement les données à l'application, sans attendre que le tampon soit rempli. Il est principalement utilisé par des applications interactives telles que <span class="em">SSH</span> ou <span class="em">Telnet</span>.</p>
+                        </li>
+                        <li>
+                            <h4>RST (Reset) :</h4>
+                            <p>L'indicateur <span class="em">RST</span> provoque une réinitialisation immédiate de la connexion TCP. Il est utilisé en cas d'erreur, de tentative de connexion vers un port fermé ou lorsqu'une connexion est jugée invalide. Cette fermeture est brutale et ne suit pas la procédure normale FIN/ACK.</p>
+                        </li>
+                        <li>
+                            <h4>SYN (Synchronize) :</h4>
+                            <p>L'indicateur <span class="em">SYN</span> est utilisé pour initier une connexion TCP. Il permet la synchronisation des numéros de séquence entre les deux hôtes et intervient lors de la phase d'établissement de la connexion, notamment dans le <span class="em">three-way handshake</span>.</p>
+                        </li>
+                        <li>
+                            <h4>FIN (Finish) :</h4>
+                            <p>L'indicateur <span class="em">FIN</span> indique qu'un hôte n'a plus de données à transmettre et souhaite fermer la connexion de manière ordonnée. Chaque sens de communication étant indépendant, chaque hôte doit envoyer son propre segment FIN pour mettre fin complètement à la connexion TCP.</p>
+                        </li>
+                    </ul>
                     <h3>Communication TCP :</h3>
                     <p>Pour mettre fin à une connexion, l'indicateur de contrôle FIN (Finish) doit être défini dans l'en-tête de segment. Pour mettre fin à chaque session TCP unidirectionnelle, on utilise un échange en deux étapes, constitué d'un segment FIN et d'un segment ACK. Par conséquent, pour mettre fin à une seule conversation TCP, quatre échanges sont nécessaires pour mettre fin aux deux sessions (voir la figure 1 ci-dessous).</p>
                     <figure>
                         <img src="../images/etablissement_fermeture_connexion_TCP.PNG" alt="">
                         <figcaption>Figure 1 : Établissement et fermeture d'une connexion TCP.</figcaption>
                     </figure>
-                    <p><span class="em">Remarque</span> : les termes client et serveur sont utilisés ici pour simplifier l'explication, mais le processus d'interruption peut être initié par n'importe lequel des deux hôts ayant une session ouverte.</p>
+                    <p><span class="em">Remarque</span> : les termes client et serveur sont utilisés ici pour simplifier l'explication, mais le processus d'interruption peut être initié par n'importe lequel des deux hôtes ayant une session ouverte.</p>
                     <p>Voici les différentes étapes :</p>
                     <ol>
                         <li>
@@ -2623,7 +2651,7 @@ c.writePDFfile("test_trame1.pdf")</code></pre>
                     </ol>
                     <p>Quand le client n'a plus aucune donnée à transférer, il définit l'indicateur FIN dans l'en-tête d'un segment. Ensuite, le serveur de la connexion envoie un segment normal contenant des données dont l'indicateur ACK est défini en utilisant le numéro d'accusé de réception, confirmant ainsi que tous les octets de données ont été reçus. Quand la réception de tous les segments a été confirmée, la session est fermée.</p>
                     <p>La session dans l'autre sens est fermée selon le même processus. Le récepteur indique qu'il n'y a plus de données à envoyer en définissant l'indicateur FIN dans l'en-tête d'un segment envoyé à la source. Un accusé de réception confirme que tous les octets de données ont été reçus et que cette session, à son tour, se ferme.</p>
-                    <p>Voir les figures 2 et 3 ci-dessous pour voir les indicateurs de contrôle FIN et ACK définis dans l'en-tête de segment, permettant ainsi l'interruption d'une session HTTP.</p>
+                    <p>Voir les figures 2 et 3 ci-dessous pour observer les indicateurs de contrôle FIN et ACK définis dans l'en-tête de segment, permettant ainsi l'interruption d'une session HTTP.</p>
                     <figure>
                         <img src="../images/interruption_session_TCP_FIN.png" alt="">
                         <figcaption>Figure 2 : Interruption de session TCP (FIN).</figcaption>
@@ -2634,7 +2662,7 @@ c.writePDFfile("test_trame1.pdf")</code></pre>
                         <figcaption>Figure 3 : Interruption de session TCP (ACK)</figcaption>
                     </figure>
                     <p>Un analyseur de protocole affiche les détails de la trame 17 (réponse ACK TCP).</p>
-                    <p>Il est également possible de fermer la connexion à l'aide d'une conexion en trois étapes. Quand le client n'a plus de données à envoyer, il envoie un segment FIN au serveur. Si le serveur n'a plus de données à envoyer, il peut répondre en définissant les indicateurs FIN et ACK simultanément et en combinant ainsi deux étapes en une. Le client répond par un segment ACK.</p>
+                    <p>Il est également possible de fermer la connexion à l'aide d'une connexion en trois étapes. Quand le client n'a plus de données à envoyer, il envoie un segment FIN au serveur. Si le serveur n'a plus de données à envoyer, il peut répondre en définissant les indicateurs FIN et ACK simultanément et en combinant ainsi deux étapes en une. Le client répond par un segment ACK.</p>
                     <h3>Contrôle de flux :</h3>
                     <img src="../images/controle_flux_TCP.png" alt="">
                     <p>Ce schéma illustre le mécanisme de <span class="em">contrôle de flux</span> de TCP, utilisant ce qu'on appelle une <span class="em">fenêtre glissante (sliding window)</span>.</p>
