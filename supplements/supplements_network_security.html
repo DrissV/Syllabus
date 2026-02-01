@@ -2766,6 +2766,998 @@ c.writePDFfile("test_trame1.pdf")</code></pre>
                             <p><span class="em">Libération continue</span> : Le dialogue continue ainsi jusqu'à ce que l'application cliente ait lu toutes les données du tampon ou que l'expéditeur n'ait plus rien à transmettre.</p>
                         </li>
                     </ul>
+                    <h3>Application d'inscription et gestion d'étudiants en C :</h3>
+                    <p>Cette application implémente un service client-serveur permettant l'inscription et la gestion d'étudiants à distance, en utilisant un protocole personnalisé reposant sur TCP, avec stockage des informations dans un fichier côté serveur.</p>
+                    <p>Voici les différents fichiers de l'application :</p>
+                    <ul>
+                        <li>
+                            <p>Le fichier `<span class="em">server.c</span>` est :</p>
+<pre><code>#include "csock.h"
+#include "myprotocol.h"
+#include &lt;unistd.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;getopt.h&gt;
+
+typedef struct {
+	int id;
+	char nom[32];
+	char prenom[32];
+} etudiant_st;
+
+struct liste {
+	etudiant_st etudiant;
+	struct liste *suivant;
+};
+
+typedef struct liste liste_etudiant;
+
+liste_etudiant *tete_liste = NULL;
+
+/* affiche la description of de tous les options supporté */
+
+/* affiche la description of de tous les options supporté */
+void usage (FILE *fp, const char *path) {
+    /* prendre uniquement la derniere portion du chemin de fichier */
+    const char *basename = strrchr(path, '/');
+    basename = basename ? basename + 1 : path;
+
+    fprintf (fp, "usage: %s [OPTION]\n", basename);
+    fprintf (fp, "  -h, --help\t\t\tafficher cette aide et quitter.\n");
+    fprintf (fp, "  -t, --transport [PROTOCOL]\tutiliser le protocol de transport (tcp ou udp).\n");
+    fprintf (fp, "  -p, --port=STRING\t\tLe numero de port ou le nom du service à utilisé'.\n");
+    fprintf (fp, " \nexemple :\n\t%s -t tcp -p 5656\n\t%s -t udp -p myprotocol\n", basename, basename);
+}
+
+liste_etudiant *initialisation() {
+    FILE *fich;
+    char nom[32], prenom[32];
+    int id;
+
+    liste_etudiant *liste = malloc(sizeof(*liste));
+
+    if (liste == NULL) {
+        exit(EXIT_FAILURE);
+    }
+
+    fich = fopen("etudiants.txt", "r");
+ 
+    if (fich == NULL) {
+        printf("Erreur lors de l'ouverture du fichier etudiants");
+        exit(1);
+    }
+
+    // lire les données à partie de fichier
+    fscanf(fich, "%d %s %s\n", &id, nom, prenom);
+
+    liste->etudiant.id = id;
+    strcpy(liste-&gt;etudiant.nom, nom);
+    strcpy(liste-&gt;etudiant.prenom, prenom);
+    liste-&gt;suivant = NULL;
+
+    tete_liste = liste;
+
+    // tant que la fin du fichier n'est atteint lire les données
+    // et stocker dans la liste
+    while (!feof(fich)){
+        liste->suivant = malloc(sizeof(*liste));
+        liste = liste-&gt;suivant;
+
+     	fscanf(fich, "%d %s %s\n", &id, nom, prenom);
+    	liste-&gt;etudiant.id = id;
+    	strcpy(liste-&gt;etudiant.nom, nom);
+    	strcpy(liste-&gt;etudiant.prenom, prenom);
+    	liste-&gt;suivant = NULL;
+ 
+ 	    // afficher les données chargées
+    	//printf("ID : %d\tNom : %s\tPrenom : %s\n", id, nom, prenom);
+    }
+ 
+    fclose(fich);
+ 
+    return tete_liste;
+}
+
+void ajouter_etudiant_s(int sock, message_t message_client) {
+	int id;
+	char nom[32];
+	char prenom[32];
+
+	liste_etudiant *liste;
+	liste = tete_liste;
+
+    sscanf(message_client.data, "%d %s %s", &id, nom, prenom);
+
+	/* Aller à la fin de la liste des etudiant */
+	while(liste-&gt;suivant != NULL) {
+        	liste = liste-&gt;suivant;
+    }
+
+    liste-&gt;suivant = malloc(sizeof(liste_etudiant));
+    liste = liste-&gt;suivant;
+    liste-&gt;etudiant.id = id;
+    strcpy(liste-&gt;etudiant.nom, nom);
+    strcpy(liste-&gt;etudiant.prenom, prenom);
+    liste-&gt;suivant = NULL;
+
+    printf("Etudiant Ajouter :\n\tID : %d\tNom : %s\t\tPrenom : %s\n", liste-&gt;etudiant.id, liste-&gt;etudiant.nom, liste-&gt;etudiant.prenom);
+
+    
+	/* remplir la memoire occupé par message.data de O /
+	memset(message.data, 'O', sizeof(char) * DATA_SIZE);
+	
+	/* ici j'aurai pu envoyer au client un message OK
+	message.header.message_type = OK;
+	// sprintf(buffer, "%d %s", message.header.message_type, message.data);
+	send(sock, (const char *) &message, MESSAGE_SIZE, 0); */
+}
+
+void supprimer_etudiant_s(int sock, message_t message) {
+	int id;
+	int trouve = 0;
+
+	liste_etudiant *liste, *courant, *precedent; 
+	liste = courant = tete_liste;
+
+ 	sscanf(message.data, "%d", &id);
+	printf("Recherche de l'etudiant avec l'ID : %d\n", id);
+
+    // tant que la fin de liste n'est pas atteint
+    // et stocker dans la liste
+    liste = liste-&gt;suivant;
+    while (courant != NULL && !trouve) {
+    	if (courant->etudiant.id == id) {
+          trouve = 1;
+        } else {
+        	precedent = courant;
+        	courant = liste;
+        	liste = liste-&gt;suivant;
+        }
+    }
+    if (trouve) {
+		printf("Etudiant trouvé (et supprimé) : \n\t%d\n\t%s\n\t%s\n", courant-&gt;etudiant.id, courant-&gt;etudiant.nom, courant-&gt;etudiant.prenom);
+    	precedent-&gt;suivant = courant-&gt;suivant;
+    	free(courant);
+    } else {
+    	printf("Etudiant (ID : %d) non trouvé !\n", id);
+    }
+}
+
+void envoyer_etudiant(int sock, message_t message_client) {
+	int id;
+
+	message_t my_message;
+	char nom[32], prenom[32];
+
+	int trouve = 0;
+
+	sscanf(message_client.data,"%d", &id);
+	liste_etudiant *liste; 
+	liste = tete_liste;
+
+	while (liste != NULL && !trouve) {
+    	if (liste-&gt;etudiant.id == id) {
+          trouve = 1;
+        } else {
+        	liste = liste-&gt;suivant;
+        }
+    }
+    
+    if (trouve) {
+		printf("Etudiant trouvé.\n");
+		printf("Envoi vers le client :  \n\t%d\n\t%s\n\t%s\n", liste-&gt;etudiant.id, liste-&gt;etudiant.nom, liste-&gt;etudiant.prenom);
+    	
+		/* remplir la memoire occupé par message.data de S */
+		memset(my_message.data, 'E', sizeof(char) * DATA_SIZE);
+	
+		/* ecrire les données dans message.data 
+     	* l'espace restant est rempli de 'E' */
+		sprintf(my_message.data, "%d %s %s ", liste-&gt;etudiant.id, liste-&gt;etudiant.nom, liste-&gt;etudiant.prenom);
+		my_message.header.message_type = OK;
+		send(sock, (const char *) &my_message, MESSAGE_SIZE, 0);   
+    } else {
+		my_message.header.message_type = INVALID_OPTION;
+		send(sock, (const char *) &my_message, MESSAGE_SIZE, 0);   
+    }
+}
+
+void envoyer_etudiants_liste(int sock, message_t message_client) {
+	char bourage = 'A';
+	message_t message;
+	message.header.message_type = OK;
+	
+	liste_etudiant *liste; 
+	liste = tete_liste;
+
+	printf("Envoi de la liste des étudiants \n");
+
+	while (liste != NULL) {
+    	memset(message.data,bourage,DATA_SIZE);
+    	sprintf(message.data, "%d %s %s \n", liste-&gt;etudiant.id, liste-&gt;etudiant.nom, liste-&gt;etudiant.prenom);
+
+		printf("\tétudiants : %s\n",message.data);
+		send(sock , (const char *) &message, MESSAGE_SIZE, 0 );
+        liste = liste-&gt;suivant;
+        bourage++; 
+    }
+
+	message.header.message_type = DONE;
+
+	send(sock, (const char *) &message, MESSAGE_SIZE, 0);
+}
+
+void terminer_s(int sock) {
+	printf("Fermeture de la connexion\n");
+	close(sock);
+}
+
+int main(int argc, char *argv[]) {
+	/*char service[32] = "5656"; 	/* n° de port par défaut */
+	char service[32] = "myprotocol"; 	/* au lieu du n° de port on utilise le nom du service -> /etc/service */
+	char transport[32] = "tcp"; 	/* n° de port par défaut */
+	int mysock;			/* socket passive pour le serveur */
+	int client_sock;			/* socket de communication (active) */
+	struct sockaddr_in sin;		/* structure décrivant la socket active */
+	int lsin = sizeof(sin);
+
+	char buffer[100]; 			/* buffer pour accueillir les caractères */
+	int operation;
+    message_t message;
+    int opt;
+
+	liste_etudiant *tete_liste, *liste_etud; 
+
+    /* Traitement des paramettres de la ligne de commande */
+    struct option longopts[] = {
+        { "help", no_argument, NULL, 'h' },
+        { "transport", optional_argument, NULL, 't' },
+        { "service", required_argument, NULL, 'p' },
+        { 0 }
+    };
+
+	/* boucle infinie, jusqu'a la fin du parsing des options */
+    while (1) {
+        opt = getopt_long (argc, argv, "ht::p:", longopts, 0);
+
+        if (opt == -1) {
+            /* -1 indique q'il n y plus d'options */
+            break;
+        }
+
+        switch (opt) {
+        case 'h':
+            usage(stderr, argv[0]);
+            return 0;
+            break;
+        case 't':
+            printf ("Protocole de transport : '%s'\n", optarg);
+            strcpy(transport, optarg);
+            break;
+        case 'p':
+            printf ("Service : '%s'\n", optarg);
+            strcpy (service, optarg);
+            break;
+        case '?':
+            /* '?' indique d'un option a été malformé: Option inconnu */
+            usage (stderr, argv[0]);
+            return 1;
+        default:
+            break;
+        }
+    }
+
+	tete_liste = initialisation();
+	liste_etud = tete_liste;
+	
+	while(liste_etud != NULL) {
+    	printf("ID : %d --- Nom : %s  --- Prenom : %s\n", liste_etud-&gt;etudiant.id, liste_etud-&gt;etudiant.nom, liste_etud-&gt;etudiant.prenom);
+    	liste_etud = liste_etud-&gt;suivant;
+	}
+
+	mysock = server_socket(service, "tcp", 5);
+	puts("Attente de la connexion cliente...\n");
+
+	/* attente de la connexion d'un client et création de la socket de communication 'client' */
+	client_sock = accept(mysock, (struct sockaddr *) &sin, &lsin);
+	
+	/* Affichage de l'adresse IP du client */
+	printf("Connexion depuis: %s\n", inet_ntoa(sin.sin_addr));
+		/* fermeture de la socket */
+	close(mysock);
+
+	do {
+		printf("Attente de requettes clients ... \n");
+
+		read(client_sock, (const char *) &message, MESSAGE_SIZE);
+		
+		operation = message.header.message_type;
+
+		switch(operation) {
+			case ADD_STUDENT :
+				ajouter_etudiant_s(client_sock, message);
+				break;
+			case DEL_STUDENT :
+				supprimer_etudiant_s(client_sock, message);
+				break;
+			case GET_STUDENT :
+				envoyer_etudiant(client_sock, message);
+				break;
+			case GET_STUDENT_LIST :
+				envoyer_etudiants_liste(client_sock, message);
+				break;
+			case BYE :
+				terminer_s(client_sock);
+				break;
+			default  :
+				printf("erreur operation %d n'est pas valide\n", operation);
+				break;
+		}
+	} while(operation != BYE && client_sock != 0);
+
+
+	// printf("buffer de fen2 = %s\n", buffer);
+	/* write(partenaire, caractere, sizeof(caractere)); */
+
+	return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">client.c</span>` est :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;getopt.h&gt;
+#include "csock.h"
+#include "myprotocol.h"
+
+void usage (FILE *fp, const char *path) {
+    /* prendre uniquement la derniere portion du chemin de fichier */
+    const char *basename = strrchr(path, '/');
+    basename = basename ? basename + 1 : path;
+
+    fprintf (fp, "usage: %s [OPTION]\n", basename);
+    fprintf (fp, "  -h, --help\t\t\tafficher cette aide et quitter.\n");
+    fprintf (fp, "  -s, --server [STRING]\tl'adresse IP ou le nom du serveur.\n");
+    fprintf (fp, "  -t, --transport [STRING]\tutiliser le protocol de transport (tcp ou udp).\n");
+    fprintf (fp, "  -p, --port=STRING\t\tLe numero de port ou le nom du service à utilisé'.\n");
+    fprintf (fp, " \nexemple :\n\t%s -s localhost -t tcp -p 5656\n\t%s -s 192.168.1.1 -t udp -p myprotocol\n", basename, basename);
+}
+
+void affiche_menu(){
+	printf("===============================================================================\n");
+	printf("Veuillez faire votre choix\n");
+	printf("-------------------------------------------------------------------------------\n");
+	printf("\t%d : pour initialiser la connexion avec le serveur.\n", INITIALIZE);
+	printf("\t%d : pour ajouter un etudiant.\n", ADD_STUDENT);
+	printf("\t%d : pour supprimer un etudiant.\n", DEL_STUDENT);
+	printf("\t%d : pour afficher un etudiant.\n", GET_STUDENT);
+	printf("\t%d : pour afficher tous les etudiants.\n", GET_STUDENT_LIST);
+	printf("\t%d : pour Terminer.\n", BYE);
+	printf("===============================================================================\n");
+	printf("Votre choix : ");
+}
+
+void ajouter_etudiant_c(int sock) {
+	int id;
+	char nom[32];
+	char prenom[32];
+	message_t message;
+	char buffer[MESSAGE_SIZE];
+	printf("Veuillez donner l'ID de l'etudiant : ");
+	scanf("%d", &id);
+	printf("Veuillez donner le nom  de l'etudiant : ");
+	scanf("%s", nom);
+	printf("Veuillez donner le prenom de l'etudiant : ");
+	scanf("%s", prenom);
+
+	/* remplir la memoire occupée par message.data de A */
+	memset(message.data, 'A', sizeof(char) * DATA_SIZE);
+	
+	/* ecrire les données dans message.data 
+     * l'espace restant est rempli de 'A' */
+
+	sprintf(message.data, "%d %s %s", id, nom, prenom);
+	
+	message.header.message_type = ADD_STUDENT;
+	// sprintf(buffer,"%d %s", message.header.message_type, message.data);
+	send(sock, (const char *) &message, MESSAGE_SIZE, 0);
+}
+
+void supprimer_etudiant_c(int sock) {
+	int id;
+	message_t message;
+	char buffer[MESSAGE_SIZE];
+	printf("Veuillez donner l'ID de l'etudiant à supprimer : ");
+	scanf("%d", &id);
+
+	/* remplir la memoire occupé par message.data de S */
+	memset(message.data, 'S', sizeof(char) * DATA_SIZE);
+	
+	/* ecrire les données dans message.data 
+     * l'espace restant est rempli de 'S' */
+
+	sprintf(message.data, "%d", id);
+	message.header.message_type = DEL_STUDENT;
+	//sprintf(buffer, "%d %s", message.header.message_type, message.data);
+	send(sock, (const char *) &message, MESSAGE_SIZE, 0 );
+}
+
+void afficher_etudiant_c(int sock) {
+	int id;
+	message_t message;
+	char nom[32], prenom[32];
+	char buffer[MESSAGE_SIZE];
+	printf("Veuillez donner l'ID de l'etudiant à afficher : ");
+	scanf("%d", &id);
+	
+	/* remplir la memoire occupé par message.data de S */
+	memset(message.data, 'P', sizeof(char) * DATA_SIZE);
+	
+	/* ecrire les données dans message.data 
+     * l'espace restant est rempli de 'S' */
+	sprintf(message.data, "%d", id);
+	message.header.message_type = GET_STUDENT;
+
+	send(sock, (const char *) &message, MESSAGE_SIZE, 0);
+	
+	read(sock, (const char *) &message, MESSAGE_SIZE, 0);
+	
+	if (message.header.message_type == OK) {
+		printf("Etudiant reçu :=:\t %s \n", message.data);
+    } else {
+		printf("Etudiant non trouvé!");
+    }
+}
+
+void afficher_etudiants_liste_c(int sock) {
+	message_t message;
+	message.header.message_type = GET_STUDENT_LIST;
+	
+	/* envoyer la demande */
+	send(sock, (const char *) &message, MESSAGE_SIZE, 0);
+	
+	/* reception de la liste */
+	read(sock, (const char *) &message, MESSAGE_SIZE, 0);
+	printf("Liste des étudiants reçu : \n");
+	while (message.header.message_type != DONE) {
+		printf("\tétudiant :%s \n", message.data);
+		read(sock , (const char *) &message, MESSAGE_SIZE, 0);
+	}
+}
+
+void terminer_c(int sock) {
+	message_t message;
+	message.header.message_type = BYE;
+	send(sock, (const char *) &message, MESSAGE_SIZE, 0);
+	printf("Fermeture de la connexion\n");
+	close(sock);
+}
+
+int main(int argc,char *argv[]) {
+	char service[32] = "5656"; 	/* n° de port par défaut */
+	char transport[32] = "tcp"; 	/* n° de port par défaut */
+	char server_address[32] = "localhost"; 	/* l'adresse du serveur */
+	int choix;
+	int sock = 0;
+
+	int opt;
+
+    /* Traitement des paramettres de la ligne de commande */
+    struct option longopts[] = {
+        { "help", no_argument, NULL, 'h' },
+        { "server", optional_argument, NULL, 's' },
+        { "transport", optional_argument, NULL, 't' },
+        { "service", required_argument, NULL, 'p' },
+        { 0 }
+    };
+
+	/* boucle infinie, jusqu'a la fin du parsing des options */
+    while (1) {
+        opt = getopt_long (argc, argv, "h:s:t:p:", longopts, 0);
+
+        if (opt == -1) {
+            /* -1 indique q'il n y plus d'options */
+            break;
+        }
+
+        switch (opt) {
+        case 'h':
+            usage(stderr, argv[0]);
+            return 0;
+            break;
+        case 's':
+            printf ("Adresse Serveur : '%s'\n", optarg);
+            strcpy(server_address, optarg);
+            break;
+        case 't':
+            printf ("Protocole de transport : '%s'\n", optarg);
+            strcpy(transport, optarg);
+            break;
+        case 'p':
+            printf ("Service : '%s'\n", optarg);
+            strcpy (service, optarg);
+            break;
+        case '?':
+            /* '?' indique d'un option a été malformé: Option inconnu */
+            usage (stderr, argv[0]);
+            return 1;
+        default:
+            break;
+        }
+    }
+
+
+	printf("DATASIZE = %d\n, MESSAGE_SIZE = %d\n", DATA_SIZE, MESSAGE_SIZE);
+	//ajouter_etudiant(sock);
+
+	do {
+		affiche_menu();
+
+		scanf("%d", &choix);
+
+		switch(choix) {
+			case INITIALIZE :
+				if (sock == 0) {
+					sock = client_socket(server_address,service,transport);
+                } else {
+					printf("connexion deja établi\n");
+                }
+				break;
+			case ADD_STUDENT :
+				if (sock != 0) {
+					ajouter_etudiant_c(sock);
+                } else {
+					printf("pas de connexion avec le serveur\n");
+                }
+				break;
+			case DEL_STUDENT :
+				if (sock != 0) {
+					supprimer_etudiant_c(sock);
+                } else {
+					printf("pas de connexion avec le serveur\n");
+                }
+				break;
+			case GET_STUDENT :
+				if (sock != 0) {
+					afficher_etudiant_c(sock);
+                } else {
+					printf("pas de connexion avec le serveur\n");
+                }
+				break;
+			case GET_STUDENT_LIST :
+				if (sock != 0) {
+					afficher_etudiants_liste_c(sock);
+                } else {
+					printf("pas de connexion avec le serveur\n");
+                }
+				break;
+			case BYE :
+				terminer_c(sock);
+				break;
+			default  :
+				printf("erreur de saisi %d n'est pas valide\n", choix);
+				break;
+		}
+	} while(choix != BYE);
+	
+	return 0;
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">etudiants.txt</span>` est :</p>
+<pre><code>10 DEHERDT Gabiel
+22 BAH Amadou
+30 GEIST Lucas
+20 KAMMEGNE Henri
+28 PADOAN Carine
+32 ARHBAL Nadia
+54 AZGHAY Redouan
+25 BOUTAGOUMANT Soufian
+52 BOUZAMBOU Aädel
+48 MITELLO Vincent
+41 KAYUMBA Eric
+14 ZEGGERS François
+61 SENHAJI Mohamed
+18 EL-KADOURY Abdelghani
+47 VANDENHEEDE Driss</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">myprotocol.h</span>` est :</p>
+<pre><code>/*********************************************************************************
+*                               myprotocol.h                                     *
+**********************************************************************************
+* Auteur : Pierre Muhirwa                                                        *
+* description : illustration de protocoles  
+* 	Fichier d'entête contenant les types de données et de messages utilisés  *
+* 	lors des échanges de données entre le serveur et le(s) clients           *
+**********************************************************************************/
+
+#ifndef _MYPROTOCOL_H
+#define _MYPROTOCOL_H
+
+/* la taille du payload */
+#define DATA_SIZE 256
+
+/* Les types de messages echangés entre les programmes client/serveur */
+#define INITIALIZE 1  /* initialiser la connexion */
+#define	ADD_STUDENT 2 /* inscrire un etudiant       */
+#define	DEL_STUDENT 3 /* supprimer un etudiant    */
+#define GET_STUDENT 4 /* envoyer un etudiant vers le client  */
+#define GET_STUDENT_LIST 5 /* envoyer la liste de tous les etudiants */
+#define OK 6
+#define DONE 7
+#define INVALID_OPTION 8
+#define BYE 9
+
+/* structure implementant l'entete de notre protocole */
+typedef struct {
+	uint8_t message_type;
+	uint8_t message_length;
+	uint8_t flags;
+} header_t;
+
+/* structure implementant le message (PDU) */
+typedef struct {
+	header_t header; /* l'entete de notre protocole */
+	char data[DATA_SIZE]; /*le payload de notre protocole */
+} message_t;
+
+#define MESSAGE_SIZE sizeof(message_t)
+
+#endif</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">csock.h</span>` est :</p>
+<pre><code>/**************************************************************************
+ * csock.h : Fichier en tete pour les fonctions utilisant les sockets     *
+ * Auteur : Muhirwa Pierre                                                *
+ **************************************************************************/
+
+#include &lt;errno.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;netdb.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdarg.h&gt;
+#include &lt;stdlib.h&gt;
+#ifndef INADDR_NONE
+#define INADDR_NONE	0xffffffff
+#endif
+
+void error_socket(const char *format, ...);
+int create_socket(const char *service, const char *transport, struct sockaddr_in *sin);
+int client_socket(const char *host,const char *service, const char *transport);
+int server_socket(const char *service, const char *transport, int lqueue);</code></pre>
+                            <p>Le fichier `<span class="em">csock.c</span>` est :</p>
+<pre><code>/**************************************************************************
+ * csock.c : Fichier source pour les fonctions utilisant les sockets     *
+ * Auteur : Muhirwa Pierre                                                *
+ **************************************************************************/
+
+#include "csock.h"
+
+extern int errno;
+
+void error_socket(const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
+	exit(1);
+}
+
+int create_socket(const char *service, const char *transport, struct sockaddr_in *sin) {
+	/* structure permettant de récupérer les informations numériques à partir
+	   des nom de service(n° port) et de protocole transport (n° protocole)  */
+
+	struct servent *iservice;
+	struct protoent *itransport;
+	int s, type, proto;
+
+	/* initialisation de la structure socket   */
+	memset(sin,0,sizeof(*sin));	/* mise à zéro */
+	sin-&gt;sin_family = AF_INET;	/* Famille internet */
+
+	/* Recherche du numéro de port */
+	sin-&gt;sin_port = htons(atoi(service));
+
+	/* Si le service n'était pas un numéro on le recherche dens /etc/services */
+	if (!sin-&gt;sin_port) {
+		iservice = getservbyname(service, transport);
+		if (!iservice) {
+			error_socket("Service non enregistré: %s\n", service);
+        }
+		sin-&gt;sin_port = iservice-&gt;s_port;
+	}
+
+	/* recherche du numéro de protocole */
+	itransport = getprotobyname(transport);
+	if (!itransport) {
+		error_socket("Protocole non enregistré: %s\n", transport);
+    }
+	proto = itransport-&gt;p_proto;
+
+	if (!strcmp(transport, "udp")) {
+		type = SOCK_DGRAM; /* protocole UDP */
+    } else {
+		type = SOCK_STREAM; /* protocole TCP  */
+    }
+
+	/* creation de la socket */
+	s = socket(AF_INET, type, proto);
+	if (s &lt; 0) {
+		error_socket("Création de socket impossible: %s", strerror(errno));
+    }
+
+	return s;
+}
+
+/**
+ * Fonction qui crée une socket client : etablit une connexion avec le serveur
+ * @param : 
+ *	- host : une chaine de caractere qui conntien l'adresse du serveur.
+ *	- service : le nom du service ou le numero de port 
+ *		sous forme de chaine de caractere.
+ *	- transport : protocole de transport utilisé "tcp" ou "udp".
+ *	
+ * @see : 
+ 	 - create_socket() : utilise cette fonction pour creer la socket
+ * @return : la socket client (s)
+ */
+
+int client_socket(const char *host, const char *service, const char *transport) {
+	/* structure décrivant la socket */
+	struct sockaddr_in sin;
+	struct hostent *ihost;
+
+	int s;
+
+	/* création de la socket  */
+	s = create_socket(service, transport, &sin);
+
+	/* recherche de l'adresse IP de host */
+	sin.sin_addr.s_addr = inet_addr(host);
+	/* si l'hôte n'est pas une adresse IP mais un nom, on recherche dans (/etc/host, dns )   */
+	if (sin.sin_addr.s_addr == INADDR_NONE) {
+		ihost = gethostbyname(host);
+		if (!ihost) {
+			error_socket("Hôte inconnu : %s\n", host);
+        }
+		memcpy(&sin.sin_addr, ihost-&gt;h_addr, ihost-&gt;h_length);
+	}
+	/* connexion de la socket   */
+	if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) &lt; 0) {
+		error_socket("Impossible de se connecter à %s[%s]: %s", host, service,strerror(errno));
+    }
+	return s;
+}
+
+
+/**
+ * Fonction qui crée une socket client : etablit une connexion avec le serveur
+ * @param : 
+ *	- host : une chaine de caractere qui conntien l'adresse du serveur.
+ *	- service : le nom du service ou le numero de port 
+ *		sous forme de chaine de caractere.
+ *	- transport : protocole de transport utilisé "tcp" ou "udp".
+ *	
+ * @see : 
+ 	 - create_socket() : utilise cette fonction pour creer la socket
+ * @return : la socket client (s)
+ */
+
+int server_socket(const char *service, const char *transport, int lqueue){
+	/* structure décrivant la socket */
+	struct sockaddr_in sin;
+
+	int s;
+
+	/* création de la socket */
+	s = create_socket(service, transport, &sin);
+
+	sin.sin_addr.s_addr = INADDR_ANY;
+
+	/* Allocation du numéro de port */
+	if (bind(s, (struct sockaddr *) &sin, sizeof(sin)) &lt; 0) {
+		error_socket("Impossible de lier la socket à %s: %s\n", service, strerror(errno));
+    }
+
+	/* Placer la socket en mode passif si transport != "udp" */
+	if (strcmp(transport, "udp") && listen(s, lqueue) &lt; 0)  {
+		error_socket("Mode passif impossible sur %s: %s\n", service,strerror(errno));
+    }
+	return s;
+}</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">RFCXXXXX_MyProtocol.txt</span>` est :</p>
+<pre><code>Network Working Group                                     P. Muhirwa
+Request for Comments: MYPROTO-01                         (Example)
+Category: Informational                                   Jan 2026
+
+                MyProtocol - Simple Client/Server Protocol
+                -------------------------------------------
+
+Status of This Memo
+
+   This document is an informational RFC-like specification that
+   describes "MyProtocol", a simple application-layer protocol
+   used to illustrate client/server exchanges.
+
+   Distribution of this memo is unlimited.
+
+1.  Introduction
+
+   MyProtocol is a lightweight application protocol designed for
+   educational purposes. It illustrates basic concepts such as
+   protocol headers, message types, payloads, and request/response
+   interactions between a client and a server.
+
+   The protocol operates over a reliable transport (e.g. TCP) and
+   uses a fixed-size Protocol Data Unit (PDU).
+
+2.  Terminology
+
+   The key words "MUST", "MUST NOT", "SHOULD", and "MAY" in this
+   document are to be interpreted as described in RFC 2119.
+
+   Client:
+      An application initiating requests.
+
+   Server:
+      An application responding to client requests.
+
+   PDU:
+      Protocol Data Unit, represented by the message_t structure.
+
+3.  Protocol Overview
+
+   Communication is performed using messages composed of:
+     - a fixed-size header
+     - a fixed-size payload (data)
+
+   All messages exchanged between the client and server share the
+   same format. The semantics of the message are determined by the
+   "message_type" field in the header.
+
+4.  Message Format
+
+   Each message (PDU) is defined as follows:
+
+       0                   1                   2
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+      +---------------+---------------+---------------+
+      | message_type  | msg_length    | flags         |
+      +---------------+---------------+---------------+
+      |                                               |
+      |               data (payload)                  |
+      |                 256 bytes                     |
+      |                                               |
+      +-----------------------------------------------+
+
+   Total message size: sizeof(message_t)
+
+5.  Header Fields
+
+5.1 message_type (1 byte)
+
+   Indicates the type of message being exchanged.
+   This field defines the operation to be performed or the meaning
+   of the message.
+
+5.2 message_length (1 byte)
+
+   Indicates the length of meaningful data in the payload.
+   The maximum value MUST NOT exceed DATA_SIZE (256).
+
+5.3 flags (1 byte)
+
+   Reserved for future use.
+   This field is currently unused and MUST be set to 0.
+
+6.  Payload (data)
+
+   The payload is a character array of fixed size (256 bytes).
+   Its interpretation depends on the message_type.
+
+   If the payload contains a string, it SHOULD be null-terminated.
+   Unused bytes MAY be set to zero.
+
+7.  Message Types
+
+   The following message types are defined:
+
+   Value  Name               Description
+   -----  -----------------  -------------------------------------
+     1    INITIALIZE         Initialize a client/server connection
+     2    ADD_STUDENT        Add a student record
+     3    DEL_STUDENT        Delete a student record
+     4    GET_STUDENT        Retrieve a single student
+     5    GET_STUDENT_LIST   Retrieve all students
+     6    OK                 Operation accepted
+     7    DONE               Operation completed
+     8    INVALID_OPTION     Unsupported or invalid request
+     9    BYE                Terminate the connection
+
+8.  Operations
+
+8.1 Connection Initialization
+
+   The client sends an INITIALIZE message to the server.
+   The server replies with an OK message if the initialization
+   succeeds.
+
+8.2 Add Student
+
+   The client sends an ADD_STUDENT message.
+   The payload contains the student information.
+   The server replies with OK followed by DONE.
+
+8.3 Delete Student
+
+   The client sends a DEL_STUDENT message with the student identifier
+   in the payload.
+   The server replies with DONE if the deletion succeeds.
+
+8.4 Get Student
+
+   The client sends a GET_STUDENT message.
+   The server replies with a GET_STUDENT message containing the
+   requested student data, or INVALID_OPTION if not found.
+
+8.5 Get Student List
+
+   The client sends a GET_STUDENT_LIST message.
+   The server replies with one or more messages containing the list
+   of students.
+
+8.6 Termination
+
+   Either peer MAY send a BYE message to terminate the session.
+   No further messages MUST be sent after BYE.
+
+9.  Error Handling
+
+   If the server receives an unknown or unsupported message_type,
+   it MUST respond with INVALID_OPTION.
+
+   Malformed messages MAY be ignored.
+
+10. Security Considerations
+
+   This protocol provides no authentication, confidentiality, or
+   integrity mechanisms. It is intended for demonstration purposes
+   only and MUST NOT be used in production environments.
+
+11. IANA Considerations
+
+   This document has no IANA actions.
+
+12. Author
+
+   Pierre Muhirwa</code></pre>
+                        </li>
+                        <li>
+                            <p>Le fichier `<span class="em">Makefile</span>` est :</p>
+<pre><code>all : client server
+
+client : client.c myprotocol.h libcsock.a
+	gcc -w -o client client.c -L. -lcsock
+
+server : server.c myprotocol.h libcsock.a
+	gcc -w -o server server.c -L. -lcsock
+
+libcsock.a : csock.h csock.c
+	gcc -w -c -o libcsock.a csock.c
+
+clean:
+	rm -f server
+	rm -f client
+	rm -f libcsock.a</code></pre>
+                            <p>La commande <span class="em">make clean</span> supprime les fichiers générés lors de la compilation (comme les fichiers objets <span class="em">.o</span> et les exécutables) afin de nettoyer le répertoire de travail et permettre une recompilation propre du projet.</p>
+                        </li>
+                    </ul>
                 </article>
                 <article>
                     <h2 id="exercices_network_security">Exercices de Network Security :</h2>
@@ -2895,7 +3887,7 @@ c.writePDFfile("test_trame1.pdf")</code></pre>
                                 <p>2048 &#10060;</p>
                             </li>
                         </ol>
-                        <p>Le masque de sous-réseau <span class="em">255.255.252.0</span> correspond à <span class="em">/22</span>, ce qui signifie que 22 bits sont utiisés pour la partie réseau et qu'il reste <span class="em">10 bits pour la partie hôte</span>. Le réseau peut contenir <span class="em">2<sup>10</sup> = 1024 adresses IP au total</span>, dont <span class="em">1022 adresses d'hôte utilisables</span> après exclusion de l'adresse réseau et de l'adresse de diffusion.</p>
+                        <p>Le masque de sous-réseau <span class="em">255.255.252.0</span> correspond à <span class="em">/22</span>, ce qui signifie que 22 bits sont utilisés pour la partie réseau et qu'il reste <span class="em">10 bits pour la partie hôte</span>. Le réseau peut contenir <span class="em">2<sup>10</sup> = 1024 adresses IP au total</span>, dont <span class="em">1022 adresses d'hôte utilisables</span> après exclusion de l'adresse réseau et de l'adresse de diffusion.</p>
                     </fieldset>
                     <fieldset class="question">
                         <legend>Question 4</legend>
@@ -2935,7 +3927,7 @@ c.writePDFfile("test_trame1.pdf")</code></pre>
                                 </tr>
                                 <tr>
                                     <td>Total Length</td>
-                                    <td>0x0003c = 60 octets</td>
+                                    <td>0x003c = 60 octets</td>
                                 </tr>
                                 <tr>
                                     <td>Identification</td>
@@ -3051,6 +4043,7 @@ c.writePDFfile("test_trame1.pdf")</code></pre>
                                 <p>Hôte inaccessible &#10060;</p>
                             </li>
                         </ol>
+                        <p>Lorsqu'une commande ping reçoit une réponse ICMP avec un <span class="em">code 4</span>, cela indique une erreur de type <span class="em">Destination Unreachable - Network Unreachable</span>. Ce qui signifie que le réseau de destination ne peut pas être atteint, généralement en raison d'un problème de routage ou d'une route inexistante vers ce réseau.</p>
                     </fieldset>
                     <fieldset class="question">
                         <legend>Question 8</legend>
@@ -3504,6 +4497,24 @@ c.writePDFfile("test_trame1.pdf")</code></pre>
 <pre><code>Prochain numéro de séquence attendu = Numéro actuel + Taille des données TCP.</code></pre>
                         <p>Sur l'illustration, le numéro de séquence (relatif) est de <span class="em">1</span> et la longueur des données TCP est de <span class="em">35 octets</span>. Donc, en résumé, le prochain numéro de séquence attendu est <span class="em">36</span> car le segment commence à <span class="em">1</span> et transporte <span class="em">35 octets de données</span>.</p>
                         <p><span class="em">Phrase clé à mémoriser</span> : Le numéro ACK correspond toujours au prochain octet attendu par le récepteur.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 17</legend>
+                        <p>De quelle façon les zombies sont-ils utilisés dans les attaques contre la sécurité ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Il s'agit de segments de code créés de façon malveillante pour remplacer des applications légitimes. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Ils ciblent des personnes précises pour obtenir les informations d'entreprises ou des informations personnelles. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Ce sont des ordinateurs infectés qui effectuent une attaque par déni de service (DDoS). &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Ils sondent un groupe de machines pour trouver des ports ouverts afin de déterminer quels services sont en fonctionnement. &#10060;</p>
+                            </li>
+                        </ol>
                     </fieldset>
                 </article>
                 <article>
