@@ -47,6 +47,10 @@
             <nav role="navigation" aria-label="Menu secondaire">
                 <ol>
                     <li><a href="../supplements.html">Retour au sommaire</a></li>
+                    <li><a href="#introduction">Introduction</a></li>
+                    <li><a href="#securite_information">Sécurité de l'information</a></li>
+                    <li><a href="#gestion_acces">Gestion des accès</a></li>
+                    <li><a href="#implementation">Implémentation</a></li>
                 </ol>
             </nav>
             
@@ -63,6 +67,297 @@
             <section id="mainSection">
                 <article>
                     <h1>Host Security :</h1>
+                </article>
+                <article>
+                    <h2 id="introduction">Introduction :</h2>
+                    <h3>Objectifs :</h3>
+                    <ol>
+                        <li>
+                            <p>Mettre en pratique et vérifier les principes outils et technologies de sécurisation des hôtes (clients, serveurs, ...).</p>
+                        </li>
+                        <li>
+                            <p>Expliquer et justifier les choix et solutions proposées.</p>
+                        </li>
+                    </ol>
+                    <h3>Quelques sujets :</h3>
+                    <ul>
+                        <li>
+                            <p>Gestion des accès.</p>
+                        </li>
+                        <li>
+                            <p>Gestion des comptes utilisateurs.</p>
+                        </li>
+                        <li>
+                            <p>Logging / Monitoring.</p>
+                        </li>
+                        <li>
+                            <p>Encryption - protection des données.</p>
+                        </li>
+                        <li>
+                            <p>Infrastructures à base des certificats et de clef publique.</p>
+                        </li>
+                        <li>
+                            <p>Détection d'intrusion basé sur l'hôte.</p>
+                        </li>
+                        <li>
+                            <p>Sécurisation (hardening) de l'operating system.</p>
+                        </li>
+                        <li>
+                            <p>Mise en oeuvre.</p>
+                        </li>
+                        <li>
+                            <p>Liste évolutive et sujette à changement !</p>
+                        </li>
+                    </ul>
+                    <h3>Perspectives :</h3>
+                    <ul>
+                        <li>
+                            <p>Perspective d'entreprise.</p>
+                        </li>
+                        <li>
+                            <p>Principes langement valables pour type d'operating system.</p>
+                        </li>
+                        <li>
+                            <p>Exemples principalement Linux (open-source).</p>
+                        </li>
+                        <li>
+                            <p>"Bare metal", virtualisation, os, containers - Cloud.</p>
+                        </li>
+                        <li>
+                            <p>Approche défensive, mais aussi sensibilité offensive.</p>
+                        </li>
+                        <li>
+                            <p>Exemples reproductibles.</p>
+                        </li>
+                        <li>
+                            <p>Background : mix technique, administration, management.</p>
+                        </li>
+                    </ul>
+                    <h3>Références :</h3>
+                    <ul>
+                        <li>
+                            <p>Foundations of Information Security - A Straightforward Introduction - Jason Andress - no starch press 2019</p>
+                        </li>
+                        <li>
+                            <p>Unix and Linux System Administratin Handbook - fifth edition - Evi Nemeth and others- Addison-Wesly 2018</p>
+                        </li>
+                    </ul>
+                    <h3>Environnement de travail :</h3>
+                    <ul>
+                        <li>
+                            <p>VirtualBox pour virtualisation.</p>
+                        </li>
+                        <li>
+                            <p>Vagrant pour création et configuration d'environnements de développement légers, reproductibles et portables.</p>
+                        </li>
+                        <li>
+                            <p>Ubuntu (et Windows) - Autres distributions possibles.</p>
+                        </li>
+                        <li>
+                            <p class="em">Attention certains environnements délibérement vulnérables !</p>
+                        </li>
+                        <li>
+                            <p>Connaissance de base terminal pré-requise.</p>
+                        </li>
+                    </ul>
+                    <h3>Instructions pour VirtualBox et Vagrant :</h3>
+                    <p>Nous utiliserons les outils <a href="https://www.virtualbox.org/" target="_blank">VirtualBox</a> et <a href="https://www.vagrantup.com/" target="_blank">Vagrant</a> pour virtualiser des environnements reproductibles sur vos ordinateurs.</p>
+                    <p>Il faut les installer dans cet ordre-là.</p>
+                    <p>Cela nécessite des droits d'administrateur sur sa machine et parfois une configuration spécifique du BIOS (activation des fonctions de virtualisation - parfois aussi SecureBoot).</p>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>ASSUREZ-VOUS DE PRENDRE LES TOUTES DERNIÈRES VERSIONS STABLES (au moment de la rédaction de cet article, testé sur Vagrant 2.4.9 et virtualbox 7.2.6 - virtualbox 7.2.0 n'est PAS stable, prendre les extensions virtualbox compatibles).</p>
+                        <p>NÉCESSITE UN LINUX / WINDOWS / MAC OS récent (sur processeur Intel - support pour Silicon Apple en développement).</p>
+                        <p>Si possible, installer en dualboot Linux si vous avez Windows.</p>
+                    </div>
+                    <p>Pour chaque environnement utilisé au cours, télécharger le folder correspondant (éventuellement le déziper) dans un folder spécifique, puis se déplacer dans ce folder.</p>
+                    <p>Quelques commandes terminal Vagrant utiles (toujours dans le folder correspondant à l'environnement que l'on veut travailler) :</p>
+                    <ul>
+                        <li>
+                            <p>Pour démarrer un environnement :</p>
+<pre><code>vagrant up</code></pre>
+                        </li>
+                        <li>
+                            <p>Pour rentrer dans l'environnement :</p>
+<pre><code>vagrant ssh</code></pre>
+                        </li>
+                        <li>
+                            <p>Pour suspendre le fonctionnement de l'environnement :</p>
+<pre><code>vagrant halt</code></pre>
+                        </li>
+                        <li>
+                            <p>Pour supprimer un environnement :</p>
+<pre><code>vagrant destroy</code></pre>
+                        </li>
+                    </ul>
+                    <h3>Instructions spécifiques à Linux/MacOS pour l'utilisation d'adresses spécifiques pour des machines virtualisées par VirtualBox :</h3>
+                    <p>Comem mentionné dans <a href="https://www.virtualbox.org/manual/topics/networkingdetails.html#networkingdetails" target="_blank">https://www.virtualbox.org/manual/topics/networkingdetails.html#networkingdetails</a>, une configuration additionnelle est requise pour permettre à un hôte Linux/MacOS de se connecter à une machine virtuelle ayant une adresse spécifique : créer un fichier <span class="em">networks.conf</span> à l'emplacement <span class="em">/etc/virtualbox</span> et lui donner le contenu suivant (pour ce cours - bien mettre l'étoile au début) :</p>
+<pre><code>* 10.0.0.0/8 172.28.128.0/16</code></pre>
+                    <h3>Instructions SSH pour Windows :</h3>
+                    <p>Pour les utilisateurs utilisant Windows (10+) pour l'hôte, voir <a href="https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh-overview" target="_blank">https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh-overview</a> pour la configuration du client d'OpenSSH.</p>
+                    <p>Notez que <span class="em">ssh-keyscan</span> retourne un encodage UTF-16 (sur 2 bytes), là où le fichier <span class="em">known_hosts</span> semble devoir être encodé en UTF-8 (1 byte pour ASCII). Pour passer de l'un à l'autre (dans le directory <span class="em">~\.ssh</span>) :</p>
+<pre><code>ssh-keyscan -t ecdsa t.x.y.z &gt; .\known_hosts2</code></pre>
+<pre><code>gc .\known_hosts2 | sc -Encoding utf8 .\known_hosts</code></pre>
+                    <p>On peut après faire un <span class="em">ssh</span> vers <span class="em">t.x.y.z</span> sans recevoir d'avertissement sur l'authenticité du serveur.</p>
+                </article>
+                <article>
+                    <h2 id="securite_information">Sécurité de l'information :</h2>
+                    <h3>Notion de sécurité :</h3>
+                    <p><span class="em">Notion de valeur</span> : Quelle information a de la valeur ?</p>
+                    <p class="em">Caractérisation de la sécurité :</p>
+                    <ul>
+                        <li>
+                            <p>Confidentialité</p>
+                        </li>
+                        <li>
+                            <p>Intégrité</p>
+                        </li>
+                        <li>
+                            <p>Accessibilité</p>
+                        </li>
+                    </ul>
+                    <h3>Les menaces :</h3>
+                    <p><span class="em">Anderson</span> : Interception, Interruption, Modification, Fabrication</p>
+                    <p><span class="em">STRIDE - Microsoft</span> : Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege</p>
+                    <h3>Vulnérabilités & risques :</h3>
+                    <p><span class="em">Vulnérabilité</span> : Une faiblesse qui peut être exploitée.</p>
+                    <p><span class="em">Risque</span> : Probabilité que quelque chose de négatif va se passer.</p>
+                    <h3>Processus de gestion des risques :</h3>
+                    <p><span class="em">Processus - Anderson - <a href="https://www.ibm.com/fr-fr/topics/cyber-risk-management" target="_blank">https://www.ibm.com/fr-fr/topics/cyber-risk-management</a></span> : Actifs &#8594; Menaces &#8594; Vulnérabilités &#8594; Risques &#8594; (Acceptation, Mitigation, Transfert) &#8594; ...</p>
+                    <p class="em">Mitigations / Contrôles :</p>
+                    <ul>
+                        <li>
+                            <p>Contrôles physiques.</p>
+                        </li>
+                        <li>
+                            <p>Contrôles <span class="em">logiques / techniques</span>.</p>
+                        </li>
+                        <li>
+                            <p>Contrôles administratifs / organisationnels.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="gestion_acces">Gestion des accès :</h2>
+                    <h3>Définitions :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Identification</span> : Affirmation de qui on est.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Authentification</span> : Apport d'une preuve de qui on est.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Autorisation</span> Détermination de ce qu'une personne (chose) authentifiée peut faire.</p>
+                        </li>
+                    </ul>
+                    <h3>Identification :</h3>
+                    <h4>Concept :</h4>
+                    <ul>
+                        <li>
+                            <p>Personne, chose, système.</p>
+                        </li>
+                        <li>
+                            <p>Nom-Prénom, identifiant, adresse.</p>
+                        </li>
+                    </ul>
+                    <h4>Vérification :</h4>
+                    <ul>
+                        <li>
+                            <p>ID</p>
+                        </li>
+                        <li>
+                            <p>Peut être (relativement) facilement dupliqué, donc faible force probante.</p>
+                        </li>
+                    </ul>
+                    <h3>Authentification :</h3>
+                    <ul>
+                        <li>
+                            <p>Quelque chose qu'on connaît.</p>
+                        </li>
+                        <li>
+                            <p>Quelque chose qu'on est.</p>
+                        </li>
+                        <li>
+                            <p>Quelque chose qu'on possède.</p>
+                        </li>
+                        <li>
+                            <p>localisation, comportement, ...</p>
+                        </li>
+                    </ul>
+                    <h4>Facteurs multiples :</h4>
+                    <ul>
+                        <li>
+                            <p>2FA</p>
+                        </li>
+                        <li>
+                            <p>...</p>
+                        </li>
+                    </ul>
+                    <h3>Autorisation :</h3>
+                    <p><span class="em">Concept</span> : Qui peut faire quoi. En pratique, mis en oeuvre via le contrôle d'accès aux ressources.</p>
+                    <p>Les <span class="em">types de contrôle d'accès</span> sont :</p>
+                    <ul>
+                        <li>
+                            <p>Autoriser.</p>
+                        </li>
+                        <li>
+                            <p>Interdire.</p>
+                        </li>
+                        <li>
+                            <p>Limiter.</p>
+                        </li>
+                        <li>
+                            <p>Révoquer.</p>
+                        </li>
+                    </ul>
+                    <h3>Mise en oeuvre des contrôles d'accès :</h3>
+                    <h4>Access Control List :</h4>
+                    <p>Pour une ressource donnée, qui peut faire quoi.</p>
+                    <ul>
+                        <li>
+                            <p>Fichiers.</p>
+                        </li>
+                        <li>
+                            <p>Accès au réseau.</p>
+                        </li>
+                    </ul>
+                    <h4>Capabilities - peu fréquent au nivaeu OS :</h4>
+                    <p>L'utilisateur possède un <span class="em">token</span>. Accès aux resources basé uniquement sur la possession du token, pas de celui qui le possède.</p>
+                    <h3>Modèles de contrôle d'accès :</h3>
+                    <p><span class="em">Qui</span> détermine l'accès aux ressources.</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Discretionary Access Control</span> : Le propriétaire de la ressource.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Mandatory Access Control</span> : Un groupe séparé détermine l'accès aux ressources.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Rule-based, Role-based, Multi-level Access Control</span> : Souvent, pour environnements "sensibles".</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="implementation">Implémentation de contrôle d'accès type UNIX/Linux :</h2>
+                    <h3>Principaux mécanismes - Evi Nemeth &amp; ohers :</h3>
+                    <ul>
+                        <li>
+                            <p>L'accès à une ressource se fait en contrôlant l'utilisateur essayant d'y accéder (et / ou le groupe de l'utilisateur).</p>
+                        </li>
+                        <li>
+                            <p>Les ressources (fichier, processus) ont un propriétaure qui ont un accès large à la ressource.</p>
+                        </li>
+                        <li>
+                            <p>Les propriétaires "possèdent" les ressources qu'ils créent.</p>
+                        </li>
+                        <li>
+                            <p>L'utilisateur "root" peut agir comme le propriétaire de tout objet/ressource.</p>
+                        </li>
+                        <li>
+                            <p>Certaines fonctions administratives sont réservées à l'utilisateur "root".</p>
+                        </li>
+                    </ul>
                 </article>
             <!-- fin de section -->
             </section>
