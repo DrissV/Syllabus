@@ -51,6 +51,7 @@
                     <li><a href="#securite_information">Sécurité de l'information</a></li>
                     <li><a href="#gestion_acces">Gestion des accès</a></li>
                     <li><a href="#implementation">Implémentation</a></li>
+                    <li><a href="#extensions">Extensions</a></li>
                 </ol>
             </nav>
             
@@ -384,7 +385,7 @@
 <pre><code>ps au | grep user</code></pre>
                     <p>En résumé, cette commande liste les processus et filtre ceux appartenant à <span class="em">user</span>.</p>
 <pre><code>kill 1788</code></pre>
-                    <p>En résumé, cette commande envoie un signal (SIGTERM par défaut) au processus 1788.</p>
+                    <p>En résumé, cette commande envoie un signal (SIGTERM par défaut) au processus 1788 afin de demander l'arrêt du processus.</p>
 <pre><code>kill 1875</code></pre>
                     <h3>Actions privilégiées - root :</h3>
                     <p>Les quelques actions privilégiées sont :</p>
@@ -422,7 +423,7 @@
 <pre><code>cd /EPHEC/test-suid</code></pre>
 <pre><code>ls -la</code></pre>
 <pre><code>cp greetings1 greetings</code></pre>
-<pre><code>./welcolme</code></pre>
+<pre><code>./welcome</code></pre>
 <pre><code>cp greetings2 greetings</code></pre>
 <pre><code>./welcome</code></pre>
 <pre><code>id</code></pre>
@@ -521,6 +522,92 @@ int main (int argc, char *argv[]) {
                             <p>Modèles convergent (surtout avec extensions).</p>
                         </li>
                     </ul>
+                </article>
+                <article>
+                    <h2 id="extensions">Extensions :</h2>
+                    <h3>Limites du modèle type - Evi nemeth &amp; others :</h3>
+                    <ul>
+                        <li>
+                            <p>Root - point faible crucial : sudo ? - d'une certaine manière, étend la surface d'attaque.</p>
+                        </li>
+                        <li>
+                            <p>suid - division des pouvoirs de Root, mais très vulnérable.</p>
+                        </li>
+                        <li>
+                            <p>Dispersion des contrôles d'accès dans les différentes commandes - changement difficile.</p>
+                        </li>
+                        <li>
+                            <p>N'adresse pas (vraiment) l'authentification dans un contexte réseau.</p>
+                        </li>
+                        <li>
+                            <p>Difficulté d'audit - l'apparence à un groupe n'est pas indicatif des droits.</p>
+                        </li>
+                        <li>
+                            <p>ACL limitées - rajout d'un membre à un groupe est une opération privilégiée.</p>
+                        </li>
+                    </ul>
+                    <h3>ACL avancées (POSIX, il existe aussi NFSv4 proche Windows) :</h3>
+                    <img src="../images/ACL_avancees.PNG" alt="">
+                    <h3>Kerberos - authentification via tiers de confiance :</h3>
+                    <figure>
+                        <img src="../images/Kerberos.svg.png" alt="">
+                        <figcaption>Source : <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.png" target="_blank">https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.pnghttps://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.png</a></figcaption>
+                    </figure>
+                    <h3>Isolation via namespaces/capabilities :</h3>
+                    <p><span class="em">namespaces</span> : Restriction "top down" de l'accès d'un processus aux ressources (fichiers, réseau, processus, etc.).</p>
+                    <p><span class="em">capabilities</span> : Division des pouvoirs de root en privilèges "individualisés" (juste ouvrir un port réseau par exemple) (À ne pas confondre avec les capabilities comme substitut aux ACL).</p>
+                    <h3>Docker et namespace - vue sur les processus internes :</h3>
+                    <img src="../images/docker_namespace_vue_processus_internes.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>docker run -p 80:80 -d --name ephec nginx</code></pre>
+<pre><code>curl localhost:80</code></pre>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Welcome to nginx!&lt;/title&gt;
+...
+&lt;/html&gt;</code></pre>
+<pre><code>docker exec -ti ephec bash</code></pre>
+<pre><code>apt-get update &amp;&amp; apt-get -y install procps</code></pre>
+<pre><code>ps aux</code></pre>
+<pre><code>ps aux | grep nginx</code></pre>
+                    <h3>Docker et capabilities - désactivation sélective de chown :</h3>
+                    <figure>
+                        <img src="../images/docker_capabilities_desactivation_selective_chown.PNG" alt="">
+                        <figcaption>Source exemple : <a href="https://dockerlabs.collabnix.com/advanced/security/capabilities/" target="_blank">https://dockerlabs.collabnix.com/advanced/security/capabilities/</a></figcaption>
+                    </figure>
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>docker run -t -i debian chown nobody /</code></pre>
+<pre><code>docker run -t -i --cap-drop chown nobody /</code></pre>
+                    <h3>Sécurité Docker - importance de la bonne configuration :</h3>
+                    <p><a href="https://docs.docker.com/engine/security/" target="_blank">https://docs.docker.com/engine/security/</a></p>
+                    <img src="../images/securite_docker_importance_bonne_configuration.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo cat /etc/group | grep docker</code></pre>
+<pre><code>docker run hello-world</code></pre>
+<pre><code>cat /host/etc/shadow | grep user</code></pre>
+                    <h3>MAC - exemple Apparmor :</h3>
+                    <img src="../images/MAC_exemple_Apparmor.PNG" alt="">
+<pre><code>sudo aa-enforce ./welcome</code></pre>
+<pre><code>sudo cat /etc/apparmor.d/EPHEC.test-suid.welcome</code></pre>
+<pre><code>#include &lt;tunables/global&gt;
+/EPHEC/test-suid/welcome {
+  #include &lt;abstractions/base&gt;
+
+  deny capability setuid,
+
+  /EPHEC/test-suid/greetings mrix,
+  /EPHEC/test-suid/welcome mr,
+  /bin/bash mrix,
+  /usr/bin/id mrix,
+}</code></pre>
+<pre><code>cp greetings2 greetings</code></pre>
+<pre><code>./welcome</code></pre>
+<pre><code>cat 1&gt; greetings -</code></pre>
+<pre><code>#!/bin/bash
+ls</code></pre>
+<pre><code>./greetings</code></pre>
+<pre><code>./welcolme</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
