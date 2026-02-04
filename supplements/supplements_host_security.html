@@ -52,6 +52,9 @@
                     <li><a href="#gestion_acces">Gestion des accès</a></li>
                     <li><a href="#implementation">Implémentation</a></li>
                     <li><a href="#extensions">Extensions</a></li>
+                    <li><a href="#gestion_utilisateurs">Gestion des utilisateurs</a></li>
+                    <li><a href="#authentification">Authentification</a></li>
+                    <li><a href="#exercices">Exercices</a></li>
                 </ol>
             </nav>
             
@@ -608,6 +611,326 @@ int main (int argc, char *argv[]) {
 ls</code></pre>
 <pre><code>./greetings</code></pre>
 <pre><code>./welcolme</code></pre>
+                </article>
+                <article>
+                    <h2 id="gestion_utilisateurs">Gestion des utilisateurs :</h2>
+                    <h3>Le fichier des utilisateurs : /etc/passwd :</h3>
+                    <img src="../images/etc_passwd.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo head -n 1 /etc/passwd</code></pre>
+                    <p>En résumé, cette commande affiche la première entrée du fichier <span class="em">/etc/passwd</span> pour montrer le format d'un compte utilisateur.</p>
+<pre><code>sudo tail -n 10 /etc/passwd</code></pre>
+                    <p>En résumé, cette commande affiche les dix derniers comptes utilisateurs définis sur le système.</p>
+                    <h4>/etc/passwd - informations détaillées :</h4>
+                    <ul>
+                        <li>
+                            <p>Username : purement conventionnel (peut être changé).</p>
+                        </li>
+                        <li>
+                            <p>(hash du password - historique).</p>
+                        </li>
+                        <li>
+                            <p>UID : identifiant numérique de l'utilisateur - coeur de l'identification.</p>
+                        </li>
+                        <li>
+                            <p>GID : identifiant numérique du groupe - coeur de l'identification.</p>
+                        </li>
+                        <li>
+                            <p>Informations administratives - peuvent être modifiées (limite sur Full Name).</p>
+                        </li>
+                        <li>
+                            <p>Home directory - pas toujours présent.</p>
+                        </li>
+                        <li>
+                            <p>Shell - pas toujours présent.</p>
+                        </li>
+                    </ul>
+                    <h3>Utilisateurs techniques, utilisateurs avec id=0 :</h3>
+                    <h4>Utilisateurs techniques (typiquement id inférieur à 1000) :</h4>
+                    <p>Typiquement, pour limiter l'accès aux ressources pour un programme spécifique, sans passer par root.</p>
+                    <h4>Utilisateurs avec id=0 :</h4>
+                    <ul>
+                        <li>
+                            <p>Pouvoirs root.</p>
+                        </li>
+                        <li>
+                            <p>Peuvent être multiples.</p>
+                        </li>
+                        <li>
+                            <p>Peuvent ne pas s'appeler root.</p>
+                        </li>
+                        <li>
+                            <p>... danger pour la sécurité ...</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="authentification">Authentification :</h2>
+                    <h3>Authentification via mots de passe : /etc/shadow :</h3>
+                    <img src="../images/etc_shadow.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo head -n 1 /etc/shadow</code></pre>
+                    <p>En résumé, cette commande affiche la première ligne du fichier contenant les mots de passe chiffrés.</p>
+<pre><code>sudo tail -n 10 /etc/shadow | fold -w 80 -s</code></pre>
+                    <p>En résumé, cette commande affiche les dernières entrées du fichier <span class="em">/etc/shadow</span> en repliant les lignes pour une meilleur lisibilité.</p>
+                    <h4>/etc/shadow - informations détaillées :</h4>
+                    <ul>
+                        <li>
+                            <p>user.</p>
+                        </li>
+                        <li>
+                            <p>hash :</p>
+                            <ul>
+                                <li>
+                                    <p>version</p>
+                                </li>
+                                <li>
+                                    <p>salt.</p>
+                                </li>
+                                <li>
+                                    <p>hash proprement dit.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>diverses informations relatives au mot de passe (dernier changement, etc.).</p>
+                        </li>
+                    </ul>
+                    <h3>Importance de mots de passe compliqués : illustration :</h3>
+                    <p>Hashcat - <a href="https://hashcat.net/hashcat/" target="_blank">https://hashcat.net/hashcat/</a> - <a href="https://github.com/danielmiessler/SecLists/tree/master" target="_blank">https://github.com/danielmiessler/SecLists/tree/master</a></p>
+                    <img src="../images/importance_passwords_compliques_illustration_1.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo cat /etc/shadow | grep weak_pass_user</code></pre>
+                    <p>En résumé, cette commande extrait l'entrée correspondant à l'utilisateur ciblé dans <span class="em">/etc/shadow</span>.</p>
+<pre><code>sudo cat /etc/shadow | grep weak_pass_user &gt; hash1.temp</code></pre>
+<pre><code>cut --delimiter=: --fields=2 hash1.temp</code></pre>
+                    <p>En résumé, cette commande extrait uniquement le champ contenant le hash du mot de passe.</p>
+<pre><code>cut --delimiter=: --fields=2 hash1.temp &gt; hash1.txt</code></pre>
+<pre><code>cat hash1.txt</code></pre>
+<pre><code>hashcat --force -m 1800 -a 0 hash1.txt rockyou.txt</code></pre>
+                    <p>En résumé, cette commande lance une attaque par dictionnaire sur un hash SHA-512 pour démontrer la faiblesse d'un mot de passe.</p>
+<pre><code>hashcat --force --show -m 1800 -a 0 hash1.txt rockyou.txt | fold -w 80 -s</code></pre>
+                    <img src="../images/importance_passwords_compliques_illustration_2.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo cat /etc/shadow | grep weak_pass:</code></pre>
+<pre><code>sudo cat /etc/shadow | grep weak_pass: &gt; hash2.temp</code></pre>
+<pre><code>cut --delimiter=: --fields=2 hash2.temp</code></pre>
+<pre><code>cut --delimiter=: --fields=2 hash.temp &gt; hash2.txt</code></pre>
+<pre><code>hashcat --force -m 1800 -a 0 hash2.txt rockyou.txt</code></pre>
+                    <h3>Gestion des logins - par exemple la rotation des mots de passe :</h3>
+                    <p><a href="https://www.baeldung.com/linux/password-complexity" target="_blank">https://www.baeldung.com/linux/password-complexity</a></p>
+                    <img src="../images/gestion_logins_rotation_passwords.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>cat /etc/login.defs</code></pre>
+                    <p>En résumé, cette commande affiche la configuration globale des règles de gestion des mots de passe.</p>
+<pre><code>sudo change user_reasonable_password</code></pre>
+                    <p>En résumé, cette commande permet de configurer l'expiration et la rotation du mot de passe d'un utilisateur.</p>
+                    <h4>Désactivation &amp; réactivation d'un compte :</h4>
+                    <img src="../images/gestion_logins.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo usermod -L -e 1 user_reasonable_password</code></pre>
+                    <p>En résumé, cette commande verouille le compte et force son expiration immédiate.</p>
+<pre><code>su user_reasonable_password</code></pre>
+<pre><code>sudo usermod -U -e "" user_reasonable_password</code></pre>
+                    <p>En résumé, cette commande déverouille le compte et supprime la date d'expiration.</p>
+<pre><code>su user_reasonable_password</code></pre>
+                    <h3>Centralisation authentification via Pluggable Authentication Module (PAM) :</h3>
+                    <p>login, passwd, sudo, etc. : répétition du code ?</p>
+                    <h4>Pluggable Authentication Module - centralisation logique :</h4>
+                    <ul>
+                        <li>
+                            <p>auth : identification des utilisateurs.</p>
+                        </li>
+                        <li>
+                            <p>account : limitation du nombre d'utilisateurs simultanés, etc.</p>
+                        </li>
+                        <li>
+                            <p>sessions : actions à faire au début et à la fin d'une session.</p>
+                        </li>
+                        <li>
+                            <p>password : complexité risque, type de hashage, etc.</p>
+                        </li>
+                    </ul>
+                    <h3>Gestion de la complexité des mots de passe via PAM :</h3>
+                    <p><a href="https://www.baeldung.com/linux/password-complexity" target="_blank">https://www.baeldung.com/linux/password-complexity</a></p>
+                    <h4>Gestion de la complexité du hashage des mots de passe via PAM :</h4>
+                    <img src="../images/gestion_complexite_hashage_passwords_PAM_1.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo cat /etc/pam.d/common-password | grp -v "#"</code></pre>
+                    <p>En résumé; cette commande affiche uniquement les règles PAM actives liées aux mots de passe.</p>
+<pre><code>sudo tail -n 1 /etc/shadow | fold -w 80 -s</code></pre>
+                    <img src="../images/gestion_complexite_hashage_passwords_PAM_2.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo cat /etc/pam.d/common-password | grp -v "#"</code></pre>
+<pre><code>sudo tail -n 2 /etc/shadow | fold -w 80 -s</code></pre>
+                    <h3>Implémentation 2FA via PAM :</h3>
+                    <p><a href="https://www.digitalocean.com/community/tutorials/how-to-configure-multi-factor-authentication-on-ubuntu-18-04" target="_blank">https://www.digitalocean.com/community/tutorials/how-to-configure-multi-factor-authentication-on-ubuntu-18-04</a></p>
+                    <img src="../images/implementation_2FA_PAM_1.PNG" alt="">
+                    <img src="../images/implementation_2FA_PAM_2.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>google-authenticator</code></pre>
+                    <p>En résumé, cette commande initialise l'authentification à deux facteurs pour un utilisateur.</p>
+<pre><code>tail -n 1 /etc/pam.d/common-auth</code></pre>
+<pre><code>su user_2fa</code></pre>
+                </article>
+                <article>
+                    <h2 id="exercices">Exercices :</h2>
+                    <h3>Contexte :</h3>
+                    <ol>
+                        <li>
+                            <p>Contexte d'entreprise :</p>
+                            <ul>
+                                <li>
+                                    <p>Sites Web d'organisation hostés sur un serveur commun.</p>
+                                </li>
+                                <li>
+                                    <p>Sites "statiques", plusieurs utilisateurs autorisés à modifier le contenu de leur(s) site(s).</p>
+                                </li>
+                                <li>
+                                    <p>Nécessité de pouvoir mettre à jour le contenu &amp; la configuration.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Actifs à protéger :</p>
+                            <ul>
+                                <li>
+                                    <p>Contenu très important pour réputation.</p>
+                                </li>
+                                <li>
+                                    <p>Réelle menace de piratage du contenu, ou de le rendre indisponible.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <h3>Configuration :</h3>
+                    <ul>
+                        <li>
+                            <p>Box Vagrant préconfigurée avec un serveur web.</p>
+                        </li>
+                        <li>
+                            <p>Fichiers de configuration pour le serveur web dans /etc/nginx/conf.d :</p>
+                            <ul>
+                                <li>
+                                    <p>client1.conf : premier site sur port 8081</p>
+                                </li>
+                                <li>
+                                    <p>client2.conf : premier site sur port 8082</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Sites dans /var/www/site-client1 et /var/www/site-client2 :</p>
+                            <ul>
+                                <li>
+                                    <p>/var/www/site-client1/index.html</p>
+                                </li>
+                                <li>
+                                    <p>/var/www/site-client2/index.html</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Tâches :</h3>
+                    <h4>Gestion des accès :</h4>
+                    <ul>
+                        <li>
+                            <p>Vérifier qu'un quidam peut bien avoir accès aux deux sites (tuyau : <span class="em">curl</span>).</p>
+<pre><code>curl http://localhost:8081</code></pre>
+<pre><code>curl http://localost:8082</code></pre>
+                        </li>
+                        <li>
+                            <p>Identifier les utilisateurs (<span class="em">user*</span>) et les groupes (<span class="em">client*</span>) (tuyau : <span class="em">/etc/passwd</span>, <span class="em">/etc/group</span>, <span class="em">/etc/shadow</span>).</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">/etc/passwd</span> &#8594; utilisateurs.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">/etc/group</span> &#8594; groupes.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">/etc/shadow</span> &#8594; authentification.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Tester le changement du contenu de site-client1 - sans utiliser sudo (!) (tuyau : un utilisateur dans le bon "groupe").</p>
+                            <ul>
+                                <li>
+                                    <p>Vérifier le <span class="em">groupe propriétaire</span> du répertoire.</p>
+                                </li>
+                                <li>
+                                    <p>Ajouter l'utilisateur au groupe :</p>
+<pre><code>sudo usermod -aG client1 userX</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Vérifier qu'un utilisateur non-autorisé ne peut pas changer le contenu de site-client1 (tuyau : voir "groupes").</p>
+                            <ul>
+                                <li>
+                                    <p>Vérifier les permissions :</p>
+<pre><code>ls -ld /var/www/site-client1</code></pre>
+                                </li>
+                                <li>
+                                    <p>Vérifierles groupes :</p>
+<pre><code>groups userX</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Changer le port d'écoute de site-client2 en 8083 (tuyau : bien voir qui peut faire cette modification et à quelle condition - redémarrer le serveur avec <span class="em">sudo nginx -t</span> suivi de <span class="em">sudo nginx -s reload</span>).</p>
+<pre><code>sudo nano /etc/nginx/conf.d/client2.conf</code></pre>
+<pre><code>sudo nginx -t</code></pre>
+<pre><code>sudo nginx -s reload</code></pre>
+                        </li>
+                    </ul>
+                    <h4>Gestion du cycle de vie des identités &amp; des "credentials" :</h4>
+                    <ul>
+                        <li>
+                            <p>Faire un "audit" des utilisateurs (qui a accès à quoi) - tous les utilisateurs listés sont-ils nécessaires ? (tuyau : ne pas oublier les utilisateurs privilégiés).</p>
+<pre><code>awk -F: '$3 &gt;= 1000 {print $1}' /etc/passwd</code></pre>
+                        </li>
+                        <li>
+                            <p>Lors d'un contrôle périodique, vous constatez que user1 ne doit plus être autorisé à modifier son site - désactiver son compte (tuyau : voir <span class="em">sudo usermod</span>) - Vérifier qu'il n'a effectivement plus accès.</p>
+<pre><code>sudo usermod -L user1</code></pre>
+                        </li>
+                        <li>
+                            <p>Un nouvel utilisateur user1b doit pouvoir modifier site-client1. Faire en sorte qu'il puisse le faire (tuyau : ne pas oublier le groupe).</p>
+<pre><code>sudo useradd user1b</code></pre>
+<pre><code>sudo usermod -aG client1 user1b</code></pre>
+                        </li>
+                        <li>
+                            <p>Vous décidez que vous voulez implémenter la règle d'entreprise qui dit que les mots de passe doivent être changés régulièrement. Modifier la configuration de user2 pour que son mot de passe expire après 7 jours et forcez la date de dernière mise à jour du mot de passe à un jour en septembre (tuyau : <span class="em">sudo chage</span>). Vérifier qu'il doit effectivement donner un nouveau mot de passe.</p>
+<pre><code>sudo chage -M 7 user2</code></pre>
+<pre><code>sudo chage -d 2023-01-01 user2</code></pre>
+                        </li>
+                        <li>
+                            <p>Comment vous-y prenez vous pour organiser et exécuter la tâche de vérification des identités et des "credentials" (tuyau : penser plan-do-check-act).</p>
+                        </li>
+                    </ul>
+                    <h4>Bonus : création d'un troisième site web :</h4>
+                    <ul>
+                        <li>
+                            <p>Créer éventuellement un nouveau groupe et un nouvel utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Créer un nouveau fichier de configuration dans <span class="em">/etc/nginx/conf.d</span> (tuyau : utiliser un port non utilisé - qui peut faire cette opération et à quelle condition ?).</p>
+                        </li>
+                        <li>
+                            <p>Créer un nouveau directory dans <span class="em">/var/www/</span> (tuyau : peser à changer le groupe et changer les droits en 2775 - qui peut faire cette opération et à quelle condition ?).</p>
+                        </li>
+                        <li>
+                            <p>Créer un nouveau fichier <span class="em">index.html</span> dans le directory nouvellement créé.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier que tout fonctionne bien (tuyau : penser à redémarrer le serveur).</p>
+                        </li>
+                        <li>
+                            <p>Donner des droits "sudo" à user_adm et vérifier qu'il peut effectuer des tâches administratives relatives aux sites.</p>
+<pre><code>sudo usermod -aG sudo user_adm</code></pre>
+                        </li>
+                    </ul>
                 </article>
             <!-- fin de section -->
             </section>
