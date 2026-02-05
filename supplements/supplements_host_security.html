@@ -662,13 +662,36 @@ int main (int argc, char *argv[]) {
                     </figure>
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>docker run -t -i debian chown nobody /</code></pre>
-<pre><code>docker run -t -i --cap-drop chown nobody /</code></pre>
+                    <p>En résumé, cete commande tente de changer le propriétaire du répertoire racine <span class="em">/</span> pour l'utilisateur <span class="em">nobody</span>. La commande fonctionne car root possède toutes les <span class="em">capabilities Linux</span>, dont <span class="em">CAP_CHOWN</span> pour changer le propriétaire de fichiers.</p>
+<pre><code>docker run -t -i --cap-drop chown debian chown nobody /</code></pre>
+                    <p>En résumé, cette commande <span class="em">retire à root</span> dans le conteneur le droit de changer les propriétaires de fichiers. La commande échoue car, même si le processus est <span class="em">root dans le conteneur</span>, il <span class="em">n'a plus la capability CAP_CHOWN</span> et donc il ne peut plus exécuter <span class="em">chown</span>.</p>
                     <h3>Sécurité Docker - importance de la bonne configuration :</h3>
                     <p><a href="https://docs.docker.com/engine/security/" target="_blank">https://docs.docker.com/engine/security/</a></p>
                     <img src="../images/securite_docker_importance_bonne_configuration.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo cat /etc/group | grep docker</code></pre>
+                    <p>En résumé, cette commande affiche le groupe <span class="em">docker</span> et ses membres. C'est important car les utilisateurs dans le groupe <span class="em">docker</span> peuvent <span class="em">contrôler le daemon Docker</span>. Or le daemon Docker tourne <span class="em">en root</span>.</p>
 <pre><code>docker run hello-world</code></pre>
+                    <p>En résumé, cette commande lance un conteneur de test pour vérifier que Docker fonctionne.</p>
+<pre><code>su user2</code></pre>
+<pre><code>docker run hello-world</code></pre>
+<pre><code>ls -la /var/run/docker.sock</code></pre>
+                    <p>En résumé, cette commande affiche les permissions du socket Docker.</p>
+<pre><code>exit</code></pre>
+                    <p>En résumé, cette commande quitte la session <span class="em">user2</span> et retourne à l'utilisateur précédent (souvent root ou vagrant).</p>
+<pre><code>docker run --rm -v /:/host -t -i debian bash</code></pre>
+                    <p>En résumé, cette commande donne au conteneur un accès <span class="em">direct au système de fichiers de l'hôte</span>.</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">--rm</span> : supprime le conteneur après arrêt.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">-v /:/host</span> monte <span class="em">la racine de l'hôte</span> dans le conteneur.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">debian shell</span> : shell interactif.</p>
+                        </li>
+                    </ul>
 <pre><code>cat /host/etc/shadow | grep user</code></pre>
                     <h3>MAC - exemple Apparmor :</h3>
                     <img src="../images/MAC_exemple_Apparmor.PNG" alt="">
