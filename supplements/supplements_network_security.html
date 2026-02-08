@@ -5346,6 +5346,126 @@ copy running-config startup-config</code></pre>
                     </ul>
                     <p>Les loopbacks sont généralement configurées avec un masque <span class="em">/32</span>, car elles représentent une adresse unique et non un réseau.</p>
                     <p><span class="em">Phrase clé à retenir</span> : Le plan d'adressage structure les communications entre équipements, tandis que l'interface loopback fournit une identité réseau stable et indépendante des liens physiques.</p>
+                    <p>Voici les différentes étapes à exécuter :</p>
+                    <h3>Étapes :</h3>
+                    <ol>
+                        <li>
+                            <h4>Créer les VLANs (sur TOUS les switchs) :</h4>
+<pre><code>enable
+configure terminal
+vlan 2
+    name EMPLOYES
+    exit
+vlan 3
+    name FINANCES
+    exit
+vlan 254
+    name MANAGEMENT
+    exit
+end</code></pre>
+                        </li>
+                        <li>
+                            <h4>Configurer les ports ACCESS (switchs L2) :</h4>
+                            <h5>PC employé :</h5>
+<pre><code>interface e0/1
+    switchport mode access
+    switchport access vlan 2
+    exit</code></pre>
+                            <h5>PC finance :</h5>
+<pre><code>interface e0/2
+    switchport mode access
+    switchport access vlan 3
+    exit</code></pre>
+                            <h5>PC admin :</h5>
+<pre><code>interface e0/3
+    switchport mode access
+    switchport access vlan 254
+    exit</code></pre>
+                        </li>
+                        <li>
+                            <h4>Configurer les TRUNKS (L2 &#8596; L3) :</h4>
+                            <p>&#8594; Toujours entre un switch L2 et un switch L3.</p>
+<pre><code>interface e0/0
+    switchport trunk encapsulation dot1q
+    switchport mode trunk
+    switchport trunk allowed vlan 2,3,254
+    exit</code></pre>
+                        </li>
+                        <li>
+                            <h4>Inter-VLAN routing (sur les SWITCHS L3) :</h4>
+<pre><code>enable
+configure terminal
+ip routing
+
+interface vlan 2
+    ip address 172.17.2.1 255.255.255.0
+    no shutdown
+    exit
+
+interface vlan 3
+    ip address 172.17.3.1 255.255.255.0
+    no shutdown
+    exit
+
+interface vlan 254
+    ip address 172.17.254.1 255.255.255.0
+    no shutdown
+    exit
+
+end</code></pre>
+                            <p>&#8594; Ces IP sont les GATEWAYS des PCs.</p>
+                        </li>
+                        <li>
+                            <h4>IP sur les liens inter-sites :</h4>
+                            <h5>Sur RT-CORE :</h5>
+<pre><code>interface e0/1
+    ip address 172.16.1.1 255.255.255.252
+    no shutdown
+    exit
+
+interface e0/2
+    ip address 172.16.1.5 255.255.255.252
+    no shutdown
+    exit</code></pre>
+                            <h5>Sur HQ-CORE</h5>
+<pre><code>interface e0/0
+    ip address 172.16.1.2 255.255.255.252
+    no shutdown
+    exit
+
+interface e0/1
+    ip address 172.16.1.9 255.255.255.252
+    no shutdown
+    exit</code></pre>
+                            <h5>Sur BRANCH-CORE :</h5>
+<pre><code>interface e0/0
+    ip address 172.16.1.6 255.255.255.252
+    no shutdown
+    exit
+
+interface e0/1
+    ip address 172.16.1.10 255.255.255.252
+    no shutdown
+    exit</code></pre>
+                        </li>
+                        <li>
+                            <h4>Loopbacks (identités) :</h4>
+<pre><code>interface loopback0
+    ip address 172.16.0.X 255.255.255.255
+    exit</code></pre>
+                            <p>(X selon l'équipement)</p>
+                        </li>
+                        <li>
+                            <h4>Routage OSPF :</h4>
+                            <h5>Sur RT-CORE, HQ-CORE, BRANCH-CORE, DMZ-CORE :</h5>
+<pre><code>router ospf 1
+    network 172.16.0.0 0.255.255.255 area 0
+    network 172.17.0.0 0.255.255.255 area 0
+    network 172.18.0.0 0.255.255.255 area 0
+    network 172.19.0.0 0.255.255.255 area 0
+</code></pre>
+                        </li>
+                    </ol>
                     <h3>Résumé :</h3>
                     <p>Dans ce laboratoire, nous aborderons la sécurisation d'un réseau au <span class="em">niveau 3 (L3) et niveau 4 (L4)</span> à l'aide de techniques de <span class="em">firewalling classique</span>.</p>
                     <h4>Sécurisation L3/L4 - Firewalling :</h4>
