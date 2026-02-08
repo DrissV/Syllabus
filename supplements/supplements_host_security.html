@@ -55,6 +55,13 @@
                     <li><a href="#gestion_utilisateurs">Gestion des utilisateurs</a></li>
                     <li><a href="#authentification">Authentification</a></li>
                     <li><a href="#exercices">Exercices</a></li>
+                    <li><a href="#environnement_travail">Environnement de travail</a></li>
+                    <li><a href="#notions">Notions</a></li>
+                    <li><a href="#serveur_identite_eventuellement_authentification">Serveur d'identité (et éventuellement d'authentification)</a></li>
+                    <li><a href="#authentification_reseau_SSO">Authentification réseau - Single Sign On</a></li>
+                    <li><a href="#configuration_clients">Configuration des clients</a></li>
+                    <li><a href="#gestion_centralisee_identite">Gestion centralisée de l'identité</a></li>
+                    <li><a href="#gestion_centralisee_authentification">Gestion centralisée de l'authentification</a></li>
                     <li><a href="#evaluation_instructions_provisoires">Évaluation - instructions provisoires</a></li>
                 </ol>
             </nav>
@@ -1041,6 +1048,324 @@ ls</code></pre>
 <pre><code>sudo usermod -aG sudo user_adm</code></pre>
                         </li>
                     </ul>
+                </article>
+                <article>
+                    <h2 id="environnement_travail">Environnement de travail :</h2>
+                    <h3>Boîtes à démarrer dans l'ordre :</h3>
+                    <ol>
+                        <li>
+                            <h4>Boîte network-identity-server (sso-server.hs.be) :</h4>
+                            <ul>
+                                <li>
+                                    <p>Serveur d'identité.</p>
+                                </li>
+                                <li>
+                                    <p>Serveur d'authentification (tiers de confiance).</p>
+                                </li>
+                                <li>
+                                    <p>Initialisée avec un utilisateur.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Boîte network-identity-service (sso-service.hs.be) :</h4>
+                            <ul>
+                                <li>
+                                    <p>Se réfère à sso-server.hs.be pour l'obtention des informations d'identité et d'authentification.</p>
+                                </li>
+                                <li>
+                                    <p>Est enregistré en tant que machine auprès du serveur d'identité / d'authentification.</p>
+                                </li>
+                                <li>
+                                    <p>Expose un service SSH configuré pour utiliser les services réseau d'authentification et d'authentification.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Boîte network-identity-client (sso-client.hs.be) :</h4>
+                            <ul>
+                                <li>
+                                    <p>Se réfère à sso-server.hs.be pour l'obtention des informations d'identité et d'authentification.</p>
+                                </li>
+                                <li>
+                                    <p>Contacte sso-service.hs.be en SSH sans devoir se réauthentifier (single sign on).</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="notions">Notions :</h2>
+                    <h3>Notion &amp; Motivation :</h3>
+                    <ol>
+                        <li>
+                            <h4>Notion :</h4>
+                            <ul>
+                                <li>
+                                    <p>Mêmes utilisateurs/'credentials' sur toutes les machines du réseau.</p>
+                                </li>
+                                <li>
+                                    <p>(Single Sign On - SSO) Ne s'identifier/s'authentifier qu'une seule fois pour une période de temps.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Motivations Administrateur / Responsable Sécurité :</h4>
+                            <ul>
+                                <li>
+                                    <p>Gestion intégrée des utilisateurs et des droits, notamment utilisateurs avec accès privilégié (sudo).</p>
+                                </li>
+                                <li>
+                                    <p>Politique mots de passe etc. unifiée...</p>
+                                </li>
+                                <li>
+                                    <p>... mais point de faiblesse unique si compte compromis.</p>
+                                </li>
+                                <li>
+                                    <p>(SSO) Centraliser au niveau du réseau l'authentification - pas de compromission des mots de passe si un service est compromis.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Motivation Utilisateurs :</h4>
+                            <ul>
+                                <li>
+                                    <p>Exigence de mots de passe forts plus supportable.</p>
+                                </li>
+                                <li>
+                                    <p>(SSO) Facilité d'utilisation.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <h3>Composants :</h3>
+                    <ol>
+                        <li>
+                            <h4>Interface client :</h4>
+                            <ul>
+                                <li>
+                                    <p>sswitch &amp; Pluggable Authentication Module (PAM - Encore lui !) - où trouver l'info &amp; configurer l'authentification.</p>
+                                </li>
+                                <li>
+                                    <p>System Security Services Daemon (SSSD) - tâche de fond.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Gestion centralisée de l'identité :</h4>
+                            <ul>
+                                <li>
+                                    <p>Le plus souvent, Lightweight Directory Access Protocol (LDAP).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Gestion centralisée de l'authentification :</h4>
+                            <ul>
+                                <li>
+                                    <p>Directement sur le serveur d'identité LDAP - pas de SSO.</p>
+                                </li>
+                                <li>
+                                    <p>Avec Kerberos - nécessaire pour SSO.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="serveur_identite_eventuellement_authentification">Serveur d'identité (et éventuellement d'authentification) :</h2>
+                    <h3>LDAP :</h3>
+                    <ul>
+                        <li>
+                            <p>Un protocole pour accéder à un annuaire via TCP/IP.</p>
+                        </li>
+                        <li>
+                            <p>Annuaire peut être général, mais en pratique bien adapté pour données d'identité et d'authentification.</p>
+                        </li>
+                        <li>
+                            <p>Accès idéalement sécurisé via TLS (certainement si Authentification).</p>
+                        </li>
+                    </ul>
+                    <img src="../images/serveur_identite_eventuellement_authentification.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>ldapsearch -x -LLL -b dc=hs,dc=be '(uid=john)'</code></pre>
+<pre><code>ldapsearch -x -LLL -b dc=hs,dc=be '(cn=john)'</code></pre>
+                    <p>En résumé, <span class="em">ldapsearch</span> est un outil pour interroger un annuaire LDAP. <span class="em">-x</span> utilise l'authentification simple, <span class="em">-LLL</span> produit une sortie épurée, <span class="em">-b dc=hs,dc=be</span> définit la base DN, et <span class="em">'(uid=john)'</span> ou <span class="em">'(cn=john)'</span> est le filtre de recherche.</p>
+                </article>
+                <article>
+                    <h2 id="authentification_reseau_SSO">Authentification réseau - Single Sign On :</h2>
+                    <h3>Kerberos - authentification via tiers de confiance et "session keys" :</h3>
+                    <figure>
+                        <img src="../images/Kerberos.svg.png" alt="">
+                        <figcaption>Source : <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.png" target="_blank">https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.pnghttps://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.png</a></figcaption>
+                    </figure>
+                    <h3>Principes de fonctionnement :</h3>
+                    <h4>Tiers de confiance :</h4>
+                    <ul>
+                        <li>
+                            <p>Authentification préalable des utilisateurs (et des services !) auprès d'un tiers de confiance.</p>
+                        </li>
+                    </ul>
+                    <h4>Échanges utilisateur - serveur - version simplifiée(!) :</h4>
+                    <ol>
+                        <li>
+                            <p>L'utilisateur reçoit du tiers de confiance :</p>
+                            <ul>
+                                <li>
+                                    <p>un secret ("session key") encrypté avec le mot de passe de l'utilisateur.</p>
+                                </li>
+                                <li>
+                                    <p>un "ticket" qui contient le secret, encrypté avec le mot de passe du service.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>L'utilisateur décrypte le secret.</p>
+                        </li>
+                        <li>
+                            <p>L'utilisateur encrypte une requête contenant un "timestamp" encrypté avec le secret et l'envoie au service, en même temps que le "ticket".</p>
+                        </li>
+                        <li>
+                            <p>Le service décrypte le ticket, avec son propre mot de passe, et utilise le secret pour décrypter la demande de l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Seul un utilisateur valide peut produire une requête valide - il doit avoir une connaissance du secret commun entre lui et le service.</p>
+                        </li>
+                        <li>
+                            <p>... à aucun moment le mot de passe n'est échangé en clair.</p>
+                        </li>
+                        <li>
+                            <p>... à aucun moment le service n'a connaissance du vrai mot de passe de l'utilisateur !</p>
+                        </li>
+                        <li>
+                            <p>Le secret et ticket n'ont qu'une durée de vie limitée.</p>
+                        </li>
+                    </ol>
+                    <h4>Single Sign On :</h4>
+                    <ol>
+                        <li>
+                            <p>Le secret initial peut servir comme "credential" entre l'utilisateur et un service spécial et centralisé qui crée des "sous-secrets et sous-tickets".</p>
+                        </li>
+                        <li>
+                            <p>Ces "sous-secrets et sous-tickets" sont utilisés par l'utilisateur pour accéder à d'autres services, sans redonner son mot de passe - single sign on !</p>
+                        </li>
+                        <li>
+                            <p>Le secret initial a de toute façon une durée de vie limitée.</p>
+                        </li>
+                    </ol>
+                    <p>Très bonne explication : <a href="https://wpollock.com/AUnixSec/MoronsGuideToKerberos.htm" target="_blank">https://wpollock.com/AUnixSec/MoronsGuideToKerberos.htm</a></p>
+                </article>
+                <article>
+                    <h2 id="configuration_clients">Configuration des clients :</h2>
+                    <h3>Configuration nsswitch &amp; PAM du client (voir Vagrant pour sources) :</h3>
+                    <ul>
+                        <li>
+                            <h4>Configuration nsswitch - où trouver l'information :</h4>
+                            <img src="../images/configuration_nsswitch.PNG" alt="">
+<pre><code>cat /etc/nsswitch.conf</code></pre>
+                            <p>En résumé, cette commande affiche le fichier <span class="em">nsswitch.conf</span>, qui définit comment le système résout les utilisateurs et groupes (fichiers locaux, LDAP, etc.).</p>
+                        </li>
+                        <li>
+                            <h4>Configuration de Pluggable Authentication Module - gestion authentification :</h4>
+                            <img src="../images/configuration_PAM.PNG" alt="">
+                            <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>cd /etc/pam.d</code></pre>
+                            <p>En résumé, cette commande accède aux fichiers de configuration PAM.</p>
+<pre><code>grep -r sss</code></pre>
+                            <p>En résumé, cette commande recherche l'utilisation de SSSD pour l'authentification.</p>
+                        </li>
+                    </ul>
+                    <h3>Configuration sssd du client :</h3>
+                    <ul>
+                        <li>
+                            <h4>Pour mémoire :</h4>
+                            <ul>
+                                <li>
+                                    <p>Résolution de nom de domaine (ici route statique vers ss-server.hs.be).</p>
+                                </li>
+                                <li>
+                                    <p>Couche Transport Layer Security (TLS), avec certificat pour le serveur d'identité - pour la sécurité (pas implémenté ici).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>sssd.conf :</h4>
+                            <img src="../images/configuration_sssd_client.PNG" alt="">
+<pre><code>sudo cat /etc/sssd/sssd.conf</code></pre>
+                            <p>En résumé, cette commande affiche la configuration de SSSD, qui gère l'authentification centralisée.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="gestion_centralisee_identite">Gestion centralisée de l'identité :</h2>
+                    <h3>Client utilisant serveur d'identité :</h3>
+                    <img src="../images/client_utilisant_serveur_identite.PNG" alt="">
+                    <p>Voici les commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo login</code></pre>
+                    <p>En résumé, cette commande ouvre une session.</p>
+<pre><code>id</code></pre>
+                    <p>En résumé, cette commande montre l'UID/GID/groupes</p>
+<pre><code>sudo cat /etc/passwd | grep john</code></pre>
+<pre><code>sudo cat /etc/group | grep john</code></pre>
+                    <p>En résumé, ces deux commandes vérifient la présence de l'utilisateur dans les fichiers système.</p>
+                </article>
+                <article>
+                    <h2 id="gestion_centralisee_authentification">Gestion centralisée de l'authentification :</h2>
+                    <h3>Authentification centralisée - login puis SSH sans réauthentification :</h3>
+                    <img src="../images/authentification_centralisee_login_SSH_sans_reauthentification.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo login</code></pre>
+<pre><code>id</code></pre>
+<pre><code>ssh john@sso-service.hs.be</code></pre>
+                    <p>En résumé, cette commande se connecte à la machine distante.</p>
+<pre><code>id</code></pre>
+<pre><code>pwd</code></pre>
+                    <p>En résumé, cette commande affiche le répertoire courant.</p>
+                    <h3>Authentification centralisée - "tickets" sur client :</h3>
+                    <img src="../images/authentification_centralisee_tickets_client.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>kinit john</code></pre>
+                    <p>En résumé, cette commande récupère un ticket Kerberos.</p>
+<pre><code>klist</code></pre>
+                    <p>En résumé, cette commande affiche le ticket.</p>
+<pre><code>exit</code></pre>
+                    <p>En résumé, cette commande ferme la session.</p>
+<pre><code>klist</code></pre>
+                    <p>En résumé, cette commande vérifie que le ticket a disparu.</p>
+                    <h3>Authentification centralisée - Contenu de la base des "principals" de Kerberos :</h3>
+                    <img src="../images/authentification_centralisee_contenu_base_principals_Kerberos.PNG" alt="">
+<pre><code>sudo kadmin.local</code></pre>
+                    <p>En résumé, cette commande ouvre l'administration Kerberos locale.</p>
+                    <h3>Ajout d'un utilisateur :</h3>
+                    <img src="../images/ajout_utilisateur_1.PNG" alt="">
+<pre><code>cat ldifs/add_user1.ldif</code></pre>
+                    <p>En résumé, cette commande affiche le fichier LDIF décrivant le nouvel utilisateur pour LDAP.</p>
+                    <img src="../images/ajout_utilisateur_2.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>ldapadd -x -D cn=admin,dc=hs,dc=be -f ldifs/add_user1.ldif -W</code></pre>
+                    <p>En résumé, commande ajoute l'utilisateur à LDAP. Voici les différentes options et leurs explications :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">-x</span> : auth simple.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">-D</span> : DN de l'admin.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">-f</span> : fichier LDIF.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">-W</span> : demande le mot de passe de l'admin.</p>
+                        </li>
+                    </ul>
+<pre><code>sudo kadmin.local -q "addprinc user1"</code></pre>
+                    <p>En résumé, cette commande crée un utilisateur dans la base Kerberos.</p>
+                    <img src="../images/ajout_utilisateur_3.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo login</code></pre>
+<pre><code>id</code></pre>
+<pre><code>ssh user1@sso-service.hs.be</code></pre>
+<pre><code>id</code></pre>
                 </article>
                 <article>
                     <h2 id="evaluation_instructions_provisoires">Évaluation - instructions provisoires :</h2>
