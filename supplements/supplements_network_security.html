@@ -5406,12 +5406,15 @@ end</code></pre>
     exit</code></pre>
                         </li>
                         <li>
-                            <h4>Inter-VLAN routing (sur les SWITCHS L3) :</h4>
+                            <h4>Activer le routage L3 :</h4>
 <pre><code>enable
 configure terminal
-ip routing
-
-interface vlan 2
+ip routing</code></pre>
+                            <p>Cela permet d'activer le routage IP (sinon le switch reste L2).</p>
+                        </li>
+                        <li>
+                            <h4>Inter-VLAN routing (sur les SWITCHS L3) :</h4>
+<pre><code>interface vlan 2
     ip address 172.17.2.1 255.255.255.0
     no shutdown
     exit
@@ -5429,21 +5432,6 @@ interface vlan 254
 end</code></pre>
                             <p>&#8594; Ces IP sont les GATEWAYS des PCs.</p>
                             <p>Il faut faire la même chose pour BRANCH-CORE avec l'adresse IP 172.18.X.1.</p>
-                        </li>
-                        <li>
-                            <h3>DHCP POOL :</h3>
-<pre><code>ip dhcp pool HQ_EMPLOYES
-    network 172.17.2.0 255.255.255.0
-    default-router 172.17.2.1
-    dns-server 1.1.1.1 8.8.8.8
-    exit
-
-ip dhcp pool HQ_FINANCES
-    network 172.17.3.0 255.255.255.0
-    default-router 172.17.3.1
-    dns-server 1.1.1.1 8.8.8.8
-    exit</code></pre>
-                            <p>&#8594; Il faut faire la même chose pour BRANCH-CORE avec l'adresse IP 172.18.X.1.</p>
                         </li>
                         <li>
                             <h4>IP sur les liens inter-sites :</h4>
@@ -5498,6 +5486,73 @@ interface e0/1
                             <p>La commande <span class="em">router ospf 1</span> démarre le processus de routage dynamique OSPF.</p>
                             <p><span class="em">area 0</span> est le <span class="em">backbone OSPF</span>.</p>
                             <p>La comande <span class="em">default-information originate</span> dit : <q>Si j'ai une route par défaut, je la diffuse via OSPF</q> et donc ça permet aux sites internes d'accéder à Internet via RT-CORE.</p>
+                        </li>
+                        <li>
+                            <h4>Exclure les gateways :</h4>
+                            <p>Sur RT-CORE uniquement :</p>
+<pre><code>ip dhcp excluded-address 172.17.2.1
+ip dhcp excluded-address 172.17.3.1
+ip dhcp excluded-address 172.18.2.1
+ip dhcp excluded-address 172.18.3.1</code></pre>
+                            <p>Cela empêche le serveur d'attribuer les IP des routeurs.</p>
+                        </li>
+                        <li>
+                            <h4>DHCP POOL :</h4>
+<pre><code>ip dhcp pool HQ_EMPLOYES
+    network 172.17.2.0 255.255.255.0
+    default-router 172.17.2.1
+    dns-server 1.1.1.1 8.8.8.8
+    exit
+
+ip dhcp pool HQ_FINANCES
+    network 172.17.3.0 255.255.255.0
+    default-router 172.17.3.1
+    dns-server 1.1.1.1 8.8.8.8
+    exit</code></pre>
+                            <p>&#8594; Il faut faire la même chose pour BRANCH-CORE avec l'adresse IP 172.18.X.1.</p>
+                        </li>
+                        <li>
+                            <h4>IP helper-address :</h4>
+                            <p>Sur les switchs L3 :</p>
+<pre><code>interface vlan 2
+    ip helper-address 172.19.254.2
+    exit
+
+interface vlan 3
+    ip helper-address 172.19.254.2
+    exit</code></pre>
+                            <p>&#8594; 172.19.254.2 = RT-CORE (serveur DHCP)</p>
+                            <p>Le helper relaie les broadcasts DHCP vers le serveur.</p>
+                        </li>
+                        <li>
+                            <h4>Configuration des PC :</h4>
+<pre><code>ip dhcp</code></pre>
+                            <p>Pour vérifier l'adresse IP attribuée avec DHCP :</p>
+<pre><code>show ip</code></pre>
+                            <h5>PC Admin (IP statique) :</h5>
+<pre><code>ip 172.17.254.10 255.255.255.0 172.17.254.1</code></pre>
+                            <p>L'adresse <span class="em">172.17.254.10</span> est choisie par convention pour le poste d'administration, afin de séparer clairement les adresses d'infrastructure (gateway, équipements réseau) des postes utilisateurs.</p>
+                        </li>
+                        <li>
+                            <h4>Tests à faire :</h4>
+                            <ul>
+                                <li>
+                                    <p>Pour vérifier les routes OSPF :</p>
+<pre><code>show ip route</code></pre>
+                                </li>
+                                <li>
+                                    <p>Pour vérifier les voisinages :</p>
+<pre><code>show ip ospf neighbor</code></pre>
+                                </li>
+                                <li>
+                                    <p>Pour vérifier DHCP sur les PCs :</p>
+<pre><code>ipconfig /all</code></pre>
+                                </li>
+                                <li>
+                                    <p>Pour tester Internet :</p>
+<pre><code>ping 8.8.8.8</code></pre>
+                                </li>
+                            </ul>
                         </li>
                     </ol>
                     <h3>Résumé :</h3>
