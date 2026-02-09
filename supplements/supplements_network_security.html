@@ -5534,6 +5534,48 @@ interface vlan 3
                             <p>L'adresse <span class="em">172.17.254.10</span> est choisie par convention pour le poste d'administration, afin de séparer clairement les adresses d'infrastructure (gateway, équipements réseau) des postes utilisateurs.</p>
                         </li>
                         <li>
+                            <h4>IP statiques serveurs DMZ (Linux) :</h4>
+                            <h5>WEB-SRV :</h5>
+<pre><code>ip addr add 172.19.254.10/24 dev eth0
+ip route add default via 172.19.254.1</code></pre>
+                            <h5>MAIL-SRV :</h5>
+<pre><code>ip addr add 172.19.254.20/24 dev eth0
+ip route add default via 172.19.254.1</code></pre>
+                            <h5>DNS-SRV :</h5>
+<pre><code>ip addr add 172.19.254.30/24 dev eth0
+ip route add default via 172.19.254.1</code></pre>
+                            <h5>AD-SRV :</h5>
+<pre><code>ip addr add 172.19.254.40/24 dev eth0
+ip route add default via 172.19.254.1</code></pre>
+                            <h5>TACACS :</h5>
+<pre><code>ip addr add 172.19.254.50/24 dev eth0
+ip route add default via 172.19.254.1</code></pre>
+                        </li>
+                        <li>
+                            <h4>Services DMZ (commandes essentielles) :</h4>
+                            <h5>DNS :</h5>
+<pre><code>appt install bind9 -y
+systemctl restart bind9</code></pre>
+                            <h5>WEB :</h5>
+<pre><code>appt install apache2 -y
+systemctl restart apache2</code></pre>
+                            <h5>MAIL :</h5>
+<pre><code>appt install postfix -y
+systemctl restart postfix</code></pre>
+                            <h5>ACTIVE DIRECTORY :</h5>
+<pre><code>appt install samba krb5-user winbind -y
+samba-tool domain provision</code></pre>
+                            <h5>TACACS+ :</h5>
+<pre><code>appt install tacacs+ -y
+systemctl restart tacacs+</code></pre>
+                            <h5>SNMP :</h5>
+<pre><code>appt install snmpd -y
+systemctl restart snmpd</code></pre>
+                            <h5>SYSLOG :</h5>
+<pre><code>appt install rsyslog -y
+systemctl restart rsyslog</code></pre>
+                        </li>
+                        <li>
                             <h4>Tests à faire :</h4>
                             <ul>
                                 <li>
