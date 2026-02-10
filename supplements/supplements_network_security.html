@@ -5570,17 +5570,19 @@ apt install bind9 -y</code></pre>
 };</code></pre>
 <pre><code>nano /etc/bind/db.labo.local</code></pre>
 <pre><code>@   IN SOA dns.labo.local. admin.labo.local. (
-        2
-        604800
-        86400
-        2419200
-        604800 )
+    2
+    604800
+    86400
+    2419200
+    604800 )
 
 @   IN NS dns.labo.local.
 dns IN A 172.19.254.30
 web IN A 172.19.254.10
 mail IN A 172.19.254.20
 ad IN A 172.19.254.40</code></pre>
+<pre><code>echo "nameserver 127.0.0.1" &gt; /etc/resolv.conf</code></pre>
+                            <p>En résumé, le serveur DNS doit pointer vers lui-même pour résoudre sa propre zone.</p>
 <pre><code>systemctl restart bind9</code></pre>
                             <h5>WEB :</h5>
 <pre><code>apt install apache2 -y</code></pre>
@@ -5588,41 +5590,88 @@ ad IN A 172.19.254.40</code></pre>
 systemctl restart apache2</code></pre>
                             <h5>MAIL :</h5>
 <pre><code>apt install postfix -y</code></pre>
-<pre><code>systemctl restart postfix</code></pre>
+                            <p>Lors de l'installation de postfix, il y a un <span class="em">assistant interactif</span>. Choisir "Internet Site" et définir le nom de domaine (par exemple : labo.local).</p>
+<pre><code>postconf -e "myhostname=mail.labo.local"
+postconf -e "mydomain=labo.local"
+systemctl restart postfix</code></pre>
                             <h5>ACTIVE DIRECTORY :</h5>
 <pre><code>apt install samba krb5-user winbind -y</code></pre>
 <pre><code>samba-tool domain provision</code></pre>
+<pre><code>cp /var/lib/samna/private/krb5.conf /etc/krb5.conf</code></pre>
 <pre><code>systemctl restart smbd nmbd winbind</code></pre>
+                            <p>En résumé, Samba4 fournit à la fois Active Directory et DNS intégré.</p>
                             <h5>TACACS+ :</h5>
 <pre><code>apt install tacacs+ -y</code></pre>
 <pre><code>nano /etc/tacacs+/tac_plus.conf</code></pre>
 <pre><code>key = cisco123
 
 user = admin {
- default service = permit
- login = cleartext admin123
+    default service = permit
+    login = cleartext admin123
 }</code></pre>
 <pre><code>systemctl restart tacacs+</code></pre>
                             <h5>Sur les routeurs (AAA) :</h5>
 <pre><code>aaa new-model
 tacacs server SESAME
- address ipv4 172.19.254.50
- key cisco123</code></pre>
+    address ipv4 172.19.254.50
+    key cisco123</code></pre>
+<pre><code>line vty 0 4
+    login authentication default</code></pre>
 <pre><code>aaa authentication login default group tacacs+ local</code></pre>
                             <h5>SNMP :</h5>
 <pre><code>apt install snmpd -y</code></pre>
 <pre><code>nano /etc/snmp/snmpd.conf</code></pre>
 <pre><code>rocommunity public</code></pre>
 <pre><code>systemctl restart snmpd</code></pre>
+                            <p>En résumé, dans un environment réel, utiliser SNMPv3 avec authentification et chiffrement.</p>
                             <h5>SYSLOG :</h5>
                             <p>Sur NETMGT-SRV :</p>
 <pre><code>apt install rsyslog -y</code></pre>
 <pre><code>systemctl restart rsyslog</code></pre>
                             <p>Sur les routeurs :</p>
-<pre><code>logging host 172.19.254.60
+<pre><code>logging host 172.19.254.60 transport udp port 514
 logging trap informational</code></pre>
                             <h5>SUPERVISION :</h5>
 <pre><code>apt install net-tools tcpdump -y</code></pre>
+                        </li>
+                        <li>
+                            <h4>Sécurité MANAGEMENT PLANE :</h4>
+<pre><code>username admin secret Admin123
+ip domain-name labo.local
+crypto key generate rsa modulus 2048
+exit</code></pre>
+<pre><code>line vty 0 4
+    transport input ssh
+    login local
+    access-class MGMT-ACL in
+    exit</code></pre>
+<pre><code>ip access-list standard MGMT-ACL
+    permit 172.17.254.0 0.0.0.255
+    permit 172.18.254.0 0.0.0.255
+    exit</code></pre>
+                            <p>En résumé, cette configuration limite l'accès SSH aux équipements aux VLANs de management uniquement.</p>
+                        </li>
+                        <li>
+                            <h4>Sécurité CONTROL PLANE (OSPF) :</h4>
+<pre><code>interface e0/1
+    ip ospf authentication message-digest
+    ip ospf message-digest-key 1 md5 OSPFKEY
+    exit</code></pre>
+                            <p>En résumé, l'authentification OSPF empêche l'injection de routes par un routeur non autorisé.</p>
+                        </li>
+                        <li>
+                            <h4>Sécurité FORWARDING PLANE (DMZ) :</h4>
+<pre><code>ip access-list extended DMZ-IN
+    permit tcp any host 172.19.254.10 eq 80
+    permit tcp any host 172.19.254.20 eq 25
+    permit udp any host 172.19.254.30 eq 53
+    deny ip any any
+    exit
+    
+interface e0/3
+    ip access-group DMZ-IN in
+    exit</code></pre>
+                            <p>En résumé, l'ACL DMZ limite les flux entrants aux seuls services explicitement autorisés.</p>
                         </li>
                         <li>
                             <h4>Tests à faire :</h4>
