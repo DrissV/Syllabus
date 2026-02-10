@@ -5561,26 +5561,68 @@ ip route add default via 172.19.254.1</code></pre>
                         <li>
                             <h4>Services DMZ (commandes essentielles) :</h4>
                             <h5>DNS :</h5>
-<pre><code>appt install bind9 -y
-systemctl restart bind9</code></pre>
+<pre><code>apt update
+apt install bind9 -y</code></pre>
+<pre><code>nano /etc/bind/named.conf.local</code></pre>
+<pre><code>zone "labo.local" {
+    type master;
+    file "/etc/bind/db.labo.local";
+};</code></pre>
+<pre><code>nano /etc/bind/db.labo.local</code></pre>
+<pre><code>@   IN SOA dns.labo.local. admin.labo.local. (
+        2
+        604800
+        86400
+        2419200
+        604800 )
+
+@   IN NS dns.labo.local.
+dns IN A 172.19.254.30
+web IN A 172.19.254.10
+mail IN A 172.19.254.20
+ad IN A 172.19.254.40</code></pre>
+<pre><code>systemctl restart bind9</code></pre>
                             <h5>WEB :</h5>
-<pre><code>appt install apache2 -y
+<pre><code>apt install apache2 -y</code></pre>
+<pre><code>echo "&lt;h1&gt;DMZ Web Server OK&lt;/h1&gt;" &gt; /var/www/html/index.html
 systemctl restart apache2</code></pre>
                             <h5>MAIL :</h5>
-<pre><code>appt install postfix -y
-systemctl restart postfix</code></pre>
+<pre><code>apt install postfix -y</code></pre>
+<pre><code>systemctl restart postfix</code></pre>
                             <h5>ACTIVE DIRECTORY :</h5>
-<pre><code>appt install samba krb5-user winbind -y
-samba-tool domain provision</code></pre>
+<pre><code>apt install samba krb5-user winbind -y</code></pre>
+<pre><code>samba-tool domain provision</code></pre>
+<pre><code>systemctl restart smbd nmbd winbind</code></pre>
                             <h5>TACACS+ :</h5>
-<pre><code>appt install tacacs+ -y
-systemctl restart tacacs+</code></pre>
+<pre><code>apt install tacacs+ -y</code></pre>
+<pre><code>nano /etc/tacacs+/tac_plus.conf</code></pre>
+<pre><code>key = cisco123
+
+user = admin {
+ default service = permit
+ login = cleartext admin123
+}</code></pre>
+<pre><code>systemctl restart tacacs+</code></pre>
+                            <h5>Sur les routeurs (AAA) :</h5>
+<pre><code>aaa new-model
+tacacs server SESAME
+ address ipv4 172.19.254.50
+ key cisco123</code></pre>
+<pre><code>aaa authentication login default group tacacs+ local</code></pre>
                             <h5>SNMP :</h5>
-<pre><code>appt install snmpd -y
-systemctl restart snmpd</code></pre>
+<pre><code>apt install snmpd -y</code></pre>
+<pre><code>nano /etc/snmp/snmpd.conf</code></pre>
+<pre><code>rocommunity public</code></pre>
+<pre><code>systemctl restart snmpd</code></pre>
                             <h5>SYSLOG :</h5>
-<pre><code>appt install rsyslog -y
-systemctl restart rsyslog</code></pre>
+                            <p>Sur NETMGT-SRV :</p>
+<pre><code>apt install rsyslog -y</code></pre>
+<pre><code>systemctl restart rsyslog</code></pre>
+                            <p>Sur les routeurs :</p>
+<pre><code>logging host 172.19.254.60
+logging trap informational</code></pre>
+                            <h5>SUPERVISION :</h5>
+<pre><code>apt install net-tools tcpdump -y</code></pre>
                         </li>
                         <li>
                             <h4>Tests à faire :</h4>
