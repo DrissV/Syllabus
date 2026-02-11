@@ -48,6 +48,7 @@
                 <ol>
                     <li><a href="supplements_ITSCM.html">Retour au sommaire</a></li>
                     <li><a href="#installation">Installation</a></li>
+                    <li><a href="#creer_entree_Windows_sans_Hyper-V">Créer une entrée Windows sans Hyper-V (pour VMware/GNS3)</a></li>
                     <li><a href="#modele_OSI">Modèle OSI</a></li>
                     <li><a href="#protocoles_TCP_IP">Protocoles TCP/IP</a></li>
                     <li><a href="#architecture_normes_protocoles">Architecture, normes (standards) et protocoles</a></li>
@@ -163,6 +164,7 @@ Invoke-WebRequest $msi -OutFile "$env:TEMP\pwsh.msi"</code></pre>
                             <p>Hyper-V "monopolise" la virtualisation parce qu'il remplace complètement le gestionnaire de virtualisation matériel de Windows. C'est un hyperviseur de type 1, exactement comme VMWare ESXi ou Proxmox.</p>
                             <p>C'est-à-dire que, quand Hyper-V est activé, Windows ne tourne plus directement sur le matériel, mais Hyper-V démarre en premier, Windows devient une VM spéciale appelée "partition parente" et Hyper-V obtient 100% du contrôle du CPU, de la RAM et surtout de Intel VT-x / AMD-V.</p>
                             <p>Donc, les autres hyperviseurs n'y ont plus accès car les instructions de virtualisation matérielle (VT-x / VT-d / AMD-V) ne peuvent être utilisées que par un seul hyperviseur à la fois.</p>
+                            <p>Pour plus d'informations, veuillez <a href="#creer_entree_Windows_sans_Hyper-v">créer une entrée Windows sans Hyper-V</a>.</p>
                         </li>
                         <li>
                             <p>Installez <a href="https://gns3.com/software/download" target="_blank">GNS3</a>.</p>
@@ -262,6 +264,87 @@ i86bi-linux-l3-adventerprisek9-15.4.2T4.bin</code></pre>
                             <p>N'oublie pas d'appliquer tous les changements.</p>
                         </li>
                     </ol>
+                </article>
+                <article>
+                    <h2 id="creer_entree_Windows_sans_Hyper-V">Créer une entrée Windows sans Hyper-V (pour VMware/GNS3) :</h2>
+                    <p>Windows peut démarrer avec Hyper-V activé si le paramètre <span class="em">hypervisorlaunchtype</span> est sur <span class="em">Auto</span>.</p>
+                    <p>Cela peut poser problème pour des hyperviseurs comme <span class="em">VMware</span> ou pour <span class="em">GNS3</span>, car Hyper-V :</p>
+                    <ul>
+                        <li>
+                            <p>Active la virtualisation imbriquée de force (<span class="em">vhv.enable = TRUE</span>).</p>
+                        </li>
+                        <li>
+                            <p>Réécrit certains fichiers de configuration VM.</p>
+                        </li>
+                        <li>
+                            <p>Peut réduire les performances ou bloquer certaines VM.</p>
+                        </li>
+                    </ul>
+                    <p>La solution est de créer une <span class="em">deuxième entrée de démarrage</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Une entrée avec Hyper-V actif (pour Docker, WSL, etc.).</p>
+                        </li>
+                        <li>
+                            <p>Un entrée avec Hyper-V désactivé (optimsée pour VMware/GNS3).</p>
+                        </li>
+                    </ul>
+                    <p>Ainsi, on peut choisir au démarrage selon le besoin.</p>
+                    <p>Voici les différentes étapes à effectuer :</p>
+                    <ol>
+                        <li>
+                            <h3>Ouvrir PowerShell en administrateur :</h3>
+                            <p>C'est indispensable pour modifier le démarrage de Windows.</p>
+                        </li>
+                        <li>
+                            <h3>Copier l'entrée actuelle :</h3>
+<pre><code>bcdedit /copy "{current}" /d "Windows sans Hyper-V (VMWare/GNS3)"</code></pre>
+                            <ul>
+                                <li>
+                                    <p><span class="em">{current}</span> : entrée Windows en cours.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">/copy</span> : crée une nouvelle entrée identique.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">/d</span> : définit le nom qui sera affiché au démarrage.</p>
+                                </li>
+                            </ul>
+                            <p>Le système retourne un <span class="em">GUID</span>unique, par exemple :</p>
+<pre><code>{768bb190-e4f4-11ef-96a4-00dbdfb25bcd}</code></pre>
+                        </li>
+                        <li>
+                            <h3>Désactiver Hyper-V sur la nouvelle entrée :</h3>
+<pre><code>bcdedit /set "{GUID_RETOURNE}" hypervisorlaunchtype Off</code></pre>
+                            <ul>
+                                <li>
+                                    <p>Remplacer <span class="em">{GUID_RETOURNE}</span> par le GUID obtenu à l'étape précédente.</p>
+                                </li>
+                                <li>
+                                    <p>Seule cette entrée aura Hyper-V désactivé.</p>
+                                </li>
+                                <li>
+                                    <p>L'entrée principale reste inchangée.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h3>(Optionnel) Allonger le délai du menu de démarrage :</h3>
+<pre><code>bcdedit /timeout 10</code></pre>
+                            <p>Cela permet de choisir l'entrée au démarrage.</p>
+                        </li>
+                    </ol>
+                    <p>Le résultat attendu est que, au démarrage, le gestionnaire de démarrage propose :</p>
+                    <ol>
+                        <li>
+                            <p>Windows 10 (Hyper-V actif).</p>
+                        </li>
+                        <li>
+                            <p>Windows sans Hyper-V (VMware/GNS3).</p>
+                        </li>
+                    </ol>
+                    <p>Après avoir d"marré dans l'entrée sans Hyper-V, avec la commande <span class="em">bccdedit</span>, on doit voir la ligne suivante :</p>
+<pre><code>hypervisorlaunchtype Off</code></pre>
                 </article>
                 <article>
                     <h2 id="modele_OSI">Modèle OSI - 7 couches :</h2>
@@ -3343,21 +3426,9 @@ int main(int argc,char *argv[]) {
                         </li>
                         <li>
                             <p>Le fichier `<span class="em">etudiants.txt</span>` est :</p>
-<pre><code>10 DEHERDT Gabiel
-22 BAH Amadou
-30 GEIST Lucas
-20 KAMMEGNE Henri
-28 PADOAN Carine
-32 ARHBAL Nadia
-54 AZGHAY Redouan
-25 BOUTAGOUMANT Soufian
-52 BOUZAMBOU Aädel
-48 MITELLO Vincent
-41 KAYUMBA Eric
-14 ZEGGERS François
-61 SENHAJI Mohamed
-18 EL-KADOURY Abdelghani
-47 VANDENHEEDE Driss</code></pre>
+<pre><code>10 ***** *****
+18 **** ****
+47 **** ****</code></pre>
                         </li>
                         <li>
                             <p>Le fichier `<span class="em">myprotocol.h</span>` est :</p>
