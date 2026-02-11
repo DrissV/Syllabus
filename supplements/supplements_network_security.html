@@ -5460,6 +5460,144 @@ interface e0/1
     ip address 172.16.1.9 255.255.255.252
     no shutdown
     exit</code></pre>
+                            <p>Un switch L3 est un équipement hybride capable d'effectuer de la <span class="em">communtation (L2)</span> et du <span class="em">routage (L3)</span>.</p>
+                            <p>Cependant, <span class="em">par défaut</span>, les interfaces physiques d'un switch L3 sont configurées en mode <span class="em">Layer 2 (switchport)</span>.</p>
+                            <p>Cela signifie que :</p>
+                            <ul>
+                                <li>
+                                    <p>Elles transportent des trames Ethernet.</p>
+                                </li>
+                                <li>
+                                    <p>Elles sont associées à des VLAN (mode access ou trunk).</p>
+                                </li>
+                                <li>
+                                    <p>Elles ne peuvent pas recevoir directement d'adresse IP.</p>
+                                </li>
+                                <li>
+                                    <p>Elles participent uniquement à la commutation.</p>
+                                </li>
+                            </ul>
+                            <p>Ainsi, une tentative de configuration IP sur un port en mode switchport provoque une erreur :</p>
+<pre><code>interface e0/0
+    ip address 172.16.1.2 255.255.255.252</code></pre>
+                            <p>Cette configuration échoue car le port est toujours en mode Layer 2.</p>
+                            <p>Pour qu'un port physique d'un switch L3 puisse fonctionne comme une interface routée (équivalente à une interface de routeur), il est nécessaire d'utiliser la commande <span class="em">no switchport</span>.</p>
+                            <p>Cette commande permet de :</p>
+                            <ul>
+                                <li>
+                                    <p>désactiver les fonctionnalités Layer 2 sur l'interface,</p>
+                                </li>
+                                <li>
+                                    <p>supprimer l'appartenance au VLAN,</p>
+                                </li>
+                                <li>
+                                    <p>transformer le port en <span class="em">port routé (routed port)</span></p>
+                                </li>
+                                <li>
+                                    <p>autoriser l'attribution d'une adresse IP.</p>
+                                </li>
+                            </ul>
+                            <p>Après l'application de <span class="em">no switchport</span>, l'interface peut être configurée comme suit :</p>
+<pre><code>interface e0/0
+    no switchport
+    ip address 172.16.1.2 255.255.255.252
+    no shutdown
+    exit</code></pre>
+                            <p>Le port devient alors une véritable interface Layer 3.</p>
+                            <p>La différence entre port switchport et port routé est :</p>
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th>Caractéristique</th>
+                                        <th>Switchport (L2)</th>
+                                        <th>Routed Port (L3)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Transporte des VLAN</td>
+                                        <td>Oui</td>
+                                        <td>Non</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Supporte trunk/access</td>
+                                        <td>Oui</td>
+                                        <td>Non</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Peut recevoir une IP</td>
+                                        <td>Non</td>
+                                        <td>Oui</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Participe au routage</td>
+                                        <td>Non</td>
+                                        <td>Oui</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Utilisé pour OSPF</td>
+                                        <td>Non</td>
+                                        <td>Oui</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Dans un environment inter-sites, les liens entre équipements de niveau 3 sont :</p>
+                            <ul>
+                                <li>
+                                    <p>des liens point-à-point,</p>
+                                </li>
+                                <li>
+                                    <p>configurés généralement en /30,</p>
+                                </li>
+                                <li>
+                                    <p>dédiés exclusivement au routage.</p>
+                                </li>
+                            </ul>
+                            <p>Ces liens ne transportent aucun trafic utilisateur ni VLAN.</p>
+                            <p>Dans ce cas, l'utilisation de <span class="em">no switchport</span> est la méthode la plus appropriée car :</p>
+                            <ul>
+                                <li>
+                                    <p>Elle simplifie l'architecture.</p>
+                                </li>
+                                <li>
+                                    <p>Elle évite la création de VLAN de transit.</p>
+                                </li>
+                                <li>
+                                    <p>Elle permet l'activation directe de protocoles de routage (par exemple : OSPF).</p>
+                                </li>
+                            </ul>
+                            <p>Une autre méthode consiste à :</p>
+                            <ul>
+                                <li>
+                                    <p>créer un VLAN dédié (VLAN de transit),</p>
+                                </li>
+                                <li>
+                                    <p>configurer une interface VLAN (SVI),</p>
+                                </li>
+                                <li>
+                                    <p>placer le lien physique en trunk transportant uniquement ce VLAN.</p>
+                                </li>
+                            </ul>
+                            <p>Par exemple :</p>
+<pre><code>vlan 100
+    name TRANSIT
+
+interface vlan 100
+    ip address 172.16.1.2 255.255.255.252
+    no shutdown
+    exit</code></pre>
+                            <p>Cette approche est fonctionnelle mais :</p>
+                            <ul>
+                                <li>
+                                    <p>Elle ajoute une couche logique supplémentaire.</p>
+                                </li>
+                                <li>
+                                    <p>Elle complexifie la configuration.</p>
+                                </li>
+                                <li>
+                                    <p>Elle est moins directe qu'un port routé.</p>
+                                </li>
+                            </ul>
                             <h5>Sur BRANCH-CORE (switch L3) :</h5>
 <pre><code>ip routing
 
