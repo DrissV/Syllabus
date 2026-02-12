@@ -5695,17 +5695,37 @@ interface e0/1
                         </li>
                         <li>
                             <h4>Routage OSPF :</h4>
-                            <h5>Sur RT-CORE, HQ-CORE, BRANCH-CORE, DMZ-CORE :</h5>
-<pre><code>router ospf 1
-    network 172.16.0.0 0.255.255.255 area 0
-    network 172.17.0.0 0.255.255.255 area 0
-    network 172.18.0.0 0.255.255.255 area 0
-    network 172.19.0.0 0.255.255.255 area 0
+                            <h5>Sur RT-CORE :</h5>
+<pre><code>router ospf 10
+    network 172.16.1.0 0.0.0.3 area 0
+    network 172.16.1.4 0.0.0.3 area 0
+    network 172.19.0.254 0.0.255.255 area 0
+    network 172.16.0.1 0.0.0.0 area 0
     default-information originate
     exit</code></pre>
                             <p>La commande <span class="em">router ospf 1</span> démarre le processus de routage dynamique OSPF.</p>
                             <p><span class="em">area 0</span> est le <span class="em">backbone OSPF</span>.</p>
                             <p>La comande <span class="em">default-information originate</span> dit : <q>Si j'ai une route par défaut, je la diffuse via OSPF</q> et donc ça permet aux sites internes d'accéder à Internet via RT-CORE.</p>
+                            <p><span class="em">Rappel très important</span> : La commande <span class="em">network X Y ara 0</span> ne sert PAS à "annoncer un réseau", mais elle sert à activer OSPF sur les interfaces dont l'IP correspond au wildcard mask.</p>
+                            <h5>Sur HQ-CORE :</h5>
+<pre><code>router ospf 10
+    network 172.16.1.0 0.0.0.3 area 0
+    network 172.16.1.8 0.0.0.3 area 0
+    network 172.17.2.0 0.0.0.255 area 0
+    network 172.17.3.0 0.0.0.255 area 0
+    network 172.17.254.0 0.0.0.255 area 0
+    network 172.16.0.2 0.0.0.0 area 0</code></pre>
+                            <h5>Sur HQ-CORE :</h5>
+<pre><code>router ospf 10
+    network 172.16.1.4 0.0.0.3 area 0
+    network 172.16.1.8 0.0.0.3 area 0
+    network 172.18.2.0 0.0.0.255 area 0
+    network 172.18.3.0 0.0.0.255 area 0
+    network 172.18.254.0 0.0.0.255 area 0
+    network 172.16.0.3 0.0.0.0 area 0</code></pre>
+                            <h5>Sur DMZ-CORE :</h5>
+<pre><code>router ospf 10
+    network 172.19.254.0 0.0.0.255 area 0</code></pre>
                         </li>
                         <li>
                             <h4>Traduction d'adresses - NAT (RT-CORE uniquement) :</h4>
@@ -5898,6 +5918,12 @@ exit</code></pre>
     ip ospf message-digest-key 1 md5 OSPFKEY
     exit</code></pre>
                             <p>En résumé, l'authentification OSPF empêche l'injection de routes par un routeur non autorisé.</p>
+                            <h5>Optimisation avec passive-interface :</h5>
+<pre><code>router ospf 1
+    passive-interface default
+    no passive-interface e0/0
+    no passive-interface e0/1</code></pre>
+                            <p>En résumé, cette commande empêche la formation de voisinages OSPF sur les VLAN utilisateurs.</p>
                         </li>
                         <li>
                             <h4>Sécurité FORWARDING PLANE (DMZ) :</h4>
