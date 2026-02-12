@@ -791,7 +791,7 @@ ls</code></pre>
 <pre><code>sudo head -n 1 /etc/shadow</code></pre>
                     <p>En résumé, cette commande affiche la première ligne du fichier contenant les mots de passe chiffrés.</p>
 <pre><code>sudo tail -n 10 /etc/shadow | fold -w 80 -s</code></pre>
-                    <p>En résumé, cette commande affiche les dernières entrées du fichier <span class="em">/etc/shadow</span> en repliant les lignes pour une meilleur lisibilité.</p>
+                    <p>En résumé, cette commande affiche les dernières entrées du fichier <span class="em">/etc/shadow</span> en repliant les lignes pour une meilleur lisibilité. L'option <span class="em">-fold</span> sert à <span class="em">casser les lignes trop longues</span>. L'option <span class="em">-w 80</span> permet une largeur maximale de ligne de <span class="em">80 caractères</span>. L'option <span class="em">-s</span> coupe <span class="em">proprement aux espaces</span> (si possible), pas au milieu d'un mot.</p>
                     <h4>/etc/shadow - informations détaillées :</h4>
                     <ul>
                         <li>
@@ -802,9 +802,20 @@ ls</code></pre>
                             <ul>
                                 <li>
                                     <p>version</p>
+                                    <ul>
+                                        <li>
+                                            <p><span class="em">$6$</span> &#8594; SHA-512</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">$5$</span> &#8594; SHA-256.</p>
+                                        </li>
+                                        <li>
+                                            <p><span class="em">$1$</span> &#8594; MD5.</p>
+                                        </li>
+                                    </ul>
                                 </li>
                                 <li>
-                                    <p>salt.</p>
+                                    <p>salt = valeur aléatoire ajoutée avant le hash.</p>
                                 </li>
                                 <li>
                                     <p>hash proprement dit.</p>
@@ -813,6 +824,29 @@ ls</code></pre>
                         </li>
                         <li>
                             <p>diverses informations relatives au mot de passe (dernier changement, etc.).</p>
+                            <ul>
+                                <li>
+                                    <p>Nombre de jours depuis le 1er janvier 1970 correspondant à la date de la dernière modification.</p>
+                                </li>
+                                <li>
+                                    <p>Nombre minimum de jours avant de pouvoir changer le mot de passe.</p>
+                                </li>
+                                <li>
+                                    <p>Nombre maximum de jours avant expiration.</p>
+                                </li>
+                                <li>
+                                    <p>Nombre de jours d'avertissement avant expiration.</p>
+                                </li>
+                                <li>
+                                    <p>Champ inactivité.</p>
+                                </li>
+                                <li>
+                                    <p>Date d'expiration du compte.</p>
+                                </li>
+                                <li>
+                                    <p>Champ réservé.</p>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                     <h3>Importance de mots de passe compliqués : illustration :</h3>
@@ -888,6 +922,7 @@ ls</code></pre>
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo cat /etc/pam.d/common-password | grep -v "#"</code></pre>
 <pre><code>sudo tail -n 2 /etc/shadow | fold -w 80 -s</code></pre>
+                    <p>La différence principale (en dehors de la version d'Ubuntu) concerne <span class="em">l'algorithme de hachage des mots de passe utilisé par PAM et stocké dans /etc/shadow</span>. Dans Ubuntu 18.04, le hash commence par <span class="em">$6$</span> (SHA-512) alors que, dans Ubuntu 22.04, le hash commence par <span class="em">$y$</span> (yescrypt).</p>
                     <h3>Implémentation 2FA via PAM :</h3>
                     <p><a href="https://www.digitalocean.com/community/tutorials/how-to-configure-multi-factor-authentication-on-ubuntu-18-04" target="_blank">https://www.digitalocean.com/community/tutorials/how-to-configure-multi-factor-authentication-on-ubuntu-18-04</a></p>
                     <img src="../images/implementation_2FA_PAM_1.PNG" alt="">
