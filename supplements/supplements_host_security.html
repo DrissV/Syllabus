@@ -1140,22 +1140,51 @@ ls</code></pre>
                     <ul>
                         <li>
                             <p>Créer éventuellement un nouveau groupe et un nouvel utilisateur.</p>
+<pre><code>sudo addgroup client3</code></pre>
+<pre><code>sudo adduser user3</code></pre>
+<pre><code>sudo usermod -aG client3 user3</code></pre>
                         </li>
                         <li>
                             <p>Créer un nouveau fichier de configuration dans <span class="em">/etc/nginx/conf.d</span> (tuyau : utiliser un port non utilisé - qui peut faire cette opération et à quelle condition ?).</p>
+<pre><code>cd /etc/nginx/conf.d</code></pre>
+<pre><code>sudo cp client1.conf client3.conf</code></pre>
+                            <p>Ou encore avec la commande suivante :</p>
+<pre><code>sudo cat client1.conf | sudo tee client3.conf</code></pre>
+                            <p>N'oubliez pas de <span class="em">nano</span> ce nouveau fichier pour modifier le port en <span class="em">8084</span> et vers le bon dossier en <span class="em">/var/www/site-client3</span>.</p>
                         </li>
                         <li>
                             <p>Créer un nouveau directory dans <span class="em">/var/www/</span> (tuyau : peser à changer le groupe et changer les droits en 2775 - qui peut faire cette opération et à quelle condition ?).</p>
+<pre><code>sudo cd /var/www</code></pre>
+<pre><code>sudo mkdir site-client3</code></pre>
+<pre><code>sudo chown -R vagrant:client3 site-client3</code></pre>
+<pre><code>sudo chmod 2775 site-client3</code></pre>
                         </li>
                         <li>
                             <p>Créer un nouveau fichier <span class="em">index.html</span> dans le directory nouvellement créé.</p>
+<pre><code>sudo cd site-client3</code></pre>
+<pre><code>sudo nano index.html</code></pre>
+<pre><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;title&gt;Site-client3&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;p&gt;Bienvenue sur le site-client3&lt;/p&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
                         </li>
                         <li>
                             <p>Vérifier que tout fonctionne bien (tuyau : penser à redémarrer le serveur).</p>
+<pre><code>sudo systemctl restart nginx</code></pre>
+<pre><code>curl localhost:8084</code></pre>
                         </li>
                         <li>
                             <p>Donner des droits "sudo" à user_adm et vérifier qu'il peut effectuer des tâches administratives relatives aux sites.</p>
 <pre><code>sudo usermod -aG sudo user_adm</code></pre>
+<pre><code>sudo nano /etc/nginx/conf.d/client3</code></pre>
+                            <p>Modifiez ce fichier pour le mettre en <span class="em">8090</span>.</p>
+<pre><code>sudo systemctl restart nginx</code></pre>
+<pre><code>curl localhost:8090</code></pre>
                         </li>
                     </ul>
                 </article>
