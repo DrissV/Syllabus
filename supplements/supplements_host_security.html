@@ -1056,6 +1056,31 @@ ls</code></pre>
                         <li>
                             <p>Faire un "audit" des utilisateurs (qui a accès à quoi) - tous les utilisateurs listés sont-ils nécessaires ? (tuyau : ne pas oublier les utilisateurs privilégiés).</p>
 <pre><code>awk -F: '$3 &gt;= 1000 {print $1}' /etc/passwd</code></pre>
+                            <p>L'audit des utilisateurs vise à :</p>
+                            <ul>
+                                <li>
+                                    <p>Identifier tous les comptes présents sur le système.</p>
+                                </li>
+                                <li>
+                                    <p>Déterminer leurs niveaux de privilèges.</p>
+                                </li>
+                                <li>
+                                    <p>Vérifier la légitimité et la nécessité de chaque compte.</p>
+                                </li>
+                                <li>
+                                    <p>Réduire la surface d'attaque en appliquant le principe du moindre privilège.</p>
+                                </li>
+                            </ul>
+                            <p>Les comptes sont listés dans le fichier <span class="em">/etc/passwd</span>. On distingue deux catégories : comptes techniques (UID &lt; 1000) et comptes utilisateurs (UID &gt;= 1000).</p>
+                            <p>L'audit doit impérativement inclure la vérification du droits d'administration.</p>
+                            <p>L'utilisateur <span class="em">www-data</span> est un compte technique utilisé par les serveurs web (Apache, Nginx). Il permet l'exécution des services web avec des privilèges restreints.</p>
+                            <p>L'utilisateur <span class="em">ubuntu</span> est un compte par défaut des images cloud Ubuntu et souvent membre du groupe <span class="em">sudo</span>. Il sert généralement de compte administrateur initial.</p>
+<pre><code>sudo su -</code></pre>
+                            <p>En résumé, cette commande ouvre une session complète en tant que <span class="em">root</span>. Elle permet d'accéder aux fichiers protégés, d'inspecter la configuration système complète et de vérifier les privilèges effectifs. Elle doit être utilisée avec précaution dans un contexte de sécurité.</p>
+                            <p>Le répertoire <span class="em">/etc/sudoers.d/</span> peut contenir des règles supplémentaires accordant des privilèges spécifiques à certains utilisateurs.</p>
+                            <p>Sur les machines issues d'images cloud (AWS, Azure, etc.), on trouve souvent le fichier <span class="em">/etc/sudoers.d/90-cloud-init-users</span>. Ce fichier est généré par <span class="em">cloud-init</span> et peut contenur une règle telle que :</p>
+<pre><code>ubuntu ALL=(ALL) NOPASSWD:ALL</code></pre>
+                            <p>En résumé, cela signique que l'utilisateur <span class="em">ubuntu</span> peut exécuter toutes les commandes en tant que n'importe quel utilisateur sans devoir saisir de mot de passe. Ceci constitue un privilège administratif complet.</p>
                         </li>
                         <li>
                             <p>Lors d'un contrôle périodique, vous constatez que user1 ne doit plus être autorisé à modifier son site - désactiver son compte (tuyau : voir <span class="em">sudo usermod</span>) - Vérifier qu'il n'a effectivement plus accès.</p>
@@ -1063,13 +1088,49 @@ ls</code></pre>
                         </li>
                         <li>
                             <p>Un nouvel utilisateur user1b doit pouvoir modifier site-client1. Faire en sorte qu'il puisse le faire (tuyau : ne pas oublier le groupe).</p>
-<pre><code>sudo useradd user1b</code></pre>
+<pre><code>sudo adduser user1b</code></pre>
 <pre><code>sudo usermod -aG client1 user1b</code></pre>
+                            <p>Sous Ubuntu, deux commandes permettent de créer des comptes utilisateurs : <span class="em">useradd</span> et <span class="em">adduser</span>. Bien qu'elles poursuivent le même objectif, leur nature et leur fonctionnement diffèrent.</p>
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th>Critère</th>
+                                        <th>useradd</th>
+                                        <td>adduser</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Niveau</td>
+                                        <td>Bas niveau</td>
+                                        <d>Haut niveau</d>
+                                    </tr>
+                                    <tr>
+                                        <td>Interaction</td>
+                                        <td>Non interactive</td>
+                                        <td>Interactive</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Création du home directory</td>
+                                        <td>Optionnelle</td>
+                                        <td>Automatique</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Portabilité</td>
+                                        <td>Toutes distributions</td>
+                                        <td>Debian/Ubuntu</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Usage recommandé</td>
+                                        <td>Scripts</td>
+                                        <td>Administration courante</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </li>
                         <li>
-                            <p>Vous décidez que vous voulez implémenter la règle d'entreprise qui dit que les mots de passe doivent être changés régulièrement. Modifier la configuration de user2 pour que son mot de passe expire après 7 jours et forcez la date de dernière mise à jour du mot de passe à un jour en septembre (tuyau : <span class="em">sudo chage</span>). Vérifier qu'il doit effectivement donner un nouveau mot de passe.</p>
-<pre><code>sudo chage -M 7 user2</code></pre>
-<pre><code>sudo chage -d 2023-01-01 user2</code></pre>
+                            <p>Vous décidez que vous voulez implémenter la règle d'entreprise qui dit que les mots de passe doivent être changés régulièrement. Modifier la configuration de user2 pour que son mot de passe expire après 7 jours et forcez la date de dernière mise à jour du mot de pa1sse à un jour en septembre (tuyau : <span class="em">sudo chage</span>). Vérifier qu'il doit effectivement donner un nouveau mot de passe.</p>
+<pre><code>sudo chage -M 7 -d 2023-01-01 user2</code></pre>
                         </li>
                         <li>
                             <p>Comment vous-y prenez vous pour organiser et exécuter la tâche de vérification des identités et des "credentials" (tuyau : penser plan-do-check-act).</p>
