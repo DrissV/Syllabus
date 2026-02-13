@@ -62,6 +62,12 @@
                     <li><a href="#configuration_clients">Configuration des clients</a></li>
                     <li><a href="#gestion_centralisee_identite">Gestion centralisée de l'identité</a></li>
                     <li><a href="#gestion_centralisee_authentification">Gestion centralisée de l'authentification</a></li>
+                    <li><a href="#box_vagrant_logging_monitoring">Box Vagrant Logging et Monitoring</a></li>
+                    <li><a href="#concepts_logging_monitoring_pertinence_securite">Concepts de logging et de monitoring et pertinence pour la sécurité</a></li>
+                    <li><a href="#logging_outils_de_base">Logging - outils de base</a></li>
+                    <li><a href="#logging_consolidation">Logging - consolidation</a></li>
+                    <li><a href="#monitoring_outils_de_base">Monitoring - outils de base</a></li>
+                    <li><a href="#monitoring_outils_specialises">Monitoring - outils spécialisés</a></li>
                     <li><a href="#evaluation_instructions_provisoires">Évaluation - instructions provisoires</a></li>
                 </ol>
             </nav>
@@ -642,7 +648,7 @@ int main (int argc, char *argv[]) {
 <pre><code>user:user_adm:rw-</code></pre>
 <pre><code>su user_adm</code></pre>
 <pre><code>cat fichier-partage-groupe-site</code></pre>
-                    <h3>Kerberos - authentification via tiers de confiance :</h3>
+                    <h3>Kerberos : authentification via tiers de confiance :</h3>
                     <figure>
                         <img src="../images/Kerberos.svg.png" alt="">
                         <figcaption>Source : <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.png" target="_blank">https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.pnghttps://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.png</a></figcaption>
@@ -1333,7 +1339,7 @@ ls</code></pre>
                 </article>
                 <article>
                     <h2 id="authentification_reseau_SSO">Authentification réseau - Single Sign On :</h2>
-                    <h3>Kerberos - authentification via tiers de confiance et "session keys" :</h3>
+                    <h3>Kerberos : authentification via tiers de confiance et "session keys" :</h3>
                     <figure>
                         <img src="../images/Kerberos.svg.png" alt="">
                         <figcaption>Source : <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.png" target="_blank">https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.pnghttps://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Kerberos.svg/1200px-Kerberos.svg.png</a></figcaption>
@@ -1482,7 +1488,7 @@ ls</code></pre>
                     <img src="../images/ajout_utilisateur_2.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>ldapadd -x -D cn=admin,dc=hs,dc=be -f ldifs/add_user1.ldif -W</code></pre>
-                    <p>En résumé, commande ajoute l'utilisateur à LDAP. Voici les différentes options et leurs explications :</p>
+                    <p>En résumé, cette commande ajoute l'utilisateur à LDAP. Voici les différentes options et leurs explications :</p>
                     <ul>
                         <li>
                             <p><span class="em">-x</span> : auth simple.</p>
@@ -1505,6 +1511,310 @@ ls</code></pre>
 <pre><code>id</code></pre>
 <pre><code>ssh user1@sso-service.hs.be</code></pre>
 <pre><code>id</code></pre>
+                </article>
+                <article>
+                    <h2 id="box_vagrant_logging_monitoring">Box Vagrant Logging et Monitoring :</h2>
+                    <ol>
+                        <li>
+                            <p>central-log :</p>
+                            <ul>
+                                <li>
+                                    <p>Box principale</p>
+                                </li>
+                                <li>
+                                    <p>Logging via <span class="em">rsyslog</span>, <span class="em">journalctl</span>, <span class="em">auditd</span></p>
+                                </li>
+                                <li>
+                                    <p>Monitoring via <span class="em">logwatch</span></p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>client-log :</p>
+                            <ul>
+                                <li>
+                                    <p>Box secondaire</p>
+                                </li>
+                                <li>
+                                    <p>Logs envoyés à central-log</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="concepts_logging_monitoring_pertinence_securite">Concepts de logging et de monitoring et pertinence pour la sécurité :</h2>
+                    <h3>Concepts (voir Jason Andress) :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Logging</span> : Garder des traces des événements principaux affectant un système.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Monitoring</span> : Surveiller les paramètres de "santé" d'un système (disponibilité, performance, sécurité...).</p>
+                        </li>
+                    </ul>
+                    <h3>Pertinence pour la sécurité :</h3>
+                    <p>Les bénéfices généraux sont :</p>
+                    <ul>
+                        <li>
+                            <p>débogage</p>
+                        </li>
+                        <li>
+                            <p>expérience utilisateur</p>
+                        </li>
+                    </ul>
+                    <p>Les bénéfices spécifiques pour la sécurité sont :</p>
+                    <ul>
+                        <li>
+                            <p>aider à l'investigation en cas d'incident</p>
+                        </li>
+                        <li>
+                            <p>non-répudiation</p>
+                        </li>
+                        <li>
+                            <p>peur du gendarme</p>
+                        </li>
+                        <li>
+                            <p>détection &amp; prévention d'attaques</p>
+                        </li>
+                    </ul>
+                    <h3>Faire que les utilisateurs répondent de leurs actes :</h3>
+                    <ul>
+                        <li>
+                            <p>Pour un utilisateur convenablement :</p>
+                            <ul>
+                                <li>
+                                    <p>identifié</p>
+                                </li>
+                                <li>
+                                    <p>authentifié</p>
+                                </li>
+                                <li>
+                                    <p>autorisé</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Assurer le bon suivi des règles...</p>
+                        </li>
+                        <li>
+                            <p>...par conservation de traces</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="logging_outils_de_base">Logging - outils de base :</h2>
+                    <h3>Principaux fichiers :</h3>
+                    <p><span class="em">/var/log</span> peut varier par distribution.</p>
+                    <img src="../images/var_log.PNG" alt="/var/log">
+<pre><code>ls -l /var/log</code></pre>
+                    <h3>Architecture (r)syslog :</h3>
+                    <p><a href="https://www.youtube.com/watch?v=L9dxZs73F94" target="_blank">https://www.youtube.com/watch?v=L9dxZs73F94</a></p>
+                    <img src="../images/architecture_rsyslog.PNG" alt="Architecture (r)syslog">
+                    <h3>Contenu typique /var/log/syslog :</h3>
+                    <p>Exemple - manipulation de date ?</p>
+                    <img src="contenu_typique_var_log_syslog.PNG" alt="Contenu typique /var/log/syslog">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo timedatectl set-timezone Europe/Brussels</code></pre>
+                    <p>En résumé, cette commande change le fuseau horaire du système.</p>
+<pre><code>sudo tail -n 10 /var/log/syslog | fold -w 80 -s</code></pre>
+                    <h4>Contenu détaillé entrée :</h4>
+                    <ul>
+                        <li>
+                            <p>Date : importance d'avoir une date faisant foi (!)</p>
+                        </li>
+                        <li>
+                            <p>Host - important quand centralisation des logs</p>
+                        </li>
+                        <li>
+                            <p>Process et [pid]</p>
+                        </li>
+                        <li>
+                            <p>Message - parfois enrichi/transformé</p>
+                        </li>
+                    </ul>
+                    <h3>Contenu typique /var/log/auth.log :</h3>
+                    <p>Exemple - sudo bien intentionné ?</p>
+                    <img src="../images/contenu_typique_var_log_authlog.PNG" alt="Contenu typique /var/log/auth.log">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo cat /home/user1/personnel.txt</code></pre>
+<pre><code>sudo tail -n 10 /var/log/auth.log | fold -w 80 -s</code></pre>
+                    <h3>Configuration (r)syslog :</h3>
+                    <img src="../images/configuration_rsyslog_1.PNG" alt="Configuration (r)syslog">
+                    <img src="../images/configuration_rsyslog_2.PNG" alt="Configuration (r)syslog">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo cat /etc/rsyslog.d/50-default.conf | grep -v '#\|^$'</code></pre>
+<pre><code>logger -p local7.warning "Hello from local7"</code></pre>
+                    <p>En résumé, cette commande envoie un message ver syslog :</p>
+                    <ul>
+                        <li>
+                            <p>local7 = facility</p>
+                        </li>
+                        <li>
+                            <p>warning = niveaude gravité</p>
+                        </li>
+                    </ul>
+<pre><code>sudo cat /var/log/syslog | grep local7</code></pre>
+<pre><code>logger -p local7.warning "Hello from auth"</code></pre>
+<pre><code>sudo cat /var/log/syslog | grep "Hello from auth"</code></pre>
+<pre><code>sudo cat /var/log/auth.log | grep "Hello from auth"</code></pre>
+<pre><code>logger -p local7.emerg "Alerte"</code></pre>
+                    <h3>Programmes n'utilisant pas (r)syslog en standard :</h3>
+                    <p>Exemple : nginx peut être changé, mais pas nécessairement une bonne idée.</p>
+                    <img src="../images/programmes_utilisant_pas_rsyslog_standard.PNG" alt="Programmes n'utilisant pas (r)syslog en standard">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>cat /etc/nginx/nginx.conf | grep -e 'acces' -e 'error'</code></pre>
+<pre><code>sudo cat /var/log/syslog | grep nginx</code></pre>
+<pre><code>sudo cat /var/log/nginx/error.log</code></pre>
+<pre><code>sudo cat /var/log/nginx/access.log</code></pre>
+                    <h3>systemd journal - alternative - avec DB plutôt que texte et "interface" :</h3>
+                    <img src="=../images/systemd_journal.PNG" alt="systemd journal">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo journalctl -u ssh | cut -b -90</code></pre>
+                    <p>En résumé, cette commande affiche les logs du service SSH.</p>
+<pre><code>sudo journalctl --since=2024-01-01 --until=yesterday | cut -b -90</code></pre>
+                    <p>En résumé, cette commande affiche les logs sur une période donnée.</p>
+                    <h3>Auditd- Audit deamon / Linux Auditing Framework :</h3>
+                    <p>La fonction de <span class="em">auditd</span> est de capturer des événements de manière flexible sur le système.</p>
+                    <ul>
+                        <li>
+                            <p>actions sur des fichiers et des répertoires</p>
+                        </li>
+                        <li>
+                            <p>appels systèmes</p>
+                        </li>
+                    </ul>
+                    <h4>Exemple - fonction "watch" fichier :</h4>
+                    <p><a href="https://www.baeldung.com/linux/auditd-monitor-file-access" target="_blank">https://www.baeldung.com/linux/auditd-monitor-file-access</a></p>
+                    <img src="../images/exemple_fonction_watch_fichier.PNG" alt="Exemple - fonction 'watch' fichier">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo auditctl -l</code></pre>
+                    <p>En résumé, cette commande liste les règles actives.</p>
+<pre><code>sudo cat /home/user1/personnel.txt</code></pre>
+<pre><code>su user1</code></pre>
+<pre><code>cat /home/user1/personnel.txt</code></pre>
+                    <h4>Audit logs - aussi /var/log/audit/audit.log - voir en particulier champ auid (!) :</h4>
+                    <img src="../images/audit_logs.PNG" alt="Audit logs">
+<pre><code>sudo ausearch -k personnel-user1 -i | tail -n 10 | fold -w 80 -s</code></pre>
+                    <p>En résumé, cette commande recherche dans leslogs auditd :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">-k</span> : clé définie dans la règle</p>
+                        </li>
+                        <li>
+                            <p><span class="em">-i</span> : interprétation lisible</p>
+                        </li>
+                    </ul>
+                    <h3>Auditd - configuration :</h3>
+                    <img src="../images/auditd_configuration" alt="Auditd - configuration">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo mv /home/vagrant/watch-home-user1.rules /etc/audit/rules.d/watch-home-user1.rules</code></pre>
+<pre><code>sudo augenrules --check</code></pre>
+                    <p>En résumé, cette commande vérifie la validité des règles.</p>
+<pre><code>sudo augenrules --load</code></pre>
+                    <p>En résumé, cette commande recharge les règles.</p>
+<pre><code>sudo augenrules --check</code></pre>
+<pre><code>sudo service auditd start</code></pre>
+                    <p>En résumé, cette commande active auditd au démarrage.</p>
+<pre><code>sudo systemctl enable auditd</code></pre>
+<pre><code>sudo cat /etc/audit/rules.d/watch-home-user1.rules | grep -v '^#' -e 1 -r 120 -w /home/user1/personnel.txt -p rwxa -k personnel-user1</code></pre>
+                    <h3>Auditd et environnements régulés - cartes de crédit :</h3>
+                    <img src="../images/auditd_environnements_regules.PNG" alt="Auditd et environnements régulés">
+<pre><code>cd /usr/share/doc/auditd/examples/rules</code>
+</pre><pre><code>cat 30-pci-dss-v31.rules</code></pre>
+                    <h3>Logging - Force probatoire :</h3>
+                    <p>Pour être en matière juridique, il faut (non exhaustif) :</p>
+                    <ul>
+                        <li>
+                            <p>avoir l'info ! - faire un logging pertinent</p>
+                        </li>
+                        <li>
+                            <p>s'assurer des bonnes dates - NTP</p>
+                        </li>
+                        <li>
+                            <p>s'assurer de la bonne protection des logs - auditd et centralisation</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="logging_consolidation">Logging - consolidation :</h2>
+                    <h3>Architecture centralisée (r)syslog :</h3>
+                    <p><a href="https://cruft.io/ports/centralised-logging-with-rsyslog/" target="_blank">https://cruft.io/ports/centralised-logging-with-rsyslog/</a></p>
+                    <img src="../images/architecture_centralisee_rsyslog.PNG" alt="Architecture centralisée (r)syslog">
+                    <h3>Démo :</h3>
+                    <img src="../images/demo_1.PNG" alt="Démo">
+                    <p>Voici les commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo cat /etc/passwd</code></pre>
+<pre><code>sudo cat /var/log/auth.log | grep sudo | tail -n 6 | fold -w 80 -s</code></pre>
+                    <img src="../images/demo_2.PNG" alt="Démo">
+<pre><code>sudo cat /var/log/auth.log | grep sudo | tail -n 20 | fold -w 80 -s</code></pre>
+                    <h4>Démo - configuration :</h4>
+                    <img src="../images/demo_3.PNG" alt="Démo">
+<pre><code>sudo cat /etc/rsyslog.d/10-server-centralisation.conf</code></pre>
+                    <p>En résumé, cette commande affiche la configuration de centralisation.</p>
+                    <img src="../images/demo_4.PNG" alt="Démo">
+<pre><code>sudo cat /etc/rsyslog.d/10-server-centralisation.conf</code></pre>
+                    <h3>Outils spécialisés :</h3>
+                    <ul>
+                        <li>
+                            <p>Capacité à gérer un grand nombre de clients (100+ 1000+)</p>
+                        </li>
+                        <li>
+                            <p>Capacité à gérer un très grand volume de logs</p>
+                        </li>
+                        <li>
+                            <p>Capacité de recherche / visualisation</p>
+                        </li>
+                        <li>
+                            <p>... ELK Stack :</p>
+                            <ul>
+                                <li>
+                                    <p>(E)lastic Search - DB</p>
+                                </li>
+                                <li>
+                                    <p>(L)ogstach - ingress des sources (remplace/se combine avec modules rsyslog)</p>
+                                </li>
+                                <li>
+                                    <p>(K)ibana - interface graphique</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="monitoring_outils_de_base">Monitoring - outils de base :</h2>
+                    <h3>Logwatch - consolidation &amp; recherche anomalies - quotidien - envoi mail :</h3>
+                    <img src="../images/logwatch_consolidation.PNG" alt="Logwatch - consolidation">
+                    <h3>Logwatch - configuration par défaut :</h3>
+                    <h4>Fichiers couverts :</h4>
+                    <img src="../images/logwatch_configuration_defaut_1.PNG" alt="Logwatch - configuration par défaut">
+<pre><code>ls /usr/share/logwatch/default.conf/logfiles/</code></pre>
+                    <p>En résumé, cette commande liste les fichiers surveillés par Logwatch.</p>
+                    <h4>Services couverts :</h4>
+                    <img src="../images/logwatch_configuration_defaut_2.PNG" alt="Logwatch - configuration par défaut">
+<pre><code>ls /usr/share/logwatch/default.conf/services/</code></pre>
+                    <p>En résumé, cette commande liste les services analysés.</p>
+                </article>
+                <article>
+                    <h2 id="monitoring_outils_specialises">Monitoring - outils spécialisés :</h2>
+                    <h3>OSSEC - Host Intrusion Detection System :</h3>
+                    <ul>
+                        <li>
+                            <p>Vérification intégrité système (vérification hash fichiers clé)</p>
+                        </li>
+                        <li>
+                            <p>Exploitation logs</p>
+                        </li>
+                        <li>
+                            <p>Peut travailler sur réseau</p>
+                        </li>
+                        <li>
+                            <p>Spécialisé sécurité</p>
+                        </li>
+                        <li>
+                            <p>... pour mémoire</p>
+                        </li>
+                    </ul>
                 </article>
                 <article>
                     <h2 id="evaluation_instructions_provisoires">Évaluation - instructions provisoires :</h2>
