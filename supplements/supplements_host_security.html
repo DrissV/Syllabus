@@ -883,7 +883,50 @@ ls</code></pre>
 <pre><code>cat /etc/login.defs</code></pre>
                     <p>En résumé, cette commande affiche la configuration globale des règles de gestion des mots de passe.</p>
 <pre><code>sudo chage user_reasonable_password</code></pre>
-                    <p>En résumé, cette commande permet de configurer l'expiration et la rotation du mot de passe d'un utilisateur.</p>
+                    <p>En résumé, cette commande permet de configurer l'expiration et la rotation du mot de passe d'un utilisateur. <span class="em">chage = change age</span></p>
+                    <p>Les différentes options de la commande <span class="em">chage</span> sont :</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Option</th>
+                                <th>Explication</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>-l</td>
+                                <td>Affiche  les paramètres actuels du compte (date du dernier changement, expiration, nombre de jours max/min, période d'avertissement, inactivité avant verrouillage).</td>
+                            </tr>
+                            <tr>
+                                <td>-d JOUR</td>
+                                <td>Définit la date du dernier changement de mot de passe. <span class="em">0</span> force un changement au prochain login, mais peut aussi prendre une date format <span class="em">YYYY-MM-DD</span>.</td>
+                            </tr>
+                            <tr>
+                                <td>-E DATE</td>
+                                <td>Définit la date d'expiration du compte. Après cette date, le compte est désactivé. Si on met <span class="em">-1</span>, il n'y a jamais d'expiration.</td>
+                            </tr>
+                            <tr>
+                                <td>-M JOURS</td>
+                                <td>Nombre <span class="em">maximum</span> de jours avant expiration du mot de passe.</td>
+                            </tr>
+                            <tr>
+                                <td>-m JOURS</td>
+                                <td>Nombre <span class="em">minimum</span> de jours avant qu'on puisse rechanger le mot de passe.</td>
+                            </tr>
+                            <tr>
+                                <td>-W JOURS</td>
+                                <td>Nombre de jours d'avertissement avant expiration.</td>
+                            </tr>
+                            <tr>
+                                <td>-I JOURS</td>
+                                <td>Nombre de jours d'inactivité après expiration avant désaction du compte. Si on met <span class="em">-1</span>, il n'y a pas de désactivation automatique.</td>
+                            </tr>
+                            <tr>
+                                <td>-R CHRROOT_DIR</td>
+                                <td>Permet d'exécuter la commande dans un environnement chroot. Rarement utilisé sauf en administration système avancée.</td>
+                            </tr>
+                        </tbody>
+                    </table>
 <pre><code>su user_reasonable_password</code></pre>
                     <h4>Désactivation &amp; réactivation d'un compte :</h4>
                     <img src="../images/gestion_logins.PNG" alt="">
@@ -1654,19 +1697,26 @@ ls</code></pre>
                             <p>warning = niveaude gravité</p>
                         </li>
                     </ul>
+                    <p>En syslog, <span class="em">local0</span> à <span class="em">local7</span> sont des catégories personnalisables.</p>
 <pre><code>sudo cat /var/log/syslog | grep local7</code></pre>
 <pre><code>logger -p local7.warning "Hello from auth"</code></pre>
+                    <p>En résumé, cette commande envoie un message au système de logs et simule un événement applicatif.</p>
 <pre><code>sudo cat /var/log/syslog | grep "Hello from auth"</code></pre>
+                    <p>En résumé, cette commande vérifie si le message aparaît dans syslog.</p>
 <pre><code>sudo cat /var/log/auth.log | grep "Hello from auth"</code></pre>
+                    <p>En résumé, cette commande cherche le même message dans <span class="em">auth.png</span>. En général il n'y sera pas, sauf si la configuration rsyslog ridirige <span class="em">local7</span> vers <span class="em">auth.log</span>.</p>
 <pre><code>logger -p local7.emerg "Alerte"</code></pre>
                     <h3>Programmes n'utilisant pas (r)syslog en standard :</h3>
                     <p>Exemple : nginx peut être changé, mais pas nécessairement une bonne idée.</p>
                     <img src="../images/programmes_utilisant_pas_rsyslog_standard.PNG" alt="Programmes n'utilisant pas (r)syslog en standard">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>cat /etc/nginx/nginx.conf | grep -e 'acces' -e 'error'</code></pre>
+                    <p>En résumé, cette commande affiche le contenu du fichier de configuration principal de <span class="em">NGINX</span> en filtrant contenant "acces" et "error".</p>
 <pre><code>sudo cat /var/log/syslog | grep nginx</code></pre>
+                    <p>En résumé, cette commande affiche les logs système et filtre les lignes contenant "nginx".</p>
 <pre><code>sudo cat /var/log/nginx/error.log</code></pre>
 <pre><code>sudo cat /var/log/nginx/access.log</code></pre>
+                    <p>En résumé, cette commande affiche le log d'accès HTTP.</p>
                     <h3>systemd journal - alternative - avec DB plutôt que texte et "interface" :</h3>
                     <img src="=../images/systemd_journal.PNG" alt="systemd journal">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
@@ -1709,6 +1759,7 @@ ls</code></pre>
                     <img src="../images/auditd_configuration" alt="Auditd - configuration">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo mv /home/vagrant/watch-home-user1.rules /etc/audit/rules.d/watch-home-user1.rules</code></pre>
+                    <p>Ce fichier contient normalement des <span class="em">règles d'audit</span> qui disent au système : <q>Surveille tel fichier ou dossier et log toute modification</q>.</p>
 <pre><code>sudo augenrules --check</code></pre>
                     <p>En résumé, cette commande vérifie la validité des règles.</p>
 <pre><code>sudo augenrules --load</code></pre>
@@ -1717,7 +1768,8 @@ ls</code></pre>
 <pre><code>sudo service auditd start</code></pre>
                     <p>En résumé, cette commande active auditd au démarrage.</p>
 <pre><code>sudo systemctl enable auditd</code></pre>
-<pre><code>sudo cat /etc/audit/rules.d/watch-home-user1.rules | grep -v '^#' -e 1 -r 120 -w /home/user1/personnel.txt -p rwxa -k personnel-user1</code></pre>
+                    <p>En résumé, cette commande active le service <span class="em">auditd</span> (daemon d'audit Linux) pour qu'il démarre automatiquement au boot et charge les règles définies dans <span class="em">/etc/audit/rules.d/</span>. Ça ne le démarre pas immédiatement (pour ça qu'il faut <span class="em">start</span>), mais ça l'active au démarrage</p>
+<pre><code>sudo cat /etc/audit/rules.d/watch-home-user1.rules | grep -v '^#'</code></pre>
                     <h3>Auditd et environnements régulés - cartes de crédit :</h3>
                     <img src="../images/auditd_environnements_regules.PNG" alt="Auditd et environnements régulés">
 <pre><code>cd /usr/share/doc/auditd/examples/rules</code>
