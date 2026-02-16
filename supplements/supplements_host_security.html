@@ -1399,6 +1399,34 @@ ls</code></pre>
                             </ul>
                         </li>
                     </ol>
+                    <h3>Pourquoi Kerberos ? Le problème de l'authentification LDAP seule :</h3>
+                    <p>Sans Kerberos, le service voit le mot de passe.</p>
+                    <ul>
+                        <li>
+                            <p>L'utilisateur envoie son mot de passe au service.</p>
+                        </li>
+                        <li>
+                            <p>Le service le transmet au serveur LDAP pour vérification.</p>
+                        </li>
+                        <li>
+                            <p>Service compromis = mot de passe capturé et réutilisable partout.</p>
+                        </li>
+                        <li>
+                            <p>L'utilisateur doit retaper son mot de passe pour chaque service sur chaque machine.</p>
+                        </li>
+                    </ul>
+                    <p>Avec Kerberos : le service ne voit jamais le mot de passe.</p>
+                    <ul>
+                        <li>
+                            <p>Le mot de passe n'est utilisé qu'une seule fois, entre l'utilisateur et le tiers de confiance.</p>
+                        </li>
+                        <li>
+                            <p>Les services reçoivent des tickets - jamais le mot de passe.</p>
+                        </li>
+                        <li>
+                            <p>Servoce compromis = rien de réutilisable (tickets à durée à durée limitée, liés à un service).</p>
+                        </li>
+                    </ul>
                 </article>
                 <article>
                     <h2 id="serveur_identite_eventuellement_authentification">Serveur d'identité (et éventuellement d'authentification) :</h2>
@@ -1482,6 +1510,191 @@ ls</code></pre>
                         </li>
                     </ol>
                     <p>Très bonne explication : <a href="https://wpollock.com/AUnixSec/MoronsGuideToKerberos.htm" target="_blank">https://wpollock.com/AUnixSec/MoronsGuideToKerberos.htm</a></p>
+                    <h5>Single Sign On - vue utilisateur :</h5>
+                    <h6>L'expériece au quotidien :</h6>
+                    <ol>
+                        <li>
+                            <p>Je tape mon mot de passe une seule fois au login.</p>
+                        </li>
+                        <li>
+                            <p>J'obtiens un TGT (Tocket-Granting Ticket) - mon "passe" pour la session.</p>
+                        </li>
+                        <li>
+                            <p>J'accède aux services réseau (SSH, web, fichiers...) sans retaper mon mot de passe.</p>
+                        </li>
+                        <li>
+                            <p>Après expiration du TGT (typiquement 10h). Il faut se réauthentifier.</p>
+                        </li>
+                    </ol>
+                    <h5>Single Sign On - vue sécurité :</h5>
+                    <h6>Les garanties :</h6>
+                    <ol>
+                        <li>
+                            <p>Le mot de passe ne circule jamais sur le réseau (contrairement à l'authentification LDAP directe).</p>
+                        </li>
+                        <li>
+                            <p>Les tickets sont à durée limitée - un ticket volé a une fenêtre d'exploitation réduite.</p>
+                        </li>
+                        <li>
+                            <p>Authentification mutuelle - le service prouve son identité au client (protection MITM).</p>
+                        </li>
+                        <li>
+                            <p>Un service compromis ne capture rien de réutilisable.</p>
+                        </li>
+                    </ol>
+                    <h5>Kerberos - Phase 1 : Authentification initiale (AS Exchange) :</h5>
+                    <p>john@sso-client &#8594; AS sur sso-server :</p>
+                    <ol>
+                        <li>
+                            <p>john envoie à l'AS : <q>Je suis john</q>.</p>
+                        </li>
+                        <li>
+                            <p>L'AS répond avec :</p>
+                            <ul>
+                                <li>
+                                    <p>une clé de session TGS, chiffrée avec le mot de passe de john.</p>
+                                </li>
+                                <li>
+                                    <p>un TGT (Ticket-Granting Ticket), chiffré avec la clé du TGS (john ne peut pas le le lire - c'est un "message scellé" pour le TGS).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>john déchiffre la clé de session avec son mot de passe.</p>
+                        </li>
+                        <li>
+                            <p>john stocke le TGT + la clé de session dans un cache local (un "portefeuille de tickets").</p>
+                        </li>
+                    </ol>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Point clé : Le mot de passe a servi une seule fois. Tout le reste repose sur le TGT et la clé de session.</p>
+                    </div>
+                    <h5>Kerberos - Phase 2 : Accès au service (TGS + AP Exchange) :</h5>
+                    <p>john@sso-client &#8594; TGS sur sso-server &#8594; sshd sur sso-service :</p>
+                    <ol>
+                        <li>
+                            <p>john envoie au TGS : TGT + authenticator * + <q>je veux host/sso-service.hs.be</q>.</p>
+                        </li>
+                        <li>
+                            <p>Le TGS déchiffre le TGT avec sa propre clé, vérifie l'authenticator.</p>
+                        </li>
+                        <li>
+                            <p>Le TGS répond avec :</p>
+                            <ul>
+                                <li>
+                                    <p>une clé de session service, chiffrée avec la clé de session TGS.</p>
+                                </li>
+                                <li>
+                                    <p>un service ticket, chiffré avec la clé de host/sso-service.hs.be.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>john envoie au sshd : service ticket + authenticator.</p>
+                        </li>
+                        <li>
+                            <p>Le sshd déchiffre le service ticket avec son keytab, vérifie l'authenticator.</p>
+                        </li>
+                        <li>
+                            <p>Le sshd répond &#8594; authentification mutuelle.</p>
+                        </li>
+                    </ol>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>* authenticator = timestamp chiffré avec la clé de session - prouver que john la possède maintenant (protection contre le rejeu).</p>
+                    </div>
+                    <h5>Kerberos - Parallélisme structurel des deux phases :</h5>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Phase 1 (AS)</th>
+                                <th>Phase 2 (TGS)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>John prouve son identité avec</td>
+                                <td>son mot de passe</td>
+                                <td>TGT + authenticator *</td>
+                            </tr>
+                            <tr>
+                                <td>Le serveur chiffre le ticket avec</td>
+                                <td>clé du TGS (<span class="em">krbtgt</span>)</td>
+                                <td>clé de <span class="em">host/sso-service</span></td>
+                            </tr>
+                            <tr>
+                                <td>John reçoit</td>
+                                <td>TGT + clé de session</td>
+                                <td>service ticket + clé de session</td>
+                            </tr>
+                            <tr>
+                                <td>Ce ticket sera présenté à</td>
+                                <td>le TGS</td>
+                                <td>sshd sur sso-service</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>* authenticator = timestamp chiffré avec la clé de session, preuve de possession "en temps réel".</p>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Le TGS est "juste un service".</p>
+                        <p>La seule différence : la première fois, john tape son mot de passe. Les fois suivantes, le TGT le remplace. C'est ça, le Single Sign-On.</p>
+                    </div>
+                    <h5>Authentification mutuelle - le service prouve son identité :</h5>
+                    <p>Le problème est :</p>
+                    <ul>
+                        <li>
+                            <p>Un attaquant pourrait se faire passer pour sso-service.hs.be (attaque MITM).</p>
+                        </li>
+                        <li>
+                            <p>Le client enverrait son service ticket à l'imposteur.</p>
+                        </li>
+                    </ul>
+                    <p>La solution est le keytab :</p>
+                    <ul>
+                        <li>
+                            <p>Le service ticket est chiffré avec la clé de <span class="em">host/sso-service.hs.be</span>.</p>
+                        </li>
+                        <li>
+                            <p>Seul le vrai sso-service possède cette clé (dans son keytab : <span class="em">/etc/krb5.keytab</span>).</p>
+                        </li>
+                        <li>
+                            <p>Le service déchiffre le ticket, extrait la clé de session, construit une réponse.</p>
+                        </li>
+                        <li>
+                            <p>Le client vérifie cette réponse &#8594; le service a prouvé son identité.</p>
+                        </li>
+                        <li>
+                            <p>Un imposteur sans keytab ne peut pas produire cette réponse.</p>
+                        </li>
+                    </ul>
+                    <h5>Le keytab - "mot de passe" de la machine :</h5>
+                    <h6>Création (sur sso-server, lors du provisioning) :</h6>
+                    <img src="../images/keytab.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>kadmin.local -q "addprinc -randkey host/sso-service.hs.be"</code></pre>
+<pre><code>kadmin.local -q "ktadd -k /etc/krb5.keytab host/sso-service.hs.be"</code></pre>
+                    <h6>Explication :</h6>
+                    <ul>
+                        <li>
+                            <p><span class="em">addprinc -randkey</span> : crée un principal avec un mot de passe aléatoire.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ktadd</span> : exporte cette clé dans un fichier keytab.</p>
+                        </li>
+                        <li>
+                            <p>Secret partagé entre la base du KDC (côté sso-server) et <span class="em">/etc/krb5.keytab</span> (côté sso-service).</p>
+                        </li>
+                        <li>
+                            <p>Analogie: le keytab est au service ce que le mot de passe est à l'utilisateur.</p>
+                        </li>
+                    </ul>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Sans keytab, le sshd ne peut pas déchiffrer le service ticket &#8594; authentification GSSAPI impossible.</p>
+                    </div>
                 </article>
                 <article>
                     <h2 id="configuration_clients">Configuration des clients :</h2>
@@ -1499,7 +1712,7 @@ ls</code></pre>
                             <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>cd /etc/pam.d</code></pre>
                             <p>En résumé, cette commande accède aux fichiers de configuration PAM.</p>
-<pre><code>grep -r sss</code></pre>
+<pre><code>grep -r sss .</code></pre>
                             <p>En résumé, cette commande recherche l'utilisation de SSSD pour l'authentification.</p>
                         </li>
                     </ul>
@@ -1521,6 +1734,10 @@ ls</code></pre>
                             <img src="../images/configuration_sssd_client.PNG" alt="">
 <pre><code>sudo cat /etc/sssd/sssd.conf</code></pre>
                             <p>En résumé, cette commande affiche la configuration de SSSD, qui gère l'authentification centralisée.</p>
+                            <div class="important">
+                                <img src="../images/important.png" alt="Important" class="float_left">
+                                <p>Séparation identité / authentification : id_provider = ldap &#8594; identité (qui est john ?) auth_provider = krb5 &#8594; authentification (est-ce bien john ?)</p>
+                            </div>
                         </li>
                     </ul>
                 </article>
@@ -1536,6 +1753,10 @@ ls</code></pre>
 <pre><code>sudo cat /etc/passwd | grep john</code></pre>
 <pre><code>sudo cat /etc/group | grep john</code></pre>
                     <p>En résumé, ces deux commandes vérifient la présence de l'utilisateur dans les fichiers système.</p>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Observation clé : identité centralisée : john n'apparaît ni dans <span class="em">/etc/passwd</span> ni dans <span class="em">/etc/group</span> &#8594; son identité vient du serveur LDAP, pas des fichiers locaux.</p>
+                    </div>
                 </article>
                 <article>
                     <h2 id="gestion_centralisee_authentification">Gestion centralisée de l'authentification :</h2>
@@ -1560,10 +1781,29 @@ ls</code></pre>
                     <p>En résumé, cette commande ferme la session.</p>
 <pre><code>klist</code></pre>
                     <p>En résumé, cette commande vérifie que le ticket a disparu.</p>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>krbgt/HS.BE = TGT (phase 1) host/sso-service.hs.be = service ticket (phase 2)</p>
+                    </div>
                     <h3>Authentification centralisée - Contenu de la base des "principals" de Kerberos :</h3>
+                    <h4>Sur Serveur !</h4>
                     <img src="../images/authentification_centralisee_contenu_base_principals_Kerberos.PNG" alt="">
 <pre><code>sudo kadmin.local</code></pre>
                     <p>En résumé, cette commande ouvre l'administration Kerberos locale.</p>
+                    <h3>Démonstration d'échec - kdestroy :</h3>
+                    <h4>Destruction des tickets puis tentative SSH :</h4>
+                    <img src="../images/kdestroy.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>klist</code></pre>
+<pre><code>kdestroy</code></pre>
+<pre><code>klist</code></pre>
+<pre><code>ssh john@sso-service.hs.be</code></pre>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>L'échec rend le mécanisme tangible.</p>
+                        <p>Sans TGT, impossible d'obtenir un service ticket &#8594; SSH redemande le mot de passe.</p>
+                        <p>Le SSO repose entièrement sur la présence d'un TGT valide.</p>
+                    </div>
                     <h3>Ajout d'un utilisateur :</h3>
                     <img src="../images/ajout_utilisateur_1.PNG" alt="">
 <pre><code>cat ldifs/add_user1.ldif</code></pre>
