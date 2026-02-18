@@ -68,6 +68,13 @@
                     <li><a href="#logging_consolidation">Logging - consolidation</a></li>
                     <li><a href="#monitoring_outils_de_base">Monitoring - outils de base</a></li>
                     <li><a href="#monitoring_outils_specialises">Monitoring - outils spécialisés</a></li>
+                    <li><a href="#crypto_base_SSL_TLS_environnements_travail">Crypto : base et SSL/TLS - Environnements de travail</a></li>
+                    <li><a href="#types_cryptographie">Types de cryptographie</a></li>
+                    <li><a href="#pertinence_securite_donnees">Pertinence pour la sécurité des données</a></li>
+                    <li><a href="#protection_donnees_SSL_TLS">Protection des données en elles-mêmes (SSL/TLS)</a></li>
+                    <li><a href="#protection_donnees_SSH_memoire">Protection des données en elles-mêmes (SSH) - pour mémoire</a></li>
+                    <li><a href="#protection_donnees_reseau_VPN_memoire">Protection des données au niveau réseau (VPN) - pour mémoire</a></li>
+                    <li><a href="#protection_donnees_repos_memoire">Protection des données au repos - pour mémoire</a></li>
                     <li><a href="#evaluation_instructions_provisoires">Évaluation - instructions provisoires</a></li>
                 </ol>
             </nav>
@@ -2152,6 +2159,355 @@ ls</code></pre>
                             <p>... pour mémoire</p>
                         </li>
                     </ul>
+                </article>
+                <article>
+                    <h2 id="crypto_base_SSL_TLS_environnements_travail">Crypto : base et SSL/TLS - Environnements de travail :</h2>
+                    <ol>
+                        <li>
+                            <p>crypto :</p>
+                            <ul>
+                                <li>
+                                    <p>À démarrer en premier.</p>
+                                </li>
+                                <li>
+                                    <p>Utilisé pour générer le certificat de l'autorité de certification.</p>
+                                </li>
+                                <li>
+                                    <p>Recopier le certificat ac.crt qui aura été généré (voir plus bas) et transféré sur votre ordinateur vers le directory de la deuxième box.</p>
+                                </li>
+                                <li>
+                                    <p>Utilisé pour signer les certificats "feuilles".</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>crypto-client :</p>
+                            <ul>
+                                <li>
+                                    <p>À démarrer après.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="types_cryptographie">Types de cryptographie :</h2>
+                    <p>Disclaimer : Ceci n'est pas un cours de crypto.</p>
+                    <p><a href="https://owasp.org/www-project-top-ten/" target="_blank">https://owasp.org/www-project-top-ten/</a></p>
+                    <img src="../images/OWASP.PNG" alt="">
+                    <h3>Chiffrement symétrique :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Quoi ?</span> Une même clé (= secret) chiffre et déchiffre.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Pourquoi ?</span> Rapide - adapté aux gros volumes de données.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Limite</span> : les deux parties doivent posséder le même secret.</p>
+                        </li>
+                    </ul>
+                    <p>Démo : AES-256-CBC avec openssl :</p>
+                    <img src="../images/demo_AES-256-CBC_openssl.PNG" alt="">
+<pre><code>./aes.sh</code></pre>
+                    <h3>Chiffrement asymétrique :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Quoi ?</span> Deux clés : publique (chiffrer) et privée (déchiffrer).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Pourquoi ?</span> Pas besoin de secret partagé au préalable.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Limite</span> : lent - inadapté aux gros volumes.</p>
+                        </li>
+                    </ul>
+                    <img src="../images/demo_chiffrement_asymetrique.PNG" alt="">
+<pre><code>./rsa/sh</code></pre>
+                    <h3>Hashage des données :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Quoi ?</span> Fonction à sens unique : donnée &#8594; empreinte de taille fixe.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Pourquoi ?</span> Vérifier l'<span class="em">intégrité</span> : le moindre changement modifie le hash.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Limite</span> : ne prouve pas qui a produit le message.</p>
+                        </li>
+                    </ul>
+                    <p>Démo : SHA-256 avec openssl :</p>
+                    <img src="../images/demo_SHA-256_openssl" alt="">
+<pre><code>./hash.sh</code></pre>
+                    <h3>MAC - Message Authentication Code :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Quoi ?</span> Hash calculé avec un <span class="em">secret partagé</span> entre les deux parties.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Pourquoi ?</span> Prouve l'<span class="em">intégrité</span> et que l'émetteur connaît le secret.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">&#8800; hash</span> : sans le secret, impossible de forger le MAC.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">&#8800; signature</span> : pas de clé publique/privée - symétrique, donc rapide.</p>
+                        </li>
+                    </ul>
+                    <p>Démo : HMAC-SHA256 avec openssl :</p>
+                    <img src="../images/demo_HMAC-SHA256.PNG" alt="">
+                    <p>Voici les différentes exécutées dans la commande précédente :</p>
+<pre><code>echo "Mon message" | openssl dgst -sha256 -hmac "secret-partage"</code></pre>
+<pre><code>echo "Mon message" | openssl dgst -sha256 -hmac "autre-secret"</code></pre>
+<pre><code>echo "Mon message" | openssl dgst -sha256</code></pre>
+                    <h3>Signature d'un message avec clé asymétrique :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Quoi ?</span> Hash du message chiffré avec la clé privée de l'émetteur.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Pourquoi ?</span> Prouve l'<span class="em">origine</span> et l'<span class="em">intégrité</span> du message.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Vérification</span> : n'importe qui peut vérifier avec la clé publique.</p>
+                        </li>
+                    </ul>
+                    <img src="../demo_signature_message_cle_asymetrique.PNG" alt="">
+<pre><code>./rsa-signature.sh</code></pre>
+                    <h3>Certificats digitaux :</h3>
+                    <ul>
+                        <li>
+                            <p>Signature m'assure que le message vient bien de la personne qui possède la clé privée.</p>
+                        </li>
+                        <li>
+                            <p>Comment m'assurer que cette personne est bien la personne q'elle prétend être ?</p>
+                        </li>
+                        <li>
+                            <p>Solution :</p>
+                            <ul>
+                                <li>
+                                    <p>Out-of-band, sinon.</p>
+                                </li>
+                                <li>
+                                    <p>Tiers de confiance.</p>
+                                </li>
+                                <li>
+                                    <p>S'assure que le possesseur de la clé est bien la "personne" attendue.</p>
+                                </li>
+                                <li>
+                                    <p>Signe un certificat en ce sens.</p>
+                                </li>
+                                <li>
+                                    <p>Autre partie doit présenter ce certificat.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="pertinence_securite_donnees">Pertinence pour la sécurité des données :</h2>
+                    <h3>Données "au repos" :</h3>
+                    <ul>
+                        <li>
+                            <p>Confidentialité :</p>
+                            <ul>
+                                <li>
+                                    <p>Encryption.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Intégrité :</p>
+                            <ul>
+                                <li>
+                                    <p>Signature.</p>
+                                </li>
+                                <li>
+                                    <p>Transactions sur une blockchain.</p>
+                                </li>
+                                <li>
+                                    <p>(problème de l'ordonnnancement - voir mining).</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Données "en transit" = réseau :</h3>
+                    <ul>
+                        <li>
+                            <p>Confidentialité &#8594; Chiffrement.</p>
+                        </li>
+                        <li>
+                            <p>Authenticité, Intégrité &#8594; Signature, Hash, Certificats.</p>
+                        </li>
+                    </ul>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float left">
+                        <p>Problème : Le chiffrement symétrique est rapide, mais comment partager le secret initial entre deux parties qui ne se connaissent pas ?</p>
+                    </div>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Solution : combiner les deux &#8594; <span class="em">TLS</span>, <span class="em">SSH</span>, <span class="em">VPN</span> :</p>
+                        <ol>
+                            <li>
+                                <p>Crypto <span class="em">asymétrique</span> pour établir un secret partagé (Diffie-Hellman).</p>
+                            </li>
+                            <li>
+                                <p>Ce secret en crypto <span class="em">symétrique</span> (AES) pour chiffrer - rapide.</p>
+                            </li>
+                            <li>
+                                <p><span class="em">MAC</span> (HMAC) pour vérifier l'intégrité.</p>
+                            </li>
+                        </ol>
+                    </div>
+                    <p>Voir par exemple : <a href="https://www.digitalocean.com/community/tutorials/understanding-the-ssh-encryption-and-connection-process" target="_blank">https://www.digitalocean.com/community/tutorials/understanding-the-ssh-encryption-and-connection-process</a>.</p>
+                    <h3>Le schéma combiné en pratique :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Étape</th>
+                                <th>Rôle</th>
+                                <th>Crypto utilisée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Établissement du secret</td>
+                                <td>Échange de clé</td>
+                                <td>Asymétrique (DH)</td>
+                            </tr>
+                            <tr>
+                                <td>Chiffrement des données</td>
+                                <td>Confidentialité</td>
+                                <td>Symétrique (AES)</td>
+                            </tr>
+                            <tr>
+                                <td>Vérification d'intégrité</td>
+                                <td>Intégrité</td>
+                                <td>MAC (HMAC-SHA256)</td>
+                            </tr>
+                            <tr>
+                                <td>Identité du serveur</td>
+                                <td>Authenticité</td>
+                                <td>Certificat (RSA/ECDSA)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float left">
+                        <p>Et concrètement ? Chaque protocole (TLS, SSH, VPN) implémente ce schéma à sa manière. Dans la suite du cours, on va montrer TLS.</p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="protection_donnees_SSL_TLS">Protection des données en elles-mêmes (SSL/TLS) :</h2>
+                    <h3>Exemple HTTP(S) - rajout d'une couche de sécurité "autour" de HTTP :</h3>
+                    <ul>
+                        <li>
+                            <p>Contexte :</p>
+                            <ul>
+                                <li>
+                                    <p>Interactions avec sites internet.</p>
+                                </li>
+                                <li>
+                                    <p>(À priori, identité des hôtes pas "facile" à établir).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Motivation :</p>
+                            <ul>
+                                <li>
+                                    <p>Confidentialité.</p>
+                                </li>
+                                <li>
+                                    <p>Intégrité.</p>
+                                </li>
+                                <li>
+                                    <p>Prévention attaque Man-in-the-middle : s'assurer de la bonne identité du site visité.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Exemple HTTP(S) - Initialisation - Public Key Infrastructure :</h3>
+                    <img src="../images/exemple_HTTPS_initialisation_PKI.PNG" alt="">
+                    <h3>Exemple HTTP(S) - Utilisation :</h3>
+                    <img src="../images/exemple_HTTPS_utilisation.PNG" alt="">
+                    <h3>Création d'une autorité de certification :</h3>
+                    <p><span class="em">genpkey</span> &#8594; clé privée RSA de l'AC.</p>
+                    <p><span class="em">-x509</span> &#8594; certificat <span class="em">auto-signé</span> (Issuer = Subject).</p>
+<pre><code>./autorite-certification.sh ac</code></pre>
+                    <h3>Installation de l'autorité de certification :</h3>
+                    <ul>
+                        <li>
+                            <p>Certificat AC copié dans le <span class="em">trust store</span> système.</p>
+                        </li>
+                        <li>
+                            <p>Partagé avec le client via <span class="em">/vagrant</span>.</p>
+                        </li>
+                    </ul>
+                    <p>À faire sur serveur et client :</p>
+                    <img src="../images/installation_CA.PNG" alt="">
+<pre><code>sudo ./autorite-installation.sh ac</code></pre>
+                    <h3>Demande de certification :</h3>
+                    <ul>
+                        <li>
+                            <p>Nouvelle clé privée pour le <span class="em">serveur</span> (distincte de celle de l'AC !).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">req -new</span> &#8594; CSR (demande), pas encore un certificat.</p>
+                        </li>
+                    </ul>
+                    <img src="../images/demande_certification.PNG" alt="">
+<pre><code>./cle-demande-certificat.sh server</code></pre>
+                    <h3>Signature du certificat du serveur :</h3>
+                    <ul>
+                        <li>
+                            <p>L'AC signe avec <span class="em">sa</span> clé &#854; Issuer (AC) &#8800; Subject (serveur).</p>
+                        </li>
+                        <li>
+                            <p>En réalité : vérification tag sans site, record DNS, mail@domain, check "in real life".</p>
+                        </li>
+                    </ul>
+                    <img src="../images/signature_certificat_serveur.PNG" alt="">
+<pre><code>./signe-certificat.sh server ac</code></pre>
+                    <h3>Vérification du certificat du serveur :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">-CAfile</span> &#8594; on vérifie <span class="em">contre le certificat de l'AC</span>.</p>
+                        </li>
+                        <li>
+                            <p>Chaîne : depth=0 (serveur) &#8594; depth=1 (AC, racine de confiance).</p>
+                        </li>
+                    </ul>
+                    <img src="../images/verification_certificat_serveur.PNG" alt="">
+<pre><code>openssl verify -show_chain -verbose <span class="em">-CAfile ac/ac.crt</span> server/server.crt</code></pre>
+                    <h3>Configuration du serveur HTTP :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">443 ssl</span> &#8594; HTTPS (pas le port 80 de HTTP).</p>
+                        </li>
+                        <li>
+                            <p>Le serveur présente son <span class="em">certificat</span> + utilise sa <span class="em">clé privée</span>.</p>
+                        </li>
+                        <li>
+                            <p>Redémarrer nginx (<span class="em">sudo systemctl restart nginx</span>) pour appliquer.</p>
+                        </li>
+                    </ul>
+                    <p>Configuration nginx :</p>
+                    <img src="../images/configuration_serveur_HTTP.PNG" alt="">
+<pre><code>sudo cat /etc/nginx/conf.d/crypto-server.hs.be.conf</code></pre>
+                    <h3>Interaction HTTPS client avec serveur :</h3>
+                    <ul>
+                        <li>
+                            <p>Même installation de l'AC côté <span class="em">client</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">curl https://</span> &#8594; connexion sécurisée réussie.</p>
+                        </li>
+                    </ul>
+                    <img src="../images/interaction_HTTPS_client_serveur.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo ./autorite-installation.sh ac</code></pre>
+<pre><code>curl https://crypto-server.hs.be</code></pre>
                 </article>
                 <article>
                     <h2 id="evaluation_instructions_provisoires">Évaluation - instructions provisoires :</h2>
