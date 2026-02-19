@@ -6020,6 +6020,596 @@ interface e0/3
                         </li>
                     </ol>
                 </article>
+                <article>
+                    <h2 id="correction_labo_netsec_lab2">Correction du labo NetSec Lab2 :</h2>
+                    <p>Remarques : les configurations vues dans le labo 1, comme la création des vlans etc... sont supprimés par la simplification.</p>
+                    <p>La sécurité du data plane a été vu dans le labo1.</p>
+                    <h3>Serveurs :</h3>
+                    <h4>La configuration du serveur DNS-SRV (Appliance DNS) :</h4>
+                    <p>Cette machine utilise le serveur (application) dnsmasq pour le service DNS. La résolution se fait par l'ajout des entrées dans le fichier /etc/hosts sous forme <q>Adresse_IP [fully_qualified_domain_name] hostname</q>.</p>
+<pre><code>127.0.0.1 localhost
+172.19.2.4 mail-srv.itscmnetsec.lab mail-srv
+172.19.2.6 web-srv.itscmnetsec.lab web-srv
+172.19.3.4 ad-srv.itscmnetsec.lab ad-srv
+172.19.3.5 dns-srv.itscmnetsec.lab dns-srv
+172.19.254.3 sesame-srv.itscmnetsec.lab sesame-srv
+172.19.254.4 netmgmt-srv.itscmnetsec.lab netmgmt-srv
+172.19.254.1 rt-core.itscmnetsec.lab rt-core
+172.19.254.2 dmz-core.itscmnetsec.lab dmz-core
+172.17.254.1 hq-core.itscmnetsec.lab hq-core
+172.17.254.2 hq-access1.itscmnetsec.lab hq-access1
+172.17.254.3 hq-access2.itscmnetsec.lab hq-access2
+172.18.254.1 branch-core.itscmnetsec.lab branch-core
+172.18.254.2 branch-access1.itscmnetsec.lab branch-access1
+172.18.254.3 branch-access2.itscmnetsec.lab branch-access2
+::1 localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters</code></pre>
+                    <h5>Configuration de dnsmasq : fichier /etc/dnsmasq.conf :</h5>
+                    <p>Ajouter ou dé-commenter les lignes :</p>
+<pre><code>local=/itscmnetsec.lab/
+user=root
+group=root
+listen-address=172.19.3.5
+expand-hosts
+domain=itscmnetsec.lab</code></pre>
+                    <h5>Configuration des interfaces : fichier /etc/network/interfaces :</h5>
+<pre><code>auto lo
+iface lo inet loopback
+auto eth0
+iface eth0 inet static
+address 172.19.3.5
+netmask 255.255.255.0
+gateway 172.19.3.1</code></pre>
+                    <h5>Fichier /etc/resolv.conf :</h5>
+<pre><code>nameserver 1.1.1.1</code></pre>
+                    <h4>La configuration du serveur NETMGMT-SRV et SESAME-SRV (appliance toolbox et Tacacsgui/aaa) :</h4>
+                    <p>La machine NETMGMT-SRV fait office de serveur de log (rsyslog), dhcp (non-utilisé pour le moment), ntp, snmp, web et ftp/tftp.</p>
+                    <p>La machine SESAME-SRV fait office de serveur tacacs.</p>
+                    <h5>Configuration :</h5>
+                    <ul>
+                        <li>
+                            <p>/etc/network/interface : voir IP topologie.</p>
+                        </li>
+                        <li>
+                            <p>/etc/resolv.conf :: nameserver 172.19.3.5</p>
+                        </li>
+                    </ul>
+                    <h5>NETMGMT-SRV : rsyslog.conf :</h5>
+<pre><code>#  /etc/rsyslog.conf
+Configuration file for rsyslog.
+#
+#
+#
+For more information see
+/usr/share/doc/rsyslog-doc/html/rsyslog_conf.html
+#
+#  Default logging rules can be found in /etc/rsyslog.d/50-default.conf
+#################
+#### MODULES ####
+#################
+module(load="imuxsock") # provides support for local system logging
+module(load="immark")  # provides --MARK-- message capability
+# provides UDP syslog reception
+module(load="imudp")
+input(type="imudp" port="514")
+# provides TCP syslog reception
+module(load="imtcp")
+input(type="imtcp" port="514")
+# provides kernel logging support and enable non-kernel klog messages
+module(load="imklog" permitnonkernelfacility="on")
+###########################
+#### GLOBAL DIRECTIVES ####
+###########################
+#
+# Use traditional timestamp format.
+# To enable high precision timestamps, comment out the following line.
+#
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+# Filter duplicated messages
+$RepeatedMsgReduction on
+#
+# Set the default permissions for all log files.
+#
+$FileOwner syslog
+$FileGroup adm
+$FileCreateMode 0640
+$DirCreateMode 0755
+$Umask 0022
+$PrivDropToUser syslog
+$PrivDropToGroup syslog
+#
+# Where to place spool and state files
+#
+$WorkDirectory /var/spool/rsyslog
+#
+# Include all config files in /etc/rsyslog.d/
+#
+$IncludeConfig /etc/rsyslog.d/*.conf</code></pre>
+                    <h5>La configuration SESAME-SRV tacacs : tac_plus.cfg :</h5>
+<pre><code>d = spawnd {
+####SPAWND#### 
+listen = { port = 49 } 
+} ##END OF SPAWND
+id = tac_plus { ##START GLOBAL CONFIGURATION
+####GENERAL CONFIGURATION#### 
+###MANUAL CONFIGURATION START### 
+log = accounting_log { 
+    destination =  "| /opt/tacacsgui/parser/tacacs_parser.sh accounting"  
+    log separator = "|!|"}  
+    log = authentication_log { 
+    destination = "| /opt/tacacsgui/parser/tacacs_parser.sh authentication" 
+    log separator = "|!|"} 
+log = authorization_log { 
+    destination = "| /opt/tacacsgui/parser/tacacs_parser.sh authorization" 
+    log separator = "|!|"} 
+###MANUAL CONFIGURATION END### 
+accounting log = accounting_log 
+authentication log = authentication_log 
+authorization log = authorization_log 
+connection timeout = 600 
+context timeout = 3600 
+password max-attempts = 1 
+password backoff = 1 
+####LIST OF DEVICE GROUPS#### 
+host = switches { 
+key = "sesameouvretoi!" 
+} #END OF switches 
+host = Routers { 
+key = "sesameouvretoi!" 
+} #END OF Routers 
+host = Servers { 
+key = "sesameouvretoi!" 
+} #END OF Servers 
+####LIST OF HOSTS#### 
+host = rt-core { 
+address = "172.19.254.1/32" 
+key = "sesameouvretoi!" 
+template = Routers 
+} #END OF rt-core 
+host = dmz-access { 
+address = "172.19.254.2/32" 
+template = switches 
+} #END OF dmz-access 
+host = hq-core { 
+address = "172.17.254.1/32" 
+template = switches 
+} #END OF hq-core 
+host = hq-access1 { 
+address = "172.17.254.2/32" 
+template = switches 
+} #END OF hq-access1 
+host = hq-access2 { 
+address = "172.17.254.3/32" 
+template = switches 
+} #END OF hq-access2 
+host = branch-core { 
+address = "172.18.254.1/32" 
+template = switches 
+} #END OF branch-core
+host = branch-access1 { 
+address = "172.18.254.2/32" 
+template = switches 
+} #END OF branch-access1 
+host = branch-access2 { 
+address = "172.18.254.3/32" 
+template = switches 
+} #END OF branch-access2 
+####LIST OF ACL#### 
+####LIST OF USER GROUPS####
+# ---------- Groupes ---------
+# 1) MONITOR : seulement certains "show"
+group = monitor {
+    default service = deny
+    service = exec {
+        priv-lvl = 1
+    }
+    service = shell {
+        priv-lvl = 1
+        # Autoriser certaines commandes show **seulement**
+        cmd = show {
+            permit ^version$
+            permit ^interfaces?$
+            permit ^ip\ interface\ brief$
+            permit ^logging$
+            permit ^inventory$
+            permit ^platform.*$
+            permit ^environment.*$
+            permit ^interface\ status$
+            # Interdire explicitement ce qui fuit la conf/sensibles
+            deny ^running-?config$
+            deny ^startup-?config$
+            deny ^tech-?support$
+        }
+        # Tout le reste refusé (par défaut)
+    }
+}
+# 2) OPERATOR : tous les "show" + configuration des interfaces (et rien d'autre)
+group = operator {
+   default service = deny
+   service = exec {
+        priv-lvl = 7
+    }
+    service = shell {
+        priv-lvl = 7
+        # a) Tous les "show"
+        cmd = show {
+            permit .*
+        }
+        # b) Autoriser l'entrÃ©e en mode configuration
+        cmd = configure {
+            permit ^terminal$
+        }
+        # c) En mode config, autoriser la config des interfaces uniquement
+        #    -> on permet 'interface ...' puis un sous-ensemble courant
+        cmd = interface {
+            permit .*
+        }
+        # Autoriser commandes utiles en sous-mode interface :
+        cmd = description {
+            permit .*
+        }
+        cmd = shutdown {
+            permit ^(shutdown|no\ shutdown)$
+        }
+        cmd = speed {
+            permit .*
+        }
+        cmd = duplex {
+            permit .*
+        }
+        cmd = switchport {
+            permit .*
+        }
+        cmd = ip {
+            permit ^address.*$
+        }
+        cmd = ipv6 {
+            permit ^address.*$
+        }
+        cmd = negotiation {
+            permit .*
+        }
+        cmd = load-interval {
+            permit .*
+        }
+        # d) Empêcher modifications globales non liées aux interfaces :
+        cmd = username { deny .* }
+        cmd = router { deny .* }
+        cmd = ip { deny ^(route|default-gateway|domain.*|name-server).*$ }
+        cmd = line { deny .* }
+        cmd = aaa { deny .* }
+        cmd = snmp-server { deny .* }
+        cmd = ntp { deny .* }
+        cmd = crypto { deny .* }
+        cmd = vlan { deny .* }
+        cmd = spanning-tree { deny .* }
+        cmd = interface-range { deny .* }   # (optionnel si vous voulez limiter à 1 interface à la fois) 
+        cmd = write { deny .* }
+        cmd = copy { deny .* }
+        cmd = erase { deny .* }
+        cmd = delete { deny .* }
+    }
+}
+# 3) ADMIN : accès complet
+group = admin {
+    default service = permit
+    service = exec {
+        priv-lvl = 15
+    }
+    service = shell {
+        priv-lvl = 15
+        # Tout est permis
+    }
+}
+# ---------- Comptes (exemples) ---------
+# En pratique, vous relierez ça à LDAP/AD.
+user = alice {
+   member = monitor
+   login = cleartext "MotDePasseFort1!"
+}
+user = bob {
+   member = operator
+   login = cleartext "MotDePasseFort2!"
+}
+user = carol {
+   member = admin
+   login = cleartext "MotDePasseFort3!"
+}
+user = pierrel { 
+    login = crypt $1$ymIhEtBv$tu1N/lT2E7KrLkRjosCYQ1 
+    message = "Welcome Pierre 
+Attention toute action est loggué" 
+    member = admin 
+    ### GET SERVICES FROM GROUP 
+} #END OF pierre 
+}##END GLOBAL CONFIGURATION</code></pre>
+                    <h4>Configuration du RT-CORE :</h4>
+                    <h5>Configuration du DHCP :</h5>
+<pre><code>ip dhcp excluded-address 172.17.2.1 172.17.2.3
+ip dhcp excluded-address 172.17.3.1 172.17.3.3
+ip dhcp excluded-address 172.18.2.1 172.18.2.3
+ip dhcp excluded-address 172.18.3.1 172.18.3.3
+!         
+ip dhcp pool POOL_HQ_VLAN2
+import all
+network 172.17.2.0 255.255.255.0
+default-router 172.17.2.1 
+dns-server 172.19.3.5 
+domain-name itscmnetsec.lab
+lease 0 8
+!         
+ip dhcp pool POOL_HQ_VLAN3
+import all
+network 172.17.3.0 255.255.255.0
+default-router 172.17.3.1 
+dns-server 172.19.3.5 
+domain-name itscmnetsec.lab
+lease 0 8
+!         
+ip dhcp pool POOL_BRANCH_VLAN2
+import all
+network 172.18.2.0 255.255.255.0
+default-router 172.18.2.1 
+dns-server 172.19.3.5 
+domain-name itscmnetsec.lab
+lease 0 8
+!         
+ip dhcp pool POOL_BRANCH_VLAN3
+import all
+network 172.18.3.0 255.255.255.0
+default-router 172.18.3.1 
+dns-server 172.19.3.5 
+domain-name itscmnetsec.lab
+lease 0 8
+!         
+Configuration des interfaces :
+!         
+interface Loopback0
+ip address 172.16.0.1 255.255.255.255
+!         
+interface Ethernet0/0
+ip address 192.168.122.118 255.255.255.0
+ip nat outside
+ip virtual-reassembly in
+!         
+interface Ethernet0/1
+ip address 172.16.1.1 255.255.255.252
+ip nat inside
+ip virtual-reassembly in
+ip ospf message-digest-key 1 md5 7 1419171F1F0129
+!         
+interface Ethernet0/2
+ip address 172.16.1.5 255.255.255.252
+ip ospf message-digest-key 1 md5 7 082F495A1A1C06
+!         
+interface Ethernet0/3
+no ip address
+!         
+interface Ethernet0/3.2
+encapsulation dot1Q 2
+ip address 172.19.2.1 255.255.255.0
+ip nat inside
+ip virtual-reassembly in
+!         
+interface Ethernet0/3.3
+encapsulation dot1Q 3
+ip address 172.19.3.1 255.255.255.0
+ip nat inside
+ip virtual-reassembly in
+!         
+interface Ethernet0/3.254
+encapsulation dot1Q 254
+ip address 172.19.254.1 255.255.255.0
+ip nat inside
+ip virtual-reassembly in
+!</code></pre>
+                    <h5>Configuration du routage OSPF :</h5>
+<pre><code>router ospf 10
+network 172.16.1.0 0.0.0.3 area 0
+network 172.16.1.4 0.0.0.3 area 0
+network 172.19.2.0 0.0.0.255 area 0
+network 172.19.3.0 0.0.0.255 area 0
+network 172.19.254.0 0.0.0.255 area 0
+ttl-security all-interfaces
+passive-interface ethernet0/0 
+! Faire la même cmd pour tous les ifaces ne participants pas au routage !
+default-information originate 
+! Pour injecter la default gateway dans les tables de routage des peers
+!</code></pre>
+                    <h5>Configuration du NAT :</h5>
+<pre><code>ip nat pool NATPOOL 192.168.122.120 192.168.122.150 netmask 255.255.255.0
+!         
+access-list 15 permit 172.17.0.0 0.0.255.255
+access-list 15 permit 172.18.0.0 0.0.255.255
+access-list 15 permit 172.19.0.0 0.0.255.255
+ip nat inside source list 15 pool NATPOOL
+!Route par defaut         
+ip route 0.0.0.0 0.0.0.0 192.168.122.1
+!</code></pre>
+                    <h4>Configuration des core switches (L3) HQ-CORE et BRANCH-CORE : il faut adapter les interfaces, leurs adresses et les réseaux annoncés dans OSPF.</h4>
+                    <h5>Exemple pour HQ-CORE : Configuration des interfaces :</h5>
+<pre><code>interface Loopback0
+    ip address 172.16.0.2 255.255.255.255
+!         
+interface Ethernet0/0
+    no switchport
+    ip address 172.16.1.2 255.255.255.252
+    ip ospf message-digest-key 1 md5 7 1419171F1F0129       
+!         
+interface Ethernet1/0
+    no switchport
+    ip address 172.16.1.9 255.255.255.252
+    ip ospf message-digest-key 1 md5 7 1419171F1F0129
+!         
+interface Ethernet0/1
+    switchport trunk encapsulation dot1q
+    switchport trunk native vlan 254
+    switchport trunk allowed vlan 2,3,254
+    switchport mode trunk
+    duplex auto
+!         
+interface Ethernet0/2
+    switchport trunk encapsulation dot1q
+    switchport trunk native vlan 254
+    switchport trunk allowed vlan 2,3,254
+    switchport mode trunk
+    duplex auto
+!
+!
+interface Vlan2
+    ip address 172.17.2.1 255.255.255.0
+    ip helper-address 172.19.254.1
+!         
+interface Vlan3
+    ip address 172.17.3.1 255.255.255.0
+    ip helper-address 172.19.254.1
+!         
+interface Vlan254
+    ip address 172.17.254.1 255.255.255.0
+!</code></pre>
+                    <h5>Configuration du routage OSPF :</h5>
+<pre><code>router ospf 10
+    network 172.16.1.0 0.0.0.3 area 0
+    network 172.16.1.8 0.0.0.3 area 0
+    network 172.17.2.0 0.0.0.255 area 0
+    network 172.17.3.0 0.0.0.255 area 0
+    network 172.17.254.0 0.0.0.255 area 0
+!
+!</code></pre>
+                    <h4>Configuration des switches d'accès (L2) HQ-ACCESS1, HQ-ACCESS2, BR-ACCESS1, BR-ACCESS2 : il faut adapter les interfaces, leurs adresses :</h4>
+<pre><code>! interface de trunk        
+interface Ethernet0/0
+    switchport trunk encapsulation dot1q
+    switchport trunk native vlan 254
+    switchport trunk allowed vlan 2,3,254
+    switchport mode trunk
+    duplex auto
+!         
+interface Ethernet0/1
+    switchport access vlan 2
+    switchport mode access
+    switchport port-security
+    switchport port-security aging time 2
+    switchport port-security violation restrict
+    switchport port-security aging type inactivity
+    duplex auto
+    spanning-tree portfast
+    spanning-tree bpduguard enable
+!         
+interface Ethernet0/2
+    switchport access vlan 3
+    switchport mode access
+    switchport port-security
+    switchport port-security aging time 2
+    switchport port-security violation restrict
+    switchport port-security aging type inactivity
+    duplex auto
+    spanning-tree portfast
+    spanning-tree bpduguard enable
+!         
+interface Ethernet0/3
+    switchport access vlan 254
+    switchport mode access
+    switchport port-security
+    switchport port-security aging time 2
+    switchport port-security violation restrict
+    switchport port-security aging type inactivity
+    duplex auto
+    spanning-tree portfast
+    spanning-tree bpduguard enable
+!       
+!         
+interface Vlan254
+    ip address 172.17.254.3 255.255.255.0
+    no ip route-cache
+!  
+! Passerelle par défaut       
+ip default-gateway 172.17.254.1
+!</code></pre>
+                    <h4>Sécurisation du management plane pour tous les routeurs/switches :</h4>
+<pre><code>!ssh a besoin du hostname et du domain-name
+hostname HQ-ACCESS2
+ip domain-name itscmnetsec.lab
+ip ssh version 2
+crypto key generate rsa modulus 1024
+!</code></pre>
+                    <h4>Configuration du tacacs (AAA) :</h4>
+<pre><code>! Définir les serveurs TACACS+
+tacacs server SESAME-SRV1
+address ipv4 172.19.254.3
+key sesameouvretoi!
+tacacs server SESAME-SRV2
+address ipv4 172.19.254.10
+key MonSecretTresFort
+!Création de l'utilisateur admin local
+username admin privilege 15 secret 4 SlVU5pmedhiwSh/Mf3GWLH1bdEXCUIl/x2uZmfyPAM2
+!Activation AAA
+aaa new-model
+!
+!
+! Groupe de serveurs
+aaa group server tacacs+ TAC-GRP
+server name SESAME-SRV1
+server name SESAME-SRV2
+! Authentification : TACACS+ puis local en secours
+aaa authentication login default group tacacs+ local
+! Autorisation du mode EXEC (le prompt) via TACACS+, secours local
+aaa authorization exec default group tacacs+ local if-authenticated
+! Autorisation des commandes par niveaux (crucial pour "monitor"/"operator")
+aaa authorization commands 0 default group tacacs+ local
+aaa authorization commands 1 default group tacacs+ local
+aaa authorization commands 15 default group tacacs+ local
+! Comptabilisation (audit)
+aaa accounting exec default start-stop group tacacs+
+aaa accounting commands 0 default start-stop group tacacs+
+aaa accounting commands 1 default start-stop group tacacs+
+aaa accounting commands 15 default start-stop group tacacs+
+aaa authentication login Authen_TACACS group tacacs+ local
+aaa authorization exec AuthorExec_TACACS group tacacs+ local 
+aaa authorization network AuthorNet_TACACS group tacacs+ local 
+aaa accounting exec default start-stop group tacacs+
+aaa accounting commands 0 default start-stop group tacacs+
+aaa accounting commands 1 default start-stop group tacacs+
+aaa accounting commands 15 default start-stop group tacacs+
+aaa accounting network default start-stop group tacacs+
+!         
+!         
+! Activation du AAA pour les connexions ssh         
+line vty 0 4
+login authentication default
+transport input ssh
+!         
+! Activation du mot de passe pour la console         
+line console 0 
+password mon-secret
+!</code></pre>
+                    <h4>Configuration du logging :</h4>
+<pre><code>logging origin-id hostname
+logging facility local6
+logging source-interface Vlan254
+logging host 172.19.254.4
+ntp server 172.19.254.4</code></pre>
+                    <h4>Configuration de snmp :</h4>
+<pre><code>access-list 1 permit 172.17.254.0 0.0.0.255
+access-list 1 permit 172.18.254.0 0.0.0.255
+access-list 2 permit 172.19.254.0 0.0.0.255
+!         
+!         
+snmp-server community ITSCMNETSEC_RO RO 1
+snmp-server community ITSCMNETSEC_RW RW 2
+snmp-server trap-source Vlan254
+snmp-server enable traps snmp authentication linkdown linkup coldstart warmstart
+snmp-server enable traps tty
+snmp-server enable traps ospf
+snmp-server enable traps vtp
+snmp-server enable traps vlancreate
+snmp-server enable traps vlandelete
+snmp-server enable traps syslog
+snmp-server host 172.19.254.4 2c  vlancreate</code></pre>
+                </article>
             <!-- fin de section -->
             </section>
         </main>
