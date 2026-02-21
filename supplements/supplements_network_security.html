@@ -5470,16 +5470,34 @@ end</code></pre>
 <pre><code>interface e0/1
     switchport mode access
     switchport access vlan 2
+    switchport port-security
+    switchport port-security violation restrict
+    switchport port-security maximum 1
+    switchport port-security mac-address sticky
+    spanning-tree portfast
+    spanning-tree bpduguard enable
     exit</code></pre>
                             <h5>PC finance :</h5>
 <pre><code>interface e0/2
     switchport mode access
     switchport access vlan 3
+    switchport port-security
+    switchport port-security violation restrict
+    switchport port-security maximum 1
+    switchport port-security mac-address sticky
+    spanning-tree portfast
+    spanning-tree bpduguard enable
     exit</code></pre>
                             <h5>PC admin :</h5>
 <pre><code>interface e0/3
     switchport mode access
     switchport access vlan 254
+    switchport port-security
+    switchport port-security violation restrict
+    switchport port-security maximum 1
+    switchport port-security mac-address sticky
+    spanning-tree portfast
+    spanning-tree bpduguard enable
     exit</code></pre>
                         </li>
                         <li>
@@ -5709,7 +5727,7 @@ interface e0/1
     network 172.16.0.1 0.0.0.0 area 0
     default-information originate
     exit</code></pre>
-                            <p>La commande <span class="em">router ospf 1</span> démarre le processus de routage dynamique OSPF.</p>
+                            <p>La commande <span class="em">router ospf 10</span> démarre le processus de routage dynamique OSPF.</p>
                             <p><span class="em">area 0</span> est le <span class="em">backbone OSPF</span>.</p>
                             <p>La comande <span class="em">default-information originate</span> dit : <q>Si j'ai une route par défaut, je la diffuse via OSPF</q> et donc ça permet aux sites internes d'accéder à Internet via RT-CORE.</p>
                             <p><span class="em">Rappel très important</span> : La commande <span class="em">network X Y ara 0</span> ne sert PAS à "annoncer un réseau", mais elle sert à activer OSPF sur les interfaces dont l'IP correspond au wildcard mask.</p>
@@ -5882,8 +5900,13 @@ tacacs server SESAME
     address ipv4 172.19.254.50
     key cisco123</code></pre>
 <pre><code>line vty 0 4
-    login authentication default</code></pre>
-<pre><code>aaa authentication login default group tacacs+ local</code></pre>
+    login authentication default
+    transport input ssh
+    exit</code></pre>
+<pre><code>aaa authentication login default group tacacs+ local
+aaa authorization exec default group tacacs+ local
+aaa authorization commands 15 default group tacacs+ local
+aaa accounting exec default start-stop group tacacs+</code></pre>
                             <h5>SNMP :</h5>
 <pre><code>apt install snmpd -y</code></pre>
 <pre><code>nano /etc/snmp/snmpd.conf</code></pre>
@@ -5904,6 +5927,7 @@ logging trap informational</code></pre>
                             <h4>Sécurité MANAGEMENT PLANE :</h4>
 <pre><code>username admin secret Admin123
 ip domain-name labo.local
+ip ssh version 2
 crypto key generate rsa modulus 2048
 exit</code></pre>
 <pre><code>line vty 0 4
