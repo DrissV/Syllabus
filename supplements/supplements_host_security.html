@@ -2517,6 +2517,28 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                     <p><span class="em">genpkey</span> &#8594; clé privée RSA de l'AC.</p>
                     <p><span class="em">-x509</span> &#8594; certificat <span class="em">auto-signé</span> (Issuer = Subject).</p>
 <pre><code>./autorite-certification.sh ac</code></pre>
+                    <p>Voici le contenu du script `<span class="em">autorite-certification.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+set -euo pipefail
+
+# https://connect.ed-diamond.com/contenu-premium/openssl-quelques-commandes-a-connaitre-pour-manipuler-vos-certificats-ssl-tls
+
+# Affichage de la version de openssl
+
+openssl version
+
+# Création clé privée pour autorité de certification
+mkdir "${1}"
+cd "${1}"
+
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out "${1}".key
+chmod 0600 "${1}".key
+
+# Création et affichage de la "requète de certificat" - auto-signé - résulte dans certificat
+openssl req -new -x509 -days 3600 -key "${1}".key -out "${1}".crt   
+openssl x509 -noout -text -in "${1}".crt
+
+cd ..</code></pre>
                     <h3>Installation de l'autorité de certification :</h3>
                     <ul>
                         <li>
@@ -2529,6 +2551,19 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                     <p>À faire sur serveur et client :</p>
                     <img src="../images/installation_CA.PNG" alt="">
 <pre><code>sudo ./autorite-installation.sh ac</code></pre>
+                    <p>Voici le contenu du script `<span class="em">autorite-installation.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+set -euo pipefail
+
+# Sans doute assez dépendant de la distribution
+# https://ubuntu.com/server/docs/security-trust-store
+
+
+sudo cp "${1}"/"${1}".crt /usr/local/share/ca-certificates
+sudo update-ca-certificates
+sudo cp "${1}"/"${1}".crt /vagrant # pour transmission au client</code></pre>
+                    <p>On sort de la VM crypto avec <span class="em">exit</span> et on copie le fichier <span class="em">ac.crt</span> dans le dossier de la VM crypto-client avec la commande suivante :</p>
+<pre><code>cp ac.crt ../crypto-client</code></pre>
                     <h3>Demande de certification :</h3>
                     <ul>
                         <li>
@@ -2540,6 +2575,24 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                     </ul>
                     <img src="../images/demande_certification.PNG" alt="">
 <pre><code>./cle-demande-certificat.sh server</code></pre>
+                    <p>Voici le contenu du script `<span class="em">cle-demande-certificat.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+set -euo pipefail
+
+# https://connect.ed-diamond.com/contenu-premium/openssl-quelques-commandes-a-connaitre-pour-manipuler-vos-certificats-ssl-tls
+
+# Création clé privée pour l'entité
+mkdir "${1}"
+cd "${1}"
+
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out "${1}".key
+chmod 0600 "${1}".key
+
+# Création et affichage de la "requète de certificat"
+openssl req -new -key "${1}".key -out "${1}".csr
+openssl req -noout -text -in "${1}".csr
+
+cd ..</code></pre>
                     <h3>Signature du certificat du serveur :</h3>
                     <ul>
                         <li>
@@ -2551,6 +2604,18 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                     </ul>
                     <img src="../images/signature_certificat_serveur.PNG" alt="">
 <pre><code>./signe-certificat.sh server ac</code></pre>
+                    <p>Voici le contenu du script `<span class="em">signe-certificat.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+set -euo pipefail
+
+# https://connect.ed-diamond.com/contenu-premium/openssl-quelques-commandes-a-connaitre-pour-manipuler-vos-certificats-ssl-tls
+
+# signature du certificat de l'entité sur base de sa demande        
+
+#cd "${2}"
+openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2}".key -CAcreateserial -out "${1}"/"${1}".crt -days 1800openssl x509 -noout -text -in "${1}"/"${1}".crt
+
+#cd ..</code></pre>
                     <h3>Vérification du certificat du serveur :</h3>
                     <ul>
                         <li>
@@ -2577,6 +2642,16 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                     <p>Configuration nginx :</p>
                     <img src="../images/configuration_serveur_HTTP.PNG" alt="">
 <pre><code>sudo cat /etc/nginx/conf.d/crypto-server.hs.be.conf</code></pre>
+<pre><code>server {
+    listen         443 ssl;
+    server_name    crypto-server.hs.be;
+    root           /var/www/crypto-server.hs.be;
+    index          index.html
+    gzip           off;
+    ssl_certificate         /home/vagrant/server/server.crt;        
+    ssl_certificate_key     /home/vagrant/server/server.key;        
+
+}</code></pre>
                     <h3>Interaction HTTPS client avec serveur :</h3>
                     <ul>
                         <li>
