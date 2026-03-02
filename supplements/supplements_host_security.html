@@ -2212,7 +2212,29 @@ ls</code></pre>
                     </ul>
                     <p>Démo : AES-256-CBC avec openssl :</p>
                     <img src="../images/demo_AES-256-CBC_openssl.PNG" alt="">
+<pre><code>su user3</code></pre>
+<pre><code>cd ~</code></pre>
 <pre><code>./aes.sh</code></pre>
+                    <p>Voici le contenu du script `<span class="em">aes.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+
+# Voir https://askubuntu.com/questions/60712/how-do-i-quickly-encrypt-a-file-with-aes
+# Voir les détails sur la Key Derivation function (https://en.wikipedia.org/wiki/Key_derivation_function
+
+# Contenu du fichier original
+cat personnel.txt
+
+# Encryption avec AES; -a pour output en base64
+openssl aes-256-cbc -in personnel.txt -a -out personnel.encrypted -pbkdf2
+
+# Fichier encrypté, base64
+cat personnel.encrypted
+
+# Décryptage
+openssl aes-256-cbc -d -a -in personnel.encrypted -pbkdf2 -out personnel.decrypted
+
+# Fichier décrypté
+cat personnel.decrypted</code></pre>
                     <h3>Chiffrement asymétrique :</h3>
                     <ul>
                         <li>
@@ -2226,7 +2248,32 @@ ls</code></pre>
                         </li>
                     </ul>
                     <img src="../images/demo_chiffrement_asymetrique.PNG" alt="">
-<pre><code>./rsa/sh</code></pre>
+<pre><code>./rsa.sh</code></pre>
+                    <p>Voici le contenu du script `<span class="em">rsa.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+
+# Voir https://opensource.com/article/21/4/encryption-decryption-openssl
+
+# Contenu du fichier original
+cat personnel.txt
+
+# Génération de la clé privée
+openssl genrsa -out privatekey.pem 2048
+
+# Génération de la clé publique
+openssl rsa -in privatekey.pem -outform PEM -pubout -out publickey.pem
+
+# Aperçu clé publique
+cat publickey.pem
+
+# encryption avec clé publique
+openssl pkeyutl -encrypt -inkey publickey.pem -pubin -in personnel.txt -out personnel.rsa.encrypted
+
+# decryptage avec clé private
+openssl pkeyutl -decrypt -inkey privatekey.pem -in personnel.rsa.encrypted -out personnel.rsa.decrypted
+
+# Contenu du fichier décrypté
+cat personnel.rsa.decrypted</code></pre>
                     <h3>Hashage des données :</h3>
                     <ul>
                         <li>
@@ -2242,6 +2289,12 @@ ls</code></pre>
                     <p>Démo : SHA-256 avec openssl :</p>
                     <img src="../images/demo_SHA-256_openssl" alt="">
 <pre><code>./hash.sh</code></pre>
+                    <p>Voici le contenu du script `<span class="em">hash.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+
+echo "Hello world!" | openssl dgst -sha256
+
+echo "hello world!" | openssl dgst -sha256</code></pre>
                     <h3>MAC - Message Authentication Code :</h3>
                     <ul>
                         <li>
@@ -2277,6 +2330,32 @@ ls</code></pre>
                     </ul>
                     <img src="../demo_signature_message_cle_asymetrique.PNG" alt="">
 <pre><code>./rsa-signature.sh</code></pre>
+                    <p>Voici le contenu du script `<span class="em">rsa-signature.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+
+# Voir https://stackoverflow.com/questions/10782826/digital-signature-for-a-file-using-openssl
+
+# Contenu du fichier original
+cat personnel.txt
+
+# Génération de la clé privée
+openssl genrsa -out privatekey.pem 2048
+
+# Génération de la clé publique
+openssl rsa -in privatekey.pem -outform PEM -pubout -out publickey.pem
+
+# Aperçu clé publique
+cat publickey.pem
+
+# Signature du message
+openssl dgst -sha256 -sign privatekey.pem -out personnel.txt.signature personnel.txt
+
+# Aperçu signature
+# À améliorer pour être en base64
+# cat personnel.txt.signature
+
+# Vérification de la signature
+openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature personnel.txt</code></pre>
                     <h3>Certificats digitaux :</h3>
                     <ul>
                         <li>
