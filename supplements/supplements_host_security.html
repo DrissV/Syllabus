@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
     <head>
-        <script src="../auth.js"></script>
         <meta charset="UTF-8">
         <meta name="author" content="Choquet Olivier & Vandenheede Driss">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -75,7 +74,9 @@
                     <li><a href="#protection_donnees_SSL_TLS">Protection des données en elles-mêmes (SSL/TLS)</a></li>
                     <li><a href="#protection_donnees_SSH_memoire">Protection des données en elles-mêmes (SSH) - pour mémoire</a></li>
                     <li><a href="#protection_donnees_reseau_VPN_memoire">Protection des données au niveau réseau (VPN) - pour mémoire</a></li>
-                    <li><a href="#protection_donnees_repos_memoire">Protection des données au repos - pour mémoire</a></li>
+                    <li><a href="#certificats_exemple_utilisation_LetsEncrypt">Certificats - Exemple utilisation Let's Encrypt</a></li>
+                    <li><a href="#crypto_SSH_environnements_de_travail">Crypto : SSH : Environnements de travail</a></li>
+                    <li><a href="#protection_donnees_SSH">Protection des données en elles-mêmes - SSH</a></li>
                     <li><a href="#evaluation_instructions_provisoires">Évaluation - instructions provisoires</a></li>
                 </ol>
             </nav>
@@ -2667,6 +2668,253 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo ./autorite-installation.sh ac</code></pre>
 <pre><code>curl https://crypto-server.hs.be</code></pre>
+                </article>
+                <article>
+                    <h2 id="certificats_exemple_LetsEncrypt">Certificats - Exemple utilisation Let's Encrypt :</h2>
+                    <h3>Mise à jour enregistrement DNS pour pointer vers l'adresse du serveur :</h3>
+                    <img src="../images/maj_enregistrement_DNS_pointer_adresse_serveur.PNG" alt="">
+                    <h3>Configuration d'un serveur web en HTTP :</h3>
+                    <img src="../images/configuration_serveur_web_HTTP.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>cat /var/www/site2/index.html</code></pre>
+<pre><code>cat /etc/nginx/conf.d/client2.conf | head -n 13</code></pre>
+                    <h3>Accès en HTTP :</h3>
+                    <img src="../images/acces_HTTP.PNG" alt="">
+                    <h3>Demande de certification à Let's Encrypt :</h3>
+                    <h4>Utilisation de la méthode webroot - dépôt par LE d'un fichier temporaire dans serveur web :</h4>
+                    <img src="../images/demande_certification_LetsEncrypt.PNG" alt="">
+<pre><code>sudo certbot certonly --webroot -w /var/www/site2 -d client2.xpertsys.be</code></pre>
+                    <h3>Configuration d'un serveur web en HTTPS :</h3>
+<pre><code>cat /etc/nginx/conf.d/client2.conf</code></pre>
+                    <h3>Accès en HTTPS :</h3>
+                    <img src="../images/acces_HTTPS.PNG" alt="">
+                </article>
+                <article>
+                    <h2 id="crypto_SSH_environnements_de_travail">Crypto : SSH : Environnements de travail :</h2>
+                    <h3>Machines virtuelles :</h3>
+                    <ol>
+                        <li>
+                            <p>ssh-serveur - à démarrer en premier :</p>
+                            <ul>
+                                <li>
+                                    <p>Accepte des connexions SSH entrantes.</p>
+                                </li>
+                                <li>
+                                    <p>Implémente divers protocoles pour accepter les connexions : mot de passe, 2FA et clé publique.</p>
+                                </li>
+                                <li>
+                                    <p>Implémente un mécanisme de défense contre les attaques de mot de passe par force brute.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>ssh-client - à démarrer en deuxième lieu :</p>
+                            <ul>
+                                <li>
+                                    <p>Se connecte.</p>
+                                </li>
+                                <li>
+                                    <p>Tente une attaque par force brute.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="protection_donnees_SSH">Protection des données en elles-mêmes - SSH :</h2>
+                    <h3>Accès sécurisé à machine distante :</h3>
+                    <ul>
+                        <li>
+                            <p>Sécurisation (Confidentialité, Intégrité, Authentification) :</p>
+                            <ul>
+                                <li>
+                                    <p>Plusieurs procédés.</p>
+                                </li>
+                                <li>
+                                    <p>Souvent avec clé privée/publique.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Fonctionnalités :</p>
+                            <ul>
+                                <li>
+                                    <p>Shell.</p>
+                                </li>
+                                <li>
+                                    <p>Exécution d'une commande à distance.</p>
+                                </li>
+                                <li>
+                                    <p>"support" pour protocoles SCP, SFTP.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>SSH - Les trois phase de la connexion :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Phase</th>
+                                <th>Qui ?</th>
+                                <th>Mécanisme</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Chiffrement du canal</td>
+                                <td>-</td>
+                                <td>DH + AES + MAC (comme TLS)</td>
+                            </tr>
+                            <tr>
+                                <td>Auth. du serveur</td>
+                                <td>Serveur &#8594; Client</td>
+                                <td><span class="em">Clé hôte</span> (host key) - toujours</td>
+                            </tr>
+                            <tr>
+                                <td>Auth. du client</td>
+                                <td>Client &#8594; Serveur</td>
+                                <td><span class="em">Mot de passe</span> OU <span class="em">clé publique</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Vérification out-of-band indispensable dans les deux sens :</p>
+                        <p><span class="em">Clé hôte (serveur)</span> : le client doit vérifier la clé du serveur à la 1ère connexion - sinon, risque de MITM.</p>
+                        <p><span class="em">Clé publique (client)</span> : l'admin du serveur doit vérifier la clé avant de l'importer dans authorized_keys - sinon, n'importe qui peut s'enregistrer.</p>
+                    </div>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Mot de passe vs clé client :</p>
+                        <p>La clé résiste mieux aux attaques par force brute et évite les risques de réutilisation.</p>
+                    </div>
+                    <h3>Configuration 2FA :</h3>
+                    <h4>Voir cours sur gestion de l'identité et de l'authentification :</h4>
+                    <img src="../images/configuration_2FA.PNG" alt="">
+<pre><code>google-authenticator</code></pre>
+                    <h3>SSH - Authentification du serveur au moyen de sa clé publique :</h3>
+                    <h4>Vérification de la clé publique du serveur par moyen annexe sinon authentification pas prouvée :</h4>
+                    <img src="../images/SSH_authentification_serveur_via_cle_publique.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>cat /etc/ssh/ssh_host_ed25519_key.pub</code></pre>
+<pre><code>ssh-keyscan -t ed25519 -H ssh-server &gt;&gt; ~/.ssh/known_hosts</code></pre>
+                    <h3>SSH - Accès au serveur via mot de passe :</h3>
+                    <h4>Ici, 2FA configuré :</h4>
+                    <img src="../images/SSH_acces_serveur_via_password.PNG" alt="">
+<pre><code>ssh vagrant@ssh-server</code></pre>
+                    <h3>Authentification mutuelle via clé publique :</h3>
+                    <img src="../images/authentification_mutuelle_via_cle_publique.PNG" alt="">
+                    <table class="tableBalises">
+                        <tbody>
+                            <tr>
+                                <td colspan="3">Authentification</td>
+                            </tr>
+                            <tr>
+                                <td>Du serveur</td>
+                                <td>
+                                    <p>Clé publique</p>
+                                    <p>~/.ssh/known_hosts</p>
+                                </td>
+                                <td>
+                                    <p>Clé privée</p>
+                                    <p>/etc/ssh/ssh_host_ed25519_key</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>De l'utilisateur</td>
+                                <td>
+                                    <p>Clé privée</p>
+                                    <p>.vagrant/machines/default/virtualbox/private_key</p>
+                                    <p>Souvent ~/.ssh/id_rsa</p>
+                                </td>
+                                <td>
+                                    <p>Clé publique</p>
+                                    <p>~/.ssh/authorized_keys</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>NB : les emplacements des clés peuvent varier selon les distributions ou le cas d'usage.</p>
+                    <h3>SSH - génération de la clé privée du client :</h3>
+                    <h4>Clé à bien protéger :</h4>
+                    <img src="../images/SSH_generation_cle_privee_client.PNG" alt="">
+<pre><code>ssh-keygen</code></pre>
+                    <h3>SSH - import de la clé publique dans le serveur :</h3>
+                    <h4>À faire de manière sécurisée sinon authenticité non prouvée :</h4>
+                    <img src="../images/SSH_import_cle_publique_serveur.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>ssh-keygen -y</code></pre>
+<pre><code>sudo nano ~/.ssh/authorized_keys</code></pre>
+<pre><code>ls -la .ssh/authorized_keys</code></pre>
+<pre><code>cat .ssh/authorized_keys</code></pre>
+                    <h3>SSH - Accès au serveur au moyen de la clé privée :</h3>
+                    <h4>PAS de mot de passe requis :</h4>
+                    <img src="../images/SSH_acces_serveur_via_cle_privee.PNG" alt="">
+<pre><code>ssh vagrant@ssh-server</code></pre>
+                    <h3>SSH - comme "support pour SCP, SFTP" :</h3>
+                    <h4>Échange de fichier sécurisé :</h4>
+                    <img src="../images/SSH_support_scp_sftp.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>echo "hello" &gt; test-scp.txt</code></pre>
+<pre><code>echo "hello" &gt; test-sftp.txt</code></pre>
+<pre><code>scp ./test-scp.txt vagrant@ssh-server:~/</code></pre>
+<pre><code>sftp vagrant@ssh-server</code></pre>
+<pre><code>put test-sftp.txt</code></pre>
+<pre><code>exit</code></pre>
+<pre><code>ls test*</code></pre>
+                    <h3>SSH - Mise à jour de ssh et et configuration sont clés : Penser MFA !</h3>
+                    <img src="../images/SSH_maj_ssh_configuration_cles_MFA.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>ssh -V</code></pre>
+<pre><code>sudo cat /etc/ssh/sshd_config | grep -v '^#\|^$'</code></pre>
+<pre><code>sudo cat /etc/ssh/sshd_config.d/PermitPasswordAuthentication.conf | grep -v '^#\|^$'</code></pre>
+                    <p>Exemples : <a href="https://www.digitalocean.com/community/tutorials/how-to-harden-openssh-on-ubuntu-20-04" target="_blank">https://www.digitalocean.com/community/tutorials/how-to-harden-openssh-on-ubuntu-20-04</a></p>
+                    <h3>SSH - Danger des attaques par force brute :</h3>
+                    <h4>Désactivation du "hardening" du serveur :</h4>
+                    <img src="../images/SSH_danger_attaques_force_brute.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo nano /etc/pam.d/sshd</code></pre>
+<pre><code>tail -n 1 /etc/pam.d/sshd</code></pre>
+<pre><code>sudo nano /etc/ssh/sshd_config.d/PermitPasswordAuthentication.conf</code></pre>
+<pre><code>tail -n 2 /etc/ssh/sshd_config.d/PermitPasswordAuthentication.conf</code></pre>
+<pre><code>sudo systemctl restart sshd</code></pre>
+<pre><code>sudo nano .ssh/authorized_keys</code></pre>
+<pre><code>tail -n 1 .ssh/authorized_keys</code></pre>
+<pre><code>cat .ssh/authorized_keys</code></pre>
+<pre><code>sudo systemctl restart sshd</code></pre>
+                    <h3>SSH - Accès par mot de passe :</h3>
+                    <h4>PAS de 2FA :</h4>
+                    <img src="../images/SSH_acces_via_password.PNG" alt="">
+<pre><code>ssh vagrant@ssh-server</code></pre>
+                    <h3>SSH - attaque par force brute :</h3>
+                    <h4>Limite par session, pas au total !</h4>
+                    <img src="../images/SSH_attaque_force_brute.PNG" alt="">
+<pre><code>ssh vagrant@ssh-server</code></pre>
+                    <h3>Fail2ban - examen des logs et bannissement IP problématiques :</h3>
+                    <h4>Pas uniquement SSH :</h4>
+                    <img src="../images/fail2ban_examen_logs_bannissement_IPS_problematiques.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo ufw allow ssh</code></pre>
+<pre><code>sudo ufw enable</code></pre>
+<pre><code>sudo cat /etc/fail2ban/jail.d/defaults-debian.conf</code></pre>
+<pre><code>sudo fail2ban-client start</code></pre>
+<pre><code>sudo fail2ban-client status</code></pre>
+                    <h3>SSH - attaque par force brute 2 :</h3>
+                    <h4>Limite par période, configurable :</h4>
+                    <img src="../images/SSH_attaque_force_brute_2.PNG" alt="">
+<pre><code>ssh vagrant@ssh-server</code></pre>
+                    <h3>SSH - status fail2ban :</h3>
+                    <h4>Avant et après tentatives de connexion :</h4>
+                    <img src="../images/SSH_status_fail2ban.PNG" alt="">
+<pre><code>sudo fail2ban-client status sshd</code></pre>
+                    <h3>SSH - Logs :</h3>
+                    <h4>Recherche dans auth.log :</h4>
+                    <img src="../images/SSH_logs.PNG" alt="">
+<pre><code>sudo cat /var/log/auth.log  | grep "Failed password for vagrant"</code></pre>
+                    <h3>SSH - Prévalence des attaques par force brute :</h3>
+                    <h4>Exemple réel :</h4>
+                    <img src="../images/SSH_prevalence_attaques_force_brute.PNG" alt="">
+<pre><code>cat /etc/fail2ban/jail.local</code></pre>
                 </article>
                 <article>
                     <h2 id="evaluation_instructions_provisoires">Évaluation - instructions provisoires :</h2>
