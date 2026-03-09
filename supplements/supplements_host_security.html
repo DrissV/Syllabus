@@ -3267,6 +3267,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                     </ul>
                     <img src="../images/verification_certificat_serveur.PNG" alt="">
 <pre><code>openssl verify -show_chain -verbose <span class="em">-CAfile ac/ac.crt</span> server/server.crt</code></pre>
+                    <p>En résumé, cette commande vérifie que le certificat du serveur est <span class="em">signé par l'autorité de certification</span>.</p>
                     <h3>Configuration du serveur HTTP :</h3>
                     <ul>
                         <li>
@@ -3292,7 +3293,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
     ssl_certificate_key     /home/vagrant/server/server.key;        
 
 }</code></pre>
-                    <p>Il faut pas oublier de redémarrer le service Nginx avec la commande suivante :</p>
+                    <p>Il faut pas oublier de redémarrer le service Nginx pour appliquer la configuration SSL avec la commande suivante :</p>
 <pre><code>sudo systemctl restart nginx</code></pre>
                     <h3>Interaction HTTPS client avec serveur :</h3>
                     <ul>
@@ -3308,6 +3309,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo ./autorite-installation.sh ac</code></pre>
 <pre><code>curl https://crypto-server.hs.be</code></pre>
+                    <p>En résumé, cette commande teste une <span class="em">connexion HTTPS sécurisée</span> vers le serveur.</p>
                 </article>
                 <article>
                     <h2 id="certificats_exemple_LetsEncrypt">Certificats - Exemple utilisation Let's Encrypt :</h2>
@@ -3324,6 +3326,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                     <h4>Utilisation de la méthode webroot - dépôt par LE d'un fichier temporaire dans serveur web :</h4>
                     <img src="../images/demande_certification_LetsEncrypt.PNG" alt="">
 <pre><code>sudo certbot certonly --webroot -w /var/www/site2 -d client2.xpertsys.be</code></pre>
+                    <p>En résumé, cette commande demande un <span class="em">certificat TLS gratuit Let's Encrupt</span> utilisant la méthode webroot.</p>
                     <h3>Configuration d'un serveur web en HTTPS :</h3>
 <pre><code>cat /etc/nginx/conf.d/client2.conf</code></pre>
                     <h3>Accès en HTTPS :</h3>
@@ -3485,13 +3488,16 @@ end</code></pre>
                     <img src="../images/SSH_authentification_serveur_via_cle_publique.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>cat /etc/ssh/ssh_host_ed25519_key.pub</code></pre>
+                    <p>En résumé, cette commande affiche la <span class="em">clé publique du serveur SSH</span>.</p>
                     <p>Ici, on est dans la VM nomée "ssh-client".</p>
 <pre><code>ssh-keyscan -t ed25519 -H ssh-server &gt;&gt; ~/.ssh/known_hosts</code></pre>
+                    <p>En résumé, cette commande ajoute automatiquement la clé du serveur dans les <span class="em">hôtes connus</span>.</p>
 <pre><code>cat .ssh/known_hosts</code></pre>
                     <h3>SSH - Accès au serveur via mot de passe :</h3>
                     <h4>Ici, 2FA configuré :</h4>
                     <img src="../images/SSH_acces_serveur_via_password.PNG" alt="">
 <pre><code>ssh vagrant@ssh-server</code></pre>
+                    <p>En résumé, cette commande permet au client de se connecter au serveur via <span class="em">SSH</span>.</p>
                     <h3>Authentification mutuelle via clé publique :</h3>
                     <img src="../images/authentification_mutuelle_via_cle_publique.PNG" alt="">
                     <table class="tableBalises">
@@ -3529,13 +3535,16 @@ end</code></pre>
                     <h4>Clé à bien protéger :</h4>
                     <img src="../images/SSH_generation_cle_privee_client.PNG" alt="">
 <pre><code>ssh-keygen</code></pre>
+                    <p>En résumé, cette commande génère une <span class="em">paire de clés SSH (privée + publique)</span>.</p>
                     <h3>SSH - import de la clé publique dans le serveur :</h3>
                     <h4>À faire de manière sécurisée sinon authenticité non prouvée :</h4>
                     <img src="../images/SSH_import_cle_publique_serveur.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>ssh-keygen -y</code></pre>
+                    <p>En résumé, cette commande extrait la <span class="em">clé publique à partir de la clé privée</span>.</p>
                     <p>Ici, on est dans la VM nommée "ssh-server".</p>
 <pre><code>sudo nano ~/.ssh/authorized_keys</code></pre>
+                    <p>En résumé, cette commande édite le fichier contenant les <span class="em">clés publiques autorisées à se connecter</span>.</p>
 <pre><code>ls -la .ssh/authorized_keys</code></pre>
 <pre><code>cat .ssh/authorized_keys</code></pre>
                     <h3>SSH - Accès au serveur au moyen de la clé privée :</h3>
@@ -3550,8 +3559,11 @@ end</code></pre>
 <pre><code>echo "hello" &gt; test-scp.txt</code></pre>
 <pre><code>echo "hello" &gt; test-sftp.txt</code></pre>
 <pre><code>scp ./test-scp.txt vagrant@ssh-server:~/</code></pre>
+                    <p>En résumé, cette commande copie un fichier vers le serveur via <span class="em">SCP sécurisé</span>.</p>
 <pre><code>sftp vagrant@ssh-server</code></pre>
+                    <p>En résumé, cette commande ouvre une session <span class="em">SFTP sécurisée</span>.</p>
 <pre><code>put test-sftp.txt</code></pre>
+                    <p>En résumé, cette commande envoie un fichier vers le serveur via SFTP.</p>
 <pre><code>exit</code></pre>
                     <p>Ici, on est dans la VM nommée "ssh-server".</p>
 <pre><code>ls test*</code></pre>
@@ -3559,6 +3571,7 @@ end</code></pre>
                     <img src="../images/SSH_maj_ssh_configuration_cles_MFA.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>ssh -V</code></pre>
+                    <p>En résumé, cette commande affiche la version du client SSH.</p>
 <pre><code>sudo cat /etc/ssh/sshd_config | grep -v '^#\|^$'</code></pre>
 <pre><code>sudo cat /etc/ssh/sshd_config.d/PermitPasswordAuthentication.conf | grep -v '^#\|^$'</code></pre>
                     <p>Exemples : <a href="https://www.digitalocean.com/community/tutorials/how-to-harden-openssh-on-ubuntu-20-04" target="_blank">https://www.digitalocean.com/community/tutorials/how-to-harden-openssh-on-ubuntu-20-04</a></p>
@@ -3575,6 +3588,7 @@ end</code></pre>
 <pre><code>tail -n 1 .ssh/authorized_keys</code></pre>
 <pre><code>cat .ssh/authorized_keys</code></pre>
 <pre><code>sudo systemctl restart sshd</code></pre>
+                    <p>En résumé, cette commande redémarre le serveur SSH.</p>
                     <h3>SSH - Accès par mot de passe :</h3>
                     <h4>PAS de 2FA :</h4>
                     <p>Ici, on est dans la VM nommée "ssh-client".</p>
@@ -3590,10 +3604,14 @@ end</code></pre>
                     <img src="../images/fail2ban_examen_logs_bannissement_IPS_problematiques.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo ufw allow ssh</code></pre>
+                    <p>En résumé, cette commande autorise les connexions SSH dans le firewall.</p>
 <pre><code>sudo ufw enable</code></pre>
+                    <p>En résumé, cette commande active le firewall UFW.</p>
 <pre><code>sudo cat /etc/fail2ban/jail.d/defaults-debian.conf</code></pre>
 <pre><code>sudo fail2ban-client start</code></pre>
+                    <p>En résumé, cette commande démarre le service <span class="em">Fail2ban</span>.</p>
 <pre><code>sudo fail2ban-client status</code></pre>
+                    <p>En résumé, cette commande affiche l'état de Fail2ban.</p>
                     <p>Tutoriel : <a href="https://www.linode.com/docs/guides/using-fail2ban-to-secure-your-server-a-tutorial/" target="_blank">https://www.linode.com/docs/guides/using-fail2ban-to-secure-your-server-a-tutorial/</a></p>
                     <h3>SSH - attaque par force brute 2 :</h3>
                     <h4>Limite par période, configurable :</h4>
@@ -3605,10 +3623,12 @@ end</code></pre>
                     <p>Ici, on est dans la VM nommée "ssh-server".</p>
                     <img src="../images/SSH_status_fail2ban.PNG" alt="">
 <pre><code>sudo fail2ban-client status sshd</code></pre>
+                    <p>En résumé, cette commande affiche les IP bannies pour le service SSH.</p>
                     <h3>SSH - Logs :</h3>
                     <h4>Recherche dans auth.log :</h4>
                     <img src="../images/SSH_logs.PNG" alt="">
 <pre><code>sudo cat /var/log/auth.log  | grep "Failed password for vagrant"</code></pre>
+                    <p>En résumé, cette commande recherche dans les logs les <span class="em">tentatives de connexion SSH échouées</span>.</p>
                     <h3>SSH - Prévalence des attaques par force brute :</h3>
                     <h4>Exemple réel :</h4>
                     <img src="../images/SSH_prevalence_attaques_force_brute.PNG" alt="">
