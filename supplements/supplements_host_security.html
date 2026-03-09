@@ -54,8 +54,8 @@
                     <li><a href="#extensions">Extensions</a></li>
                     <li><a href="#gestion_utilisateurs">Gestion des utilisateurs</a></li>
                     <li><a href="#authentification">Authentification</a></li>
-                    <li><a href="#exercices">Exercices</a></li>
-                    <li><a href="#environnement_travail">Environnement de travail</a></li>
+                    <li><a href="#exercice1">Exercice 1</a></li>
+                    <li><a href="#centralisation_identites_authentification_SSO_environnement_de_travail">Centralisation des identités &amp; de l'authentification - Single Sign On : Environnement de travail</a></li>
                     <li><a href="#notions">Notions</a></li>
                     <li><a href="#serveur_identite_eventuellement_authentification">Serveur d'identité (et éventuellement d'authentification)</a></li>
                     <li><a href="#authentification_reseau_SSO">Authentification réseau - Single Sign On</a></li>
@@ -414,6 +414,67 @@
                         </li>
                     </ul>
                     <h3>Contrôle d'accès aux fichiers :</h3>
+                    <p>Ici, on est dans la VM nommée "acces-bionic" dont voici le Vagrantfile :</p>
+<pre><code>Vagrant.configure("2") do |config|
+  config.vm.box = "hashicorp/bionic64"
+  config.vm.provision "file", source: "./users.txt", destination: "/home/vagrant/users.txt"
+  config.vm.provision "file", source: "./EPHEC", destination: "/home/vagrant/EPHEC"
+  config.vm.provision "file", source: "./sudoers-additions.txt", destination: "/home/vagrant/sudoers-additions.txt"
+  config.vm.provision "file", source: "./EPHEC.test-suid.welcome", destination: "/home/vagrant/EPHEC.test-suid.welcome"
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+  mv /home/vagrant/EPHEC /EPHEC
+  chmod 2775 /EPHEC
+  chmod 2755 /EPHEC/test-suid
+  chmod 2755 /EPHEC/testacl
+  chmod go-rw ./users.txt
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y acl 
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user1 --gecos "User1" user1
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user2 --gecos "User1" user2
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user_adm --gecos "User_adm" user_adm
+  cat ./users.txt | tee | chpasswd
+  groupadd create_user
+  adduser user1 create_user
+  groupadd rsync_user
+  adduser user1 rsync_user
+  groupadd admin
+  adduser user_adm admin
+  groupadd site
+  adduser user1 site
+  adduser user2 site
+
+  chown user1:site /EPHEC/testacl/fichier-partage-groupe-site
+  chown user1:site /EPHEC/testacl/fichier-partage-tous
+  chmod o-r /EPHEC/testacl/fichier-partage-groupe-site
+
+  chown user_adm:user_adm /EPHEC/test-suid/greetings
+  chown user_adm:user_adm /EPHEC/test-suid/greetings1
+  chown user_adm:user_adm /EPHEC/test-suid/greetings2
+  chown user_adm:user_adm /EPHEC/test-suid/greetings2.c
+  chown root:root /EPHEC/test-suid/welcome
+  chown user_adm:user_adm /EPHEC/test-suid/welcome.c
+
+  chmod +x /EPHEC/test-suid/greetings
+  chmod +x /EPHEC/test-suid/greetings1
+  chmod +x /EPHEC/test-suid/greetings2
+  chmod +x /EPHEC/test-suid/welcome
+  chmod +s /EPHEC/test-suid/welcome
+
+  mkdir /common
+  chmod 2775 /common
+  echo "hello"| tee /common/hello.txt
+  chown root:root /common/hello.txt
+
+  echo "hello" | tee /home/user1/hello.txt
+  chown user1:user1 /home/user1/hello.txt
+
+  mv /home/vagrant/EPHEC.test-suid.welcome /etc/apparmor.d/EPHEC.test-suid.welcome
+  
+  cat ./sudoers-additions.txt | tee  -a /etc/sudoers
+  SHELL
+end</code></pre>
                     <img src="../images/controle_acces_fichiers.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo cat /etc/group | grep site</code></pre>
@@ -666,6 +727,87 @@ int main (int argc, char *argv[]) {
                     <p><span class="em">namespaces</span> : Restriction "top down" de l'accès d'un processus aux ressources (fichiers, réseau, processus, etc.).</p>
                     <p><span class="em">capabilities</span> : Division des pouvoirs de root en privilèges "individualisés" (juste ouvrir un port réseau par exemple) (À ne pas confondre avec les capabilities comme substitut aux ACL).</p>
                     <h3>Docker et namespace - vue sur les processus internes :</h3>
+                    <p>Ici, on est dans la VM nommée "access-jammy" dont voici le Vagrantfile :</p>
+<pre><code>Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.provision "file", source: "./users.txt", destination: "/home/vagrant/users.txt"
+  config.vm.provision "file", source: "./EPHEC", destination: "/home/vagrant/EPHEC"
+  config.vm.provision "file", source: "./sudoers-additions.txt", destination: "/home/vagrant/sudoers-additions.txt"
+  config.vm.provision "file", source: "./EPHEC.test-suid.welcome", destination: "/home/vagrant/EPHEC.test-suid.welcome"
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+  mv /home/vagrant/EPHEC /EPHEC
+  chmod 2775 /EPHEC
+  chmod 2755 /EPHEC/test-suid
+  chmod 2755 /EPHEC/testacl
+  chmod go-rw ./users.txt
+  
+  DEBIAN_FRONTEND=noninteractive apt-get update
+
+  # Add Docker's official GPG key:
+
+  DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl
+  DEBIAN_FRONTEND=noninteractive install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  chmod a+r /etc/apt/keyrings/docker.asc
+
+  # Add the repository to Apt sources:
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y acl apparmor-profiles apparmor-utils \
+    docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user1 --gecos "User1" user1
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user2 --gecos "User1" user2
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user_adm --gecos "User_adm" user_adm
+  cat ./users.txt | tee | chpasswd  &gt; /dev/null
+  groupadd create_user
+  adduser user1 create_user
+  groupadd rsync_user
+  adduser user1 rsync_user
+  adduser user_adm admin
+  groupadd site
+  adduser user1 site
+  adduser user2 site
+
+  chown user1:site /EPHEC/testacl/fichier-partage-groupe-site
+  chown user1:site /EPHEC/testacl/fichier-partage-tous
+  chmod o-r /EPHEC/testacl/fichier-partage-groupe-site
+
+  chown user_adm:user_adm /EPHEC/test-suid/greetings
+  chown user_adm:user_adm /EPHEC/test-suid/greetings1
+  chown user_adm:user_adm /EPHEC/test-suid/greetings2
+  chown user_adm:user_adm /EPHEC/test-suid/greetings2.c
+  chown root:root /EPHEC/test-suid/welcome
+  chown user_adm:user_adm /EPHEC/test-suid/welcome.c
+
+  chmod +x /EPHEC/test-suid/greetings
+  chmod +x /EPHEC/test-suid/greetings1
+  chmod +x /EPHEC/test-suid/greetings2
+  chmod +x /EPHEC/test-suid/welcome
+  chmod +s /EPHEC/test-suid/welcome
+
+  mkdir /common
+  chmod 2775 /common
+  echo "hello" | tee /common/hello.txt &gt; /dev/null
+  chown root:root /common/hello.txt
+
+  echo "hello" | tee /home/user1/hello.txt &gt; /dev/null
+  chown user1:user1 /home/user1/hello.txt
+
+  mv /home/vagrant/EPHEC.test-suid.welcome /etc/apparmor.d/EPHEC.test-suid.welcome
+  apparmor_parser -r /etc/apparmor.d/EPHEC.test-suid.welcome
+  aa-complain /EPHEC/test-suid/welcome
+
+  cat ./sudoers-additions.txt | tee  -a /etc/sudoers > /dev/null
+
+  adduser vagrant docker
+  SHELL
+end</code></pre>
                     <img src="../images/docker_namespace_vue_processus_internes.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>docker run -p 80:80 -d --name ephec nginx</code></pre>
@@ -748,6 +890,27 @@ ls</code></pre>
                 <article>
                     <h2 id="gestion_utilisateurs">Gestion des utilisateurs :</h2>
                     <h3>Le fichier des utilisateurs : /etc/passwd :</h3>
+                    <p>Ici, on est dans la VM nommée "util-bionic" dont voici le Vagrantfile :</p>
+<pre><code>Vagrant.configure("2") do |config|
+  config.vm.box = "hashicorp/bionic64"
+  config.vm.provision "file", source: "./users.txt", destination: "/home/vagrant/users.txt"
+  config.vm.provision "file", source: "./rockyou.txt", destination: "/home/vagrant/rockyou.txt"
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user_adm --gecos "User_adm" user_adm
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user1 --gecos "User1" user1
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user2 --gecos "User1" user2
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/weak_pass --gecos "Weak_pass" weak_pass
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/weak_pass_user --gecos "Weak_pass_user" weak_pass_user
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user_reasonable_password --gecos "User_reasonable_password" user_reasonable_password
+  chpasswd &lt; users.txt
+
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y hashcat
+  SHELL
+end</code></pre>
                     <img src="../images/etc_passwd.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo head -n 1 /etc/passwd</code></pre>
@@ -954,6 +1117,28 @@ ls</code></pre>
                     </table>
 <pre><code>su user_reasonable_password</code></pre>
                     <h4>Désactivation &amp; réactivation d'un compte :</h4>
+                    <p>Ici, on est dans la VM nommée "util-jammy" dont voici le Vagrantfile :</p>
+<pre><code>Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.provision "file", source: "./users.txt", destination: "/home/vagrant/users.txt"
+  config.vm.provision "file", source: "./rockyou.txt", destination: "/home/vagrant/rockyou.txt"
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user_adm --gecos "User_adm" user_adm
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user1 --gecos "User1" user1
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user2 --gecos "User1" user2
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/weak_pass --gecos "Weak_pass" weak_pass
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/weak_pass_user --gecos "Weak_pass_user" weak_pass_user
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user_reasonable_password --gecos "User_reasonable_password" user_reasonable_password
+  chpasswd &lt; users.txt
+
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y libpam-cracklib libpam-google-authenticator
+  echo "auth required pam_google_authenticator.so nullok" | sudo tee -a /etc/pam.d/common-auth
+  SHELL
+end</code></pre>
                     <img src="../images/gestion_logins.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo usermod -L -e 1 user_reasonable_password</code></pre>
@@ -987,11 +1172,13 @@ ls</code></pre>
 <pre><code>su user_reasonable_password</code></pre>
 <pre><code>passwd</code></pre>
                     <h4>Gestion de la complexité du hashage des mots de passe via PAM :</h4>
+                    <p>Ici, on est dans la VM nommée "util-bionic".</p>
                     <img src="../images/gestion_complexite_hashage_passwords_PAM_1.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo cat /etc/pam.d/common-password | grep -v "#"</code></pre>
                     <p>En résumé, cette commande affiche uniquement les règles PAM actives liées aux mots de passe.</p>
 <pre><code>sudo tail -n 1 /etc/shadow | fold -w 80 -s</code></pre>
+                    <p>Ici, on est dans la VM nommée "util-jammy".</p>
                     <img src="../images/gestion_complexite_hashage_passwords_PAM_2.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo cat /etc/pam.d/common-password | grep -v "#"</code></pre>
@@ -1010,7 +1197,7 @@ ls</code></pre>
 <pre><code>su user_2fa</code></pre>
                 </article>
                 <article>
-                    <h2 id="exercices">Exercices :</h2>
+                    <h2 id="exercice1">Exercice 1 :</h2>
                     <h3>Contexte :</h3>
                     <ol>
                         <li>
@@ -1067,6 +1254,61 @@ ls</code></pre>
                             </ul>
                         </li>
                     </ul>
+                    <p>En résumé, ici, on est dans la VM nommée "exercice1" dont voici le Vagrantfile :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.provision "file", source: "./users.txt", destination: "/home/vagrant/users.txt"
+  config.vm.provision "file", source: "./client1.conf", destination: "/home/vagrant/client1.conf"
+  config.vm.provision "file", source: "./client2.conf", destination: "/home/vagrant/client2.conf"
+  config.vm.provision "file", source: "./site-client1", destination: "/home/vagrant/site-client1"
+  config.vm.provision "file", source: "./site-client2", destination: "/home/vagrant/site-client2"
+
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Installation de nginx (serveur web)
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+
+  # Copie des sites web et des fichiers de configuration de nginx
+  mv /home/vagrant/site-client1 /var/www
+  mv /home/vagrant/site-client2 /var/www
+  mv /home/vagrant/client1.conf /etc/nginx/conf.d
+  mv /home/vagrant/client2.conf /etc/nginx/conf.d
+
+  # Création des utilisateurs
+  chmod go-rw ./users.txt  
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user1 --gecos "User1" user1
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user2 --gecos "User2" user2
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user_adm --gecos "User_adm" user_adm
+  chpasswd &lt; users.txt
+
+  # Création des groupes et association des utilisateurs aux groupes
+  groupadd client1
+  adduser user1 client1
+  adduser vagrant client1
+
+  groupadd client2
+  adduser user2 client2
+  adduser vagrant client2
+
+  chown -R vagrant:client1 /var/www/site-client1
+  chmod 2775 /var/www/site-client1
+ 
+  chown -R vagrant:client2 /var/www/site-client2
+  chmod 2775 /var/www/site-client2
+ 
+  chown root:root /etc/nginx/conf.d/client1.conf
+  chown root:root /etc/nginx/conf.d/client2.conf
+
+  nginx -t
+  nginx -s reload
+
+  SHELL
+end</code></pre>
                     <h3>Tâches :</h3>
                     <h4>Gestion des accès :</h4>
                     <ul>
@@ -1287,7 +1529,7 @@ ls</code></pre>
                     </ul>
                 </article>
                 <article>
-                    <h2 id="environnement_travail">Environnement de travail :</h2>
+                    <h2 id="centralisation_identites_authentification_SSO_environnement_de_travail">Centralisation des identités &amp; de l'authentification - Single Sign On : Environnement de travail :</h2>
                     <h3>Boîtes à démarrer dans l'ordre :</h3>
                     <ol>
                         <li>
@@ -1303,6 +1545,96 @@ ls</code></pre>
                                     <p>Initialisée avec un utilisateur.</p>
                                 </li>
                             </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.117'
+  config.vm.provider :virtualbox
+
+  config.vm.provision "file", source: "./install-krb5.txt", destination: "/home/vagrant/install-krb5.txt"
+  config.vm.provision "file", source: "./install-slapd.txt", destination: "/home/vagrant/install-slapd.txt"
+  config.vm.provision "file", source: "./ldap.conf", destination: "/home/vagrant/ldap.conf"
+  config.vm.provision "file", source: "./ldap-pass.txt", destination: "/home/vagrant/ldap-pass.txt"
+  config.vm.provision "file", source: "./realm-pass.txt", destination: "/home/vagrant/realm-pass.txt"
+  config.vm.provision "file", source: "./ubuntu-pass.txt", destination: "/home/vagrant/ubuntu-pass.txt"
+  config.vm.provision "file", source: "./ubuntuadmin-pass.txt", destination: "/home/vagrant/ubuntuadmin-pass.txt"
+  config.vm.provision "file", source: "./ldifs", destination: "/home/vagrant/ldifs"
+  config.vm.provision "file", source: "./john-pass.txt", destination: "/home/vagrant/john-pass.txt"
+
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Idée générale: 
+  # https://documentation.ubuntu.com/server/how-to/openldap/install-openldap/
+  # https://documentation.ubuntu.com/server/how-to/kerberos/install-a-kerberos-server/
+  # https://documentation.ubuntu.com/server/how-to/sssd/with-ldap-and-kerberos
+  # Spécifiquement pour l'accès ssh: https://www.howtoforge.com/how-to-setup-kerberos-server-and-client-on-ubuntu-1804-lts/
+
+  # Mise à jour du fuseau horaire
+  timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname - Kerberos utilise les noms, pas les adresses!
+  hostnamectl set-hostname sso-server.hs.be
+  echo -e "172.28.128.117 sso-server.hs.be\n172.28.128.118 sso-client.hs.be\n172.28.128.119 sso-service.hs.be" &gt;&gt; /etc/hosts
+
+  # Protection des configurations contenant les mots de passe et des mots de passe des utilisateurs
+  chmod 0600 ./install-krb5.txt
+  chmod 0600 ./install-slapd.txt
+  chmod 0600 ./ldap-pass.txt
+  chmod 0600 ./realm-pass.txt
+  chmod 0600 ./ubuntu-pass.txt
+  chmod 0600 ./ubuntuadmin-pass.txt
+  chmod 0600 ./john-pass.txt
+  cat ./ubuntu-pass.txt ./ubuntu-pass.txt >> ubuntu-pass-create.txt
+  cat ./ubuntuadmin-pass.txt ./ubuntuadmin-pass.txt >> ubuntuadmin-pass-create.txt
+  cat ./john-pass.txt ./john-pass.txt >> john-pass-create.txt
+  chmod 0600 ./ubuntu-pass-create.txt
+  chmod 0600 ./ubuntuadmin-pass-create.txt
+  chmod 0600 ./john-pass-create.txt
+
+  # Mettre à jour les packages
+  DEBIAN_FRONTEND=noninteractive apt-get update
+
+  # Charger debconf-utils et donner les paramètres par défaut utilisés par slapd et krb5-user (en fait krb5-config)
+  # voir https://serverfault.com/questions/407317/passing-default-answers-to-apt-get-package-install-questions
+  DEBIAN_FRONTEND=noninteractive apt-get -qq -y install debconf-utils
+  debconf-set-selections &lt; install-krb5.txt
+  debconf-set-selections &lt; install-slapd.txt
+
+  # Charger et installer les packages ldap
+  DEBIAN_FRONTEND=noninteractive apt-get -qq -y install slapd ldap-utils
+
+  # Définition des défauts pour LDAP
+  cat ldap.conf &gt;&gt; /etc/ldap/ldap.conf 
+
+  # Charger et installer les packages kerberos
+  DEBIAN_FRONTEND=noninteractive apt-get -qq -y install krb5-kdc krb5-admin-server
+
+  # Création nouveau realm  
+  krb5_newrealm &lt; realm-pass.txt
+
+  # Creation des premiers principaux
+  # https://web.mit.edu/Kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-admin/Adding-or-Modifying-Principals.html
+  kadmin.local -q "addprinc ubuntu" &lt; ubuntu-pass-create.txt
+  kadmin.local -q "addprinc ubuntu/admin" &lt; ubuntuadmin-pass-create.txt
+ 
+  # Donner des droits aux admin du realm
+  echo "*/admin@HS.BE        *" &gt;&gt; /etc/krb5kdc/kadm5.acl
+  systemctl restart krb5-admin-server.service
+
+  # Création d'un utilisateur dans LDAP et dans Kerberos
+  # Attention le mot de passe ne doit pas contenir de newline
+  # https://serverfault.com/questions/140728/ldapsearch-password-file-format
+  # Il y a moyen d'unifier la configuration de LDAP et de Kerberos
+  ldapadd -x -D cn=admin,dc=hs,dc=be -f ldifs/add_meta.ldif -y ldap-pass.txt
+  ldapadd -x -D cn=admin,dc=hs,dc=be -f ldifs/add_john.ldif -y ldap-pass.txt
+  kadmin.local -q "addprinc john" &lt; john-pass-create.txt
+
+  SHELL
+end</code></pre>
                         </li>
                         <li>
                             <h4>Boîte network-identity-service (sso-service.hs.be) :</h4>
@@ -1317,6 +1649,66 @@ ls</code></pre>
                                     <p>Expose un service SSH configuré pour utiliser les services réseau d'authentification et d'authentification.</p>
                                 </li>
                             </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.119'
+  config.vm.provider :virtualbox
+
+  config.vm.provision "file", source: "./install.txt", destination: "/home/vagrant/install.txt"
+  config.vm.provision "file", source: "./sssd.conf", destination: "/home/vagrant/sssd.conf"
+  config.vm.provision "file", source: "./ubuntuadmin-pass.txt", destination: "/home/vagrant/ubuntuadmin-pass.txt"
+  
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Idée générale: https://documentation.ubuntu.com/server/how-to/sssd/with-ldap-and-kerberos
+  # Spécifiquement pour l'accès ssh: https://www.howtoforge.com/how-to-setup-kerberos-server-and-client-on-ubuntu-1804-lts/
+
+  # Mise à jour du fuseau horaire
+  timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname - Kerberos utilise les noms, pas les adresses!
+  hostnamectl set-hostname sso-service.hs.be
+  echo -e "172.28.128.117 sso-server.hs.be\n172.28.128.118 sso-client.hs.be\n172.28.128.119 sso-service.hs.be" &gt;&gt; /etc/hosts
+
+  # Protection des fichiers avec mots de passe et de configuration
+  chmod 0600 ./ubuntuadmin-pass.txt
+  chmod 0600 ./install.txt
+
+  # Mettre à jour les packages
+  DEBIAN_FRONTEND=noninteractive apt-get update
+
+  # Charger debconf-utils et donner les paramètres par défaut utilisés par krb5-user (en fait krb5-config)
+  # voir https://serverfault.com/questions/407317/passing-default-answers-to-apt-get-package-install-questions
+  DEBIAN_FRONTEND=noninteractive apt-get -qq -y install debconf-utils
+  debconf-set-selections &lt; install.txt
+
+  # Charger et installer les packages
+  DEBIAN_FRONTEND=noninteractive apt-get -qq -y install sssd-ldap sssd-krb5 ldap-utils krb5-user
+
+  # Configurer sssd pour le REALM et les serveurs LDAP et Kerberos
+  mv ./sssd.conf /etc/sssd/sssd.conf
+  chmod 0600 /etc/sssd/sssd.conf
+  chown root:root /etc/sssd/sssd.conf
+  systemctl start sssd.service
+  pam-auth-update --enable mkhomedir
+
+  # Enregister l'host dans Kerberos - nécessaire pour éviter kdc spoofing (et aussi y accéder via ssh?)
+  # voir https://documentation.ubuntu.com/server/how-to/sssd/with-ldap-and-kerberos/#sssd-and-kdc-spoofing
+  kadmin -p ubuntu/admin -q "addprinc -randkey host/sso-service.hs.be" &lt; ubuntuadmin-pass.txt
+  kadmin -p ubuntu/admin -q "ktadd -k /etc/krb5.keytab host/sso-service.hs.be" &lt; ubuntuadmin-pass.txt
+
+  # Configurer sshd pour l'authentification via Kerberos
+  echo "GSSAPIAuthentication yes" | tee /etc/ssh/sshd_config.d/50-allow-GSSAPI-authentication.conf
+  echo "GSSAPICleanupCredentials yes" | tee -a /etc/ssh/sshd_config.d/50-allow-GSSAPI-authentication.conf
+  systemctl restart sshd
+
+  SHELL
+end</code></pre>
                         </li>
                         <li>
                             <h4>Boîte network-identity-client (sso-client.hs.be) :</h4>
@@ -1328,6 +1720,67 @@ ls</code></pre>
                                     <p>Contacte sso-service.hs.be en SSH sans devoir se réauthentifier (single sign on).</p>
                                 </li>
                             </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.118'
+  config.vm.provider :virtualbox
+
+  config.vm.provision "file", source: "./install.txt", destination: "/home/vagrant/install.txt"
+  config.vm.provision "file", source: "./sssd.conf", destination: "/home/vagrant/sssd.conf"
+  config.vm.provision "file", source: "./ubuntuadmin-pass.txt", destination: "/home/vagrant/ubuntuadmin-pass.txt"
+  
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Idée générale: https://documentation.ubuntu.com/server/how-to/sssd/with-ldap-and-kerberos
+  # Spécifiquement pour l'accès ssh: https://www.howtoforge.com/how-to-setup-kerberos-server-and-client-on-ubuntu-1804-lts/
+
+  # Mise à jour du fuseau horaire
+  timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname - Kerberos utilise les noms, pas les adresses!
+  hostnamectl set-hostname sso-client.hs.be
+  echo -e "172.28.128.117 sso-server.hs.be\n172.28.128.118 sso-client.hs.be\n172.28.128.119 sso-service.hs.be" &gt;&gt; /etc/hosts
+
+  # Protection des fichiers avec mots de passe et de configuration
+  chmod 0600 ./ubuntuadmin-pass.txt
+  chmod 0600 ./install.txt
+
+  # Mettre à jour les packages
+  DEBIAN_FRONTEND=noninteractive apt-get update
+
+  # Charger debconf-utils et donner les paramètres par défaut utilisés par krb5-user (en fait krb5-config)
+  # voir https://serverfault.com/questions/407317/passing-default-answers-to-apt-get-package-install-questions
+  DEBIAN_FRONTEND=noninteractive apt-get -qq -y install debconf-utils
+  debconf-set-selections &lt; install.txt
+
+  # Charger et installer les packages
+  DEBIAN_FRONTEND=noninteractive apt-get -qq -y install sssd-ldap sssd-krb5 ldap-utils krb5-user
+
+  # Configurer sssd pour le REALM et les serveurs LDAP et Kerberos
+  mv ./sssd.conf /etc/sssd/sssd.conf
+  chmod 0600 /etc/sssd/sssd.conf
+  chown root:root /etc/sssd/sssd.conf
+  systemctl start sssd.service
+  pam-auth-update --enable mkhomedir
+
+  # Enregister l'host dans Kerberos - nécessaire pour éviter kdc spoofing (et aussi y accéder via ssh?)
+
+  # voir https://documentation.ubuntu.com/server/how-to/sssd/with-ldap-and-kerberos/#sssd-and-kdc-spoofing
+  kadmin -p ubuntu/admin -q "addprinc -randkey host/sso-client.hs.be" &lt; ubuntuadmin-pass.txt
+  kadmin -p ubuntu/admin -q "ktadd -k /etc/krb5.keytab host/sso-client.hs.be" &lt; ubuntuadmin-pass.txt
+
+  # Configurer sshd pour l'authentification via Kerberos
+  echo "GSSAPIAuthentication yes" | tee /etc/ssh/sshd_config.d/50-allow-GSSAPI-authentication.conf
+  echo "GSSAPICleanupCredentials yes" | tee -a /etc/ssh/sshd_config.d/50-allow-GSSAPI-authentication.conf
+  systemctl restart sshd
+
+  SHELL
+end</code></pre>
                         </li>
                     </ol>
                 </article>
@@ -1451,6 +1904,7 @@ ls</code></pre>
                             <p>Accès idéalement sécurisé via TLS (certainement si Authentification).</p>
                         </li>
                     </ul>
+                    <p>Ici, on est dans la VM nommée "ni-server".</p>
                     <img src="../images/serveur_identite_eventuellement_authentification.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>ldapsearch -x -LLL -b dc=hs,dc=be '(uid=john)'</code></pre>
@@ -1713,6 +2167,7 @@ ls</code></pre>
                     <ul>
                         <li>
                             <h4>Configuration nsswitch - où trouver l'information :</h4>
+                            <p>Ici, on est dans la VM nommée "ni-client".</p>
                             <img src="../images/configuration_nsswitch.PNG" alt="">
 <pre><code>cat /etc/nsswitch.conf</code></pre>
                             <p>En résumé, cette commande affiche le fichier <span class="em">nsswitch.conf</span>, qui définit comment le système résout les utilisateurs et groupes (fichiers locaux, LDAP, etc.).</p>
@@ -1798,6 +2253,7 @@ ls</code></pre>
                     </div>
                     <h3>Authentification centralisée - Contenu de la base des "principals" de Kerberos :</h3>
                     <h4>Sur Serveur !</h4>
+                    <p>Ici, on est dans la VM nommée "ni-server".</p>
                     <img src="../images/authentification_centralisee_contenu_base_principals_Kerberos.PNG" alt="">
 <pre><code>sudo kadmin.local</code></pre>
                     <p>En résumé, cette commande ouvre l'administration Kerberos locale.</p>
@@ -1842,6 +2298,7 @@ ls</code></pre>
                     </ul>
 <pre><code>sudo kadmin.local -q "addprinc user1"</code></pre>
                     <p>En résumé, cette commande crée un utilisateur dans la base Kerberos.</p>
+                    <p>Ici, on est dans la VM nommée "ni-client".</p>
                     <img src="../images/ajout_utilisateur_3.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo login</code></pre>
@@ -1865,6 +2322,56 @@ ls</code></pre>
                                     <p>Monitoring via <span class="em">logwatch</span></p>
                                 </li>
                             </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.5'
+  config.vm.provision "file", source: "./users.txt", destination: "/home/vagrant/users.txt"
+  config.vm.provision "file", source: "./watch-home-user1.rules", destination: "/home/vagrant/watch-home-user1.rules"
+  config.vm.provision "file", source: "./10-server-centralisation.conf", destination: "/home/vagrant/10-server-centralisation.conf"
+  
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+
+#!/bin/bash
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire - important pour bien interpréter les logs
+  timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname
+  hostnamectl set-hostname central-log.hs.be
+  echo "172.28.128.5       central-log.hs.be" &gt;&gt; /etc/hosts
+
+  # Accepte input du client dans le log
+  mv /home/vagrant/10-server-centralisation.conf /etc/rsyslog.d/
+  systemctl restart rsyslog
+
+  # Création des utilisateurs
+  chmod go-rw ./users.txt
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user1 --gecos "User1" user1
+  chpasswd &lt; users.txt
+
+  # Création du fichier très personnel
+  echo "Mon fichier très personnel" &gt; /home/user1/personnel.txt
+
+  # Chargement des packages, en mode non-interactif(!)
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y logwatch auditd nginx socat
+
+  # Configuration de auditd pour synchronisation rapide sur le disque
+  sed s/"flush = INCREMENTAL_ASYNC"/"flush = SYNC"/ /etc/audit/auditd.conf
+
+  # Configuration de la règle pour auditd et démarrage auditd
+  mv /home/vagrant/watch-home-user1.rules /etc/audit/rules.d/watch-home-user1.rules
+  augenrules --check
+  augenrules --load
+  augenrules --check
+  service auditd start
+  systemctl enable auditd
+
+  SHELL
+end</code></pre>
                         </li>
                         <li>
                             <p>client-log :</p>
@@ -1876,6 +2383,33 @@ ls</code></pre>
                                     <p>Logs envoyés à central-log</p>
                                 </li>
                             </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.4'
+
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+
+#!/bin/bash
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire - important pour bien interpréter les logs
+  timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname
+  hostnamectl set-hostname client-log.hs.be
+  echo "172.28.128.4       client-log.hs.be" &gt;&gt; /etc/hosts
+  
+  # Route to server
+  echo "172.28.128.5       central-log.hs.be" &gt;&gt; /etc/hosts
+
+  # Route rsyslog vers serveur
+  echo "*.*                @@central-log.hs.be" &gt; /etc/rsyslog.d/10-centralisation.conf
+  systemctl restart rsyslog
+
+  SHELL
+end</code></pre>
                         </li>
                     </ol>
                 </article>
@@ -1942,6 +2476,7 @@ ls</code></pre>
                 <article>
                     <h2 id="logging_outils_de_base">Logging - outils de base :</h2>
                     <h3>Principaux fichiers :</h3>
+                    <p>Ici, on est dans la VM nommée "logging-monitoring".</p>
                     <p><span class="em">/var/log</span> peut varier par distribution.</p>
                     <img src="../images/var_log.PNG" alt="">
 <pre><code>ls -l /var/log</code></pre>
@@ -2089,16 +2624,20 @@ ls</code></pre>
                     <p><a href="https://cruft.io/ports/centralised-logging-with-rsyslog/" target="_blank">https://cruft.io/ports/centralised-logging-with-rsyslog/</a></p>
                     <img src="../images/architecture_centralisee_rsyslog.PNG" alt="">
                     <h3>Démo :</h3>
+                    <p>Ici, on est dans la VM nommée "logging-monitoring-client".</p>
                     <img src="../images/demo_1.PNG" alt="">
                     <p>Voici les commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo cat /etc/passwd</code></pre>
 <pre><code>sudo cat /var/log/auth.log | grep sudo | tail -n 6 | fold -w 80 -s</code></pre>
+                    <p>Ici, on est dans la VM nommée "logging-monitoring".</p>
                     <img src="../images/demo_2.PNG" alt="">
 <pre><code>sudo cat /var/log/auth.log | grep sudo | tail -n 20 | fold -w 80 -s</code></pre>
                     <h4>Démo - configuration - <span class="em">À sécuriser avec TLS !</span> :</h4>
+                    <p>Ici, on est dans la VM nommée "logging-monitoring-client".</p>
                     <img src="../images/demo_3.PNG" alt="">
 <pre><code>sudo cat /etc/rsyslog.d/10-centralisation.conf</code></pre>
                     <p>En résumé, cette commande affiche la configuration de centralisation.</p>
+                    <p>Ici, on est dans la VM nommée "logging-monitoring".</p>
                     <img src="../images/demo_4.PNG" alt="">
 <pre><code>sudo cat /etc/rsyslog.d/10-server-centralisation.conf</code></pre>
                     <h3>Outils spécialisés :</h3>
@@ -2183,6 +2722,80 @@ ls</code></pre>
                                     <p>Utilisé pour signer les certificats "feuilles".</p>
                                 </li>
                             </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.7'
+  config.vm.provision "file", source: "./users.txt", destination: "/home/vagrant/users.txt"
+  config.vm.provision "file", source: "./aes.sh", destination: "/home/vagrant/aes.sh"
+  config.vm.provision "file", source: "./rsa.sh", destination: "/home/vagrant/rsa.sh"
+  config.vm.provision "file", source: "./hash.sh", destination: "/home/vagrant/hash.sh"
+  config.vm.provision "file", source: "./rsa-signature.sh", destination: "/home/vagrant/rsa-signature.sh"
+  config.vm.provision "file", source: "./autorite-certification.sh", destination: "/home/vagrant/autorite-certification.sh"
+  config.vm.provision "file", source: "./autorite-installation.sh", destination: "/home/vagrant/autorite-installation.sh"
+  config.vm.provision "file", source: "./cle-demande-certificat.sh", destination: "/home/vagrant/cle-demande-certificat.sh"
+  config.vm.provision "file", source: "./signe-certificat.sh", destination: "/home/vagrant/signe-certificat.sh"
+  config.vm.provision "file", source: "./verifie-certificat.sh", destination: "/home/vagrant/verifie-certificat.sh"
+  config.vm.provision "file", source: "./crypto-server.hs.be.conf", destination: "/home/vagrant/crypto-server.hs.be.conf"
+  config.vm.provision "file", source: "./index.html", destination: "/home/vagrant/index.html"
+  
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire - important pour les certificats
+  timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname
+  hostnamectl set-hostname crypto-server.hs.be
+  echo "172.28.128.7       crypto-server.hs.be" &gt;&gt; /etc/hosts
+
+  # Création des utilisateurs
+  chmod go-rw ./users.txt
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user3 --gecos "User3" user3
+  chpasswd &lt; users.txt
+
+  # Création du fichier très personnel
+  echo "Mon fichier très personnel" | sudo tee -a /home/user3/personnel.txt > /dev/null
+  chown user3:user3 /home/user3/personnel.txt
+
+  # Récupération aes.sh
+  mv /home/vagrant/aes.sh /home/user3/aes.sh
+  chown user3:user3 /home/user3/aes.sh
+  chmod +x /home/user3/aes.sh
+
+  # Récupération rsa.sh
+  mv /home/vagrant/rsa.sh /home/user3/rsa.sh
+  chown user3:user3 /home/user3/rsa.sh
+  chmod +x /home/user3/rsa.sh
+
+  # Récupération hash.sh
+  mv /home/vagrant/hash.sh /home/user3/hash.sh
+  chown user3:user3 /home/user3/hash.sh
+  chmod +x /home/user3/hash.sh
+
+  # Récupération rsa-signature.sh
+  mv /home/vagrant/rsa-signature.sh /home/user3/rsa-signature.sh
+  chown user3:user3 /home/user3/rsa-signature.sh
+  chmod +x /home/user3/rsa-signature.sh
+
+  # Rendre scripts TLS exécutables
+
+  chmod +x ./*.sh
+
+  # Chargement des packages, en mode non-interactif(!)
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+
+  # Configuration Web Server
+
+  cp /home/vagrant/crypto-server.hs.be.conf /etc/nginx/conf.d/
+  mkdir /var/www/crypto-server.hs.be
+  mv /home/vagrant/index.html /var/www/crypto-server.hs.be/
+
+  SHELL
+end</code></pre>
                         </li>
                         <li>
                             <p>crypto-client :</p>
@@ -2191,6 +2804,30 @@ ls</code></pre>
                                     <p>À démarrer après.</p>
                                 </li>
                             </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.8'
+  config.vm.provision "file", source: "./ac.crt", destination: "/home/vagrant/ac.crt"
+  config.vm.provision "file", source: "./autorite-installation.sh", destination: "/home/vagrant/autorite-installation.sh"
+  
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire - important pour les certificats
+  sudo timedatectl set-timezone Europe/Brussels
+
+  # Lien vers serveur
+  echo "172.28.128.7       crypto-server.hs.be" &gt;&gt; /etc/hosts
+
+  # Rendre scripts TLS exécutables
+
+  sudo chmod +x ./*.sh
+
+  SHELL
+end</code></pre>
                         </li>
                     </ol>
                 </article>
@@ -2212,6 +2849,7 @@ ls</code></pre>
                         </li>
                     </ul>
                     <p>Démo : AES-256-CBC avec openssl :</p>
+                    <p>Ici, on est dans la VM nommée "crypto".</p>
                     <img src="../images/demo_AES-256-CBC_openssl.PNG" alt="">
 <pre><code>su user3</code></pre>
 <pre><code>cd ~</code></pre>
@@ -2329,7 +2967,7 @@ echo "hello world!" | openssl dgst -sha256</code></pre>
                             <p><span class="em">Vérification</span> : n'importe qui peut vérifier avec la clé publique.</p>
                         </li>
                     </ul>
-                    <img src="../demo_signature_message_cle_asymetrique.PNG" alt="">
+                    <img src="../images/demo_signature_message_cle_asymetrique.PNG" alt="">
 <pre><code>./rsa-signature.sh</code></pre>
                     <p>Voici le contenu du script `<span class="em">rsa-signature.sh</span>` :</p>
 <pre><code>#! /usr/bin/bash -x
@@ -2517,6 +3155,7 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                     <h3>Création d'une autorité de certification :</h3>
                     <p><span class="em">genpkey</span> &#8594; clé privée RSA de l'AC.</p>
                     <p><span class="em">-x509</span> &#8594; certificat <span class="em">auto-signé</span> (Issuer = Subject).</p>
+                    <img src="../images/creation_CA.PNG" alt="">
 <pre><code>./autorite-certification.sh ac</code></pre>
                     <p>Voici le contenu du script `<span class="em">autorite-certification.sh</span>` :</p>
 <pre><code>#! /usr/bin/bash -x
@@ -2665,6 +3304,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                         </li>
                     </ul>
                     <img src="../images/interaction_HTTPS_client_serveur.PNG" alt="">
+                    <p>Ici, on est dans la VM nommée "crypto-client".</p>
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo ./autorite-installation.sh ac</code></pre>
 <pre><code>curl https://crypto-server.hs.be</code></pre>
@@ -2706,6 +3346,37 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                                     <p>Implémente un mécanisme de défense contre les attaques de mot de passe par force brute.</p>
                                 </li>
                             </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.11'
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+    set -euo pipefail
+
+    # Mise à jour du fuseau horaire
+    timedatectl set-timezone Europe/Brussels
+
+    # Changement hostname
+    hostnamectl set-hostname ssh-server
+    echo "172.28.128.11 ssh-server" &gt;&gt; /etc/hosts
+
+    # Chargement des packages
+    DEBIAN_FRONTEND=noninteractive apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y libpam-google-authenticator fail2ban
+
+    # Configuration double authentification
+    echo "auth required pam_google_authenticator.so" &gt;&gt; /etc/pam.d/sshd
+
+    # Configuration sshd pour accepter les mots de passe et 2FA 
+    echo "PasswordAuthentication yes" &gt;&gt; /etc/ssh/sshd_config.d/PermitPasswordAuthentication.conf
+    echo "ChallengeResponseAuthentication yes" &gt;&gt; /etc/ssh/sshd_config.d/PermitPasswordAuthentication.conf
+    rm /etc/ssh/sshd_config.d/60-cloudimg-settings.conf # semble rajouté depuis 22.04.5 au moins et 
+                                                        # désactive de manière prioritaire les mots de passe simples
+    sudo systemctl restart sshd.service
+  SHELL
+end</code></pre>
                         </li>
                         <li>
                             <p>ssh-client - à démarrer en deuxième lieu :</p>
@@ -2717,6 +3388,22 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                                     <p>Tente une attaque par force brute.</p>
                                 </li>
                             </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+    set -euo pipefail
+
+    # Mise à jour du fuseau horaire
+    timedatectl set-timezone Europe/Brussels
+
+    # Changement hostname
+    hostnamectl set-hostname ssh-client
+    echo "172.28.128.11 ssh-server" &gt;&gt; /etc/hosts
+  SHELL
+end</code></pre>
                         </li>
                     </ol>
                 </article>
@@ -2790,6 +3477,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                     </div>
                     <h3>Configuration 2FA :</h3>
                     <h4>Voir cours sur gestion de l'identité et de l'authentification :</h4>
+                    <p>Ici, on est dans la VM nommée "ssh-server".</p>
                     <img src="../images/configuration_2FA.PNG" alt="">
 <pre><code>google-authenticator</code></pre>
                     <h3>SSH - Authentification du serveur au moyen de sa clé publique :</h3>
@@ -2797,6 +3485,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                     <img src="../images/SSH_authentification_serveur_via_cle_publique.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>cat /etc/ssh/ssh_host_ed25519_key.pub</code></pre>
+                    <p>Ici, on est dans la VM nomée "ssh-client".</p>
 <pre><code>ssh-keyscan -t ed25519 -H ssh-server &gt;&gt; ~/.ssh/known_hosts</code></pre>
 <pre><code>cat .ssh/known_hosts</code></pre>
                     <h3>SSH - Accès au serveur via mot de passe :</h3>
@@ -2845,11 +3534,13 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                     <img src="../images/SSH_import_cle_publique_serveur.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>ssh-keygen -y</code></pre>
+                    <p>Ici, on est dans la VM nommée "ssh-server".</p>
 <pre><code>sudo nano ~/.ssh/authorized_keys</code></pre>
 <pre><code>ls -la .ssh/authorized_keys</code></pre>
 <pre><code>cat .ssh/authorized_keys</code></pre>
                     <h3>SSH - Accès au serveur au moyen de la clé privée :</h3>
                     <h4>PAS de mot de passe requis :</h4>
+                    <p>Ici, on est dans la VM nommée "ssh-client".</p>
                     <img src="../images/SSH_acces_serveur_via_cle_privee.PNG" alt="">
 <pre><code>ssh vagrant@ssh-server</code></pre>
                     <h3>SSH - comme "support pour SCP, SFTP" :</h3>
@@ -2862,6 +3553,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
 <pre><code>sftp vagrant@ssh-server</code></pre>
 <pre><code>put test-sftp.txt</code></pre>
 <pre><code>exit</code></pre>
+                    <p>Ici, on est dans la VM nommée "ssh-server".</p>
 <pre><code>ls test*</code></pre>
                     <h3>SSH - Mise à jour de ssh et et configuration sont clés : Penser MFA !</h3>
                     <img src="../images/SSH_maj_ssh_configuration_cles_MFA.PNG" alt="">
@@ -2885,6 +3577,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
 <pre><code>sudo systemctl restart sshd</code></pre>
                     <h3>SSH - Accès par mot de passe :</h3>
                     <h4>PAS de 2FA :</h4>
+                    <p>Ici, on est dans la VM nommée "ssh-client".</p>
                     <img src="../images/SSH_acces_via_password.PNG" alt="">
 <pre><code>ssh vagrant@ssh-server</code></pre>
                     <h3>SSH - attaque par force brute :</h3>
@@ -2893,6 +3586,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
 <pre><code>ssh vagrant@ssh-server</code></pre>
                     <h3>Fail2ban - examen des logs et bannissement IP problématiques :</h3>
                     <h4>Pas uniquement SSH :</h4>
+                    <p>Ici, on est dans la VM nommée "ssh-server".</p>
                     <img src="../images/fail2ban_examen_logs_bannissement_IPS_problematiques.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo ufw allow ssh</code></pre>
@@ -2903,10 +3597,12 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                     <p>Tutoriel : <a href="https://www.linode.com/docs/guides/using-fail2ban-to-secure-your-server-a-tutorial/" target="_blank">https://www.linode.com/docs/guides/using-fail2ban-to-secure-your-server-a-tutorial/</a></p>
                     <h3>SSH - attaque par force brute 2 :</h3>
                     <h4>Limite par période, configurable :</h4>
+                    <p>Ici, on est dans la VM nommée "ssh-client".</p>
                     <img src="../images/SSH_attaque_force_brute_2.PNG" alt="">
 <pre><code>ssh vagrant@ssh-server</code></pre>
                     <h3>SSH - status fail2ban :</h3>
                     <h4>Avant et après tentatives de connexion :</h4>
+                    <p>Ici, on est dans la VM nommée "ssh-server".</p>
                     <img src="../images/SSH_status_fail2ban.PNG" alt="">
 <pre><code>sudo fail2ban-client status sshd</code></pre>
                     <h3>SSH - Logs :</h3>
