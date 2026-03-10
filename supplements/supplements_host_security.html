@@ -3900,7 +3900,8 @@ end</code></pre>
                             <p>Console exercice2-client :</p>
                             <ul>
                                 <li>
-                                    <p><code class="em">su - userN</code> puis <code class="em">ssh-keygen -t ed25519</code></p>
+<pre><code>su - userN</code></pre>
+<pre><code class="em">ssh-keygen -t ed25519</code></pre>
                                 </li>
                                 <li>
 <pre><code>cat ~/.ssh/id_ed25519.pub</code></pre>
@@ -3914,7 +3915,7 @@ end</code></pre>
                         <li>
                             <p>Tester :</p>
 <pre><code>ssh userN@exercice2-server.hs.be</code></pre>
-                            <p>(chaque utilisateur a son propre <span class="em">known_hosts</span>)</p>
+                            <p>Chaque utilisateur a son propre <span class="em">known_hosts</span>.</p>
                         </li>
                     </ul>
                     <p>Vérification des droits d'accès (suite de l'exercice 1) - connecté en <span class="em">user1</span> sur le serveur via SSH :</p>
@@ -3939,7 +3940,7 @@ end</code></pre>
                             <ul>
                                 <li>
                                     <p>Pourquoi la console est-elle un canal de confiance ?</p>
-                                    <p class="em">Parce qu'elle n'utilise pasle réseau, donc un attaquent ne peut pas intercepter ou modifier la clé.</p>
+                                    <p class="em">Parce qu'elle n'utilise pas le réseau, donc un attaquant ne peut pas intercepter ou modifier la clé.</p>
                                 </li>
                                 <li>
                                     <p>Que se passerait-il si la clé publique d'un utilisateur était interceptée ou modifier lors de son transfert vers <span class="em">authorized_keys</span> ?</p>
@@ -3973,11 +3974,19 @@ end</code></pre>
                             <p>Créer la <span class="em">clé privée</span> et le <span class="em">certificat auto-signé de l'AC</span> :</p>
 <pre><code>openssl genpkey -algorithm RSA -out ~/tls/ac/ac.key</code></pre>
 <pre><code>openssl req -new -x509 -days 3600 -key ~/tls/ac/ac.key -out ~/tls/ac/ac.crt</code></pre>
+                            <div class="important">
+                                <img src="../images/important.png" alt="Important" class="float_left">
+                                <p>Le Common Name (CN) de ce certificat doit être "monac".</p>
+                            </div>
                         </li>
                         <li>
                             <p>Créer la <span class="em">clé privée</span> et la <span class="em">demande de certification (CSR)</span> du serveur :</p>
 <pre><code>openssl genpkey -algorithm RSA -out ~/tls/server.key</code></pre>
 <pre><code>openssl req -new -key ~/tls/server.key -out ~/tls/server.csr</code></pre>
+                            <div class="important">
+                                <img src="../images/important.png" alt="Important" class="float_left">
+                                <p>Le Common Name (CN) de ce certificat doit être "exercice2-server.hs.be".</p>
+                            </div>
                         </li>
                         <li>
                             <p>Faire signer le certificat par l'AC :</p>
@@ -4001,7 +4010,7 @@ end</code></pre>
 <pre><code>ssl_certificate_key /home/vagrant/tls/server.key;</code></pre>
                                 </li>
                             </ul>
-                            <p>(tuyau :<code class="em">nginx -t</code> puis <span class="em">nginx -s reload</span>)</p>
+                            <p>(tuyau :<code class="em">nginx -t</code> puis <code class="em">nginx -s reload</code>)</p>
                         </li>
                         <li>
                             <p>Copier <span class="em">ac.crt</span> sur exercice2-client via SSH :</p>
@@ -4009,12 +4018,14 @@ end</code></pre>
                         </li>
                         <li>
                             <p>Depuis exercice2-client, vérifier les deux sites HTTPS :</p>
-<pre><code>curl --cacert /home/vagrant/tls/ac/ac.crt https://exercice2-server.hs.be:4431</code></pre>
-<pre><code>curl --cacert /home/vagrant/tls/ac/ac.crt https://exercice2-server.hs.be:4432</code></pre>
+<pre><code>curl --cacert /home/vagrant/tls/ac.crt https://exercice2-server.hs.be:4431</code></pre>
+<pre><code>curl --cacert /home/vagrant/tls/ac.crt https://exercice2-server.hs.be:4432</code></pre>
                             <p>En résumé, cette commande vérifie le certificat TLS du serveur en utilisant le certificat de l'AC.</p>
                         </li>
                         <li>
                             <p>Vérifier que les sites HTTP (8081, 8082) continuent de fonctionner.</p>
+<pre><code>curl http://exercice2-server.hs.be:8081</code></pre>
+<pre><code>curl http://exercice2-server.hs.be:8082</code></pre>
                         </li>
                     </ol>
                     <h3>HTTPS (3/3) : documentation :</h3>
