@@ -78,7 +78,9 @@
                     <li><a href="#crypto_SSH_environnements_de_travail">Crypto : SSH : Environnements de travail</a></li>
                     <li><a href="#protection_donnees_SSH">Protection des données en elles-mêmes - SSH</a></li>
                     <li><a href="#exercice2">Exercice 2 : Protection des données en transit</a></li>
-                    <li><a href="#evaluation_instructions_provisoires">Évaluation - instructions provisoires</a></li>
+                    <li><a href="#protection_donnees_transit_VPN_environnements_de_travail">Protection des données en transit : VPN : Environnements de travail</a></li>
+                    <li><a href="#VPN">VPN</a></li>
+                    <li><a href="#evaluation_instructions">Évaluation - instructions</a></li>
                 </ol>
             </nav>
             
@@ -255,6 +257,33 @@
 <pre><code>gc .\known_hosts2 | sc -Encoding utf8 .\known_hosts</code></pre>
                     <p>En résumé, cette commande convertit le fichier en UTF-8 pour compatibilité OpenSSH.</p>
                     <p>On peut après faire un <span class="em">ssh</span> vers <span class="em">t.x.y.z</span> sans recevoir d'avertissement sur l'authenticité du serveur.</p>
+                    <h3>Trucs et astuces pour les problèmes de lenteur du démarrage des boîtes Vagrant sur un hôte Windows :</h3>
+                    <h4>WSL2 :</h4>
+                    <p>Apparemment, la coexistance de Vagrant/VirtualBox d'un côté et de Windows WSL2 de l'autre pose problème.</p>
+                    <p>Une possibilité : désactiver complètement WSL2.</p>
+                    <p>Une autre possibilité pour une désactivation temporaire de WSL2 : dans un PowerShell (sans doute admin) :</p>
+                    <ul>
+                        <li>
+                            <p>Désactiver (libère VT-x pour VirtualBox) avec la commande suivante et redémarrer ensuite :</p>
+<pre><code>bcdedit /set hypervisorlaunchtype off</code></pre>
+                        </li>
+                        <li>
+                            <p>Réactiver (restaure WSL2, Hyper-V, Docker Desktop) avec la commande suivante et redémarrer ensuite :</p>
+<pre><code>bcdedit /set hypervisorlaunchtype auto</code></pre>
+                        </li>
+                    </ul>
+                    <h4>Délais d'attente (timeouts) :</h4>
+                    <ul>
+                        <li>
+                            <p>Utiliser une connexion réseau rapide.</p>
+                        </li>
+                        <li>
+                            <p>Aussi, dans le Vagrantfile, juste en dessous de :</p>
+<pre><code>config.vm.box = "ubuntu/jammy64" # ou bionic</code></pre>
+                            <p>Rajouter :</p>
+<pre><code>config.vm.boot_timeout = 600</code></pre>
+                        </li>
+                    </ul>
                 </article>
                 <article>
                     <h2 id="securite_information">Sécurité de l'information :</h2>
@@ -3637,6 +3666,7 @@ end</code></pre>
                 </article>
                 <article>
                     <h2 id="exercice2">Exercice 2 : Protection des données en transit :</h2>
+                    <p>Dans cette partie du cours, on pratique la matière SSL/TLS et SSH.</p>
                     <h3>Contexte :</h3>
                     <ol>
                         <li>
@@ -4163,7 +4193,410 @@ end</code></pre>
                     </ol>
                 </article>
                 <article>
-                    <h2 id="evaluation_instructions_provisoires">Évaluation - instructions provisoires :</h2>
+                    <h2 id="protection_donnees_transit_VPN_environnements_de_travail">Protection des données en transit : VPN : Environnements de travail :</h2>
+                    <h3>Composantes :</h3>
+                    <ul>
+                        <li>
+                            <p>wg-peerA</p>
+                            <ul>
+                                <li>
+                                    <p>noeud WireGuard</p>
+                                </li>
+                                <li>
+                                    <p>agit comme gateway</p>
+                                </li>
+                            </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.9'
+  config.vm.provision "file", source: "./wireguard.sh", destination: "/home/vagrant/wireguard.sh"
+  config.vm.provision "file", source: "./forward.sh", destination: "/home/vagrant/forward.sh"
+  config.vm.provision "file", source: "./wg0.conf", destination: "/home/vagrant/wg0.conf"
+  config.vm.provision "file", source: "./private", destination: "/home/vagrant/private"
+    
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+
+  set -euo pipefail
+  # Mise à jour du fuseau horaire - important pour bien interpréter les logs
+  sudo timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname
+  hostnamectl set-hostname wg-peerA.hs.be
+  echo "172.28.128.9       wg-peerA.hs.be" &gt;&gt; /etc/hosts
+
+  # Chargement des packages, en mode non-interactif(!)
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y wireguard traceroute
+
+  # Sécurisation clé privée
+  chmod 0600 private
+
+  # Rendre scripts exécutables
+  chmod +x wireguard.sh
+  chmod +x forward.sh
+
+  SHELL
+end</code></pre>
+                        </li>
+                        <li>
+                            <p>wg-peerB</p>
+                            <ul>
+                                <li>
+                                    <p>noeud WireGuard</p>
+                                </li>
+                            </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.10'
+  config.vm.provision "file", source: "./wireguard.sh", destination: "/home/vagrant/wireguard.sh"
+  config.vm.provision "file", source: "./wg0.conf", destination: "/home/vagrant/wg0.conf"
+  config.vm.provision "file", source: "./private", destination: "/home/vagrant/private"
+    
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire - important pour bien interpréter les logs
+  sudo timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname
+  hostnamectl set-hostname wg-peerB.hs.be
+  echo "172.28.128.10       wg-peerB.hs.be" &gt;&gt; /etc/hosts
+
+  # Chargement des packages, en mode non-interactif(!)
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y wireguard traceroute
+
+  # Sécurisation clé privée
+  chmod 0600 private
+
+  # Rendre script exécutable
+  chmod +x wireguard.sh
+
+  SHELL
+end</code></pre>
+                        </li>
+                        <li>
+                            <p>wg-peerC</p>
+                            <ul>
+                                <li>
+                                    <p>noeud Wireguard</p>
+                                </li>
+                                <li>
+                                    <p>nécessite installation manuelle</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>En résumé, la troisième machine est votre poste de travail (<a href="https://www.wireguard.com/install/" target="_blank">installer Wireguard dessus !</a>) - ou alors, créez par vous même une troisième machine virtuelle.</p>
+                    <p>Pensez à l'échange préalable de clés (modification des configurations des machines A et B ?)</p>
+                </article>
+                <article>
+                    <h2 id="VPN">VPN :</h2>
+                    <h3>Vision historique de l'accès à distance :</h3>
+                    <ul>
+                        <li>
+                            <p>Travail essentiellement sur site.</p>
+                        </li>
+                        <li>
+                            <p>Infrastructure relativement simple.</p>
+                        </li>
+                        <li>
+                            <p>Peu / pas de "cloud".</p>
+                        </li>
+                        <li>
+                            <p>Accès de l'extérieur plutôt exceptionnel.</p>
+                        </li>
+                        <li>
+                            <p>Approche périmétrique de la sécurité extérieure = danger (et souvent implicite : intérieur = sûr).</p>
+                        </li>
+                    </ul>
+                    <h3>Cas d'utilisation :</h3>
+                    <ul>
+                        <li>
+                            <h4>Contexte :</h4>
+                            <ul>
+                                <li>
+                                    <p>Liaison de serveurs d'entreprise distants.</p>
+                                </li>
+                                <li>
+                                    <p>Connexion au réseau d'entreprise dans le cadre du télétravail.</p>
+                                </li>
+                                <li>
+                                    <p>(À priori, identité des hôtes "facile" à établir.)</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Motivation :</h4>
+                            <ul>
+                                <li>
+                                    <p>Confidentialité.</p>
+                                </li>
+                                <li>
+                                    <p>Intégrité.</p>
+                                </li>
+                                <li>
+                                    <p>Prévention MITM : s'assurer de la bonne identité des hôtes.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p><span class="em">SSH</span> : avant tout <span class="em">administration système</span> d'une machine (shell, SCP/SFTP); un tunnel par port (<span class="em">-L</span>) ou proxy SOCKS(<span class="em">-D</span>) peut exposer d'autres services, mais chaque service nécessite une configuration explicite.</p>
+                        <p><span class="em">VPN</span> : <span class="em">transparence au niveau réseau</span> - toutes les applications atteignent directement les hôtes distants, sans modification.</p>
+                    </div>
+                    <h3>Exemple: création du réseau "virtuel" 10.0.0.0/24 sur infrastructure sous-jacente :</h3>
+                    <img src="../images/exemple_creation_VPN_infrastructure.PNG" alt="">
+                    <h3>Wireguard - "Cryptokey Routing" :</h3>
+                    <p><a href="https://www.wireguard.com/" target="_blank">https://www.wireguard.com/</a></p>
+                    <p>Nouvelle interface réseau (wg0 ici).</p>
+                    <p>Pairs.</p>
+                    <p>Allowed IPs : Routing en sortie; ACL en entrée.</p>
+                    <p>Chiffrement des données via clé publique du pair.</p>
+                    <div>
+                        <img src="../images/peerA.PNG" alt="" class="float_left">
+                        <img src="../images/peerB.PNG" alt="">
+                    </div>
+                    <h3>WireGuard - Étapes cryptographiques :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Étape</th>
+                                <th>Rôle</th>
+                                <th>Mécanisme</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="em">Auth. mutuelle</td>
+                                <td>Identité des deux pairs</td>
+                                <td>Clés publiques pré-configurées (Curve25519)</td>
+                            </tr>
+                            <tr>
+                                <td>Échange de clé éphémère</td>
+                                <td>Secret partagé</td>
+                                <td>DH éphémère (Curve25519)</td>
+                            </tr>
+                            <tr>
+                                <td>Chiffrement + intégrité</td>
+                                <td>Confidentialité + intégrité</td>
+                                <td><span class="em">ChaCha20-Poly1305</span> (AEAD)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p><span class="em">Authentification mutuelle par conception</span> : Chaque pair configure <span class="em">explicitement</span> la <span class="em">clé publique</span> de l'autre (<span class="em">PublicKey</span> dans <span class="em">wg0.conf</span>). Un pair inconnu est <span class="em">silencieusement ignoré</span> : pas de PKI, pas de CA.</p>
+                    </div>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p><span class="em">Forward secrecy</span> : clés éphémères jetées après chaque session - une fuite future de la clé statique ne compromet pas le trafic passé.</p>
+                        <p><span class="em">AEAD</span> (ChaCha20-Poly1305) : chiffrement + intégrité en un seul primitif (contrairement à AES + HMAC séparés dans TLS/SSH).</p>
+                    </div>
+                    <h3>Configuration peer A :</h3>
+                    <p>(joue un rôle de "serveur" - voir plus loin - tous les clients listés comme pairs).</p>
+                    <img src="../images/configuration_peerA.PNG" alt="">
+<pre><code>cat wg0.conf</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">wg0.conf</span>` :</p>
+<pre><code>[Interface]
+ListenPort = 51820
+
+[Peer]
+PublicKey = ubUFl57LM3iKezkC5LmxkFeLtPboclTgC34IFM7eYTo=
+AllowedIPs = 10.0.0.2/32
+Endpoint = 172.28.128.10:51820
+
+[Peer]
+PublicKey = R02vI0+j7b6riBsVNgJQ2kNLQSwHKPvfLQVj+moxfG8=
+AllowedIPs = 10.0.0.3/32
+Endpoint = 172.28.128.1:51820</code></pre>
+                    <h3>Configuration peer B :</h3>
+                    <p>(joue un rôle de "client" - serveur listé comme pair).</p>
+                    <img src="../images/configuration_peerB.PNG" alt="">
+<pre><code>cat wg0.conf</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">wg0.conf</span>` :</p>
+<pre><code>[Interface]
+ListenPort = 51820
+
+[Peer]
+PublicKey = nl6cvnJOPoo13PecODuKVINZlYWzZt4sti3x+qJDezY=
+AllowedIPs = 10.0.0.0/24
+Endpoint = 172.28.128.9:51820</code></pre>
+                    <h3>Création interface wg0 - peer A :</h3>
+                    <p>5 étapes : créer l'interface &#8594; assigner l'IP VPN &#8594; charger la config (pairs) &#8594; charger la <span class="em">clé privée</span> &#8594; activer. La route <span class="em">10.0.0.0/24 via wg0</span> apparaît automatiquement.<p>
+<pre><code>sudo ./wireguard.sh 1</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">wireguard.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+
+set -euo pipefail
+
+# Création de l'interface
+sudo ip link add dev wg0 type wireguard
+
+# Rajout des adresses
+sudo ip address add dev wg0 10.0.0."${1}"/24
+
+# Chargement de la configuration de wg0
+sudo wg setconf wg0 ./wg0.conf
+
+# Chargement de la clé privée
+sudo wg set wg0 private-key ./private
+
+# Démarrage de l'interface
+sudo ip link set up dev wg0
+
+# Vérification de la configuration de l'interface
+ip -c -4 a show dev wg0
+
+# Vérification de la route
+ip route
+
+# Etat de wireguard
+sudo wg show</code></pre>
+                    <h3>Création interface wg0 - peer B :</h3>
+                    <p>Même séquence que peer A (le nom de l'interface peut différer entre systèmes).<p>
+<pre><code>sudo ./wireguard.sh 2</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">wireguard.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+
+set -euo pipefail
+
+# Création de l'interface
+sudo ip link add dev wg0 type wireguard
+
+# Rajout des adresses
+sudo ip address add dev wg0 10.0.0."${1}"/24
+
+# Chargement de la configuration de wg0
+sudo wg setconf wg0 ./wg0.conf
+
+# Chargement de la clé privée
+sudo wg set wg0 private-key ./private
+
+# Démarrage de l'interface
+sudo ip link set up dev wg0
+
+# Vérification de la configuration de l'interface
+ip -c -4 a show dev wg0
+
+# Vérification de la route
+ip route
+
+# Etat de wireguard
+sudo wg show</code></pre>
+                    <h3>Interactions :</h3>
+                    <div>
+                        <img src="../images/interactions_peerA.PNG" alt="" class="float_left">
+                        <img src="../images/interactions_peerB.PNG" alt="">
+                    </div>
+                    <p>Le trafic vers <span class="em">10.0.0.0/24</span> est routé via <span class="em">wg0</span> - WireGuard le <span class="em">chiffre automatiquement</span> avec la clé publique du pair destinataire.</p>
+                    <h3>Rôle serveur de Peer A :</h3>
+                    <p>Peer C n'a qu'un seul pair (Peer A) avec AllowedIPs = 10.0.0.0/24 - tout trafic VPN transite par Peer A. Pour relayer vers Peer B. Peer A doit activer le forwarding IP.</p>
+                    <div><img src="../images/PeerC_avant_reconfiguration_peerA_serveur.PNG" alt="" class="float_left">
+                        <img src="../images/PeerC_apres_reconfiguration_peerA_serveur.PNG" alt="">
+                    </div>
+                    <h3>Configuration Peer A comme "serveur" = relayeur :</h3>
+                    <p>À ne faire que si intentionnel ! Mauvaise pratique de sécurité sinon :</p>
+                    <img src="../images/configuration_peerA_serveur_relayeur.PNG" alt="">
+<pre><code>sudo ./forward.sh</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">forward.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+
+set -euo pipefail
+
+# On s'assure que ce "peer" -ci puisse forwarder les paquets - il agit comme "routeur"
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo sysctl -w net.ipv6.conf.all.forwarding=1
+sudo sysctl -p</code></pre>
+                    <h3>Considérations de sécurité des VPN :</h3>
+                    <ul>
+                        <li>
+                            <p>Diverses autres implémentations existent :</p>
+                            <ul>
+                                <li>
+                                    <p>IPSec : au niveau de la couche IP.</p>
+                                </li>
+                                <li>
+                                    <p>OpenVPN : utilisation TLS.</p>
+                                </li>
+                                <li>
+                                    <p>Solutions propriétaires.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Bien comprendre technologie utilisée (!) - s'assurer de l'existence d'une sécurisation au niveau de la couche interface réseau.</p>
+                        </li>
+                        <li>
+                            <p>Réseau exposé - quid si un des hôtes est un poste de télétravail mal sécurisé ?</p>
+                        </li>
+                        <li>
+                            <p>Faux sentiment de sécurité "périmètre" - voir module Zero Trust Architecture.</p>
+                        </li>
+                        <li>
+                            <p>Utilisation pour protection de la vie privée ? Risques résiduels : fuites DNS, l'opérateur VPN voit ce que votre FAI voyait avant...</p>
+                        </li>
+                    </ul>
+                    <h3>TLS, SSH, WireGuard - Comparatif :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>TLS</th>
+                                <th>SSH</th>
+                                <th>WireGuard</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Auth. serveur</td>
+                                <td>Certificat CA</td>
+                                <td>Clé hôte (TOFU)</td>
+                                <td class="em">Clé publique pré-configurée</td>
+                            </tr>
+                            <tr>
+                                <td>Auth. client</td>
+                                <td>Certificat CA (opt.)</td>
+                                <td>Mdp ou clé publique</td>
+                                <td class="em">Clé publique pré-configurée</td>
+                            </tr>
+                            <tr>
+                                <td>Infrastructure</td>
+                                <td>PKI + CA requise</td>
+                                <td>Aucune</td>
+                                <td>Aucune</td>
+                            </tr>
+                            <tr>
+                                <td>Chiffrement + intégrité</td>
+                                <td>AES + HMAC</td>
+                                <td>AES + HMAC</td>
+                                <td>ChaCha20-Poly1305 (<span class="em">AEAD</span>)</td>
+                            </tr>
+                            <tr>
+                                <td>Forward secrecy</td>
+                                <td>Selon suite (DHE)</td>
+                                <td>Oui</td>
+                                <td>Oui</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Chaque protocole implémente le schéma combiné à sa manière.</p>
+                        <p>TLS privilégie l'interopérabilité (PKI, autorités de certification).</p>
+                        <p>SSH et WireGuard privilégient la simplicité : confiance par clé explicite, sans CA.</p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="evaluation_instructions">Évaluation - instructions :</h2>
                     <h3>Objectifs / critères UE 478 :</h3>
                     <ol>
                         <li>
