@@ -3942,7 +3942,7 @@ end</code></pre>
                             <ul>
                                 <li>
 <pre><code>su - userN</code></pre>
-<pre><code class="em">ssh-keygen -t ed25519</code></pre>
+<pre><code>ssh-keygen -t ed25519</code></pre>
                                 </li>
                                 <li>
 <pre><code>cat ~/.ssh/id_ed25519.pub</code></pre>
@@ -3960,14 +3960,16 @@ end</code></pre>
                         </li>
                     </ul>
                     <p>Vérification des droits d'accès (suite de l'exercice 1) - connecté en <span class="em">user1</span> sur le serveur via SSH :</p>
+<pre><code>su - user1</code></pre>
+<pre><code>ssh user1@exercice2-server.hs.be</code></pre>
                     <ul>
                         <li>
                             <p>Modifier <span class="em">/var/www/site-client1/index.html</span> &#8594; succès (user1 &#8712; groupe client1).</p>
-<pre><code>sudo nano /var/www/site-client1/index.html</code></pre>
+<pre><code>nano /var/www/site-client1/index.html</code></pre>
                         </li>
                         <li>
                             <p>Modifier <span class="em">/var/www/site-client2/index.html</span> &#8594; <span class="em">permission refusée</span> (user1 &#8713; groupe client2).</p>
-<pre><code>sudo nano /var/www/site-client2/index.html</code></pre>
+<pre><code>nano /var/www/site-client2/index.html</code></pre>
                         </li>
                         <li>
                             <p>Depuis exercice2-client, confirmer :</p>
@@ -4053,6 +4055,16 @@ end</code></pre>
 <pre><code>ssl_certificate /home/vagrant/tls/server.crt;</code></pre>
 <pre><code>ssl_certificate_key /home/vagrant/tls/server.key;</code></pre>
                                 </li>
+                                <p>Il faut donc faire la commande suivante (remplacer le "X" par le bon chiffre) :</p>
+<pre><code>sudo nano /etc/nginx/conf.d/clientX.conf</code></pre>
+                                <p>Et ajouter le bloc suivant (remplacer le "X" par le bon chiffre) :</p>
+<pre><code>server {
+    listen 443X ssl;
+    root /var/www/site-clientX;
+    index index.html;
+    ssl_certificate /home/vagrant/tls/server.crt;
+    ssl_certificate_key /home/vagrant/tls/server.key;
+}</code></pre>
                             </ul>
                             <p>Après avoir modifier la configuration de nginx, il faut pas oublier de faire les commandes suivantes :</p>
 <pre><code>sudo nginx -t</code></pre>
