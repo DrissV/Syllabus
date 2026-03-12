@@ -4296,6 +4296,107 @@ end</code></pre>
                     </ul>
                     <p>En résumé, la troisième machine est votre poste de travail (<a href="https://www.wireguard.com/install/" target="_blank">installer Wireguard dessus !</a>) - ou alors, créez par vous même une troisième machine virtuelle.</p>
                     <p>Pensez à l'échange préalable de clés (modification des configurations des machines A et B ?)</p>
+                    <p>Voici le Vagrantfile de cette VM si vous voulez le faire et les différentes étapes à exécuter :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: "172.28.128.11"
+
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+
+set -euo pipefail
+
+# Fuseau horaire
+timedatectl set-timezone Europe/Brussels
+
+# Hostname
+hostnamectl set-hostname wg-peerC.hs.be
+echo "172.28.128.11 wg-peerC.hs.be" &gt;&gt; /etc/hosts
+
+# Installation WireGuard
+DEBIAN_FRONTEND=noninteractive apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y wireguard traceroute
+
+# Répertoire pour configuration
+mkdir -p /home/vagrant/wg
+chown vagrant:vagrant /home/vagrant/wg
+
+SHELL
+
+end</code></pre>
+                    <ol>
+                        <li>
+                            <p>Dans le dossier <span class="em">wg</span> de PeerC :</p>
+<pre><code>cd ~/wg</code></pre>
+                        </li>
+                        <li>
+                            <p>Créer les clés :</p>
+<pre><code>wg genkey | tee private | wg pubkey &gt; public</code></pre>
+                        </li>
+                        <li>
+                            <p>Sécuriser la clé privée :</p>
+<pre><code>chmod 600 private</code></pre>
+                        </li>
+                        <li>
+                            <p>Afficher la clé publique :</p>
+<pre><code>cat public</code></pre>
+                        </li>
+                        <li>
+                            <p>Sur PeerA, modifier le fichier `<span class="em">wg0.conf</span>` pour ajouter PeerC dans PeerA :</p>
+<pre><code>[Peer]
+PublicKey = CLE_PUBLIQUE_PEERC
+AllowedIPs = 10.0.0.3/32
+Endpoint = 172.28.128.11:51820</code></pre>
+                        </li>
+                        <li>
+                            <p>Dans PeerC, créer la config :</p>
+<pre><code>nano ~/wg/wg0.conf</code></pre>
+                            <p>Voici le contenu du fichier de configuration :</p>
+<pre><code>[Interface]
+PrivateKey = CLE_PRIVEE_PEERC
+Address = 10.0.0.3/24
+ListenPort = 51820
+
+[Peer]
+PublicKey = CLE_PUBLIQUE_PEERA
+AllowedIPs = 10.0.0.0/24
+Endpoint = 172.28.128.9:51820</code></pre>
+                        </li>
+                        <li>
+                            <p>Voici le contenu du script `<span class="em">~/wireguard.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+
+set -euo pipefail
+
+# Création de l'interface
+sudo ip link add dev wg0 type wireguard
+
+# Rajout des adresses
+sudo ip address add dev wg0 10.0.0."${1}"/24
+
+# Chargement de la configuration de wg0
+sudo wg setconf wg0 ./wg0.conf
+
+# Chargement de la clé privée
+sudo wg set wg0 private-key ./private
+
+# Démarrage de l'interface
+sudo ip link set up dev wg0
+
+# Vérification de la configuration de l'interface
+ip -c -4 a show dev wg0
+
+# Vérification de la route
+ip route
+
+# Etat de wireguard
+sudo wg show</code></pre>
+                                <p>Lancer ce script avec la commande suivante pour démarrer l'interface WireGuard :</p>
+<pre><code>sudo ./wireguard.sh 3</code></pre>
+                            </li>
+                    </ol>
                 </article>
                 <article>
                     <h2 id="VPN">VPN :</h2>
@@ -4360,7 +4461,6 @@ end</code></pre>
                     <p>Nouvelle interface réseau (wg0 ici).</p>
                     <p>Pairs.</p>
                     <p>Allowed IPs : Routing en sortie; ACL en entrée.</p>
-                    <p>Chiffrement des données via clé publique du pair.</p>
                     <div>
                         <img src="../images/peerA.PNG" alt="" class="float_left">
                         <img src="../images/peerB.PNG" alt="">
@@ -4497,12 +4597,16 @@ sudo wg show</code></pre>
                         <img src="../images/interactions_peerA.PNG" alt="" class="float_left">
                         <img src="../images/interactions_peerB.PNG" alt="">
                     </div>
-                    <p>Le trafic vers <span class="em">10.0.0.0/24</span> est routé via <span class="em">wg0</span> - WireGuard le <span class="em">chiffre automatiquement</span> avec la clé publique du pair destinataire.</p>
+<pre><code>ping 10.0.0.2</code></pre>
+<pre><code>ping 10.0.0.1</code></pre>
+                    <p>Le trafic vers <span class="em">10.0.0.0/24</span> est routé via <span class="em">wg0</span>.</p>
                     <h3>Rôle serveur de Peer A :</h3>
                     <p>Peer C n'a qu'un seul pair (Peer A) avec AllowedIPs = 10.0.0.0/24 - tout trafic VPN transite par Peer A. Pour relayer vers Peer B. Peer A doit activer le forwarding IP.</p>
-                    <div><img src="../images/PeerC_avant_reconfiguration_peerA_serveur.PNG" alt="" class="float_left">
+                    <div>
+                        <img src="../images/PeerC_avant_reconfiguration_peerA_serveur.PNG" alt="" class="float_left">
                         <img src="../images/PeerC_apres_reconfiguration_peerA_serveur.PNG" alt="">
                     </div>
+<pre><code>ping 10.0.0.2</code></pre>
                     <h3>Configuration Peer A comme "serveur" = relayeur :</h3>
                     <p>À ne faire que si intentionnel ! Mauvaise pratique de sécurité sinon :</p>
                     <img src="../images/configuration_peerA_serveur_relayeur.PNG" alt="">
@@ -4723,10 +4827,10 @@ sudo sysctl -p</code></pre>
                             <p>Configuration à présenter :</p>
                             <ul>
                                 <li>
-                                    <p>Au moins 2 "types de machines" (terminal, serveur, etc.).</p>
+                                    <p>Au moins deux "types de machines" (terminal, serveur, etc.).</p>
                                 </li>
                                 <li>
-                                    <p>Au moins 5 contrôles techniques mis en place.</p>
+                                    <p>Au moins cinq contrôles techniques mis en place.</p>
                                 </li>
                             </ul>
                         </li>
@@ -4737,13 +4841,10 @@ sudo sysctl -p</code></pre>
                                     <p>Contexte d'entreprise.</p>
                                 </li>
                                 <li>
-                                    <p>Justification des choix pour les contrôles.</p>
+                                    <p>Principaux contrôles techniques mis en place</p>
                                 </li>
                                 <li>
-                                    <p>Analyse risque - menace - coût - risque résiduel.</p>
-                                </li>
-                                <li>
-                                    <p>Discussion sur alternatives possibles.</p>
+                                    <p>Démos : copie principaux écrans (fonctionnement, limites, alternatives).</p>
                                 </li>
                             </ul>
                         </li>
@@ -4751,16 +4852,17 @@ sudo sysctl -p</code></pre>
                     <h4>Timing ENCORE À FINALISER :</h4>
                     <ul>
                         <li>
-                            <p>19/5 - Remise Contexte + Atelier.</p>
+                            <p>11/5 - Remise Contexte + Atelier.</p>
+                        </li>
+                        <li>18/5 - Atelier.</li>
+                        <li>
+                            <p>21/5 - Atelier (à domicile).</p>
                         </li>
                         <li>
-                            <p>Semaine du 26/5 (à déterminer) - Atelier.</p>
+                            <p>25/5 - Remise travail.</p>
                         </li>
                         <li>
-                            <p>1/6 - Remise travail.</p>
-                        </li>
-                        <li>
-                            <p>5/6 - Défense travail.</p>
+                            <p>28/5 - Défense travail.</p>
                         </li>
                     </ul>
                 </article>
