@@ -3384,10 +3384,11 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/jammy64"
   config.vm.network "private_network", ip: '172.28.128.11'
+
   config.vm.provision "shell", inline: &lt;&lt;-SHELL
 #!/bin/bash
+    
     set -euo pipefail
-
     # Mise à jour du fuseau horaire
     timedatectl set-timezone Europe/Brussels
 
@@ -4306,31 +4307,22 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: &lt;&lt;-SHELL
 #!/bin/bash
 
-set -euo pipefail
+    set -euo pipefail
+    # Fuseau horaire
+    timedatectl set-timezone Europe/Brussels
 
-# Fuseau horaire
-timedatectl set-timezone Europe/Brussels
+    # Hostname
+    hostnamectl set-hostname wg-peerC.hs.be
+    echo "172.28.128.11      wg-peerC.hs.be" &gt;&gt; /etc/hosts
 
-# Hostname
-hostnamectl set-hostname wg-peerC.hs.be
-echo "172.28.128.11 wg-peerC.hs.be" &gt;&gt; /etc/hosts
-
-# Installation WireGuard
-DEBIAN_FRONTEND=noninteractive apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get install -y wireguard traceroute
-
-# Répertoire pour configuration
-mkdir -p /home/vagrant/wg
-chown vagrant:vagrant /home/vagrant/wg
+    # Installation WireGuard
+    DEBIAN_FRONTEND=noninteractive apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y wireguard traceroute
 
 SHELL
 
 end</code></pre>
                     <ol>
-                        <li>
-                            <p>Dans le dossier <span class="em">wg</span> de PeerC :</p>
-<pre><code>cd ~/wg</code></pre>
-                        </li>
                         <li>
                             <p>Créer les clés :</p>
 <pre><code>wg genkey | tee private | wg pubkey &gt; public</code></pre>
@@ -4352,7 +4344,7 @@ Endpoint = 172.28.128.11:51820</code></pre>
                         </li>
                         <li>
                             <p>Dans PeerC, créer la config :</p>
-<pre><code>nano ~/wg/wg0.conf</code></pre>
+<pre><code>nano wg0.conf</code></pre>
                             <p>Voici le contenu du fichier de configuration :</p>
 <pre><code>[Interface]
 PrivateKey = CLE_PRIVEE_PEERC
