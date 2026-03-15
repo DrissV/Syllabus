@@ -80,6 +80,10 @@
                     <li><a href="#exercice2">Exercice 2 : Protection des données en transit</a></li>
                     <li><a href="#protection_donnees_transit_VPN_environnements_de_travail">Protection des données en transit : VPN : Environnements de travail</a></li>
                     <li><a href="#VPN">VPN</a></li>
+                    <li><a href="#protection_donnees_repos_environnements_de_travail">Protection des données au repos : Environnements de travail :</a></li>
+                    <li><a href="#rappel_concepts">Rappel des concepts</a></li>
+                    <li><a href="#confidentialite_niveau_fichier_systeme_fichier">Confidentialité au niveau fichier ou système de fichier</a></li>
+                    <li><a href="#confidentialite_niveau_disque">Confidentialité au niveau du disque</a></li>
                     <li><a href="#evaluation_instructions">Évaluation - instructions</a></li>
                 </ol>
             </nav>
@@ -4688,6 +4692,686 @@ sudo sysctl -p</code></pre>
                         <p>TLS privilégie l'interopérabilité (PKI, autorités de certification).</p>
                         <p>SSH et WireGuard privilégient la simplicité : confiance par clé explicite, sans CA.</p>
                     </div>
+                </article>
+                <article>
+                    <h2 id="protection_donnees_repos_environnements_de_travail">Protection des données au repos : Environnements de travail :</h2>
+                    <p>Attention, bien conserver la structure des fichiers.</p>
+                    <p>Le répertoire de base doit contenir deux sous-répertoires :</p>
+                    <ol>
+                        <li>
+                            <p>vm-provisioning :</p>
+                            <ul>
+                                <li>
+                                    <p>crypto-fs</p>
+                                </li>
+                                <li>
+                                    <p>crypto-fs-attaque</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>vm-virtual-disks</p>
+                        </li>
+                    </ol>
+                    <p>Attention, lorsque vous passez d'une machine virtuelle à l'autre, la première doit être arrêtée pour éviter un conflit sur l'ouverture des disques partagés.</p>
+                    <h3>Architecture globale :</h3>
+                    <ol>
+                        <li>
+                            <p>crypto-fs :</p>
+                            <ul>
+                                <li>
+                                    <p>À démarrer en premier.</p>
+                                </li>
+                                <li>
+                                    <p>Utilisé pour tester l'encryption au niveau file system.</p>
+                                </li>
+                                <li>
+                                    <p>Utilisé pour tester l'encryption au niveau disque ("full disk encryption").</p>
+                                </li>
+                                <li>
+                                    <p>Crée des disques durs virtuels, qui seront réutilisés par le deuxième box.</p>
+                                </li>
+                                <li>
+                                    <p>Pour que les disques virtuels soient accessibles à crypto-fs-attaque, il faut arrêter la machine virtuelle crypto-fs (en sortir, puis "vagrant halt").</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>crypto-fs-attaque :</p>
+                            <ul>
+                                <li>
+                                    <p>À démarrer après que la première machine virtuelle soit arrêtée.</p>
+                                </li>
+                                <li>
+                                    <p>Se connecte aux disques durs virtuels (atteinte à la sécurité physique).</p>
+                                </li>
+                                <li>
+                                    <p>Démontrer l'accès au contenu nom encrypté de la première box.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <h3>Visualisation dans VirtualBox :</h3>
+                    <img src="../images/visualisation_VirtualBox.PNG" alt="">
+                    <h3>Disque attaché à crypto-fs :</h3>
+                    <img src="../images/disque_attache_crypto-fs.PNG" alt="">
+                    <h3>Disque attaché à crypto-fs-attaque :</h3>
+                    <img src="../images/disque_attache_crypto-fs-attaque.PNG" alt="">
+                    <h3>Extrait de la configuration Vagant :</h3>
+                    <h4>Contenu Vagrantfile pour crypto-fs :</h4>
+                    <img src="../images/extrait_configuration_Vagrant_crypto-fs.PNG" alt="">
+<pre><code># coding: utf-8
+
+disk1 = "../../vm-virtual-disks/extra-auto-1.vdi"
+disk2 = "../../vm-virtual-disks/extra-auto-2.vdi"
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.provider :virtualbox
+  config.vm.provision "file", source: "./users.txt", destination: "/home/vagrant/users.txt"
+  config.vm.provision "file", source: "./mount-hello.sh", destination: "/home/vagrant/mount-hello.sh"
+  config.vm.provision "file", source: "./mount-laisse-mount.sh", destination: "/home/vagrant/mount-laisse-mount.sh"
+  config.vm.provision "file", source: "./format-and-mount-extra1.sh", destination: "/home/vagrant/format-and-mount-extra1.sh"
+  config.vm.provision "file", source: "./format-and-mount-extra2.sh", destination: "/home/vagrant/format-and-mount-extra2.sh"
+  config.vm.provision "file", source: "./remount-extra1.sh", destination: "/home/vagrant/remount-extra1.sh"
+  config.vm.provision "file", source: "./remount-open-extra2.sh", destination: "/home/vagrant/remount-open-extra2.sh"
+  config.vm.provision "file", source: "./unmount-close-extra2.sh", destination: "/home/vagrant/unmount-close-extra2.sh"
+  config.vm.provision "file", source: "./unmount-extra1.sh", destination: "/home/vagrant/unmount-extra1.sh"
+  
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire - important pour les certificats
+  timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname
+  hostnamectl set-hostname crypto-fs.hs.be
+  echo "172.28.128.11       crypto-fs.hs.be" | sudo tee -a /etc/hosts
+
+  # Création des utilisateurs
+  chmod go-rw ./users.txt
+  adduser --quiet --disabled-password --shell /bin/bash --home /home/user3 --gecos "User3" user3
+  chpasswd &lt; users.txt
+  rm users.txt
+ 
+  adduser user3 admin
+
+  # Rendre scripts liés aux disques exécutables et création des points de montage
+  mkdir /mnt1
+  mkdir /mnt2
+  chmod +x /home/vagrant/format-and-mount-extra1.sh
+  chmod +x /home/vagrant/format-and-mount-extra2.sh
+  chmod +x /home/vagrant/remount-extra1.sh
+  chmod +x /home/vagrant/remount-open-extra2.sh
+  chmod +x /home/vagrant/unmount-close-extra2.sh
+  chmod +x /home/vagrant/unmount-extra1.sh
+
+  # Déplacement des scripts ecryptfs, les rendre exécutables et création des dir/points de montage
+  mv /home/vagrant/mount-hello.sh /home/user3
+  mv /home/vagrant/mount-laisse-mount.sh /home/user3
+  chown user3:user3 /home/user3/*.sh
+  chmod +x /home/user3/*.sh
+  mkdir /home/user3/hello
+  mkdir /home/user3/hello1
+
+  # Chargement des packages, en mode non-interactif(!)
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y ecryptfs-utils xxd
+
+  SHELL
+
+  # Création / Raccord des disques
+  # https://stackoverflow.com/questions/27501019/vb-customize-storageattach-mounts-my-disk-first-time-but-changes-are-lost-aft
+  
+  config.vm.provider "virtualbox" do |vb|
+    unless File.exist?(disk1)
+      vb.customize ['createhd', '--filename', disk1, '--variant', 'Fixed', '--size', 1 * 1024]
+    end
+    
+    vb.customize ['storageattach', :id,  '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', disk1]
+  end
+
+  config.vm.provider "virtualbox" do |vb|
+    unless File.exist?(disk2)
+      vb.customize ['createhd', '--filename', disk2, '--variant', 'Fixed', '--size', 1 * 1024]
+    end
+    
+    vb.customize ['storageattach', :id,  '--storagectl', 'SCSI', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', disk2]
+  end
+end</code></pre>
+                </article>
+                <article>
+                    <h2 id="rappels_concepts">Rappels des concepts :</h2>
+                    <h3>Données au repos :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Confidentialité</span> : chiffrement du contenu :</p>
+                            <ul>
+                                <li>
+                                    <p>Granularité : fichier, dossier, partition, disque entier.</p>
+                                </li>
+                                <li>
+                                    <p>Algorithme symétrique (AES) - clé partagée ou dérivée d'une passphrase.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p><span class="em">Intégrité</span> : détection de modification non autorisée :</p>
+                            <ul>
+                                <li>
+                                    <p>Signature numérique (GPG) d'un fichier ou d'une archive.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">dm-verity</span> : intégrité au niveau bloc (Android, ChromeOS; images systèmes).</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Défense en profondeur - accès physique :</h3>
+                    <ul>
+                        <li>
+                            <p>IAA + contrôle d'accès + monitoring = efficaces <span class="em">sur un système en fonctionnement</span>.</p>
+                        </li>
+                        <li>
+                            <p>Et si l'attaquant accède <span class="em">physiquement</span> au matériel ?</p>
+                            <ul>
+                                <li>
+                                    <p>Vol d'un laptop ou d'un serveur.</p>
+                                </li>
+                                <li>
+                                    <p>Disque retiré et attaché à une autre machine (démonstration ci-après).</p>
+                                </li>
+                                <li>
+                                    <p>Maintenance tierce : réparation, recyclage, cession.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Le chiffrement est la <span class="em">dernière ligne de défense</span>.</p>
+                        </li>
+                    </ul>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Protège contre...</th>
+                                <th>Ne protège pas contre...</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <p>Vol du disque ou du matériel.</p>
+                                    <p>Lecture d'un disque détaché.</p>
+                                    <p>Maintenance ou recyclage.</p>
+                                </td>
+                                <td>
+                                    <p>Accès pendant que le système tourne.</p>
+                                    <p>Session ouverte (donnée en clair en RAM).</p>
+                                    <p>Mode <span class="em">suspend</span> : RAM non effacée.</p>
+                                    <p>Cold boot attack : lecture de la RAM refroidie.</p>
+                                    <p>Malware avec les droits de l'utilisateur.</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Règle fondamentale : Le chiffrement est efficace uniquement quand le volume est <span class="em">verrouillé</span> (système éteint ou volume fermé avec <span class="em">cryptsetup close</span>). Une fois monté, les contrôles d'accès habituels reprennent.</p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="confidentialite_niveau_fichier_systeme_fichier">Confidentialité au niveau fichier ou système de fichier :</h2>
+                    <h3>Motivation :</h3>
+                    <ul>
+                        <li>
+                            <p>Contexte :</p>
+                            <ul>
+                                <li>
+                                    <p>Machine partagée.</p>
+                                </li>
+                                <li>
+                                    <p>Machine exposée physiquement ou matériel en transit.</p>
+                                </li>
+                                <li>
+                                    <p>Information particulièrement sensible.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Motivation :</p>
+                            <ul>
+                                <li>
+                                    <p>Confidentialité.</p>
+                                </li>
+                                <li>
+                                    <p>Défense en profondeur.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Chiffrement d'un fichier - clé symétrique :</h3>
+                    <p>(PM) Voir aes.sh - crypto-server - -pbkdf2 : dérivation de clé depuis la passphrase.</p>
+                    <img src="../images/chiffrement_fichier_cle_symetrique.PNG" alt="">
+<pre><code>./aes.sh</code></pre>
+                    <h3>Chiffrement d'un dossier personnel (eCryptfs) - ouverture :</h3>
+                    <p>Exemple eCryptfs - similaire Windows EFS :</p>
+                    <p><a href="https://www.ecryptfs.org/" target="_blank">https://www.ecryptfs.org/</a></p>
+                    <img src="../images/chiffrement_dossier_personnel_ouverture.PNG" alt="">
+<pre><code>sudo ./mount-hello.sh</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">mount-hello.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+set -euo pipefail
+
+# Crée le directory hello au point de montage hello1
+sudo mount -t ecryptfs hello /home/user3/hello1 -o ecryptfs_cipher=aes -o ecryptfs_key_bytes=16 -o no_sig_cache -o ecryptfs_passthrough=no -o ecryptfs_enable_filename_crypto=no
+
+# Crée un fichier
+echo "Mon fichier très très personnel" &gt; hello1/personnel.txt
+
+# Affiche le fichier
+
+xxd hello1/personnel.txt | tail -n 5
+
+# Démontage
+
+sudo umount hello
+
+# Affiche les fichiers
+
+ls -l hello1
+
+ls -l hello/personnel.txt
+
+xxd hello/personnel.txt | tail -n 5</code></pre>
+                    <h3>Chiffrement d'un dossier personnel (eCryptfs) - fermeture :</h3>
+                    <p>Exemple eCryptfs - étape fermeture :</p>
+                    <img src="../images/chiffrement_dossier_personnel_fermeture.PNG" alt="">
+                    <h3>Concept d'un système de fichiers "empilé" (stacked) :</h3>
+                    <ul>
+                        <li>
+                            <p>Rajoute des fonctionnalités au-dessus des fonctionnalités de base (ACL, etc.).</p>
+                        </li>
+                        <li>
+                            <p>Permet dans certains cas de chiffrer aussi les méta-données.</p>
+                        </li>
+                        <li>
+                            <p>Gestion de la clé peut être confiée à l'OS.</p>
+                        </li>
+                        <li>
+                            <p>et débloquée automatiquement au login...</p>
+                        </li>
+                        <li>
+                            <p>... voir contexte / modèle de menace : pas nécessairement une bonne idée.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Note</span> : eCryptfs est obsolète sur Ubuntu 22.04 - le remplaçant est <span class="em">fscrypt</span> (même concept, intégré au noyau); <span class="em">systemd-homed</span> gère le dossier personnel chiffré à la connexion.</p>
+                        </li>
+                    </ul>
+                    <h3>Chiffrement d'un dossier personnel - au repos uniquement :</h3>
+                    <p>Exemple eCryptfs - chiffrement "au repos" seulement :</p>
+                    <img src="../images/chiffrement_dossier_personnel_repos_uniquement.PNG" alt="">
+<pre><code>sudo ./mount-laisse-mount.sh</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">mount-laisse-mount.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+set -euo pipefail
+
+# Crée le directory hello au point de montage hello1
+sudo mount -t ecryptfs hello /home/user3/hello1 -o ecryptfs_cipher=aes -o ecryptfs_key_bytes=16 -o no_sig_cache -o ecryptfs_passthrough=no -o ecryptfs_enable_filename_crypto=no
+
+# Crée un fichier
+echo "Mon fichier très très personnel" &gt; hello1/personnel.txt
+
+# Affiche le fichier
+
+xxd hello1/personnel.txt | tail -n 5</code></pre>
+                </article>
+                <article>
+                    <h2 id="confidentialite_niveau_disque">Confidentialité au niveau du disque :</h2>
+                    <h3>Motivation :</h3>
+                    <ul>
+                        <li>
+                            <p>Contexte :</p>
+                            <ul>
+                                <li>
+                                    <p>Machine exposée physiquement ou matériel en transit.</p>
+                                </li>
+                                <li>
+                                    <p>Information particulièrement sensible.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Motivation :</p>
+                            <ul>
+                                <li>
+                                    <p>Confidentialité.</p>
+                                </li>
+                                <li>
+                                    <p>Défense en profondeur.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Disque non chiffré - formatage et montage :</h3>
+                    <p>Disque extra-auto-1, ici monté comme /dev/sdc :</p>
+                    <img src="../images/disque_non_chiffre_formatage_montage.PNG" alt="">
+<pre><code>./format-and-mount-extra1.sh</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">format-and-mount-extra1.sh</span>` :</p>
+<pre><code>#!/bin/bash  -x
+
+set -euo pipefail
+
+# format and mount disk - https://serverfault.com/questions/258152/fdisk-partition-in-single-line 
+
+# D'abord retirer l'existant 
+sudo shred -f -n 1 /dev/sdc
+# Création de la table de partition
+sudo parted /dev/sdc mklabel "gpt"
+# Création de la partition proprement dite
+sudo parted /dev/sdc mkpart name 0% 1000MB
+# Création du système de fichier
+sudo mkfs -t ext4 -L extra1 /dev/sdc1
+# Création du point de montage et montage du système de fichier
+sudo mount LABEL=extra1 /mnt1
+# Création d'un contenu
+sudo chown vagrant:vagrant /mnt1
+sudo echo "hello" &gt; /mnt1/file.txt
+sudo cat /mnt1/file.txt</code></pre>
+                    <h3>Disque non chiffré - démontage et remontage :</h3>
+                    <p>Disque extra-auto-1, démontage, remontage :</p>
+<pre><code>./unmount-extra1.sh</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">unmount-extra1</span>` :</p>
+<pre><code>#!/bin/bash  -x
+
+set -euo pipefail
+
+# https://gitlab.com/cryptsetup/cryptsetup/-/wikis/FrequentlyAskedQuestions 
+
+# d'abord démonter le disque
+sudo umount /dev/sdc1</code></pre>
+                    <h3>Scénario d'attaque - disque non chiffré :</h3>
+                    <ul>
+                        <li>
+                            <p>Machine entièrement à la main de l'attaquant.</p>
+                        </li>
+                        <li>
+                            <p>Crée un utilisateur privilégié "factice".</p>
+                        </li>
+                        <li>
+                            <p>Attaque le disque extra-auto-1.</p>
+                        </li>
+                    </ul>
+                    <h3>Disque attaché à crypto-fs-attaque :</h3>
+                    <img src="../images/disque_attache_crypto-fs-attaque.PNG" alt="">
+                    <h3>Extrait de la configuration Vagrant :</h3>
+                    <p>Contenu Vagrantfile pour crypto-fs-attaque :</p>
+                    <img src="../images/extrait_configuration_Vagrant_crypto-fs-attaque.PNG" alt="">
+<pre><code># coding: utf-8
+
+disk1 = "../../vm-virtual-disks/extra-auto-1.vdi"
+disk2 = "../../vm-virtual-disks/extra-auto-2.vdi"
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.provider :virtualbox
+  config.vm.provision "file", source: "./remount-extra1.sh", destination: "/home/vagrant/remount-extra1.sh"
+  config.vm.provision "file", source: "./remount-open-extra2.sh", destination: "/home/vagrant/remount-open-extra2.sh"
+
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire
+  timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname
+  hostnamectl set-hostname crypto-fs-attaque.hs.be
+  echo "172.28.128.12       crypto-fs-attaque.hs.be" &gt;&gt; /etc/hosts
+
+  # Rendre scripts liés aux disques exécutables et création des points de montage
+  mkdir /mnt1
+  mkdir /mnt2
+  chmod +x /home/vagrant/remount-extra1.sh
+  chmod +x /home/vagrant/remount-open-extra2.sh
+
+  SHELL
+
+  # Création / Raccord des disques
+  # https://stackoverflow.com/questions/27501019/vb-customize-storageattach-mounts-my-disk-first-time-but-changes-are-lost-aft
+  
+  config.vm.provider "virtualbox" do |vb|
+    
+    vb.customize ['storageattach', :id,  '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', disk1]
+  end
+
+  config.vm.provider "virtualbox" do |vb|
+    
+    vb.customize ['storageattach', :id,  '--storagectl', 'SCSI', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', disk2]
+  end
+  
+end</code></pre>
+                    <h3>Scénario d'attaque - résultat (disque non chiffré) :</h3>
+                    <p>Résultat - vérifier montage sur sdc (parfois sdd) :</p>
+                    <img src="../images/scenario_attaque_resultat_disque_non_chiffre.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>./remount-extra1.sh</code></pre>
+<pre><code>sudo cat /mnt1/file.txt</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">remount-extra1.sh</span>` :</p>
+<pre><code>#!/bin/bash  -x
+
+set -euo pipefail
+
+# puis le monter
+sudo mount LABEL=extra1 /mnt1</code></pre>
+                    <h3>Chiffrement LUKS - formatage et ouverture :</h3>
+                    <p>dm-crypt &amp; LUKS :</p>
+                    <p><a href="https://gitlab.com/cryptsetup/cryptsetup/blob/master/README.md" target="_blank">https://gitlab.com/cryptsetup/cryptsetup/blob/master/README.md</a></p>
+                    <img src="../images/chiffrement_LUKS_formatage_ouverture.PNG" alt="">
+<pre><code>./format-and-mount-extra2.sh</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">format-and-mount-extra2.sh</span>` :</p>
+<pre><code>#!/bin/bash  -x
+
+set -euo pipefail
+
+# https://gitlab.com/cryptsetup/cryptsetup/-/wikis/FrequentlyAskedQuestions 
+
+# D'abord retirer l'existant 
+sudo cryptsetup luksFormat --type luks2 /dev/sdd
+# Création d'un container directement sur le disque, aussi possible de le faire sur partition, etc.
+sudo cryptsetup luksOpen /dev/sdd c1
+# Création du système de fichier
+sudo mkfs -t ext4 -L extra2 /dev/mapper/c1
+# Création du point de montage et montage du système de fichier
+sudo mount LABEL=extra2 /mnt2
+# Création d'un contenu
+sudo chown vagrant:vagrant /mnt2
+sudo echo "hello" &gt; /mnt2/file.txt
+sudo cat /mnt2/file.txt</code></pre>
+                    <h3>Chiffrement LUKS - système de fichiers et montage :</h3>
+                    <p>Volume accessible via /dev/mapper/c1 :</p>
+                    <img src="../images/chiffrement_LUKS_systeme_fichiers_montage.PNG" alt="">
+                    <h3>Chiffrement LUKS - fermeture et réouverture :</h3>
+                    <p>dm-crypt &amp; LUKS - démontage, fermeture, réouverture :</p>
+                    <img src="../images/chiffrement_LUKS_fermeture_reouverture.PNG" alt="">
+<pre><code>./unmount-close-extra2.sh</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">unmount-close-extra2.sh</span>` :</p>
+<pre><code>#!/bin/bash  -x
+
+set -euo pipefail
+
+# https://gitlab.com/cryptsetup/cryptsetup/-/wikis/FrequentlyAskedQuestions 
+
+# d'abord démonter le disque
+sudo umount /dev/mapper/c1
+
+# puis le bloquer
+sudo cryptsetup close /dev/mapper/c1</code></pre>
+                    <h3>Concept : chiffrement au niveau bloc :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">dm-crypt</span> au niveau du noyau : toute lecture/écriture au niveau bloc est médiatisée par une étape crypto (transparent pour le système de fichiers).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">LUKS/cryptsetup</span> au niveau utilisateur : interface de gestion (formatage, ouverture, fermeture des volumes).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Attention</span> : données accessibles en mode <span class="em">suspend</span> (clé en RAM, volume monté).</p>
+                        </li>
+                    </ul>
+                    <h3>Architecture LUKS - clé maître et key slots :</h3>
+                    <ul>
+                        <li>
+                            <p>Le volume est chiffré avec une <span class="em">clé maître</span> (master key) aléatoire, jamais exposée directement à l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>La passphrase ne chiffre pas le volume - elle chiffre la master key, stockée dans un key slot (LUKS2 : jusqu'à 32 slots).</p>
+                        </li>
+                    </ul>
+                    <div>
+                        <div class="information float_left">
+                            <img src="../images/information.png" alt="Information" class="float_left">
+                            <p>Conséquences pratiques :</p>
+                            <ul>
+                                <li>
+                                    <p>Changer la passphrase &#8594; rechiffre seulement la master key (millisecondes, volume intact).</p>
+                                </li>
+                                <li>
+                                    <p>Passphrase compromise &#8594; il faut rechiffrer tout le volume (<span class="em">cryptsetup-reencrypt</span>).</p>
+                                </li>
+                                <li>
+                                    <p>Plusieurs passphrases en parallèle : utilisateur + clé de récupération admin dans deux slots distincts.</p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="important">
+                            <img src="../images/important.png" alt="Important" class="float_left">
+                            <p>Structure du header LUKS :</p>
+                            <p><span class="em">Key slot 0</span> : passphrase utilisateur.</p>
+                            <p><span class="em">Key slot 1</span> : clé de récupération.</p>
+                            <p><span class="em">...</span> (jusqu'à 32).</p>
+                            <p>&#8592; chaque slot contient la master key chiffrée.</p>
+                            <p><span class="em">Volume</span> : chiffré AES-XTS avec la master key.</p>
+                        </div>
+                    </div>
+                    <h3>Scénario d'attaque - disque chiffré :</h3>
+                    <ul>
+                        <li>
+                            <p>Machine entièrement à la main de l'attaquant.</p>
+                        </li>
+                        <li>
+                            <p>Crée un utilisateur privilégié "factice".</p>
+                        </li>
+                        <li>
+                            <p>Attache le disque extra-auto-2 (chiffré LUKS).</p>
+                        </li>
+                        <li>
+                            <p>Sans la passphrase, le contenu est inaccessible.</p>
+                        </li>
+                    </ul>
+                    <h3>Scénario d'attaque : tentative de lecture :</h3>
+                    <p>Attachement du disque chiffré à crypto-fs-attaque - passphrase requise :</p>
+                    <img src="../images/scenario_attaque_tentative_lecture.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>./remount-open-extra2.sh</code></pre>
+<pre><code>cat /mnt2/file.txt</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">remount-open-extra2.sh</span>` :</p>
+<pre><code>#!/bin/bash  -x
+
+set -euo pipefail
+
+# https://gitlab.com/cryptsetup/cryptsetup/-/wikis/FrequentlyAskedQuestions 
+
+# d'abord débloquer le disque
+sudo cryptsetup luksOpen /dev/sdd c1
+
+# puis le monter
+sudo mount LABEL=extra2 /mnt2</code></pre>
+                    <h3>Scénario d'attaque - vue du disque sans passphrase :</h3>
+                    <p>Disque vu comme bloc brut non partitionné :</p>
+<pre><code>sudo lsblk -l</code></pre>
+                    <h3>Comparaison : chiffrement fichier/FS vs disque entier :</h3>
+                    <ul>
+                        <li>
+                            <p>Fichier/FS :</p>
+                            <ul>
+                                <li>
+                                    <p>Granularité : protection ciblée de certains fichiers.</p>
+                                </li>
+                                <li>
+                                    <p>Facilité de sauvegarde (backup).</p>
+                                </li>
+                                <li>
+                                    <p>Surtout pertinent sur une machine patagée.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Disque entier :</p>
+                            <ul>
+                                <li>
+                                    <p>Protection contre le vol physique.</p>
+                                </li>
+                                <li>
+                                    <p>Toutes les partitions déverrouillées en une seule opération.</p>
+                                </li>
+                                <li>
+                                    <p>Sauvegardes plus complexes (image chiffrée).</p>
+                                </li>
+                                <li>
+                                    <p>"Disque entier" est relatif : possible de ne chiffrer qu'une partition.</p>
+                                </li>
+                                <li>
+                                    <p>(en pratique, la partition <span class="em">/boot</span> reste non chiffrée).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Les deux approches peuvent se combiner.</p>
+                        </li>
+                    </ul>
+                    <h3>Chiffrement du swap :</h3>
+                    <ul>
+                        <li>
+                            <p>Données sensibles normalement pas copiées dans le swap...</p>
+                        </li>
+                        <li>
+                            <p>... mais le noyau ne peut pas toujours garantir l'absence de fuite.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Solution 1</span> : partition swap séparée, chiffrée avec dm-crypt et une <span class="em">clé éphémère</span> (générée à chaque démarrage) &#8594; pas d'hibernation possible.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Solution 2</span> : partition swap dans le volume LUKS &#8594; permet l'hibernation (image chiffrée sur disque).</p>
+                        </li>
+                    </ul>
+                    <h3>Limites et compléments :</h3>
+                    <ul>
+                        <li>
+                            <p>Cold boot attack : après arrêt brutal, des rémanences de la RAM permettent d'extraire les clés (quelques secondes à minutes selon la température).</p>
+                        </li>
+                        <li>
+                            <p>Suspend vs Hibernate :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">suspend</span> : clés en RAM, volume monté - <span class="em">non protégé</span>.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">hibernate</span> : état sauvegardé sur disque - protéger si swap chiffré.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>TPM : puce matérielle stockant la clé LUKS liée au matériel - déverrouillage automatique au boot sans passphrase (BitLocker, LUKS + clevis).</p>
+                            <p>&#8594; compromis commodité / protection contre vol du seul disque.</p>
+                        </li>
+                        <li>
+                            <p>Rotation des clés : passphrase compromise &#8594; changer le mot de passe ne suffit pas - rechiffrer tout le volume (<span class="em">cryptsetup-reencrypt</span>).</p>
+                        </li>
+                    </ul>
+                    <h3>Configuration d'une machine avec LUKS/dm-crypt :</h3>
+                    <img src="../images/configuration_machine_LUKS_1.PNG" alt="">
+                    <img src="../images/configuration_machine_LUKS_2.PNG" alt="">
                 </article>
                 <article>
                     <h2 id="evaluation_instructions">Évaluation - instructions :</h2>
