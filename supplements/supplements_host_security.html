@@ -5042,7 +5042,10 @@ xxd hello/personnel.txt | tail -n 5</code></pre>
                     <h3>Chiffrement d'un dossier personnel - au repos uniquement :</h3>
                     <p>Exemple eCryptfs - chiffrement "au repos" seulement :</p>
                     <img src="../images/chiffrement_dossier_personnel_repos_uniquement.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo ./mount-laisse-mount.sh</code></pre>
+<pre><code>exit</code></pre>
+<pre><code>sudo xxd /home/user3/hello1/personnel.txt</code></pre>
                     <p>Voici le contenu du fichier `<span class="em">mount-laisse-mount.sh</span>` :</p>
 <pre><code>#! /usr/bin/bash -x
 set -euo pipefail
@@ -5111,7 +5114,11 @@ sudo echo "hello" &gt; /mnt1/file.txt
 sudo cat /mnt1/file.txt</code></pre>
                     <h3>Disque non chiffré - démontage et remontage :</h3>
                     <h4>Disque extra-auto-1, démontage, remontage :</h4>
+                    <img src="../images/disque_non_chiffre_demontage_remontage.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>./unmount-extra1.sh</code></pre>
+<pre><code>./remount-extra1.sh</code></pre>
+<pre><code>cat /mnt1/file.txt</code></pre>
                     <p>Voici le contenu du fichier `<span class="em">unmount-extra1.sh</span>` :</p>
 <pre><code>#!/bin/bash  -x
 
@@ -5121,6 +5128,13 @@ set -euo pipefail
 
 # d'abord démonter le disque
 sudo umount /dev/sdc1</code></pre>
+                    <p>Voici le contenu du fhichier `<span class="em">remount-extra1.sh</span>` :</p>
+<pre><code>#!/bin/bash  -x
+
+set -euo pipefail
+
+# puis le monter
+sudo mount LABEL=extra1 /mnt1</code></pre>
                     <h3>Scénario d'attaque - disque non chiffré :</h3>
                     <ul>
                         <li>
@@ -5225,7 +5239,10 @@ sudo cat /mnt2/file.txt</code></pre>
                     <h3>Chiffrement LUKS - fermeture et réouverture :</h3>
                     <h4>dm-crypt &amp; LUKS - démontage, fermeture, réouverture :</h4>
                     <img src="../images/chiffrement_LUKS_fermeture_reouverture.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>./unmount-close-extra2.sh</code></pre>
+<pre><code>./remount-open-extra2.sh</code></pre>
+<pre><code>cat /mnt2/file.txt</code></pre>
                     <p>Voici le contenu du fichier `<span class="em">unmount-close-extra2.sh</span>` :</p>
 <pre><code>#!/bin/bash  -x
 
@@ -5238,6 +5255,18 @@ sudo umount /dev/mapper/c1
 
 # puis le bloquer
 sudo cryptsetup close /dev/mapper/c1</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">remount-open-extra2.sh</span>` :</p>
+<pre><code>#!/bin/bash  -x
+
+set -euo pipefail
+
+# https://gitlab.com/cryptsetup/cryptsetup/-/wikis/FrequentlyAskedQuestions 
+
+# d'abord débloquer le disque
+sudo cryptsetup luksOpen /dev/sdd c1
+
+# puis le monter
+sudo mount LABEL=extra2 /mnt2</code></pre>
                     <h3>Concept : chiffrement au niveau bloc :</h3>
                     <ul>
                         <li>
