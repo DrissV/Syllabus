@@ -305,8 +305,8 @@
                     <p>On devrait maintenant voir :</p>
 <pre><code>Windows Boot Manager
 
-Windows avec Hyper-V (WSL / Docker)
-Windows sans Hyper-V (GNS3 / VMware)</code></pre>
+Windows sans Hyper-V (GNS3 / VMware)
+Windows avec Hyper-V (WSL / Docker)</code></pre>
                     <h4>Délais d'attente (timeouts) :</h4>
                     <ul>
                         <li>
@@ -5085,7 +5085,7 @@ xxd hello1/personnel.txt | tail -n 5</code></pre>
                         </li>
                     </ul>
                     <h3>Disque non chiffré - formatage et montage :</h3>
-                    <p>Disque extra-auto-1, ici monté comme /dev/sdc :</p>
+                    <h4>Disque extra-auto-1, ici monté comme /dev/sdc :</h4>
                     <img src="../images/disque_non_chiffre_formatage_montage.PNG" alt="">
 <pre><code>./format-and-mount-extra1.sh</code></pre>
                     <p>Voici le contenu du fichier `<span class="em">format-and-mount-extra1.sh</span>` :</p>
@@ -5110,9 +5110,9 @@ sudo chown vagrant:vagrant /mnt1
 sudo echo "hello" &gt; /mnt1/file.txt
 sudo cat /mnt1/file.txt</code></pre>
                     <h3>Disque non chiffré - démontage et remontage :</h3>
-                    <p>Disque extra-auto-1, démontage, remontage :</p>
+                    <h4>Disque extra-auto-1, démontage, remontage :</h4>
 <pre><code>./unmount-extra1.sh</code></pre>
-                    <p>Voici le contenu du fichier `<span class="em">unmount-extra1</span>` :</p>
+                    <p>Voici le contenu du fichier `<span class="em">unmount-extra1.sh</span>` :</p>
 <pre><code>#!/bin/bash  -x
 
 set -euo pipefail
@@ -5136,7 +5136,7 @@ sudo umount /dev/sdc1</code></pre>
                     <h3>Disque attaché à crypto-fs-attaque :</h3>
                     <img src="../images/disque_attache_crypto-fs-attaque.PNG" alt="">
                     <h3>Extrait de la configuration Vagrant :</h3>
-                    <p>Contenu Vagrantfile pour crypto-fs-attaque :</p>
+                    <h4>Contenu Vagrantfile pour crypto-fs-attaque :</h4>
                     <img src="../images/extrait_configuration_Vagrant_crypto-fs-attaque.PNG" alt="">
 <pre><code># coding: utf-8
 
@@ -5183,7 +5183,7 @@ Vagrant.configure("2") do |config|
   
 end</code></pre>
                     <h3>Scénario d'attaque - résultat (disque non chiffré) :</h3>
-                    <p>Résultat - vérifier montage sur sdc (parfois sdd) :</p>
+                    <h4>Résultat - vérifier montage sur sdc (parfois sdd) :</h4>
                     <img src="../images/scenario_attaque_resultat_disque_non_chiffre.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>./remount-extra1.sh</code></pre>
@@ -5196,7 +5196,7 @@ set -euo pipefail
 # puis le monter
 sudo mount LABEL=extra1 /mnt1</code></pre>
                     <h3>Chiffrement LUKS - formatage et ouverture :</h3>
-                    <p>dm-crypt &amp; LUKS :</p>
+                    <h4>dm-crypt &amp; LUKS :</h4>
                     <p><a href="https://gitlab.com/cryptsetup/cryptsetup/blob/master/README.md" target="_blank">https://gitlab.com/cryptsetup/cryptsetup/blob/master/README.md</a></p>
                     <img src="../images/chiffrement_LUKS_formatage_ouverture.PNG" alt="">
 <pre><code>./format-and-mount-extra2.sh</code></pre>
@@ -5220,10 +5220,10 @@ sudo chown vagrant:vagrant /mnt2
 sudo echo "hello" &gt; /mnt2/file.txt
 sudo cat /mnt2/file.txt</code></pre>
                     <h3>Chiffrement LUKS - système de fichiers et montage :</h3>
-                    <p>Volume accessible via /dev/mapper/c1 :</p>
+                    <h4>Volume accessible via /dev/mapper/c1 :</h4>
                     <img src="../images/chiffrement_LUKS_systeme_fichiers_montage.PNG" alt="">
                     <h3>Chiffrement LUKS - fermeture et réouverture :</h3>
-                    <p>dm-crypt &amp; LUKS - démontage, fermeture, réouverture :</p>
+                    <h4>dm-crypt &amp; LUKS - démontage, fermeture, réouverture :</h4>
                     <img src="../images/chiffrement_LUKS_fermeture_reouverture.PNG" alt="">
 <pre><code>./unmount-close-extra2.sh</code></pre>
                     <p>Voici le contenu du fichier `<span class="em">unmount-close-extra2.sh</span>` :</p>
@@ -5259,31 +5259,29 @@ sudo cryptsetup close /dev/mapper/c1</code></pre>
                             <p>La passphrase ne chiffre pas le volume - elle chiffre la master key, stockée dans un key slot (LUKS2 : jusqu'à 32 slots).</p>
                         </li>
                     </ul>
-                    <div>
-                        <div class="information float_left">
-                            <img src="../images/information.png" alt="Information" class="float_left">
-                            <p>Conséquences pratiques :</p>
-                            <ul>
-                                <li>
-                                    <p>Changer la passphrase &#8594; rechiffre seulement la master key (millisecondes, volume intact).</p>
-                                </li>
-                                <li>
-                                    <p>Passphrase compromise &#8594; il faut rechiffrer tout le volume (<span class="em">cryptsetup-reencrypt</span>).</p>
-                                </li>
-                                <li>
-                                    <p>Plusieurs passphrases en parallèle : utilisateur + clé de récupération admin dans deux slots distincts.</p>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="important">
-                            <img src="../images/important.png" alt="Important" class="float_left">
-                            <p>Structure du header LUKS :</p>
-                            <p><span class="em">Key slot 0</span> : passphrase utilisateur.</p>
-                            <p><span class="em">Key slot 1</span> : clé de récupération.</p>
-                            <p><span class="em">...</span> (jusqu'à 32).</p>
-                            <p>&#8592; chaque slot contient la master key chiffrée.</p>
-                            <p><span class="em">Volume</span> : chiffré AES-XTS avec la master key.</p>
-                        </div>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Conséquences pratiques :</p>
+                        <ul>
+                            <li>
+                                <p>Changer la passphrase &#8594; rechiffre seulement la master key (millisecondes, volume intact).</p>
+                            </li>
+                            <li>
+                                <p>Passphrase compromise &#8594; il faut rechiffrer tout le volume (<span class="em">cryptsetup-reencrypt</span>).</p>
+                            </li>
+                            <li>
+                                <p>Plusieurs passphrases en parallèle : utilisateur + clé de récupération admin dans deux slots distincts.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Structure du header LUKS :</p>
+                        <p><span class="em">Key slot 0</span> : passphrase utilisateur.</p>
+                        <p><span class="em">Key slot 1</span> : clé de récupération.</p>
+                        <p><span class="em">...</span> (jusqu'à 32).</p>
+                        <p>&#8592; chaque slot contient la master key chiffrée.</p>
+                        <p><span class="em">Volume</span> : chiffré AES-XTS avec la master key.</p>
                     </div>
                     <h3>Scénario d'attaque - disque chiffré :</h3>
                     <ul>
@@ -5301,7 +5299,7 @@ sudo cryptsetup close /dev/mapper/c1</code></pre>
                         </li>
                     </ul>
                     <h3>Scénario d'attaque : tentative de lecture :</h3>
-                    <p>Attachement du disque chiffré à crypto-fs-attaque - passphrase requise :</p>
+                    <h4>Attachement du disque chiffré à crypto-fs-attaque - passphrase requise :</h4>
                     <img src="../images/scenario_attaque_tentative_lecture.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>./remount-open-extra2.sh</code></pre>
@@ -5319,7 +5317,7 @@ sudo cryptsetup luksOpen /dev/sdd c1
 # puis le monter
 sudo mount LABEL=extra2 /mnt2</code></pre>
                     <h3>Scénario d'attaque - vue du disque sans passphrase :</h3>
-                    <p>Disque vu comme bloc brut non partitionné :</p>
+                    <h4>Disque vu comme bloc brut non partitionné :</h4>
 <pre><code>sudo lsblk -l</code></pre>
                     <h3>Comparaison : chiffrement fichier/FS vs disque entier :</h3>
                     <ul>
