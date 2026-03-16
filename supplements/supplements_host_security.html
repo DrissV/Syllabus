@@ -276,6 +276,37 @@
 <pre><code>bcdedit /set hypervisorlaunchtype auto</code></pre>
                         </li>
                     </ul>
+                    <p>En pratique, on peut également faire deux entrées Windows dans le bootloader avec des configurations différentes :</p>
+                    <ul>
+                        <li>
+                            <p>Windows 1 : avec WSL / Hyper-V &#8594; pour Docker Desktop.</p>
+                        </li>
+                        <li>
+                            <p>Windows 2 : sans Hyper-V &#8594; pour VMware/VirtualBox.</p>
+                        </li>
+                    </ul>
+                    <p>Il ne s'agit pas réellement d'un "dual boot" classique. La solution consiste simplement à créer une seconde entrée de démarrage Windows avec Hyper-V désactivé.</p>
+                    <p>La commande suivante affiche les entrées de boot actuelles :</p>
+<pre><code>bcdedit</code></pre>
+                    <p>La commande suivante crée une copie de l'entrée Windows actuelle et va retourner un <span class="em">GUID</span> sous la forme <span class="em">{1f3c1c9e-xxxx-xxxx-xxxx-xxxxxxxxxxxx}</span> :</p>
+<pre><code>bcdedit /copy {current} /d "Windows sans Hyper-V (GNS3 / VMware)"</code></pre>
+                    <p>La commande suivante désactive Hyper-V sur cette entrée. Il ne faut pas oblier de remplacer <span class="em">{GUID}</span> par celui reçu :</p>
+<pre><code>bcdedit /set {GUID} hypervisorlaunchtype off</code></pre>
+                    <p>On va renommer l'entrée actuelle (WSL / Docker) avec la commande suivante :</p>
+<pre><code>bcdedit /set {current} description "Windows avec Hyper-V (WSL / Docker)"</code></pre>
+                    <p>On peut également choisir l'entrée par défaut avec la commande suivante :</p>
+<pre><code>bcdedit /default {GUID}</code></pre>
+                    <p>On peut aussi modifier le temps du menu de boot avec la commande suivante (par exemple : menu visible 5 secondes) :</p>
+<pre><code>bcdedit /timeout 5</code></pre>
+                    <p>On peut également vouloir que l'entrée sans Hyper-V soit la première ligne du menu de boot avec la commande suivante :</p>
+<pre><code>bcdedit /displayorder {current} {GUID}</code></pre>
+                    <p>La configuration est maintenant finie. On va vérifier qu'on a bien deux entrées Windows dans le bootloader avec la commande suivante :</p>
+<pre><code>bcdedit</code></pre>
+                    <p>On devrait maintenant voir :</p>
+<pre><code>Windows Boot Manager
+
+Windows avec Hyper-V (WSL / Docker)
+Windows sans Hyper-V (GNS3 / VMware)</code></pre>
                     <h4>Délais d'attente (timeouts) :</h4>
                     <ul>
                         <li>
@@ -3327,7 +3358,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
     ssl_certificate_key     /home/vagrant/server/server.key;        
 
 }</code></pre>
-                    <p>Il faut pas oublier de redémarrer le service Nginx pour appliquer la configuration SSL avec la commande suivante :</p>
+                    <p>Il ne faut pas oublier de redémarrer le service Nginx pour appliquer la configuration SSL avec la commande suivante :</p>
 <pre><code>sudo systemctl restart nginx</code></pre>
                     <h3>Interaction HTTPS client avec serveur :</h3>
                     <ul>
@@ -4101,7 +4132,7 @@ end</code></pre>
     ssl_certificate_key /home/vagrant/tls/server.key;
 }</code></pre>
                             </ul>
-                            <p>Après avoir modifier la configuration de nginx, il faut pas oublier de faire les commandes suivantes :</p>
+                            <p>Après avoir modifier la configuration de nginx, il ne faut pas oublier de faire les commandes suivantes :</p>
 <pre><code>sudo nginx -t</code></pre>
 <pre><code>sudo nginx -s reload</code></pre>
                         </li>
