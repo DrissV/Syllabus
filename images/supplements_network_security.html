@@ -58,6 +58,8 @@
                     <li><a href="#labo1">Labo 1 : construction d'un petit réseau</a></li>
                     <li><a href="#labo2">Labo 2 : construction et sécurisation d'un réseau de taille moyenne</a></li>
                     <li><a href="#correction_labo_netsec_lab2">Correction du labo NetSec Lab2 :</a></li>
+                    <li><a href="#GRE_Tunnel">GRE Tunnel</a></li>
+                    <li><a href="#protocoles_IPsec">Les protocoles IPsec</a></li>
                 </ol>
             </nav>
             
@@ -6106,10 +6108,10 @@ iface eth0 inet static
                     <h5>Configuration :</h5>
                     <ul>
                         <li>
-                            <p>/etc/network/interface : voir IP topologie.</p>
+                            <p>/etc/network/interfaces : voir IP topologie.</p>
                         </li>
                         <li>
-                            <p>/etc/resolv.conf :: nameserver 172.19.3.5</p>
+                            <p>/etc/resolv.conf : nameserver 172.19.3.5</p>
                         </li>
                     </ul>
                     <h5>NETMGMT-SRV : rsyslog.conf :</h5>
@@ -6660,6 +6662,726 @@ snmp-server enable traps vlancreate
 snmp-server enable traps vlandelete
 snmp-server enable traps syslog
 snmp-server host 172.19.254.4 2c  vlancreate</code></pre>
+                </article>
+                <article>
+                    <h2 id="GRE_Tunnel">GRE Tunnel :</h2>
+                    <img src="../images/topologie_GRE_tunnel.png" alt="">
+                    <p>Voici la configuration de R1 :</p>
+<pre><code>!
+! Last configuration change at 23:51:34 CET Sat Mar 18 2023
+!
+version 15.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R1
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+!
+no aaa new-model
+clock timezone CET 1 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+no ip icmp rate-limit unreachable
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+! 
+!
+interface Tunnel1
+    ip address 172.16.1.1 255.255.255.0
+    ip mtu 1400
+    ip tcp adjust-mss 1360
+    tunnel source 100.100.100.1
+    tunnel destination 200.200.200.2
+!
+interface Ethernet0/0
+    ip address 100.100.100.1 255.255.255.252
+!
+interface Ethernet0/1
+    ip address 192.168.111.1 255.255.255.0
+!
+interface Ethernet0/2
+    no ip address
+    shutdown
+!
+interface Ethernet0/3
+    no ip address
+    shutdown
+!
+interface Ethernet1/0
+    no ip address
+    shutdown
+!
+interface Ethernet1/1
+    no ip address
+    shutdown
+!
+interface Ethernet1/2
+    no ip address
+    shutdown
+!
+interface Ethernet1/3
+    no ip address
+    shutdown
+!
+interface Serial2/0
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/1
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/2
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/3
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/0
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/1
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/2
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/3
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 192.168.222.0 255.255.255.0 172.16.1.2
+ip route 200.200.200.0 255.255.255.252 100.100.100.2
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+    exec-timeout 0 0
+    privilege level 15
+    logging synchronous
+line aux 0
+    exec-timeout 0 0
+    privilege level 15
+    logging synchronous
+line vty 0 4
+    login
+    transport input none
+!
+!
+end</code></pre>
+                    <p>Voici la configuration de R2 :</p>
+<pre><code>!
+! Last configuration change at 00:37:21 CET Sun Mar 19 2023
+!
+version 15.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+no aaa new-model
+clock timezone CET 1 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+no ip icmp rate-limit unreachable
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+!
+!
+interface Ethernet0/0
+    ip address 100.100.100.2 255.255.255.252
+!
+interface Ethernet0/1
+    ip address 202.44.40.1 255.255.255.252
+!
+interface Ethernet0/2
+    no ip address
+    shutdown
+!
+interface Ethernet0/3
+    no ip address
+    shutdown
+!
+interface Ethernet1/0
+    no ip address
+    shutdown
+!
+interface Ethernet1/1
+    no ip address
+    shutdown
+!
+interface Ethernet1/2
+    no ip address
+    shutdown
+!
+interface Ethernet1/3
+    no ip address
+    shutdown
+!
+interface Serial2/0
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/1
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/2
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/3
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/0
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/1
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/2
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/3
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 200.200.200.0 255.255.255.252 202.44.40.2
+!
+!
+control-plane
+!
+!
+line con 0
+    exec-timeout 0 0
+    privilege level 15
+    logging synchronous
+line aux 0
+    exec-timeout 0 0
+    privilege level 15
+    logging synchronous
+line vty 0 4
+    login
+    transport input none
+!
+!
+end</code></pre>
+                    <p>Voici la configuration de R3 :</p>
+<pre><code>!
+! Last configuration change at 00:37:04 CET Sun Mar 19 2023
+!
+version 15.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R3
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+!
+no aaa new-model
+clock timezone CET 1 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+no ip icmp rate-limit unreachable
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+!
+!
+interface Ethernet0/0
+    ip address 202.44.40.2 255.255.255.252
+!
+interface Ethernet0/1
+    ip address 200.200.200.1 255.255.255.252
+!
+interface Ethernet0/2
+    no ip address
+    shutdown
+!
+interface Ethernet0/3
+    no ip address
+    shutdown
+!
+interface Ethernet1/0
+    no ip address
+    shutdown
+!
+interface Ethernet1/1
+    no ip address
+    shutdown
+!
+interface Ethernet1/2
+    no ip address
+    shutdown
+!
+interface Ethernet1/3
+    no ip address
+    shutdown
+!
+interface Serial2/0
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/1
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/2
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/3
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/0
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/1
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/2
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/3
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 100.100.100.0 255.255.255.252 202.44.40.1
+!
+!
+control-plane
+!
+!
+line con 0
+    exec-timeout 0 0
+    privilege level 15
+    logging synchronous
+line aux 0
+    exec-timeout 0 0
+    privilege level 15
+    logging synchronous
+line vty 0 4
+    login
+    transport input none
+!
+!
+end</code></pre>
+                    <p>Voici la configuration de R4 :</p>
+<pre><code>!
+! Last configuration change at 23:58:02 CET Sat Mar 18 2023
+!
+version 15.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R4
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+!
+no aaa new-model
+clock timezone CET 1 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+no ip icmp rate-limit unreachable
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+!
+!
+interface Tunnel1
+    ip address 172.16.1.2 255.255.255.0
+    ip mtu 1400
+    ip tcp adjust-mss 1360
+    tunnel source 200.200.200.2
+    tunnel destination 100.100.100.1
+!
+interface Ethernet0/0
+    ip address 200.200.200.2 255.255.255.252
+!
+interface Ethernet0/1
+    ip address 192.168.222.1 255.255.255.0
+!
+interface Ethernet0/2
+    no ip address
+    shutdown
+!
+interface Ethernet0/3
+    no ip address
+    shutdown
+!
+interface Ethernet1/0
+    no ip address
+    shutdown
+!
+interface Ethernet1/1
+    no ip address
+    shutdown
+!
+interface Ethernet1/2
+    no ip address
+    shutdown
+!
+interface Ethernet1/3
+    no ip address
+    shutdown
+!
+interface Serial2/0
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/1
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/2
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial2/3
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/0
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/1
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/2
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+interface Serial3/3
+    no ip address
+    shutdown
+    serial restart-delay 0
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 100.100.100.0 255.255.255.252 200.200.200.1
+ip route 192.168.111.0 255.255.255.0 172.16.1.1
+!
+!
+control-plane
+!
+!
+line con 0
+    exec-timeout 0 0
+    privilege level 15
+    logging synchronous
+line aux 0
+    exec-timeout 0 0
+    privilege level 15
+    logging synchronous
+line vty 0 4
+    login
+    transport input none
+!
+!
+end</code></pre>
+                </article>
+                <article>
+                    <h2 id="protocoles_IPsec">Les protocoles IPsec :</h2>
+                    <p>IPsec (Internet Protocol Security) est un Framework qui sert à protéger le trafic IP sur la couche réseau, car le protocole IP lui-même ne possède aucune caractéristique de sécurité.</p>
+                    <p>IPsec protège le trafic IP avec les caractéristiques suivantes :</p>
+                    <ul>
+                        <li>
+                            <p>Confidentialité : en chiffrant les données, personne d'autre que l'expéditeur et le destinataire ne peut les lire.</p>
+                        </li>
+                        <li>
+                            <p>Intégrité : pour assurer que personne ne modifie les données contenues dans les paquets. En calculant une valeur de hachage, l'expéditeur et le destinataire peuvent vérifier que des modifications ont été approtées au paquet.</p>
+                        </li>
+                        <li>
+                            <p>Authentification : l'expéditeur et le destinataire s'authentifient mutuellement pour s'assurer que les échanges se font entre les équipements avec lesquels les échanges doivent se faire.</p>
+                        </li>
+                        <li>
+                            <p>Anti-rejeu : même si un paquet est crypté et authentifié, un attaquant peut essayer de capturer ces paquets et de les renvoyer. En utilisant des numéros de séquence, IPsec ne transmet pas de paquets en double.</p>
+                        </li>
+                    </ul>
+                    <p>En tant que framework, IPsec utilise une variété de protocoles pour mettre en oeuvre les fonctionnalités décrites ci-dessus. Le protocole IPsec peut être utilisé sur de nombreux dispositifs différents, notamment sur les routeurs, les pare-feu, les hôtes et les serveurs.</p>
+                    <p>IPsec est assez complexe et il y a beaucoup de façons différentes de l'implémenter. Dans ce cours, nous commencerons par une vue d'ensemble, puis nous examinerons de plus près chacun des composants.</p>
+                    <p>Avant de pouvoir protéger des paquets IP, nous avons besoin de deux homologues IPsec qui construisent le tunnel IPsec.</p>
+                    <p>Pour établir un tunnel IPsec, on utilise un protocole appelé IKE (Internet Key Exchange).</p>
+                    <p>La construction d'un tunnel IPsec se fait en deux phases :</p>
+                    <ul>
+                        <li>
+                            <p>IKE phase 1</p>
+                        </li>
+                        <li>
+                            <p>IKE phase 2</p>
+                        </li>
+                    </ul>
+                    <p>Dans la phase 1 d'IKE, deux pairs négocient les protocoles de cryptage, d'authentification, de hachage et d'autres protocoles qu'ils souhaitent utiliser. Dans cette phase, une session ISAKMP (Internet Security Association and Key Management Protocol) est établie. Cette session est également appelée tunnel ISAKMP ou tunnel IKE phase 1 :</p>
+                    <p>L'ensemble des paramètres que les deux appareils utiliseront est appelé SA (Security Association). Voici un exemple de deux routeurs qui ont établi le tunnel IKE phase 1 :</p>
+                    <img src="../images/tunnel_IKE_Phase1.PNG" alt="">
+                    <p>Le tunnel IKE phase 1 n'est utilisé que pour le trafic de gestion. Ce tunnel est utilisé comme méthode sécurisée pour établir le second tunnel appelé tunnel IKE phase 2 ou tunnel IPsec et pour le tafic de gestion comme les keepalives.</p>
+                    <p>Voici une image de nos deux routeurs qui ont terminé la phase 2 de l'IKE :</p>
+                    <img src="../images/tunnel_IKE_Phase2.PNG" alt="">
+                    <p>Une fois la phase 2 de KE terminée, on dispose d'un tunnel IKE phase 2 (ou tunnel IPsec) qui peut petre utilisé pour protéger les données utilisateur. Ces données utilisateur seront envoyées via le tunnel IKE phase 2.</p>
+                    <img src="../images/tunnel_IKE_Phase2_donnees.PNG" alt="">
+                    <p>IKE construit les tunnels, mais il n'authentifie pas et ne crypte pas les données des utilisateurs. Pour cela on utilise deux autres protocoles pour :</p>
+                    <ul>
+                        <li>
+                            <p>AH (Authentication Header)</p>
+                        </li>
+                        <li>
+                            <p>ESP (Encapsulating Security Payload)</p>
+                        </li>
+                    </ul>
+                    <p>AH et ESP offrent tous deux l'authentification et l'intégrité, mais seul ESP prend en charge le cryptage. C'est la raison pour laquelle ESP est le choix le plus populaire de nos jours.</p>
+                    <p>Les deux protocoles prennent en charge deux modes différents :</p>
+                    <ul>
+                        <li>
+                            <p>Le mode transport</p>
+                        </li>
+                        <li>
+                            <p>Mode tunnel</p>
+                        </li>
+                    </ul>
+                    <p>La principale différence entre les deux est qu'en mode transport, nous utilisons l'en-tête IP d'origine, tandis qu'en mode tunnel, nous utilisons un nouvel en-tête IP. Voici un exemple pour visualiser cela :</p>
+                    <img src="../images/difference_mode_transport_mode_tunnel.PNG" alt="">
+                    <p>Le mode transport est souvent utilisé entre deux appareils qui veulent protéger un trafic non sécurisé (exemple : trafic ftp, telnet). Le mode tunnel est généralement utilisé pour les VPN de site à site, où il est nécessaire d'encapsuler le paquet IP d'origine, car il s'agit principalment d'adresses IP privées qui ne peuvent pas être acheminées sur l'Internet. Nous verrons ces deux mode en détail plus loin dans ce cours.</p>
+                    <p>Le processus complet d'IPsec se compose de cinq étapes :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Initiation</span> : quelque chose doit déclencher la création de nos tunnels. Par exemple, lorsque vous configurez IPsec sur un routeur, vous utilisez une liste d'accès pour indiquer au routeur les données à protéger. Lorsque le routeur reçoit quelque chose qui correspond à la liste d'accès, il lance le processus IKE. Il est également possible d'initier manuellement le tunnel.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">IKE phase 1</span> : les équiments (exemple : parefeux) négocie une association de sécurité pour construire le tunnel IKE phase 1 (tunnel ISAKMP).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">IKE phase 2</span> : à l'intérieur du tunnel IKE phase 1, nous construisons le tunnel IKE phase 2 (tunnel IPsec).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Transfert de données</span> : dans cette étape, on protège les donées de l'utilisateur en les envoyant par le tunnel IKE phase 2.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Terminaison</span>: lorsqu'il n'y a plus de de données utilisateur à protéger, le tunnel IPsec se termine au bout d'un certain temps.</p>
+                        </li>
+                    </ul>
+                    <p>Maintenant qu'on connait les principes de base d'IPsec, examinons de plus près chacun de ses différents composants.</p>
+                    <ol>
+                        <li>
+                            <h3>IKE (Internet Key Exchange) :</h3>
+                            <p>IKE (Internet Key Exchange) est l'un des principaux protocoles d'IPsec puisqu'il établit l'association de sécurité entre deux pairs. Il existe deux versions d'IKE : IKEv1 et IKEv2.</p>
+                            <p>IKEv1 a été introduit vers 1998 et remplacé par IKEv2 en 2005. Il existe quelques différences entre les deux versions :</p>
+                            <ul>
+                                <li>
+                                    <p>IKEv2 nécessite moins de bande passante qu'IKEv1.</p>
+                                </li>
+                                <li>
+                                    <p>IKEv2 prend en charge l'authentification EAP (avec des clés pré-partagées et des certificats numériques).</p>
+                                </li>
+                                <li>
+                                    <p>IKEv2 intègre la prise en charge du NAT transversal (nécessaire lorsque le pair IPsec se truve derrière un routeur NAT).</p>
+                                </li>
+                                <li>
+                                    <p>IKEv2 dispose d'un mécanisme de keepalive intégré pour les tunnels.</p>
+                                </li>
+                            </ul>
+                            <p>La liste des avantages est encore longue, mais pour l'instant, concentrons-nous sur la compréhension d'IKE. Comme expliqué précédemment, IKE utilise deux phases : IKE Phase 1 et IKE Phase 2.</p>
+                            <p>Voyons ce qui se passe à chaque phase. Tout ce qui est expliqué ci-dessous s'applique à IKEv1.</p>
+                            <ol>
+                                <li>
+                                    <h4>IKE Phase 1 :</h4>
+                                    <p>L'objectif principal de la phase 1 de l'IKE est d'établir un tunnel sécurisé que nous pouvons utilsier la phase 2 de l'IKE. Nous pouvons décomposer la phase 1 en trois étaoes simples :</p>
+                                    <ul>
+                                        <li>
+                                            <h5>Étape 1 : Négociation :</h5>
+                                            <p>Le pair dont le trafic doit être potégé entame la phase 1 de la négociation IKE. Les deux homologues négocient sur les points suivants :</p>
+                                            <ul>
+                                                <li>
+                                                    <p><span class="em">Hachage</span>: on utilise un algorithme de hachage pour vérifier l'intégrité (MD5 ou SHA).</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="em">Authentification</span> : chaque pair doit prouver son identité. Les deux options couramment utilisées sont une clé pré-partagée ou des certificats numériques.</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="em">Group DH (Diffie-Hellman)</span> : le groupe DH détermine la force de la clé utilisée dans le processus d'échange de clés. Les numéros de groupe les plus élevés sont plus sûrs, mais leur calcul prend plus de temps.</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="em">Durée de vie</span> : combien de temps le tunnel IKE phase 1 résiste-t-il ? Plus la durée de vie est courte, plus il est sûr, car sa reconstruction implique l'utilisation de nouvelles clés. Chaque fournisseur utilise une durée de vie différente, mais la valeur par défaut la plus courante est de 86400 secondes (1 jour).</p>
+                                                </li>
+                                                <li>
+                                                    <p><span class="em">Chiffrement</span> : quel algorithme utilise-t-on pour le chiffrement ? Par exemple, DES, 3DES ou AES.</p>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <h5>Étape 2 : Échange de clés DH :</h5>
+                                            <p>Une fois que la négociation a abouti, les deux pairs savent quelle politique utiliser. Ils utiliseront alors le groupe DH qu'ils ont négocié pour échanger des clés. Le résultat final est que les deux pairs disposent d'une clé partagée.</p>
+                                        </li>
+                                        <li>
+                                            <h5>Étape 3 : Authentification :</h5>
+                                            <p>Lors de la dernière étape, les deux pairs s'authentifient mutiellement en utilisant la méthide d'authentification convenue lors de la négociation. Lorsque l'authenntification est réussie, la phase 1 de l'IKE est terminée. Le résultat final est un tunnel IKE phase 1 (tunnel ISAKMP) qui est bidirectionnel. Cela signifie que les deux pairs peuvent envoyer et recevoir des données sur ce tunnel.</p>
+                                        </li>
+                                    </ul>
+                                    <p>Les trois étapes ci-dessus peuvent être réalisées en utilisant deux modes différents :</p>
+                                    <ul>
+                                        <li>
+                                            <p>Le mode normal (Main Mode)</p>
+                                        </li>
+                                        <li>
+                                            <p>Le mode agressif (Agressive Mode)</p>
+                                        </li>
+                                    </ul>
+                                    <p>Le mode main utilise six messages, tandis que le mode agressif n'en utilise que trois. Le mode main est considéré comme plus sûr. Examinons les deux modes de plus près.</p>
+                                    <ol>
+                                        <li>
+                                            <h5>Le mode normal (Main mode) :</h5>
+                                            <p>Le mode principal d'IKEv1 utilise 6 messages.</p>
+                                            
+                                        </li>
+                                    </ol>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
