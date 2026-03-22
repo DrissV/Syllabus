@@ -5418,25 +5418,371 @@ copy running-config startup-config</code></pre>
                             </tr>
                         </tbody>
                     </table>
-                    <p>Une <span class="em">interface loopback</span> est une interface <span class="em">virtuelle</span> d'un routeur ou d'un switch de niveau 3.</p>
-                    <p>Elle ne dépend d'aucun lien physique et reste active tant que l'équipement est opérationnel.</p>
-                    <p>Les interfaces loopback sont utilisées pour :</p>
-                    <ul>
-                        <li>
-                            <p>identifier de manière <span class="em">unique et stable</span> un équipement,</p>
-                        </li>
-                        <li>
-                            <p>servir d'adresse de <span class="em">gestion</span> (SSH, supervision),</p>
-                        </li>
-                        <li>
-                            <p>fournir un <span class="em">identifiant fiable</span> pour les protocoles de routage.</p>
-                        </li>
-                    </ul>
-                    <p>Les loopbacks sont généralement configurées avec un masque <span class="em">/32</span>, car elles représentent une adresse unique et non un réseau.</p>
-                    <p><span class="em">Phrase clé à retenir</span> : Le plan d'adressage structure les communications entre équipements, tandis que l'interface loopback fournit une identité réseau stable et indépendante des liens physiques.</p>
                     <p>Voici les différentes étapes à exécuter :</p>
                     <h3>Étapes :</h3>
                     <ol>
+                        <li>
+                            <h4>La configuration du serveur DNS-SRV (Appliance DNS) :</h4>
+                            <p>Le serveur <span class="em">DNS-SRV</span> utilise l'application <span class="em">dnsmasq</span> pour fournir le service DNS. La résolution des noms internes se fait principalement via le fichier <span class="em">/etc/hosts</span>, où chaque entrée associe une adresse IP à un nom de domaine complet (FQDN) et à un nom d'hôte local. Par exemple, "<span class="em">Adresse_IP [FQDN] hostname</span>". Les clients du réseau interrogent ce serveur pour résoudre les noms internes, et dnsmasq peut être configuré pour transférer les requêtes vers un DNS externe si le nom demandé n'existe pas dans <span class="em">/etc/hosts</span>.</p>
+<pre><code>nano /etc/hosts</code></pre>
+<pre><code>127.0.0.1 localhost
+# DMZ Servers
+172.19.2.4 mail-srv.itscmnetsec.lab mail-srv
+172.19.2.6 web-srv.itscmnetsec.lab web-srv
+172.19.3.4 ad-srv.itscmnetsec.lab ad-srv
+172.19.3.5 dns-srv.itscmnetsec.lab dns-srv
+172.19.254.3 sesame-srv.itscmnetsec.lab sesame-srv
+172.19.254.4 netmgmt-srv.itscmnetsec.lab netmgmt-srv
+# CORE Routers
+172.19.254.1 rt-core.itscmnetsec.lab rt-core
+172.19.254.2 dmz-core.itscmnetsec.lab dmz-core
+# HQ
+172.17.254.1 hq-core.itscmnetsec.lab hq-core
+172.17.254.2 hq-access1.itscmnetsec.lab hq-access1
+172.17.254.3 hq-access2.itscmnetsec.lab hq-access2
+# BRANCH
+172.18.254.1 branch-core.itscmnetsec.lab branch-core
+172.18.254.2 branch-access1.itscmnetsec.lab branch-access1
+172.18.254.3 branch-access2.itscmnetsec.lab branch-access2
+# IPv6 standard entries
+::1 localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters</code></pre>
+                            <h5>Configuration de dnsmasq :</h5>
+<pre><code>nano /etc/dnsmasq.conf</code></pre>
+                            <p>Ajouter ou dé-commenter les lignes :</p>
+<pre><code>#DNSMASQ configuration
+local=/itscmnet.lab/
+user=root
+group=root
+listen-address=172.19.3.5
+expand-hosts
+domain=itscmnetsec.lab</code></pre>
+                            <p>Redémarrer le service :</p>
+<pre><code>systemctl restart dnsmasq</code></pre>
+                            <h5>Configuration des interfaces :</h5>
+<pre><code>nano /etc/network/interfaces</code></pre>
+<pre><code># Loopback
+auto lo
+iface lo inet loopback
+# Interface réseau
+auto eth0
+iface eth0 inet static
+    address 172.19.3.5
+    netmask 255.255.255.0
+    gateway 172.19.3.1
+    up echo nameserver 1.1.1.1 &gt; /etc/resolv.conf</code></pre>
+                            <p>Redémarrer le service :</p>
+<pre><code>systemctl restart networking</code></pre>
+                            <p>Voici les différentes configurations :</p>
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Adresse</th>
+                                        <th>Gateway</th>
+                                        <th>Nameserver</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>WEB-SRV</td>
+                                        <td>172.19.2.6</td>
+                                        <td>172.19.2.1</td>
+                                        <td>172.19.3.5</td>
+                                    </tr>
+                                    <tr>
+                                        <td>MAIL-SRV</td>
+                                        <td>172.19.2.4</td>
+                                        <td>172.19.2.1</td>
+                                        <td>172.19.3.5</td>
+                                    </tr>
+                                    <tr>
+                                        <td>AD-SRV</td>
+                                        <td>172.19.3.4</td>
+                                        <td>172.19.3.1</td>
+                                        <td>172.19.3.5</td>
+                                    </tr>
+                                    <tr>
+                                        <td>SESAME-SRV</td>
+                                        <td>172.19.254.3</td>
+                                        <td>172.19.254.1</td>
+                                        <td>172.19.3.5</td>
+                                    </tr>
+                                    <tr>
+                                        <td>NETMGMT-SRV</td>
+                                        <td>172.19.254.4</td>
+                                        <td>172.19.254.1</td>
+                                        <td>172.19.3.5</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </li>
+                        <li>
+                            <h4>La configuration du serveur NETMGMT-SRV et SESAME-SRV (Appliance toolbox et Tacacsgui) :</h4>
+                            <p><span class="em">NETMGMT-SRV</span> fournit les services de <span class="em">journalisation (rsyslog), NTP, SNMP, web et FTP/TFTP</span>, et peut également servir de serveur DHCP (non utilisé pour le moment.</p>
+                            <p><span class="em">SESAME-SRV</span> est dédié au service <span class="em">TACACS+</span> pour l'authentification, l'autorisation et la comptabilité (accounting) des équipements réseau via l'interface Tacacsgui/AAA.</p>
+                            <h5>Configuration du NETMGT-SRV :</h5>
+<pre><code>nano /etc/rsyslog.conf</code></pre>
+<pre><code><pre><code>#  /etc/rsyslog.conf
+Configuration file for rsyslog.
+#
+#
+#
+For more information see
+/usr/share/doc/rsyslog-doc/html/rsyslog_conf.html
+#
+#  Default logging rules can be found in /etc/rsyslog.d/50-default.conf
+#################
+#### MODULES ####
+#################
+module(load="imuxsock") # provides support for local system logging
+module(load="immark")  # provides --MARK-- message capability
+# provides UDP syslog reception
+module(load="imudp")
+input(type="imudp" port="514")
+# provides TCP syslog reception
+module(load="imtcp")
+input(type="imtcp" port="514")
+# provides kernel logging support and enable non-kernel klog messages
+module(load="imklog" permitnonkernelfacility="on")
+###########################
+#### GLOBAL DIRECTIVES ####
+###########################
+#
+# Use traditional timestamp format.
+# To enable high precision timestamps, comment out the following line.
+#
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+# Filter duplicated messages
+$RepeatedMsgReduction on
+#
+# Set the default permissions for all log files.
+#
+$FileOwner syslog
+$FileGroup adm
+$FileCreateMode 0640
+$DirCreateMode 0755
+$Umask 0022
+$PrivDropToUser syslog
+$PrivDropToGroup syslog
+#
+# Where to place spool and state files
+#
+$WorkDirectory /var/spool/rsyslog
+#
+# Include all config files in /etc/rsyslog.d/
+#
+$IncludeConfig /etc/rsyslog.d/*.conf</code></pre>
+                            <p>Redémarrer le service :</p>
+<pre><code>systemctl restart syslog</code></pre>
+                            <h5>Configuration du SESAME-SRV :</h5>
+<pre><code>nano /etc/tacacs+/tac_plus.cfg</code></pre>
+<pre><code>#### SPAWND ####
+d = spawnd {
+    listen = { port = 49 }
+} ## END OF SPAWND
+#### GLOBAL CONFIGURATION ####
+id = tac_plus { ## START GLOBAL CONFIGURATION
+    ### MANUAL CONFIGURATION START ###
+    log = accounting_log {
+        destination =  "| /opt/tacacsgui/parser/tacacs_parser.sh accounting"
+        log separator = "|!|"
+        }
+    log = authentication_log {
+        destination = "| /opt/tacacsgui/parser/tacacs_parser.sh authentication"
+        log separator = "|!|"
+    }
+    log = authorization_log {
+        destination = "| /opt/tacacsgui/parser/tacacs_parser.sh authorization"
+        log separator = "|!|"
+    }
+    ### MANUAL CONFIGURATION END ###
+    accounting log = accounting_log
+    authentication log = authentication_log
+    authorization log = authorization_log
+    connection timeout = 600
+    context timeout = 3600
+    password max-attempts = 1
+    password backoff = 1
+    #### LIST OF DEVICE GROUPS ####
+    host = switches {
+        key = "sesameouvretoi!"
+    } #END OF switches
+    host = Routers {
+        key = "sesameouvretoi!"
+    } #END OF Routers
+    host = Servers {
+        key = "sesameouvretoi!"
+    } #END OF Servers
+    #### LIST OF HOSTS ####
+    host = rt-core {
+        address = "172.19.254.1/32"
+        key = "sesameouvretoi!"
+        template = Routers
+    } #END OF rt-core
+    host = dmz-access {
+        address = "172.19.254.2/32"
+        template = switches
+    } #END OF dmz-access
+    host = hq-core {
+        address = "172.17.254.1/32"
+        template = switches
+    } #END OF hq-core 
+    host = hq-access1 { 
+        address = "172.17.254.2/32"
+        template = switches
+    } #END OF hq-access1
+    host = hq-access2 {
+        address = "172.17.254.3/32"
+        template = switches
+    } #END OF hq-access2
+    host = branch-core {
+        address = "172.18.254.1/32" 
+        template = switches 
+    } #END OF branch-core
+    host = branch-access1 {
+        address = "172.18.254.2/32"
+        template = switches
+    } #END OF branch-access1
+    host = branch-access2 {
+        address = "172.18.254.3/32"
+        template = switches
+    } #END OF branch-access2
+    #### LIST OF ACL ####
+    #### LIST OF USER GROUPS ####
+    # ---------- Groupes ---------
+    # 1) MONITOR : seulement certains "show"
+    group = monitor {
+        default service = deny
+        service = exec {
+            priv-lvl = 1
+        }
+        service = shell {
+            priv-lvl = 1
+            # Autoriser certaines commandes show **seulement**
+            cmd = show {
+                permit ^version$
+                permit ^interfaces?$
+                permit ^ip\ interface\ brief$
+                permit ^logging$
+                permit ^inventory$
+                permit ^platform.*$
+                permit ^environment.*$
+                permit ^interface\ status$
+                # Interdire explicitement ce qui fuit la conf/sensibles
+                deny ^running-?config$
+                deny ^startup-?config$
+                deny ^tech-?support$
+            }
+            # Tout le reste refusé (par défaut)
+        }
+    }
+    # 2) OPERATOR : tous les "show" + configuration des interfaces (et rien d'autre)
+    group = operator {
+    default service = deny
+    service = exec {
+            priv-lvl = 7
+        }
+        service = shell {
+            priv-lvl = 7
+            # a) Tous les "show"
+            cmd = show {
+                permit .*
+            }
+            # b) Autoriser l'entrÃ©e en mode configuration
+            cmd = configure {
+                permit ^terminal$
+            }
+            # c) En mode config, autoriser la config des interfaces uniquement
+            #    -> on permet 'interface ...' puis un sous-ensemble courant
+            cmd = interface {
+                permit .*
+            }
+            # Autoriser commandes utiles en sous-mode interface :
+            cmd = description {
+                permit .*
+            }
+            cmd = shutdown {
+                permit ^(shutdown|no\ shutdown)$
+            }
+            cmd = speed {
+                permit .*
+            }
+            cmd = duplex {
+                permit .*
+            }
+            cmd = switchport {
+                permit .*
+            }
+            cmd = ip {
+                permit ^address.*$
+            }
+            cmd = ipv6 {
+                permit ^address.*$
+            }
+            cmd = negotiation {
+                permit .*
+            }
+            cmd = load-interval {
+                permit .*
+            }
+            # d) Empêcher modifications globales non liées aux interfaces :
+            cmd = username { deny .* }
+            cmd = router { deny .* }
+            cmd = ip { deny ^(route|default-gateway|domain.*|name-server).*$ }
+            cmd = line { deny .* }
+            cmd = aaa { deny .* }
+            cmd = snmp-server { deny .* }
+            cmd = ntp { deny .* }
+            cmd = crypto { deny .* }
+            cmd = vlan { deny .* }
+            cmd = spanning-tree { deny .* }
+            cmd = interface-range { deny .* }   # (optionnel si vous voulez limiter à 1 interface à la fois) 
+            cmd = write { deny .* }
+            cmd = copy { deny .* }
+            cmd = erase { deny .* }
+            cmd = delete { deny .* }
+        }
+    }
+    # 3) ADMIN : accès complet
+    group = admin {
+        default service = permit
+        service = exec {
+            priv-lvl = 15
+        }
+        service = shell {
+            priv-lvl = 15
+            # Tout est permis
+        }
+    }
+# ---------- Comptes (exemples) ---------
+# En pratique, vous relierez ça à LDAP/AD.
+    user = alice {
+        member = monitor
+        login = cleartext "MotDePasseFort1!"
+    }
+    user = bob {
+        member = operator
+        login = cleartext "MotDePasseFort2!"
+    }
+    user = carol {
+        member = admin
+        login = cleartext "MotDePasseFort3!"
+    }
+    user = pierrel { 
+        login = crypt $1$ymIhEtBv$tu1N/lT2E7KrLkRjosCYQ1 
+        message = "Welcome Pierre 
+        # Attention toute action est loggué" 
+        member = admin 
+        ### GET SERVICES FROM GROUP 
+    } #END OF pierre
+}## END GLOBAL CONFIGURATION</code></pre>
+                            <p>Redémarrer le service :</p>
+<pre><code>systemctl restart tacacs+</code></pre>
+                        </li>
                         <li>
                             <h4>Configuration IP sur RT-CORE :</h4>
 <pre><code>enable
@@ -5458,46 +5804,26 @@ vlan 2
     name EMPLOYES
     exit
 vlan 3
-    name FINANCES
+    name FINANCE
     exit
 vlan 254
     name MANAGEMENT
     exit
 end</code></pre>
+                            <p>Pour le DMZ-CORE, le nom du VLAN est <span class="em">DMZ</span> et celui du VLAN 3 : <span class="em">I-DMZ</span>.</p>
                             <p>Même sur les switchs L3, les VLANs doivent exister.</p>
                         </li>
                         <li>
                             <h4>Configurer les ports ACCESS (switchs L2) :</h4>
-                            <h5>PC employé :</h5>
+                            <p>Il faut adapter les interfaces et leurs adresses :</p>
 <pre><code>interface e0/1
-    switchport mode access
     switchport access vlan 2
-    switchport port-security
-    switchport port-security violation restrict
-    switchport port-security maximum 1
-    switchport port-security mac-address sticky
-    spanning-tree portfast
-    spanning-tree bpduguard enable
-    exit</code></pre>
-                            <h5>PC finance :</h5>
-<pre><code>interface e0/2
     switchport mode access
-    switchport access vlan 3
     switchport port-security
+    switchport port-security aging time 2
     switchport port-security violation restrict
-    switchport port-security maximum 1
-    switchport port-security mac-address sticky
-    spanning-tree portfast
-    spanning-tree bpduguard enable
-    exit</code></pre>
-                            <h5>PC admin :</h5>
-<pre><code>interface e0/3
-    switchport mode access
-    switchport access vlan 254
-    switchport port-security
-    switchport port-security violation restrict
-    switchport port-security maximum 1
-    switchport port-security mac-address sticky
+    switchport port-security aging type inactivity
+    duplex auto
     spanning-tree portfast
     spanning-tree bpduguard enable
     exit</code></pre>
@@ -5506,11 +5832,12 @@ end</code></pre>
                         </li>
                         <li>
                             <h4>Configurer les TRUNKS (L2 &#8596; L3) :</h4>
-                            <p>&#8594; Toujours entre un switch L2 et un switch L3. <span class="em">Sur chaque switch ACCESS</span>, vers le CORE :</p>
+                            <p>&#8594; Toujours entre un switch L2 et un switch L3. Il faut le faire dans les deux sens.</p>
 <pre><code>interface e0/0
     switchport trunk encapsulation dot1q
     switchport mode trunk
     switchport trunk allowed vlan 2,3,254
+    duplex auto
     exit</code></pre>
                         </li>
                         <li>
@@ -5533,6 +5860,28 @@ interface vlan 254
 end</code></pre>
                             <p>&#8594; Ces IP sont les GATEWAYS des PCs.</p>
                             <p>Il faut faire la même chose pour BRANCH-CORE avec l'adresse IP 172.18.X.1.</p>
+                            <p>Comme DMZ-CORE est un switch L2, il ne peut pas faire de l'adressage IP. Il faut configurer des interfaces sur RT-CORE :</p>
+<pre><code>interface e0/3
+    no ip address
+    exit
+
+interface e0/3.2
+    encapsulation dot1Q 2
+    ip address 172.19.2.1 255.255.255.0
+    exit
+
+interface e0/3.3
+    encapsulaton dot1Q 3
+    ip address 172.19.3.1 255.255.255.0
+    exit
+
+interface e0/3.254
+    encapsulation dot1Q 254
+    ip address 172.19.254.1 255.255.255.0
+    exit</code></pre>
+                            <p>Même si ton routeur gère tout le routage, le switch L2 a besoin d'une gateway pour sa propre communication.</p>
+<pre><code>ip default-gateway 172.17.254.1</code></pre>
+                            <p>Cette commande dit au switch : <q>Si tu dois parler à un autre routeur, envoie tout vers ce routeur</q>.</p>
                         </li>
                         <li>
                             <h4>IP sur les liens inter-sites :</h4>
@@ -5561,7 +5910,7 @@ interface e0/1
     ip address 172.16.1.9 255.255.255.252
     no shutdown
     exit</code></pre>
-                            <p>Un switch L3 est un équipement hybride capable d'effectuer de la <span class="em">communtation (L2)</span> et du <span class="em">routage (L3)</span>.</p>
+                            <p>Un switch L3 est un équipement hybride capable d'effectuer de la <span class="em">commutation (L2)</span> et du <span class="em">routage (L3)</span>.</p>
                             <p>Cependant, <span class="em">par défaut</span>, les interfaces physiques d'un switch L3 sont configurées en mode <span class="em">Layer 2 (switchport)</span>.</p>
                             <p>Cela signifie que :</p>
                             <ul>
@@ -5578,10 +5927,7 @@ interface e0/1
                                     <p>Elles participent uniquement à la commutation.</p>
                                 </li>
                             </ul>
-                            <p>Ainsi, une tentative de configuration IP sur un port en mode switchport provoque une erreur :</p>
-<pre><code>interface e0/0
-    ip address 172.16.1.2 255.255.255.252</code></pre>
-                            <p>Cette configuration échoue car le port est toujours en mode Layer 2.</p>
+                            <p>Ainsi, une tentative de configuration IP sur un port en mode switchport provoque une erreur. Cette configuration échoue car le port est toujours en mode Layer 2.</p>
                             <p>Pour qu'un port physique d'un switch L3 puisse fonctionne comme une interface routée (équivalente à une interface de routeur), il est nécessaire d'utiliser la commande <span class="em">no switchport</span>.</p>
                             <p>Cette commande permet de :</p>
                             <ul>
@@ -5598,13 +5944,7 @@ interface e0/1
                                     <p>autoriser l'attribution d'une adresse IP.</p>
                                 </li>
                             </ul>
-                            <p>Après l'application de <span class="em">no switchport</span>, l'interface peut être configurée comme suit :</p>
-<pre><code>interface e0/0
-    no switchport
-    ip address 172.16.1.2 255.255.255.252
-    no shutdown
-    exit</code></pre>
-                            <p>Le port devient alors une véritable interface Layer 3.</p>
+                            <p>Après l'application de <span class="em">no switchport</span>, le port devient alors une véritable interface Layer 3.</p>
                             <p>La différence entre port switchport et port routé est :</p>
                             <table class="tableBalises">
                                 <thead>
@@ -5679,14 +6019,6 @@ interface e0/1
                                     <p>placer le lien physique en trunk transportant uniquement ce VLAN.</p>
                                 </li>
                             </ul>
-                            <p>Par exemple :</p>
-<pre><code>vlan 100
-    name TRANSIT
-
-interface vlan 100
-    ip address 172.16.1.2 255.255.255.252
-    no shutdown
-    exit</code></pre>
                             <p>Cette approche est fonctionnelle mais :</p>
                             <ul>
                                 <li>
@@ -5719,17 +6051,39 @@ interface e0/1
 <pre><code>interface loopback0
     ip address 172.16.0.X 255.255.255.255
     exit</code></pre>
-                            <p>(X selon l'équipement)</p>
+                            <p>(X selon l'équipement) RT-CORE = 1, HQ-CORE = 2, BRANCH-CORE = 3</p>
+                            <p>Une <span class="em">interface loopback</span> est une interface <span class="em">virtuelle</span> d'un routeur ou d'un switch de niveau 3.</p>
+                            <p>Elle ne dépend d'aucun lien physique et reste active tant que l'équipement est opérationnel.</p>
+                            <p>Les interfaces loopback sont utilisées pour :</p>
+                            <ul>
+                                <li>
+                                    <p>identifier de manière <span class="em">unique et stable</span> un équipement,</p>
+                                </li>
+                                <li>
+                                    <p>servir d'adresse de <span class="em">gestion</span> (SSH, supervision),</p>
+                                </li>
+                                <li>
+                                    <p>fournir un <span class="em">identifiant fiable</span> pour les protocoles de routage.</p>
+                                </li>
+                            </ul>
+                            <p>Les loopbacks sont généralement configurées avec un masque <span class="em">/32</span>, car elles représentent une adresse unique et non un réseau.</p>
+                            <p><span class="em">Phrase clé à retenir</span> : Le plan d'adressage structure les communications entre équipements, tandis que l'interface loopback fournit une identité réseau stable et indépendante des liens physiques.</p>
                         </li>
                         <li>
                             <h4>Routage OSPF :</h4>
                             <h5>Sur RT-CORE :</h5>
 <pre><code>router ospf 10
+    ! Activer OSPF sur les liens point-à-point et VLANs nécessaires
     network 172.16.1.0 0.0.0.3 area 0
     network 172.16.1.4 0.0.0.3 area 0
-    network 172.19.0.254 0.0.255.255 area 0
-    network 172.16.0.1 0.0.0.0 area 0
+    network 172.19.2.0 0.0.0.255 area 0
+    network 172.19.3.0 0.0.0.255 area 0
+    ttl-security all-interfaces
+    ! Protection OSPF contre les paquets non autorisés
+    passive-interface e0/0
+    ! Faire la même commande pour tous les ifaces ne participants pas au routage !
     default-information originate
+    ! Pour injecter la default gateway dans les tables de routage des peers
     exit</code></pre>
                             <p>La commande <span class="em">router ospf 10</span> démarre le processus de routage dynamique OSPF.</p>
                             <p><span class="em">area 0</span> est le <span class="em">backbone OSPF</span>.</p>
@@ -5741,8 +6095,7 @@ interface e0/1
     network 172.16.1.8 0.0.0.3 area 0
     network 172.17.2.0 0.0.0.255 area 0
     network 172.17.3.0 0.0.0.255 area 0
-    network 172.17.254.0 0.0.0.255 area 0
-    network 172.16.0.2 0.0.0.0 area 0</code></pre>
+    network 172.17.254.0 0.0.0.255 area 0</code></pre>
                             <h5>Sur BRANCH-CORE :</h5>
 <pre><code>router ospf 10
     network 172.16.1.4 0.0.0.3 area 0
@@ -5761,7 +6114,7 @@ interface e0/1
 <pre><code>access-list 15 permit 172.17.0.0 0.0.255.255
 access-list 15 permit 172.18.0.0 0.0.255.255
 access-list 15 permit 172.19.0.0 0.0.255.255</code></pre>
-                            <p>Cette commande identifie le trafic "inside".</p>
+                            <p>Cette commande identifie le trafic "inside", c'est-à-dire les réseaux internes autorisés à utiliser le NAT.</p>
 <pre><code>ip nat pool NATPOOL 192.168.122.120 192.168.122.150 netmask 255.255.255.0</code></pre>
                             <p>Cette commande définit le pool d'adresses publiques.</p>
 <pre><code>ip nat inside source list 15 pool NATPOOL</code></pre>
@@ -5778,45 +6131,58 @@ interface e0/2
     ip nat inside
     exit
 
-interface e0/3
+interface e0/3.2
+    ip nat inside
+    exit
+
+interface e0/3.3
+    ip nat inside
+    exit
+
+interface e0/3.254
     ip nat inside
     exit</code></pre>
                         </li>
                         <li>
                             <h4>Exclure les gateways :</h4>
                             <p>Sur RT-CORE uniquement :</p>
-<pre><code>ip dhcp excluded-address 172.17.2.1
-ip dhcp excluded-address 172.17.3.1
-ip dhcp excluded-address 172.18.2.1
-ip dhcp excluded-address 172.18.3.1</code></pre>
-                            <p>Cela empêche le serveur d'attribuer les IP des routeurs.</p>
+<pre><code>ip dhcp excluded-address 172.17.2.1 172.17.2.3
+ip dhcp excluded-address 172.17.3.1 172.17.3.3
+ip dhcp excluded-address 172.18.2.1 172.18.2.3
+ip dhcp excluded-address 172.18.3.1 172.18.3.3</code></pre>
+                            <p>Cela empêche le serveur d'attribuer les IP des routeurs (gateways) et autres équipements fixes.</p>
                         </li>
                         <li>
                             <h4>DHCP POOL :</h4>
 <pre><code>ip dhcp pool HQ_EMPLOYES
     network 172.17.2.0 255.255.255.0
     default-router 172.17.2.1
-    dns-server 1.1.1.1 8.8.8.8
+    dns-server 172.19.3.5
+    domain-name itscmnetsec.lab
+    lease 0 8
     exit
 
-ip dhcp pool HQ_FINANCES
+ip dhcp pool HQ_FINANCE
     network 172.17.3.0 255.255.255.0
     default-router 172.17.3.1
-    dns-server 1.1.1.1 8.8.8.8
+    dns-server 172.19.3.5
+    domain-name itscmnet.lab
+    lease 0 8
     exit</code></pre>
                             <p>&#8594; Il faut faire la même chose pour BRANCH-CORE avec l'adresse IP 172.18.X.1.</p>
+                            <p>La commande <span class="em">lease</span> possède le format <span class="em">lease &lt;jours&gt; &lt;heures&gt; &lt;minutes&gt;</span>. Donc, conrcrètement, <span class="em">lease 0 8</span> permet à une IP donnée par le DHCP d'être valable 8 heures.</p>
                         </li>
                         <li>
                             <h4>IP helper-address :</h4>
                             <p>Sur les switchs L3 :</p>
 <pre><code>interface vlan 2
-    ip helper-address 172.19.254.2
+    ip helper-address 172.19.254.1
     exit
 
 interface vlan 3
-    ip helper-address 172.19.254.2
+    ip helper-address 172.19.254.1
     exit</code></pre>
-                            <p>&#8594; 172.19.254.2 = RT-CORE (serveur DHCP)</p>
+                            <p>&#8594; 172.19.254.1 = RT-CORE (serveur DHCP)</p>
                             <p>Le helper relaie les broadcasts DHCP vers le serveur.</p>
                         </li>
                         <li>
@@ -5824,126 +6190,94 @@ interface vlan 3
 <pre><code>ip dhcp</code></pre>
                             <p>Pour vérifier l'adresse IP attribuée avec DHCP :</p>
 <pre><code>show ip</code></pre>
-                            <h5>PC Admin (IP statique) :</h5>
-<pre><code>ip 172.17.254.10 255.255.255.0 172.17.254.1</code></pre>
-                            <p>L'adresse <span class="em">172.17.254.10</span> est choisie par convention pour le poste d'administration, afin de séparer clairement les adresses d'infrastructure (gateway, équipements réseau) des postes utilisateurs.</p>
                         </li>
                         <li>
-                            <h4>IP statiques serveurs DMZ (Linux) :</h4>
-                            <h5>WEB-SRV :</h5>
-<pre><code>ip addr add 172.19.254.10/24 dev eth0
-ip route add default via 172.19.254.1</code></pre>
-                            <h5>MAIL-SRV :</h5>
-<pre><code>ip addr add 172.19.254.20/24 dev eth0
-ip route add default via 172.19.254.1</code></pre>
-                            <h5>DNS-SRV :</h5>
-<pre><code>ip addr add 172.19.254.30/24 dev eth0
-ip route add default via 172.19.254.1</code></pre>
-                            <h5>AD-SRV :</h5>
-<pre><code>ip addr add 172.19.254.40/24 dev eth0
-ip route add default via 172.19.254.1</code></pre>
-                            <h5>TACACS :</h5>
-<pre><code>ip addr add 172.19.254.50/24 dev eth0
-ip route add default via 172.19.254.1</code></pre>
+                            <h4>Sécurisation du MANAGEMENT PLANE pour tous les routeurs/switchs :</h4>
+<pre><code>! ssh a besoin du hostname et du domain-name
+hostname HQ-ACCESS2
+ip domain-name itscmnetsec.lab
+ip ssh version 2
+crypto key generate rsa modulus 1024
+exit</code></pre>
                         </li>
                         <li>
-                            <h4>Services DMZ (commandes essentielles) :</h4>
-                            <h5>DNS :</h5>
-<pre><code>apt update
-apt install bind9 -y</code></pre>
-<pre><code>nano /etc/bind/named.conf.local</code></pre>
-<pre><code>zone "labo.local" {
-    type master;
-    file "/etc/bind/db.labo.local";
-};</code></pre>
-<pre><code>nano /etc/bind/db.labo.local</code></pre>
-<pre><code>@   IN SOA dns.labo.local. admin.labo.local. (
-    2
-    604800
-    86400
-    2419200
-    604800 )
-
-@   IN NS dns.labo.local.
-dns IN A 172.19.254.30
-web IN A 172.19.254.10
-mail IN A 172.19.254.20
-ad IN A 172.19.254.40</code></pre>
-<pre><code>echo "nameserver 127.0.0.1" &gt; /etc/resolv.conf</code></pre>
-                            <p>En résumé, le serveur DNS doit pointer vers lui-même pour résoudre sa propre zone.</p>
-<pre><code>systemctl restart bind9</code></pre>
-                            <h5>WEB :</h5>
-<pre><code>apt install apache2 -y</code></pre>
-<pre><code>echo "&lt;h1&gt;DMZ Web Server OK&lt;/h1&gt;" &gt; /var/www/html/index.html
-systemctl restart apache2</code></pre>
-                            <h5>MAIL :</h5>
-<pre><code>apt install postfix -y</code></pre>
-                            <p>Lors de l'installation de postfix, il y a un <span class="em">assistant interactif</span>. Choisir "Internet Site" et définir le nom de domaine (par exemple : labo.local).</p>
-<pre><code>postconf -e "myhostname=mail.labo.local"
-postconf -e "mydomain=labo.local"
-systemctl restart postfix</code></pre>
-                            <h5>ACTIVE DIRECTORY :</h5>
-<pre><code>apt install samba krb5-user winbind -y</code></pre>
-<pre><code>samba-tool domain provision</code></pre>
-<pre><code>cp /var/lib/samba/private/krb5.conf /etc/krb5.conf</code></pre>
-<pre><code>systemctl restart smbd nmbd winbind</code></pre>
-                            <p>En résumé, Samba4 fournit à la fois Active Directory et DNS intégré.</p>
-                            <h5>TACACS+ :</h5>
-<pre><code>apt install tacacs+ -y</code></pre>
-<pre><code>nano /etc/tacacs+/tac_plus.conf</code></pre>
-<pre><code>key = cisco123
-
-user = admin {
-    default service = permit
-    login = cleartext admin123
-}</code></pre>
-<pre><code>systemctl restart tacacs+</code></pre>
-                            <h5>Sur les routeurs (AAA) :</h5>
-<pre><code>aaa new-model
-tacacs server SESAME
-    address ipv4 172.19.254.50
-    key cisco123</code></pre>
-<pre><code>line vty 0 4
+                            <h4>Configuration du TACACS (AAA) :</h4>
+<pre><code>! Définir les serveurs TACACS+
+tacacs server SESAME-SRV1
+    address ipv4 172.19.254.3
+    key sesameouvretoi!
+tacacs server SESAME-SRV2
+    address ipv4 172.19.254.10
+    key MonSecretTresFort
+!Création de l'utilisateur admin local
+username admin privilege 15 secret 4 SlVU5pmedhiwSh/Mf3GWLH1bdEXCUIl/x2uZmfyPAM2
+!Activation AAA
+aaa new-model
+!
+!
+! Groupe de serveurs
+aaa group server tacacs+ TAC-GRP
+    server name SESAME-SRV1
+    server name SESAME-SRV2
+! Authentification : TACACS+ puis local en secours
+aaa authentication login default group tacacs+ local
+! Autorisation du mode EXEC (le prompt) via TACACS+, secours local
+aaa authorization exec default group tacacs+ local if-authenticated
+! Autorisation des commandes par niveaux (crucial pour "monitor"/"operator")
+aaa authorization commands 0 default group tacacs+ local
+aaa authorization commands 1 default group tacacs+ local
+aaa authorization commands 15 default group tacacs+ local
+! Comptabilisation (audit)
+aaa accounting exec default start-stop group tacacs+
+aaa accounting commands 0 default start-stop group tacacs+
+aaa accounting commands 1 default start-stop group tacacs+
+! aaa accounting commands 15 default start-stop group tacacs+
+! aaa authentication login Authen_TACACS group tacacs+ local
+! aaa authorization exec AuthorExec_TACACS group tacacs+ local 
+! aaa authorization network AuthorNet_TACACS group tacacs+ local 
+! aaa accounting exec default start-stop group tacacs+
+! aaa accounting commands 0 default start-stop group tacacs+
+! aaa accounting commands 1 default start-stop group tacacs+
+! aaa accounting commands 15 default start-stop group tacacs+
+aaa accounting network default start-stop group tacacs+
+!         
+!         
+! Activation du AAA pour les connexions ssh         
+line vty 0 4
     login authentication default
     transport input ssh
-    exit</code></pre>
-<pre><code>aaa authentication login default group tacacs+ local
-aaa authorization exec default group tacacs+ local
-aaa authorization commands 15 default group tacacs+ local
-aaa accounting exec default start-stop group tacacs+</code></pre>
-                            <h5>SNMP :</h5>
-<pre><code>apt install snmpd -y</code></pre>
-<pre><code>nano /etc/snmp/snmpd.conf</code></pre>
-<pre><code>rocommunity public</code></pre>
-<pre><code>systemctl restart snmpd</code></pre>
-                            <p>En résumé, dans un environment réel, utiliser SNMPv3 avec authentification et chiffrement.</p>
-                            <h5>SYSLOG :</h5>
-                            <p>Sur NETMGT-SRV :</p>
-<pre><code>apt install rsyslog -y</code></pre>
-<pre><code>systemctl restart rsyslog</code></pre>
-                            <p>Sur les routeurs :</p>
-<pre><code>logging host 172.19.254.60 transport udp port 514
-logging trap informational</code></pre>
-                            <h5>SUPERVISION :</h5>
-<pre><code>apt install net-tools tcpdump -y</code></pre>
-                        </li>
-                        <li>
-                            <h4>Sécurité MANAGEMENT PLANE :</h4>
-<pre><code>username admin secret Admin123
-ip domain-name labo.local
-ip ssh version 2
-crypto key generate rsa modulus 2048
-exit</code></pre>
-<pre><code>line vty 0 4
-    transport input ssh
-    login local
-    access-class MGMT-ACL in
-    exit</code></pre>
-<pre><code>ip access-list standard MGMT-ACL
-    permit 172.17.254.0 0.0.0.255
-    permit 172.18.254.0 0.0.0.255
-    exit</code></pre>
-                            <p>En résumé, cette configuration limite l'accès SSH aux équipements aux VLANs de management uniquement.</p>
+!         
+! Activation du mot de passe pour la console         
+line console 0 
+    password mon-secret
+!</code></pre>
+                </li>
+                <li>
+                    <h4>Configuration du logging :</h4>
+<pre><code>logging origin-id hostname
+logging facility local6
+logging source-interface Vlan254
+logging host 172.19.254.4
+ntp server 172.19.254.4</code></pre>
+                </li>
+                <li>
+                    <h4>Configuration de snmp :</h4>
+<pre><code>access-list 1 permit 172.17.254.0 0.0.0.255
+access-list 1 permit 172.18.254.0 0.0.0.255
+access-list 2 permit 172.19.254.0 0.0.0.255
+!         
+!         
+snmp-server community ITSCMNETSEC_RO RO 1
+snmp-server community ITSCMNETSEC_RW RW 2
+snmp-server trap-source Vlan254
+snmp-server enable traps snmp authentication linkdown linkup coldstart warmstart
+snmp-server enable traps tty
+snmp-server enable traps ospf
+snmp-server enable traps vtp
+snmp-server enable traps vlancreate
+snmp-server enable traps vlandelete
+snmp-server enable traps syslog
+snmp-server host 172.19.254.4 2c  vlancreate</code></pre>
                         </li>
                         <li>
                             <h4>Sécurité CONTROL PLANE (OSPF) :</h4>
@@ -6666,6 +7000,18 @@ snmp-server host 172.19.254.4 2c  vlancreate</code></pre>
                 <article>
                     <h2 id="GRE_Tunnel">GRE Tunnel :</h2>
                     <img src="../images/topologie_GRE_tunnel.png" alt="">
+                    <p>Un <span class="em">GRE Tunnel (Generic Routing Encapsulation)</span> est une technique réseau qui permet de <span class="em">créer un "tunnel virtuel" entre deux routeurs</span> à travers un réseau intermédiaire (souvent Internet).</p>
+                    <p>Par exemple :</p>
+<pre><code>interface Tunnel1
+    ip address 172.16.1.1 255.255.255.0
+    ip mtu 1400
+    ip tcp adjust-mss 1360
+    tunnel source 100.100.100.1
+    tunnel destination 200.200.200.2
+    exit</code></pre>
+                    <p>La commande <span class="em">ip mtu 1400</span> réduit la taille maximale du paquet dans le tunnel car GRE ajoute de l'overhead (~ 24 bytes) sinon fragmentation.</p>
+                    <p>La commande <span class="em">ip tcp adjust-mss 1360</span> ajuste le MSS TCP. Cela évite la fragmentation et les problèmes de connexion (sites qui chargent mal).</p>
+                    <p>Les commandes <span class="em">tunel source/destination</span> définissent les <span class="el">IP réelles (WAN)</span>.</p>
                     <p>Voici la configuration de R1 :</p>
 <pre><code>!
 ! Last configuration change at 23:51:34 CET Sat Mar 18 2023
