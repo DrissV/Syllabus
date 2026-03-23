@@ -85,6 +85,10 @@
                     <li><a href="#confidentialite_niveau_fichier_systeme_fichier">Confidentialité au niveau fichier ou système de fichier</a></li>
                     <li><a href="#confidentialite_niveau_disque">Confidentialité au niveau du disque</a></li>
                     <li><a href="#devoir_securite_physique">Devoir Sécurité physique</a></li>
+                    <li><a href="#backup_environnnements_de_travail">Backup : Environnements de travail</a></li>
+                    <li><a href="#backup_concepts">Backup : Concepts</a></li>
+                    <li><a href="#backup_implementation_type">Backup : implémentation type</a></li>
+                    <li><a href="#backup_exemple_implementation_alternative">Backup : exemple d'implémentation alternative</a></li>
                     <li><a href="#evaluation_instructions">Évaluation - instructions</a></li>
                 </ol>
             </nav>
@@ -5540,6 +5544,412 @@ sudo mount LABEL=extra2 /mnt2</code></pre>
                     <p>Enfin, les infrastructures critiques, comme les salles serveurs, doivent bénéficier d'une protection renforcée. L'accès doit être limité, surveillé et journalisé afin de garantir une traçabilité complète des actions.</p>
                     <h4>Conclusion :</h4>
                     <p>Le pentesting physique met en évidence l'importance d'une approche globale de la sécurité. Les attaques ne reposent pas uniquement sur des vulnérabilités techniques, mais aussi sur des failles humaines et organisationnelles. Une sécurité efficace doit donc combiner des mesures physiques, techniques et humaines. En renforçant la vigilance des utilisateurs et en améliorant les dispositifs de protection, il est possible de réduire significativement les risques d'intrusion et de compromission des systèmes.</p>
+                </article>
+                <article>
+                    <h2 id="backup_environnements_de_travail">Backup (Sauvegarde des données) : Environnements de travail :</h2>
+                    <ol>
+                        <li>
+                            <p>backup-origin :</p>
+                            <ul>
+                                <li>
+                                    <p>Contient données à sauvegarder.</p>
+                                </li>
+                                <li>
+                                    <p>Disque attaché.</p>
+                                </li>
+                            </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+
+disk = "./extra-disk.vdi"
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.15'
+  config.vm.provider :virtualbox
+
+  config.vm.provision "file", source: "./create-snapshot.sh", destination: "/home/vagrant/create-snapshot.sh"
+  config.vm.provision "file", source: "./delete-snapshot.sh", destination: "/home/vagrant/delete-snapshot.sh"
+  
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+
+#!/bin/bash
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire - important pour les certificats
+  timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname
+  sudo hostnamectl set-hostname backup-origin
+  echo "172.28.128.15       backup-origin" &gt;&gt; /etc/hosts
+  echo "172.28.128.16       backup-server" &gt;&gt; /etc/hosts
+
+  # Rendre scripts exécutables
+  chmod +x /home/vagrant/create-snapshot.sh
+  chmod +x /home/vagrant/delete-snapshot.sh
+
+  # Création d'un point de montage pour snapshot
+  mkdir /mnt2
+
+  # check disk
+  lsblk -l
+
+  # création physical volume - en détruisant ce qui avait avant
+  pvcreate -ff /dev/sdc
+
+  # création volume group
+  vgcreate origin /dev/sdc
+
+  # création logical volume
+  lvcreate -L 2M -n origin-data origin
+
+  # création du système de fichier
+  mkfs /dev/origin/origin-data
+
+  # montage du système de fichier
+  mount /dev/origin/origin-data /mnt
+
+  # création d'un fichier à sauvegarder
+  echo "hello" | sudo tee /mnt/file.txt
+
+  # affichage du contenu du ficher
+  cat /mnt/file.txt
+
+  # suppression de lost+found
+  rm -rf /mnt/lost+found
+
+  SHELL
+
+  # Création / Raccord des disques
+  # https://stackoverflow.com/questions/27501019/vb-customize-storageattach-mounts-my-disk-first-time-but-changes-are-lost-aft
+  
+  config.vm.provider "virtualbox" do |vb|
+    unless File.exist?(disk)
+      vb.customize ['createhd', '--filename', disk, '--variant', 'Fixed', '--size', 1 * 10]
+    end
+    
+    vb.customize ['storageattach', :id,  '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', disk]
+  end
+
+end</code></pre>
+                        </li>
+                        <li>
+                            <p>backup-server :</p>
+                            <ul>
+                                <li>
+                                    <p>Serveur de sauvegarde des données.</p>
+                                </li>
+                                <li>
+                                    <p>Disque pas attaché - box backup-origin doit être active.</p>
+                                </li>
+                            </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.16'
+  config.vm.provider :virtualbox
+
+  config.vm.provision "file", source: "./faire-sauvegarde.sh", destination: "/home/vagrant/faire-sauvegarde.sh"
+  
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire - important pour les certificats
+  timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname
+  hostnamectl set-hostname backup-server
+  echo "172.28.128.16       backup-server" &gt;&gt; /etc/hosts
+  echo "172.28.128.15       backup-origin" &gt;&gt; /etc/hosts
+
+  # Rendre script exécutable
+  chmod +x faire-sauvegarde.sh
+  SHELL
+
+end</code></pre>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="backup_concepts">Backup : Concepts :</h2>
+                    <h3>Motivation :</h3>
+                    <ul>
+                        <li>
+                            <p>Contexte :</p>
+                            <ul>
+                                <li>
+                                    <p>Incidents majeurs.</p>
+                                </li>
+                                <li>
+                                    <p>Fausses manoeuvres.</p>
+                                </li>
+                                <li>
+                                    <p>Accès physique malicieux non autorisé.</p>
+                                </li>
+                                <li>
+                                    <p>... plus récent, ransomware - évolution solutions.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Motivation :</p>
+                            <ul>
+                                <li>
+                                    <p>Disponibilité (Availability - CIA).</p>
+                                </li>
+                                <li>
+                                    <p>Défense en profondeur.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Éléments à prendre en compte :</h3>
+                    <p><a href="https://connect.ed-diamond.com/Linux-Pratique/lphs-051/faites-vous-de-bonnes-sauvegardes" target="_blank">https://connect.ed-diamond.com/Linux-Pratique/lphs-051/faites-vous-de-bonnes-sauvegardes</a></p>
+                    <ul>
+                        <li>
+                            <p>Profondeur - quid si attaque/erreur non détectée durant longue période ?</p>
+                        </li>
+                        <li>
+                            <p>Localisation des copies - quid si backup exposé comme le maître ?</p>
+                        </li>
+                        <li>
+                            <p>Sens de la copie - push vs pull - quid si machine infectée est vecteur de contamination du backup ?</p>
+                        </li>
+                        <li>
+                            <p>Cohérence des données - quid si mise à jour des données durant (long) backup.</p>
+                        </li>
+                        <li>
+                            <p>Périmètre des données - aussi système d'exploitation ?</p>
+                        </li>
+                        <li>
+                            <p>Encryption ? Droit d'accès ?</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="backup_implementation_type">Backup : implémentation type :</h2>
+                    <h3>Logiciels :</h3>
+                    <ul>
+                        <li>
+                            <p>Logiciels spécialisés :</p>
+                            <ul>
+                                <li>
+                                    <p>Facilité d'utilisation.</p>
+                                </li>
+                                <li>
+                                    <p>Adaptation aux menaces récentes ? Notamment, sens de la copie ?</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>"Scripts" :</p>
+                            <ul>
+                                <li>
+                                    <p>Flexibilité.</p>
+                                </li>
+                                <li>
+                                    <p>Qualité ?</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Logiciels pour datacenter :</p>
+                            <ul>
+                                <li>
+                                    <p>Copie à chaud de machines / disques virtuels.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Structure de solution :</h3>
+                    <p><a href="https://connect.ed-diamond.com/Linux-Pratique/lphs-049/sauvegardez-vos-donnees-centralisez-vos-logs-et-supervisez-votresecurite" target="_blank">https://connect.ed-diamond.com/Linux-Pratique/lphs-049/sauvegardez-vos-donnees-centralisez-vos-logs-et-supervisez-votresecurite</a></p>
+                    <ul>
+                        <li>
+                            <p>Couche transport :</p>
+                            <ul>
+                                <li>
+                                    <p>SSH - bonnes garanties de confidentialité, d'intégrité, d'authentification.</p>
+                                </li>
+                                <li>
+                                    <p>"tunnel" simple et disponible.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Cohérence des données :</p>
+                            <ul>
+                                <li>
+                                    <p>Prise d'un "snapshot" des fichiers en capitalisant sur fonctionnalité Logical Volume Management.</p>
+                                </li>
+                                <li>
+                                    <p>Alternative : utilisation d'un système de fichier supportant nativement la prise de snapshot.</p>
+                                </li>
+                                <li>
+                                    <p>Alternative : création d'un état stable au niveau applicatif.</p>
+                                </li>
+                                <li>
+                                    <p>Alternative : arrêt machine origine (?).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Logiciel :</p>
+                            <ul>
+                                <li>
+                                    <p>Rsync - fonctionnalités de base pour copie - calcul delta.</p>
+                                </li>
+                                <li>
+                                    <p>Automatisable (clé !).</p>
+                                </li>
+                                <li>
+                                    <p>Automatisation peut créer profondeur de backup (copie tous jours/mois).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Sens de la copie :</p>
+                            <ul>
+                                <li>
+                                    <p>Pull.</p>
+                                </li>
+                                <li>
+                                    <p>Serveur de backup protégeable par pare-feu.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Échange préalable de clés - à faire de manière sécurisée !</h3>
+                    <h4>backup-server - pull, donc le processus backup est client !</h4>
+                    <img src="../images/echange_prealable_cles_1.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+                    <p>Dans la VM "backup-server" :</p>
+<pre><code>cd ~/.ssh</code></pre>
+<pre><code>ssh-keygen</code></pre>
+<pre><code>ssh-keygen -y -f ./id_rsa</code></pre>
+                    <p>Dans la VM "backup-origin" :</p>
+<pre><code>sudo nano .ssh/authorized_keys</code></pre>
+<pre><code>cat .ssh/authorized_keys</code></pre>
+                    <h4>backup-origin - pull, donc les données sont extraites !</h4>
+                    <img src="../images/echange_prealable_cles_2.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>cat /etc/ssh/ssh_host_ed25519_key.pub</code></pre>
+                    <p>Dans la VM "backup-server" :</p>
+<pre><code>ssh-keygen -t ed25519 -p 22 -H backup-origin &gt;&gt; .ssh/known_hosts</code></pre>
+<pre><code>cat .ssh/known_hosts</code></pre>
+                    <h3>Création et montage d'un file system sur un disque en capitalisant sur Logical Volume Management :</h3>
+                    <h4>Contenu Vagrantfile pour backup-origin :</h4>
+                    <img src="../images/creation_montage_file_system_disque_capitalisant_LVM.PNG" alt="">
+                    <h3>Cohérence des données :</h3>
+                    <h4>Création d'un snapshot :</h4>
+<img src="../images/coherence_donnees_1.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées lors de l'image précédente :</p>
+<pre><code>sudo ls /mnt/</code></pre>
+<pre><code>./create-snapshot.sh</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">create-snapshot.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+set -euo pipefail
+
+# inspiré de
+# https://tldp.org/HOWTO/LVM-HOWTO/snapshots_backup.html
+# https://connect.ed-diamond.com/Linux-Pratique/lphs-049/sauvegardez-vos-donnees-centralisez-vos-logs-et-supervisez-votre-securite
+# vérifier connectivité et présence du disque monté
+sudo lsblk -l
+# démonter disque par prudence
+sudo umount /dev/origin/origin-data
+# création du snapshot
+sudo lvcreate -L 2M -s -n origin-data-snapshot origin/origin-data
+# remonter disque
+sudo mount /dev/origin/origin-data /mnt
+# montage du snapshot
+sudo mount /dev/origin/origin-data-snapshot /mnt2</code></pre>
+                    <h3>Sauvegarde proprement dite :</h3>
+                    <h4>Mobilisation rsync et ssh :</h4>
+<pre><code>./faire-sauvegarde.sh</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">faire-sauvegarde.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+set -euo pipefail
+
+# inspiré de
+# https://tldp.org/HOWTO/LVM-HOWTO/snapshots_backup.html
+# https://connect.ed-diamond.com/Linux-Pratique/lphs-049/sauvegardez-vos-donnees-centralisez-vos-logs-et-supervisez-votre-securite
+# vérifier connectivité et présence du disque monté
+# sauvegarde proprement dite
+rsync -avx --delete --rsync-path="/usr/bin/rsync" -e "ssh -i /home/vagrant/.ssh/id_rsa" vagrant@backup-origin:/mnt2/ sauvegarde
+# vérification contenu sauvegarde
+ls -l ./sauvegarde</code></pre>
+                    <h3>Cohérence des données :</h3>
+                    <h4>Suppression du snapshot :</h4>
+                    <img src="../images/coherence_donnees_2.PNG" alt="">
+<pre><code>./delete-snapshot.sh</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">delete-snapshot.sh</span>` :</p>
+<pre><code>#! /usr/bin/bash -x
+set -euo pipefail
+
+# inspiré de
+# https://tldp.org/HOWTO/LVM-HOWTO/snapshots_backup.html
+# https://connect.ed-diamond.com/Linux-Pratique/lphs-049/sauvegardez-vos-donnees-centralisez-vos-logs-et-supervisez-votre-securite
+# vérifier connectivité et présence du disque monté
+# démontage du snapshot
+sudo umount /dev/origin/origin-data-snapshot
+# suppression du snapshot
+sudo lvremove -y /dev/origin/origin-data-snapshot</code></pre>
+                    <h3>Rajout de données :</h3>
+                    <h4>Création d'un snapshot :</h4>
+                    <img src="../images/rajout_donnees.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>echo "hello2" | sudo tee /mnt/file2.txt</code></pre>
+<pre><code>./create-snapshot.sh</code></pre>
+                </article>
+                <article>
+                    <h2 id="backup_exemple_implementation_alternative">Backup : Exemple d'implémentation alternative :</h2>
+                    <h3>Exemple de solution alternative : BorgBackup, Borgmatic, Borgbase :</h3>
+                    <ul>
+                        <li>
+                            <p>Logiciel :</p>
+                            <ul>
+                                <li>
+                                    <p>BorgBackup - solution de backup avec forte déduplication des données.</p>
+                                </li>
+                                <li>
+                                    <p>BorgMatic - scripting "intelligent" des backups.</p>
+                                </li>
+                                <li>
+                                    <p>BorgBase - un fournisseur parmi d'autres de services de backup.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Sens de la copie :</p>
+                            <ul>
+                                <li>
+                                    <p>Push.</p>
+                                </li>
+                                <li>
+                                    <p>Configuration ici avec clé SSH uniquement pour ajout de données, pas pour suppression, modification de données - protection contre ransomware.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p><a href="https://www.borgbackup.org/" target="_blank">https://www.borgbackup.org/</a></p>
+                    <p><a href="https://torsion.org/borgmatic/" target="_blank">https://torsion.org/borgmatic/</a></p>
+                    <p><a href="https://www.borgbase.com/" target="_blank">https://www.borgbase.com/</a></p>
+                    <h3>Backup avec déduplication des données :</h3>
+                    <h4>En standard, création d'un backup (une "archive") :</h4>
+                    <img src="../images/backup_deduplication_donnees.PNG" alt="">
+<pre><code>borgmatic --stats</code></pre>
+                    <h3>Création d'une profondeur de backup :</h3>
+                    <h4>Configuration :</h4>
+                    <img src="../images/creation_profondeur_backup_1.PNG" alt="">
+<pre><code>cat .config/borgmatic.d/config.yml | grep keep</code></pre>
+                    <h4>Contenu sur serveur :</h4>
+                    <img src="../images/creation_profondeur_backup_2.PNG" alt="">
+<pre><code>borgmatic prune --list --dry-run</code></pre>
+                    <h3>Configuration du service :</h3>
+                    <h4>Utilisation d'une clé SSH pour ajouts exclusivement :</h4>
+                    <img src="../images/configuration_service.PNG" alt="">
                 </article>
                 <article>
                     <h2 id="evaluation_instructions">Évaluation - instructions :</h2>
