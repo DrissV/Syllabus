@@ -87,6 +87,12 @@
                     <li><a href="#backup_concepts">Backup : Concepts</a></li>
                     <li><a href="#backup_implementation_type">Backup : implémentation type</a></li>
                     <li><a href="#backup_exemple_implementation_alternative">Backup : exemple d'implémentation alternative</a></li>
+                    <li><a href="#reseau_fw_segmentation_detection_prevention_intrusion_environnements_de_travail">Réseau : Pare-feu et segmentation, Détection &amp; prévention d'intrusion : Environnements de travail</a></li>
+                    <li><a href="#fw_segmentation_cocepts_motivation">Pare-feu et segmentation : Concepts et motivation</a></li>
+                    <li><a href="#fw_segmentation_implementation_type">Pare-feu et segmentation : Implémentation type</a></li>
+                    <li><a href="#detection_prevention_intrusion_concepts">Détection/prévention d'intrusion : Concepts</a></li>
+                    <li><a href="#detection_prevention_intrusion_implementation_type">Détection/prévention d'intrusion : implémentation type</a></li>
+                    <li><a href="#detection_prevention_intrusion_force_faiblesses">Détection/prévention d'intrusion : Forces et faiblesses</a></li>
                     <li><a href="#evaluation_instructions">Évaluation - instructions</a></li>
                 </ol>
             </nav>
@@ -5965,6 +5971,464 @@ sudo lvremove -y /dev/origin/origin-data-snapshot</code></pre>
                     <h3>Configuration du service :</h3>
                     <h4>Utilisation d'une clé SSH pour ajouts exclusivement :</h4>
                     <img src="../images/configuration_service.PNG" alt="">
+                </article>
+                <article>
+                    <h2 id="reseau_fw_segmentation_detection_prevention_intrusion_environnements_de_travail">Réseau : Pare-feu et segmentation, Détection &amp; prévention d'intrusion : Environnements de travail :</h2>
+                    <ol>
+                        <li>
+                            <p>fw :</p>
+                            <ul>
+                                <li>
+                                    <p>Implémente un firewall.</p>
+                                </li>
+                                <li>
+                                    <p>2 serveurs web "locaux" : ports 80 et 8081.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>poste client (= machine hôte) :</p>
+                            <ul>
+                                <li>
+                                    <p>Accèdent aux serveurs web, avec et sans pare-feu.</p>
+                                </li>
+                                <li>
+                                    <p>Idéalement accès à Nmap.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <p>fw : à télécharger et démarrer comme d'habitude. Idéalement, essayer d'installer <a href="https://nmap.org/" target="_blank">Nmap</a> sur votre machine hôte.</p>
+                    <p>Voici le Vagrantfile de la VM "fw" :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.17'
+  config.vm.provision "file", source: "./www8081.conf", destination: "www8081.conf"
+  config.vm.provision "file", source: "./index.html", destination: "index.html"
+  config.vm.provision "file", source: "./v4", destination: "v4"
+  
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire - important pour bien interpréter les logs
+  sudo timedatectl set-timezone Europe/Brussels
+
+  # Changement hostname
+  hostnamectl set-hostname fw
+  echo "172.28.128.17      fw" &gt;&gt; /etc/hosts
+
+  # Chargement des packages, en mode non-interactif(!)
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y nginx traceroute
+
+  mkdir /var/www/html2
+  chown -R vagrant:www-data /var/www/html2
+  chmod 2775 /var/www/html2
+  mv /home/vagrant/index.html /var/www/html2/
+  mv /home/vagrant/www8081.conf /etc/nginx/conf.d/
+  chown root:root /etc/nginx/conf.d/www8081.conf
+
+  # (re)démarrage serveur nginx
+
+  systemctl enable nginx
+  systemctl start nginx
+  nginx -s reload
+
+  SHELL
+
+end</code></pre>
+                    <h3>IPS :</h3>
+                    <div class="important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>À ne faire que sur réseau contrôlé !</p>
+                    </div>
+                    <ol>
+                        <li>
+                            <p>metasploitable3-ub1404 :</p>
+                            <ul>
+                                <li>
+                                    <p>Environnement volontairement vulnérable.</p>
+                                </li>
+                                <li>
+                                    <p>Outil "Snort" installé pour (non-détection) d'intrusion.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>poste client (= machine hôte) :</p>
+                            <ul>
+                                <li>
+                                    <p>Metasploit framework (à installer !).</p>
+                                </li>
+                                <li>
+                                    <p>Penetration testing framework.</p>
+                                </li>
+                                <li>
+                                    <p>Utilisé pour démontrer attaques / déclencher alarmes ou absence d'alarme de Snort.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <p>Metasploitable : attendre les instructions du cours - exercices à ne faire que sur un réseau contrôlé ! Dans la mesure du possible, essayer d'installer <a href="https://www.metasploit.com/" target="_blank">Metasploit</a> (la version open source) sur votre machine hôte.</p>
+                    <p>Voici le Vagrantfile de la VM "metasploitable3-ub1404" :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+  config.vm.define "ub1404" do |ub1404|
+    ub1404.vm.box = "rapid7/metasploitable3-ub1404"
+    ub1404.vm.hostname = "metasploitable3-ub1404"
+    config.ssh.username = 'vagrant'
+    config.ssh.password = 'vagrant'
+
+    ub1404.vm.network "private_network", ip: '172.28.128.3'
+
+    ub1404.vm.provider "virtualbox" do |v|
+      v.name = "M-ub1404"
+      v.memory = 2048
+    end
+
+    config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+
+    set -euo pipefail
+
+    # Chargement des packages, en mode non-interactif(!)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y snort
+
+    # Nettoyage des directories snort, ils seront remplacés via sftp
+    rm -rf /etc/snort
+    mkdir /etc/snort
+    mkdir /etc/snort/rules
+
+  SHELL
+  end
+end</code></pre>
+                </article>
+                <article>
+                    <h2 id="fw_segmentation_concepts_motivation">Pare-feu et segmentation : Concepts et motivation :</h2>
+                    <h3>Motivation :</h3>
+                    <ul>
+                        <li>
+                            <p>Contexte :</p>
+                            <ul>
+                                <li>
+                                    <p>Accès malveillant au réseau.</p>
+                                </li>
+                                <li>
+                                    <p>... voir cours sécurité réseau.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Motivation :</p>
+                            <ul>
+                                <li>
+                                    <p>"hygiène" de base.</p>
+                                </li>
+                                <li>
+                                    <p>Défense en profondeur.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Type de pare-feu :</h3>
+                    <ul>
+                        <li>
+                            <p>Simple inspection des paquets. Filtrage sur :</p>
+                            <ul>
+                                <li>
+                                    <p>Adresse d'origine.</p>
+                                </li>
+                                <li>
+                                    <p>Protocole.</p>
+                                </li>
+                                <li>
+                                    <p>Adresse et port de destination.</p>
+                                </li>
+                                <li>
+                                    <p>...</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>idem + exploitation de la notion d'état :</p>
+                            <ul>
+                                <li>
+                                    <p>Capitalise sur la notion de transaction en cours.</p>
+                                </li>
+                                <li>
+                                    <p>Reste limité à un niveau relativement bas dans les couches OSI.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>"Deep Packet Inspection" :</p>
+                            <ul>
+                                <li>
+                                    <p>Est capable d'exploiter de l'information plus haut dans la couche OSI.</p>
+                                </li>
+                                <li>
+                                    <p>... réalité ?</p>
+                                </li>
+                                <li>
+                                    <p>Catégorisation floue avec IPS.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <img src="../images/concepts_motivation_FW.PNG" alt="">
+                    <p><a href="https://commons.wikimedia.org/w/index.php?title=File:DMZ_network_diagram_2_firewall.svg&oldid=581796947" target="_blank">https://commons.wikimedia.org/w/index.php?title=File:DMZ_network_diagram_2_firewall.svg&oldid=581796947</a></p>
+                </article>
+                <article>
+                    <h2 id="fw_segmentation_implementation_type">Pare-feu et segmentation : Implémentation type :</h2>
+                    <h3>Accès à une machine non sécurisée :</h3>
+                    <h4>Services disponibles :</h4>
+                    <img src="../images/acces_machine_non_securisee_1.PNG" alt="">
+<pre><code>sudo nmap 172.28.128.17</code></pre>
+                    <h4>web-servers accessibles de l'extérieur :</h4>
+                    <img src="../images/acces_machine_non_securisee_2.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>curl 172.28.128.17</code></pre>
+<pre><code>curl 172.28.128.17:8081</code></pre>
+                    <h4>web-servers accessibles de l'intérieur :</h4>
+                    <img src="../images/acces_machine_non_securisee_3.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>curl localhost</code></pre>
+<pre><code>cd /etc/nginx/conf.d</code></pre>
+<pre><code>curl localhost:8081</code></pre>
+                    <h3>Iptables - accès à logique de filtrage interne au noyau :</h3>
+                    <h4>Commandes :</h4>
+                    <p><a href="https://www.linode.com/docs/guides/control-network-traffic-with-iptables/#basic-iptables-rulesets-for-ipv4-and-ipv6" target="_blank">https://www.linode.com/docs/guides/control-network-traffic-with-iptables/#basic-iptables-rulesets-for-ipv4-and-ipv6</a></p>
+                    <img src="../images/iptables_acces_logique_filtrage_interne_noyau_1.PNG" alt="">
+<pre><code>cat v4</code></pre>
+                    <p>Voici le contenu du fichier `<span class="em">v4</span>` :</p>
+<pre><code>*filter
+
+# Allow all loopback (lo0) traffic and reject traffic
+# to localhost that does not originate from lo0.
+-A INPUT -i lo -j ACCEPT
+-A INPUT ! -i lo -s 127.0.0.0/8 -j REJECT
+
+# Allow ping.
+-A INPUT -p icmp -m state --state NEW --icmp-type 8 -j ACCEPT
+
+# Allow SSH connections.
+-A INPUT -p tcp --dport 22 -m state --state NEW -j ACCEPT
+
+# Allow HTTP and HTTPS connections from anywhere
+# (the normal ports for web servers).
+-A INPUT -p tcp --dport 80 -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT
+
+# Allow inbound traffic from established connections.
+# This includes ICMP error returns.
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Log what was incoming but denied (optional but useful).
+-A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables_INPUT_denied: " --log-level 7
+
+# Reject all other inbound.
+-A INPUT -j REJECT
+
+# Log any traffic that was sent to you
+# for forwarding (optional but useful).
+-A FORWARD -m limit --limit 5/min -j LOG --log-prefix "iptables_FORWARD_denied: " --log-level 7
+
+# Reject all traffic forwarding.
+-A FORWARD -j REJECT
+
+COMMIT</code></pre>
+                   <h4>Configuration du firewall :</h4>
+                   <img src="../images/iptables_acces_logique_filtrage_interne_noyau_2.PNG" alt=""> 
+                   <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>nano /vagrant/out/v4.tex</code></pre>
+<pre><code>sudo iptables-restore &lt; v4</code></pre>
+<pre><code>sudo iptables -vL --line-numbers</code></pre>
+                    <h3>Accès à une machine sécurisée :</h3>
+                    <h4>Services disponibles :</h4>
+                    <img src="../images/acces_machine_securisee_1.PNG" alt="">
+<pre><code>sudo nmap 172.28.128.17</code></pre>
+                    <h4>web-servers accessibles de l'extérieur :</h4>
+                    <img src="../images/acces_machine_securisee_2.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>curl 172.28.128.17</code></pre>
+<pre><code>curl 172.28.128.17:8081</code></pre>
+                    <h4>web-servers accessibles de l'intérieur :</h4>
+                    <img src="../images/acces_machine_securisee_3.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>curl localhost</code></pre>
+<pre><code>curl localhost:8081</code></pre>
+                    <h3>Notion de gestion de l'état de la connexion :</h3>
+                    <h4>Échanges avec l'extérieur (y compris retours !) :</h4>
+                    <img src="../images/notion_gestion_etat_connection.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>curl web-server.gac.xpertsys.be:8081</code></pre>
+<pre><code>ssh XXX7@XX.XX.XX.XX</code></pre>
+                    <h3>Rajout d'une règle pour serveur 8081 :</h3>
+                    <h4>Configuration :</h4>
+                    <img src="../images/rajout_regle_serveur_8081.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo iptable -I INPUT 7 -p tcp --dport 8081 -m state --state NEW -j ACCEPT</code></pre>
+<pre><code>sudo iptables -vL --line-numbers</code></pre>
+                    <h3>Accès à une machine sécurisée :</h3>
+                    <h4>Services disponibles :</h4>
+                    <img src="../images/acces_machine_securisee_4.PNG" alt="">
+<pre><code>sudo nmap 172.28.128.17</code></pre>
+                    <h4>web-servers accessibles de l'extérieur :</h4>
+                    <img src="../images/acces_machine_securisee_5.PNG" alt="">
+<pre><code>curl 172.28.128.17:8081</code></pre>
+                </article>
+                <article>
+                    <h2 id="detection_prevention_intrusion_concepts">Détection/prévention d'intrusion :</h2>
+                    <h3>Principe de fonctionnement :</h3>
+                    <ul>
+                        <li>
+                            <p>Bonne connaissance des protocoles.</p>
+                        </li>
+                        <li>
+                            <p>Fonctionne au-dessus du niveau "réseau" pur.</p>
+                        </li>
+                        <li>
+                            <p>Souvent basé sur des règles (parfois détection d'anomalies).</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="detection_prevention_intrusion">Détection/prévention d'intrusion :</h2>
+                    <h3>Snort + Metasploitable + Metasploit Framework :</h3>
+                    <p>C'est largement inspiré de <a href="https://cybersecuritybase.mooc.fi/module-5.1/index" target="_blank">https://cybersecuritybase.mooc.fi/module-5.1/index</a>.</p>
+                    <ul>
+                        <li>
+                            <p><a href="https://snort.org/" target="_blank">Snort</a> :</p>
+                            <ul>
+                                <li>
+                                    <p>Open Source Intrusion Prevention System.</p>
+                                </li>
+                                <li>
+                                    <p>Basées sur des règles (ici : community &amp; emergent rule sets).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p><a href="https://github.com/rapid7/metasploitable3" target="_blank">Metasploitable</a> :</p>
+                            <ul>
+                                <li>
+                                    <p>Système d'exploitation avec services, volontairement vulnérable.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p><a href="https://github.com/rapid7/metasploit-framework" target="_blank">Metasploit Framework</a></p>
+                            <ul>
+                                <li>
+                                    <p>Outil de pentesting.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Snort : Règles :</h3>
+                    <h4>/etc/snort/snort.conf :</h4>
+                    <img src="../images/snort_regles.PNG" alt="">
+                    <h3>Metasploit Framework : exploration :</h3>
+                    <h4>Nmap :</h4>
+                    <img src="../images/metasploit_framework_exploration_1.PNG" alt="">
+<pre><code>sudo nmap -n -sS -sV -sC 172.28.123.3 -p0-65535 #</code></pre>
+                    <img src="../images/metasploit_framework_exploration_2.PNG" alt="">
+                    <h3>proFTP exploit :</h3>
+                    <h4>Configuration Metasploit Framework :</h4>
+                    <img src="../images/proFTP_exploit_1.PNG" alt="">
+                    <h4>Résumé configuration Metasploit Framework :</h4>
+                    <img src="../images/proFTP_exploit_2.PNG" alt="">
+                    <h4>Exploitation :</h4>
+                    <img src="../images/proFTP_exploit_3.PNG" alt="">
+                    <h4>Détection :</h4>
+                    <img src="../images/proFTP_exploit_4.PNG" alt="">
+                    <h4>Contenu règle :</h4>
+                    <img src="../images/proFTP_exploit_5.PNG" alt="">
+                    <h4>Vulnérabilité :</h4>
+                    <img src="../images/proFTP_exploit_6.PNG" alt="">
+                    <h4>Payload :</h4>
+                    <p><a href="https://github.com/rapid7/metasploit-framework/blob/master/modules/payloads/singles/cmd/unix/reverse_perl.rb" target="_blank">https://github.com/rapid7/metasploit-framework/blob/master/modules/payloads/singles/cmd/unix/reverse_perl.rb</a></p>
+                    <img src="../images/proFTP_exploit_7.PNG" alt="">
+                    <h3>Shellshock (bug présent depuis 1989 (!)) :</h3>
+                    <h4>Metasploit Framework :</h4>
+                    <img src="../images/shellshock_1.PNG" alt="">
+                    <img src="../images/shellshock_2.PNG" alt="">
+                    <h4>Exploitation :</h4>
+                    <img src="../images/shellshock_3.PNG" alt="">
+                    <h4>Détection :</h4>
+                    <img src="../images/shellshock_4.PNG" alt="">
+                    <img src="../images/shellshock_5.PNG" alt="">
+                    <p><a href="https://owasp.org/www-pdf-archive/Shellshock_-_Tudor_Enache.pdf" target="_blank">https://owasp.org/www-pdf-archive/Shellshock_-_Tudor_Enache.pdf</a></p>
+                    <p><a href="https://www.infosecarticles.com/exploiting-shellshock-vulnerability/" target="_blank">https://www.infosecarticles.com/exploiting-shellshock-vulnerability/</a></p>
+                    <h4>Exploitation détaillée :</h4>
+                    <img src="../images/shellshock_6.PNG" alt="">
+                    <h4>Règle détaillée :</h4>
+                    <h5>Contenu règle :</h5>
+                    <img src="../images/shellshock_7.PNG" alt="">
+                    <h3>Drupal exploit :</h3>
+                    <h4>Configuration Metasploit Framework :</h4>
+                    <img src="../images/drupal_exploit_1.PNG" alt="">
+                    <h4>Résumé configuration Metasploit Framework :</h4>
+                    <img src="../images/drupal_exploit_2.PNG" alt="">
+                    <h4>Exploitation :</h4>
+                    <img src="../images/drupal_exploit_3.PNG" alt="">
+                    <h4>Détection :</h4>
+                    <p>(Néant)</p>
+                </article>
+                <article>
+                    <h2 id="detection_prevention_intrusion_forces_faiblesses">Détection/prévention d'intrusion : Forces et faiblesses :</h2>
+                    <h3>Avantages/Limites :</h3>
+                    <ul>
+                        <li>
+                            <p>Avantages :</p>
+                            <ul>
+                                <li>
+                                    <p>Capte des attaques non détectables à un niveau inférieur.</p>
+                                </li>
+                                <li>
+                                    <p>Inspection possible du trafic...</p>
+                                </li>
+                                <li>
+                                    <p>... arrêt possible aussi.</p>
+                                </li>
+                                <li>
+                                    <p>Priorités, donc optimisation du travail.</p>
+                                </li>
+                                <li>
+                                    <p>Aide dans certains contextes régulatoires (logs).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Limites :</p>
+                            <ul>
+                                <li>
+                                    <p>Nécessité d'avoir de "bonnes" règles (pas trop de faux positifs, peu d'attaques réelles manquées).</p>
+                                </li>
+                                <li>
+                                    <p>Certaines alertes pas très spécifiques.</p>
+                                </li>
+                                <li>
+                                    <p>Attaques spécifiquement conçues pour contourner la détection.</p>
+                                </li>
+                                <li>
+                                    <p>Attaques fragmentées.</p>
+                                </li>
+                                <li>
+                                    <p>Faux sens de sécurité si utilisé seul.</p>
+                                </li>
+                                <li>
+                                    <p>Consommation de resources machine.</p>
+                                </li>
+                                <li>
+                                    <p>Saturation possible du personnel de sécurité.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
                 </article>
                 <article>
                     <h2 id="evaluation_instructions">Évaluation - instructions :</h2>
