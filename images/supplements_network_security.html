@@ -60,6 +60,7 @@
                     <li><a href="#correction_labo_netsec_lab2">Correction du labo NetSec Lab2 :</a></li>
                     <li><a href="#GRE_Tunnel">GRE Tunnel</a></li>
                     <li><a href="#protocoles_IPsec">Les protocoles IPsec</a></li>
+                    <li><a href="#attaques_reseaux">Les attaques réseaux</a></li>
                 </ol>
             </nav>
             
@@ -7872,6 +7873,251 @@ end</code></pre>
                             <p>IPsec est assez complexe. Nous avons vu comment IKE est utilisé pour construire le tunnel IPsec et comment les protocoles AH et/ou ESP sont utilisés pour protéger le trafic IP. Désormais vous pouvez construire vos réseaux VPN et comprendre les mécanismes mis en place pour sécuriser le trafic VPN.</p>
                         </li>
                     </ol>
+                </article>
+                <article>
+                    <h2 id="attaques_reseaux">Les attaques réseaux :</h2>
+                    <p>Les attaques réseaux s'appuient sur des vulnérabilités liées directement aux protocoles ou à leur implémentation. Il en existe un grand nombre. Néanmoins, la plupart d'entre elles ne sont que des variantes des cinq attaques réseaux les plus connues aujourd'hui.</p>
+                    <ol>
+                        <li>
+                            <h3>Fragments attacks :</h3>
+                            <p>Cette attaque outrepasse la protection des équipements de filtrage IP. Pour sa mise en pratique, les pirates utilisent deux méthodes : les <span class="em">Tiny Fragments</span> et le <span class="em">Fragment Overlapping</span>. Ces attaques étant historiques, les pare-feux actuels les prennent en compte depuis longtemps dans leur implémentation.</p>
+                            <ul>
+                                <li>
+                                    <h4>Tiny Fragments :</h4>
+                                    <p>D'après la RFC (Request For Comment) 791 (IP), tous les noeuds Internet (routeurs) doivent pouvoir transmettre des paquets d'une taille de 68 octets sans les fragmenter davantage. En effet, la taille minimale de l'en-tête d'un paquet IP est de 20 octets sans options. Lorsqu'elles sont présentes, la taille maximale de l'en-tête est de 60 octets. Le champ IHL (Internet Header Length) contient la longueur de l'en-tête en mots de 32 bits. Ce champ occupant 4 bits, le nombre de valeurs possibles vaut de 2<sup>4</sup> - 1 = 15 (il ne peut pas prendre la valeur 0000). La taille maximale de l'en-tête est donc bien 15 * 4 = 60 octets. Enfin, le champ Fragment Offset qui indique le décalage du premier octet du fragment par rapport au datagramme complet est mesuré en blocs de 8 octets. Un fragment de données occupe donc au moins 8 octets. Nous arrivons bien à un total de 68 octets.</p>
+                                    <p>L'attaque consiste à fragmenter sur deux paquets IP une demande de connexion TCP. Le premier paquet IP de 68 octets ne contient comme données que les 8 premiers octets de l'en-tête TCP (ports source et destination ainsi que le numéro de séquence). Les données du second paquet IP renferment alors la demande de connexion TCP (flag SYN à 1 et flag ACK à 0).</p>
+                                    <p>Or, les filtres IP appliquent la même règle de filtrage à tous les fragments d'un paquet. Le filtrage du premier fragment (Fragment Offset égal à 0) déterminant cette règle, elle s'applique donc aux autres (Fragment Offset égal à 1) sans aucune autre forme de vérification. Ainsi, lors de la défragmentation au niveau IP de la machine cible, le paquet de demande de connexion est reconstitué et passé à la couche TCP. La connexion s'établit alors malgré le filtre IP.</p>
+                                    <p>Les figures 1 et 2 montrent les deux fragments et la figure 3 le paquet défragmenté au niveau de la machine cible.</p>
+                                    <figure>
+                                        <img src="../images/fragment1_1.PNG" alt="">
+                                        <figcaption>Figure 1 : Fragment 1</figcaption>
+                                    </figure>
+                                    <figure>
+                                        <img src="../images/fragment2_1.PNG" alt="">
+                                        <figcaption>Figure 2 : Fragment 2</figcaption>
+                                    </figure>
+                                    <figure>
+                                        <img src="../images/paquet_defragmente_1.PNG" alt="">
+                                        <figcaption>Figure 3 : Paquet défragmenté</figcaption>
+                                    </figure>
+                                </li>
+                                <li>
+                                    <h4>Fragment Overlapping :</h4>
+                                    <p>Toujours d'après la RFC 791 (IP), si deux fragments IP se superposent, le deuxième écrase le premier.</p>
+                                    <p>L'attaque consiste à forger deux fragments d'un paquet IP.</p>
+                                    <p>Le filtre IP accepte le premier fragment de 68 octets (voir Tiny Fragments) car il ne contient aucune demande de connexion TCP (flag SYN = 0 et flag ACK = 0).</p>
+                                    <p>Cette règle d'acceptation s'applique, là encore, aux autres fragments du paquet.</p>
+                                    <p>Le deuxième (avec un Fragment Offset égal à 1) contenant les véritables données de connexion est alors accepté par le filtre IP.</p>
+                                    <p>Ainsi, lors de la défragmentation, les données du deuxième fragment écrasent celles du premier à partir de la fin du 8ème octet (car le fragment offset est égal à 1).</p>
+                                    <p>Le paquet réassemblé constitue donc une demande de connexion valide pour la machine cible.</p>
+                                    <p>La connexion s'établit malgré le filtre IP.</p>
+                                    <p>Les figures 4 et 5 montrent les deux fragments et la figure 6 le paquet défragmenté au niveau de la machine cible.</p>
+                                    <figure>
+                                        <img src="../images/fragment1_2.PNG" alt="">
+                                        <figcaption>Figure 4 : Fragment 1</figcaption>
+                                    </figure>
+                                    <figure>
+                                        <img src="../images/fragment2_2.PNG" alt="">
+                                        <figcaption>Figure 5 : Fragment 2</figcaption>
+                                    </figure>
+                                    <figure>
+                                        <img src="../images/paquet_defragmente_2.PNG" alt="">
+                                        <figcaption>Figure 6 : Paquet défragmenté</figcaption>
+                                    </figure>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h3>IP Spoofing :</h3>
+                            <p>Le but de cette attaque est l'usurpation de l'adresse IP d'une machine. Ceci permet au pirate de cacher la source de son attaque (utilisée dans les dénis de services dont nous discuterons plus tard) ou de profiter d'une relation de confiance entre deux machines.</p>
+                            <p>Nous expliquerons donc ici cette deuxième utilisation de l'IP Spoofing.</p>
+                            <p>Le principe de base de cette attaque consiste à forger ses propres paquets IP (avec des programmes comme hping2 ou nemesis) dans lesquels le pirate modifiera, entre autres, l'adresse IP source.</p>
+                            <p>L'IP Spoofing est souvent qualifié d'attaque aveugle (ou Blind Spoofing).</p>
+                            <p>Effectivement, les réponses éventuelles des paquets envoyés ne peuvent pas arriver sur la machine du pirate puisque la source est falsifiée. Ils se dirigent donc vers la machine spoofée.</p>
+                            <p>Il existe néanmoins deux méthodes pour récupérer des réponses :</p>
+                            <ol>
+                                <li>
+                                    <p>Le Source Routing : le protocole IP possède une option appelée Source Routing autorisant la spécification du chemin que doivent suivre les paquets IP. Ce chemin est constitué d'une suite d'adresses IP des routeurs que les paquets vont devoir emprunter. Il suffit au pirate d'indiquer un chemin, pour le retour des paquets, jusqu'à un routeur qu'il contrôle. De nos jours, la plupart des implémentations des piles TCP/IP rejettent les paquets avec cette option;</p>
+                                </li>
+                                <li>
+                                    <p>Le Reroutage : les tables de routeurs utilisant le protocole ROP peuvent être modifiées en leur envoyant des paquets ROP avec de nouvelles indications de routage. Ceci dans le but de rerouter les paquets vers un routeur que le pirate maîtrise.</p>
+                                </li>
+                            </ol>
+                            <p>Ces techniques ne sont plus (ou difficilement) utilisables : l'attaque est donc menée sans avoir connaissance des paquets émis par le serveur cible.</p>
+                            <p>Le Blind Spoofing s'utilise contre des services de type rlogin ou rsh. En effet, leur mécanisme d'authentification se base uniquement sur l'adresse IP source de la machine cliente. Cette attaque relativement bien connue (surtout grâce à Kevin Mitnick qui l'avait utilisée contre la machine de Tsutomu Shimomura en 1994) se déroule en plusieurs étapes :</p>
+                            <ul>
+                                <li>
+                                    <p>Détermination de l'adresse IP de la machine de confiance en utilisant par exemple <code class="em">showmount -e</code> qui montre où sont exportés les systèmes de fichiers ou <code class="em">rpcinfo</code> qui apporte des informations supplémentaires</p>
+                                </li>
+                                <li>
+                                    <p>Mise hors service de l'hôte de confiance via un SYN Flooding par exemple (nous aborderons les dénis de service plus loin dans cet article). Cela est nécessaire pour que la machine ne puisse pas répondre aux paquets envoyés par le serveur cible. Dans le cas contraire, elle enverrait des paquets TCP RST qui mettraient fin à l'établissement de la connexion;</p>
+                                </li>
+                                <li>
+                                    <p>Prédiction des numéros de séquence TCP : à chaque paquet TCP est associé un numéro de séquence initiale. La pile TCP/IP du système d'exploitation le génère de manière linéaire, dépendante du temps, pseudo-aléatoire selon les systèmes. Le pirate peut uniquement appliquer cette attaque à des systèmes générant des numéros de séquence prévisibles (génération linéaire ou dépendante du temps);</p>
+                                </li>
+                                <li>
+                                    <p>L'attaque consiste à ouvrir une connexion TCP sur le port souhaité (rsh par exemple). Pour une meilleure compréhension, nous allons rappeler le mécanisme d'ouverture d'une connexion TCP. Elle s'effectue en trois phases (TCP Three Way Handshake) :</p>
+                                    <ol>
+                                        <li>
+                                            <p>L'initiateur envoie un paquet comportant le flag TCP SYN et un numéro de séquence x, est envoyé à la machine cible;</p>
+                                        </li>
+                                        <li>
+                                            <p>Cette dernière répond avec un paquet dont les flags TCP SYN et ACK (avec un numéro d'acquittement de x+1) sont activés. Son numéro de séquence vaut y</p>
+                                        </li>
+                                        <li>
+                                            <p>L'initiateur renvoie un paquet contenant un paquet contenant le flag TCP ACK (avec un numéro d'acquittement de y+1) à la machine cible.</p>
+                                        </li>
+                                    </ol>
+                                </li>
+                            </ul>
+                            <p>Lors de l'attaque, le pirate ne reçoit pas le SYN-ACK envoyé par la cible. Pour que la connexion puisse s'établir, il prédit le numéro de séquence y afin d'envoyer un paquet avec le bon numéro de ACK (y+1). La connexion s'établit alors grâce à l'authentification par l'adresse IP. Le pirate peut donc envoyer une commande au service rsh pour obtenir des droits supplémentaires, comme <code class="em">echo ++ &gt;&gt; /.rhosts</code>. Pour cela, il forge un paquet avec le flag TCP PSH (Push) : les données reçues sont immédiatement transmises à la couche supérieure, ici le service rsh, pour que celle-ci les traite. Il lui est alors possible de se connecter sur la machine directement via un service de type rlogin ou rsh sans IP Spoofing.</p>
+                            <p>La figure 7 résume les étapes de l'IP Spoofing :</p>
+                            <figure>
+                                <img src="../images/IP_spoofing_applique_service_rsh.PNG" alt="">
+                                <figcaption>Figure 7 : IP Spoofing appliqué au service rsh</figcaption>
+                            </figure>
+                            <p>Le pirate utilise la machine A tandis que la C représente la machine de confiance. La notion A(C) signifie que le paquet est envoyé par A avec l'adresse IP spoofée de C. A noter l'existence du programme mendax qui met en oeuvre ces différents mécanismes de l'IP Spoofing.</p>
+                        </li>
+                        <li>
+                            <h3>TCP Session Hijacking :</h3>
+                            <p>Le TCP Session Hijacking permet de rediriger un flux TCP. Un pirate peut alors outrepasser une protection par un mot de passe (comme Telnet ou FTP). La nécessité d'une écoute passive (sniffing) restreint le périmètre de cette attaque au réseau physique de la cible. Avant de détailler cette attaque, nous expliquerons quelques principes fondamentaux du protocole TCP.</p>
+                            <p>Nous ne dévoilerons pas ici les arcanes du protocole TCP, mais préciserons uniquement les points essentiels à la compréhension de l'attaque.</p>
+                            <p>L'en-tête TCP est constitué de plusieurs champs :</p>
+                            <ul>
+                                <li>
+                                    <p>Le port source et le port destination, pour identifier la connexion entre deux machines;</p>
+                                </li>
+                                <li>
+                                    <p>Le numéro de séquence qui identifie chacun des octets envoyés;</p>
+                                </li>
+                                <li>
+                                    <p>Les flags, avec ceux qui vont nous intéresser sont :</p>
+                                    <ul>
+                                        <li>
+                                            <p>SYN qui synchronise les numéros de séquence lors de l'établissement d'une connexion;</p>
+                                        </li>
+                                        <li>
+                                            <p>ACK, le flag d'acquittement d'un segment TCP;</p>
+                                        </li>
+                                        <li>
+                                            <p>PSH qui indique au récepteur de remonter les données à l'application.</p>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <p>La figure 8 schématise l'établissement d'une connexion TCP (Three Way Handshake) :</p>
+                            <figure>
+                                <img src="../images/three-way_handshake_2.PNG" alt="">
+                                <figcaption>Figure 8 : Three Way Handshake</figcaption>
+                            </figure>
+                            <p>Dans ce cas, il s'agit de la machine A qui a initialisé une connexion TCP sur la machine B.</p>
+                            <p>De même, la figure 9 montre un transfert de données TCP :</p>
+                            <figure>
+                                <img src="../images/echanges_donnees.PNG" alt="">
+                                <figcaption>Figure 9 : Échanges de données</figcaption>
+                            </figure>
+                            <p>Les numéros de séquence vont évoluer en fonction du nombre d'octets de données envoyées.</p>
+                            <p>Le numéro de séquence est représenté par Seq, le numéro d'acquittement se trouve après les flags PSH et ACK et le nombre d'octets de données envoyé se trouve entre parenthèses.</p>
+                            <p>Cette attaque crée un état de désynchronisation de chaque côté de la connexion TCP, rendant possible le vol de session. Une connexion est désynchronisée lorsque le numéro de séquence du prochain octet envoyé par la machine A est différent du numéro de séquence du prochain octet à recevoir par B. Et réciproquement, il y a désynchronisation lorsque le numéro de séquence du prochain octet envoyé par la machine B est différent du numéro de séquence du prochain octet à recevoir par A.</p>
+                            <p>Dans l'exemple de la figure 9, à la fin de la première étape quand B reçoit son paquet, A attend un paquet avec un numéro d'acquittement de x+60. Si le prochain paquet qu'envoie B n'a pas ce numéro d'acquittement alors A et B sont dits désynchronisés.</p>
+                            <p>Concrètement, un pirate avec une machine C veut voler une session Telnet établie entre les machines A et B.</p>
+                            <p>Dans un premier temps, la machine C sniffe le trafic Telnet (port TCP 23) entre A et B.</p>
+                            <p>Une fois que le pirate estime que A a eu le temps de s'authentifier auprès du service Telnet de la machine B, il désynchronise la machine A par rapport à B.</p>
+                            <p>Pour cela, il forge alors un paquet avec, comme adresse IP source, celle de la machine A et le numéro d'acquittement TCP attendu par B. La machine B accepte donc ce paquet.</p>
+                            <p>En plus de désynchroniser la connexion TCP, ce paquet permet au pirate d'injecter une commande via la session Telnet préalablement établie par A. En effet, ce paquet peut transporter des données (flag PSH égal à 1).</p>
+                            <p>La figure 10 résume cette attaque :</p>
+                            <figure>
+                                <img src="../images/TCP_Session_Hijacking.PNG" alt="">
+                                <figcaption>Figure 10 : TCP Session Hijacking</figcaption>
+                            </figure>
+                            <p>La machine B accepte bien la commande envoyée par C, elle acquitte donc ce paquet en envoyant un paquet à A avec le flag ACK. Entre-temps, si A a envoyé un paquet à B, celui-ci n'a pas été accepté du fait de numéro de séquence qui n'est pas celui attendu par B.</p>
+                            <p>Un problème apparaît alors : le Ack Storm. Il s'agit d'une multitude de ACK qui sont générés.</p>
+                            <p>Ils apparaissent lorsque A envoie un paquet TCP avec un numéro de séquence non valide (car A est désynchronisé), B le jette et envoie à A un ACK avec le numéro de séquence qu'il attend.</p>
+                            <p>De son côté, A reçoit ce ACK et comme le numéro de séquence ne correspond pas à celui attendu, il renvoie à son tour un ACK à B et B refait la même chose...</p>
+                            <p>Ce problème du Ack Storm peut être réglé si le pirate utilise l'ARP Spoofing.</p>
+                            <p>Dans ce cas, la machine C empoisonnera le cache ARP de la machine B en lui indiquant que l'adresse IP de A est désormais associée à l'adresse MAC de C.</p>
+                            <p>Ces différentes techniques sont implémentées par le programme <code class="em">hunt</code>.</p>
+                        </li>
+                        <li>
+                            <h3>ARP Spoofing :</h3>
+                            <p>Cette attaque, appelée aussi ARP Redirect, redirige le trafic réseau d'un ou plusieurs machines vers la machine du pirate. Elle s'effectue sur le réseau physique des victimes.</p>
+                            <p>Au préalable, nous ferons un rappel sur l'utilité et le fonctionnement du protocole ARP.</p>
+                            <p>Le protocole ARP (Address Resolution Protocol) implémente le mécanisme de résolution d'une adresse IP en une adresse MAC Ethernet. Les équipements réseaux communiquent en échangeant des trames Ethernet (dans le cas d'un réseau Ethernet bien sûr) au niveau de la couche liaison de données. Pour pouvoir échanger ces informations, il est nécessaire que les cartes réseau possèdent une adresse unique au niveau Ethernet, il s'agit de l'adresse MAC (Media Access Control).</p>
+                            <p>Quand un paquet IP doit être envoyé, la machine expéditrice a besoin de l'adresse MAC du destinataire. Pour cela, une requête ARP en broadcast est envoyée à chacune des machines du réseau physique local. Cette requête pose la question : <q>Quelle est l'adresse MAC associée à cette adresse IP ?</q>.</p>
+                            <p>La machine ayant cette adresse IP répond via un paquet ARP, cette réponse indiquant à la machine émettrice l'adresse MAC recherchée. Dès lors, la machine source possède l'adresse MAC correspondant à l'adresse IP destination des paquets qu'elle doit envoyer.</p>
+                            <p>Cette correspondance sera gardée pendant un certain temps au niveau d'un cache (pour éviter de faire une nouvelle requête à chaque paquet IP envoyé).</p>
+                            <p>Cette attaque corrompt le cache de la machine victime. Le pirate envoie des paquets ARP réponse à la machine cible indiquant que la nouvelle adresse MAC correspondant à l'adresse IP d'une passerelle (par exemple) est la sienne. La machine du pirate recevra donc tout le trafic à destination de la passerelle, il lui suffira alors d'écouter passivement le trafic (et/ou le modifier). Il routera ensuite les paquets vers la véritable destination.</p>
+                            <p>L'ARP Spoofing sert dans le cas où le réseau local utilise des switchs. Ceux-ci redirigent les trames Ethernet sur des ports différents selon l'adresse MAC. Il est dès lors impossible à un sniffer de capturer des trames au-delà de son port physique.</p>
+                            <p>L'ARP Spoofing permet ainsi d'écouter le trafic entre des machines situées sur des portes différents au niveau du switch.</p>
+                            <p>Pour mettre en oeuvre une attaque par ARP Spoofing, le pirate va utiliser un générateur de paquet ARP comme <span class="em">ARPSpoof</span>.</p>
+                        </li>
+                        <li>
+                            <h3>Les dénis de service réseaux :</h3>
+                            <p>Il existe différents types de déni de service utilisant les spécificités des protocoles de la pile TCP/IP.</p>
+                            <ol>
+                                <li>
+                                    <h4>SYN Flooding :</h4>
+                                    <p>Nous avons vu qu'une connexion TCP s'établit en trois phases (TCP Three Way Handshake).</p>
+                                    <p>Le SYN Flooding exploite ce mécanisme d'établissement en trois phases.</p>
+                                    <p>Les trois étapes sont l'envoi d'un SYN, la réception d'un SYN-ACK et l'envoi d'un ACK.</p>
+                                    <p>Le principe est de laisser sur la machine cible un nombre important de connexions TCP en attente.</p>
+                                    <p>Pour cela, le pirate envoie un très grand nombre de demandes de connexion (flag SYN à 1), la machine cible renvoie les SYN-ACK en réponse aux SYN reçus.</p>
+                                    <p>Le pirate ne répondra jamais avec un ACK, et donc pour chaque SYN reçu la cible aura une connexion TCP en attente.</p>
+                                    <p>Étant donné que ces connexions semi-ouvertes consomment des ressources mémoires au bout d'un certain temp,s la machine est saturée et ne peut plus accepter de connexion.</p>
+                                    <p>Ce type de déni de service n'affecte que la machine cible.</p>
+                                    <p>Le pirate utilise un SYN Flooder comme <span class="em">synk4</span>, en indiquant le port TCP cible et l'utilisation d'adresses IP source aléatoires pour éviter toute identification de la machine du pirate.</p>
+                                </li>
+                                <li>
+                                    <h4>UDP Flooding :</h4>
+                                    <p>Ce déni de service exploite le mode non connecté du protocole UDP. Il crée un "UDP Packet Storm" (génération d'une grande quantité de paquets UDP) soit à destination d'une machine soit entre deux machines. Une telle attaque entre deux machines entraîne une congestion du réseau ainsi qu'une saturation des ressources des deux hôtes victimes.</p>
+                                    <p>La congestion est plus importante du fait que le trafic UDP est prioritaire sur le trafic TCP.</p>
+                                    <p>En effet, le protocole TCP possède un mécanisme de contrôle de congestion, dans le cas où l'acquittement d'un paquet arrive après un long délai, ce mécanisme adapte la fréquence d'émission des paquets TCP, le débit diminue.</p>
+                                    <p>Le protocole UDP ne possède pas ce mécanisme, au bout d'un certain temps le trafic UDP occupe donc toute la bande passante n'en laissant qu'une infime partie au trafic TCP.</p>
+                                    <p>L'exemple le plus connu d'UDP Flooding est le Chargen Denial of Service Attack.</p>
+                                    <p>La mise en pratique de cette attaque est simple, il suffit de faire communiquer le service <span class="em">chargen</span> d'une machine avec le service <span class="em">echo</span> d'une autre. Le service <span class="em">chargen</span> génère des caractères tandis que echo se contente de réémettre les données qu'il reçoit.</p>
+                                    <p>Il suffit alors au pirate d'envoyer des paquets UDP sur le port 19 (<span class="em">chargen</span>) à une des victimes en spoofant l'adresse IP et le port source de l'autre.</p>
+                                    <p>Dans ce cas, le port source est le port UDP 7 (<span class="em">echo</span>).</p>
+                                    <p>L'UDP Flooding entraîne une saturation de la bande passante entre les deux machines.</p>
+                                    <p>Un réseau complet peut donc être victime d'un UDP Flooding.</p>
+                                </li>
+                                <li>
+                                    <h4>Packet Fragment :</h4>
+                                    <p>Les dénis de service de type Packet Fragment utilisent des faiblesses dans l'implémentation de certaines piles TCP/IP au niveau de la défragmentation IP (réassemblage des fragments IP).</p>
+                                    <p>Une attaque connue utilisant ce principe est <span class="em">Teardrop</span>. L'offset de fragmentation du second fragment est inférieur à la taille du premier ainsi que l'offset plus la taille du second.</p>
+                                    <p>Cela revient à dire que le deuxième fragment est contenu dans le premier (overlapping).</p>
+                                    <p>Lors de la défragmentation, certains systèmes ne gèrent pas cette exception et cela entraîne un déni de service. Il existe des variantes de cette attaque : bonk, boink et newtear par exemple.</p>
+                                    <p>Le déni de service Ping of Death exploite une mauvaise gestion de la défragmentation au niveau ICMP, en envoyant une quantité de données supérieure à la taille maximum d'un paquet IP.</p>
+                                    <p>Ces différents dénis de services aboutissent à un crash de la machine cible.</p>
+                                </li>
+                                <li>
+                                    <h4>Smurfing :</h4>
+                                    <p>Cette attaque utilise le protocole ICMP. Quand un ping (message ICMP ECHO) est envoyé à une adresse de broadcast (par exemple : 10.255.255.255), celui-ci est démultiplié et envoyé à chacune des machines du réseau. Le principe de l'attaque est de spoofer les paquets ICMP ECHO REQUEST envoyés en mettant comme adresse IP source celle de la cible. Le pirate envoie un flux continu de ping vers l'adresse de broadcast d'un réseau et toutes les machines répondent alors par un message ICMP ECHO REPLY en direction de la cible. Le flux est alors multiplié par le nombre d'hôte composant le réseau.</p>
+                                    <p>Dans ce cas, tout le réseau cible subira le déni de service, puisque l'énorme quantité de trafic généré par cette attaque entraîne une congestion du réseau.</p>
+                                </li>
+                                <li>
+                                    <h4>Déni de service distribué :</h4>
+                                    <p>Les dénis de services distribués saturent le réseau victime. Le principe est d'utiliser plusieurs sources (daemons) pour l'attaque et des maîtres (masters) qui les contrôlent.</p>
+                                    <p>Les outils de DDoS (Distributed Denial of Service) les plus connus sont Tribal Flood Network (<span class="em">TFN</span>), <span class="em">TFN2K</span>, <span class="em">Trinoo</span> et <span class="em">Stacheldraht</span>.</p>
+                                    <p>La figure 11 montre un réseau typique de DDoS.</p>
+                                    <figure>
+                                        <img src="../images/reseau_DDOS.PNG" alt="">
+                                        <figcaption>Figure 11 : Réseau DDoS</figcaption>
+                                    </figure>
+                                    <p>Le pirate utilise des maîtres pour contrôler plus facilement les sources. En effet, il a besoin de se connecter (en TCP) aux maîtres pour configurer et préparer l'attaque.</p>
+                                    <p>Les maîtres se contentent d'envoyer des commandes aux sources en UDP.</p>
+                                    <p>S'il n'y avait pas les maîtres, le pirate serait obligé de se connecter à chaque source.</p>
+                                    <p>La source de l'attaque serait détectée plus facilement et sa mise en place beaucoup plus longue.</p>
+                                    <p>Chaque daemon et master discutent en échangeant des messages spécifiques selon l'outil utilisé.</p>
+                                    <p>Ces communications peuvent même être cryptées et/ou authentifiées.</p>
+                                    <p>Pour installer les daemons et les masters, le pirate utilise des failles connues (buffer overflow sur des services RFC, FTP ou autres). L'attaque en elle-même est un SYN Flooding, UDP Flooding ou autre Smurf Attack. Le résultat d'un déni de service est donc de rendre un réseau inaccessible.</p>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                    <h3>Conclusion :</h3>
+                    <p>Aujourd'hui, la sécurité contre les attaques à distance se renforce de plusen plus à la sécurité interne. Ce parent pauvre de la protection contre les pirates laisse encore de belles perspectives à des attaques en local comme le TCP Session Hijacking, l'ARP Spoofing et le DNS Spoofing.</p>
+                    <p>Par ailleurs, la prédiction de numéro de séquence (coeur de l'IP Spoofing) et les variantes de Fragments Attacks apparaissent uniquement à cause de bugs au niveau des OS des équipements grâce à la complexité sans cesse croissante des applications liées au Web et aux délais de plus en plus courts imposés aux développeurs et aux administrateurs.</p>
+                    <p>Quant aux dénis de service, ils seront toujours aussi redoutables dans leur forme distribuée tant que tout le monde ne sera pas sensibilisé à la protection de leur machine personnelle.</p>
                 </article>
             <!-- fin de section -->
             </section>
