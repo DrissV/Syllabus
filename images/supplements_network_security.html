@@ -46,7 +46,7 @@
         <div id="menu">
             <nav role="navigation" aria-label="Menu secondaire">
                 <ol>
-                    <li><a href="supplements_ITSCM.html">Retour au sommaire</a></li>
+                    <li><a href="../supplements/supplements_ITSCM.html">Retour au sommaire</a></li>
                     <li><a href="#installation">Installation</a></li>
                     <li><a href="#creer_entree_Windows_sans_Hyper-V">Créer une entrée Windows sans Hyper-V (pour VMware/GNS3)</a></li>
                     <li><a href="#modele_OSI">Modèle OSI</a></li>
@@ -8137,6 +8137,298 @@ end</code></pre>
                     <p>Remarque : vous n'avez pas besoin de configurer les serveurs (NETGMT-SRV et PROD-SRV). Partez du principe qu'ils sont déjà configurés.</p>
                     <h3>Topologie :</h3>
                     <img src="../images/topologie_NS_examen.PNG" alt="">
+                    <h3>Architecture :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">DCR (serveurs)</span> &#8594; géré le routeur (router-on-a-sick).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">USER (clients)</span> &#8594; géré par le switch L3.</p>
+                        </li>
+                    </ul>
+                    <h3>Plan d'adressage :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>VLAN</th>
+                                <th>Nom</th>
+                                <th>Réseau</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>5</td>
+                                <td>EMPLOYES</td>
+                                <td>192.168.5.0/24</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>ADMIN</td>
+                                <td>192.168.6.0/24</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>MANAGEMENT2</td>
+                                <td>192.168.7.0/24</td>
+                            </tr>
+                            <tr>
+                                <td>20</td>
+                                <td>PRODUCTION</td>
+                                <td>172.16.20.0/24</td>
+                            </tr>
+                            <tr>
+                                <td>30</td>
+                                <td>IT_SERVICE</td>
+                                <td>172.16.30.0/24</td>
+                            </tr>
+                            <tr>
+                                <td>40</td>
+                                <td>MANAGEMENT1</td>
+                                <td>172.16.40.0/24</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <ul>
+                        <li>
+                            <p>Lien L3 : 10.10.10.0/30</p>
+                        </li>
+                        <li>
+                            <p>PROD-SRV: 172.16.20.5</p>
+                        </li>
+                        <li>
+                            <p>NETMGMT-SRV : 172.16.30.5</p>
+                        </li>
+                    </ul>
+                    <h3>Routeur :</h3>
+                    <h4>Interfaces :</h4>
+<pre><code>interface e0/0
+    ip address dhcp
+    ip nat outside
+    no shutdown
+    exit
+
+interface e0/2
+    ip address 10.10.10.1 255.255.255.252
+    ip nat inside
+    no shutdown
+    exit</code></pre>
+                    <h4>TRUNK vers DCR :</h4>
+<pre><code>interface e0/1
+    no ip address
+    no shutdown
+    exit
+
+interface e0/1.20
+    encapsulation dot1Q 20
+    ip address 172.16.20.254 255.255.255.0
+    ip nat inside
+    exit
+
+interface e0/1.30
+    encapsulation dot1Q 30
+    ip address 172.16.30.254 255.255.255.0
+    ip nat inside
+    exit
+
+interface e0/1.40
+    encapsulation dot1Q 40
+    ip address 172.16.40.254 255.255.255.0
+    ip nat inside
+    exit</code></pre>
+                    <h4>NAT :</h4>
+<pre><code>access-list 1 permit any
+ip nat inside source list 1 interface e0/0 overload</code></pre>
+                    <h4>Route par défaut :</h4>
+<pre><code>ip route 0.0.0.0 0.0.0.0 e0/0</code></pre>
+                    <h3>SWITCH L3 (USER) :</h3>
+                    <h4>VLANs :</h4>
+<pre><code>vlan 5
+    name EMPLOYES
+    exit
+
+vlan 6
+    name ADMIN
+    exit
+
+vlan 7
+    name MANAGEMENT 2
+    exit</code></pre>
+                    <h4>Routage :</h4>
+<pre><code>ip routing</code></pre>
+                    <h4>Interfaces VLAN :</h4>
+<pre><code>interface Vlan5
+    ip address 192.168.5.1 255.255.255.0
+    no shutdown
+    exit
+
+interface Vlan6
+    ip address 192.168.6.1 255.255.255.0
+    no shutdown
+    exit
+
+interface Vlan7
+    ip address 192.168.7.1 255.255.255.0
+    no shutdown
+    exit</code></pre>
+                    <h4>Lien vers routeur :</h4>
+<pre><code>interface e0/0
+    no switchport
+    ip address 10.10.10.2 255.255.255.252
+    no shutdown
+    exit</code></pre>
+                    <h4>Trunk vers L2 USER :</h4>
+<pre><code>interface e0/1
+    switchport trunk encapsulation dot1q
+    switchport mode trunk
+    switchport trunk allowed vlan 5,6,7
+    exit</code></pre>
+                    <h4>Route par défaut :</h4>
+<pre><code>ip route 0.0.0.0 0.0.0.0 10.10.10.1</code></pre>
+                    <h4>DHCP (clients) :</h4>
+<pre><code>ip dhcp excluded-address 192.168.5.1 192.168.5.10
+ip dhcp excluded-address 192.168.6.1 192.168.6.10
+
+ip dhcp pool VLAN5_EMPLOYES
+    network 192.168.5.0 255.255.255.0
+    default-router 192.168.5.1
+    dns-server 172.16.20.5
+    exit
+
+ip dhcp pool VLAN6_ADMIN
+    network 192.168.6.0 255.255.255.0
+    default-router 192.168.6.1
+    dns-server 172.16.20.5
+    exit</code></pre>
+                    <h4>ACL sécurité :</h4>
+<pre><code>ip access-list extended BLOQUE_NETMGMT-SRV
+    deny ip 192.168.5.0 0.0.0.255 host 172.16.30.5
+    permit ip any any
+    exit
+
+interface Vlan5
+    ip access-group BLOQUE_NETMGMT-SRV in
+    exit</code></pre>
+                    <h3>SWITCH L2 DCR :</h3>
+<pre><code>vlan 20
+    name PRODUCTION
+    exit
+
+vlan 30
+    name IT_SERVICE
+    exit
+
+vlan 40
+    name MANAGEMENT1
+    exit</code></pre>
+<pre><code>interface e0/0
+    switchport trunk encapsulation dot1q
+    switchport mode Trunk
+    switchport trunk allowed vlan 20,30,40
+    exit</code></pre>
+<pre><code>interface Vlan40
+    ip address 172.16.40.2 255.255.255.0
+    no shutdown
+    exit
+
+ip default-gateway 172.16.40.254</code></pre>
+                    <h3>SWITCH L2 USER :</h3>
+<pre><code>vlan 5
+    name EMPLOYES
+    exit
+
+vlan 6
+    name ADMIN
+    exit
+
+vlan 7
+    name MANAGEMENT2
+    exit</code></pre>
+<pre><code>interface e0/0
+    swicthport trunk encapsulation dot1q
+    switchport mode trunk
+    switchport trunk allowed vlan 5,6,7
+    exit</code></pre>
+<pre><code>interface Vlan7
+    ip address 192.168.7.2 255.255.255.0
+    no shutdown
+
+ip default-gateway 192.168.7.1</code></pre>
+                    <h3>SERVEURS :</h3>
+                    <h4>PROD-SRV (DNS) :</h4>
+<pre><code>nano /etc/network/interfaces</code></pre>
+<pre><code>auto eth0
+iface eth0 inet static
+    address 172.16.20.5
+    netmask 255.255.255.0
+    gateway 172.16.20.254
+    dns-nameservers 172.16.20.5</code></pre>
+                    <h5>/etc/hosts :</h5>
+<pre><code>nano /etc/hosts</code></pre>
+<pre><code>127.0.0.1 localhost
+# Serveurs
+172.16.20.5 prod-srv
+172.16.30.5 netmgmt-srv
+# Switchs
+172.16.40.2 switch-l2-dcr
+192.168.7.2 switch-l2-user
+10.10.10.2 switch-l3</code></pre>
+                    <h4>NETMGMT-SRV :</h4>
+<pre><code>nano /etc/network/interfaces</code></pre>
+<pre><code>auto eth0
+iface eth0 inet static
+    address 172.16.30.5
+    netmask 255.255.255.0
+    gateway 172.16.30.254
+    dns-nameservers 172.16.20.5</code></pre>
+                    <h5>TACACS :</h5>
+<pre><code>apt install tacacs+ -y
+nano /etc/tacacs+/tac_plus.conf</code></pre>
+<pre><code>key = cisco
+
+user = gns3 {
+    login = cleartext "gns3"
+    service = exec {
+        priv-lvl = 15
+    }
+}</code></pre>
+<pre><code>systemctl restart tacacs+</code></pre>
+                    <h5>SYSLOG :</h5>
+<pre><code>apt install rsyslog -y
+nano /etc/rsyslog.conf</code></pre>
+<pre><code>module(load="imudp")
+input(type="imudp" port="514")</code></pre>
+<pre><code>systemctl restart rsyslog</code></pre>
+                    <h5>SNMP :</h5>
+<pre><code>apt install snmpd -y
+nano /etc/snmp/snmpd.conf</code></pre>
+<pre><code>rocommunity public
+agentAddress udp:161</code></pre>
+<pre><code>systemctl restart snmpd</code></pre>
+                    <h3>CONFIGURATION SÉCURITÉ (TOUS LES ÉQUIPEMENTS CISCO) :</h3>
+                    <h4>TACAS :</h4>
+<pre><code>aaa new-model
+
+tacacs server TAC
+    address ipv4 172.16.30.5
+    key cisco
+    exit
+
+aaa authentication login default group tacacs+ local
+aaa authorization exec default group tacacs+ local</code></pre>
+                    <h4>SSH :</h4>
+<pre><code>crypto key generate rsa
+
+username admin secret cisco123
+
+line vty 0 4
+    transport input ssh
+    login authentication default
+    exit</code></pre>
+                    <h4>SNMP + SYSLOG :</h4>
+<pre><code>snmp-server community public RO
+snmp-server hist 172.16.30.5 version 2c public
+
+logging host 172.16.30.5</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
