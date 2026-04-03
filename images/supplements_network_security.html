@@ -4999,7 +4999,7 @@ interface e0/2
     no shutdown
     exit</code></pre>
                                     <p>On peut abréger les commandes précédentes comme ceci :</p>
-<pre><code>interface e0/1-2
+<pre><code>interface range e0/1-2
     switchport mode access
     switchport access vlan 2
     no shutdown
@@ -8251,7 +8251,7 @@ vlan 6
     exit
 
 vlan 7
-    name MANAGEMENT 2
+    name MANAGEMENT2
     exit</code></pre>
                     <h4>Routage :</h4>
 <pre><code>ip routing</code></pre>
@@ -8281,6 +8281,7 @@ interface Vlan7
     switchport trunk encapsulation dot1q
     switchport mode trunk
     switchport trunk allowed vlan 5,6,7
+    no shutdown
     exit</code></pre>
                     <h4>Route par défaut :</h4>
 <pre><code>ip route 0.0.0.0 0.0.0.0 10.10.10.1</code></pre>
@@ -8322,7 +8323,7 @@ vlan 40
     exit</code></pre>
 <pre><code>interface e0/0
     switchport trunk encapsulation dot1q
-    switchport mode Trunk
+    switchport mode trunk
     switchport trunk allowed vlan 20,30,40
     exit</code></pre>
 <pre><code>interface Vlan40
@@ -8344,7 +8345,7 @@ vlan 7
     name MANAGEMENT2
     exit</code></pre>
 <pre><code>interface e0/0
-    swicthport trunk encapsulation dot1q
+    switchport trunk encapsulation dot1q
     switchport mode trunk
     switchport trunk allowed vlan 5,6,7
     exit</code></pre>
@@ -8353,6 +8354,26 @@ vlan 7
     no shutdown
 
 ip default-gateway 192.168.7.1</code></pre>
+                    <h4>Ports utilisateurs :</h4>
+<pre><code>interface e0/1
+    switchport mode access
+    switchport access vlan 5
+    exit
+
+interface e0/2
+    switchport mode access
+    switchport access vlan 6
+    exit</code></pre>
+                    <h4>Port Security :</h4>
+<pre><code>interface range e0/1-2
+    switchport port-security
+    switchport port-security maximum 3
+    switchport port-security violation restrict
+    switchport port-security mac-address sticky
+    
+    spanning-tree bpduguard enable
+    spanning-tree portfast edge
+    exit</code></pre>
                     <h3>SERVEURS :</h3>
                     <h4>PROD-SRV (DNS) :</h4>
 <pre><code>nano /etc/network/interfaces</code></pre>
@@ -8426,7 +8447,7 @@ line vty 0 4
     exit</code></pre>
                     <h4>SNMP + SYSLOG :</h4>
 <pre><code>snmp-server community public RO
-snmp-server hist 172.16.30.5 version 2c public
+snmp-server host 172.16.30.5 version 2c public
 
 logging host 172.16.30.5</code></pre>
                 </article>
