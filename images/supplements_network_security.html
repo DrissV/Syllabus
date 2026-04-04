@@ -8141,7 +8141,7 @@ end</code></pre>
                     <h3>Architecture :</h3>
                     <ul>
                         <li>
-                            <p><span class="em">DCR (serveurs)</span> &#8594; géré le routeur (router-on-a-sick).</p>
+                            <p><span class="em">DCR (serveurs)</span> &#8594; géré le routeur (router-on-a-stick).</p>
                         </li>
                         <li>
                             <p><span class="em">USER (clients)</span> &#8594; géré par le switch L3.</p>
@@ -8358,6 +8358,7 @@ vlan 7
 <pre><code>interface Vlan7
     ip address 192.168.7.2 255.255.255.0
     no shutdown
+    exit
 
 ip default-gateway 192.168.7.1</code></pre>
                     <h4>Ports utilisateurs :</h4>
@@ -8400,14 +8401,14 @@ iface eth0 inet static
 <pre><code>nano /etc/hosts</code></pre>
 <pre><code>127.0.0.1 localhost
 # Serveurs
-172.16.20.5 prod-srv
-172.16.30.5 netmgmt-srv
+172.16.20.5 prod-srv.lab prod-srv
+172.16.30.5 netmgmt-srv.lab netmgmt-srv
 # Switchs
-172.16.40.2 switch-l2-dcr
-192.168.7.2 switch-l2-user
-10.10.10.2 switch-l3
+172.16.40.2 switch-l2-dcr.lab switch-l2-dcr
+192.168.7.2 switch-l2-user.lab switch-l2-user
+10.10.10.2  switch-l3.lab switch-l3
 # Routeurs
-10.10.10.1 routeur
+10.10.10.1 routeur.lab routeur
 # IPv6 standard entries
 :: 1    localhost ip6-localhost ip6-loopback
 fe00::0 ip6-localnet
@@ -8427,10 +8428,19 @@ iface eth0 inet static
 nano /etc/tacacs+/tac_plus.conf</code></pre>
 <pre><code>key = cisco
 
+# ADMIN
 user = gns3 {
     login = cleartext "gns3"
     service = exec {
         priv-lvl = 15
+    }
+}
+
+# READONLY
+user = readonly {
+    login = cleartext "gns3"
+    service = exec {
+        priv-lvl = 1
     }
 }</code></pre>
 <pre><code>systemctl restart tacacs+</code></pre>
