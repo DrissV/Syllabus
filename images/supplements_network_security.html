@@ -4840,7 +4840,7 @@ ip dhcp pool POOL_ADMINS
                                     <p>Donc, on ne peut pas mutualiser le pool.</p>
                                     <p>La commande <span class="em">network 192.168.2.0 255.255.255.0</span> ne signifie <span class="em">pas</span> <q>donner l'adresse 192.168.2.0</q>, mais signifie <q>ce pool DHCP concerne <span class="em">tout le réseau 192.168.2.0/24</span></q>.</p>
                                     <h4>NAT Overload (Internet) :</h4>
-                                    <p>Le PAT est une forme de NAT (overload) qui traduit non seulement l'adresse IP mais aussi les ports pour permettre à plusieurs clients internes de partager une IP publique.</p>
+                                    <p>Le PAT (Port Address Translation) est une forme de NAT (overload) qui traduit non seulement l'adresse IP mais aussi les ports pour permettre à plusieurs clients internes de partager une IP publique.</p>
                                     <p>Il faut configurer les listes d'accès (ACL) pour les subnets qui peuvent utiliser le NAT et configurer le NAT.</p>
 <pre><code>access-list 1 permit 192.168.2.0 0.0.0.255
 access-list 1 permit 192.168.3.0 0.0.0.255
@@ -8316,6 +8316,7 @@ interface Vlan5
     ip access-group BLOQUE_NETMGMT-SRV in
     exit</code></pre>
                     <h3>SWITCH L2 DCR :</h3>
+                    <h4>VLANs :</h4>
 <pre><code>vlan 20
     name PRODUCTION
     exit
@@ -8327,6 +8328,7 @@ vlan 30
 vlan 40
     name MANAGEMENT1
     exit</code></pre>
+                    <h4>Trunk :</h4>
 <pre><code>interface e0/0
     switchport trunk encapsulation dot1q
     switchport mode trunk
@@ -8338,6 +8340,16 @@ vlan 40
     exit
 
 ip default-gateway 172.16.40.254</code></pre>
+                    <h4>Ports accès serveurs :</h4>
+<pre><code>interface e0/1
+    switchport mode access
+    switchport access vlan 20
+    exit
+
+interface e0/2
+    switchport mode access
+    switchport access vlan 30
+    exit</code></pre>
                     <h3>SWITCH L2 USER :</h3>
 <pre><code>vlan 5
     name EMPLOYES
@@ -8361,7 +8373,7 @@ vlan 7
     exit
 
 ip default-gateway 192.168.7.1</code></pre>
-                    <h4>Ports utilisateurs :</h4>
+                    <h4>Ports accès utilisateurs :</h4>
 <pre><code>interface e0/1
     switchport mode access
     switchport access vlan 5
