@@ -95,10 +95,21 @@
                     <li><a href="#detection_prevention_intrusion_concepts">Détection/prévention d'intrusion : Concepts</a></li>
                     <li><a href="#detection_prevention_intrusion_implementation_type">Détection/prévention d'intrusion : Implémentation type</a></li>
                     <li><a href="#detection_prevention_intrusion_forces_faiblesses">Détection/prévention d'intrusion : Forces et faiblesses</a></li>
-                    <li><a href="#scanning_virus_rootkits_environnements_de_travail">Scanning : virus et rootkits : environnements de travail</a></li>
+                    <li><a href="#scanning_virus_rootkits_environnements_de_travail">Scanning : virus et rootkits : Environnements de travail</a></li>
                     <li><a href="#scanning_detection_virus_rootkit">Scanning : Détection de virus et rootkit</a></li>
                     <li><a href="#scanning_demo_rootkit">Scanning : Démo rootkit</a></li>
                     <li><a href="#pratique_individuelle_pentesting_detection_prevention_intrusion">Pratique individuelle du pentesting et de la détection/prévention d'intrusion</a></li>
+                    <li><a href="#securisation_hotes_patching_isolation_sandboxing_environnements_de_travail">Sécurisation des hôtes (Linux) : Du patching à l'isolation et au sandboxing : Environnements de travail</a></li>
+                    <li><a href="#securisation_hotes_approche_generale_securisation">Sécurisation des hôtes (Linux) : Approche générale de sécurisation</a></li>
+                    <li><a href="securisation_hotes_maj_logiciels_patching">Sécurisation des hôtes (Linux) : Mise à jour des logiciels / patching</a></li>
+                    <li><a href="#securisation_hotes_limiter_services">Sécurisation des hôtes (Linux) : Limiter les services</a></li>
+                    <li><a href="#securisation_hotes_renforcement_OS">Sécurisation des hôtes (Linux) : Renforcement de l'operating system</a></li>
+                    <li><a href="#securisation_hotes_securisation_SSH">Sécurisation des hôtes (Linux) : Sécurisation de SSH</a></li>
+                    <li><a href="#securisation_hotes_isolation_inter-services_sockets_Unix_moindre_privilege">Sécurisation des hôtes (Linux) : Isolation inter-services : sockets Unix et moindre privilège</a></li>
+                    <li><a href="#securisation_hotes_sandboxing_services_systemd">Sécurisation des hôtes (Linux) : Sandboxing des services via systemd</a></li>
+                    <li><a href="#securisation_hotes_AppArmor_controle_acces_obligatoire">Sécurisation des hôtes (Linux) : AppArmor : contrôle d'accès obligatoire</a></li>
+                    <li><a href="#securisation_hotes_scanning_auditing">Sécurisation des hôtes (Linux) : Scanning, Auditing</a></li>
+                    <li><a href="#securisation_hotes_autres">Sécurisation des hôtes (Linux) : Autres</a></li>
                     <li><a href="#evaluation_instructions">Évaluation - instructions</a></li>
                 </ol>
             </nav>
@@ -7055,6 +7066,802 @@ end</code></pre>
                     <p>En vous basant sur les exemples des sections "Réseau : pare-feu &amp; segmentation; détection &amp; prévention d'intrusion", "Scanning" et "Détection, prévention d'intrusion : mise en pratique" et les boîtes Varant correspondantes, refaire et documenter au moins deux attaques sur une machine metasploitable. Expliquer les étapes, et si possible, l'exploitation faite.</p>
                     <p>Bonus : pour des attaques que vous trouvez vous-même ou sur Internet (voir par exemple <a href="https://web.archive.org/web/20210126234700/https://stuffwithaurum.com/2020/04/17/metasploitable-3-linux-an-exploitation-guide/" target="_blank">https://web.archive.org/web/20210126234700/https://stuffwithaurum.com/2020/04/17/metasploitable-3-linux-an-exploitation-guide/</a>).</p>
                     <p>Deuxième bonus : documenter la détection ou non par Snort.</p>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_patching_isolation_sandboxing_environnements_de_travail">Sécurisation des hôtes (Linux) : Du patching à l'isolation et au sandboxing : Environnements de travail :</h2>
+                    <p><span class="em">maintenance-sec</span> (172.28.128.222) :</p>
+                    <ul>
+                        <li>
+                            <p>Démo sécurisation : patching, services, SSH, isolation, sandboxing.</p>
+                        </li>
+                        <li>
+                            <p>Serveur web 3 couches: nginix (www-data) &#8594; socket Unix &#8594; PHP-FPM (appphp) &#8594; socket Unix &#8594; MariaDB (mysql)</p>
+                        </li>
+                        <li>
+                            <p>Partie "Canonical Expaded Security Maintenance" et "Ubuntu Security Guide" nécessite une clé propre (gratuite). <a href="https://login.ubuntu.com/" target="_blank">https://login.ubuntu.com/</a></p>
+                        </li>
+                    </ul>
+                    <p>Voici le Vagrantfile de cette VM :</p>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.box_version = "20240115.0.0"
+  config.vm.network "private_network", ip: '172.28.128.222'
+
+  config.vm.provider "virtualbox" do |v|
+      v.name = "maintenance-sec"
+      v.memory = 1024
+  end
+
+  config.vm.provision "shell", inline: &lt;&lt;-'SHELL'
+
+#!/bin/bash
+set -euo pipefail
+
+# --- Packages ---
+DEBIAN_FRONTEND=noninteractive apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    nginx \
+    php8.1-fpm \
+    php8.1-mysql \
+    mariadb-server \
+    lynis \
+    chkrootkit \
+    unattended-upgrades \
+    apt-listchanges \
+    fish
+
+# --- MariaDB : sockets uniquement, pas de TCP ---
+cat &gt; /etc/mysql/mariadb.conf.d/99-no-tcp.cnf &lt;&lt;'EOF'
+[mysqld]
+skip-networking = 1
+EOF
+systemctl restart mariadb
+
+# --- Base de données et utilisateur limité (unix_socket auth) ---
+mysql -u root &lt;&lt;'SQL'
+CREATE DATABASE IF NOT EXISTS demo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE demo;
+CREATE TABLE IF NOT EXISTS messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    content VARCHAR(255) NOT NULL
+);
+INSERT INTO messages (content) VALUES
+    ('Bonjour depuis la base de données'),
+    ('Deuxième message de test');
+-- unix_socket auth : MariaDB vérifie que l'OS user = 'appphp'
+-- aucun mot de passe stocké dans le code PHP
+CREATE USER IF NOT EXISTS 'appphp'@'localhost' IDENTIFIED VIA unix_socket;
+GRANT SELECT ON demo.messages TO 'appphp'@'localhost';
+FLUSH PRIVILEGES;
+SQL
+
+# --- Utilisateur système dédié pour PHP-FPM ---
+useradd --system --no-create-home --shell /usr/sbin/nologin appphp
+# nginx (www-data) peut accéder au socket du pool appphp
+usermod -aG appphp www-data
+
+# --- Pool PHP-FPM dédié : user appphp, socket accessible à www-data uniquement ---
+cat &gt; /etc/php/8.1/fpm/pool.d/appphp.conf &lt;&lt;'EOF'
+[appphp]
+user = appphp
+group = appphp
+listen = /run/php/appphp-fpm.sock
+listen.owner = appphp
+listen.group = www-data
+listen.mode = 0660
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+EOF
+# Désactiver le pool www par défaut
+mv /etc/php/8.1/fpm/pool.d/www.conf /etc/php/8.1/fpm/pool.d/www.conf.disabled
+
+# --- Application PHP (PDO via socket Unix, unix_socket auth, sans mot de passe) ---
+mkdir -p /var/www/demo
+cat &gt; /var/www/demo/index.php &lt;&lt;'EOF'
+&lt;?php
+try {
+    $pdo = new PDO(
+        'mysql:unix_socket=/run/mysqld/mysqld.sock;dbname=demo;charset=utf8mb4',
+        'appphp',   // OS user appphp (unix_socket auth — pas de mot de passe stocké)
+        ''
+    );
+    // PDO::ERRMODE_EXCEPTION : une erreur DB lève une exception (pas de plantage silencieux)
+    $pdo-&gt;setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $stmt = $pdo-&gt;query('SELECT content FROM messages');
+    echo "&lt;ul&gt;\n";
+    while ($row = $stmt-&gt;fetch(PDO::FETCH_ASSOC)) {
+        echo "  &lt;li&gt;" . htmlspecialchars($row['content']) . "&lt;/li&gt;\n";
+    }
+    echo "&lt;/ul&gt;\n";
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo "Erreur base de données\n";
+}
+EOF
+chown appphp:appphp /var/www/demo/index.php
+
+# --- nginx : socket Unix vers PHP-FPM appphp, refus fichiers cachés ---
+cat &gt; /etc/nginx/sites-available/demo &lt;&lt;'EOF'
+server {
+    listen 80;
+    server_name _;
+    root /var/www/demo;
+    index index.php;
+
+    location ~ /\. { deny all; }
+    location / { try_files $uri /index.php$is_args$args; }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/appphp-fpm.sock;
+    }
+}
+EOF
+rm -f /etc/nginx/sites-enabled/default
+ln -sf /etc/nginx/sites-available/demo /etc/nginx/sites-enabled/demo
+
+# --- systemd overrides : nginx ---
+mkdir -p /etc/systemd/system/nginx.service.d
+cat &gt; /etc/systemd/system/nginx.service.d/sandbox.conf &lt;&lt;'EOF'
+[Service]
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=yes
+EOF
+
+# --- systemd overrides : php8.1-fpm ---
+mkdir -p /etc/systemd/system/php8.1-fpm.service.d
+cat &gt; /etc/systemd/system/php8.1-fpm.service.d/sandbox.conf &lt;&lt;'EOF'
+[Service]
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=yes
+RestrictAddressFamilies=AF_UNIX
+EOF
+
+# --- systemd overrides : mariadb (PrivateTmp non activé par défaut dans le paquet) ---
+mkdir -p /etc/systemd/system/mariadb.service.d
+cat &gt; /etc/systemd/system/mariadb.service.d/sandbox.conf &lt;&lt;'EOF'
+[Service]
+PrivateTmp=yes
+EOF
+
+systemctl daemon-reload
+systemctl restart php8.1-fpm
+systemctl restart nginx
+systemctl restart mariadb
+
+# --- Kernel hardening via sysctl ---
+cat &gt; /etc/sysctl.d/99-hardening.conf &lt;&lt;'EOF'
+# ASLR : aléatoirisation de l'espace d'adressage
+kernel.randomize_va_space = 2
+# dmesg restreint aux processus root
+kernel.dmesg_restrict = 1
+# Ce serveur n'est pas un routeur
+net.ipv4.ip_forward = 0
+# Ignorer les redirections ICMP
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+# Protection contre les SYN flood
+net.ipv4.tcp_syncookies = 1
+EOF
+sysctl --system
+
+# --- SSH hardening via sshd_config.d ---
+cat &gt; /etc/ssh/sshd_config.d/10-hardening.conf &lt;&lt;'EOF'
+PasswordAuthentication no
+PermitRootLogin no
+MaxAuthTries 3
+X11Forwarding no
+AllowAgentForwarding no
+ClientAliveInterval 300
+ClientAliveCountMax 2
+EOF
+systemctl reload ssh
+
+# --- AppArmor : actif par défaut sur Ubuntu, vérification ---
+aa-status --enabled &amp;&amp; echo "AppArmor actif" || echo "AppArmor inactif"
+
+echo "=== maintenance-sec pret ==="
+echo "  http://172.28.128.222/"
+echo "  PHP-FPM socket: /run/php/appphp-fpm.sock (appphp:www-data 660)"
+echo "  MariaDB socket: /run/mysqld/mysqld.sock (mysql:mysql 777, unix_socket auth)"
+echo "  SSH hardening: /etc/ssh/sshd_config.d/10-hardening.conf"
+echo "  Sysctl: /etc/sysctl.d/99-hardening.conf"
+
+  SHELL
+end</code></pre>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_approche_generale_securisation">Sécurisation des hôtes (Linux) : Approche générale de sécurisation :</h2>
+                    <h3>Causes générales :</h3>
+                    <p>Evi Nemeth &amp; co</p>
+                    <ul>
+                        <li>
+                            <p>Social Engineering :</p>
+                            <ul>
+                                <li>
+                                    <p>phishing</p>
+                                </li>
+                                <li>
+                                    <p>...</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Vulnérabilités des programmes :</p>
+                            <ul>
+                                <li>
+                                    <p>Buffer overflow</p>
+                                </li>
+                                <li>
+                                    <p>...</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Fraude interne :</p>
+                            <ul>
+                                <li>
+                                    <p>Concept d'entreprise "étendue"</p>
+                                </li>
+                                <li>
+                                    <p>...</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Erreurs de configuration :</p>
+                            <ul>
+                                <li>
+                                    <p>Ports exposés</p>
+                                </li>
+                                <li>
+                                    <p>Identification / authentification trop "relax"</p>
+                                </li>
+                                <li>
+                                    <p>...</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>Principes généraux de sécurisation :</h3>
+                    <ul>
+                        <li>
+                            <p>Réduction de la surface d'attaque :</p>
+                            <ul>
+                                <li>
+                                    <p>N'offrir que ce qui est strictement nécessaire.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Principe de "least privilege" :</p>
+                            <ul>
+                                <li>
+                                    <p>Un programme, un utilisateur, un service ne doit recevoir que les droits strictement nécessaires.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Défense en profondeur :</p>
+                            <ul>
+                                <li>
+                                    <p>Ne jamais se baser que sur une mesure.</p>
+                                </li>
+                                <li>
+                                    <p>Exemple : Droits d'accès + encryption + backup + firewall.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>(Automatisation) :</p>
+                            <ul>
+                                <li>
+                                    <p>Rendre répétable.</p>
+                                </li>
+                                <li>
+                                    <p>Éviter les erreurs humaines.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_maj_logiciels_patching">Sécurisation des hôtes (Linux) :  Mise à jour des logiciels / patching :</h2>
+                    <h3>Considérations générales :</h3>
+                    <ul>
+                        <li>
+                            <p>Politique :</p>
+                            <ul>
+                                <li>
+                                    <p>Mise à jour la plus récente</p>
+                                </li>
+                                <li>
+                                    <p>... peut introduire des instabilités</p>
+                                </li>
+                                <li>
+                                    <p>... ou patch de sécurité vers version "stable"</p>
+                                </li>
+                                <li>
+                                    <p>...</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Automatisation de la mise à jour :</p>
+                            <ul>
+                                <li>
+                                    <p>Conseillé de manière générale.</p>
+                                </li>
+                                <li>
+                                    <p>Certainement pour mise à jour de sécurité.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Éviter l'installation de logiciels inutiles !!!</p>
+                        </li>
+                    </ul>
+                    <h3>Canonical - Expanded Security Maintenance :</h3>
+                    <img src="../images/canonical_expanded_security_maintenance.PNG" alt="">
+                    <h3>Mise à jour des packages :</h3>
+                    <h4>Machine non mise à jour :</h4>
+                    <img src="../images/maj_packages_1.PNG" alt="">
+                    <h4>État de la sécurité :</h4>
+                    <img src="../images/maj_packages_2.PNG" alt="">
+<pre><code>pro security-status</code></pre>
+                    <p>En résumé, cette commande affiche l'état de sécurité du système et les mises à jour disponibles (dont ESM).</p>
+                    <h5>Zoom sur partie esm :</h5>
+                    <img src="../images/maj_packages_3.PNG" alt="">
+<pre><code>pro security-status --esm-apps</code></pre>
+                    <p>En résumé, cette commande détaille les correctifs de sécurité disponibles via ESM pour les applications.</p>
+                    <h4>Version exacte de fish :</h4>
+                    <img src="../images/maj_packages_4.PNG" alt="">
+<pre><code>apt-cache policy fish</code></pre>
+                    <p>En résumé, cette commande affiche les versions disponibles et installées du paquet <span class="em">fish</span>.</p>
+                    <h3>Canonical - CVE search :</h3>
+                    <img src="../images/canonical_CVE_search.PNG" alt="">
+                    <h3>Canonical - Ubuntu Security Notice :</h3>
+                    <img src="../images/canonical_USN.PNG" alt="">
+                    <p><a href="https://ubuntu.com/security/notices/USN-5367-1" target="_blank">https://ubuntu.com/security/notices/USN-5367-1</a></p>
+                    <h3>Mise à jour des packages :</h3>
+                    <h4>CVE-2022-20001 :</h4>
+                    <img src="../images/maj_packages_5.PNG" alt="">
+<pre><code>sudo pro fix CVE-2022-20001</code></pre>
+                    <p>En résumé, cette commande applique automatiquement le correctif pour une vulnérabilité spécifique.</p>
+                    <h4>CVE-2023-49284 :</h4>
+                    <img src="../images/maj_packages_6.PNG" alt="">
+<pre><code>sudo pro fix CVE-2023-49284</code></pre>
+                    <p>En résumé, cette commande corrige une CVE précise via les outils Ubuntu Pro.</p>
+                    <h4>Situation logiciels non standard ?</h4>
+                    <h5>Situation après upgrade des packages "standards" :</h5>
+                    <img src="../images/maj_packages_situation_logiciels_non_standard.PNG" alt="">
+<pre><code>vagrant ssh</code></pre>
+                    <h4>Automatisation :</h4>
+                    <h5>Mise en place :</h5>
+                    <img src="../images/automatisation_maj_packages_1.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo apt install unattended-upgrades apt-listchanges</code></pre>
+                    <p>En résumé cette commande installe les outils pour automatiser les mises à jour de sécurité.</p>
+<pre><code>sudo dpkg-reconfigure -plow unattended-upgrades</code></pre>
+                    <p>En résumé, cette commande configure les mises à jour automatiques interactives.</p>
+                    <h5>Configuration - À COMPLÉTER si packages non "officiels" :</h5>
+                    <img src="../images/automatisation_maj_packages_2.PNG" alt="">
+<pre><code>sudo cat /etc/apt/apt.conf.d/50unattended-upgrades</code></pre>
+                    <p>En résumé, cette commande affiche la configuration des mises à jour automatiques.</p>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_limiter_services">Sécurisation des hôtes (Linux) : Limiter les services :</h2>
+                    <h3>Sockets - communication inter-process (IPC) :</h3>
+                    <div>
+                        <div class="information float_left">
+                            <h4>TCP/IP socket :</h4>
+                            <p>nginx &#8594; 127.0.0.1:9000 &#8594; php-fpm</p>
+                            <p>Identificateur : adresse IP + port</p>
+                            <p>Accessible depuis le réseau</p>
+                        </div>
+                        <div class="important">
+                            <h4>Socket Unix (domain socket) :</h4>
+                            <p>nginx &#8594; /run/php/fpm.sock &#8594; php-fpm</p>
+                            <p>Identificateur : chemin de fichier</p>
+                            <p>Permissions filesystem, même machine</p>
+                        </div>
+                    </div>
+                    <p><code class="em">ss</code> (socket statistics) liste les deux types. <code class="em">ss -lntp</code> : sockets TCP en écoute. <code>ss -lxp</code> : sockets Unix en écoute.</p>
+                    <h3>Limiter les services ouverts à l'écoute - ss :</h3>
+                    <h4>sudo ss -lntp - ports <span class="em">TCP</span> en écoute :</h4>
+                    <img src="../images/limiter_services_ouverts_ecoute_ss.PNG" alt="">
+<pre><code>sudo ss -ltnp</code></pre>
+                    <p>En résumé, cette comande liste les ports TCP en écoute avec les processus associés.</p>
+                    <p><code class="em">ss</code> (<code class="em">iproute2</code>) liste aussi les <span class="em">sockets Unix</span> (<code class="em">ss -lxp</code>) - fichiers spéciaux sur le filesystem, pas de port réseau. Les deux types sont vus dans la section "Isolation inter-services".</p>
+                    <h3>Connexions établies - lsof :</h3>
+                    <h4>sudo lsof -i:22 - connexions établies par port :</h4>
+                    <img src="../images/connexions_etablies_lsof.PNG" alt="">
+<pre><code>sudo lsof -i:22</code></pre>
+                    <p>En résumé, cette commande affiche les connexions réseau actives sur le port 22 (SSH).</p>
+                    <p><code class="em">ss</code> montre les ports en écoute; <code class="em">lsof -i:port</code> montre les connexions établies et quel utilisateur OS les possède.</p>
+                    <h3>ss -lx - sockets Unix : la colonne "Port" est un inode :</h3>
+                    <p><code class="em">ss -lx</code> liste les sockets Unix (fichiers spéciaux). La colonne Local Address:Port réutilise l'en-tête TCP : pour les sockets Unix, le nombre affiché est le <span class="em">numéro d'inode</span>, pas un port réseau.</p>
+<pre><code>ss -lx | grep -E 'php|mysqld'</code></pre>
+                    <p>En résumé, cette commande filtre les sockets Unix liésà PHP ou MariaDB.</p>
+                    <img src="../images/ss-lx.PNG" alt="">
+                    <h3>Désactiver les services inutiles :</h3>
+                    <p>Sur un serveur minimal, de nombreux services installés par défaut sont inutiles et augmentent la surface d'attaque.</p>
+                    <h4>systemctl disable --now + mask :</h4>
+                    <img src="../images/desactiver_services_inutiles.PNG" alt="">
+                    <p><code class="em">disable</code> empêche le démarrage au boot. <span class="em">mask</span> crée un lien vers /dev/null - le service <span class="em">ne peut plus démarrer</span> même manuellement ou comme dépendance.</p>
+                    <p><code class="em">dbus</code> : intégré à systemd, ne pas supprimer - restreindre via <span class="em">/etc/dbus-1/system.d/</span> si nécessaire.</p>
+                    <h3>Quid si accès non-local nécessaire :</h3>
+                    <ul>
+                        <li>
+                            <p>Faire écouter sur une adresse IP (non-publique) spécifique.</p>
+                        </li>
+                        <li>
+                            <p>Mettre en place une authentification.</p>
+                        </li>
+                        <li>
+                            <p>Pare-feu.</p>
+                        </li>
+                        <li>
+                            <p>Éventuellement, proxy.</p>
+                        </li>
+                    </ul>
+                    <h4>Proxy avec terminaison HTTPS + pare-feu (non montré) :</h4>
+                    <img src="../images/quid_acces_non-local_necessaire.PNG" alt="">
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_renforcement_OS">Sécurisation des hôtes (Linux) : Renforcement de l'operating system :</h2>
+                    <h3>Considérations :</h3>
+                    <ul>
+                        <li>
+                            <p>Toujours un équilibre entre fonctionnalités / aisance d'utilisation / sécurité.</p>
+                        </li>
+                        <li>
+                            <p>Voir infra liste de mesures prises en "standard".</p>
+                        </li>
+                        <li>
+                            <p>Possible de renforcer les paramètres.</p>
+                        </li>
+                    </ul>
+                    <h3>Ubuntu Security Features :</h3>
+                    <p><a href="https://wiki.ubuntu.com/Security/Features" target="_blank">https://wiki.ubuntu.com/Security/Features</a></p>
+                    <img src="../images/USF.PNG" alt="">
+                    <h3>Profilage de l'operating system - Canonical :</h3>
+                    <h4>Profilage en fonction profil type - Center for Internet Security (CIS) :</h4>
+                    <img src="../images/profilage_OS_canonical_1.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo pro enable usg</code></pre>
+                    <p>En résumé, cette commande active les outils de sécurité Ubuntu (Ubuntu Security Guide).</p>
+<pre><code>sudo apt install usg</code></pre>
+                    <p>En résumé, cette commande installe l'outil d'audit de conformité CIS.</p>
+<pre><code>sudo usg audit cis_level1_server</code></pre>
+                    <p>En résumé, cette commande lance un audit de sécurité basé sur le profil CIS niveau 1.</p>
+                    <h4>Fichier html généré (usg-report-20240324.0931) copié dans box :</h4>
+                    <img src="../images/profilage_OS_canonical_2.PNG" alt="">
+                    <h3>Kernel hanrdening - paramètres sysctl :</h3>
+                    <h4>/etc/sysctl.d/99-hardening.conf :</h4>
+                    <img src="../images/kernel_hardening_parametres_sysctl.PNG" alt="">
+<pre><code>cat /etc/sysctl.d/99-hardening.conf</code></pre>
+                    <p>En résumé, cette commande affiche les paramètres de durcissement du kernel.</p>
+                    <p>Les paramètres dans /etc/sysctl.d persistent au redémarrage et sont auditables.</p>
+                    <p><code class="em">sudo sysctl --system</code> les applique immédiatement.</p>
+                    <h3>Kernel hardening - vérification :</h3>
+                    <h4>sudo sysctl --system et vérification :</h4>
+                    <img src="../images/kernel_hardening_verification.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo sysctl --system 2&gt;&amp;1 | grep -A8 '99-hardening'</code></pre>
+                    <p>En résumé, cette commande vérifie l'application des paramètres spécifiques.</p>
+<pre><code>sysctl kernel.randomize_va_space</code></pre>
+                    <p>En résumé, cette commande affiche la valeur de l'ASLR.</p>
+                    <p><code class="em">randomize_va_space = 2</code> : ASLR complet - rend les exploits de type buffer overflow beaucoup plus difficiles à exploiter en randomisant les adresses mémoire à chaque exécution.</p>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_securisation_SSH">Sécurisation des hôtes (Linux) : Sécurisation de SSH :</h2>
+                    <h3>Sécurisation de SSH - vecteur d'entrée principal :</h3>
+                    <div>
+                        <div class="information float_left">
+                            <h4>Risques par défaut :</h4>
+                            <ul>
+                                <li>
+                                    <p>Authentification par mot de passe : brute-force possible.</p>
+                                </li>
+                                <li>
+                                    <p>Login root direct : compromission immédiate.</p>
+                                </li>
+                                <li>
+                                    <p>Sessions inactives maintenues.</p>
+                                </li>
+                                <li>
+                                    <p>Forwarding graphique (X11) : surface inutile.</p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="important">
+                            <h4>Principe :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Clé SSH</span> (pas de mot de passe).</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Pas de login root</span> direct.</p>
+                                </li>
+                                <li>
+                                    <p>Fermer les sessions inactives.</p>
+                                </li>
+                                <li>
+                                    <p>Désactiver tout ce qui n'est pas utilisé.</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <h3>Overrides via sshd_config.d/ :</h3>
+                    <h4>/etc/ssh/sshd_config inclut sshd_config.d/ :</h4>
+                    <img src="../images/overrides_sshd_config.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>grep Include /etc/ssh/sshd_config</code></pre>
+                    <p>En résumé, cette commande vérifie si des fichiers externes sont inclus dans la config SSH.</p>
+<pre><code>ls /etc/ssh/sshd_config.d/</code></pre>
+                    <p>En résumé, cette commande liste les fichiersde configurations additionnels.</p>
+<pre><code>sudo sshd -T | grep -E 'passwordauth|permitroot|maxauth'</code></pre>
+                    <p>En résumé, cette commande filtre certains paramètres de sécurité SSH dans la configuration SSH effective (après fusion de tous les fichiers).</p>
+                    <p>Modifier sshd_config directement serait écrasé à la mise à jour du paquet. Un fichier dans sshd_config.d/ est <span class="em">préservé aux mises à jour</span>.</p>
+                    <p>Les fichiers sont lus dans <span class="em">l'ordre lexicographique</span> : le premier paramètre rencontré est prioritaire. Nommer 10-hardening.conf garantit qu'il précède 60-clouding-settings.conf.</p>
+                    <p><code class="em">sudo sshd -T</code> affiche la configuration effective (toutes sources confondues).</p>
+                    <h3>Contenu du fichier de durcissement :</h3>
+                    <h4>/etc/ssh/sshd_config.d/hardening.conf :</h4>
+                    <img src="../images/contenu_fichier_durcissement.PNG" alt="">
+<pre><code>cat /etc/ssh/sshd_config.d/10-hardening.conf</code></pre>
+                    <p><span class="em">AllowUsers vagrant appphp</span> peut limiter les comptes autorisés.</p>
+                    <p>Après modification : <code class="em">sudo systemctl reload ssh</code> - pas de coupure des sessions actives.</p>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_isolation_inter-services_sockets_Unix_moindre_privilege">Sécurisation des hôtes (Linux) : Isolation inter-services : sockets Unix et moindre privilège :</h2>
+                    <h3>Machine virtuelle maintenance+sec - architecture :</h3>
+                    <img src="../images/VM_maintenance-sec_architecture.PNG" alt="">
+                    <p>Chaque couche tourne sous un <span class="em">utilisateur OS distinct</span>. Les communications inter-couches passent par des <span class="em">sockets Unix</span> - aucun port TCP interne. Objectif : si une couche est compromise, les autres restent protégées.</p>
+                    <h3>Sockets Unix - principe :</h3>
+                    <div>
+                        <div class="information float_left">
+                            <h4>TCP/IP loopback :</h4>
+                            <p>nginx &#8594; 127.0.0.1:9000 &#8594; php-fpm</p>
+                            <ul>
+                                <li>
+                                    <p>Port ouvert (visible dans ss).</p>
+                                </li>
+                                <li>
+                                    <p>Pile réseau complète traversée.</p>
+                                </li>
+                                <li>
+                                    <p>Toute appli peut tenter de s'y connecter.</p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="important">
+                            <h4>Socket Unix :</h4>
+                            <p>nginx &#8594; /run/php/appphp-fpm.sock &#8594; php-fpm</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Aucun port réseau</span> ouvert.</p>
+                                </li>
+                                <li>
+                                    <p>Permissions filesystem (owner/group).</p>
+                                </li>
+                                <li>
+                                    <p>Inaccessible depuis le réseau.</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p>Même principe entre php-fpm et MariaDB : /run/mysqld.sock - et MariaDB peut désactiver TCP entièrement (<span class="em">skip-networking = 1</span>).</p>
+                    <h3>Architecture : 3 couches, 3 utilisateurs, 0 port TCP interne :</h3>
+                    <img src="../images/architecture_3couches_3utilisateurs_0port_TCP_interne.PNG" alt="">
+                    <ul>
+                        <li>
+                            <p>Chaque service tourne avec son propre utilisateur OS.</p>
+                        </li>
+                        <li>
+                            <p>appphp : <span class="em">SELECT uniquement</span> sur demo.messages (unix_socket auth).</p>
+                        </li>
+                        <li>
+                            <p>PHP-FPM compromis : pas d'accès réseau, pas d'écriture en DB.</p>
+                        </li>
+                    </ul>
+                    <h3>Permissions des sockets : qui peut se connecter ?</h3>
+                    <h4>ls -la /run/php/appphp-fpm.sock /run/mysqld/mysqld.sock :</h4>
+                    <img src="../images/permissions_sockets_connecter.PNG" alt="">
+<pre><code>ls -la /run/php/appphp-fpm.sock /run/mysqld/mysqld.sock</code></pre>
+                    <p>En résumé, cette commande affiche les permissions des sockets Unix.</p>
+                    <p><span class="em">PHP-FPM : appphp:www-data 660</span> - seul le groupe www-data peut lire/écrire le socket. En pratique : tout process nginx (tous vhosts) peut s'y connecter. <span class="em">En production multi-vhosts</span> : un groupe dédié par pool (listen.acl_users) évite qu'un vhost accède au pool d'un autre.</p>
+                    <p><span class="em">MariaDB:mysql 777</span> (socket ouvert) - protection par authentification : unix_socket auth vérifie que <span class="em">l'OS user est appphp</span>.</p>
+                    <h3>Pool PHP-FPM dédié - utilisateur séparé :</h3>
+                    <h4>/etc/php/8.1/fpm/pool.d/appphp.conf</h4>
+                    <img src="../images/pool_PHP_FPM_dedie_utilisateur_separe.PNG" alt="">
+                    <p><span class="em">user = appphp</span> : process PHP en tant qu'appphp (pas www-data).</p>
+                    <p><span class="em">listen.group = www-data</span> + <span class="em">listen.mode = 0660</span> : seul nginx peut lire/écrire.</p>
+                    <p>Multi-vhosts : listen.acl_users (ACL POSIX) isole chaque pool.</p>
+                    <h3>Sockets actifs - sockets Unix uniquement :</h3>
+                    <h4>ss -lx | grep -E 'php|mysqld' - sockets Unix :</h4>
+                    <img src="../images/sockets_actifs_Unix_uniquement.PNG" alt="">
+<pre><code>ss -lx | grep -E 'php|mysqld'</code></pre>
+                    <p>Aucun port TCP interne : ni port 3306 (MariaDB) ni port 9000 (PHP-FPM) - vérifiable avec <code>ss -lntp</code> (voir section "Limiter les services").</p>
+                    <h3>Moindre privilège - appphp en lecture seule, sans mot de passe :</h3>
+                    <h4>Droits accordés - unix_socket auth, pas de mot de passe dans le code :</h4>
+                    <img src="../images/appphp_lecture_seule_1.PNG" alt="">
+                    <div class="important">
+                        <h4>INSERT refusé (SELECT uniquement) :</h4>
+                        <img src="../images/appphp_lecture_seule_2.PNG" alt="">
+                    </div>
+                    <h3>Résultat et PDO :</h3>
+                    <div>
+                        <div class="information float_left">
+                            <h4>curl http://172.28.128.222/</h4>
+                            <img src="../images/Resultat_PDO.PNG" alt="">
+                        </div>
+                        <div class="information">
+                            <h4>PDO en bref :</h4>
+                            <p>PDO = PHP Data Objects : couche d'abstraction BD (idem pour MySQL, SQLite, ...).</p>
+                            <p><span class="em">ERRMODE_EXCEPTION</span> une erreur DB lève une exception PHP (pas de plantage silencieux).</p>
+                            <p><span class="em">unix_socket=...</span> dans le DSN : connexion directe via socket Unix, sans TCP, sans mot de passe stocké.</p>
+                            <p><a href="https://www.php.net/manual/fr/book.pdo.php" target="_blank">https://www.php.net/manual/fr/book.pdo.php</a></p>
+                        </div>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_sandboxing_services_systemd">Sécurisation des hôtes (Linux) : Sandboxing des services via systemd :</h2>
+                    <h3>Sandboxing systemd - principe :</h3>
+                    <p>systemd peut <span class="em">restreindre ce qu'un service peut faire</span>, indépendamment des droits Unix. Une faille dans nginx n'ouvre pas l'ensemble du système.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Directive</th>
+                                <th>Effet</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="em">NoNewPrivileges=yes</td>
+                                <td>Interdit <span class="em">setuid</span>, escalade de privilèges</td>
+                            </tr>
+                            <tr>
+                                <td class="em">PrivateTmp=yes</td>
+                                <td>/tmp isolé (invisible des autres services)</td>
+                            </tr>
+                            <tr>
+                                <td class="em">ProtectSystem=yes</td>
+                                <td>/usr, /boot en lecture seule</td>
+                            </tr>
+                            <tr>
+                                <td class="em">ProtectHome=yes</td>
+                                <td>/home, /root invisibles</td>
+                            </tr>
+                            <tr>
+                                <td class="em">RestrictAddressFamilies</td>
+                                <td>Familles réseau autorisées seulement</td>
+                            </tr>
+                            <tr>
+                                <td class="em">DynamicUser=yes</td>
+                                <td>UID aléatoire à chaque démarrage (avancé)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Fichier : /etc/systemd/system/&lt;service&gt;.d/sandbox.conf (surcharge de l'unité livrée par le paquet, sans le modifier).</p>
+                    <h3>Override systemd - nginx et php-fpm :</h3>
+                    <div>
+                        <div class="float_left">
+                            <h4>nginx.service.d/</h4>
+                            <img src="../images/override_systemd_1.PNG" alt="">
+                        </div>
+                        <div>
+                            <h4>php8.1-fpm.service.d/</h4>
+                            <img src="../images/override_systemd_2.PNG" alt="">
+                        </div>
+                    </div>
+                    <p>MariaDB : le paquet <span class="em">mariadb-server</span> inclut déjà <span class="em">ProtectSystem=full</span> et <span class="em">ProtectHome=true</span> dans son unité. On y ajoute <span class="em">PrivateTmp=yes</span> via un override identique.</p>
+                    <h3>Vérification - systemd-analyze security :</h3>
+                    <img src="../images/verification_systemd-analyze_security.PNG" alt="">
+                    <p>Score bas = surface d'attaque réduite. ~9.6 UNSAFE sans override. MariaDB part de 8.8 (hardening inclus dans le paquet); <span class="em">PrivateTmp=yes</span> le ramène à 8.5. Aller sous 5 requiert <span class="em">DynamicUser</span>, <span class="em">PrivateNetwork</span>...</p>
+                    <h3>Effet concret - PrivateTmp=yes :</h3>
+                    <img src="../images/effet_concret_privatetmp=yes.PNG" alt="">
+                    <p>Chaque service sandboxé obtient son propre /tmp isolé - impossible d'y déposer des fichiers depuis un autre service, même tournant avec le même utilisateur OS.</p>
+                    <p>Idem pour <span class="em">ProtectHome=yes</span> : nginx ne peut pas lire /home/vagrant.</p>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_AppArmor_controle_acces_obligatoire">Sécurisation des hôtes (Linux) : AppArmor : contrôle d'accès obligatoire :</h2>
+                    <div>
+                        <div class="information float_left">
+                            <h3>DAC (Unix classique) :</h3>
+                            <ul>
+                                <li>
+                                    <p>Droits définis par le propriétaire du fichier.</p>
+                                </li>
+                                <li>
+                                    <p>Un process root peut tout faire.</p>
+                                </li>
+                                <li>
+                                    <p>Un service compromis = accès à tous ses fichiers.</p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="important">
+                            <h3>MAC - AppArmor :</h3>
+                            <ul>
+                                <li>
+                                    <p>Droits définis par <span class="em">un profil par exécutable</span>.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Root ne contourne pas</span> le profil.</p>
+                                </li>
+                                <li>
+                                    <p>nginx compromis : limité à ce que son profil autorise.</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p>AppArmor est <span class="em">actif par défaut</span> sur Ubuntu. Complément à systemd sandboxing : systemd restreint le service en tant qu'unité, AppArmor restreint l'exécutable au niveau noyau.</p>
+                    <h3>État sur la machine :</h3>
+                    <h4>sudo aa-status :</h4>
+                    <img src="../images/AppArmor_etat_machine.PNG" alt="">
+<pre><code>sudo aa-status</code></pre>
+                    <p>En résumé, cette commande affiche l'état d'AppArmor (profils chargés, actifs, en mode enforce ou complain).</p>
+                    <p>Mode enforce : les accès non autorisés par le profil sont <span class="em">bloqués et journalisés</span>.</p>
+                    <p>Mode complain : les accès non autorisés sont seulement journalisés (utile pour tester un profil).</p>
+                    <h3>Ajouter un profil pour un service :</h3>
+                    <h4>Workflow pour profiler nginx :</h4>
+                    <img src="../images/AppArmor_ajouter_profil_service.PNG" alt="">
+                    <p>Ubuntu 22.04 : nginx et php-fpm n'ont pas de profil installé par défaut.</p>
+                    <p><span class="em">apparmor-profiles</span> (paquet expérimental) en fournit un. En production : profil sur mesure via aa-genprof + tests.</p>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_scanning_auditing">Sécurisation des hôtes (Linux) : Scanning, Auditing :</h2>
+                    <h3>Scanning :</h3>
+                    <ul>
+                        <li>
+                            <p>Outils de type Nmap.</p>
+                        </li>
+                        <li>
+                            <p>Nessus, OpenVAS : scanning de vulnérabilité.</p>
+                        </li>
+                    </ul>
+                    <h3>Auditing tools - Lynis :</h3>
+                    <h4>Audit sur machine pleinement mise à jour :</h4>
+                    <img src="../images/auditing_tools_Lynis.PNG" alt="">
+<pre><code>sudo lynis audit system | tee /vagrant/out/audit2.tex</code></pre>
+                    <p>En résumé, cette commande lance un audit de sécurité complet du système avec Lynis et enregistre le résultat à la fois à l'écran et dans un fichier.</p>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_autres">Sécurisation des hôtes (Linux) : Autres :</h2>
+                    <h3>Autres outils pertinents :</h3>
+                    <ul>
+                        <li>
+                            <p>Cassage de mots de passe : <span class="em">hashcat</span>, <span class="em">John the Ripper</span> :</p>
+                            <ul>
+                                <li>
+                                    <p>Tester la robustesse des mots de passe de sa propre machine.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Host-based Intrusion Detection (HIDS) : <span class="em">AIDE</span>, <span class="em">OSSEC</span> :</p>
+                            <ul>
+                                <li>
+                                    <p>AIDE : vérifie l'intégrité des fichiers système (hash).</p>
+                                </li>
+                                <li>
+                                    <p>OSSEC : corrélation de logs, détection d'intrusion.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Rootkit detection : <span class="em">chkrootkit</span>, <span class="em">rkhunter</span>.</p>
+                        </li>
+                    </ul>
                 </article>
                 <article>
                     <h2 id="evaluation_instructions">Évaluation - instructions :</h2>
