@@ -7460,19 +7460,17 @@ end</code></pre>
                 <article>
                     <h2 id="securisation_hotes_limiter_services">Sécurisation des hôtes (Linux) : Limiter les services :</h2>
                     <h3>Sockets - communication inter-process (IPC) :</h3>
-                    <div>
-                        <div class="information float_left">
-                            <h4>TCP/IP socket :</h4>
-                            <p>nginx &#8594; 127.0.0.1:9000 &#8594; php-fpm</p>
-                            <p>Identificateur : adresse IP + port</p>
-                            <p>Accessible depuis le réseau</p>
-                        </div>
-                        <div class="important">
-                            <h4>Socket Unix (domain socket) :</h4>
-                            <p>nginx &#8594; /run/php/fpm.sock &#8594; php-fpm</p>
-                            <p>Identificateur : chemin de fichier</p>
-                            <p>Permissions filesystem, même machine</p>
-                        </div>
+                    <div class="information">
+                        <h4>TCP/IP socket :</h4>
+                        <p>nginx &#8594; 127.0.0.1:9000 &#8594; php-fpm</p>
+                        <p>Identificateur : adresse IP + port</p>
+                        <p>Accessible depuis le réseau</p>
+                    </div>
+                    <div class="important">
+                        <h4>Socket Unix (domain socket) :</h4>
+                        <p>nginx &#8594; /run/php/fpm.sock &#8594; php-fpm</p>
+                        <p>Identificateur : chemin de fichier</p>
+                        <p>Permissions filesystem, même machine</p>
                     </div>
                     <p><code class="em">ss</code> (socket statistics) liste les deux types. <code class="em">ss -lntp</code> : sockets TCP en écoute. <code>ss -lxp</code> : sockets Unix en écoute.</p>
                     <h3>Limiter les services ouverts à l'écoute - ss :</h3>
@@ -7565,41 +7563,39 @@ end</code></pre>
                 <article>
                     <h2 id="securisation_hotes_securisation_SSH">Sécurisation des hôtes (Linux) : Sécurisation de SSH :</h2>
                     <h3>Sécurisation de SSH - vecteur d'entrée principal :</h3>
-                    <div>
-                        <div class="information float_left">
-                            <h4>Risques par défaut :</h4>
-                            <ul>
-                                <li>
-                                    <p>Authentification par mot de passe : brute-force possible.</p>
-                                </li>
-                                <li>
-                                    <p>Login root direct : compromission immédiate.</p>
-                                </li>
-                                <li>
-                                    <p>Sessions inactives maintenues.</p>
-                                </li>
-                                <li>
-                                    <p>Forwarding graphique (X11) : surface inutile.</p>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="important">
-                            <h4>Principe :</h4>
-                            <ul>
-                                <li>
-                                    <p><span class="em">Clé SSH</span> (pas de mot de passe).</p>
-                                </li>
-                                <li>
-                                    <p><span class="em">Pas de login root</span> direct.</p>
-                                </li>
-                                <li>
-                                    <p>Fermer les sessions inactives.</p>
-                                </li>
-                                <li>
-                                    <p>Désactiver tout ce qui n'est pas utilisé.</p>
-                                </li>
-                            </ul>
-                        </div>
+                    <div class="information">
+                        <h4>Risques par défaut :</h4>
+                        <ul>
+                            <li>
+                                <p>Authentification par mot de passe : brute-force possible.</p>
+                            </li>
+                            <li>
+                                <p>Login root direct : compromission immédiate.</p>
+                            </li>
+                            <li>
+                                <p>Sessions inactives maintenues.</p>
+                            </li>
+                            <li>
+                                <p>Forwarding graphique (X11) : surface inutile.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="important">
+                        <h4>Principe :</h4>
+                        <ul>
+                            <li>
+                                <p><span class="em">Clé SSH</span> (pas de mot de passe).</p>
+                            </li>
+                            <li>
+                                <p><span class="em">Pas de login root</span> direct.</p>
+                            </li>
+                            <li>
+                                <p>Fermer les sessions inactives.</p>
+                            </li>
+                            <li>
+                                <p>Désactiver tout ce qui n'est pas utilisé.</p>
+                            </li>
+                        </ul>
                     </div>
                     <h3>Overrides via sshd_config.d/ :</h3>
                     <h4>/etc/ssh/sshd_config inclut sshd_config.d/ :</h4>
@@ -7627,37 +7623,35 @@ end</code></pre>
                     <img src="../images/VM_maintenance-sec_architecture.PNG" alt="">
                     <p>Chaque couche tourne sous un <span class="em">utilisateur OS distinct</span>. Les communications inter-couches passent par des <span class="em">sockets Unix</span> - aucun port TCP interne. Objectif : si une couche est compromise, les autres restent protégées.</p>
                     <h3>Sockets Unix - principe :</h3>
-                    <div>
-                        <div class="information float_left">
-                            <h4>TCP/IP loopback :</h4>
-                            <p>nginx &#8594; 127.0.0.1:9000 &#8594; php-fpm</p>
-                            <ul>
-                                <li>
-                                    <p>Port ouvert (visible dans ss).</p>
-                                </li>
-                                <li>
-                                    <p>Pile réseau complète traversée.</p>
-                                </li>
-                                <li>
-                                    <p>Toute appli peut tenter de s'y connecter.</p>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="important">
-                            <h4>Socket Unix :</h4>
-                            <p>nginx &#8594; /run/php/appphp-fpm.sock &#8594; php-fpm</p>
-                            <ul>
-                                <li>
-                                    <p><span class="em">Aucun port réseau</span> ouvert.</p>
-                                </li>
-                                <li>
-                                    <p>Permissions filesystem (owner/group).</p>
-                                </li>
-                                <li>
-                                    <p>Inaccessible depuis le réseau.</p>
-                                </li>
-                            </ul>
-                        </div>
+                    <div class="information float_left">
+                        <h4>TCP/IP loopback :</h4>
+                        <p>nginx &#8594; 127.0.0.1:9000 &#8594; php-fpm</p>
+                        <ul>
+                            <li>
+                                <p>Port ouvert (visible dans ss).</p>
+                            </li>
+                            <li>
+                                <p>Pile réseau complète traversée.</p>
+                            </li>
+                            <li>
+                                <p>Toute appli peut tenter de s'y connecter.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="important">
+                        <h4>Socket Unix :</h4>
+                        <p>nginx &#8594; /run/php/appphp-fpm.sock &#8594; php-fpm</p>
+                        <ul>
+                            <li>
+                                <p><span class="em">Aucun port réseau</span> ouvert.</p>
+                            </li>
+                            <li>
+                                <p>Permissions filesystem (owner/group).</p>
+                            </li>
+                            <li>
+                                <p>Inaccessible depuis le réseau.</p>
+                            </li>
+                        </ul>
                     </div>
                     <p>Même principe entre php-fpm et MariaDB : /run/mysqld.sock - et MariaDB peut désactiver TCP entièrement (<span class="em">skip-networking = 1</span>).</p>
                     <h3>Architecture : 3 couches, 3 utilisateurs, 0 port TCP interne :</h3>
@@ -7699,18 +7693,16 @@ end</code></pre>
                         <img src="../images/appphp_lecture_seule_2.PNG" alt="">
                     </div>
                     <h3>Résultat et PDO :</h3>
-                    <div>
-                        <div class="information float_left">
-                            <h4>curl http://172.28.128.222/</h4>
-                            <img src="../images/Resultat_PDO.PNG" alt="">
-                        </div>
-                        <div class="information">
-                            <h4>PDO en bref :</h4>
-                            <p>PDO = PHP Data Objects : couche d'abstraction BD (idem pour MySQL, SQLite, ...).</p>
-                            <p><span class="em">ERRMODE_EXCEPTION</span> une erreur DB lève une exception PHP (pas de plantage silencieux).</p>
-                            <p><span class="em">unix_socket=...</span> dans le DSN : connexion directe via socket Unix, sans TCP, sans mot de passe stocké.</p>
-                            <p><a href="https://www.php.net/manual/fr/book.pdo.php" target="_blank">https://www.php.net/manual/fr/book.pdo.php</a></p>
-                        </div>
+                    <div class="information">
+                        <h4>curl http://172.28.128.222/</h4>
+                        <img src="../images/Resultat_PDO.PNG" alt="">
+                    </div>
+                    <div class="information">
+                        <h4>PDO en bref :</h4>
+                        <p>PDO = PHP Data Objects : couche d'abstraction BD (idem pour MySQL, SQLite, ...).</p>
+                        <p><span class="em">ERRMODE_EXCEPTION</span> une erreur DB lève une exception PHP (pas de plantage silencieux).</p>
+                        <p><span class="em">unix_socket=...</span> dans le DSN : connexion directe via socket Unix, sans TCP, sans mot de passe stocké.</p>
+                        <p><a href="https://www.php.net/manual/fr/book.pdo.php" target="_blank">https://www.php.net/manual/fr/book.pdo.php</a></p>
                     </div>
                 </article>
                 <article>
@@ -7774,35 +7766,33 @@ end</code></pre>
                 </article>
                 <article>
                     <h2 id="securisation_hotes_AppArmor_controle_acces_obligatoire">Sécurisation des hôtes (Linux) : AppArmor : contrôle d'accès obligatoire :</h2>
-                    <div>
-                        <div class="information float_left">
-                            <h3>DAC (Unix classique) :</h3>
-                            <ul>
-                                <li>
-                                    <p>Droits définis par le propriétaire du fichier.</p>
-                                </li>
-                                <li>
-                                    <p>Un process root peut tout faire.</p>
-                                </li>
-                                <li>
-                                    <p>Un service compromis = accès à tous ses fichiers.</p>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="important">
-                            <h3>MAC - AppArmor :</h3>
-                            <ul>
-                                <li>
-                                    <p>Droits définis par <span class="em">un profil par exécutable</span>.</p>
-                                </li>
-                                <li>
-                                    <p><span class="em">Root ne contourne pas</span> le profil.</p>
-                                </li>
-                                <li>
-                                    <p>nginx compromis : limité à ce que son profil autorise.</p>
-                                </li>
-                            </ul>
-                        </div>
+                    <div class="information">
+                        <h3>DAC (Unix classique) :</h3>
+                        <ul>
+                            <li>
+                                <p>Droits définis par le propriétaire du fichier.</p>
+                            </li>
+                            <li>
+                                <p>Un process root peut tout faire.</p>
+                            </li>
+                            <li>
+                                <p>Un service compromis = accès à tous ses fichiers.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="important">
+                        <h3>MAC - AppArmor :</h3>
+                        <ul>
+                            <li>
+                                <p>Droits définis par <span class="em">un profil par exécutable</span>.</p>
+                            </li>
+                            <li>
+                                <p><span class="em">Root ne contourne pas</span> le profil.</p>
+                            </li>
+                            <li>
+                                <p>nginx compromis : limité à ce que son profil autorise.</p>
+                            </li>
+                        </ul>
                     </div>
                     <p>AppArmor est <span class="em">actif par défaut</span> sur Ubuntu. Complément à systemd sandboxing : systemd restreint le service en tant qu'unité, AppArmor restreint l'exécutable au niveau noyau.</p>
                     <h3>État sur la machine :</h3>
