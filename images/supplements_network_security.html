@@ -7883,6 +7883,103 @@ end</code></pre>
                             <p>IPsec est assez complexe. Nous avons vu comment IKE est utilisé pour construire le tunnel IPsec et comment les protocoles AH et/ou ESP sont utilisés pour protéger le trafic IP. Désormais vous pouvez construire vos réseaux VPN et comprendre les mécanismes mis en place pour sécuriser le trafic VPN.</p>
                         </li>
                     </ol>
+                    <p>La distinction la plus importante est "AH vs ESP".</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>AH - AUTHENTICATION HEADER (PROTO 51)</th>
+                                <th>ESP - ENCAPSULATING SECURITY PAYLOAD (PROTO 50)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Chiffrement</td>
+                                <td>NON</td>
+                                <td>OUI (ex: AES)</td>
+                            </tr>
+                            <tr>
+                                <td>Authentification</td>
+                                <td>OUI</td>
+                                <td>OUI (ex : HMAC)</td>
+                            </tr>
+                            <tr>
+                                <td>Intégrité</td>
+                                <td>OUI</td>
+                                <td>OUI</td>
+                            </tr>
+                            <tr>
+                                <td>Signe</td>
+                                <td>En-tête IP + payload</td>
+                                <td>Payload uniquement (pas l'IP externe)</td>
+                            </tr>
+                            <tr>
+                                <td>NAT</td>
+                                <td>INCOMPATIBLE</td>
+                                <td>COMPATIBLE</td>
+                            </tr>
+                            <tr>
+                                <td>Pourquoi (NAT)</td>
+                                <td>NAT moodifie IP src &#8594; signature invalide</td>
+                                <td>IP externe non signée &#8594; NAT possible</td>
+                            </tr>
+                            <tr>
+                                <td>NAT-T</td>
+                                <td>NON</td>
+                                <td>OUI (ESP encapsulé dans UDP port 4500)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>À retenir : AH signe l'en-tête IP &#8594; incompatible NAT. ESP ne signe pas l'IP externe &#8594; compatible NAT via UDP 4500. En pratique : toujours utiliser ESP.</p>
+                    </div>
+                    <p>La deuxième distinction à faire est "Mode Transport vs Mode Tunnel".</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Mode Transport</th>
+                                <th>Mode Tunnel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Usage</td>
+                                <td>Host-to-host (entre deux hôtes finaux)</td>
+                                <td>Gateway-to-gateway (VPN site-à-site)</td>
+                            </tr>
+                            <tr>
+                                <td>Protège</td>
+                                <td>Payload L4 + données</td>
+                                <td>Tout le paquet IP original</td>
+                            </tr>
+                            <tr>
+                                <td>En-tête IP original</td>
+                                <td>Conservé en clair</td>
+                                <td>Chiffré (encapsulé dans un nouveau paquet)</td>
+                            </tr>
+                            <tr>
+                                <td>Overhead</td>
+                                <td>Faible</td>
+                                <td>Plus élevé</td>
+                            </tr>
+                            <tr>
+                                <td>Exemple</td>
+                                <td>PC employé &#8596; serveur même réseau</td>
+                                <td>Routeur A &#8596; Routeur B (VPN entreprise)</td>
+                            </tr>
+                            <tr>
+                                <td>Structure</td>
+                                <td>[ En-tête IP original ] [ En-tête ESP ] [ TCP chiffré ] [ Données chiffrées ]</td>
+                                <td>[ Nouvel en-tête IP ] [ En-tête ESP ] [ En-tête IP original chiffré ] [ TCP ] [ Données ]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Règle : Transport = entre hôtes (adresses visibles). Tunnel = entre gateways (adresses internes cachées).</p>
+                    </div>
                 </article>
                 <article>
                     <h2 id="attaques_reseaux">Les attaques réseaux :</h2>
