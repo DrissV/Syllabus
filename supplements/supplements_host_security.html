@@ -111,6 +111,11 @@
                     <li><a href="#securisation_hotes_outils_scanning_auditing">Sécurisation des hôtes (Linux) : Outils : Scanning, Auditing</a></li>
                     <li><a href="#securisation_hotes_outils_autres">Sécurisation des hôtes (Linux) : Outils : Autres</a></li>
                     <li><a href="#securisation_identites_zero_trust_environnements_de_travail">Sécurisation des hôtes à grande échelle, Gestion renforcée des identités, Zero Trust Network Access : Du paramètre à l'identité : une approche architecturale : Environnements de travail</a></li>
+                    <li><a href="#ZTNA_contexte_probleme">Zero Trust Network Access : Contexte et problème</a></li>
+                    <li><a href="#architecture_zero_trust_composants_logiques_styles_deploiement">Architecure Zero Trust : Composants et styles de déploiement</a></li>
+                    <li><a href="#ZTNA_mise_pratique_gestion_renforcee_identite">Zero Trust Network Access : Mise en pratique : Gestion renforcée des identités</a></li>
+                    <li><a href="#mise_pratique_ZTNA">Mise en pratique de Zero Trust Network Access</a></li>
+                    <li><a href="#ZTNA_risques">Zero Trust Network Access : Risques</a></li>
                     <li><a href="#evaluation_instructions">Évaluation - instructions</a></li>
                 </ol>
             </nav>
@@ -225,7 +230,7 @@
                     <p>Nous utiliserons les outils <a href="https://www.virtualbox.org/" target="_blank">VirtualBox</a> et <a href="https://www.vagrantup.com/" target="_blank">Vagrant</a> pour virtualiser des environnements reproductibles sur vos ordinateurs.</p>
                     <p>Il faut les installer dans cet ordre-là.</p>
                     <p>Cela nécessite des droits d'administrateur sur sa machine et parfois une configuration spécifique du BIOS (activation des fonctions de virtualisation - parfois aussi SecureBoot).</p>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>ASSUREZ-VOUS DE PRENDRE LES TOUTES DERNIÈRES VERSIONS STABLES (au moment de la rédaction de cet article, testé sur Vagrant 2.4.9 et virtualbox 7.2.6 - virtualbox 7.2.0 n'est PAS stable, prendre les extensions virtualbox compatibles).</p>
                         <p>NÉCESSITE UN LINUX / WINDOWS / MAC OS récent (sur processeur Intel - support pour Silicon Apple en développement).</p>
@@ -2121,7 +2126,7 @@ end</code></pre>
                             <p>john stocke le TGT + la clé de session dans un cache local (un "portefeuille de tickets").</p>
                         </li>
                     </ol>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Point clé : Le mot de passe a servi une seule fois. Tout le reste repose sur le TGT et la clé de session.</p>
                     </div>
@@ -2155,7 +2160,7 @@ end</code></pre>
                             <p>Le sshd répond &#8594; authentification mutuelle.</p>
                         </li>
                     </ol>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>* authenticator = timestamp chiffré avec la clé de session - prouver que john la possède maintenant (protection contre le rejeu).</p>
                     </div>
@@ -2192,7 +2197,7 @@ end</code></pre>
                         </tbody>
                     </table>
                     <p>* authenticator = timestamp chiffré avec la clé de session, preuve de possession "en temps réel".</p>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Le TGS est "juste un service".</p>
                         <p>La seule différence : la première fois, john tape son mot de passe. Les fois suivantes, le TGT le remplace. C'est ça, le Single Sign-On.</p>
@@ -2248,7 +2253,7 @@ end</code></pre>
                             <p>Analogie: le keytab est au service ce que le mot de passe est à l'utilisateur.</p>
                         </li>
                     </ul>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Sans keytab, le sshd ne peut pas déchiffrer le service ticket &#8594; authentification GSSAPI impossible.</p>
                     </div>
@@ -2292,7 +2297,7 @@ end</code></pre>
                             <img src="../images/configuration_sssd_client.PNG" alt="">
 <pre><code>sudo cat /etc/sssd/sssd.conf</code></pre>
                             <p>En résumé, cette commande affiche la configuration de SSSD, qui gère l'authentification centralisée.</p>
-                            <div class="important">
+                            <div class="bordure important">
                                 <img src="../images/important.png" alt="Important" class="float_left">
                                 <p>Séparation identité / authentification : id_provider = ldap &#8594; identité (qui est john ?) auth_provider = krb5 &#8594; authentification (est-ce bien john ?)</p>
                             </div>
@@ -2311,7 +2316,7 @@ end</code></pre>
 <pre><code>sudo cat /etc/passwd | grep john</code></pre>
 <pre><code>sudo cat /etc/group | grep john</code></pre>
                     <p>En résumé, ces deux commandes vérifient la présence de l'utilisateur dans les fichiers système.</p>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Observation clé : identité centralisée : john n'apparaît ni dans <span class="em">/etc/passwd</span> ni dans <span class="em">/etc/group</span> &#8594; son identité vient du serveur LDAP, pas des fichiers locaux.</p>
                     </div>
@@ -2339,7 +2344,7 @@ end</code></pre>
                     <p>En résumé, cette commande ferme la session.</p>
 <pre><code>klist</code></pre>
                     <p>En résumé, cette commande vérifie que le ticket a disparu.</p>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>krbgt/HS.BE = TGT (phase 1) host/sso-service.hs.be = service ticket (phase 2)</p>
                     </div>
@@ -2360,7 +2365,7 @@ end</code></pre>
 <pre><code>klist</code></pre>
 <pre><code>ssh john@sso-service.hs.be</code></pre>
                     <p>En résumé, cette commande tente une connexion SSH vers le serveur. Si un TGT vaide est présent &#8594; authentification GGSAPI automatique (SSO). Sinon &#8594; demande le mot de passe.</p>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>L'échec rend le mécanisme tangible.</p>
                         <p>Sans TGT, impossible d'obtenir un service ticket &#8594; SSH redemande le mot de passe.</p>
@@ -3153,11 +3158,11 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                             <p>Authenticité, Intégrité &#8594; Signature, Hash, Certificats.</p>
                         </li>
                     </ul>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float left">
                         <p>Problème : Le chiffrement symétrique est rapide, mais comment partager le secret initial entre deux parties qui ne se connaissent pas ?</p>
                     </div>
-                    <div class="information">
+                    <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Solution : combiner les deux &#8594; <span class="em">TLS</span>, <span class="em">SSH</span>, <span class="em">VPN</span> :</p>
                         <ol>
@@ -3205,7 +3210,7 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                             </tr>
                         </tbody>
                     </table>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float left">
                         <p>Et concrètement ? Chaque protocole (TLS, SSH, VPN) implémente ce schéma à sa manière. Dans la suite du cours, on va montrer TLS.</p>
                     </div>
@@ -3560,13 +3565,13 @@ end</code></pre>
                             </tr>
                         </tbody>
                     </table>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Vérification out-of-band indispensable dans les deux sens :</p>
                         <p><span class="em">Clé hôte (serveur)</span> : le client doit vérifier la clé du serveur à la 1ère connexion - sinon, risque de MITM.</p>
                         <p><span class="em">Clé publique (client)</span> : l'admin du serveur doit vérifier la clé avant de l'importer dans authorized_keys - sinon, n'importe qui peut s'enregistrer.</p>
                     </div>
-                    <div class="information">
+                    <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Mot de passe vs clé client :</p>
                         <p>La clé résiste mieux aux attaques par force brute et évite les risques de réutilisation.</p>
@@ -3803,7 +3808,7 @@ end</code></pre>
                             </tr>
                         </tbody>
                     </table>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <h4>known_hosts - une entrée par utilisateur :</h4>
                         <p>Chaque utilisateur de exercice2-client possède son propre <span class="em">~/.ssh/known_hosts</span>. La clé hôte du serveur y est enregistrée lors de la première connexion SSH - chaque utilisateur doit la vérifier <span class="em">indépendamment</span> par un canal hors-bande (console du serveur).</p>
@@ -3980,7 +3985,7 @@ end</code></pre>
                             <p>Console exercice2-server : ajouter la clé publique de <span class="em">vagrant</span> :</p>
 <pre><code>echo "&lt;clé&gt;" &gt;&gt; /home/vagrant/.ssh/authorized_keys</code></pre>
                             <p>En résumé, cette commande autorise cette clé publique à se connecter au compte.</p>
-                            <div class="important">
+                            <div class="bordure important">
                                 <img src="../images/important.png" alt="Important" class="float_left">
                                 <p><span class="em">&lt;clé&gt;</span> contient la ligne complète de la clé publique avec les trois parties et pas juste la partie de la clé encodée.</p>
                             </div>
@@ -4035,7 +4040,7 @@ end</code></pre>
                             <ul>
                                 <li>
 <pre><code>su - userN</code></pre>
-                                    <div class="information">
+                                    <div class="bordure information">
                                         <img src="../images/information.png" alt="Information" class="float_left">
                                         <p>Il y a une différence entre la commande <code class="em">su userN</code> et la commande <code class="em">su - userN</code> :</p>
                                         <table class="tableBalises">
@@ -4141,7 +4146,7 @@ end</code></pre>
                             <p>Créer la <span class="em">clé privée</span> et le <span class="em">certificat auto-signé de l'AC</span> :</p>
 <pre><code>openssl genpkey -algorithm RSA -out ~/tls/ac/ac.key</code></pre>
 <pre><code>openssl req -new -x509 -days 3600 -key ~/tls/ac/ac.key -out ~/tls/ac/ac.crt</code></pre>
-                            <div class="important">
+                            <div class="bordure important">
                                 <img src="../images/important.png" alt="Important" class="float_left">
                                 <p>Le Common Name (CN) de ce certificat doit être "monac".</p>
                             </div>
@@ -4150,7 +4155,7 @@ end</code></pre>
                             <p>Créer la <span class="em">clé privée</span> et la <span class="em">demande de certification (CSR)</span> du serveur :</p>
 <pre><code>openssl genpkey -algorithm RSA -out ~/tls/server.key</code></pre>
 <pre><code>openssl req -new -key ~/tls/server.key -out ~/tls/server.csr</code></pre>
-                            <div class="important">
+                            <div class="bordure important">
                                 <img src="../images/important.png" alt="Important" class="float_left">
                                 <p>Le Common Name (CN) de ce certificat doit être "exercice2-server.hs.be".</p>
                             </div>
@@ -4529,7 +4534,7 @@ sudo wg show</code></pre>
                             </ul>
                         </li>
                     </ul>
-                    <div class="information">
+                    <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p><span class="em">SSH</span> : avant tout <span class="em">administration système</span> d'une machine (shell, SCP/SFTP); un tunnel par port (<span class="em">-L</span>) ou proxy SOCKS(<span class="em">-D</span>) peut exposer d'autres services, mais chaque service nécessite une configuration explicite.</p>
                         <p><span class="em">VPN</span> : <span class="em">transparence au niveau réseau</span> - toutes les applications atteignent directement les hôtes distants, sans modification.</p>
@@ -4572,11 +4577,11 @@ sudo wg show</code></pre>
                             </tr>
                         </tbody>
                     </table>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p><span class="em">Authentification mutuelle par conception</span> : Chaque pair configure <span class="em">explicitement</span> la <span class="em">clé publique</span> de l'autre (<span class="em">PublicKey</span> dans <span class="em">wg0.conf</span>). Un pair inconnu est <span class="em">silencieusement ignoré</span> : pas de PKI, pas de CA.</p>
                     </div>
-                    <div class="information">
+                    <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p><span class="em">Forward secrecy</span> : clés éphémères jetées après chaque session - une fuite future de la clé statique ne compromet pas le trafic passé.</p>
                         <p><span class="em">AEAD</span> (ChaCha20-Poly1305) : chiffrement + intégrité en un seul primitif (contrairement à AES + HMAC séparés dans TLS/SSH).</p>
@@ -4729,7 +4734,7 @@ sudo sysctl -p</code></pre>
                             <p>Utilisation pour protection de la vie privée ? Risques résiduels : fuites DNS, l'opérateur VPN voit ce que votre FAI voyait avant...</p>
                         </li>
                     </ul>
-                    <div class="information">
+                    <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>"<span class="em">quid</span>" signifie "Qu'en est-il (de ...) ?" ou "Que penser (de ...) ?"</p>
                     </div>
@@ -4776,7 +4781,7 @@ sudo sysctl -p</code></pre>
                             </tr>
                         </tbody>
                     </table>
-                    <div class="information">
+                    <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Chaque protocole implémente le schéma combiné à sa manière.</p>
                         <p>TLS privilégie l'interopérabilité (PKI, autorités de certification).</p>
@@ -5006,7 +5011,7 @@ end</code></pre>
                             </tr>
                         </tbody>
                     </table>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Règle fondamentale : Le chiffrement est efficace uniquement quand le volume est <span class="em">verrouillé</span> (système éteint ou volume fermé avec <span class="em">cryptsetup close</span>). Une fois monté, les contrôles d'accès habituels reprennent.</p>
                     </div>
@@ -5349,7 +5354,7 @@ sudo mount LABEL=extra2 /mnt2</code></pre>
                             <p>La passphrase ne chiffre pas le volume - elle chiffre la master key, stockée dans un key slot (LUKS2 : jusqu'à 32 slots).</p>
                         </li>
                     </ul>
-                    <div class="information">
+                    <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Conséquences pratiques :</p>
                         <ul>
@@ -5364,7 +5369,7 @@ sudo mount LABEL=extra2 /mnt2</code></pre>
                             </li>
                         </ul>
                     </div>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Structure du header LUKS :</p>
                         <p><span class="em">Key slot 0</span> : passphrase utilisateur.</p>
@@ -6113,7 +6118,7 @@ Vagrant.configure("2") do |config|
 
 end</code></pre>
                     <h3>IPS :</h3>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>À ne faire que sur réseau contrôlé !</p>
                     </div>
@@ -6471,7 +6476,7 @@ COMMIT</code></pre>
                         <li>
 <pre><code>./copy-snort-conf.sh &lt;PORT&gt;</code></pre>
                             <p>Ce script sert à copier ta configuration Snort personnalisée dans la VM.</p>
-                            <div class="important">
+                            <div class="bordure important">
                                 <img src="../images/important.png" alt="Important" class="float_left">
                                 <p>Tu dois relancer ce script à chaque fois que tu modifies tes règles Snort ou si la VM est recréée (<span class="em">vagrant destroy</span>).</p>
                             </div>
@@ -7465,13 +7470,13 @@ end</code></pre>
                 <article>
                     <h2 id="securisation_hotes_limiter_services">Sécurisation des hôtes (Linux) : Limiter les services :</h2>
                     <h3>Sockets - communication inter-process (IPC) :</h3>
-                    <div class="information">
+                    <div class="bordure information">
                         <h4>TCP/IP socket :</h4>
                         <p>nginx &#8594; 127.0.0.1:9000 &#8594; php-fpm</p>
                         <p>Identificateur : adresse IP + port</p>
                         <p>Accessible depuis le réseau</p>
                     </div>
-                    <div class="important">
+                    <div class="bordure important">
                         <h4>Socket Unix (domain socket) :</h4>
                         <p>nginx &#8594; /run/php/fpm.sock &#8594; php-fpm</p>
                         <p>Identificateur : chemin de fichier</p>
@@ -7568,7 +7573,7 @@ end</code></pre>
                 <article>
                     <h2 id="securisation_hotes_securisation_SSH">Sécurisation des hôtes (Linux) : Sécurisation de SSH :</h2>
                     <h3>Sécurisation de SSH - vecteur d'entrée principal :</h3>
-                    <div class="information">
+                    <div class="bordure">
                         <h4>Risques par défaut :</h4>
                         <ul>
                             <li>
@@ -7585,7 +7590,7 @@ end</code></pre>
                             </li>
                         </ul>
                     </div>
-                    <div class="important">
+                    <div class="bordure important">
                         <h4>Principe :</h4>
                         <ul>
                             <li>
@@ -7628,7 +7633,7 @@ end</code></pre>
                     <img src="../images/VM_maintenance-sec_architecture.PNG" alt="">
                     <p>Chaque couche tourne sous un <span class="em">utilisateur OS distinct</span>. Les communications inter-couches passent par des <span class="em">sockets Unix</span> - aucun port TCP interne. Objectif : si une couche est compromise, les autres restent protégées.</p>
                     <h3>Sockets Unix - principe :</h3>
-                    <div class="information float_left">
+                    <div class="bordure important">
                         <h4>TCP/IP loopback :</h4>
                         <p>nginx &#8594; 127.0.0.1:9000 &#8594; php-fpm</p>
                         <ul>
@@ -7643,7 +7648,7 @@ end</code></pre>
                             </li>
                         </ul>
                     </div>
-                    <div class="important">
+                    <div class="bordure important">
                         <h4>Socket Unix :</h4>
                         <p>nginx &#8594; /run/php/appphp-fpm.sock &#8594; php-fpm</p>
                         <ul>
@@ -7693,16 +7698,16 @@ end</code></pre>
                     <h3>Moindre privilège - appphp en lecture seule, sans mot de passe :</h3>
                     <h4>Droits accordés - unix_socket auth, pas de mot de passe dans le code :</h4>
                     <img src="../images/appphp_lecture_seule_1.PNG" alt="">
-                    <div class="important">
+                    <div class="bordure important">
                         <h4>INSERT refusé (SELECT uniquement) :</h4>
                         <img src="../images/appphp_lecture_seule_2.PNG" alt="">
                     </div>
                     <h3>Résultat et PDO :</h3>
-                    <div class="information">
+                    <div class="bordure">
                         <h4>curl http://172.28.128.222/</h4>
                         <img src="../images/Resultat_PDO.PNG" alt="">
                     </div>
-                    <div class="information">
+                    <div class="bordure">
                         <h4>PDO en bref :</h4>
                         <p>PDO = PHP Data Objects : couche d'abstraction BD (idem pour MySQL, SQLite, ...).</p>
                         <p><span class="em">ERRMODE_EXCEPTION</span> une erreur DB lève une exception PHP (pas de plantage silencieux).</p>
@@ -7771,7 +7776,7 @@ end</code></pre>
                 </article>
                 <article>
                     <h2 id="securisation_hotes_AppArmor_controle_acces_obligatoire">Sécurisation des hôtes (Linux) : AppArmor : contrôle d'accès obligatoire :</h2>
-                    <div class="information">
+                    <div class="bordure information">
                         <h3>DAC (Unix classique) :</h3>
                         <ul>
                             <li>
@@ -7785,7 +7790,7 @@ end</code></pre>
                             </li>
                         </ul>
                     </div>
-                    <div class="important">
+                    <div class="bordure important">
                         <h3>MAC - AppArmor :</h3>
                         <ul>
                             <li>
@@ -7887,7 +7892,33 @@ end</code></pre>
                                 </li>
                             </ul>
                             <p>Voici le Vagrantfile de cette VM :</p>
-<pre><code></code></pre>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: '172.28.128.25'
+
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+  set -euo pipefail
+
+  # Chargement des packages, en mode non-interactif(!)
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y apt-transport-https curl gnupg
+  curl https://lemonldap-ng.org/lemonldap-debian-packages-pub.gpg | gpg --dearmor &gt; /usr/share/keyrings/lemonldap-debian-packages-pub.gpg
+  echo "# LemonLDAP::NG repository" &gt; /etc/apt/sources.list.d/lemonldap-ng.list
+  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/lemonldap-debian-packages-pub.gpg] https://lemonldap-ng.org/deb 2.0 main" > /etc/apt/sources.list.d/lemonldap-ng.list
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y lemonldap-ng nginx
+
+  # démarrage des services
+
+  cd /etc/nginx/sites-enabled
+  ln -s ../sites-available/*nginx* .
+  systemctl restart lemonldap-ng-fastcgi-server
+  systemctl restart nginx
+
+  SHELL
+end</code></pre>
                         </li>
                         <li>
                             <p>zero &amp; zero-dev-monit &amp; zero-client :</p>
@@ -7903,13 +7934,210 @@ end</code></pre>
                                 </li>
                             </ul>
                             <p>Voici le Vagrantfile de la VM nommée "zero" :</p>
-<pre><code></code></pre>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.hostname = "prod.local"
+  config.vm.provision "file", source: "./http", destination: "/home/vagrant/http"
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+
+   # Add Tailscale's package signing key and repository
+   sudo curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.noarmor.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg &gt; /dev/null
+   curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.tailscale-keyring.list | sudo tee /etc/apt/sources.list.d/tailscale.list
+
+   # Chargement des packages, en mode non-interactif(!)
+   sudo apt-get update
+   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tailscale
+ 
+  # start prod server
+
+  SHELL
+end</code></pre>
                             <p>Voici le Vagrantfile de la VM nommée "zero-dev-monit" :</p>
-<pre><code></code></pre>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.hostname = "dev-monit.local"
+  config.vm.provision "file", source: "./http", destination: "/home/vagrant/http"
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+
+   # Add Tailscale's package signing key and repository
+   sudo curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.noarmor.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg &gt; /dev/null
+   curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.tailscale-keyring.list | sudo tee /etc/apt/sources.list.d/tailscale.list
+
+   # Chargement des packages, en mode non-interactif(!)
+   sudo apt-get update
+   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tailscale
+ 
+  # start prod server
+
+  SHELL
+end</code></pre>
                             <p>Voici le Vagrantfile de la VM nommée "zero-client" :</p>
-<pre><code></code></pre>
+<pre><code># coding: utf-8
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.hostname = "client.local"
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+
+   # Add Tailscale's package signing key and repository
+   sudo curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.noarmor.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg &gt; /dev/null
+   curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.tailscale-keyring.list | sudo tee /etc/apt/sources.list.d/tailscale.list
+
+   # Chargement des packages, en mode non-interactif(!)
+   sudo apt-get update
+   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tailscale
+ 
+  # start prod server
+
+  SHELL
+end</code></pre>
                         </li>
                     </ol>
+                </article>
+                <article>
+                    <h2 id="ZTNA_contexte_probleme">Zero Trust Network Access : Contexte et problème :</h2>
+                    <h3>Un contexte en mutation :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Télétravail généralisé</span> : les utilisateurs accèdent aux ressources depuis des réseaux non maîtrisés (domicile, mobile, hôtel).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Cloud et SaaS</span> : les ressources elles-mêmes ne sont plus à l'intérieur - elles sont chez AWS, un éditeur SaaS, réparties géographiquement.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Partenaires et prestataires</span> : des tiers accèdent à des ressources internes sans être sous contrôle de l'organisation.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">BYOD</span> : des terminaux hors contrôle organisationnel accèdent aux ressources.</p>
+                        </li>
+                    </ul>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Il n'y a plus de réseau interne homogène et fiable - le "dedans" est fragmenté, partiellement externe, partiellement hors contrôle.</p>
+                    </div>
+                    <h3>Ce qui fonctionnait - et pourquoi :</h3>
+                    <div class="bordure">
+                        <h4>Machine individuelle :</h4>
+                        <ul>
+                            <li>
+                                <p>Périmètre = la machine.</p>
+                            </li>
+                            <li>
+                                <p>Hardening (sysctl, AppArmor, systemd), réduction de surface, least privilege local.</p>
+                            </li>
+                            <li>
+                                <p>Suffisant : les menaces viennent de l'intérieur de la machine.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bordure">
+                        <h4>Réseau d'entreprise fermé :</h4>
+                        <ul>
+                            <li>
+                                <p>Périmètre = firewall + frontière physique.</p>
+                            </li>
+                            <li>
+                                <p>Identité centralisée (LDAP/Kerberos). Segmentation réseau, machines gérées.</p>
+                            </li>
+                            <li>
+                                <p>Suffisant si : accès externe exceptionnel, frontière physique réelle, terminaux sous contrôle.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Ces mécanismes restent valables dans tous les contextes. Zero Trust s'y ajoute - il ne les remplace pas.</p>
+                    </div>
+                    <h3>Deux failles du modèle périmétrique :</h3>
+                    <h4>Faille 1 - Le périmètre est devenu poreux par conception :</h4>
+                    <ul>
+                        <li>
+                            <p>Télétravail, cloud SaaS = accès légitimes depuis partout.</p>
+                        </li>
+                        <li>
+                            <p>Multiplier les exceptions (VPN, DMZ, règles ad hoc) &#8595; configuration de plus en plus complexe, maîtrise décroissante.</p>
+                        </li>
+                    </ul>
+                    <h4>Faille 2 - La confiance implicite à l'intérieur est un risque :</h4>
+                    <ul>
+                        <li>
+                            <p>Une machine compromise "à l'intérieur" peut atteindre librement toutes les autres ressources internes.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Mouvement latéral</span> : vecteur majeur dans les incidents réels.</p>
+                        </li>
+                        <li>
+                            <p>SolarWinds : un prestataire "de confiance" introduit une compromission qui se propage latéralement sans franchir le périmètre.</p>
+                        </li>
+                    </ul>
+                    <h3>Réponse architecturale : Zero Trust :</h3>
+                    <ul>
+                        <li>
+                            <p>Principe : la décision d'accès est basée sur l'<span class="em">identité vérifiée</span> et le <span class="em">contexte</span>, indépendamment de la localisation réseau.</p>
+                        </li>
+                        <li>
+                            <p>"Never trust, always verify" - Kindervag/Forrester; formalisé dans NIST SP 800-207 et ANSSI.</p>
+                        </li>
+                        <li>
+                            <p>Un point de vérification explicite devant chaque ressource.</p>
+                        </li>
+                        <li>
+                            <p>Politique <span class="em">default deny</span> - chaque accès autorisé est une exception explicite.</p>
+                        </li>
+                        <li>
+                            <p>Décisions d'accès dynamiques : identité + contexte + état du terminal.</p>
+                        </li>
+                    </ul>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Zero Trust n'est pas une technologie ou un produit - c'est une approche architecturale. "Zero Trust" en étiquette commerciale ne garantit rien.</p>
+                    </div>
+                    <h3>ZT s'ajoute - et la complexité a un coût :</h3>
+                    <div class="bordure">
+                        <h4>ZT ne remplace pas les couches inférieures :</h4>
+                        <ul>
+                            <li>
+                                <p>Une machine dans un réseau ZT a toujours besoin de hardening individuel.</p>
+                            </li>
+                            <li>
+                                <p>LemonLDAP nécessite toujours un fournisseur d'identité (LDAP/Kerberos).</p>
+                            </li>
+                            <li>
+                                <p>La sécurité réseau ZT ne dispense pas du hardening des services exposés.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bordure important">
+                        <h4>La complexité comme risque :</h4>
+                        <ul>
+                            <li>
+                                <p>Plus de composants = plus de surface d'attaque.</p>
+                            </li>
+                            <li>
+                                <p>Plus de points de défaillance.</p>
+                            </li>
+                            <li>
+                                <p>Misconfiguration : risque réel.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bordure">
+                        <h4>La bonne question :</h4>
+                        <p>Mon contexte justifie-t-il cette complexité supplémentaire ?</p>
+                        <ul>
+                            <li>
+                                <p>Télétravail, SaaS, partenaires externes, ressources critiques &#8594; oui.</p>
+                            </li>
+                            <li>
+                                <p>Réseau interne stable, machines toutes gérées, peu d'accès externes &#8594; probablement non.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="architecture_zero_trust_composants_logiques_styles_deploiement">Architecture Zero Trust : Composants logiques et styles de déploiement :</h2>
+                    
                 </article>
                 <article>
                     <h2 id="evaluation_instructions">Évaluation - instructions :</h2>
