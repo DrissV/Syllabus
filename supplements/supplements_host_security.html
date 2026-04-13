@@ -7919,6 +7919,7 @@ Vagrant.configure("2") do |config|
 
   SHELL
 end</code></pre>
+                            <p>En résumé, pour la VM "sso", les noms auth.example.com manager.example.com test1.example.com test2.example.com doivent être définis statiquement et pointer vers 172.28.128.25 dans la machine hôte, puis démarrer normalement la boîte vagrant.</p>
                         </li>
                         <li>
                             <p>zero &amp; zero-dev-monit &amp; zero-client :</p>
@@ -7992,6 +7993,7 @@ Vagrant.configure("2") do |config|
 
   SHELL
 end</code></pre>
+                            <p>En résumé, c'est trois machines à démarrer; zero-client peut être remplacé par votre machinehôte, mais alors installer tailscale dessus. Il faut provisionner au moins deux comptes sur tailscale.com.</p>
                         </li>
                     </ol>
                 </article>
@@ -8153,7 +8155,7 @@ end</code></pre>
                              : réseau virtuel dont les points d'accès sont pilotables et utilisent d'autres informations que l'identité réseau.
                         </li>
                     </ul>
-                    <div class="important">
+                    <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float">
                         <p>Ces styles ne sont pas exclusifs - une architecture ZT mature les combine. Les deux cas pratiques illustrent le premier (LemonLDAP) et le troisième (Tailscale).</p>
                     </div>
@@ -8193,6 +8195,193 @@ end</code></pre>
                     <img src="../images/ZTNA_idee_generale.PNG" alt="">
                     <p>Aussi possibilité Open ID Connect, SAML (voir supra).</p>
                     <h3>Le Handler : Point d'Application des Politiques (PEP) :</h3>
+                    <ul>
+                        <li>
+                            <p>Chaque requête HTTP vers une application protégée est <span class="em">interceptée</span> par le Handler nginx.</p>
+                        </li>
+                        <li>
+                            <p>Le Handler vérifie :</p>
+                            <ul>
+                                <li>
+                                    <p>L'utilisateur est-il authentifié ? (cookie de session valide).</p>
+                                </li>
+                                <li>
+                                    <p>La politique d'accès l'autorise-t-il pour cette ressource ?</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Si oui &#8594; requête transmise à l'application.</p>
+                        </li>
+                        <li>
+                            <p>Si non &#8594; redirection vers le portail ou refus (403).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Indépendant de l'origine réseau</span> : même vérification pour un utilisateur interne ou externe.</p>
+                        </li>
+                    </ul>
+                    <div class="bordure important">
+                        <h4>Terminologie NIST SP 800-207 :</h4>
+                        <p>Le Handler est un Policy Enforcement Point (PEP) : il matérialise le principe "never trust, always verify" au niveau applicatif. La politique est définie centralement (Policy Engine), le Handler l'applique devant chaque ressource.</p>
+                    </div>
+                    <h3>Architecture :</h3>
+                    <img src="../images/ZTNA_architecture.PNG" alt="">
+                    <h3>Composants :</h3>
+                    <img src="../images/ZTNA_composants.PNG" alt="">
+                    <p><a href="https://arxiv.org/pdf/2301.11092.pdf" target="_blank">https://arxiv.org/pdf/2301.11092.pdf</a></p>
+                    <h3>Dynamique d'interaction avec Handler :</h3>
+                    <img src="../images/ZTNA_dynamique_interaction_handler.PNG" alt="">
+                    <h3>Démo <a href="http://auth.172-28-128-25.nip.io/" target="_blank">http://auth.172-28-128-25.nip.io/</a> ou <a href="http://auth.example.com/" target="_blank">http://auth.example.com/</a> :</h3>
+                    <p><a href="https://lemonldap-ng.org/documentation/latest/quickstart.html" target="_blank">https://lemonldap-ng.org/documentation/latest/quickstart.html</a></p>
+                    <img src="../images/demo_auth.example.PNG" alt="">
+                    <h3>Démo - accès/redirection portail :</h3>
+                    <img src="../images/demo_acces_redirection_portail_1.PNG" alt="">
+                    <h3>Démo - access! application test1 :</h3>
+                    <img src="../images/demo_acces_application_test1_1.PNG" alt="">
+                    <h3>Configuration par admin d'une règle d'accès :</h3>
+                    <img src="../images/configuration_admin_regle_acces.PNG" alt="">
+                    <h3>Démo - accès/redirection portail :</h3>
+                    <img src="../images/demo_acces_redirection_portail_2.PNG" alt="">
+                    <h3>Démo - accès application test1 :</h3>
+                    <img src="../images/demo_acces_application_test1_2.PNG" alt="">
+                    <h3>Configuration par admin d'une variable relative à l'environnement :</h3>
+                    <img src="../images/configuration_admin_variable_relative_environnement_1.PNG" alt="">
+                    <img src="../images/configuration_admin_variable_relative_environnement_2.PNG" alt="">
+                    <h3>Vérification de l'accès différencié en fonction de l'environnement :</h3>
+                    <img src="../images/verification_acces_differencie_fonction_environnement.PNG" alt="">
+                    <h3>Vérification contextuelle - tenet Zero trust :</h3>
+                    <ul>
+                        <li>
+                            <p>L'accès dépend de l'identité <span class="em">et</span> du contexte (navigateur, niveau d'authentification, heure...).</p>
+                        </li>
+                        <li>
+                            <p>Un même utilisateur peut avoir des droits différents selon le contexte dans lequel il se connecte.</p>
+                        </li>
+                        <li>
+                            <p>C'est le tenet ZT : "politique d'accès dynamique, tenant compte d'un large éventail d'attributs".</p>
+                        </li>
+                    </ul>
+                    <div class="bordure">
+                        <h4>Ce que cela change par rapport à un accès statique :</h4>
+                        <p>Un modèle périmétrique accorde l'accès selon la position réseau. Un modèle basé sur des rôles statiques accorde l'accès selon l'identité seule. LemonLDAP ajoute le contexte comme troisième dimension de la décision.</p>
+                    </div>
+                    <h3>Plugins :</h3>
+                    <img src="../images/ZTNA_plugins.PNG" alt="">
+                    <p>etc...</p>
+                    <p><a href="https://lemonldap-ng.org/documentation/latest/index_plugins.html" target="_blank">https://lemonldap-ng.org/documentation/latest/index_plugins.html</a></p>
+                    <h3>Capacité d'interagir avec/d'être un Identity Provider pour applications SAML/OpenID...</h3>
+                    <img src="../images/capacite_interagir_Identity_Provider_applications_SAML_OpenID.PNG" alt="">
+                    <p><a href="https://lemonldap-ng.org/documentation/latest/prereq.html" target="_blank">https://lemonldap-ng.org/documentation/latest/prereq.html</a></p>
+                    <h3>Ce que LemonLDAP couvre - et ce qu'il ne couvre pas :</h3>
+                    <div class="bordure">
+                        <h4>Pilier ZT couvert :</h4>
+                        <ul>
+                            <li>
+                                <p>Vérification explicite par le Handler (PEP) devant chaque ressource.</p>
+                            </li>
+                            <li>
+                                <p>Politique d'accès centralisée et dynamique (contexte).</p>
+                            </li>
+                            <li>
+                                <p>Identité comme base de décision, indépendante de l'origine réseau.</p>
+                            </li>
+                            <li>
+                                <p>SSO : une authentification forte, accès à de multiples ressources.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bordure important">
+                        <h4>Limites :</h4>
+                        <ul>
+                            <li>
+                                <p>Session cookie : confiance maintenue pour la durée de la session - pas de re-vérification per-request.</p>
+                            </li>
+                            <li>
+                                <p>Pas de contrôle de la santé du terminal : une machine compromise reste "authentifiée".</p>
+                            </li>
+                            <li>
+                                <p>Couche applicative uniquement : pas de protection contre le mouvement latéral réseau.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="ZTNA">Zero Trust Network Access :</h2>
+                    <h3>Contexte :</h3>
+                    <ul>
+                        <li>
+                            <p>Accès à un ensemble de ressources par employés / partenaires.</p>
+                        </li>
+                        <li>
+                            <p>Relatif contrôle sur les postes clients.</p>
+                        </li>
+                        <li>
+                            <p>Ressources accédées pas nécessairement de type Web.</p>
+                        </li>
+                        <li>
+                            <p>Déploiement de type agent sur terminal / gateway privilégié.</p>
+                        </li>
+                        <li>
+                            <p>Style privilégiant l'utilisation de l'infrastructure réseau &amp; la notion de "périmètre" défini par logiciel.</p>
+                        </li>
+                    </ul>
+                    <h3>Principe Zero Trust dans Tailscale :</h3>
+                    <ul>
+                        <li>
+                            <p>Chaque machine doit <span class="em">s'enregistrer et s'authentifier</span> - pas d'accès anonyme au réseau virtuel.</p>
+                        </li>
+                        <li>
+                            <p>ACL : <span class="em">default deny</span> - aucun flux n'est autorisé entre machines par défaut.</p>
+                        </li>
+                        <li>
+                            <p>Chaque règle d'accès est une exception <span class="em">explicite et nommée</span> (par tag, groupe, utilisateur).</p>
+                        </li>
+                        <li>
+                            <p>Micro-segmentation par rôle : développeurs &#8800; administrateurs &#8800; partenaires.</p>
+                        </li>
+                    </ul>
+                    <div class="bordure">
+                        <h4>Parallèle avec AppArmor :</h4>
+                        <p>Comme AppArmor pour un processus : politique obligatoire (default deny), définie par un administrateur externe à l'entité contrôlée, impossible à contourner par l'entité elle-même - mais appliquée au niveau de flux réseau entre machines.</p>
+                    </div>
+                    <h3>Deux machines avec services :</h3>
+                    <h4>Production :</h4>
+                    <img src="../images/2machines_avec_services_1.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>sudo python3 -m http.server --directory ./http/prod 80 &amp;</code></pre>
+                    <p>En résumé, cette commande lance un serveur HTTP Python en arrière-plan sur le port 80 en servant le dossier <span class="em">./http/prod</span>.</p>
+<pre><code>curl localhost</code></pre>
+                    <p>En résumé, cette commande envoie une requête HTTP vers le serveur local sur le port 80.</p>
+                    <h4>Development - Monitoring :</h4>
+                    <img src="../images/2machines_avec_services_2.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>python3 -m http.server --directory ./http/dev 8080 &amp;</code></pre>
+<pre><code>python3 -m http.server --directory ./http/monitoring 8081 &amp;</code></pre>
+<pre>curl localhost:8080</pre>
+<pre>curl localhost:8081</pre>
+                    <h3>Connexion dev-monit à réseau virtuel - tailscale.com :</h3>
+                    <img src="../images/connexion_dev-monit_reseau_virtuel_tailscale.PNG" alt="">
+                    <h3>Visualisation dev-monit dans réseau virtuel :</h3>
+                    <img src="../images/visualisation_dev-monit_reseau_virtuel.PNG" alt="">
+                    <h3>Connexion prod à réseau virtuel - tailscale.com :</h3>
+                    <img src="../images/connexion_prod_reseau_virtuel_tailscale.PNG" alt="">
+                    <h3>Connexion laptop à réseau virtuel - tailscale.com :</h3>
+                    <img src="../images/connexion_laptop_reseau_virtuel_tailscale.PNG" alt="">
+                    <h3>Visualisation machines dans réseau virtuel :</h3>
+                    <img src="../images/visualisation_machines_reseau_virtuel.PNG" alt="">
+                    <h3>Interactions sur le réseau virtuel :</h3>
+                    <h4>Accès aux services - pourrait être via Internet :</h4>
+                    <img src="../images/interactions_reseau_virtuel.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+<pre><code>curl 100.100.162.106:8080</code></pre>
+<pre><code>curl dev-monit:8080</code></pre>
+<pre><code>curl dev-monit:8081</code></pre>
+<pre><code>curl prod</code></pre>
+                    <h3>Invitation tiers dans réseau virtuel :</h3>
+                    <img src="../images/invitation_tiers_reseau_virtuel.PNG" alt="">
+                    <h3>Connexion tiers dans réseau virtuel :</h3>
+                    <img src="../images/connexion_tiers_reseau_virtuel.PNG" alt="">
+                    <h3>Établissement des tunnels avant le premier accès :</h3>
                     
                 </article>
                 <article>
