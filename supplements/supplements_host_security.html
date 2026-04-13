@@ -8316,7 +8316,7 @@ end</code></pre>
                             <p>Relatif contrôle sur les postes clients.</p>
                         </li>
                         <li>
-                            <p>Ressources accédées pas nécessairement de type Web.</p>
+                            <p>Ressources accédées, pas nécessairement de type Web.</p>
                         </li>
                         <li>
                             <p>Déploiement de type agent sur terminal / gateway privilégié.</p>
@@ -8387,7 +8387,7 @@ end</code></pre>
                             <p>sky33940 est visible dans la console Tailscale (<span class="em">plan de contrôle</span>)...</p>
                         </li>
                         <li>
-                            <p>...mais les tunnels WireGuard vers prod et dev-monit n'existe pas encore (<span class="em">plan de données</span>).</p>
+                            <p>...mais les tunnels WireGuard vers prod et dev-monit n'existent pas encore (<span class="em">plan de données</span>).</p>
                         </li>
                         <li>
                             <p>Premier accès sans tunnel établi : paquets perdus pendant le handshake &#8594; connexion échoue.</p>
@@ -8402,7 +8402,7 @@ end</code></pre>
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Une fois ces deux tunnels établis, sky33940 peut joindre prod et dev-monit directement. <span class="em">--verbose</span> confirme si la connexion est directe (via IP) ou via relais DERP.</p>
                     </div>
-                    <h3>Tiers peut accéder auw services :</h3>
+                    <h3>Tiers peut accéder aux services :</h3>
                     <img src="../images/tiers_peut_acceder_aux_services.PNG" alt="">
                     <h3>Liste des utilisateurs sur réseau virtuel :</h3>
                     <img src="../images/liste_utilisateurs_reseau_virtuel.PNG" alt="">
@@ -8417,7 +8417,79 @@ end</code></pre>
                     <h3>Machines &amp; services accessibles au groupe "administrators" :</h3>
                     <img src="../images/machines_services_accessibles_groupe_administrators.PNG" alt="">
                     <h3>Plan de contrôle : une décision d'architecture :</h3>
-                    
+                    <ul>
+                        <li>
+                            <p>Tailscale : plan de contrôle chez Tailscale Inc. (coordination server externe) :</p>
+                            <ul>
+                                <li>
+                                    <p>Séparation : plan de données (connexions WireGuard P2P entre machines) vs plan de contrôle (politiques, authentification).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <p>Headscale : alternative open-source, self-hosted du coordination server :</p>
+                            <ul>
+                                <li>
+                                    <p>Garde le plan de contrôle sous contrôle de l'organisation.</p>
+                                </li>
+                                <li>
+                                    <p>Pertinent pour contraintes de souveraineté ou de conformité (ANSSI).</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="bordure important">
+                        <h4>Question à se poser :</h4>
+                        <p>Qui contrôle le plan de contrôle ? ANSSI soulève ce point explicitement dans ses recommandations ZT : la confiance accordée au gestionnaire du plan de contrôle doit être évaluée comme n'importe quel autre tiers.</p>
+                    </div>
+                    <h3>Ce que Tailscale ne couvre pas seul :</h3>
+                    <ul> 
+                        <li>
+                            <p>Pas de contrôle de la posture du terminal (configurable, mais non illustré ici).</p>
+                        </li>
+                        <li>
+                            <p>Couche réseau uniquement : pas de contrôle applicatif (qui accède à quoi dans l'application).</p>
+                        </li>
+                        <li>
+                            <p>Une fois connecté : confiance maintenue pour la session - pas de re-vérification continue per-request.</p>
+                        </li>
+                    </ul>
+                    <div class="bordure">
+                        <h4>Architecture ZT en couches :</h4>
+                        <p>Une architecture ZT complète combine :</p>
+                        <ul>
+                            <li>
+                                <p>Hardening individuel des machines (sysctl, AppArmor, systemd).</p>
+                            </li>
+                            <li>
+                                <p>Identité centralisée (LDAP/Kerberos).</p>
+                            </li>
+                            <li>
+                                <p>Contrôle applicatif (LemonLDAP - couche identité/portail).</p>
+                            </li>
+                            <li>
+                                <p>Contrôle réseau (Tailscale - couche réseau/accès).</p>
+                            </li>
+                        </ul>
+                        <p>Chaque couche reste nécessaire; ZT ajoute les couches supérieures quand le contexte le justifie.</p>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="ZTNA_risques">Zero Trust Network Access : Risques &amp; défis :</h2>
+                    <ul>
+                        <li>
+                            <p><span class="em">"ZT washing" : terme utilisé abusivement par les vendeurs - demander : que vérifie-t-il exactement ? quand ? sur quelle base ? La présence du mot "Zero Trust" dans un produit ne garantit rien.</span></p>
+                        </li>
+                        <li>
+                            <p>Complexité comme risque : plus de composants = plus de surface, plus de points de défaillance, plus de risques de misconfiguration. Un déploiement ZT mal maîtrisé peut être moins sûr qu'un modèle simple bien tenu.</p>
+                        </li>
+                        <li>
+                            <p>Point de défaillance unique : si LemonLDAP ou la coordination server tombent, toutes les ressources protégées deviennent inaccessibles - haute disponibilité indispensable.</p>
+                        </li>
+                        <li>
+                            <p>Piège de l'outil : Tailscale + LemonLDAP avec des politiques permissives n'est pas du Zero Trust. L'outil avec des politiques permissives n'est pas du Zero Trust. L'outil n'est que le vecteur : la politique est l'essentiel.</p>
+                        </li>
+                    </ul>
                 </article>
                 <article>
                     <h2 id="evaluation_instructions">Évaluation - instructions :</h2>
