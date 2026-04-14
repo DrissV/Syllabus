@@ -7876,6 +7876,43 @@ end</code></pre>
                             <p>pentest2 : 172.28.128.223 - poste attaquant (Metasploit)</p>
                         </li>
                     </ul>
+                    <p>Voici le Vagrantfile de la VM nommée "pentest2" :</p>
+<pre><code># coding: utf-8
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.box_version = "20240115.0.0"
+
+  config.vm.network "private_network", ip: "172.28.128.223"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name   = "pentest2"
+    vb.gui    = false
+    vb.memory = "4096"
+  end
+
+  config.vm.provision "shell", inline: &lt;&lt;-SHELL
+#!/bin/bash
+set -euo pipefail
+
+DEBIAN_FRONTEND=noninteractive apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y nmap netcat-openbsd curl
+
+# Installation Metasploit Framework (Rapid7 omnibus installer)
+# Requiert accès internet — téléchargement ~500 Mo, prend plusieurs minutes
+curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb \
+  &gt; /tmp/msfinstall && \
+  chmod 755 /tmp/msfinstall && \
+  /tmp/msfinstall
+
+echo "=== pentest2 pret ==="
+echo "  IP:         172.28.128.223"
+echo "  msfvenom:   $(which msfvenom)"
+echo "  msfconsole: $(which msfconsole)"
+  SHELL
+end</code></pre>
                     <p>Architecture interne de maintenance-sec :</p>
                     <img src="../images/VM_maintenance-sec_architecture.png" alt="">
                     <p>Démarrage : <code class="em">vagrant up</code> dans chaque répertoire, <span class="em">pentest2</span> requiert Internet (installation Metasploit, plusieurs minutes).</p>
