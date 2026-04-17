@@ -8246,7 +8246,7 @@ end</code></pre>
                     <h3>Architecture :</h3>
                     <ul>
                         <li>
-                            <p><span class="em">DCR (serveurs)</span> &#8594; géré le routeur (router-on-a-stick).</p>
+                            <p><span class="em">DCR (serveurs)</span> &#8594; géré par le routeur (router-on-a-stick).</p>
                         </li>
                         <li>
                             <p><span class="em">USER (clients)</span> &#8594; géré par le switch L3.</p>
@@ -8344,13 +8344,37 @@ interface e0/1.40
     ip nat inside
     no shutdown
     exit</code></pre>
+                    <p>Chaque VLAN du DCR possède une sous-interface associée sur le routeur :</p>
+                    <ul>
+                        <li>
+                            <p>VLAN 20 &#8594; 172.16.20.254</p>
+                        </li>
+                        <li>
+                            <p>VLAN 30 &#8594; 172.16.30.254</p>
+                        </li>
+                        <li>
+                            <p>VLAN 40 &#8594; 172.16.40.254</p>
+                        </li>
+                    </ul>
+                    <p>Ces adresses IP correspondent aux passerelles par défaut (gateways) des équipements présents dans chaque VLAN (ici, les serveurs).</p>
+                    <p>J'ai utilisé .254 au lieu de .1 pour la passerelle comme choix de convention d'adressage. Certains administrateurs préfèrent mettre la gateway sur la dernière adresse IP du sous-réseau pour la différencier des adresses attribuées aux hôtes.</p>
+                    <p>Sans configuration en mode trunk, un lien ne peut transporter qu'un seul VLAN. Dans ce cas, le port fonctionne en mode access et ne transporte pas de trames taguées.</p>
                     <h4>NAT :</h4>
 <pre><code>access-list 1 permit 172.16.0.0 0.0.255.255
 access-list 1 permit 192.168.0.0 0.0.255.255
 
 ip nat inside source list 1 interface e0/0 overload</code></pre>
+                    <p>Dans cette configuration, seuls les réseaux internes suivants sont autorisés :</p>
+                    <ul>
+                        <li>
+                            <p>172.16.0.0/16</p>
+                        </li>
+                        <li>
+                            <p>192.168.0.0/16</p>
+                        </li>
+                    </ul>
                     <h4>Route par défaut :</h4>
-<pre><code>ip route 0.0.0.0 0.0.0.0 e0/0</code></pre>
+<pre><code>ip route 0.0.0.0 0.0.0.0 dhcp</code></pre>
                     <h4>Routes statiques :</h4>
 <pre><code>ip route 192.168.5.0 255.255.255.0 10.10.10.2
 ip route 192.168.6.0 255.255.255.0 10.10.10.2
@@ -8403,6 +8427,8 @@ vlan 6
 vlan 7
     name MANAGEMENT2
     exit</code></pre>
+                    <p>Pour afficher les VLANs configurés sur le switch :</p>
+<pre><code>show vlan brief</code></pre>
                     <h4>Routage :</h4>
 <pre><code>ip routing</code></pre>
                     <h4>Interfaces VLAN :</h4>
@@ -8437,9 +8463,9 @@ interface Vlan7
 <pre><code>ip route 0.0.0.0 0.0.0.0 10.10.10.1</code></pre>
                     <h4>DHCP (clients) :</h4>
 <pre><code>ip dhcp excluded-address 192.168.5.1 192.168.5.10
-ip dhcp excluded-address 192.168.6.1 192.168.6.10
-
-ip dhcp pool VLAN5_EMPLOYES
+ip dhcp excluded-address 192.168.6.1 192.168.6.10</code></pre>
+                    <p>Ici, j'ai exclu les dix premières adresses IP du réseau du VLAN 5 et du VLAN 6 pour les garder pour des équipements réseau comme un routeur ou un switch.</p>
+<pre><code>ip dhcp pool VLAN5_EMPLOYES
     network 192.168.5.0 255.255.255.0
     default-router 192.168.5.1
     dns-server 172.16.20.5
@@ -8451,6 +8477,7 @@ ip dhcp pool VLAN6_ADMIN
     dns-server 172.16.20.5
     exit</code></pre>
                     <h4>ACL sécurité :</h4>
+                    <p>Pour empêcher que  les </p>
 <pre><code>ip access-list extended BLOQUE_NETMGMT-SRV
     deny ip 192.168.5.0 0.0.0.255 host 172.16.30.5
     permit ip any any
@@ -8459,6 +8486,8 @@ ip dhcp pool VLAN6_ADMIN
 interface Vlan5
     ip access-group BLOQUE_NETMGMT-SRV in
     exit</code></pre>
+                    <p>Pour afficher toutes les ACL configurées sur le SWITCH-L3 :</p>
+<pre><code>show access-lists</code></pre>
                     <h3>SWITCH L2 DCR :</h3>
                     <h4>VLANs :</h4>
 <pre><code>vlan 20
@@ -8478,6 +8507,7 @@ vlan 40
     switchport mode trunk
     switchport trunk allowed vlan 20,30,40
     exit</code></pre>
+                    <h4>Configuration IP (VLAN de management) :</h4>
 <pre><code>interface Vlan40
     ip address 172.16.40.2 255.255.255.0
     no shutdown
@@ -8495,6 +8525,7 @@ interface e0/2
     switchport access vlan 30
     exit</code></pre>
                     <h3>SWITCH L2 USER :</h3>
+                    <h4>VLANs :</h4>
 <pre><code>vlan 5
     name EMPLOYES
     exit
@@ -8506,11 +8537,13 @@ vlan 6
 vlan 7
     name MANAGEMENT2
     exit</code></pre>
+                    <h4>Trunk vers le SWITCH L3 :</h4>
 <pre><code>interface e0/0
     switchport trunk encapsulation dot1q
     switchport mode trunk
     switchport trunk allowed vlan 5,6,7
     exit</code></pre>
+                    <h4>Configuration IP (VLAN de management) :</h4>
 <pre><code>interface Vlan7
     ip address 192.168.7.2 255.255.255.0
     no shutdown
@@ -8537,13 +8570,8 @@ interface e0/2
     spanning-tree bpduguard enable
     spanning-tree portfast edge
     exit</code></pre>
-                    <h3>PCs :</h3>
-                    <p>Donner une adresse IP en DHCP :</p>
-<pre><code>ip dhcp</code></pre>
-                    <p>Vérifier l'adresse IP :</p>
-<pre><code>show ip</code></pre>
-                    <p>Vérifier la connexion Internet :</p>
-<pre><code>ping 8.8.8.8</code></pre>
+                    <p>Pour voir la sécurité sur les ports du switch, on utilise la commande suivante :</p>
+<pre><code>show port-security</code></pre>
                     <h3>SERVEURS :</h3>
                     <h4>PROD-SRV (DNS) :</h4>
 <pre><code>nano /etc/network/interfaces</code></pre>
@@ -8553,7 +8581,20 @@ iface eth0 inet static
     netmask 255.255.255.0
     gateway 172.16.20.254
     dns-nameservers 172.16.20.5</code></pre>
-                    <h5>/etc/hosts :</h5>
+                    <h4>NETMGMT-SRV :</h4>
+<pre><code>nano /etc/network/interfaces</code></pre>
+<pre><code>auto eth0
+iface eth0 inet static
+    address 172.16.30.5
+    netmask 255.255.255.0
+    gateway 172.16.30.254
+    dns-nameservers 172.16.20.5</code></pre>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Il ne faut pas oublier de reboot les serveurs une fois qu'on leur a donné une adresse IP statique.</p>
+                    </div>
+                    <h4>Résolution des noms :</h4>
+                    <p>Sur les deux serveurs, on va modifier le fameux fichier <span class="em">/etc/hosts</span> :</p>
 <pre><code>nano /etc/hosts</code></pre>
 <pre><code>127.0.0.1 localhost
 # Serveurs
@@ -8571,58 +8612,30 @@ fe00::0 ip6-localnet
 ff00::0 ip6-mcastprefix
 ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters</code></pre>
-                    <h4>NETMGMT-SRV :</h4>
-<pre><code>nano /etc/network/interfaces</code></pre>
-<pre><code>auto eth0
-iface eth0 inet static
-    address 172.16.30.5
-    netmask 255.255.255.0
-    gateway 172.16.30.254
-    dns-nameservers 172.16.20.5</code></pre>
-                    <h5>TACACS :</h5>
-<pre><code>apt install tacacs+ -y
-nano /etc/tacacs+/tac_plus.conf</code></pre>
-<pre><code>key = cisco
-
-# ADMIN
-user = gns3 {
-    login = cleartext "gns3"
-    service = exec {
-        priv-lvl = 15
-    }
-}
-
-# READONLY
-user = readonly {
-    login = cleartext "gns3"
-    service = exec {
-        priv-lvl = 1
-    }
-}</code></pre>
-<pre><code>systemctl restart tacacs+</code></pre>
-                    <h5>SYSLOG :</h5>
-<pre><code>apt install rsyslog -y
-nano /etc/rsyslog.conf</code></pre>
-<pre><code>module(load="imudp")
-input(type="imudp" port="514")</code></pre>
-<pre><code>systemctl restart rsyslog</code></pre>
-                    <h5>SNMP :</h5>
-<pre><code>apt install snmpd -y
-nano /etc/snmp/snmpd.conf</code></pre>
-<pre><code>rocommunity public
-agentAddress udp:161</code></pre>
-<pre><code>systemctl restart snmpd</code></pre>
+                    <h3>PCs :</h3>
+                    <p>Donner une adresse IP en DHCP :</p>
+<pre><code>ip dhcp</code></pre>
+                    <p>Vérifier l'adresse IP :</p>
+<pre><code>show ip</code></pre>
+                    <p>Vérifier la connexion Internet :</p>
+<pre><code>ping 8.8.8.8</code></pre>
+                    <p>Si vous voyez que le ping vers le DNS de Google (8.8.8.8) échoue, il faut lancer la commande suivante sur le switch L3 :</p>
+<pre><code>no ip cef</code></pre>
+                    <p>Cette commande permet de désactiver le mécanisme de commutation rapide Cisco Express Forwarding et de forcer le routeur à utiliser un mode de traitement plus simple dit "process switching", dans lequel chaque paquet est traité de manière plus directe à partir des tables de routage et des résolutions ARP classiques.</p>
+                    <p>Dans un environnement de simulation comme GNS3, cela permet de contourner certaines limitations ou incohérences liées à la gestion des adjacences CEF entre interfaces SVI et interfaces routées, qui peuvent parfois provoquer des dysfonctionnements de connectivité malgré une configuration correcte. Ce changement améliore donc la stabilité du routage et rétablit la communication complète entre les différents réseaux.</p>
                     <h3>CONFIGURATION SÉCURITÉ (TOUS LES ÉQUIPEMENTS CISCO) :</h3>
                     <h4>TACAS :</h4>
+                    <p>TACACS+ permet une authentification centralisée des équipements réseau, améliorant la sécurité et la traçabilité des accès.</p>
 <pre><code>aaa new-model
 
-tacacs server TAC
+tacacs server NETMGMT-SRV
     address ipv4 172.16.30.5
     key gns3
     exit
 
 aaa authentication login default group tacacs+ local
 aaa authorization exec default group tacacs+ local</code></pre>
+                    <p>Cette configuration active le modèle AAA, définit un serveur TACACS+ pour authentifier et autoriser les utilisateurs en priorité via ce serveur, avec un basculement vers la base locale en cas d'échec, tout en nécessitant une clé partagée identique des deux côtés.</p>
                     <h4>SSH :</h4>
 <pre><code>ip domain-name lab
 crypto key generate rsa modulus 2048
@@ -8633,6 +8646,7 @@ line vty 0 4
     transport input ssh
     login authentication default
     exit</code></pre>
+                    <p>Cette configuration définit un nom de domaine, génère des clés RSA pour activer SSH, crée un utilisateur local et sécurise les accès distants en autorisant uniquement SSH avec authentification via AAA.</p>
                     <h4>SNMP + SYSLOG :</h4>
 <pre><code>snmp-server community public RO
 snmp-server host 172.16.30.5 version 2c public
@@ -8645,9 +8659,13 @@ logging trap informational</code></pre>
                     <p>Pour préciser les types de traps, on fait plutôt la commande suivante :</p>
 <pre><code>snmp-server enable traps snmp linkdown linkup coldstart warmstart</code></pre>
                     <p>La commande <span class="em">logging trap informational</span> définit le niveau de logs envoyés.</p>
+                    <p>En résumé, cette configuration permet la supervision à distance en autoriisant l'accès SNMP en lecture seule avec la communauté "public", en envoyant les informations vers un serveur de gestion, et en configurant également l'envoi des logs vers ce même serveur.</p>
                     <p>Pour vérifier que tout est configuré, on a les commandes suivantes :</p>
 <pre><code>show snmp</code></pre>
 <pre><code>show logging</code></pre>
+                    <h3>Conclusion :</h3>
+                    <p>Ce laboratoire m'a permis de mettre en pratique les différents concepts de sécurité et de gestion réseau vus au cours. En faisant les configurations, j'ai compris le rôle des VLANs, des ACL et des différents équipements.</p>
+                    <p>Les tests montrent que tout fonctionne comme prévu, ce qui veut dire que les objectifs sont atteints. Ça m'a aussi fait réaliser que la sécurité est vraiment un point important, pas juste un détail en plus.</p>
                 </article>
                 <article>
                     <h2 id="network_security_exercices">Network Security Exercices :</h2>
