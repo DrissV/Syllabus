@@ -5463,7 +5463,7 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters</code></pre>
                             <h5>Configuration de dnsmasq :</h5>
 <pre><code>nano /etc/dnsmasq.conf</code></pre>
-                            <p>Ajouter ou dé-commenter les lignes :</p>
+                            <p>Ajouter ou décommenter les lignes :</p>
 <pre><code>#DNSMASQ configuration
 local=/itscmnet.lab/
 user=root
@@ -6427,7 +6427,7 @@ ff00::0 ip6-mcastprefix
 ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters</code></pre>
                     <h5>Configuration de dnsmasq : fichier /etc/dnsmasq.conf :</h5>
-                    <p>Ajouter ou dé-commenter les lignes :</p>
+                    <p>Ajouter ou décommenter les lignes :</p>
 <pre><code># DNSMASQ configuration
 local=/itscmnetsec.lab/
 user=root
@@ -8580,7 +8580,22 @@ iface eth0 inet static
     address 172.16.20.5
     netmask 255.255.255.0
     gateway 172.16.20.254
-    dns-nameservers 172.16.20.5</code></pre>
+    up echo -e "nameserver 1.1.1.1\nnameserver 8.8.8.8" &gt; /etc/resolv.conf</code></pre>
+                    <p>Optionnel : Ajouter ou décommenter les lignes suivantes dans le fichier <span class="em">/etc/dnsmasq.conf</span> :</p>
+<pre><code># Configuration DNS
+# Définition du domaine local
+local=/lab/
+domain=lab
+
+# Utilisateur et groupe d'exécution
+user=root
+group=root
+
+# IP de PROD-SRV car c'est sur celle-ci que le DNS écoute
+listen-address=172.16.20.5
+
+# Option cruciale pour lire /etc/hosts et résoudre les noms
+expand-hosts</code></pre>
                     <h4>NETMGMT-SRV :</h4>
 <pre><code>nano /etc/network/interfaces</code></pre>
 <pre><code>auto eth0
@@ -8588,7 +8603,7 @@ iface eth0 inet static
     address 172.16.30.5
     netmask 255.255.255.0
     gateway 172.16.30.254
-    dns-nameservers 172.16.20.5</code></pre>
+    up echo nameserver 172.16.20.5 &gt; /etc/resolv.conf</code></pre>
                     <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Il ne faut pas oublier de reboot les serveurs une fois qu'on leur a donné une adresse IP statique.</p>
