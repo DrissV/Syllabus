@@ -7931,6 +7931,8 @@ end</code></pre>
                             <li>
                                 <p>Afficher les droits configurés dans MariaDB :</p>
 <pre><code>sudo mysql -e "SHOW GRANTS FOR 'appphp@localhost';"</code></pre>
+                                <p>Juste après cette commande, on doit faire la commande suivante pour voir explicitement <span class="em">unix_socket</span> et donc de prouver notre explication :</p>
+<pre><code>sudo mysql -e "SELECT user, host, plugin FROM mysql.user;"</code></pre>
                             </li>
                         </ol>
                     </div>
@@ -7939,12 +7941,15 @@ end</code></pre>
                         <ul>
                             <li>
                                 <p>Pourquoi vagrant est-il refusé bien qu'il dispose de sudo ?</p>
+                                <p>vagrant est refusé car MariaDB ne se base pas sur les droits sudo du système, mais sur ses propres comptes internes. Quand tu exécutes <span class="em">mysql demo</span>, tu t'authentifies comme utilisateur MySQL vagrant, qui n'a pas de privilèges définis dans la base. Le fait d'avoir sudo permet seulement de changer d'utilisateur Linux (par exemple avec <span class="em">sudo -u appphp</span>), mais n'accorde aucun droit automatique dans MariaDB.</p>
                             </li>
                             <li>
                                 <p>Quel mécanisme MariaDB explique ce comportement ? (tuyau : IDENTIFIED VIA unix_socket)</p>
+                                <p>Ce comportement s'explique par le mécanisme d'authentification <span class="em">unix_socket</span>. Avec <span class="em">IDENTIFIED VIA unix_socket</span>, MariaDB vérifie que l'utilisateur Linux correspond exactement à l'utilisateur MariaDB, sans demander de mot de passe. Ainsi, appphp peut se connecter parce que le processus tourne sous cet utilisateur système, tandis que vagrant est refusé car son identité Linux ne correspond pas à un compte MariaDB autorisé. Ce comportement est visible dans la colonne <span class="em">plugin</span> de la table <span class="em">mysql.user</span>, qui indique <span class="em">unix_socket</span> pour l'utilisateir concerné.</p>
                             </li>
                             <li>
                                 <p>Quelle directive dans /etc/php/8.1/fpm/pool.d/appphp.conf garantit que PHP.FPM tourne bien sous l'identité appphp ?</p>
+                                <p>La directive qui garantit que PHP-FPM s'exécute sous l'identité appphp se trouve dans <span class="em">/etc/php/8.1/fpm/pool.d/appphp.conf</span> et correspond à <span class="em">user = appphp</span> (ainsi que <span class="em">group = appphp</span>). Elle assure que les scripts PHP sont exécutés avec cet utilisateur système, ce qui permet à MariaDB d'accepter la connexion via le mécanisme <span class="em">unix_socket</span>.</p>
                             </li>
                         </ul>
                     </div>
@@ -7968,12 +7973,17 @@ end</code></pre>
                         <ul>
                             <li>
                                 <p>Quel GRANT MariaDB précis justifie ces refus ?</p>
+                                <p>Le refus des commandes <span class="em">INSERT</span> et <span class="em">DROP</span> s'explique par les privilèges accordés à l'utilisateur MariaDB appphp. Il possède très probablement un <span class="em">GRANT</span> limité, du type :</p>
+<pre><code>GRANT SELECT ON demo.messages TO 'appphp'@'localhost'</code></pre>
+                                <p>Cela signifie qu'il peut uniquement lire les données (<span class="em">SELECT</span>), mais pas les modifier (<span class="em">INSERT</span>, <span class="em">UPDATE</span>, <span class="em">DELETE</span>) ni altérer la structure (<span class="em">DROP</span>). L'erreur 1142 correspond donc à un manque de privilèges sur la table.</p>
                             </li>
                             <li>
                                 <p>Comparer le code d'erreur obtenu ici (1142) avec celui de la Partie 1 (1698). Quelle est la différence de nature entre les deux refus ?</p>
+                                <p>Le code d'erreur 1142 est différent de 1698 par sa nature : 1698 correspond à un échec d'authentification (l'utilisateur n'est pas autorisé à se connecter du tout), tandis que 1142 intervient après une connexion réussie mais avec des droits insuffisants pour exécuter une action donnée. Autrement dit, 1698 bloque l'accès à la base, alors que 1142 bloque seulement certaines opérations.</p>
                             </li>
                             <li>
                                 <p>En quoi l'absence de mot de passe stocké dans le code PHP renforce-t-elle encore ce mécanisme ?</p>
+                                <p>L'absence de mot de passe dans le code PHP renforce ce mécanisme car l'authentification repose entièrement sur <span class="em">unix_socket</span>, donc sur l'identité système (appphp). Cela évite de stocker des identifiants sensibles dans le code et empêche toute connexion externe avec un mot de passe compromis : seul un processus exécuté sous l'utilisateur Linux appphp peut accéder à la base, avec des droits strictement limités.</p>
                             </li>
                         </ul>
                     </div>
@@ -7988,8 +7998,14 @@ end</code></pre>
                         <h4>Étape 2 - Déployer sur maintenance-sec :</h4>
                         <p>Copier <span class="em">/tmp/shell.php</span> dans <span class="em">/var/www/shell.php</span> sur maintenance-sec (via <span class="em">vagrant ssh maintenance-sec</span>, puis <span class="em">sudo cp</span>).</p>
                         <p>Tuyau : utiliser le dossier partagé <span class="em">/vagrant/</span> commun au répertoire Vagrant, ou <span class="em">scp</span> entre les deux machines.</p>
+                        <p>Dans pentest2 :</p>
+<pre><code>cp /tmp/shell.php /vagrant/</code></pre>
+                        <p>Dans maintenance-sec :</p>
+<pre><code>sudo cp /tmp/shell.php /var/www/shell.php</code></pre>
                     </div>
                     <h3>Partie 3 - Sandboxing PHP-FPM (tests) :</h3>
+                    <p>Pour montrer que la restriction est réellement active côté systemd et pas juste théorique, on fait la commande suivante :</p>
+<pre><code>systemctl cat php8.1-fpm | grep RestrictAddressFamilies</code></pre>
                     <div class="bordure">
                         <h4>Étape 3 - Démarrer le listener sur pentest2 :</h4>
 <pre><code>nc -lvp 4444</code></pre>
@@ -7998,12 +8014,14 @@ end</code></pre>
                     <div class="bordure important">
                         <h4>Test A - restriction active (état nominal) :</h4>
                         <p>Depuis pentest2 : <span class="em">curl -s http://172.28.128.222/shell.php</span></p>
-                        <p>Observer : <span class="em">curl</span> retourne /* imédiatemment, <span class="em">nc</span> reçoit aucune connexion.</p>
+                        <p>Observer : <span class="em">curl</span> retourne /* immédiatement, <span class="em">nc</span> reçoit aucune connexion.</p>
                     </div>
                     <div class="bordure information">
                         <h3>Test B - restriction retirée (pour comparaison) :</h3>
                         <p>Sur maintenance-sec, retirer <span class="em">RestrictAddressFamilies</span>, <span class="em">daemon-reload + restart php8.1-fpm</span>, relancer le curl.</p>
                         <p>Observer dans <span class="em">nc</span> : connexion reçue, taper <span class="em">id</span> puis Entrée.</p>
+<pre><code>ps aux | grep php-fpm</code></pre>
+                        <p>En résumé, cette commande montre que le shell tourne bien sous appphp.</p>
                         <p><span class="em">Restaurer</span> la restriction après le test.</p>
                     </div>
                     <div class="bordure">
@@ -8011,12 +8029,15 @@ end</code></pre>
                         <ul>
                             <li>
                                 <p>Quel appel système est bloqué par <span class="em">RestrictAddressFamilies=AF_UNIX</span> ?</p>
+                                <p>Le paramètre <span class="em">RestrictAddressFamilies=AF_UNIX</span> bloque les appels système liés à la création de sockets réseau, en particulier les appels <span class="em">socket()</span> lorsqu'ils utilisent des familles d'adresses autres que <span class="em">AF_UNIX</span>, comme <span class="em">AF_INET</span> (IPv4) et <span class="em">AF_INET6</span> (IPv6). Cela empêche donc les processus concernés d'ouvrir des connexions réseau TCP ou UDP vers l'extérieur, en ne leur laissant que la possibilité d'utiliser des communications locales via des sockets UNIX. Concrètement, toute tentative de connexion vers une adresse IP (comme celle utilisée pour un reverse shell) est bloquée au niveau du système d'exploitation.</p>
                             </li>
                             <li>
                                 <p>Ce mécanisme dépend-il du code PHP ou de la configuration du service ?</p>
+                                <p>Ce mécanisme dépend exclusivement de la configuration du service <span class="em">systemd</span> qui lance PHP-FPM, et non du code PHP lui-même. Il s'agit d'une restriction appliquée au niveau du système d'exploitation via <span class="em">systemd</span> (<span class="em">sandboxing</span>), qui limite les capacités du processus PHP-FPM avant même l'exécution du script. Ainsi, peu importe ce que contient le code PHP, s'il tente d'ouvrir une connexion réseau interdite, celle-ci sera bloquée si le service est configuré avec <span class="em">RestrictAddressFamilies=AF_UNIX</span>.</p>
                             </li>
                             <li>
                                 <p>Que se passe-t-il si l'attaquant exécute directement <span class="em">php shell.php</span> hors de PHP-FPM ?</p>
+                                <p>Si l'attaquant exécute directement le script via <span class="em">php shell.php</span> en ligne de commande, il contourne complètement PHP-FPM et donc les restrictions imposées par <span class="em">systemd</span>, y compris <span class="em">RestrictAddressFamilies</span>. Dans ce cas, le processus PHP CLI n'est pas soumis au sandbox du service, ce qui permet la création de sockets réseau et donc l'exécution normale d'un reverse shell ou de toute autre connexion sortante.</p>
                             </li>
                         </ul>
                     </div>
