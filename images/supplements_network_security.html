@@ -7991,8 +7991,8 @@ end</code></pre>
                             <ul>
                                 <li>
                                     <h4>Tiny Fragments :</h4>
-                                    <p>D'après la RFC (Request For Comment) 791 (IP), tous les noeuds Internet (routeurs) doivent pouvoir transmettre des paquets d'une taille de 68 octets sans les fragmenter davantage. En effet, la taille minimale de l'en-tête d'un paquet IP est de 20 octets sans options. Lorsqu'elles sont présentes, la taille maximale de l'en-tête est de 60 octets. Le champ IHL (Internet Header Length) contient la longueur de l'en-tête en mots de 32 bits. Ce champ occupant 4 bits, le nombre de valeurs possibles vaut de 2<sup>4</sup> - 1 = 15 (il ne peut pas prendre la valeur 0000). La taille maximale de l'en-tête est donc bien 15 * 4 = 60 octets. Enfin, le champ Fragment Offset qui indique le décalage du premier octet du fragment par rapport au datagramme complet est mesuré en blocs de 8 octets. Un fragment de données occupe donc au moins 8 octets. Nous arrivons bien à un total de 68 octets.</p>
-                                    <p>L'attaque consiste à fragmenter sur deux paquets IP une demande de connexion TCP. Le premier paquet IP de 68 octets ne contient comme données que les 8 premiers octets de l'en-tête TCP (ports source et destination ainsi que le numéro de séquence). Les données du second paquet IP renferment alors la demande de connexion TCP (flag SYN à 1 et flag ACK à 0).</p>
+                                    <p>D'après la RFC (Request For Comments) 791 (IP), tous les noeuds Internet (routeurs) doivent pouvoir transmettre des paquets d'une taille de 68 octets sans les fragmenter davantage. En effet, la taille minimale de l'en-tête d'un paquet IP est de 20 octets sans options. Lorsqu'elles sont présentes, la taille maximale de l'en-tête est de 60 octets. Le champ IHL (Internet Header Length) contient la longueur de l'en-tête en mots de 32 bits. Ce champ occupant 4 bits, le nombre de valeurs possibles vaut de 2<sup>4</sup> - 1 = 15 (il ne peut pas prendre la valeur 0000). La taille maximale de l'en-tête est donc bien 15 * 4 = 60 octets. Enfin, le champ Fragment Offset qui indique le décalage du premier octet du fragment par rapport au datagramme complet est mesuré en blocs de 8 octets. Un fragment de données occupe donc au moins 8 octets. Nous arrivons bien à un total de 68 octets.</p>
+                                    <p>L'attaque consiste à fragmenter sur deux paquets IP une demande de connexion TCP. Le premier paquet IP de 68 octets ne contient comme données que les 8 premiers octets de l'en-tête TCP (ports source et destination ainsi que le numéro de séquence). Les données du second paquet IP renferment alors la demande de connexion TCP (flag SYN = 1 et flag ACK = 0).</p>
                                     <p>Or, les filtres IP appliquent la même règle de filtrage à tous les fragments d'un paquet. Le filtrage du premier fragment (Fragment Offset égal à 0) déterminant cette règle, elle s'applique donc aux autres (Fragment Offset égal à 1) sans aucune autre forme de vérification. Ainsi, lors de la défragmentation au niveau IP de la machine cible, le paquet de demande de connexion est reconstitué et passé à la couche TCP. La connexion s'établit alors malgré le filtre IP.</p>
                                     <p>Les figures 1 et 2 montrent les deux fragments et la figure 3 le paquet défragmenté au niveau de la machine cible.</p>
                                     <figure>
@@ -8047,11 +8047,11 @@ end</code></pre>
                                     <p>Le Source Routing : le protocole IP possède une option appelée Source Routing autorisant la spécification du chemin que doivent suivre les paquets IP. Ce chemin est constitué d'une suite d'adresses IP des routeurs que les paquets vont devoir emprunter. Il suffit au pirate d'indiquer un chemin, pour le retour des paquets, jusqu'à un routeur qu'il contrôle. De nos jours, la plupart des implémentations des piles TCP/IP rejettent les paquets avec cette option;</p>
                                 </li>
                                 <li>
-                                    <p>Le Reroutage : les tables de routeurs utilisant le protocole ROP peuvent être modifiées en leur envoyant des paquets ROP avec de nouvelles indications de routage. Ceci dans le but de rerouter les paquets vers un routeur que le pirate maîtrise.</p>
+                                    <p>Le Reroutage : les tables de routeurs utilisant le protocole RIP (Routing Information Protocol) peuvent être modifiées en leur envoyant des paquets ROP avec de nouvelles indications de routage. Ceci dans le but de rerouter les paquets vers un routeur que le pirate maîtrise.</p>
                                 </li>
                             </ol>
                             <p>Ces techniques ne sont plus (ou difficilement) utilisables : l'attaque est donc menée sans avoir connaissance des paquets émis par le serveur cible.</p>
-                            <p>Le Blind Spoofing s'utilise contre des services de type rlogin ou rsh. En effet, leur mécanisme d'authentification se base uniquement sur l'adresse IP source de la machine cliente. Cette attaque relativement bien connue (surtout grâce à Kevin Mitnick qui l'avait utilisée contre la machine de Tsutomu Shimomura en 1994) se déroule en plusieurs étapes :</p>
+                            <p>Le Blind Spoofing s'utilise contre des services de type rlogin ou rsh. En effet, leur mécanisme d'authentification se base uniquement sur l'adresse IP source de la machine cliente. Cette attaque, relativement bien connue, (surtout grâce à Kevin Mitnick qui l'avait utilisée contre la machine de Tsutomu Shimomura en 1994) se déroule en plusieurs étapes :</p>
                             <ul>
                                 <li>
                                     <p>Détermination de l'adresse IP de la machine de confiance en utilisant par exemple <code class="em">showmount -e</code> qui montre où sont exportés les systèmes de fichiers ou <code class="em">rpcinfo</code> qui apporte des informations supplémentaires;</p>
@@ -8063,16 +8063,16 @@ end</code></pre>
                                     <p>Prédiction des numéros de séquence TCP : à chaque paquet TCP est associé un numéro de séquence initiale. La pile TCP/IP du système d'exploitation le génère de manière linéaire, dépendante du temps, pseudo-aléatoire selon les systèmes. Le pirate peut uniquement appliquer cette attaque à des systèmes générant des numéros de séquence prévisibles (génération linéaire ou dépendante du temps);</p>
                                 </li>
                                 <li>
-                                    <p>L'attaque consiste à ouvrir une connexion TCP sur le port souhaité (rsh par exemple). Pour une meilleure compréhension, nous allons rappeler le mécanisme d'ouverture d'une connexion TCP. Elle s'effectue en trois phases (TCP Three Way Handshake) :</p>
+                                    <p>L'attaque consiste à ouvrir une connexion TCP sur le port souhaité (rsh par exemple). Pour une meilleure compréhension, nous allons rappeler le mécanisme d'ouverture d'une connexion TCP. Elle s'effectue en trois phases (TCP Three-Way Handshake) :</p>
                                     <ol>
                                         <li>
-                                            <p>L'initiateur envoie un paquet comportant le flag TCP SYN et un numéro de séquence x, est envoyé à la machine cible;</p>
+                                            <p>L'initiateur envoie un paquet comportant le flag TCP SYN et un numéro de séquence x est envoyé à la machine cible;</p>
                                         </li>
                                         <li>
                                             <p>Cette dernière répond avec un paquet dont les flags TCP SYN et ACK (avec un numéro d'acquittement de x+1) sont activés. Son numéro de séquence vaut y;</p>
                                         </li>
                                         <li>
-                                            <p>L'initiateur renvoie un paquet contenant un paquet contenant le flag TCP ACK (avec un numéro d'acquittement de y+1) à la machine cible.</p>
+                                            <p>L'initiateur renvoie un paquet contenant le flag TCP ACK (avec un numéro d'acquittement de y+1) à la machine cible.</p>
                                         </li>
                                     </ol>
                                 </li>
@@ -8112,10 +8112,10 @@ end</code></pre>
                                     </ul>
                                 </li>
                             </ul>
-                            <p>La figure 8 schématise l'établissement d'une connexion TCP (Three Way Handshake) :</p>
+                            <p>La figure 8 schématise l'établissement d'une connexion TCP (Three-Way Handshake) :</p>
                             <figure>
                                 <img src="../images/three-way_handshake_2.PNG" alt="">
-                                <figcaption>Figure 8 : Three Way Handshake</figcaption>
+                                <figcaption>Figure 8 : Three-Way Handshake</figcaption>
                             </figure>
                             <p>Dans ce cas, il s'agit de la machine A qui a initialisé une connexion TCP sur la machine B.</p>
                             <p>De même, la figure 9 montre un transfert de données TCP :</p>
@@ -8138,10 +8138,10 @@ end</code></pre>
                                 <figcaption>Figure 10 : TCP Session Hijacking</figcaption>
                             </figure>
                             <p>La machine B accepte bien la commande envoyée par C, elle acquitte donc ce paquet en envoyant un paquet à A avec le flag ACK. Entre-temps, si A a envoyé un paquet à B, celui-ci n'a pas été accepté du fait de numéro de séquence qui n'est pas celui attendu par B.</p>
-                            <p>Un problème apparaît alors : le Ack Storm. Il s'agit d'une multitude de ACK qui sont générés.</p>
+                            <p>Un problème apparaît alors : le ACK Storm. Il s'agit d'une multitude de ACK qui sont générés.</p>
                             <p>Ils apparaissent lorsque A envoie un paquet TCP avec un numéro de séquence non valide (car A est désynchronisé), B le jette et envoie à A un ACK avec le numéro de séquence qu'il attend.</p>
                             <p>De son côté, A reçoit ce ACK et comme le numéro de séquence ne correspond pas à celui attendu, il renvoie à son tour un ACK à B et B refait la même chose...</p>
-                            <p>Ce problème du Ack Storm peut être réglé si le pirate utilise l'ARP Spoofing.</p>
+                            <p>Ce problème du ACK Storm peut être réglé si le pirate utilise l'ARP Spoofing.</p>
                             <p>Dans ce cas, la machine C empoisonnera le cache ARP de la machine B en lui indiquant que l'adresse IP de A est désormais associée à l'adresse MAC de C.</p>
                             <p>Ces différentes techniques sont implémentées par le programme <code class="em">hunt</code>.</p>
                         </li>
@@ -8164,11 +8164,11 @@ end</code></pre>
                             <ol>
                                 <li>
                                     <h4>SYN Flooding :</h4>
-                                    <p>Nous avons vu qu'une connexion TCP s'établit en trois phases (TCP Three Way Handshake).</p>
+                                    <p>Nous avons vu qu'une connexion TCP s'établit en trois phases (TCP Three-Way Handshake).</p>
                                     <p>Le SYN Flooding exploite ce mécanisme d'établissement en trois phases.</p>
                                     <p>Les trois étapes sont l'envoi d'un SYN, la réception d'un SYN-ACK et l'envoi d'un ACK.</p>
                                     <p>Le principe est de laisser sur la machine cible un nombre important de connexions TCP en attente.</p>
-                                    <p>Pour cela, le pirate envoie un très grand nombre de demandes de connexion (flag SYN à 1), la machine cible renvoie les SYN-ACK en réponse aux SYN reçus.</p>
+                                    <p>Pour cela, le pirate envoie un très grand nombre de demandes de connexion (flag SYN = 1), la machine cible renvoie les SYN-ACK en réponse aux SYN reçus.</p>
                                     <p>Le pirate ne répondra jamais avec un ACK, et donc pour chaque SYN reçu la cible aura une connexion TCP en attente.</p>
                                     <p>Étant donné que ces connexions semi-ouvertes consomment des ressources mémoires au bout d'un certain temps, la machine est saturée et ne peut plus accepter de connexion.</p>
                                     <p>Ce type de déni de service n'affecte que la machine cible.</p>
