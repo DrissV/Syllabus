@@ -117,6 +117,7 @@
                     <li><a href="#ZTNA_mise_pratique_gestion_renforcee_identites">Zero Trust Network Access : Mise en pratique : Gestion renforcée des identités</a></li>
                     <li><a href="#mise_pratique_ZTNA">Mise en pratique de Zero Trust Network Access</a></li>
                     <li><a href="#ZTNA_risques">Zero Trust Network Access : Risques</a></li>
+                    <li><a href="#securisation_hotes_revision_synthese">Sécurisation des hôtes - Révision-synthèse</a></li>
                     <li><a href="#evaluation_instructions">Évaluation - instructions</a></li>
                 </ol>
             </nav>
@@ -8674,6 +8675,627 @@ end</code></pre>
                         </li>
                         <li>
                             <p>Piège de l'outil : Tailscale + LemonLDAP avec des politiques permissives n'est pas du Zero Trust. L'outil avec des politiques permissives n'est pas du Zero Trust. L'outil n'est que le vecteur : la politique est l'essentiel.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="securisation_hotes_revision_synthese">Sécurisation des hôtes - Révision-synthèse :</h2>
+                    <h3>Vue d'ensemble :</h3>
+                    <ol>
+                        <li>
+                            <p>Gestion des accès</p>
+                        </li>
+                        <li>
+                            <p>Utilisateurs &amp; authentification</p>
+                        </li>
+                        <li>
+                            <p>Centralisation &amp; SSO</p>
+                        </li>
+                        <li>
+                            <p>Logging &amp; monitoring</p>
+                        </li>
+                        <li>
+                            <p>Crypto de base</p>
+                        </li>
+                        <li>
+                            <p>TLS / PKI</p>
+                        </li>
+                        <li>
+                            <p>SSH</p>
+                        </li>
+                        <li>
+                            <p>VPN - WireGuard</p>
+                        </li>
+                        <li>
+                            <p>Données au repos</p>
+                        </li>
+                        <li>
+                            <p>Sécurité physique</p>
+                        </li>
+                        <li>
+                            <p>Sauvegardes</p>
+                        </li>
+                        <li>
+                            <p>Pare-feu &amp; IDS/IPS</p>
+                        </li>
+                        <li>
+                            <p>Scanning</p>
+                        </li>
+                        <li>
+                            <p>Practice detection</p>
+                        </li>
+                        <li>
+                            <p>Renforcement &amp; sandboxing</p>
+                        </li>
+                        <li>
+                            <p>Zero Trust</p>
+                        </li>
+                    </ol>
+                    <h3>Introduction : gestion des accès :</h3>
+                    <p><span class="em">Intention</span> : Poser le vocabulaire (menace / vulnérabilité / risque; identification / authentification / autorisation) et montrer comment Unix/Linux matérialise le contrôle d'accès.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Triade <span class="em">CIA</span> : menace &#8594; vulnérabilité &#8594; risque &#8594; contrôle.</p>
+                        </li>
+                        <li>
+                            <p>Facteurs d'authentification : savoir, être, posséder (+ localisation, comportement).</p>
+                        </li>
+                        <li>
+                            <p>Modèles : <span class="em">DAC</span>, <span class="em">MAC</span>, <span class="em">RBAC</span>.</p>
+                        </li>
+                        <li>
+                            <p>Unix classique : ugo rwx, root, bits <span class="em">SUID/SGID</span>.</p>
+                        </li>
+                        <li>
+                            <p>Limites : root = point unique, SUID étend la surface, audit difficile.</p>
+                        </li>
+                        <li>
+                            <p>Extensions : ACL POSIX, Kerberos, namespaces, capabilities, AppArmor.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : chmod, chown, ls -l, getfacl/setfacl, sudo.</p>
+                    <p><span class="em">Ponts</span> : PAM (2), Kerberos/LDAP (3), AppArmor &amp; sandboxing (15).</p>
+                    <h3>2 - Gestion des utilisateurs et de l'authentification :</h3>
+                    <p><span class="em">Intention</span> : Ouvrir la boîte noire du login Linux : stockage des identités, vérification des mots de passe, extension via PAM.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Identification locale : /etc/passwd (UID, GID, home, shell); UID 0 = root.</p>
+                        </li>
+                        <li>
+                            <p>Authentification locale : /etc/shadow, <span class="em">hash salé</span> (yescrypt / SHA-512), gestion d'âge / rotation / expiration.</p>
+                        </li>
+                        <li>
+                            <p>Force du mot de passe : attaques par dictionnaire / force brute hors-ligne.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">PAM</span> - pile modulaire /etc/pam.d/* : complexité, MFA, rotation, restrictions.</p>
+                        </li>
+                        <li>
+                            <p>2FA logiciel : pam_google_authenticator (<span class="em">TOTP</span>, RFC 6238).</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : useradd/usermod/userdel, passwd, chage, id, getent; pam_unix, pam_pwqualify, pam_google_authenticator.</p>
+                    <p><span class="Em">Ponts</span> : PAM est aussi le point d'intégration de la centralisation (3) via pam_sss.</p>
+                    <h3>3 - Centralisation des identités &amp; de l'authentification :</h3>
+                    <p><span class="em">Intention</span> : Étendre au réseau ce que le thème 2 fait sur un hôte. Séparer identité centralisée (LDAP) et authentifcation centralisée (Kerberos); leur combinaison donne le SSO.</p>
+                    <p><span class="em">Identité : LDAP</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Arbre DIT (dc=hs,dc=be), entrées posixAccount / inetOrgPerson, posixGroup.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Limite de LDAP seul</span> : le mot de passe transite vers chaque service qui fait un bind. D'où la nécessité d'une authentification séparée.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Authentification : Kerberos</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Realm, principals, KDC = AS + TGS.</p>
+                        </li>
+                        <li>
+                            <p>Objets-clés : <span class="em">TGT</span>, <span class="em">service ticket</span>, <span class="em">keytab</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Authentification mutuelle</span> : grâce à son keytab, le service prouve son identité au client &#8594; protection contre un imposteur.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Trois phases structurantes</span> :</p>
+                    <ol>
+                        <li>
+                            <p><span class="em">AS Exchange</span> : Le client prouve son identité (mot de passe une seule fois) et obtient le <span class="em">TGT</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">TGS Exchange</span> : Le client présente le TGT et obtient un <span class="em">service ticket</span> pour un service donné.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">AP Exchange</span> : Le client présente le service ticket au service - authentification mutuelle.</p>
+                        </li>
+                    </ol>
+                    <p><span class="em">Côté client</span> :</p>
+                    <ul>
+                        <li>
+                            <p>NSS route l'identité vers LDAP, SSSD route l'authentification vers Kerberos.</p>
+                        </li>
+                        <li>
+                            <p>sssd.conf : id_provider = ldap / auth_provider = krb5.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : slapd, ldapadd, ldapsearch, krb5-kdc, kadmin (addprinc, ktadd), klist, kdestroy, kinit, sssd.conf, /etc/krb5.keytab.</p>
+                    <p><span class="em">Ponts</span> : Mise en réseau de l'authentification (2). Les tickets à durée limitée préfigurent le zero trust (16).</p>
+                    <h3>4 - Logging, monitoring :</h3>
+                    <p><span class="em">Intention</span> : Produire des traces exploitables (logging) et les analyser  pour détecter (monitoring) : accountability et détection.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">rsyslog</span> : facility / priority, /var/log/syslog, /var/log/auth.log; centralisation client &#8594; serveur (à protéger en TLS).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">journald</span> : structure indexée (DB binaire vs texte), requêtes via journalctl.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">auditd</span> / Linux Auditing Framework : règles sur appels système, environnements régulés (PCI-DSS).</p>
+                        </li>
+                        <li>
+                            <p>Analyse : Logwatch (rapports quotidiens), Fail2ban (bannissement IP sur motifs), OSSEC (HIDS).</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : rsyslog, journalctl, auditd (auditctl, ausearch), Logwatch, Fail2ban, OSSEC.</p>
+                    <p><span class="em">Ponts</span> : Matière première de la practice detection (14) et du scanning (13). Fail2ban &#8594; SSH (7), renforcement (15).</p>
+                    <h3>5 - Cryptographie : les bases :</h3>
+                    <p><span class="em">Intention</span> : Fournir le socle minimal (5 primitives + certificats) nécessaire aux thèmes TLS, SSH, VPN, chiffrement au repos, sauvegardes.</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Symétrique</span> : une clé partagée, rapide; problème = distribution.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Asymétrique</span> : clé publique / clé privée, lent; résout la distribution.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Hash</span> : fonction à sens unique - intégrité, stockage de mot de passe (avec sel).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">MAC</span> : hash + clé secrète - intégrité et authenticité d'origine.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Signature</span> : chiffrement du hash avec la clé privée - non-répudiation.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Schéma combiné</span> : l'asymétrique sert à convenir d'une clé symétrique de session (réutilisé par TLS, SSH, WireGuard).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Certificat</span> : lie une clé publique à une identité, signé par une CA - base de la PKI.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : openssl (genrsa, dgst, enc, rand), gpg.</p>
+                    <p><span class="em">Ponts</span> : Ces primitives suffisent pour TLS (6), SSH (7), WireGuard (8), données au repos (9), sauvegardes (11).</p>
+                    <h3>6 - Crypto : TLS et certificats (dont Let's Encrypt) :</h3>
+                    <p><span class="em">Intention</span> : Donner à voir la PKI "en vrai" : créer une CA, émettre un certificat, configurer HTTPS; puis refaire la même chose dans le monde réel avec Let's Encrypt.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">HTTPS</span> = HTTP + couche TLS "autour".</p>
+                        </li>
+                        <li>
+                            <p>Composants PKI : CA (racine, intermédiaire), clé privée, <span class="em">CSR</span>, certificat signé.</p>
+                        </li>
+                        <li>
+                            <p>Cycle de vie : clé privée &#8594; CSR &#8594; signature CA &#8594; déploiement &#8594; vérification client.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ACME / Let's Encrypt</span> : validation automatique de la possession du domaine (HTTP-01 / DNS-01), renouvellement automatique.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : openssl (req, x509, genrsa, verify), certbot, Apache / Nginx (directives SSL), DNS.</p>
+                    <p><span class="em">Ponts</span> : Archétype de la protection data-in-transit - logique reprise derrière SSH (7), WireGuard (8), centralisation des logs (4).</p>
+                    <h3>7 - Crypto : SSH :</h3>
+                    <p><span class="em">Intention</span> : Un protocole concret d'accès distant sécurisé, décomposé en trois phases et durci contre les attaques courantes.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Trois phases : <span class="em">authentification du serveur</span> (host key), <span class="em">négociation de clé de session</span>, <span class="em">authentification du client</span> (mot de passe ou clé).</p>
+                        </li>
+                        <li>
+                            <p>Clés publiques : ~/.ssh/id_ed25519 côté client, ~/.ssh/authorized_keys coté serveur; passphrase + ssh-agent.</p>
+                        </li>
+                        <li>
+                            <p>Durcissement : désactivation du login root, désactivation du login par mot de passe, AllowUsers.</p>
+                        </li>
+                        <li>
+                            <p>MFA : clé + TOTP via PAM.</p>
+                        </li>
+                        <li>
+                            <p>Force brute sur le port &#8594; <span class="em">Fail2ban</span>.</p>
+                        </li>
+                        <li>
+                            <p>Suport pour : scp, sftp, tunnels, port forwarding.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : ssh, ssh-keygen, ssh-copy-id, ssh-agent, scp, sftp, sshd_config (+ sshd_config.d/), Fail2ban (jail sshd).</p>
+                    <p><span class="em">Ponts</span> : Mobilise directement les primitives du thème 5; cible privilégiée du durcissement (15).</p>
+                    <h3>8 - Protection des données en transit : VPN (WireGuard) :</h3>
+                    <p><span class="em">Intention</span> : Quand la protection applicative (TLS/SSH) ne suffit pas, établir un réseau virtuel chiffré entre pairs.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Usages : accès distant à un réseau privé, site-à-site, tunnel d'administration, VPN grand public.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">WireGuard</span> : philosophie minimale, implémentation noyau, <span class="em">cryptokey routing</span> (clé publique = pair = plage IP).</p>
+                        </li>
+                        <li>
+                            <p>Primitives fixées (pas de négociation) : <span class="em">Curve25519</span>, <span class="em">ChaCha20-Poly1305</span>, <span class="em">BLAKE2s</span>, protocole <span class="em">Noise IK</span>.</p>
+                        </li>
+                        <li>
+                            <p>Configuration : wg0.conf par pair, UDP (typ. 51820), PersistentKeyalive derrière NAT.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : wg, wg-quick, wg0.conf, interface noyau wg0, ip, sysctl net.ipv4.ip_forward, pare-feu (UDP 51820).</p>
+                    <p><span class="em">Ponts</span> : Support possible pour l'accès SSH (7); brique d'un ZTNA (16.c).</p>
+                    <h3>8 bis - Comparatif TLS / SSH / WireGuard :</h3>
+                    <p><span class="em">Ce que chacun protège</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">TLS</span> - une connexion applicative (HTTPS, IMAPS, LDAPS...) : un client parle à un service chiffré au-dessus de TCP.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">SSH</span> - une session utilisateur vers un hôte distant (shell, transfert, port forwarding) : même logique que TLS côté transport, mais orientée utilisateur/commande.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">WireGuard</span> - une interface réseau virtuelle entre deux pairs : n'importe quel trafic IP (TCP, UDP, ICMP) passe dedans et ressort comme s'il venait d'un réseau privé.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Surface d'attaque et granularité</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Exposition</span> : TLS / SSH exposent un port par service (443, 993, 22...). WireGuard n'ouvre qu'un port UDP qui ne répond jamais à un paquet dont la clé ne correspond pas - invisible au scan.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Granularité</span> : TLS / SSH = un canal par service, décision binaire "dans ou hors du tunnel applicatif". WireGuard = tout le trafic IP entre pairs; le contrôle fin est ensuite délégué au pare-feu ou aux ACL.</p>
+                        </li>
+                    </ul>
+                    <h3>9 - Protection des données au repos :</h3>
+                    <p><span class="em">Intention</span> : Protéger contre un adversaire qui a un <span class="em">accès physique</span> au support (vol, disque récupéré, sauvegarde égarée).</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Quatre granularités : fichier, dossier personnel, système de fichiers, disque entier.</p>
+                        </li>
+                        <li>
+                            <p>Niveau <span class="em">bloc</span> (LUKS/dm-crypt) vs niveau <span class="em">fichier</span> (eCryptfs/fscrypt) : performance, granularité, fuite de méta-données.</p>
+                        </li>
+                        <li>
+                            <p>Architecture LUKS : une <span class="em">clé maître</span> chiffre les données : elle est elle-même chiffrée par la passphrase et stockée dans un <span class="em">key slot</span> (jusquà 32 en LUKS2).</p>
+                        </li>
+                        <li>
+                            <p>Conséquence : plusieurs passphrases possibles, rotation de passphrase sans rechiffrement.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Subtilités et limites</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Swap chiffré : nécessaire pour l'hibernation.</p>
+                        </li>
+                        <li>
+                            <p>Suspend laisse les clés en RAM - <span class="em">pas protégé</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Cold boot attack</span> sur la RAM résiduelle.</p>
+                        </li>
+                        <li>
+                            <p>Déverrouillage matériel : TPM + clevis - compromis commodité / sécurité.</p>
+                        </li>
+                        <li>
+                            <p>Rotation de passphrase &#8800; rotation de la clé maître (cette dernière exige cryptsetup-reencrypt).</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : gpg -c (fichier), eCryptfs (obsolète Ubuntu 22.04+), fscrypt (remplaçant noyau), cryptsetup (LUKS), dm-crypt, clevis, systemd-cryptenroll (TPM).</p>
+                    <p><span class="em">Ponts</span> : Les sauvegardes (11) combinent ce chiffrement au repos avec un transport (TLS/SSH). Dernier rempart si la sécurité physique (10) est contournée.</p>
+                    <h3>10 - Sécurité physique :</h3>
+                    <p><span class="em">Intention</span> : Sortir du logiciel. L'adversaire qui entre dans le bâtiment, branche un USB, clone un badge contourne toutes les couches logicielles en quelques secondes. Appui sur la vidéo I'll Let Myself In (Deviant Ollam) et le catalogue Hak5.</p>
+                    <p><span class="em">Techniques observées (Deviant Ollam)</span>  :</p>
+                    <ul>
+                        <li>
+                            <p>Reconnaissance : OSINT, plannings de livraison, uniformes.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Tailgating</span> : se glisser derrière un employé badgé.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Prétexing</span> : faux livreur, faux technicien.</p>
+                        </li>
+                        <li>
+                            <p>Exploitation de serrures mal possées / mal choisies, porte dérobées non sécurisées.</p>
+                        </li>
+                        <li>
+                            <p>Manipulation des capteurs (sous-la-porte, REX), <span class="em">clonage RFID</span> à distance.</p>
+                        </li>
+                        <li>
+                            <p>Priorisation : cibler d'abord les <span class="em">crown jewels</span> (salle serveur, archives MDF/IDF) et les points d'accès faibles (portes de service, fumeurs).</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Catalogue Hak5 (illustration)</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">USB Rubber Ducky</span>, <span class="em">Bash Bunny</span>, <span class="em">O.MG Cable</span> - périphérique USB malveillants (HID, implants, injection de frappes).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Key Croc</span> - keylogger, matériel.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">LAN Turtle</span>, <span class="em">Packet Squirrel</span>, <span class="em">Shark Jack</span> - implants / interception / injection réseau filaire.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">WiFi Pineapple</span> - pseudo-AP pour evil twin, captive portal.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Contre-mesures</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Contrôles en couches : badge + PIN, mantrap, verrouillage de racks.</p>
+                        </li>
+                        <li>
+                            <p>Surveillance : caméras, corrélation logs badges / logs système.</p>
+                        </li>
+                        <li>
+                            <p>Politiques : clean desk, pas de port USB libre, blocage HID (usbguard).</p>
+                        </li>
+                        <li>
+                            <p>Sensibilisation du personnel; chiffrement au repos (9) comme filet de sécurité.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : usbguard, règles udev.</p>
+                    <p><span class="em">Ponts</span> : Boucle avec 9; prépare 15.</p>
+                    <h3>Sauvegarde des données :</h3>
+                    <h4>Principes :</h4>
+                    <p><span class="em">Intention</span> : Dernière ligne de défense face à tout incident (panne, erreur humaine, <span class="em">rançongiciel</span>). Comprendre ce qui fait une bonne sauvegarde : intégrité, séparation, vérification, automatisation.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Règle 3-2-1</span> : 3 copies, sur 2 supports différents, dont 1 hors site.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Cohérence</span> : photo à un instant T - snapshots LVM pour figer un état cohérent pendant la copie.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Déduplication</span> + chunking (restic, Borg) - évite de stocker les blocs identiques.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Chiffrement côté source</span> : le destinataire ne voit que des blobs chiffrés; la clé ne quitte pas le client.</p>
+                        </li>
+                        <li>
+                            <p>Profondeur / rotation : quotidien / hebdo / mensuel.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Test de restauration</span> régulier : une sauvegarde jamais restaurée n'a aucune valeur prouvée.</p>
+                        </li>
+                    </ul>
+                    <h4>Résilience au rançongiciel :</h4>
+                    <p><span class="em">Push vs pull</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Push</span> - la machine écrit vers le dépôt : simple, mais une machine compromise peut effacer ses sauvegardes distantes.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Pull</span> - le serveur vient chercher les données : meilleur cloisonnement, serveur plus intrusif.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Dépôt append-only</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Append-only</span> : la clé / le compte utilisé par la machine ne peut <span class="em">qu'ajouter</span> - jamais supprimer ni écraser. Rempart contre un rançongiciel qui attaquerait aussi les sauvegardes.</p>
+                        </li>
+                        <li>
+                            <p>Borg : borg serve --append-only via forced command SSH; Borgbase expose un mode équivalent.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : LVM (lvcreate --snapshot), restic, BorgBackup (+ borgmatic, Borgbase) expose un mode équivalent.</p>
+                    <p><span class="em">Ponts</span> : Chiffrement côté source = primitive (5); transport via SSH (7).</p>
+                    <h3>12 - Réseau : pare-feu &amp; segmentation; IDS/IPS :</h3>
+                    <p><span class="em">Intention</span> : Mettre en place les contrôles au niveau réseau : filtrer ce qui entre/sort, cloisonner ce qui doit rester isolé, repérer ce qui est malveilant.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Pare-feu : <span class="em">stateless</span>, <span class="em">stateful</span> (ESTABLISHED, RELATED comme autorisation implicite), <span class="em">applicatif/proxy</span> (L7).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Segmentation</span> : DMZ, VLAN, zone de confiance, bastion host.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">IDS</span> (détection) vs <span class="em">IPS</span> (détection + blocage); placement : miroir de port ou en coupure.</p>
+                        </li>
+                        <li>
+                            <p>Snort : signatures, seuils, corrélation (ex. proFTP, Shellshock, Drupal) - limites signature-based, aveugle au chiffrement et au zero-day.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : iptables / nftables, ufw, conntrack, Snort, Metasploit, Metasploitable.</p>
+                    <p><span class="em">Ponts</span> : Le pare-feu hôte revient dans le durcissement (15); l'IDS prolonge le monitoring (4). Le default deny trouvera son écho dans les ACL Zero Trust (16.c).</p>
+                    <h3>13 - Scanning : virus et rootkits :</h3>
+                    <p><span class="em">Intention</span> : Détecter les compromissions déjà installées. Distinguer un virus (user-space) d'un rootkit (niveau noyau, qui <span class="em">cache sa propre présence</span>).</p>
+                    <p><span class="em">Détection par signature</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Moteurs par signature (<span class="em">ClamAV</span>); limites structurelles : polymorphisme, zero-day, impossibilité de détecter ce qui n'est pas fiché.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Hygiène des bases de signatures - point critique</span> : Un moteur signature-based ne vaut que par la fraîcheur de sa base. freshclam (démon ClamAV) met à jour les définitions virales; rkhunter --update met à jour les règles et listes de rootkits connus.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Baseline système</span> : rkhunter --propupd fige les empreintes des binaires à un instant supposé sain. Toute mise à jour légitime doit être suivie d'un --propupd pour éviter les faux positifs.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Rootkits</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Userland</span> : remplacement de ls, ps.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Kernel</span> (LKM type Diamorphine) : intercepte les appels système pour masquer fichiers/processus; peut piéger les outils de détection eux-mêmes.</p>
+                        </li>
+                        <li>
+                            <p>Détection : comparaison à la baseline (tripwire-like), scanners heuristiques, analyse hors-ligne (live CD) pour contourner un rootkit kernel.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Audit global</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Lynis - inventaire de configurations, permissions, services.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : ClamAV (clamscan, clamd, freshclam), rkhunter, chkrootkit, Lynis, Diamorphine (lab).</p>
+                    <p><span class="em">Ponts</span> : Ces scanners complètent les défenses préventives du thème 15; ils présupposent que le patching et la réduction de surface y ont déjà été faits. Heuristique &#8594; practice detection (14).</p>
+                    <h3>14 - Détection / prévention d'intrusion : mise en pratique :</h3>
+                    <p><span class="em">Intention</span> : Vivre une chaîne d'attaque du point de vue défensif, sur une box vulnérable; accès initial &#8594; élévation &#8594; persistance. Objectif : <span class="em">reconnaître les traces</span>, pas devenir pentester.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Accès initial via un service vulnérable exposé, puis <span class="em">upgrade de session</span> : shell limité &#8594; TTY interactif stable.</p>
+                        </li>
+                        <li>
+                            <p>Énumération locale : uname -a, noyau, SUID exploitables, services locaux.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Élévation de privilège</span> : SUID mal configuré, capability sur un binaire écrit, sudoers permissif, kernel non patché.</p>
+                        </li>
+                        <li>
+                            <p>Corrélation avec les traces : ce qui apparaîtra dans auth.log, syslog, auditd.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : Metasploit, Metasploitable, outils d'énumération (LinPEAS), journalctl -xe, ausearch.</p>
+                    <p><span class="em">Ponts</span> : Concrétise ce que les thèmes 4 (logs), 12 (Snort/IDS), 13 (scanners) étaient censés capter - et met en lumière ce qui <span class="em">n'est pas détecté</span>. Motive le renforcement (15).</p>
+                    <h3>15 - Renforcement et sandboxing :</h3>
+                    <h4>Patching :</h4>
+                    <p><span class="em">Intention</span> : Prendre un hôte standard et <span class="em">réduire méthodologiquement la surface d'attaque</span> : patcher, limiter, durcir, sécuriser SSH, isoler et sandboxer les services.</p>
+                    <p><span class="em">Patching</span> :</p>
+                    <ul>
+                        <li>
+                            <p>apt update &amp;&amp; apt upgrade manuel vs automatisation via unattended-upgrades.</p>
+                        </li>
+                        <li>
+                            <p>Gestion des redémarrages via needrestart.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ESM</span> (Canonical) pour les paquets anciens.</p>
+                        </li>
+                        <li>
+                            <p>Suivi via base CVE et Ubuntu Security Notice.</p>
+                        </li>
+                    </ul>
+                    <h4>Limiter et durcir :</h4>
+                    <p><span class="em">Limiter les services</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Inventaire via ss -tlnp et lsof ("qui écoute sur quoi, pour quel binaire").</p>
+                        </li>
+                        <li>
+                            <p>Désactivation via systemctl.</p>
+                        </li>
+                        <li>
+                            <p>Préférer un socket Unix à un port TCP quand possible.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Kernel</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Kernel hardening</span> : sysctl (kernel.kptr_restrict, net.ipv4.conf.all.rp_filter...), Ubuntu Security Features.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">SSH</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Durcissement (cf. thème 7) via sshd_config.d/.</p>
+                        </li>
+                    </ul>
+                    <h4>Isoler &amp; sandboxer :</h4>
+                    <p><span class="em">Isolation inter-services</span> : Sockets Unix + utilisateurs dédiés par service (ex. pool PHP-FPM appphp), pas de TCP interne inutile.</p>
+                    <p><span class="em">Sandboxing systemd</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Directives : PrivateTmp=yes, ProtectSystem=strict, NoNewPrivileges=yes, RestrictAddressFamilies=..., SystemCallFilter=... (seccomp).</p>
+                        </li>
+                        <li>
+                            <p>Vérification via systemd-analyze security.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">MAC : AppArmor</span> : Profils par exécutable, enforce vs complain.</p>
+                    <p><span class="em">Principe intégrateur</span> : Un service compromis ne doit pas entraîner la compromission de l'hôte - illustré par le devoir renforcement-isolation (MariaDb socket Unix, PHP-FPM sandboxé, reverse-shell bloqué par seccomp).</p>
+                    <p><span class="em">Ponts</span> : Concentre l'outillage des thèmes 2, 4, 7, 12, 13. Dernier thème hôte seul avant l'ouverture à grande échelle (16).</p>
+                    <h3>16.a - Sécurisation à grande échelle : architecture Zero Trust :</h3>
+                    <p><span class="em">Intention</span> : Quand les hôtes se multiplient et que le périmètre classique (VPN/pare-feu) ne suffit plus, passer du trust-then-verify au <span class="em">verify-every-time</span>.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p>Périmètre qui s'effrite (SaaS, BYOD, distant); failles du modèle périmétrique : ce qui est dedans est implicitement de confiance, un hôte compromis pivote librement.</p>
+                        </li>
+                        <li>
+                            <p>Principe (<span class="em">NIST 800-207</span>) : never trust, always verify - chaque requête est évaluée en fonction de l'identité, du contexte et de la politique.</p>
+                        </li>
+                        <li>
+                            <p>Composants logiques : <span class="em">Policy Engine</span> (PE), <span class="em">Policy Administrator</span> (PA), <span class="em">Policy Enforcement Point</span> (PEP).</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Trois styles (NIST SP 800-207), non exclusifs</span> :</p>
+                    <ol>
+                        <li>
+                            <p>Gouvernance stricte des identités &#8594; cas 16.b.</p>
+                        </li>
+                        <li>
+                            <p>Micro-segmentation - gateways reconfigurables devant les ressources.</p>
+                        </li>
+                        <li>
+                            <p>Software-Defined Perimeter (SDP) - réseau virtuel piloté par politique &#8594; cas 16.c.</p>
+                        </li>
+                    </ol>
+                    <h3>16.b - Gestion renforcée des identités : LemonLDAP:NG :</h3>
+                    <p><span class="em">Intention</span> : Placer l'<span class="em">identité au centre</span> : un portail unique authentifie, un Handler applique la politique sur chaque requête vers l'application protégée.</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Handler = PEP</span> placé devant chaque application.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Vérification contextuelle</span> : la règle peut combiner identité, rôle, attribut LDAP, horaire, origine réseau...</p>
+                        </li>
+                        <li>
+                            <p>Capacité <span class="em">Identity Provider</span> : LemonLDAP peut émettre <span class="em">SAML</span> / <span class="em">OpenID Connect</span> pour des applications tierces - devient le hub d'authentification.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Limite</span> : la compromission d'un poste client ayant une session active n'est pas couverte - limite intrinsèque des solutions "identité seule".</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : LemonLDAP:NG (portail + handler Apache/Nginx), LDAP en backend, plugins 2FA, SAML / OIDC.</p>
+                    <h3>16.c - ZTNA : Tailscale :</h3>
+                    <p><span class="em">Intention</span> : Déployer un <span class="em">réseau virtuel maillé privé par défaut</span>, où chaque machine est identifiée et chaque communication soumise à ACL. Illustration du style 3 (SDP).</p>
+                    <p><span class="em">Concepts-clés</span> :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Tailscale = surcouche à WireGuard</span> : WG fournit les tunnels (data plane), Tailscale fournit le control plane - contrôle centralisé (<span class="em">single point of trust</span>) mais trafic pair-à-pair.</p>
+                        </li>
+                        <li>
+                            <p>Identité par Identity Provider externe (Google, GitHub, OIDC) - pas de gestion locale de clés.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ACL initiales = default deny</span> - rien ne passe sans autorisation explicite.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Limites</span> : pas d'inspection applicative. MFA forte à déléguer à l'IdP, posture du terminal non couverte.</p>
+                        </li>
+                    </ul>
+                    <p><span class="em">Outils</span> : tailscale (CLI), tailscaled, ACL JSON (tableau de bord), WireGuard comme transport.</p>
+                    <h3>16 - Ponts de la section :</h3>
+                    <ul>
+                        <li>
+                            <p>L'<span class="em">identité</span> du thème 3 (Kerberos / LDAP) refait surface en 16.b comme plan de contrôle.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">WireGuard</span> (thème 8) est le transport de 16.c.</p>
+                        </li>
+                        <li>
+                            <p>Le <span class="em">default deny</span> de 16.c est l'équivalent architectural du pare-feu (thème 12).</p>
+                        </li>
+                        <li>
+                            <p>Le <span class="em">durcissement</span> du thème 15 reste indispensable : Zero Trust s'ajoute, il ne remplace pas les couches précédentes.</p>
                         </li>
                     </ul>
                 </article>
