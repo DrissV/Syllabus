@@ -3569,7 +3569,7 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                                     <p>Transactions sur une blockchain.</p>
                                 </li>
                                 <li>
-                                    <p>(problème de l'ordonnnancement - voir mining).</p>
+                                    <p>(problème de l'ordonnancement - voir mining).</p>
                                 </li>
                             </ul>
                         </li>
@@ -3584,7 +3584,7 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                         </li>
                     </ul>
                     <div class="bordure important">
-                        <img src="../images/important.png" alt="Important" class="float left">
+                        <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Problème : Le chiffrement symétrique est rapide, mais comment partager le secret initial entre deux parties qui ne se connaissent pas ?</p>
                     </div>
                     <div class="bordure information">
@@ -3636,7 +3636,7 @@ openssl dgst -sha256 -verify publickey.pem -signature personnel.txt.signature pe
                         </tbody>
                     </table>
                     <div class="bordure important">
-                        <img src="../images/important.png" alt="Important" class="float left">
+                        <img src="../images/important.png" alt="Important" class="float_left">
                         <p>Et concrètement ? Chaque protocole (TLS, SSH, VPN) implémente ce schéma à sa manière. Dans la suite du cours, on va montrer TLS.</p>
                     </div>
                 </article>
@@ -3724,7 +3724,7 @@ set -euo pipefail
 sudo cp "${1}"/"${1}".crt /usr/local/share/ca-certificates
 sudo update-ca-certificates
 sudo cp "${1}"/"${1}".crt /vagrant # pour transmission au client</code></pre>
-                    <p>On sort de la VM crypto avec <span class="em">exit</span> et on copie le fichier <span class="em">ac.crt</span> dans le dossier de la VM crypto-client avec la commande suivante :</p>
+                    <p>On sort de la VM "crypto" avec <span class="em">exit</span> et on copie le fichier <span class="em">ac.crt</span> dans le dossier de la VM "crypto-client" avec la commande suivante :</p>
 <pre><code>cp ac.crt ../crypto-client</code></pre>
                     <h3>Demande de certification :</h3>
                     <ul>
@@ -3860,7 +3860,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                     <h4>Utilisation de la méthode webroot - dépôt par LE d'un fichier temporaire dans serveur web :</h4>
                     <img src="../images/demande_certification_LetsEncrypt.PNG" alt="">
 <pre><code>sudo certbot certonly --webroot -w /var/www/site2 -d client2.xpertsys.be</code></pre>
-                    <p>En résumé, cette commande demande un <span class="em">certificat TLS gratuit Let's Encrupt</span> utilisant la méthode webroot.</p>
+                    <p>En résumé, cette commande demande un <span class="em">certificat TLS gratuit Let's Encrypt</span> utilisant la méthode webroot.</p>
                     <h3>Configuration d'un serveur web en HTTPS :</h3>
 <pre><code>cat /etc/nginx/conf.d/client2.conf</code></pre>
                     <h3>Accès en HTTPS :</h3>
@@ -4004,13 +4004,13 @@ end</code></pre>
                     </table>
                     <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
-                        <p>Vérification out-of-band indispensable dans les deux sens :</p>
-                        <p><span class="em">Clé hôte (serveur)</span> : le client doit vérifier la clé du serveur à la 1ère connexion - sinon, risque de MITM.</p>
+                        <h4>Vérification out-of-band indispensable dans les deux sens :</h4>
+                        <p><span class="em">Clé hôte (serveur)</span> : le client doit vérifier la clé du serveur à la première connexion - sinon, risque de MITM.</p>
                         <p><span class="em">Clé publique (client)</span> : l'admin du serveur doit vérifier la clé avant de l'importer dans authorized_keys - sinon, n'importe qui peut s'enregistrer.</p>
                     </div>
                     <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
-                        <p>Mot de passe vs clé client :</p>
+                        <h4>Mot de passe vs clé client :</h4>
                         <p>La clé résiste mieux aux attaques par force brute et évite les risques de réutilisation.</p>
                     </div>
                     <h3>Configuration 2FA :</h3>
@@ -4162,16 +4162,36 @@ end</code></pre>
                     <h4>Désactivation du "hardening" du serveur :</h4>
                     <img src="../images/SSH_danger_attaques_force_brute.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+                    <ul>
+                        <li>
 <pre><code>sudo nano /etc/pam.d/sshd</code></pre>
+                        </li>
+                        <li>
 <pre><code>tail -n 1 /etc/pam.d/sshd</code></pre>
+                        </li>
+                        <li>
 <pre><code>sudo nano /etc/ssh/sshd_config.d/PermitPasswordAuthentication.conf</code></pre>
+                        </li>
+                        <li>
 <pre><code>tail -n 2 /etc/ssh/sshd_config.d/PermitPasswordAuthentication.conf</code></pre>
+                        </li>
+                        <li>
 <pre><code>sudo systemctl restart sshd</code></pre>
+                        </li>
+                        <li>
 <pre><code>sudo nano .ssh/authorized_keys</code></pre>
+                        </li>
+                        <li>
 <pre><code>tail -n 1 .ssh/authorized_keys</code></pre>
+                        </li>
+                        <li>
 <pre><code>cat .ssh/authorized_keys</code></pre>
+                        </li>
+                        <li>
 <pre><code>sudo systemctl restart sshd</code></pre>
-                    <p>En résumé, cette commande redémarre le serveur SSH.</p>
+                            <p>En résumé, cette commande redémarre le serveur SSH.</p>
+                        </li>
+                    </ul>
                     <h3>SSH - Accès par mot de passe :</h3>
                     <h4>PAS de 2FA :</h4>
                     <p>Ici, on est dans la VM nommée "ssh-client".</p>
@@ -4565,6 +4585,8 @@ end</code></pre>
                                             </tbody>
                                         </table>
                                     </div>
+                                </li>
+                                <li>
 <pre><code>ssh-keygen -t ed25519</code></pre>
                                 </li>
                                 <li>
@@ -4790,7 +4812,7 @@ end</code></pre>
                     <h3>Composantes :</h3>
                     <ul>
                         <li>
-                            <p>wg-peerA</p>
+                            <p>wg-peerA :</p>
                             <ul>
                                 <li>
                                     <p>noeud WireGuard</p>
@@ -4835,7 +4857,7 @@ Vagrant.configure("2") do |config|
 end</code></pre>
                         </li>
                         <li>
-                            <p>wg-peerB</p>
+                            <p>wg-peerB :</p>
                             <ul>
                                 <li>
                                     <p>noeud WireGuard</p>
@@ -4876,7 +4898,7 @@ Vagrant.configure("2") do |config|
 end</code></pre>
                         </li>
                         <li>
-                            <p>wg-peerC</p>
+                            <p>wg-peerC :</p>
                             <ul>
                                 <li>
                                     <p>noeud Wireguard</p>
