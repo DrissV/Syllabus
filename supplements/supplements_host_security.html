@@ -79,7 +79,7 @@
                     <li><a href="#protection_donnees_transit_VPN_environnements_de_travail">Protection des données en transit : VPN : Environnements de travail</a></li>
                     <li><a href="#VPN">VPN</a></li>
                     <li><a href="#protection_donnees_repos_environnements_de_travail">Protection des données au repos : Environnements de travail :</a></li>
-                    <li><a href="#rappel_concepts">Rappel des concepts</a></li>
+                    <li><a href="#rappels_concepts">Rappels des concepts</a></li>
                     <li><a href="#confidentialite_niveau_fichier_systeme_fichier">Confidentialité au niveau fichier ou système de fichier</a></li>
                     <li><a href="#confidentialite_niveau_disque">Confidentialité au niveau du disque</a></li>
                     <li><a href="#devoir_securite_physique">Devoir Sécurité physique</a></li>
@@ -3070,7 +3070,7 @@ end</code></pre>
                     <h4>Audit logs - aussi /var/log/audit/audit.log - voir en particulier champ auid (!) :</h4>
                     <img src="../images/audit_logs.PNG" alt="">
 <pre><code>sudo ausearch -k personnel-user1 -i | tail -n 10 | fold -w 80 -s</code></pre>
-                    <p>En résumé, cette commande recherche dans leslogs auditd :</p>
+                    <p>En résumé, cette commande recherche dans les logs auditd :</p>
                     <ul>
                         <li>
                             <p><span class="em">-k</span> : clé définie dans la règle</p>
@@ -3105,6 +3105,8 @@ end</code></pre>
                         <li>
 <pre><code>sudo systemctl enable auditd</code></pre>
                             <p>En résumé, cette commande active le service <span class="em">auditd</span> (daemon d'audit Linux) pour qu'il démarre automatiquement au boot et charge les règles définies dans <span class="em">/etc/audit/rules.d/</span>. Ça ne le démarre pas immédiatement (pour ça qu'il faut <span class="em">start</span>), mais ça l'active au démarrage</p>
+                        </li>
+                        <li>
 <pre><code>sudo cat /etc/audit/rules.d/watch-home-user1.rules | grep -v '^#'</code></pre>
                         </li>
                     </ul>
@@ -3427,7 +3429,7 @@ openssl pkeyutl -decrypt -inkey privatekey.pem -in personnel.rsa.encrypted -out 
 
 # Contenu du fichier décrypté
 cat personnel.rsa.decrypted</code></pre>
-                    <h3>Hashage des données :</h3>
+                    <h3>Hachage des données :</h3>
                     <ul>
                         <li>
                             <p><span class="em">Quoi ?</span> Fonction à sens unique : donnée &#8594; empreinte de taille fixe.</p>
@@ -3439,7 +3441,7 @@ cat personnel.rsa.decrypted</code></pre>
                             <p><span class="em">Limite</span> : ne prouve pas qui a produit le message.</p>
                         </li>
                     </ul>
-                    <p>Démo : SHA-256 avec openssl :</p>
+                    <h4>Démo : SHA-256 avec openssl :</h4>
                     <img src="../images/demo_SHA-256_openssl" alt="">
 <pre><code>./hash.sh</code></pre>
                     <p>Voici le contenu du script `<span class="em">hash.sh</span>` :</p>
@@ -3802,7 +3804,7 @@ openssl x509 -req -in "${1}"/"${1}".csr -CA "${2}"/"${2}".crt -CAkey "${2}"/"${2
                             <p>Redémarrer nginx (<span class="em">sudo systemctl restart nginx</span>) pour appliquer.</p>
                         </li>
                     </ul>
-                    <p>Configuration nginx :</p>
+                    <h4>Configuration nginx :</h4>
                     <img src="../images/configuration_serveur_HTTP.PNG" alt="">
 <pre><code>sudo cat /etc/nginx/conf.d/crypto-server.hs.be.conf</code></pre>
 <pre><code>server {
@@ -4506,7 +4508,7 @@ end</code></pre>
                                 <img src="../images/important.png" alt="Important" class="float_left">
                                 <p><span class="em">&lt;clé&gt;</span> contient la ligne complète de la clé publique avec les trois parties et pas juste la partie de la clé encodée.</p>
                             </div>
-                            <p>Voici ls redirections les plus utilisées en bash :</p>
+                            <p>Voici les redirections les plus utilisées en bash :</p>
                             <table class="tableBalises">
                                 <thead>
                                     <tr>
@@ -4542,7 +4544,7 @@ end</code></pre>
                             <p>Depuis exercice2-client : tester la connexion SSH :</p>
 <pre><code>ssh vagrant@exercice2-server.hs.be</code></pre>
                             <p>En résumé, cette commande ouvre une connexion SSH vers le serveur.</p>
-                            <p><span class="em">Comparer</span> l'empreinte affichée avec celle relevée sur la console serveur avant d'accepter (<span class="em">yes</span>) - la clé hôte est mémorisée dans <span class="em">~/.ssh/known_hosts</span>.</p>
+                            <p><span class="em">Comparer</span> l'empreinte affichée avec celle relevée sur la console du serveur avant d'accepter (<span class="em">yes</span>) - la clé hôte est mémorisée dans <span class="em">~/.ssh/known_hosts</span>.</p>
                             <p>Pour voir quelle clé est utilisée par le client lors de la connexion, on fait la commande suivante :</p>
 <pre><code>ssh -v vagrant@exercice2-server.hs.be</code></pre>
                             <p>On verra dans les logs la ligne suivante :</p>
@@ -4626,7 +4628,7 @@ end</code></pre>
                     <ol>
                         <li>
                             <p>Décrire la <span class="em">procédure hors-bande</span> utilisée pour échanger les clés publiques et vérifier la clé hôte :</p>
-                            <p class="em">La clé publique du client est copiée via la console des VMs, puis collée dans authorize_keys.</p>
+                            <p class="em">La clé publique du client est copiée via la console des VMs, puis collée dans authorized_keys.</p>
                             <ul>
                                 <li>
                                     <p>Pourquoi la console est-elle un canal de confiance ?</p>
@@ -4711,7 +4713,7 @@ end</code></pre>
     ssl_certificate_key /home/vagrant/tls/server.key;
 }</code></pre>
                             </ul>
-                            <p>Après avoir modifier la configuration de nginx, il ne faut pas oublier de faire les commandes suivantes :</p>
+                            <p>Après avoir modifié la configuration de nginx, il ne faut pas oublier de faire les commandes suivantes :</p>
 <pre><code>sudo nginx -t</code></pre>
 <pre><code>sudo nginx -s reload</code></pre>
                         </li>
@@ -4782,6 +4784,23 @@ end</code></pre>
                         </li>
                         <li>
                             <p>Décrire la <span class="em">procédure d'échange</span> : comment le certificat de l'AC est-il transmis au client, et comment s'assure-t-on de son authenticité avant de lui faire confiance ?</p>
+                            <ol class="em">
+                                <li>
+                                    <p>Le serveur envoie son certificat au client lors du handshake TLS, incluant le certificat de l'AC si nécessaire.</p>
+                                </li>
+                                <li>
+                                    <p>Le client reçoit le certificat du serveur et extrait la chaîne de certification.</p>
+                                </li>
+                                <li>
+                                    <p>Le client vérifie que le certificat de l'AC est signé par une autorité de confiance et que la chaine est intacte.</p>
+                                </li>
+                                <li>
+                                    <p>Si l'AC est auto-signée, le client doit installer le certificat manuellement ou accepter de lui faire confiance.</p>
+                                </li>
+                                <li>
+                                    <p>Une fois la vérification réussie, le client établit une connexion sécurisée avec le serveur.</p>
+                                </li>
+                            </ol>
                         </li>
                         <li>
                             <p>Que se passe-t-il si la <span class="em">clé privée de l'AC</span> est compromise ? Quelles actions s'imposent ?</p>
@@ -4909,7 +4928,7 @@ end</code></pre>
                             </ul>
                         </li>
                     </ul>
-                    <p>En résumé, la troisième machine est votre poste de travail (<a href="https://www.wireguard.com/install/" target="_blank">installer Wireguard dessus !</a>) - ou alors, créez par vous même une troisième machine virtuelle.</p>
+                    <p>En résumé, la troisième machine est votre poste de travail (<a href="https://www.wireguard.com/install/" target="_blank">installer Wireguard dessus !</a>) - ou alors, créez par vous-même une troisième machine virtuelle.</p>
                     <p>Pensez à l'échange préalable de clés (modification des configurations des machines A et B ?)</p>
                     <p>Voici le Vagrantfile de cette VM si vous voulez le faire et les différentes étapes à exécuter :</p>
 <pre><code># coding: utf-8
@@ -4995,7 +5014,7 @@ ip -c -4 a show dev wg0
 # Vérification de la route
 ip route
 
-# Etat de wireguard
+# État de WireGuard
 sudo wg show</code></pre>
                                 <p>Lancer ce script avec la commande suivante pour démarrer l'interface WireGuard :</p>
 <pre><code>sudo ./wireguard.sh 3</code></pre>
@@ -5069,6 +5088,7 @@ sudo wg show</code></pre>
                         <img src="../images/peerA.PNG" alt="" class="float_left">
                         <img src="../images/peerB.PNG" alt="">
                     </div>
+<pre><code>sudo wg show</code></pre>
                     <h3>WireGuard - Étapes cryptographiques :</h3>
                     <table class="tableBalises">
                         <thead>
@@ -5135,7 +5155,7 @@ PublicKey = nl6cvnJOPoo13PecODuKVINZlYWzZt4sti3x+qJDezY=
 AllowedIPs = 10.0.0.0/24
 Endpoint = 172.28.128.9:51820</code></pre>
                     <h3>Création interface wg0 - peer A :</h3>
-                    <p>5 étapes : créer l'interface &#8594; assigner l'IP VPN &#8594; charger la config (pairs) &#8594; charger la <span class="em">clé privée</span> &#8594; activer. La route <span class="em">10.0.0.0/24 via wg0</span> apparaît automatiquement.<p>
+                    <p>Cinq étapes : créer l'interface &#8594; assigner l'IP VPN &#8594; charger la config (pairs) &#8594; charger la <span class="em">clé privée</span> &#8594; activer. La route <span class="em">10.0.0.0/24 via wg0</span> apparaît automatiquement.<p>
 <pre><code>sudo ./wireguard.sh 1</code></pre>
                     <p>Voici le contenu du fichier `<span class="em">wireguard.sh</span>` :</p>
 <pre><code>#! /usr/bin/bash -x
@@ -5163,7 +5183,7 @@ ip -c -4 a show dev wg0
 # Vérification de la route
 ip route
 
-# Etat de wireguard
+# État de WireGuard
 sudo wg show</code></pre>
                     <h3>Création interface wg0 - peer B :</h3>
                     <p>Même séquence que peer A (le nom de l'interface peut différer entre systèmes).<p>
@@ -5194,14 +5214,16 @@ ip -c -4 a show dev wg0
 # Vérification de la route
 ip route
 
-# Etat de wireguard
+# État de WireGuard
 sudo wg show</code></pre>
                     <h3>Interactions :</h3>
                     <div>
                         <img src="../images/interactions_peerA.PNG" alt="" class="float_left">
                         <img src="../images/interactions_peerB.PNG" alt="">
                     </div>
+                    <p>Depuis Peer A :</p>
 <pre><code>ping 10.0.0.2</code></pre>
+                    <p>Depuis Peer B :</p>
 <pre><code>ping 10.0.0.1</code></pre>
                     <p>Le trafic vers <span class="em">10.0.0.0/24</span> est routé via <span class="em">wg0</span>.</p>
                     <h3>Rôle serveur de Peer A :</h3>
@@ -5241,7 +5263,7 @@ sudo sysctl -p</code></pre>
                             </ul>
                         </li>
                         <li>
-                            <p>Bien comprendre technologie utilisée (!) - s'assurer de l'existence d'une sécurisation au niveau de la couche interface réseau.</p>
+                            <p>Bien comprendre la technologie utilisée (!) - s'assurer de l'existence d'une sécurisation au niveau de la couche interface réseau.</p>
                         </li>
                         <li>
                             <p>Réseau exposé - quid si un des hôtes est un poste de télétravail mal sécurisé ?</p>
@@ -5360,7 +5382,7 @@ sudo sysctl -p</code></pre>
                                     <p>Se connecte aux disques durs virtuels (atteinte à la sécurité physique).</p>
                                 </li>
                                 <li>
-                                    <p>Démontrer l'accès au contenu nom encrypté de la première box.</p>
+                                    <p>Démontrer l'accès au contenu non encrypté de la première box.</p>
                                 </li>
                             </ul>
                         </li>
@@ -5637,6 +5659,7 @@ xxd hello/personnel.txt | tail -n 5</code></pre>
                         </li>
                         <li>
 <pre><code>sudo xxd /home/user3/hello1/personnel.txt</code></pre>
+                            <p>En résumé, cette commande affiche le contenu du fichier `<span class="em">personnel.txt</span>` sous forme hexadécimale (et ASCII) avec <span class="em">xxd</span>.</p>
                         </li>
                     </ul>
                     <p>Voici le contenu du fichier `<span class="em">mount-laisse-mount.sh</span>` :</p>
