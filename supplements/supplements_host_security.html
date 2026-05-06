@@ -95,8 +95,8 @@
                     <li><a href="#detection_prevention_intrusion_concepts">Détection/prévention d'intrusion : Concepts</a></li>
                     <li><a href="#detection_prevention_intrusion_implementation_type">Détection/prévention d'intrusion : Implémentation type</a></li>
                     <li><a href="#detection_prevention_intrusion_forces_faiblesses">Détection/prévention d'intrusion : Forces et faiblesses</a></li>
-                    <li><a href="#scanning_virus_rootkits_environnements_de_travail">Scanning : virus et rootkits : Environnements de travail</a></li>
-                    <li><a href="#scanning_detection_virus_rootkit">Scanning : Détection de virus et rootkit</a></li>
+                    <li><a href="#scanning_virus_rootkits_environnements_de_travail">Scanning : Virus et rootkits : Environnements de travail</a></li>
+                    <li><a href="#scanning_detection_virus_rootkits">Scanning : Détection de virus et rootkits</a></li>
                     <li><a href="#scanning_demo_rootkit">Scanning : Démo rootkit</a></li>
                     <li><a href="#pratique_individuelle_pentesting_detection_prevention_intrusion">Pratique individuelle du pentesting et de la détection/prévention d'intrusion</a></li>
                     <li><a href="#securisation_hotes_patching_isolation_sandboxing_environnements_de_travail">Sécurisation des hôtes (Linux) : Du patching à l'isolation et au sandboxing : Environnements de travail</a></li>
@@ -7363,7 +7363,7 @@ sudo snort -A console -u snort -g snort -c /etc/snort/snort.conf -i eth1 -k none
                     </ul>
                 </article>
                 <article>
-                    <h2 id="scanning_virus_rootkits_environnements_de_travail">Scanning : virus et rootkits : environnements de travail :</h2>
+                    <h2 id="scanning_virus_rootkits_environnements_de_travail">Scanning : Virus et rootkits : Environnements de travail :</h2>
                     <h3>Box Vagrant Scanning :</h3>
                     <ol>
                         <li>
@@ -7373,7 +7373,7 @@ sudo snort -A console -u snort -g snort -c /etc/snort/snort.conf -i eth1 -k none
                                     <p>Démo protection virus et rootkit.</p>
                                 </li>
                             </ul>
-                            <p>À télécharger et démarrer comme d'habitude. Attention, il se peut que votre anti-virus rejette le fichier eicarcom2.zip - ce qui serait plutôt une bonne chose :-) car sa "signature" fait penser à un virus. Au besoin, utiliser la boîte "scanning-sanitized".</p>
+                            <p>À télécharger et démarrer comme d'habitude. Attention, il se peut que votre anti-virus rejette le fichier eicarcom2.zip - ce qui serait plutôt une bonne chose :-) car sa "signature" fait penser à un virus. Au besoin, utiliser la boîte Vagrant nommée "scanning-sanitized".</p>
                             <p>Votre poste hôte gagne à être équipé de Metasploit Framework.</p>
                             <p>Voici le Vagrantfile de cette VM :</p>
 <pre><code># coding: utf-8
@@ -7465,22 +7465,29 @@ end</code></pre>
                     </ol>
                 </article>
                 <article>
-                    <h2 id="scanning_detection_virus_rootkit">Scanning : Détection de virus et rootkit :</h2>
+                    <h2 id="scanning_detection_virus_rootkits">Scanning : Détection de virus et rootkits :</h2>
                     <h3>Détection de virus :</h3>
                     <h4>Exemple Clamav - mise à jour des signatures :</h4>
                     <img src="../images/detection_virus_1.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+                    <ul>
+                        <li>
 <pre><code>sudo systemctl stop clamav-freshclam</code></pre>
-                    <p>En résumé, cette commande arrête le service de mise à jour automatique de ClamAV (anti-virus).</p>
+                            <p>En résumé, cette commande arrête le service de mise à jour automatique de ClamAV (anti-virus).</p>
+                        </li>
+                        <li>
 <pre><code>sudo freshclam</code></pre>
-                    <p>En résumé, cette commande met à jour manuellement la base de signatures de virus.</p>
+                            <p>En résumé, cette commande met à jour manuellement la base de signatures de virus.</p>
+                        </li>
+                        <li>
 <pre><code>sudo systemctl enable clamav-freshclam --now</code></pre>
-                    <p>En résumé, cette commande dit au système : <q>Active les mises à jour automatiques de l'antivirus et démarre-les maintenant.</q></p>
+                            <p>En résumé, cette commande dit au système : <q>Active les mises à jour automatiques de l'antivirus et démarre-les maintenant.</q></p>
+                        </li>
+                    </ul>
                     <h4>Création d'un payload de type "reverse shell" :</h4>
                     <p><a href="https://www.hackingarticles.in/msfvenom-tutorials-beginners/" target="_blank">https://www.hackingarticles.in/msfvenom-tutorials-beginners/</a></p>
                     <img src="../images/detection_virus_2.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
-<pre><code>cd ~/Downloads</code></pre>
                     <ul>
                         <li>
                             <p>Sur la machine hôte, il faut que le firewall autorise les connexions entrantes sur le port 4444, utilisé par le payload pour établir la connexion avec la commande suivante :</p>
@@ -7499,7 +7506,7 @@ end</code></pre>
                             <p>En résumé, cette commande copie le fichier généré vers un autre dossier.</p>
                         </li>
                     </ul>
-                    <p>Dans la VM nommée "scanning" ou nommée scanning-sanitized" :</p>
+                    <p>Ici, on est dans la VM nommée "scanning" ou dans la VM nommée "scanning-sanitized" :</p>
                     <ul>
                         <li>
 <pre><code>cp /vagrant/shell . # copie payload dans VM</code></pre>
@@ -7654,6 +7661,7 @@ end</code></pre>
 <pre><code>sudo insmod diamorphine.ko</code></pre>
                             <p>En résumé, cette commande charge le rootkit dans le noyau Linux. C'est la seule commande qui introduit la vulnérabilité dans le système.</p>
                         </li>
+                    </ul>
                     <h3>Exploitation 1 :</h3>
                     <img src="../images/demo_rootkit_2.PNG" alt="">
                     <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
