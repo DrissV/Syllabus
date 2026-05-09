@@ -8375,12 +8375,31 @@ end</code></pre>
                     <h3>ss -lx - sockets Unix : la colonne "Port" est un inode :</h3>
                     <p><code class="em">ss -lx</code> liste les sockets Unix (fichiers spéciaux). La colonne "Local Address:Port" réutilise l'en-tête TCP : pour les sockets Unix, le nombre affiché est le <span class="em">numéro d'inode</span>, pas un port réseau.</p>
 <pre><code>ss -lx | grep -E 'php|mysqld'</code></pre>
-                    <p>En résumé, cette commande filtre les sockets Unix liésà PHP ou MariaDB.</p>
+                    <p>En résumé, cette commande filtre les sockets Unix liés à PHP ou à MariaDB.</p>
                     <img src="../images/ss-lx.PNG" alt="">
                     <h3>Désactiver les services inutiles :</h3>
                     <p>Sur un serveur minimal, de nombreux services installés par défaut sont inutiles et augmentent la surface d'attaque.</p>
                     <h4>systemctl disable --now + mask :</h4>
                     <img src="../images/desactiver_services_inutiles.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+                    <ul>
+                        <li>
+<pre><code>sudo systemctl disable --now snapd.socket snapd-snap.socket</code></pre>
+                            <p>En résumé, cette commande permet de désactiver et arrêter immédiatement les sockets liés au service Snap afin d'empêcher leur démarrage automatique.</p>
+                        </li>
+                        <li>
+<pre><code>sudo systemctl disable --now lxd lxd.socket lxd-user.socket</code></pre>
+                            <p>En résumé, cette commande permet de désactiver et arrêter immédiatement les services et sockets LXD pour empêcher l'utilisation et le lancement automatique des conteneurs.</p>
+                        </li>
+                        <li>
+<pre><code>sudo systemctl disable --now iscid multipathd</code></pre>
+                            <p>En résumé, cette commande permet de désactiver et arrêter immédiatement les services iSCSI et multipath afin d'empêcher leur exécution au démarrage du système.</p>
+                        </li>
+                        <li>
+<pre><code>sudo systemctl mask iscid multipathd uuidd avahi-daemon</code></pre>
+                            <p>En résumé, cette commande permet de bloquer complètement ces services afin d'empêcher tout démarrage manuel ou automatique.</p>
+                        </li>
+                    </ul>
                     <p><code class="em">disable</code> empêche le démarrage au boot. <span class="em">mask</span> crée un lien vers /dev/null - le service <span class="em">ne peut plus démarrer</span> même manuellement ou comme dépendance.</p>
                     <p><code class="em">dbus</code> : intégré à systemd, ne pas supprimer - restreindre via <span class="em">/etc/dbus-1/system.d/</span> si nécessaire.</p>
                     <h3>Quid si accès non-local nécessaire :</h3>
@@ -8437,7 +8456,7 @@ end</code></pre>
                         </li>
                     </ul><h4>Fichier html généré (usg-report-20240324.0931) copié dans box :</h4>
                     <img src="../images/profilage_OS_canonical_2.PNG" alt="">
-                    <h3>Kernel hanrdening - paramètres sysctl :</h3>
+                    <h3>Kernel hardening - paramètres sysctl :</h3>
                     <h4>/etc/sysctl.d/99-hardening.conf :</h4>
                     <img src="../images/kernel_hardening_parametres_sysctl.PNG" alt="">
 <pre><code>cat /etc/sysctl.d/99-hardening.conf</code></pre>
@@ -8508,7 +8527,7 @@ end</code></pre>
                         </li>
                         <li>
 <pre><code>ls /etc/ssh/sshd_config.d/</code></pre>
-                            <p>En résumé, cette commande liste les fichiersde configurations additionnels.</p>
+                            <p>En résumé, cette commande liste les fichiers de configuration additionnels.</p>
                         </li>
                         <li>
 <pre><code>sudo sshd -T | grep -E 'passwordauth|permitroot|maxauth'</code></pre>
@@ -8527,11 +8546,11 @@ end</code></pre>
                 </article>
                 <article>
                     <h2 id="securisation_hotes_isolation_inter-services_sockets_Unix_moindre_privilege">Sécurisation des hôtes (Linux) : Isolation inter-services : sockets Unix et moindre privilège :</h2>
-                    <h3>Machine virtuelle maintenance+sec - architecture :</h3>
+                    <h3>Machine virtuelle maintenance-sec - architecture :</h3>
                     <img src="../images/VM_maintenance-sec_architecture.PNG" alt="">
                     <p>Chaque couche tourne sous un <span class="em">utilisateur OS distinct</span>. Les communications inter-couches passent par des <span class="em">sockets Unix</span> - aucun port TCP interne. Objectif : si une couche est compromise, les autres restent protégées.</p>
                     <h3>Sockets Unix - principe :</h3>
-                    <div class="bordure important">
+                    <div class="bordure">
                         <h4>TCP/IP loopback :</h4>
                         <p>nginx &#8594; 127.0.0.1:9000 &#8594; php-fpm</p>
                         <ul>
@@ -8596,6 +8615,7 @@ end</code></pre>
                     <h3>Moindre privilège - appphp en lecture seule, sans mot de passe :</h3>
                     <h4>Droits accordés - unix_socket auth, pas de mot de passe dans le code :</h4>
                     <img src="../images/appphp_lecture_seule_1.PNG" alt="">
+<pre><code>SHOW GRANTS FOR 'appphp'@'localhost';</code></pre>
                     <div class="bordure important">
                         <h4>INSERT refusé (SELECT uniquement) :</h4>
                         <img src="../images/appphp_lecture_seule_2.PNG" alt="">
@@ -8669,6 +8689,21 @@ end</code></pre>
                     <p>Score bas = surface d'attaque réduite. ~9.6 UNSAFE sans override. MariaDB part de 8.8 (hardening inclus dans le paquet); <span class="em">PrivateTmp=yes</span> le ramène à 8.5. Aller sous 5 requiert <span class="em">DynamicUser</span>, <span class="em">PrivateNetwork</span>...</p>
                     <h3>Effet concret - PrivateTmp=yes :</h3>
                     <img src="../images/effet_concret_privatetmp=yes.PNG" alt="">
+                    <p>Voici les différentes commandes exécutées dans l'image précédente :</p>
+                    <ul>
+                        <li>
+<pre><code>sudo sh -c 'echo "donnees-sensibles" &gt; /tmp/session.txt'</code></pre>
+                            <p>En résumé, cette commande permet de créer un fichier <span class="em">/tmp/session.txt</span> contenant la chaîne <span class="em">donnees-sensibles</span> avec des privilèges administrateur.</p>
+                        </li>
+                        <li>
+<pre><code>sudo ls /tmp/</code></pre>
+                            <p>En résumé, cette commande permet de lister le contenu du répertoire <span class="em">/tmp</span> afin de vérifier la présence de fichiers temporaires ou isolés par les services.</p>
+                        </li>
+                        <li>
+<pre><code>sudo ls /proc/$(systemctl show -p MainPID nginx | cut -d= -f2)/root/tmp/</code></pre>
+                            <p>En résumé, cette commande permet d'accéder au répertoire <span class="em">/tmp</span> du namespace du processus principal du service nginx en récupérant son PID via <span class="em">systemctl</span>, afin d'observer l'isolation des fichiers temporaires entre le système hôte et le service.</p>
+                        </li>
+                    </ul>
                     <p>Chaque service sandboxé obtient son propre /tmp isolé - impossible d'y déposer des fichiers depuis un autre service, même tournant avec le même utilisateur OS.</p>
                     <p>Idem pour <span class="em">ProtectHome=yes</span> : nginx ne peut pas lire /home/vagrant.</p>
                 </article>
@@ -8714,7 +8749,7 @@ end</code></pre>
                     <h4>Workflow pour profiler nginx :</h4>
                     <img src="../images/AppArmor_ajouter_profil_service.PNG" alt="">
                     <p>Ubuntu 22.04 : nginx et php-fpm n'ont pas de profil installé par défaut.</p>
-                    <p><span class="em">apparmor-profiles</span> (paquet expérimental) en fournit un. En production : profil sur mesure via aa-genprof + tests.</p>
+                    <p><span class="em">apparmor-profiles</span> (paquet expérimental) en fournit un. En production : profil sur mesure via <code class="em">aa-genprof</code> + tests.</p>
                 </article>
                 <article>
                     <h2 id="securisation_hotes_outils_scanning_auditing">Sécurisation des hôtes (Linux) : Outils : Scanning, Auditing :</h2>
@@ -8842,7 +8877,7 @@ end</code></pre>
                             </li>
                             <li>
                                 <p>Quel mécanisme MariaDB explique ce comportement ? (tuyau : IDENTIFIED VIA unix_socket)</p>
-                                <p>Ce comportement s'explique par le mécanisme d'authentification <span class="em">unix_socket</span>. Avec <span class="em">IDENTIFIED VIA unix_socket</span>, MariaDB vérifie que l'utilisateur Linux correspond exactement à l'utilisateur MariaDB, sans demander de mot de passe. Ainsi, appphp peut se connecter parce que le processus tourne sous cet utilisateur système, tandis que vagrant est refusé car son identité Linux ne correspond pas à un compte MariaDB autorisé. Ce comportement est visible dans la colonne <span class="em">plugin</span> de la table <span class="em">mysql.user</span>, qui indique <span class="em">unix_socket</span> pour l'utilisateir concerné.</p>
+                                <p>Ce comportement s'explique par le mécanisme d'authentification <span class="em">unix_socket</span>. Avec <span class="em">IDENTIFIED VIA unix_socket</span>, MariaDB vérifie que l'utilisateur Linux correspond exactement à l'utilisateur MariaDB, sans demander de mot de passe. Ainsi, appphp peut se connecter parce que le processus tourne sous cet utilisateur système, tandis que vagrant est refusé car son identité Linux ne correspond pas à un compte MariaDB autorisé. Ce comportement est visible dans la colonne <span class="em">plugin</span> de la table <span class="em">mysql.user</span>, qui indique <span class="em">unix_socket</span> pour l'utilisateur concerné.</p>
                             </li>
                             <li>
                                 <p>Quelle directive dans /etc/php/8.1/fpm/pool.d/appphp.conf garantit que PHP.FPM tourne bien sous l'identité appphp ?</p>
