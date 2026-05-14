@@ -5,7 +5,7 @@
         <meta name="author" content="Choquet Olivier & Vandenheede Driss">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Forensics - Suppléments - e-Syllabus HTML5 et CSS3</title>
+        <title>Incident Response & Digital Forensics (DFIR) - Suppléments - e-Syllabus HTML5 et CSS3</title>
         <!-- une icône dans la barre du navigateur -->
         <link rel="icon" href="../images/favicon.png" type="image/png">
         <link rel="stylesheet" href="../style.css">
@@ -48,6 +48,10 @@
                 <ol>
                     <li><a href="../supplements/supplements_ITSCM.html">Retour au sommaire</a></li>
                     <li><a href="#introduction">Introduction</a></li>
+                    <li><a href="#session1_threat_landscape_bases_fondamentales">Session 1 : Threat Landscape &amp; Bases fondamentales</a></li>
+                    <li><a href="#session2_hacking_methodology">Session 2 : Hacking Methodology</a></li>
+                    <li><a href="#session3_incident_response_procedure">Session 3 : Incident Response Procedure</a></li>
+                    <li><a href="#mes_notes">Mes notes</a></li>
                 </ol>
             </nav>
             
@@ -63,10 +67,1041 @@
         <main id="container" role="main" tabindex="-1">
             <section id="mainSection">
                 <article>
-                    <h1>Forensics :</h1>
+                    <h1>Incident Response &amp; Digital Forensics (DFIR) :</h1>
                 </article>
                 <article>
                     <h2 id="introduction">Introduction :</h2>
+                    <h3>Plan du cours - 7 sessions :</h3>
+                    <ol>
+                        <li>
+                            <p>Threat Landscape &amp; bases fondamentales.</p>
+                        </li>
+                        <li>
+                            <p>Hacking methodology</p>
+                        </li>
+                        <li>
+                            <p>Incidnet Response - procédure</p>
+                        </li>
+                        <li>
+                            <p>IR Plan + Cyber Threat Intelligence</p>
+                        </li>
+                        <li>
+                            <p>Digital Forensics - principes &amp; collecte</p>
+                        </li>
+                        <li>
+                            <p>Digital Forensics - analyse &amp; timeline</p>
+                        </li>
+                        <li>
+                            <p>Gouvernance, NIS2 &amp; cadre légal</p>
+                        </li>
+                    </ol>
+                    <h3>Scénario fil rouge : Belacorp SA :</h3>
+                    <h4>Belacorp SA :</h4>
+                    <p>PME belge fictive, 250 employés, secteur logistique. Présence : Bruxelles + 2 entrepôts (Liège, Gand). Traite des données personnelles de clients et partenaires.</p>
+                    <h4>Ce que vous allez faire :</h4>µ
+                    <p>À chaque session, ce scénario évolue. Vous verrez d'abord comment l'attaquant opère, puis comment Belacorp détecte, répond, collecte les preuves - et finalement notifie les autorités.</p>
+                    <ul>
+                        <li>
+                            <p>Session 1 : Belacorp reçoit un e-mail de phishing ciblé (spear phishing) visant son responsable comptable.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="session1_threat_landscape_bases_fondamentales">Session 1 : Threat Landscape &amp; Bases fondamentales :</h2>
+                    <h3>Trois périmètres à distinguer :</h3>
+                    <ol>
+                        <li>
+                            <p><span class="em">Information Security</span> : Garantir la Confidentialité, l'Intégrité et la Disponibilité (CID ou CIA en anglais) de l'information - quelle que soit sa forme.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">IT Security</span> : Protéger les systèmes informatiques et les données contre les accès non autorisés (sous-ensemble de l'InfoSec).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Cybersecurity</span> : Défendre les systèmes connectés contre les attaques malveillantes - focus sur la menace cyber externe.</p>
+                        </li>
+                    </ol>
+                    <h3>Vulnérabilité, Menace &amp; Risque :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Vulnérabilité</span> : Faiblesse dans un système, un processus, ou une organisation qui peut être exploitée.</p>
+                            <p>Exemples : patch de sécurité manquant, mot de passe faible, configuration incorrecte.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Menace (Threat)</span> : Événement potentiel capable d'exploiter une vulnérabilité et de causer un préjudice.</p>
+                            <p>Exemples : ransomware, phishing, attaque DDoS, insider malveillant.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Risque</span> : Probabilité qu'une menace exploite une vulnérabilité * Impact potentiel.</p>
+                            <p>RISQUE = VRAISEMBLANCE * IMPACT.</p>
+                        </li>
+                    </ul>
+                    <h3>CVE &amp; CVSS - Identifier et scorer les vulnérabilités :</h3>
+                    <h4>CVE (Common Vulnerabilities and Exposures) :</h4>
+                    <p>Identifiant uniqu pour chaque vulnérabilité publique : CVE-ANNÉE-NUMÉRO.</p>
+                    <p>Référentiel maintenu par MITRE, alimenté par les éditeurs et chercheurs.</p>
+                    <h4>CVSS - Common Vulnerability Scoring System :</h4>
+                    <p>Score de 0 à 10 basé sur : vecteur d'attaque, complexité, impact CIA.</p>
+                    <p>7-8.9 = Élevé. 9-10 = Critique. Exemples : Log4Shell = 10, Spectre = 5.6.</p>
+                    <h4>Ressources clés :</h4>
+                    <p><a href="https://cve.mitre.org" target="_blank">https://cve.mitre.org</a></p>
+                    <p><a href="https://nvd.nist.gov" target="_blank">https://nvd.nist.gov</a></p>
+                    <p><a href="https://www.cvedetails.com" target="_blank">https://www.cvedetails.com</a></p>
+                    <h3>Catégories de menaces :</h3>
+                    <h4>Menaces techniques :</h4>
+                    <ul>
+                        <li>
+                            <p>Malware (ransomware, trojan, wiper).</p>
+                        </li>
+                        <li>
+                            <p>Phishing &amp; spear-phishing.</p>
+                        </li>
+                        <li>
+                            <p>Exploitation de vulnérabilités (RCE, SQLi, XSS).</p>
+                        </li>
+                        <li>
+                            <p>Supply-chain attack.</p>
+                        </li>
+                    </ul>
+                    <h4>Menaces organisationnelles :</h4>
+                    <ul>
+                        <li>
+                            <p>Ingénierie sociale (manipulation humaine).</p>
+                        </li>
+                        <li>
+                            <p>Insider threat (employé malveillant).</p>
+                        </li>
+                        <li>
+                            <p>Fuite de données (accidentelle ou volontaire).</p>
+                        </li>
+                        <li>
+                            <p>APT - Advanced Persistent Threat.</p>
+                        </li>
+                        <li>
+                            <p>Cryptojacking.</p>
+                        </li>
+                    </ul>
+                    <h3>Matrice de risque - Vraisemblance * Impact :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Scénario de risque</th>
+                                <th>Vraisemblance</th>
+                                <th>Impact</th>
+                                <th>Niveau de risque</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Perte d'un laptop hors périmètre (données non chiffrées)</td>
+                                <td>Probable</td>
+                                <td>Élévé</td>
+                                <td>CRITIQUE</td>
+                            </tr>
+                            <tr>
+                                <td>Serveur interne compromis par un attaquant</td>
+                                <td>Possible</td>
+                                <td>Élevé</td>
+                                <td>ÉLEVÉ</td>
+                            </tr>
+                            <tr>
+                                <td>Contrôleur de domaine compromis</td>
+                                <td>Possible</td>
+                                <td>Critique</td>
+                                <td>CRITIQUE</td>
+                            </tr>
+                            <tr>
+                                <td>Fichier infecté téléchargé par un employé</td>
+                                <td>Probable</td>
+                                <td>Moyen</td>
+                                <td>ÉLEVÉ</td>
+                            </tr>
+                            <tr>
+                                <td>Divulgation d'informations non sensibles</td>
+                                <td>Possible</td>
+                                <td>Faible</td>
+                                <td>FAIBLE</td>
+                            </tr>
+                            <tr>
+                                <td>Indisponibilité du site web (DDoS)</td>
+                                <td>Possible</td>
+                                <td>Moyen</td>
+                                <td>MODÉRÉ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Sources de cybermenaces :</h3>
+                    <h4>Acteurs externes :</h4>
+                    <ul>
+                        <li>
+                            <p>États et groupes state-sponsored (APT).</p>
+                        </li>
+                        <li>
+                            <p>Crime organisé (ransomware-as-a-service).</p>
+                        </li>
+                        <li>
+                            <p>Hacktivistes (idéologie, protestation).</p>
+                        </li>
+                        <li>
+                            <p>Espionnage industriel (concurrence).</p>
+                        </li>
+                        <li>
+                            <p>Script kiddies (opportunistes).</p>
+                        </li>
+                    </ul>
+                    <h4>Acteurs internes :</h4>
+                    <ul>
+                        <li>
+                            <p>Employé malveillant (insider threat).</p>
+                        </li>
+                        <li>
+                            <p>Employé négligent (erreur humaine).</p>
+                        </li>
+                        <li>
+                            <p>Prestataire / sous-traitant compromis.</p>
+                        </li>
+                        <li>
+                            <p>Ex-employé (accès non révoqué).</p>
+                        </li>
+                        <li>
+                            <p>Partenaire de confiance compromise.</p>
+                        </li>
+                    </ul>
+                    <h3>APT - Advanced Persistent Threats :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>Pays d'origine</th>
+                                <th>Domaines d'action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>APT28</td>
+                                <td>Fancy Bear</td>
+                                <td>Russie</td>
+                                <td>Espionnage politique, gouvernements, OTAN</td>
+                            </tr>
+                            <tr>
+                                <td>APT29</td>
+                                <td>Cozy Bear</td>
+                                <td>Russie</td>
+                                <td>Supply-chain (SolarWinds), renseignement</td>
+                            </tr>
+                            <tr>
+                                <td>APT38 / Lazarus</td>
+                                <td>Lazarus Group</td>
+                                <td>Corée du Nord</td>
+                                <td>Finance, crypto, WannaCry</td>
+                            </tr>
+                            <tr>
+                                <td>Equation Group</td>
+                                <td>Equation</td>
+                                <td>USA (probable NSA)</td>
+                                <td>Stuxnet, espionnage mondial</td>
+                            </tr>
+                            <tr>
+                                <td>APT32</td>
+                                <td>Ocean Lotus</td>
+                                <td>Vietnam</td>
+                                <td>Entreprises étrangères opérant en ASIE du Sud-Est</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Attack surface, Threat actor &amp; Threat landscape :</h3>
+                    <h4>Attack surface :</h4>
+                    <p>Somme de toutes les surfaces exploitables d'une organisation : interfaces réseau, applications web, emails, postes de travail, accès physiques, employés...</p>
+                    <h4>Threat actor / agent :</h4>
+                    <p>Entité (personne, groupe, organisation) responsable d'un incident ou capable d'en causer un.</p>
+                    <h4>Threat landscape :</h4>
+                    <p>Cartographie des menaces pertinentes pour une organisation donnée : qui sont les attaquants probables, par quels vecteurs, pour quels objectifs ?</p>
+                    <p>Chaque secteur a son paysage de menaces propre (finance &#8800; santé &#8800; logistique).</p>
+                    <h3>Stuxnet (2010) :</h3>
+                    <ul>
+                        <li>
+                            <p>MALWARE</p>
+                        </li>
+                        <li>
+                            <p>LATERAL MOVEMENT</p>
+                        </li>
+                        <li>
+                            <p>SUPPLY-CHAIN</p>
+                        </li>
+                    </ul>
+                    <table class="tableBalises">
+                        <tbody>
+                            <tr>
+                                <td>Origine</td>
+                                <td>USA / Israël (opération conjointe)</td>
+                            </tr>
+                            <tr>
+                                <td>Cible</td>
+                                <td>Programme nucléaire iranien - centrifugeuses Siemens (SCADA/PLC)</td>
+                            </tr>
+                            <tr>
+                                <td>Vecteur</td>
+                                <td>Clé USB introduite dans un réseau air-gappé (isolé d'Internet)</td>
+                            </tr>
+                            <tr>
+                                <td>Technique</td>
+                                <td>4 zero-days exploités simultanément + 2 certificats numériques volés</td>
+                            </tr>
+                            <tr>
+                                <td>Impact</td>
+                                <td>~1000 centrifugeuses détruites, programme nucléaire retardé de 2 ans</td>
+                            </tr>
+                            <tr>
+                                <td>Pourquoi c'est historique</td>
+                                <td>Premier cyberweapon documenté causant des dommages physiques réels</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Belgacom / OP Socialist (2010-2013) :</h3>
+                    <ul>
+                        <li>
+                            <p>MAN-IN-THE-MIDDLE</p>
+                        </li>
+                        <li>
+                            <p>SOCIAL ENGINEERING</p>
+                        </li>
+                        <li>
+                            <p>SUPPLY-CHAIN</p>
+                        </li>
+                    </ul>
+                    <table class="tableBaalises">
+                        <tbody>
+                            <tr>
+                                <td>Origine</td>
+                                <td>GCHQ (Royaume-Uni) avec assistance NSA</td>
+                            </tr>
+                            <tr>
+                                <td>Cible</td>
+                                <td>Belgacom &amp; BICS - routeurs GRX dy réseau 2G/3G européen</td>
+                            </tr>
+                            <tr>
+                                <td>Vecteur</td>
+                                <td>Spear phishing via faux profils LinkedIn &#8594; malware REIGN</td>
+                            </tr>
+                            <tr>
+                                <td>Objectif</td>
+                                <td>Espionnage de cibles politiques européennes (Conseil EU, Parlement)</td>
+                            </tr>
+                            <tr>
+                                <td>Découverte</td>
+                                <td>Audit de sécurité interne Belgacom &#8594; présence malware &#8594; révélations Snowden</td>
+                            </tr>
+                            <tr>
+                                <td>Impact</td>
+                                <td>Fuite de données, attente à la souveraineté belge, réforme CCE</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Synthèse S1 - Belacorp : le début de l'incident :</h3>
+                    <ul>
+                        <li>
+                            <h4>Ce que vous savez maintenant :</h4>
+                            <p>CID, CVE/CVSS, catégories de menaces, matrice de risque, sources d'attaque, APT.</p>
+                        </li>
+                        <li>
+                            <h4>Belacorp - événement du jour J :</h4>
+                            <p>Un comptable de Belacorp reçoit un email avec une facture PDF attachée.</p>
+                            <p>L'email semble venir d'un fournisseur connu. Il ouvre la pièce jointe.</p>
+                            <p>Le PDF exploite une vulnérabilité zero-day de son lecteur PDF (non patché).</p>
+                            <p>Un malware s'installe silencieusement. L'attaquant a son propre accès.</p>
+                        </li>
+                        <li>
+                            <h4>Questions pour la prochaine session :</h4>
+                            <p>Que fait l'attaquant maintenant qu'il est dans le réseau ? Quelles sont ses étapes ?</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="session2_hacking_methodology">Session 2 : Hacking Methodology :</h2>
+                    <h3>Les sept étapes d'une attaque :</h3>
+                    <ol>
+                        <li>
+                            <p>Information Gathering</p>
+                        </li>
+                        <li>
+                            <p>Scanning</p>
+                        </li>
+                        <li>
+                            <p>Enumeration</p>
+                        </li>
+                        <li>
+                            <p>Gaining Access (Intrusion)</p>
+                        </li>
+                        <li>
+                            <p>Privilege Escalation &amp; Lateral Movement</p>
+                        </li>
+                        <li>
+                            <p>Covering Tracks</p>
+                        </li>
+                        <li>
+                            <p>Creating Backdoors</p>
+                        </li>
+                    </ol>
+                    <p>&#8594; Chaque étape sera détaillée individuellement dans la suite du cours.</p>
+                    <p><span class="em">Note</span> : ce schéma est une simplification pédagogique. En réalité, les attaques avancées (APT) ne sont pas linéaires - les étapes se chevauchent et se répètent.</p>
+                    <p>Denial of Service (DoS/DDoS) et Ransomware, sont traités séparément car ce sont des objectifs finaux, pas des étapes systématiques.</p>
+                    <ol>
+                        <li>
+                            <h4>Information Gathering (Reconnaissance) :</h4>
+                            <h5>Objectif de l'attaquant :</h5>
+                            <p>Collecter un maximum d'informationtions sur la cible AVANT toute interaction directe.</p>
+                            <h5>Passive : OSINT (Open Source Intelligence) :</h5>
+                            <ul>
+                                <li>
+                                    <p>LinkdIn (organigramme, technologies utilisées, emails).</p>
+                                </li>
+                                <li>
+                                    <p>WHOIS, DNS records, job postings, GitHub (code source exposé).</p>
+                                </li>
+                                <li>
+                                    <p>Shodan (équipements connectés), Google dorks, certificats TLS (crt.sh).</p>
+                                </li>
+                            </ul>
+                            <h5>Active : sondage direct :</h5>
+                            <p>Ping sweep, traceroute, tests de connexion - plus détectable.</p>
+                        </li>
+                        <li>
+                            <h4>Scanning :</h4>
+                            <h5>Objectif :</h5>
+                            <p>Identifier les systèmes actifs, ports ouverts, services en écoute, OS.</p>
+                            <h5>Outils courants :</h5>
+                            <ul>
+                                <li>
+                                    <p>Nmap - scanner réseau de référenve (ports, services, versions, OS fingerprinting).</p>
+                                </li>
+                                <li>
+                                    <p>Masscan - scanner ultra-rapide pour grands espaces d'adressage.</p>
+                                </li>
+                                <li>
+                                    <p>Nesssus / OpenVAS / Qualys - scanners de vulnérabilités.</p>
+                                </li>
+                            </ul>
+                            <h5>Ce que ça révèle :</h5>
+                            <ul>
+                                <li>
+                                    <p>Ports ouverts &#8594; services en écoute &#8594; versions logicielles &#8594; CVEs exploitables.</p>
+                                </li>
+                                <li>
+                                    <p>Cartographie du réseau : combien d'hôtes, sous-réseaux, pare-feux ?</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Enumeration :</h4>
+                            <h5>Objectif :</h5>
+                            <p>Extraire des informations détaillées des services identifiés : comptes, partaes, rôles.</p>
+                            <h5>Cibles typiques :</h5>
+                            <ul>
+                                <li>
+                                    <p>Active Directory (AD) : utilisateurs, groupes, politiques GPO, relations de confiance.</p>
+                                </li>
+                                <li>
+                                    <p>SMB : partages réseaux accessibles, fichiers exposés.</p>
+                                </li>
+                                <li>
+                                    <p>SNMP : configuration réseau, interfaces, routes.</p>
+                                </li>
+                                <li>
+                                    <p>LDAP, HTTP, FTP, SSH : banners, configurations par défaut.</p>
+                                </li>
+                            </ul>
+                            <h5>Résultat :</h5>
+                            <p>L'attaquant connaît maintenant la topologie interne, les comptes actifs et les partages accessibles.</p>
+                        </li>
+                        <li>
+                            <h4>Gaining Access (Intrusion) :</h4>
+                            <h5>Méthodes d'exploitation :</h5>
+                            <ul>
+                                <li>
+                                    <p>Exploitation de vulnérabilités : Metasploit, exploits publics (Exploit DB), code custom.</p>
+                                </li>
+                                <li>
+                                    <p>Phishing / Spear-phishing &#8594; malware (dropper, RAT, ransomware).</p>
+                                </li>
+                                <li>
+                                    <p>Credential stuffing / brute force (mots de passe faibles ou leakés).</p>
+                                </li>
+                                <li>
+                                    <p>Exploitation d'accès légitimes : VPN, RDP, Citrix mal configurés.</p>
+                                </li>
+                                <li>
+                                    <p>Supply-chain : compromission d'un fournisseur de confiance.</p>
+                                </li>
+                            </ul>
+                            <h5>Frameworks d'exploitation :</h5>
+                            <ul>
+                                <li>
+                                    <p>Metasploit (open source) - Cobalt Strike (commercial, très utilisé par APT).</p>
+                                </li>
+                                <li>
+                                    <p>Mimikatz - extraction de Credentials depuis la mémoire Windows (LSASS).</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Privilege Escalation &amp; Lateral Movement :</h4>
+                            <h5>Privilege Escalation (escalade verticale) :</h5>
+                            <p>Passer d'un compte utilisateur standard à Admin/root/SYSTEM.</p>
+                            <p>Via : exploits kernel, mauvaises configurations, tokens volés, services mal configurés.</p>
+                            <p>Objectif final souvent : Domain Admin sur Active Directory.</p>
+                            <h5>Lateral Movement (mouvement latéral) :</h5>
+                            <p>Se déplacer d'un système à l'autre dans le réseau interne.</p>
+                            <p>Techniques : Pass-the-Hash, Pass-the-Ticket, Remote Services (RDP, WMI, PsExec).</p>
+                            <p>Chaque système compromis devient un nouveau point de départ.</p>
+                            <h5>Distinction clé :</h5>
+                            <p>Escalade = monter en privilèges sur UN système. Latéral = se propager sur D'AUTRES systèmes.</p>
+                        </li>
+                        <li>
+                            <h4>Covering Tracks (Dissimulation) :</h4>
+                            <h5>Objectif :</h5>
+                            <p>Effacer les traces de l'intrusion pour rester non détecté et compliquer l'investigation.</p>
+                            <h5>Techniques courantes :</h5>
+                            <ul>
+                                <li>
+                                    <p>Effacement ou modification des journaux (event logs Windows, syslog Linux).</p>
+                                </li>
+                                <li>
+                                    <p>Modification des horodatages de fichiers (timestomping).</p>
+                                </li>
+                                <li>
+                                    <p>Désactivation des antivirus / EDR</p>
+                                </li>
+                                <li>
+                                    <p>Utilisation de comptes légitimes pour masquer l'activité malveillante.</p>
+                                </li>
+                                <li>
+                                    <p>Chiffrement des communications C2 (Command &amp; Control) dans du trafic HTTPS légitime.</p>
+                                </li>
+                            </ul>
+                            <h5>Impact pour le forensics :</h5>
+                            <p>Compliquer ou empêcher la reconstitution de la timeline de l'incident.</p>
+                            <p>&#8594; D'où l'importance des logs centralisés (SIEM) et des backups immuables.</p>
+                        </li>
+                        <li>
+                            <h4>Creating Backdoors (Persistance) :</h4>
+                            <h5>Objectif :</h5>
+                            <p>Maintenir un accès long terme au système compromis, même après redémarrage ou reset de mot de passe.</p>
+                            <h5>Mécanismes courants :</h5>
+                            <ul>
+                                <li>
+                                    <p>Création de comptes admin cachés dans Active Directory.</p>
+                                </li>
+                                <li>
+                                    <p>Tâches planifiées / services Windows malveillants.</p>
+                                </li>
+                                <li>
+                                    <p>Modification des DLL système (DLL hijacking) ou des binaires OS.</p>
+                                </li>
+                                <li>
+                                    <p>Implants dans le firmware (UEFI rootkits - très difficiles à détecter).</p>
+                                </li>
+                                <li>
+                                    <p>Modification des règles de pare-feu ou ACL réseau.</p>
+                                </li>
+                            </ul>
+                            <h5>Lien avec les APT :</h5>
+                            <p>Les APT maintiennent des accès pendant des mois ou des années - phase C2 (Command &amp; Control).</p>
+                            <p>SolarWinds : backdoor SUNBURST dans une mise à jour logicielle légitime.</p>
+                        </li>
+                    </ol>
+                    <h3>Denial of Service (DoS) &amp; DDoS :</h3>
+                    <h4>Objectif de l'attaque :</h4>
+                    <p>Rendre un service inaccessible aux utilisateurs légitimes - impact sur la Disponibilité (D du CID).</p>
+                    <h4>Types :</h4>
+                    <ul>
+                        <li>
+                            <p>Volumétrique : saturer la bande passante (amplification DNS/NTP, exemple : 3,47 Tbps record 2022).</p>
+                        </li>
+                        <li>
+                            <p>Protocole : exploiter les faiblesses TCP/IP (SYN flood, Ping Of Death).</p>
+                        </li>
+                        <li>
+                            <p>Applicatif (Layer 7) : cibler les ressources serveur (HTTP flood, Slowloris).</p>
+                        </li>
+                    </ul>
+                    <h4>DDoS = Distributed DoS :</h4>
+                    <p>Utilise un botnet (milliers de machines infectées) pour démultiplier l'attaque.</p>
+                    <p>DDoS-as-a-Service disponible sur le dark web pour quelques dizaines d'euros/heure.</p>
+                    <h4>Défenses :</h4>
+                    <p>CDN avec filtrage DDoS (Cloudflare, Akamai), scrubbing centers, rate limiting.</p>
+                    <h3>Ransomware - Mécanisme et impact :</h3>
+                    <h4>Comment ça fonctionne :</h4>
+                    <ol>
+                        <li>
+                            <p>Accès initial (phishing, vuln, credential volé).</p>
+                        </li>
+                        <li>
+                            <p>Escalade + lateral movement &#8594; contrôle de l'AD, accès aux backups.</p>
+                        </li>
+                        <li>
+                            <p>Exfiltration des données sensibles (double extorsion).</p>
+                        </li>
+                        <li>
+                            <p>Déploiement du chiffrement sur tout le réseau simultanément.</p>
+                        </li>
+                        <li>
+                            <p>Demande de rançon + menace de publication des données volées.</p>
+                        </li>
+                    </ol>
+                    <h4>Ransomware-as-a-Service (RaaS) :</h4>
+                    <p>Groupes comme LockBit, REvil, Conti : fournissent le logiciel + support aux 'affiliés'.</p>
+                    <p>Modèle commercial sophistiqué : partage des revenus, service client, négociation.</p>
+                    <h4>Impact réel :</h4>
+                    <p>Coût moyen d'un incident ransomware (PME) : &gt; 500k&euro; - rançon + coûts de récupération.</p>
+                    <h3>Kill Chain - Lockheed Martin :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Étape Kill Chain</th>
+                                <th>Correspondance 7 étapes</th>
+                                <th>Objectif attaquant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1. Reconnaissance</td>
+                                <td>Information Gathering + Scanning</td>
+                                <td>Identifier la cible et ses faiblesses</td>
+                            </tr>
+                            <tr>
+                                <td>2. Weaponization</td>
+                                <td>Enumeration</td>
+                                <td>Créer ou préparer l'exploit/malware</td>
+                            </tr>
+                            <tr>
+                                <td>3. Delivery</td>
+                                <td>Gaining Access (vecteur)</td>
+                                <td>Livrer l'arme à la cible (email, USB, web)</td>
+                            </tr>
+                            <tr>
+                                <td>4. Exploitation</td>
+                                <td>Gaining Access (exécution)</td>
+                                <td>Déclencher la vulnérabilité</td>
+                            </tr>
+                            <tr>
+                                <td>5. Installation</td>
+                                <td>Gaining Access + Persistence</td>
+                                <td>Installer le malware, établir la persistance</td>
+                            </tr>
+                            <tr>
+                                <td>6. C2 (Command &amp; Control)</td>
+                                <td>Creating Backdoors</td>
+                                <td>Établir un canal de communication sortant</td>
+                            </tr>
+                            <tr>
+                                <td>7. Actions on Objectives</td>
+                                <td>Exfiltration / Ransomware / Sabotage</td>
+                                <td>Atteindre l'objectif final</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>WannaCry (2017) :</h3>
+                    <ul>
+                        <li>
+                            <p>RANSOMWARE</p>
+                        </li>
+                        <li>
+                            <p>MALWARE</p>
+                        </li>
+                        <li>
+                            <p>LATERAL MOVEMENT</p>
+                        </li>
+                    </ul>
+                    <table class="tableBalises">
+                        <tbody>
+                            <tr>
+                                <td>Origine</td>
+                                <td>Lazarus Group (Corée du Nord)</td>
+                            </tr>
+                            <tr>
+                                <td>Vecteur initial</td>
+                                <td>Propagation autonome via SMBv1 - aucune interaction utilisateur requise</td>
+                            </tr>
+                            <tr>
+                                <td>Exploit</td>
+                                <td>EternalBlue (CVE-2017-0143) - développé par la NSA, volé par Shadoow Brokers</td>
+                            </tr>
+                            <tr>
+                                <td>Impact</td>
+                                <td>&gt; 300000 systèmes dans 150 pays - NHS, UK, Renault, Telefonica, FedEx</td>
+                            </tr>
+                            <tr>
+                                <td>Arrêt de l'attaque</td>
+                                <td>Kill switch découvert par Marcus Hutchins - un seul domaine non enregistré</td>
+                            </tr>
+                            <tr>
+                                <td>Coût estimé</td>
+                                <td>~ 4 milliards USD de dégâts économiques globaux</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>NotPetya (2017) :</h3>
+                    <ul>
+                        <li>
+                            <p>WIPER</p>
+                        </li>
+                        <li>
+                            <p>SUPPLY-CHAIN</p>
+                        </li>
+                        <li>
+                            <p>LATERAL MOVEMENT</p>
+                        </li>
+                    </ul>
+                    <table class="tableBalises">
+                        <tbody>
+                            <tr>
+                                <td>Origine</td>
+                                <td>GRU russe (attribuée par USA, UK, UE, Australie)</td>
+                            </tr>
+                            <tr>
+                                <td>Cible initiale</td>
+                                <td>Ukraine - via mise à jour malveillante du logiciel comptable MEDoc</td>
+                            </tr>
+                            <tr>
+                                <td>Réalité</td>
+                                <td>Wiper déguisé en ransomware - aucune possibilité réelle de décryptage</td>
+                            </tr>
+                            <tr>
+                                <td>Propagation</td>
+                                <td>EternalBlue + Mimikatz (credential harvesting interne)</td>
+                            </tr>
+                            <tr>
+                                <td>Dommages collatéraux</td>
+                                <td>Maersk, FedEx, TNT, Merck, Saint-Gobain, DHL - entreprises mondiales</td>
+                            </tr>
+                            <tr>
+                                <td>Coût</td>
+                                <td>&gt; 10 milliards USD - la cyberattaque la plus destructrice de l'histoire</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>SolarWinds / SUNBURST (2020) :</h3>
+                    <ul>
+                        <li>
+                            <p>SUPPLY-CHAIN</p>
+                        </li>
+                        <li>
+                            <p>APT</p>
+                        </li>
+                        <li>
+                            <p>BACKDOOR</p>
+                        </li>
+                    </ul>
+                    <table class="tableBalises">
+                        <tbody>
+                            <tr>
+                                <td>Origine</td>
+                                <td>APT29 / Cozy Bear (SVR russe)</td>
+                            </tr>
+                            <tr>
+                                <td>Vecteur</td>
+                                <td>Mise à jour malveillante d'Orion (logiciel de gestion réseau) - signée numériquement</td>
+                            </tr>
+                            <tr>
+                                <td>Victimes</td>
+                                <td>18000 organisations dont US Treasury, DoJ, DHS, Microsoft, FireEye</td>
+                            </tr>
+                            <tr>
+                                <td>Durée de présence</td>
+                                <td>Octobre 2019 - Décembre 2020 &#8594; 14 mois non détectés</td>
+                            </tr>
+                            <tr>
+                                <td>Découverte</td>
+                                <td>FireEye détecte le vol de ses outils Read Team &#8594; remonte à la backdoor Orion</td>
+                            </tr>
+                            <tr>
+                                <td>Impact</td>
+                                <td>Espionnage massif, données gouvernementales US compromises</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Sythèse S2 - Belacorp : dans le réseau :</h3>
+                    <h4>Ce que vous savez maintenant :</h4>
+                    <p>Sept étapes, Kill Chain, MITRE ATT&amp;CK - les trois frameworks pour comprendre et analyser une attaque.</p>
+                    <h4>Belacorp - progression de l'attaque :</h4>
+                    <ul>
+                        <li>
+                            <p>J+0 : Accès initial via spear phishing (T1566.001).</p>
+                        </li>
+                        <li>
+                            <p>J+1 : Escalade de privilèges via vulnérabilité non patchée &#8594; compte admin local.</p>
+                        </li>
+                        <li>
+                            <p>J+2 : Lateral movement avec Mimikatz &#8594; contrôleur de domaine compromis.</p>
+                        </li>
+                        <li>
+                            <p>J+3 : Backups identifiés et chiffrés par l'attaquant.</p>
+                        </li>
+                        <li>
+                            <p>J+4 : Déploiement du ransomware - tout le réseau chiffré à 3h du matin.</p>
+                        </li>
+                    </ul>
+                    <h4>Session 3 : Comment Belacorp détecte et répond.</h4>
+                </article>
+                <article>
+                    <h2 id="session3_incident_response_procedure">Session 3 : Incident Response Procedure :</h2>
+                    <h3>Procédure IR - Vue d'ensemble :</h3>
+                    <ul>
+                        <li>
+                            <p>Détection</p>
+                        </li>
+                        <li>
+                            <p>Vérification &amp; Qualification</p>
+                        </li>
+                        <li>
+                            <p>Containment</p>
+                        </li>
+                        <li>
+                            <p>Éradication</p>
+                        </li>
+                        <li>
+                            <p>Recovery</p>
+                        </li>
+                        <li>
+                            <p>Lessons Learned</p>
+                        </li>
+                        <li>
+                            <p>Rapport</p>
+                        </li>
+                    </ul>
+                    <p>Ce schéma est votre référence pour toute la session 3. Chaque étape sera détaillée dans la suite du cours.</p>
+                    <p><span class="em">Parallèle avec le forensics</span> : la collecte de preuves (Digital Forensics) se fait principalement pendant les phases Identification et Containment - avant toute action corrective qui pourrait altérer les preuves.</p>
+                    <h3>Détection - Qui voit quoi et comment ?</h3>
+                    <ul>
+                        <li>
+                            <h4>Employés &amp; utilisateurs :</h4>
+                            <p>&gt; 40% des incidents sont d'abord remarqués par un employé non-sécurité. Les campagnes de sensibilisation ont un impact direct.</p>
+                        </li>
+                        <li>
+                            <h4>Alertes systèmes &amp; applications :</h4>
+                            <p>Logs serveurs, alertes applicatives, métriques d'infrastructure anormales.</p>
+                        </li>
+                        <li>
+                            <h4>Security Monitoring (SOC) :</h4>
+                            <ul>
+                                <li>
+                                    <p>SIEM (Splunk, QRadar, MS Sentinel, ELK) - corrélation de logs multi-sources.</p>
+                                </li>
+                                <li>
+                                    <p>EDR/XDR (Tanium, CrowdStrike, MS Defender) - détection comportementale endpoint.</p>
+                                </li>
+                                <li>
+                                    <p>NGFW, IDS/IPS, proxies, WAF - alertes réseau.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Tiers (CERT, partenaires, clients) :</h4>
+                            <p>Cyber Threat Intelligence (CTI), OSINT, Threat Hunting, disclosure responsable.</p>
+                        </li>
+                    </ul>
+                    <h3>Vérification &amp; Qualification :</h3>
+                    <h4>Question centrale :</h4>
+                    <p>Cet événement est-il un incident de sécurité ou une fausse alerte ?</p>
+                    <h4>Définition d'un incident de sécurité :</h4>
+                    <p>Toute tentative ou acte réussi d'accès non autorisé, utilisation, divulgation, modification ou destruction d'informations ou de systèmes.</p>
+                    <p>&#8594; Impact négatif sur la Confidentialité, l'Intégrité ou la Disponibilité (CID).</p>
+                    <h4>Processus de qualification :</h4>
+                    <ul>
+                        <li>
+                            <p>Recueillir les premiers éléments : logs, alertes, témoignages.</p>
+                        </li>
+                        <li>
+                            <p>Évaluer : est-ce une activité autorisée ? Un test de pénétration planifié ? Un bug ?</p>
+                        </li>
+                        <li>
+                            <p>Si incident confirmé : déclencher la procédure formelle &#8594; notifier le Incident Manager.</p>
+                        </li>
+                        <li>
+                            <p>Si non : documenter et archiver pour référence future.</p>
+                        </li>
+                    </ul>
+                    <h3>Identification - Comprendre le périmètre :</h3>
+                    <h4>Objectif :</h4>
+                    <p>Délimiter précisément ce qui est affecté, comment l'incident s'est produit et depuis quand.</p>
+                    <h4>Actions concrètes :</h4>
+                    <ul>
+                        <li>
+                            <p>Identifier tous les systèmes, comptes et données impliqués.</p>
+                        </li>
+                        <li>
+                            <p>Analyser les logs réseau, EDR, SIEM pour reconstruire la timeline.</p>
+                        </li>
+                        <li>
+                            <p>Contacter les utilisateurs impactés pour collecter des informations.</p>
+                        </li>
+                        <li>
+                            <p>Identifier le vecteur d'entrée initial (Patient Zéro).</p>
+                        </li>
+                        <li>
+                            <p>Évaluer si l'attaquant est encore actif dans le réseau.</p>
+                        </li>
+                    </ul>
+                    <h4>Collecte de preuves forensiques (voir session 5) :</h4>
+                    <ul>
+                        <li>
+                            <p>Capture mémoire des systèmes critiques AVANT de les isoler ou éteindre.</p>
+                        </li>
+                        <li>
+                            <p>Images disques des systèmes compromis pour analyse ultérieure.</p>
+                        </li>
+                    </ul>
+                    <h3>Containment - Limiter la propagation :</h3>
+                    <h4>Objectif :</h4>
+                    <p>Arrêter la propagation de l'incident sans détruire les preuves.</p>
+                    <h4>Containment court terme (immédiat) :</h4>
+                    <ul>
+                        <li>
+                            <p>Isoler les systèmes compromis du réseau (VLAN isolation, déconnexion physique).</p>
+                        </li>
+                        <li>
+                            <p>Bloquer les comptes compromis et révoquer les tokens d'accès.</p>
+                        </li>
+                        <li>
+                            <p>Bloquer les IOC connus sur le pare-feu, proxy, EDR (IPs, domaines, hashs).</p>
+                        </li>
+                    </ul>
+                    <h4>Containment long terme :</h4>
+                    <ul>
+                        <li>
+                            <p>Changer les mots de passe de tous les comptes impactées (AD complet si nécessaire).</p>
+                        </li>
+                        <li>
+                            <p>Vérifier l'intégrité des systèmes non compromis.</p>
+                        </li>
+                        <li>
+                            <p>Patch d'urgence sur la vulnérabilité exploitée.</p>
+                        </li>
+                    </ul>
+                    <h4>Attention aux preuves forensiques :</h4>
+                    <p>Éteindre un système détruit la mémoire RAM - capturer la mémoire AVANT isolation si possible.</p>
+                    <h3>Éradication - Éliminer la menace :</h3>
+                    <h4>Objectif :</h4>
+                    <p>Supprimer complètement la présence de l'attaquant du réseau.</p>
+                    <h4>Actions techniques :</h4>
+                    <ul>
+                        <li>
+                            <p>Supprimer les malwares, fichiers malveillants et outils déposés.</p>
+                        </li>
+                        <li>
+                            <p>Désactiver / supprimer les comptes compromis et backdoors.</p>
+                        </li>
+                        <li>
+                            <p>Réinitialiser tous les credentials potentiellement comprpomis.</p>
+                        </li>
+                    </ul>
+                    <h4>Actions organisationnelles :</h4>
+                    <ul>
+                        <li>
+                            <p>Informer les employés de la menace et des comportements à éviter.</p>
+                        </li>
+                        <li>
+                            <p>Notifier les partenaires et clients impactés.</p>
+                        </li>
+                        <li>
+                            <p>Notifier les autorités compétentes (RGPD, NIS2 - délais légaux !).</p>
+                        </li>
+                    </ul>
+                    <h4>Attention : l'éradication n'est pas la recovery :</h4>
+                    <p>Ne pas remettre en production avant d'être certain que la menace est éliminée.</p>
+                    <h3>Recovery - Reprise d'activité :</h3>
+                    <h4>Objectif :</h4>
+                    <p>Remettre les systèmes en production de manière contrôlée et sécurisée.</p>
+                    <h4>Prérequis indispensables :</h4>
+                    <ul>
+                        <li>
+                            <p>Éradication confirmée : aucune trace de l'attaquant détectée.</p>
+                        </li>
+                        <li>
+                            <p>Vulnérabilités exploitées patchées ou mitigées.</p>
+                        </li>
+                        <li>
+                            <p>Monitoring renforcé activé pour détecter toute réactivation.</p>
+                        </li>
+                    </ul>
+                    <h4>Processus de recovery :</h4>
+                    <ul>
+                        <li>
+                            <p>Restaurer depuis des backups sains et vérifiés (hash de l'image).</p>
+                        </li>
+                        <li>
+                            <p>Prioriser les systèmes critiques pour le business (processus métier clé).</p>
+                        </li>
+                        <li>
+                            <p>Tester avant de remettre en production : accès, intégrité des données, performances.</p>
+                        </li>
+                    </ul>
+                    <h4>Recovery &#8800; retour à l'état précédent :</h4>
+                    <p>C'est l'opportunité de corriger les faiblesses identifiées pendant l'incident.</p>
+                    <h3>Lessons Learned &amp; Rapport d'incident :</h3>
+                    <h4>Lessons Learned (bilan post-incident) :</h4>
+                    <ul>
+                        <li>
+                            <p>Réunion dans les deux semaines suivant la clôture de l'incident.</p>
+                        </li>
+                        <li>
+                            <p>Pas un exercice de blame - focus sur amélioration des processus.</p>
+                        </li>
+                        <li>
+                            <p>Questions clés : Qu'est-ce qui a fonctionné ? Qu'est-ce qui a échoué ? Comment améliorer ?</p>
+                        </li>
+                        <li>
+                            <p>Résultat : plan d'actions correctives avec responsables et délais.</p>
+                        </li>
+                    </ul>
+                    <h4>Structure du rapport d'incident :</h4>
+                    <ol>
+                        <li>
+                            <p>Identification : date, nature, systèmes affectés.</p>
+                        </li>
+                        <li>
+                            <p>Résumé exécutif : ce qui s'est passé, impact, actions menées.</p>
+                        </li>
+                        <li>
+                            <p>Notification : parties prenantes informées (internes + régulateurs).</p>
+                        </li>
+                        <li>
+                            <p>Actions : détail de chaque phase IR avec preuves.</p>
+                        </li>
+                        <li>
+                            <p>Évaluation &amp; enseignements : plan d'amélioration.</p>
+                        </li>
+                    </ol>
+                    <h3>Belacorp - Application de la procédure IR :</h3>
+                    <ul>
+                        <li>
+                            <h4>J+4, 7h00 - Détection :</h4>
+                            <p>Les employés arrivent, fichiers chiffrés, message de rançon &#8594; qualification immédiate : incident ransomware.</p>
+                        </li>
+                        <li>
+                            <h4>J+4, 8h00 - Identification :</h4>
+                            <p>Patient zéro identifié (PC comptable), timeline reconstruite, étendue de la compromission cartographiée.</p>
+                        </li>
+                        <li>
+                            <h4>J+4, 9h00 - Containment :</h4>
+                            <p>Réseau isolé, captures mémoire effectuées sur DC et serveurs critiques, comptes AD désactivés.</p>
+                        </li>
+                        <li>
+                            <h4>J+5 à J+7 - Éradication :</h4>
+                            <p>AD reconstruit, backdoors supprimées, SMBv1 désactivé, MFA déployé sur VPN et RDP.</p>
+                        </li>
+                        <li>
+                            <h4>J+8 à J+12 - Recovery :</h4>
+                            <p>Restauration depuis backups offline, systèmes critiques remis en production progressivement.</p>
+                        </li>
+                        <li>
+                            <h4>Obligations légales (session 7) :</h4>
+                            <p>Notification RGPD dans 72h (J+4 &#8594; J+7 au plus tard). Notification NIS2 si Belacorp est opérateur essentiel.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="mes_notes">Mes notes :</h2>
                     <h3>Objectifs :</h3>
                     <p><q>Permettre à l'étudiant de fournir une réponse approprié aux incidents dans l'entreprise, ainnsi qu'entreprendre les démarches forensiques adéquates.</q></p>
                     <h3>Définitions :</h3>
