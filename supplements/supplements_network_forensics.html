@@ -50,6 +50,13 @@
                     <li><a href="#section1">Section 1 : Introduction, concepts clés et enjeux</a></li>
                     <li><a href="#section2">Section 2 : Architecture &amp; points de collecte</a></li>
                     <li><a href="#section3">Section 3 : Capture et collecte de données</a></li>
+                    <li><a href="#section4">Section 4 : Analyse de trafic et extraction d'indicateurs</a></li>
+                    <li><a href="#section5">Section 5 : Protocoles, signatures et anomalies</a></li>
+                    <li><a href="#section6">Section 6 : Reconstruction et corrélation</a></li>
+                    <li><a href="#section7">Section 7 : Forensique réseau en environnement cloud</a></li>
+                    <li><a href="#section8">Section 8 : Rapport, documentation &amp; outils avancés</a></li>
+                    <li><a href="#section9">Section 9 : Atelier pratique (Lab en autonomie)</a></li>
+                    <li><a href="#NetFlow">Addendum : Vue d'ensemble de NetFlow</a></li>
                 </ol>
             </nav>
             
@@ -368,7 +375,688 @@
                             <p>Garantir l'intégrité et la traçabilité des preuves réseau.</p>
                         </li>
                     </ul>
-                    
+                    <h3>Méthodes de capture réseau :</h3>
+                    <ul>
+                        <li>
+                            <p>Capture en ligne : <span class="em">Wireshark, tcpdump, TShark</span>.</p>
+                        </li>
+                        <li>
+                            <p>Capture sur interface <span class="em">SPAN/TAP</span>.</p>
+                        </li>
+                        <li>
+                            <p>Utilisation de sondes : <span class="em">Zeek, Suricata, Arkime</span>.</p>
+                        </li>
+                        <li>
+                            <p>Capture dans le cloud : AWS VPC Mirroring, Azure Network Watche.</p>
+                        </li>
+                    </ul>
+                    <h3>Outils de capture - CLI :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">tcpdump</span> : outil léger, puissant, <span class="em">TShark</span> - version en ligne de commande de Wireshark.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">dumpcap</span> - capture rapide avec Wireshark.</p>
+                        </li>
+                        <li>
+                            <p>Filtres <span class="em">BPF</span> : host, port, net, proto.</p>
+                        </li>
+                    </ul>
+                    <h3>Outils de capture GUI :</h3>
+                    <ul>
+                        <li>
+                            <p>Wireshark - visualisation complète - Affichage des couches OSI.</p>
+                        </li>
+                        <li>
+                            <p>Filtres d'affichage vs filtres de capture - Coloration syntaxique pour anomalies.</p>
+                        </li>
+                    </ul>
+                    <h3>Collecte passive vs active :</h3>
+                    <ul>
+                        <li>
+                            <p>Passive : sans modification du trafic, préférée pour la forensique.</p>
+                        </li>
+                        <li>
+                            <p>Active : injection ou manipulation (utile en tests mais intrusif).</p>
+                        </li>
+                        <li>
+                            <p>La forensique privilégie la non-altération des flux.</p>
+                        </li>
+                    </ul>
+                    <h3>Filtrage et performance :</h3>
+                    <ul>
+                        <li>
+                            <p>Filtres de capture (BPF) : limiter les volumes.</p>
+                        </li>
+                        <li>
+                            <p>Éviter le packet loss sur interfaces rapides.</p>
+                        </li>
+                        <li>
+                            <p>Segmentation des fichiers .pcap.</p>
+                        </li>
+                        <li>
+                            <p>Déclencheurs d'enregistrement (Zeek, Suricata).</p>
+                        </li>
+                    </ul>
+                    <h3>Stockage &amp; rotation :</h3>
+                    <ul>
+                        <li>
+                            <p>Rotation automatique avec dumpcap/tcpdump.</p>
+                        </li>
+                        <li>
+                            <p>Nomination horodatée des fichiers.</p>
+                        </li>
+                        <li>
+                            <p>Conservation légale et éthique des captures.</p>
+                        </li>
+                        <li>
+                            <p>Sécurisation (chiffrement, checksums, accès restreint).</p>
+                        </li>
+                    </ul>
+                    <h3>Intégrité des preuves réseau :</h3>
+                    <ul>
+                        <li>
+                            <p>Utiliser des hashs SHA256 pour les .pcap.</p>
+                        </li>
+                        <li>
+                            <p>Chaîne de possession (Chain of Custody).</p>
+                        </li>
+                        <li>
+                            <p>Journalisation des accès aux fichiers.</p>
+                        </li>
+                        <li>
+                            <p>Conformié RGPD et pratiques internes.</p>
+                        </li>
+                    </ul>
+                    <h3>Quiz / Discussion / Réflexion :</h3>
+                    <p>Comment garantir qu'une capture réseau n'a pas été altérée ?</p>
+                    <p>Quelles différences entre filtres de capture et filtres d'affichage ?</p>
+                    <p>Comment limiter l'impact d'une capture sur un réseau en production ?</p>
+                </article>
+                <article>
+                    <h2 id="section4">Section 4 : Analyse de trafic &amp; extraction d'indicateurs :</h2>
+                    <h3>Objectifs :</h3>
+                    <ul>
+                        <li>
+                            <p>Comprendre comment analyser un fichier PCAP.</p>
+                        </li>
+                        <li>
+                            <p>Identifier des IOC dans le trafic réseau.</p>
+                        </li>
+                        <li>
+                            <p>Reconstruire une chronologie des événements.</p>
+                        </li>
+                        <li>
+                            <p>Détecter les signes d'intrusion ou d'exfiltration.</p>
+                        </li>
+                    </ul>
+                    <h3>Outils d'analyse réseau :</h3>
+                    <ul>
+                        <li>
+                            <p>Wireshark, TShark, NetworkMiner.</p>
+                        </li>
+                        <li>
+                            <p>Zeek pour l'analyse comportementale.</p>
+                        </li>
+                        <li>
+                            <p>Suricata pour l'analyse par signature.</p>
+                        </li>
+                    </ul>
+                    <h3>Détection d'anomalies :</h3>
+                    <ul>
+                        <li>
+                            <p>Ports non standards.</p>
+                        </li>
+                        <li>
+                            <p>Services non autorisés.</p>
+                        </li>
+                        <li>
+                            <p>Volumes anormaux de données.</p>
+                        </li>
+                        <li>
+                            <p>Protocoles non usuels.</p>
+                        </li>
+                    </ul>
+                    <h3>Extraction d'IOC :</h3>
+                    <ul>
+                        <li>
+                            <p>Adresses IP, domaines, User-Agents.</p>
+                        </li>
+                        <li>
+                            <p>Hashes de fichiers (MD5/SHA).</p>
+                        </li>
+                        <li>
+                            <p>Certificats SSL/TLS anormaux.</p>
+                        </li>
+                        <li>
+                            <p>Payloads encodés ou chiffrés.</p>
+                        </li>
+                    </ul>
+                    <h3>chronologie d'attaque :</h3>
+                    <ul>
+                        <li>
+                            <p>Reconstruction temporelle du trafic.</p>
+                        </li>
+                        <li>
+                            <p>Identification de la machine d'origine.</p>
+                        </li>
+                        <li>
+                            <p>Séquence des actions malicieuses.</p>
+                        </li>
+                        <li>
+                            <p>Corrélation avec logs système.</p>
+                        </li>
+                    </ul>
+                    <h3>Quiz / Discussion / Réflexion :</h3>
+                    <p>Quelle différence entre IOC statique et comportemental ?</p>
+                    <p>Peut-on détecter une exfiltration chiffrée ?</p>
+                    <p>Quels outils permettent la reconstruction de fichiers ?</p>
+                </article>
+                <article>
+                    <h2 id="section5">Section 5 : Protocoles, signatures et anomalies :</h2>
+                    <h3>Objectifs :</h3>
+                    <ul>
+                        <li>
+                            <p>Maîtriser les proocoles réseaux standards.</p>
+                        </li>
+                        <li>
+                            <p>Détecter les usages détournés ou suspects.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser les signatures et anomalies pour alerter.</p>
+                        </li>
+                        <li>
+                            <p>Configurer des outils IDS/NSM.</p>
+                        </li>
+                    </ul>
+                    <h3>Protocoles à surveiller :</h3>
+                    <ul>
+                        <li>
+                            <p>HTTP/S - User-Agent, URI, host.</p>
+                        </li>
+                        <li>
+                            <p>DNS - requêtes fréquentes, domaines NXDOMAIN.</p>
+                        </li>
+                        <li>
+                            <p>SMTP - en-têtes, pièces jointes.</p>
+                        </li>
+                        <li>
+                            <p>FTP/SSH - connexions inhabituelles.</p>
+                        </li>
+                    </ul>
+                    <h3>Anomalies réseau typiques :</h3>
+                    <ul>
+                        <li>
+                            <p>Scan de ports, reconnaissance réseau.</p>
+                        </li>
+                        <li>
+                            <p>Taux élevé de paquets SYN ou RST.</p>
+                        </li>
+                        <li>
+                            <p>Flux internes vers IP externes inhabituelles.</p>
+                        </li>
+                    </ul>
+                    <h3>Utilisation de signatures IDS :</h3>
+                    <ul>
+                        <li>
+                            <p>Snort, Suricata : règles et signatures.</p>
+                        </li>
+                        <li>
+                            <p>Exemples de règles : shellcode, exploitation CVE.</p>
+                        </li>
+                        <li>
+                            <p>Alertes : log, drop, reject.</p>
+                        </li>
+                    </ul>
+                    <h3>Signature vs Anomalie :</h3>
+                    <ul>
+                        <li>
+                            <p>Signature : spécifique, faible faux positifs.</p>
+                        </li>
+                        <li>
+                            <p>Anomalie : plus générique, détection inconnus.</p>
+                        </li>
+                        <li>
+                            <p>Approche hybride recommandée.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="section6">Section 6 : Reconstruction et corrélation :</h2>
+                    <h3>Objectifs :</h3>
+                    <ul>
+                        <li>
+                            <p>Reconstituer les sessions TCP et flux applicatifs.</p>
+                        </li>
+                        <li>
+                            <p>Corréler les événements entre plusieurs sources.</p>
+                        </li>
+                        <li>
+                            <p>Identifier des patterns d'attaque.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser les logs réseau pour enrichir une investigation.</p>
+                        </li>
+                    </ul>
+                    <h3>Reconstruction de sessions :</h3>
+                    <ul>
+                        <li>
+                            <p>Suivi de flux TCP : 3-way handshake.</p>
+                        </li>
+                        <li>
+                            <p>Suivi de sessions HTTP, FTP, SMTP.</p>
+                        </li>
+                        <li>
+                            <p>Reconstitution de fichiers ou conversations.</p>
+                        </li>
+                    </ul>
+                    <h3>Corrélation avec autres logs :</h3>
+                    <ul>
+                        <li>
+                            <p>Firewall, EDR, SIEM.</p>
+                        </li>
+                        <li>
+                            <p>Combinaison IP + timestamp.</p>
+                        </li>
+                        <li>
+                            <p>Corrélation temporelle &amp; spatiale.</p>
+                        </li>
+                    </ul>
+                    <h3>Timeline d'incident :</h3>
+                    <ul>
+                        <li>
+                            <p>Fusion des événements pour visualisation.</p>
+                        </li>
+                        <li>
+                            <p>Outils : Timesketch, Elastic, Splunk.</p>
+                        </li>
+                        <li>
+                            <p>Détection des phases MITRE ATT&amp;CK.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="section7">Section 7 : Forensique réseau en environnement cloud :</h2>
+                    <h3>Objectifs :</h3>
+                    <ul>
+                        <li>
+                            <p>Comprendre les limites d'analyse réseau dans le cloud.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser les outils natifs pour capturer/analyser le trafic.</p>
+                        </li>
+                        <li>
+                            <p>Évaluer les contraintes de confidentialité et sécurité.</p>
+                        </li>
+                    </ul>
+                    <h3>Défis du cloud :</h3>
+                    <ul>
+                        <li>
+                            <p>Pas d'accès direct aux interfaces.</p>
+                        </li>
+                        <li>
+                            <p>Chiffrement TLS par défaut.</p>
+                        </li>
+                        <li>
+                            <p>Flux internes non visibles.</p>
+                        </li>
+                    </ul>
+                    <h3>Outils natifs cloud :</h3>
+                    <ul>
+                        <li>
+                            <p>AWS VPC Traffic Mirroring, GuardDuty.</p>
+                        </li>
+                        <li>
+                            <p>Azure NSG Flow Logs, Network Watcher.</p>
+                        </li>
+                        <li>
+                            <p>GCP Packet Mirroring, VPC Flow Logs.</p>
+                        </li>
+                    </ul>
+                    <h3>Visibilité limitée :</h3>
+                    <ul>
+                        <li>
+                            <p>Absence de full packet capture.</p>
+                        </li>
+                        <li>
+                            <p>Détection par métadonnées ou comportement.</p>
+                        </li>
+                        <li>
+                            <p>Utilisation combinée avec EDR ou XDR.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="section8">Section 8 : Rapport, documentation &amp; outils avancés.</h2>
+                    <h3>Objectifs :</h3>
+                    <ul>
+                        <li>
+                            <p>Structurer un rapport de forensique réseau.</p>
+                        </li>
+                        <li>
+                            <p>Présenter les preuves de manière claire et recevable.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser des outils avancés pour automatiser l'analyse.</p>
+                        </li>
+                    </ul>
+                    <h3>Rapport d'analyse réseau :</h3>
+                    <ul>
+                        <li>
+                            <p>Résumé exécutif (timeline, impact).</p>
+                        </li>
+                        <li>
+                            <p>Méthodologie, outils, sources.</p>
+                        </li>
+                        <li>
+                            <p>Indicateurs clés, IOC.</p>
+                        </li>
+                        <li>
+                            <p>Annexes : fichiers pcap, logs.</p>
+                        </li>
+                    </ul>
+                    <h3>Chaîne de possession (Chain of custody) :</h3>
+                    <ul>
+                        <li>
+                            <p>Traçabilité des manipulations et Conservation sécurisée.</p>
+                        </li>
+                        <li>
+                            <p>Hash, signature et Horodatage légal (RFC 3161).</p>
+                        </li>
+                    </ul>
+                    <h3>OUtils avancés :</h3>
+                    <ul>
+                        <li>
+                            <p>Arkime : indexation de trafic réseau.</p>
+                        </li>
+                        <li>
+                            <p>Zeek scripting pour détection personnalisée.</p>
+                        </li>
+                        <li>
+                            <p>Velociraptor, pcapkit, Scapy, Brim.</p>
+                        </li>
+                    </ul>
+                    <h3>Quiz / Discussion / Réflexion :</h3>
+                    <p>Comment assurer la recevabilité d'un rapport forensique ?</p>
+                    <p>Quels outils d'automatisation recommandez-vous ?</p>
+                </article>
+                <article>
+                    <h2 id="section9">Atelier pratique (Lab en autonomie) :</h2>
+                    <ul>
+                        <li>
+                            <p>Mise en pratique des concepts vus au cours.</p>
+                        </li>
+                        <li>
+                            <p>Configuration du trafic mirroring (SPAN, RSPAN).</p>
+                        </li>
+                        <li>
+                            <p>Configuration de netflow.</p>
+                        </li>
+                        <li>
+                            <p>Isolation de l'environnement de forensics et mise en place d'un simulateur internet (inetsim).</p>
+                        </li>
+                        <li>
+                            <p>Capturer et analyser le trafic réseau.</p>
+                        </li>
+                    </ul>
+                    <div>
+                        <img src="../images/lab_forensics.PNG" alt="" class="float_left">
+                        <h3>Configurations :</h3>
+                        <dl>
+                            <dt>EDGE-ROUTER :</dt>
+                            <dd>
+                                <p>Configuration netflow : envoi les flows vers ADMIN-SRV.</p>
+                                <p>Configuration DHCP avec INETSIM-SRV comme serveur DNS.</p>
+                            </dd>
+                            <dt>LAN-SWITCH et DC-SWITCH :</dt>
+                            <dd>
+                                <p>Configuration de SPAN port (mirroring du trafic de PC-USER2 vers ADMIN-PC2).</p>
+                                <p>Configuration de RSPAN (mirroring du trafic de PC-USER1 vers ADMIN-PC1).</p>
+                            </dd>
+                            <dt>INETSIM-SRV :</dt>
+                            <dd>Simulation de services (HTTP, FTP, DNS, MAIL (SMTP, IMAP) etc...).</dd>
+                            <dt>Capture et analyse du trafic :</dt>
+                            <p>Wireshark, TCPDUMP, NetFlow collector (nfdump, ntopng ou pmacct).</p>
+                        </dl>
+                    </div>
+                </article>
+                <article>
+                    <h2 id="NetFlow">Addendum : Vue d'ensemble de NetFlow :</h2>
+                    <h3>Netflow : Agenda :</h3>
+                    <ul>
+                        <li>
+                            <h4>Netflow :</h4>
+                            <ul>
+                                <li>
+                                    <p>Ce que c'est et comment cela fonctionne.</p>
+                                </li>
+                                <li>
+                                    <p>Usages et applications.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Configurations/implémentations des vendeurs :</h4>
+                            <ul>
+                                <li>
+                                    <p>Cisco et Juniper.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Flow-tools :</h4>
+                            <ul>
+                                <li>
+                                    <p>Problèmes architecturaux.</p>
+                                </li>
+                                <li>
+                                    <p>Logiciels, outils, etc.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Discussion approfondie / démonstration en laboratoire.</h4>
+                        </li>
+                    </ul>
+                    <h3>Netflow : c'est quoi un Flow (flots) :</h3>
+                    <h4>Définition :</h4>
+                    <p>Un flow est une session unidirectionnelle unique identitifiée par un ensemble de caractéristiques partagées par les paquets.</p>
+                    <h4>Critères typiques (clé de flow) :</h4>
+                    <ul>
+                        <li>
+                            <p>Adresse IP source.</p>
+                        </li>
+                        <li>
+                            <p>Adresse IP destination</p>
+                        </li>
+                        <li>
+                            <p>Port source.</p>
+                        </li>
+                        <li>
+                            <p>Port destination.</p>
+                        </li>
+                        <li>
+                            <p>Protocole de couche 4 (TCP, UDP, ICMP).</p>
+                        </li>
+                        <li>
+                            <p>Type of Service (ToS).</p>
+                        </li>
+                        <li>
+                            <p>Interface d'entrée.</p>
+                        </li>
+                    </ul>
+                    <h3>Netflow : C'est quoi NetFlow ?</h3>
+                    <h4>Définition :</h4>
+                    <p>Protocole développé par Cisco qui capture des métadonnées sur les communications réseau.</p>
+                    <h4>Ne capture pas les paquets eux-mêmes, mais enregistre les caractéristiques du flow :</h4>
+                    <ul>
+                        <li>
+                            <p>Qui a communiqué avec qui ?</p>
+                        </li>
+                        <li>
+                            <p>Quand ? Combien de temps ?</p>
+                        </li>
+                        <li>
+                            <p>Combien d'octets ont été échangés ?</p>
+                        </li>
+                    </ul>
+                    <h4>Exportation des flots depuis les équipements :</h4>
+                    <ul>
+                        <li>
+                            <p>Types de flots.</p>
+                        </li>
+                        <li>
+                            <p>Taux d'échantillonage.</p>
+                        </li>
+                    </ul>
+                    <h3>Netflow : Pourquoi utiliser Netflow :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Objectif</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Visibilité réseau</td>
+                                <td>Vue globale sur les communications internes et externes.</td>
+                            </tr>
+                            <tr>
+                                <td>Visibilité réseau</td>
+                                <td>Vue globale sur les communications internes et externes.</td>
+                            </tr>
+                            <tr>
+                                <td>Threat hunting</td>
+                                <td>Identifier beaconing, exfiltration, scan de ports</td>
+                            </tr>
+                            <tr>
+                                <td>Détection d'incidents (DFIR)</td>
+                                <td>Trafic vers IP malveillantes, activités suspectes</td>
+                            </tr>
+                            <tr>
+                                <td>Supervision &amp; audit</td>
+                                <td>Mesure de charge, bande passante par protocole ou service</td>
+                            </tr>
+                            <tr>
+                                <td>Facturation/Comptabilité (Accounting)</td>
+                                <td>Calcul des volumes de données par client ou utilisateur</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Netflow : Composants de l'infrastructure NetFlow :</h3>
+                    <h4>Éléments : Exporter, Collector, Analyzer :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Exporter</span> : Génère les flows (exemples : routeur, switch, sonde).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Collector</span> : Reçoit les flows et les stocke (exemples : nfcapd, Logstash).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Analyzer</span> : Interface de visualisation (exemples : NfSen, ntopng, ELK, Arkime).</p>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li>
+                            <p><span class="em">Netflow v1</span> : Première version, limitée, pas de timestamp fin, pas de séquence.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Netflow v5</span> : La plus utilisée, stabe et supportée, IPv4 uniquement.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Netflow v7</span> : Version améliorée pour Catalyst, peu utilisée.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Netflow v8</span> : Flows agrégés, moins de granularité.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Netflow v9</span> : Template-based, supporte IPv6, MPLS, multicast.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">IPFIX</span> : Standard IETF basé sur NetFlow v9, extensible.</p>
+                        </li>
+                    </ul>
+                    <h3>Netflow : Différences : NetFlow vs sFlow vs IPFIX :</h3>
+                    <h4>Éléments : Exporter, Collector, Analyzer :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Exporter</span> : Génère les flows (exemples: routeur, switch, sonde).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Collector</span> : Reçoit les flows et les stocke (exemples : nfcapd, Logstash).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Analyzer</span> : Interface de visualisation (exemples : NfSen, ntopng, ELK, Arkime).</p>
+                        </li>
+                    </ul>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Critère</th>
+                                <th>NetFlow</th>
+                                <th>sFlow</th>
+                                <th>IPFIX</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Type de données</td>
+                                <td>Flows (résumés)</td>
+                                <td>Échantillons de paquets</td>
+                                <td>Flows (standard IETF)</td>
+                            </tr>
+                            <tr>
+                                <td>Protocole</td>
+                                <td>Cisco propriétaire</td>
+                                <td>Standard multi-vendeur</td>
+                                <td>Standard IETF</td>
+                            </tr>
+                            <tr>
+                                <td>Niveaux OSI</td>
+                                <td>Couches 3/4</td>
+                                <td>Couches 2 à 7 (via paquets)</td>
+                                <td>Couches 3/4 (comme NetFlow)</td>
+                            </tr>
+                            <tr>
+                                <td>Format</td>
+                                <td>Fixe (v5), Template (v9)</td>
+                                <td>Échantillonnage</td>
+                                <td>Template-based</td>
+                            </tr>
+                            <tr>
+                                <td>Performance</td>
+                                <td>Plus de charge CPU</td>
+                                <td>Moins de précision</td>
+                                <td>Plus flexible</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Netflow : Exemple d'utilisation : Identification des flows :</h3>
+                    <img src="../images/NetFlow.PNG" alt="">
+                    <h3>Exemple d'utilisation : Identification d'une attaque DOS - classification du trafic - Détection d'événements anormale : SQL "Slammer" Worm* :</h3>
+                    <img src="../images/slammer_worm.PNG" alt="">
+                    <h3>Références et liens utilisés :</h3>
+                    <ul>
+                        <li>
+                            <h4>Flow-tools :</h4>
+                            <p><a href="http://www.splintered.net/sw/flow-tools" target="_blank">http://www.splintered.net/sw/flow-tools</a></p>
+                        </li>
+                        <li>
+                            <h4>NetFlow Applications :</h4>
+                            <p><a href="http://www.inmon.com/technology/netflowapps.php" target="_blank">http://www.inmon.com/technology/netflowapps.php</a></p>
+                            <p><a href="https://www.ntop.org/products/traffic-analysis/ntop/" target="_blank">https://www.ntop.org/products/traffic-analysis/ntop/</a></p>
+                        </li>
+                        <li>
+                            <h4>NetFlow HOWTO :</h4>
+                            <p><a href="http://www.linuxgeek.org/netflow-howto.php" target="_blank">http://www.linuxgeek.org/netflow-howto.php</a></p>
+                        </li>
+                        <li>
+                            <h4>IETF IPFIX :</h4>
+                            <p><a href="http://www.ietf.org/html.charters/ipfix-charter.html" target="_blank">http://www.ietf.org/html.charters/ipfix-charter.html</a></p>
+                            <p><a href="https://datatracker.ietf.org/wg/ipfix/documents/" target="_blank">https://datatracker.ietf.org/wg/ipfix/documents/</a></p>
+                        </li>
+                    </ul>
                 </article>
             <!-- fin de section -->
             </section>
