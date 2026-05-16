@@ -48,6 +48,8 @@
                 <ol>
                     <li><a href="../supplements/supplements_ITSCM.html">Retour au sommaire</a></li>
                     <li><a href="#section1">Section 1 : Introduction, concepts clés et enjeux</a></li>
+                    <li><a href="#section2">Section 2 : Architecture &amp; points de collecte</a></li>
+                    <li><a href="#section3">Section 3 : Capture et collecte de données</a></li>
                 </ol>
             </nav>
             
@@ -102,7 +104,7 @@
                 </article>
                 <article>
                     <h2 id="section1">Section 1 : Introduction, concepts clés et enjeux :</h2>
-                    <h3>Objectif :</h3>
+                    <h3>Objectifs :</h3>
                     <ul>
                         <li>
                             <p>Comprendre ce qu'est la forensique réseau.</p>
@@ -209,6 +211,164 @@
                     </ul>
                     <h3>Quiz / Discussion / Réflexion :</h3>
                     <p>Quelles sont les limites de l'analyse réseau ?</p>
+                    <p>Peut-on faire du network forensics sans avoir les flux ?</p>
+                    <p>Quels sont les enjeux juridiques dans un cloud ?</p>
+                </article>
+                <article>
+                    <h2 id="section2">Section 2 : Architecture réseau &amp; points de collecte :</h2>
+                    <h3>Objectifs :</h3>
+                    <ul>
+                        <li>
+                            <p>Revoir l'architecture réseau (OSI &amp; TCP/IP).</p>
+                        </li>
+                        <li>
+                            <p>Identifier les différents points de collecte de données.</p>
+                        </li>
+                        <li>
+                            <p>Comparer les méthodes de capture (SPAN vs TAP vs logs).</p>
+                        </li>
+                        <li>
+                            <p>Comprendre les contraintes de déploiement et de performance.</p>
+                        </li>
+                    </ul>
+                    <h3>Rappels modèles réseau :</h3>
+                    <ul>
+                        <li>
+                            <p>Modèle OSI (7 couches) vs pile TCP/IP (4 couches).</p>
+                        </li>
+                        <li>
+                            <p>Couches clés pour l'analyse : <span class="em">Réseau, Transport, Application</span>.</p>
+                        </li>
+                        <li>
+                            <p>Importance du contexte protocolaire pour la forensique.</p>
+                        </li>
+                    </ul>
+                    <h3>Protocoles critiques à analyser :</h3>
+                    <ul>
+                        <li>
+                            <p>ARP / NDP (résolution d'adresses).</p>
+                        </li>
+                        <li>
+                            <p>DNS (résolution de noms, détection du tunneling).</p>
+                        </li>
+                        <li>
+                            <p>HTTP/HTTPS (contenu &amp; métadonnées).</p>
+                        </li>
+                        <li>
+                            <p>SMTP/IMAP (phishing, exfiltration).</p>
+                        </li>
+                        <li>
+                            <p>FTP/SFTP, SSH, RDP (accès distant).</p>
+                        </li>
+                    </ul>
+                    <img src="../images/architecture_reseau_points_collecte.PNG" alt="">
+                    <h3>Sources de données - Capture directe :</h3>
+                    <ul>
+                        <li>
+                            <p>Port mirroring / SPAN sur switch.</p>
+                        </li>
+                        <li>
+                            <p>TAP (Test Access Point) matériel.</p>
+                        </li>
+                        <li>
+                            <p>Avantages : trafic complet, horodatage précis.</p>
+                        </li>
+                        <li>
+                            <p>Inconvénients : coût, risques de goulot d'étranglement.</p>
+                        </li>
+                    </ul>
+                    <h3>Sources de données - Logs &amp; flux :</h3>
+                    <ul>
+                        <li>
+                            <p>Logs pare-feu / UTM.</p>
+                        </li>
+                        <li>
+                            <p>NetFlow / sFlow / IPFIX.</p>
+                        </li>
+                        <li>
+                            <p>IDS/IPS (Suricata, Snort) alert logs.</p>
+                        </li>
+                        <li>
+                            <p>Proxies TTP/NGFW.</p>
+                        </li>
+                        <li>
+                            <p>Endpoint / EDR network telemetry.</p>
+                        </li>
+                    </ul>
+                    <h3>Capture centralisée vs distribuée :</h3>
+                    <ul>
+                        <li>
+                            <p>Centralisée : collecte au coeur du réseau ou datacenter.</p>
+                        </li>
+                        <li>
+                            <p>Distribuée : sondes multiples (filiales, cloud, OT).</p>
+                        </li>
+                        <li>
+                            <p>Avantages / inconvénients : visibilité vs complexité.</p>
+                        </li>
+                        <li>
+                            <p>Considérations : latence, bande passante, chiffrement.</p>
+                        </li>
+                    </ul>
+                    <h3>Placement stratégique des sondes :</h3>
+                    <ul>
+                        <li>
+                            <p>Périmètre (edge) pour le trafic entrant/sortant.</p>
+                        </li>
+                        <li>
+                            <p>DMZ pour services exposés.</p>
+                        </li>
+                        <li>
+                            <p>Segment interne critique (serveurs, OT, IoT).</p>
+                        </li>
+                        <li>
+                            <p>Liaisons inter-sites (VPN, MPLS).</p>
+                        </li>
+                        <li>
+                            <p>Environnements cloud (VPC mirroring, packet capture).</p>
+                        </li>
+                    </ul>
+                    <h3>Performance &amp; stockage :</h3>
+                    <ul>
+                        <li>
+                            <p>Débit et packet loss (capture à 1/10/40 Gbps).</p>
+                        </li>
+                        <li>
+                            <p>Options de filtrage en temps réel (BPF, DPI).</p>
+                        </li>
+                        <li>
+                            <p>Compression, déduplication.</p>
+                        </li>
+                        <li>
+                            <p>Retention des PCAP vs logs (coût stockage, législation).</p>
+                        </li>
+                        <li>
+                            <p>Horodatage précis (PTP, NTP, GPS).</p>
+                        </li>
+                    </ul>
+                    <h3>Quiz / Discussion / Réflexion :</h3>
+                    <p>Comment choisir entre SPAN et TAP pour une investigation ?</p>
+                    <p>Quels défis pose le chiffrement TLS 1.3 aux collectes ?</p>
+                    <p>Comment capturer le trafic dans un environnement cloud ?</p>
+                </article>
+                <article>
+                    <h2 id="section3">Section 3 : Capture et collecte de données :</h2>
+                    <h3>Objectifs :</h3>
+                    <ul>
+                        <li>
+                            <p>Comprendre les méthodes de capture de trafic réseau.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser les outils de capture en ligne de commande et GUI.</p>
+                        </li>
+                        <li>
+                            <p>Gérer le filtrage, le stockage et la rotation des captures.</p>
+                        </li>
+                        <li>
+                            <p>Garantir l'intégrité et la traçabilité des preuves réseau.</p>
+                        </li>
+                    </ul>
+                    
                 </article>
             <!-- fin de section -->
             </section>
