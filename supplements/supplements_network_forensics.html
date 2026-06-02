@@ -1901,7 +1901,7 @@
                     <h5>Objectif :</h5>
                     <ul>
                         <li>
-                            <p>Comprendre comment les données sont organisées sur des support physique (use case : Disque/disquette).</p>
+                            <p>Comprendre comment les données sont organisées sur des supports physiques (use case : Disque/disquette).</p>
                         </li>
                         <li>
                             <p>Comprendre le fonctionnement des systèmes de fichiers et des médias de stockage.</p>
@@ -1970,7 +1970,7 @@
                         </li>
                         <li>
                             <h5>Bloc de données :</h5>
-                            <p>Un bloc est la plus petite unité  de stockage sur un disque que le système de fichiers peut gérer.</p>
+                            <p>Un bloc est la plus petite unité de stockage sur un disque que le système de fichiers peut gérer.</p>
                             <p>Les fichiers sont stockés en segments de blocs, ce qui facilite l'accès et la gestion des données.</p>
                         </li>
                     </ul>
@@ -2055,7 +2055,7 @@
                     <h5>HFS+ (Hierarchical File System Plus) :</h5>
                     <ul>
                         <li>
-                            <p><span class="em">Utilisé sur</span> les systèmes Mac OS.</p>
+                            <p><span class="em">Utilisé sur</span> les systèmes macOS.</p>
                         </li>
                         <li>
                             <p><span class="em">Avantages</span> : Performance sur les disques durs traditionnels, compatibilité macOS.</p>
@@ -2120,7 +2120,7 @@
                             <p>Répertoire principal contenant les entrées de répertoires et de fichiers.</p>
                         </li>
                         <li>
-                            <p>Chaque entrée de répertoire comprend des informations comme le nom du fichier, la date de création, et le premier cluser.</p>
+                            <p>Chaque entrée de répertoire comprend des informations comme le nom du fichier, la date de création, et le premier cluster.</p>
                         </li>
                     </ul>
                     <h6>Data Area :</h6>
@@ -2229,10 +2229,208 @@
                             <p><span class="em">Uniformité</span> : Les applications peuvent fonctionner sur divers systèmes de fichiers sans modifications.</p>
                         </li>
                         <li>
-                            <p><span class="em">Séparation des préoccupations</span> :Les systèmes de fichiers concrets se concentrent sur la gestion des données, VFS sur l'interface.</p>
+                            <p><span class="em">Séparation des préoccupations</span> : Les systèmes de fichiers concrets se concentrent sur la gestion des données, VFS sur l'interface.</p>
                         </li>
                     </ul>
                     <img src="../images/architecture_VFS.PNG" alt="">
+                    <h3>Utilisation des outils d'analyse forensique :</h3>
+                    <h4>CAS : Sleuth Kit : Introduction :</h4>
+                    <p>Le Sleuth Kit (TSK) est une suite d'outils en ligne de commande pour analyser les disques et les systèmes de fichiers. Utilisés principalement dans le domaine de la criminalistique informatique, ces outils permettent de récupérer des données, d'analyser des systèmes de fichiers et de conduire des enquêtes numériques. Voici une présentation détaillée de chaque outil, accompagné de contextes d'utilisation et d'exemples concrets.</p>
+                    <h4>Outils principaux du Sleuth Kit :</h4>
+                    <h5>mmls :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Affiche la structure des partitions sur un disque ou une image disque.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous souhaitez comprendre la structure des partitions sur un disque avant de procéder à une analyse plus détaillée.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>mmls image.dd</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume.</p>
+                        </li>
+                    </ul>
+                    <h5>fsstat :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Affiche les informations de base sur le système de fichiers.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous souhaitez des informations générales sur le système de fichiers d'une partition spécifique.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>fsstat image.dd</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume.</p>
+                        </li>
+                    </ul>
+                    <h5>fls :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Liste les fichiers et répertoires dans un système de fichiers.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous avez besoin de lister les fichiers et répertoires présents sur une image disque.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>fls image.dd [dir inode]</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume. <code>dir inode</code> = l'inode répertoire.</p>
+                        </li>
+                    </ul>
+                    <h5>icat :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Extrait le contenu des fichiers par leur numéro d'inode.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> :Vous avez identifié un fichier spécifique par son inode et souhaitez extraire son contenu.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>icat image.dd 345 &gt; contenu_fichier.txt</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume. <code>345</code> = inode du fichier. <code>contenu_fichier.txt</code> = le fichier dans lequel vous rediriger le contenu de l'inode 345.</p>
+                        </li>
+                    </ul>
+                    <h5>istat :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Affiche des informations détaillées sur un inode.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous souhaitez obtenir des détails sur un inode spécifique, y compris ses attributs et son historique (MAC Times).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>istat image.dd 345</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume. <code>345</code> = inode du fichier.</p>
+                        </li>
+                    </ul>
+                    <h5>ils :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Liste les inodes dans un système de fichiers.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous souhaitez obtenir une liste complète des inodes dans un système de fichiers, y compris ceux qui sont supprimés.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>ils image.dd 345</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume. <code>345</code> = inode du fichier.</p>
+                        </li>
+                    </ul>
+                    <h5>ffind :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Trouve l'inode d'un fichier par son nom.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous connaissez le nom d'un fichier et souhaitez trouver son inode pour une analyse plus détaillée.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>ffind image.dd /chemin/vers/le_fichier</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume. <code>/chemin/vers/le_fichier</code> = le fichier pour lequel vous souhaitez avoir l'inode.</p>
+                        </li>
+                    </ul>
+                    <h5>blkls :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Extrait les blocs de données non alloués.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous souhaitez analyser les blocs de données non alloués pour trouver des fragments de fichiers ou des données cachées.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>blkls image.dd &gt; blocs_non_alloues.bin</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume. <code>blocs_non_alloues.bin</code> = Redirige les blocs non alloués vers un fichier binaire.</p>
+                        </li>
+                    </ul>
+                    <h5>blkcat :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Affiche le contenu d'un bloc spécifique.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous avez identifié un bloc spécifique et souhaitez voir son contenu exact.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>blkcat image.dd 4096</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume. <code>4096</code> = Numéro de bloc.</p>
+                        </li>
+                    </ul>
+                    <h5>blkcalc :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Calcule les informations des blocs (mappage entre l'adresse logique et physique).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous avez besoin de comprendre la relation entre les adresses logiques et physiques des blocs pour une analyse plus approfondie.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>blkcalc image.dd -o 63</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume. <code>-o 63</code> = Décalage de la partition en secteurs.</p>
+                        </li>
+                    </ul>
+                    <h5>tsk_recover :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Récupère les fichiers supprimés d'une image disque.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous souhaitez récupérer des fichiers supprimés qui peuvent encore être présents sur le disque.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>tsk_recover image.dd recovered_files/</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume. <code>recovered_files/</code> = répertoire où les fichiers récupérés seront sauvegardés.</p>
+                        </li>
+                    </ul>
+                    <h5>tsk_loaddb :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Description</span> : Charge les métadonnées d'une image disque dans une base de données SQLite pour des recherches plus faciles.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Contexte d'utilisation</span> : Vous souhaitez gérer et interroger les métadonnées des fichiers de manière structurée.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Commande</span> :</p>
+<pre><code>tsk_loaddb -d database image.dd</code></pre>
+                        </li>
+                        <li>
+                            <p><span class="em">Explication</span> : <code>image.dd</code> = le nom de l'image disque/volume. <code>-d database</code> = la base de données pour la recherche.</p>
+                        </li>
+                    </ul>
+                    <h4>Conclusion :</h4>
+                    <p>Le Sleuth Kit offre une gamme d'outils puissants pour l'analyse légale des disques et des systèmes de fichiers. Chaque outil a son propre contexte d'utilisation et peut être utilisé pour des tâches spécifiques telles que l'analyse de la structure des partitions, la récupération de fichiers supprimés, et l'extraction de métadonnées. Cette présentation a couvert les commandes principales du Sleuth Kit, fournissant des exemples concrets pour chaque outil afin de démontrer leur application pratique dans le domaine de l'investigation numérique.</p>
                 </article>
             <!-- fin de section -->
             </section>
