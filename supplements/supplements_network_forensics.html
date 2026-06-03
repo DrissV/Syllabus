@@ -55,7 +55,7 @@
                     <li><a href="#section6">Section 6 : Reconstruction et corrélation</a></li>
                     <li><a href="#section7">Section 7 : Forensique réseau en environnement cloud</a></li>
                     <li><a href="#section8">Section 8 : Rapport, documentation &amp; outils avancés</a></li>
-                    <li><a href="#section9">Section 9 : Atelier pratique (Lab en autonomie)</a></li>
+                    <li><a href="#section9">Section 9 : Atelier pratique (Labo en autonomie)</a></li>
                     <li><a href="#NetFlow">Addendum : Vue d'ensemble de NetFlow</a></li>
                     <li><a href="#data_acquisition_analysis">Data acquisition &amp; analysis</a></li>
                 </ol>
@@ -1617,7 +1617,7 @@
                     </ol>
                 </article>
                 <article>
-                    <h2 id="section9">Section 9 : Atelier pratique (Lab en autonomie) :</h2>
+                    <h2 id="section9">Section 9 : Atelier pratique (Labo en autonomie) :</h2>
                     <ul>
                         <li>
                             <p>Mise en pratique des concepts vus au cours.</p>
@@ -1655,6 +1655,288 @@
                             <p>Wireshark, TCPDUMP, NetFlow collector (nfdump, ntopng ou pmacct).</p>
                         </dl>
                     </div>
+                    <p>Pour reproduire ce laboratoire dans <span class="em">GNS3</span>, il faut procéder par couches : création de la topologie, configuration IP, routage, services InetSim, NetFlow, SPAN/RSPAN puis captures et validation.</p>
+                    <p>Voici les différentes étapes à réaliser :</p>
+                    <ol>
+                        <li>
+                            <h3>Créer les équipements dans GNS3 :</h3>
+                            <p>Déployez :</p>
+                            <ul>
+                                <li>
+                                    <p>1 routeur (Cisco IOSv ou équivalent) &#8594; <span class="em">EDGE-ROUTER</span>.</p>
+                                </li>
+                                <li>
+                                    <p>2 commutateurs L2 (IOSvL2) : <span class="em">LAN-SWITCH</span> et <span class="em">DC-SWITCH</span>.</p>
+                                </li>
+                                <li>
+                                    <p>6 machines Linux : <span class="em">INETSIM-SRV</span>, <span class="em">ADMIN-SRV</span>, <span class="em">ADMIN-PC1</span>, <span class="em">ADMIN-PC2</span>, <span class="em">PC-USER1</span> et <span class="em">PC-USER2</span>.</p>
+                                </li>
+                            </ul>
+                            <p>Connectez-les selon votre schéma.</p>
+                        </li>
+                        <li>
+                            <h3>Configurer l'adressage IP :</h3>
+                            <h4>Réseau Internet simulé :</h4>
+                            <h5>INETSIM-SRV :</h5>
+<pre><code>ip addr add 192.168.0.1/24 dev eth0
+ip route add default via 192.168.0.2</code></pre>
+                            <h4>Datacenter :</h4>
+                            <h5>ADMIN-SRV :</h5>
+<pre><code>ip addr add 192.168.1.2/24 dev eth0
+ip route add default via 192.168.1.1</code></pre>
+                            <h5>ADMIN-PC1 :</h5>
+<pre><code>ip addr add 192.168.1.3/24 dev eth0
+ip route add default via 192.168.1.1</code></pre>
+                            <h4>Users :</h4>
+                            <h5>ADMIN-PC2 :</h5>                           
+<pre><code>ip addr add 192.168.2.2/24 dev eth0
+ip route add default via 192.168.2.1</code></pre>
+                            <h5>PC-USER1 :</h5>
+                            <p>DHCP.</p>
+                            <h5>PC-USER2 :</h5>
+                            <p>DHCP.</p>
+                        </li>
+                        <li>
+                            <h3>Configuration du routeur :</h3>
+                            <h4>Interfaces :</h4>
+<pre><code>enable
+configure terminal
+
+interface g0/0
+    ip address 192.168.0.2 255.255.255.0
+    no sutdown
+    exit
+
+interface g0/1
+    ip address 192.168.1.1 255.255.255.255.0
+    no shutdown
+    exit
+
+interface g0/2
+    ip address 192.168.2.1 255.255.255.255.0
+    no shutdown
+    exit</code></pre>
+                            <h4>Vérification :</h4>
+<pre><code>show ip interface brief</code></pre>
+                        </li>
+                        <li>
+                            <h3>Configuration DHCP :</h3>
+                            <h4>Sur le routeur :</h4>
+<pre><code>ip dhcp excluded-address 192.168.2.1 192.168.2.20
+
+ip dhcp pool USERS
+    network 192.168.2.0 255.255.255.0
+    default-router 192.168.2.1
+    dns-server 192.168.0.1
+    domain-name lab.local
+    exit</code></pre>
+                            <h4>Vérifier :</h4>
+<pre><code>show ip dhcp binding</code></pre>
+                        </li>
+                        <li>
+                            <h3>Installation d'INetSim :</h3>
+                            <h4>Sur INETSIM-SRV :</h4>
+                            <h5>Ubuntu/Debian :</h5>
+<pre><code>apt update
+apt install inetsim</code></pre>
+                            <h5>Modifier :</h5>
+<pre><code>nano /etc/inetsim/inestsim.conf</code></pre>
+                            <h5>Exemple :</h5>
+<pre><code>service_binding_address 192.168.0.1
+dns_default_ip 192.168.0.1</code></pre>
+                            <h5>Démarrage :</h5>
+<pre><code>systemctl start inetsim</code></pre>
+                            <p>ou :</p>
+<pre><code>inetsim</code></pre>
+                            <h5>Vérification :</h5>
+<pre><code>netstat -tulpn</code></pre>
+                            <p>Vous devez voir :</p>
+                            <ul>
+                                <li>
+                                    <p>HTTP</p>
+                                </li>
+                                <li>
+                                    <p>HTTPS</p>
+                                </li>
+                                <li>
+                                    <p>FTP</p>
+                                </li>
+                                <li>
+                                    <p>SMTP</p>
+                                </li>
+                                <li>
+                                    <p>POP3</p>
+                                </li>
+                                <li>
+                                    <p>IMAP</p>
+                                </li>
+                                <li>
+                                    <p>DNS</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h3>Configuration NetFlow sur le routeur :</h3>
+                            <p>Le collecteur est :</p>
+<pre><code>ADMIN-SRV = 192.168.1.2</code></pre>
+                            <h4>Export NetFlow :</h4>
+<pre><code>enable
+configure terminal
+
+ip flow-export destination 192.168.1.2 2055
+ip flow-export version 9
+
+interface g0/0
+    ip flow ingress
+    ip flow egress
+    exit
+
+interface g0/1
+    ip flow ingress
+    ip flow egress
+    exit
+
+interface g0/2
+    ip flow ingress
+    ip flow egress
+    exit</code></pre>
+                            <h4>Vérification :</h4>
+<pre><code>show ip cache flow
+show ip flow export</code></pre>
+                        </li>
+                        <li>
+                            <h3>Installer le collecteur NetFlow :</h3>
+                            <h4>Sur ADMIN-SRV :</h4>
+                            <h5>Option 1 : nfdump :</h5>
+<pre><code>apt install nfdump</code></pre>
+                            <h6>Lancement :</h6>
+<pre><code>mkdir /flows
+
+nfcapd -w -D -l /fows -p 2055</code></pre>
+                            <h6>visualisation :</h6>
+<pre><code>nfdump -R /flows</code></pre>
+                            <h5>Option 2 : ntopng :</h5>
+<pre><code>apt install ntopng</code></pre>
+                            <h6>Interface Web :</h6>
+<pre><code>http://192.168.1.2:3000</code></pre>
+                        </li>
+                        <li>
+                            <h3>Configuration SPAN :</h3>
+                            <h4>Objectif :</h4>
+<pre><code>PC-USER2 &#8594; ADMIN-PC2</code></pre>
+                            <p>Sur LAN-SWITCH.</p>
+                            <h4>Identififier les ports :</h4>
+                            <h5>Exemple :</h5>
+<pre><code>e0/0 &#8594; routeur
+e0/1 &#8594; PC-USER1
+e0/2 &#8594; PC-USER2
+e0/3 &#8594; ADMIN-PC2</code></pre>
+                            <h5>Configuration :</h5>
+<pre><code>monitor session 1 source interface e0/2 both
+monitor session 1 destination interface e0/3</code></pre>
+                            <h5>Vérification :</h5>
+<pre><code>show monitor session 1</code></pre>
+                        </li>
+                        <li>
+                            <h3>Configuration RSPAN :</h3>
+                            <h4>Objectif :</h4>
+<pre><code>PC-USER1 &#8594; ADMIN-PC1</code></pre>
+                            <p>Le trafic doit traverser les deux switchs.</p>
+                            <h4>Création VLAN RSPAN :</h4>
+                            <h5>Sur les deux switchs :</h5>
+<pre><code>vlan 999
+    remote-span
+    exit</code></pre>
+                            <h4>Sur LAN-SWITCH :</h4>
+                            <h5>Source :</h5>
+<pre><code>monitor session 2 source interface e0/1 both
+
+monitor session 2 destination remote vlan 999</code></pre>
+                            <h4>Sur DC-SWITCH :</h4>
+<pre><code>monitor session 3 source remote vlan 999
+
+monitor session 3 destination interface e0/2</code></pre>
+                            <p>où e0/2 corrspond à ADMIN-PC1.</p>
+                        </li>
+                        <li>
+                            <h3>Wireshark sur ADMIN-PC1 et ADMIN-PC2 :</h3>
+                            <h4>Installation :</h4>
+<pre><code>apt install wireshark</code></pre>
+                            <h4>Lancer :</h4>
+<pre><code>wireshark</code></pre>
+                            <p>De PC-USER2, ADMIN-PC2 doit voir :</p>
+                            <ul>
+                                <li>
+                                    <p>HTTP</p>
+                                </li>
+                                <li>
+                                    <p>DNS</p>
+                                </li>
+                                <li>
+                                    <p>SMTP</p>
+                                </li>
+                                <li>
+                                    <p>FTP</p>
+                                </li>
+                                <li>
+                                    <p>etc.</p>
+                                </li>
+                            </ul>
+                            <p>ADMIN-PC1 doit voir le trafic de PC-USER1 via RSPAN.</p>
+                        </li>
+                        <li>
+                            <h3>Capture tcpdump :</h3>
+                            <h4>Sur ADMIN-SRV :</h4>
+<pre><code>tcpdump -i eth0 -nn</code></pre>
+                            <h4>Capture vers fichier :</h4>
+<pre><code>tcpdump -i eth0 -w forensic.pcap</code></pre>
+                        </li>
+                        <li>
+                            <h3>Génération de trafic :</h3>
+                            <h4>Depuis PC-USER1 ou PC-USER2 :</h4>
+                            <h5>DNS :</h5>
+<pre><code>dig test.lab@192.168.0.1</code></pre>
+                            <h5>HTTP :</h5>
+<pre><code>curl http://192.168.0.1</code></pre>
+                            <h5>FTP :</h5>
+<pre><code>ftp 192.168.0.1</code></pre>
+                            <h5>SMTP :</h5>
+<pre><code>telnet 192.168.0.1 25</code></pre>
+                            <h5>IMAP :</h5>
+<pre><code>telnet 192.168.0.1 143</code></pre>
+                        </li>
+                        <li>
+                            <h3>Validation finale :</h3>
+                            <p>Vous devriez pouvoir vérifier :</p>
+                            <h4>Réseau :</h4>
+                            <ul>
+                                <li>
+                                    <p>Ping entre tous les segments.</p>
+                                </li>
+                                <li>
+                                    <p>DHCP opérationnel.</p>
+                                </li>
+                                <li>
+                                    <p>DNS fourni par INetSim.</p>
+                                </li>
+                            </ul>
+                            <h4>Forensic :</h4>
+                            <ul>
+                                <li>
+                                    <p>SPAN &#8594; ADMIN-PC2 reçoit le trafic de PC-USER2.</p>
+                                </li>
+                                <li>
+                                    <p>RSPAN &#8594; ADMIN-PC1 reçoit le trafic de PC-USER1.</p>
+                                </li>
+                                <li>
+                                    <p>Wireshark capture correctement.</p>
+                                </li>
+                                <li>
+                                    <p>tcpdump enregistre les paquets.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
                 </article>
                 <article>
                     <h2 id="NetFlow">Addendum : Vue d'ensemble de NetFlow :</h2>
@@ -2133,7 +2415,17 @@
                         </li>
                     </ul>
                     <img src="../images/FAT_1.PNG" alt="">
+                    <p>Ce schéma représente l'organisation générale d'un système de fichiers <span class="em">FAT</span> et la façon dont un fichier est retrouvé sur le disque.</p>
+                    <p>Le <span class="em">Boot Sector</span> contient les informations nécessaires pour démarrer et décrire le système de fichiers.</p>
+                    <p>La <span class="em">File Allocation Table (FAT)</span> joue le rôle d'une table de chaînage : elle indique pour chaque cluster quel est le cluster suivant du fichier.</p>
+                    <p>Le <span class="em">Root Directory</span> (ou un répertoire quelconque, représenté en orange) contient les entrées des fichiers et dossiers, notamment le numéro du premier cluster de chaque fichier.</p>
+                    <p>Lorsqu'on veut lire un fichier, on consulte d'abord son entrée dans le répertoire pour obtenir son premier cluster, puis on suit la chaîne de clusters indiquée dans la FAT jusqu'à atteindre le marqueur <span class="em">EOF (End Of File)</span>, qui signale la fin du fichier.</p>
+                    <p>Les flèches montrent donc le parcours : <span class="em">Répertoire &#8594; premier cluster &#8594; clusters suivants via le FAT &#8594; EOF</span>.</p>
                     <img src="../images/FAT_2.PNG" alt="">
+                    <p>Cette image montre comment fonctionne un système de fichiers <span class="em">FAT</span> : le répertoire racine (Root Directory) contient pour chaque fichier son nom, sa taille et le numéro de son premier cluster.</p>
+                    <p>Pour retrouver toutes les données d'un fichier, on commence par ce premier cluster puis on suit les liens indiqués dans la <span class="em">File Allocation Table (FAT)</span> jusqu'à rencontrer la valeur <span class="em">0xFF</span>, ce qui signifie "fin de fichier".</p>
+                    <p>Dans l'exemple, <span class="em">gary.txt</span> commence au cluster 6 et se termine immédiatement (6 &#8594; 0xFF), tandis que <span class="em">hello.jpg</span> occupe deux clusters reliés entre eux (3 &#8594; 8 &#8594; 0xFF).</p>
+                    <p>Les rectangles colorés à droite représentent les clusters du disque : les parties colorées contiennent les données des fichiers et les zones hachurées correspondent à l'espace inutilisé du dernier cluster.</p>
                     <h6>Exercice - Trouvez le contenu de FileA :</h6>
                     <img src="../images/FAT_3.PNG" alt="">
                     <p>Pour trouver le contenu de <span class="em">File A</span>, il faut suivre la chaîne de clusters dans la FAT à partir du <span class="em">premier cluster = 6</span> indiqué dans le répertoire racine.</p>
