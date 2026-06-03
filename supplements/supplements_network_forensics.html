@@ -1704,16 +1704,16 @@ configure terminal
 
 interface g0/0
     ip address 192.168.0.2 255.255.255.0
-    no sutdown
+    no shutdown
     exit
 
 interface g0/1
-    ip address 192.168.1.1 255.255.255.255.0
+    ip address 192.168.1.1 255.255.255.0
     no shutdown
     exit
 
 interface g0/2
-    ip address 192.168.2.1 255.255.255.255.0
+    ip address 192.168.2.1 255.255.255.0
     no shutdown
     exit</code></pre>
                             <h4>Vérification :</h4>
@@ -1740,9 +1740,9 @@ ip dhcp pool USERS
 <pre><code>apt update
 apt install inetsim</code></pre>
                             <h5>Modifier :</h5>
-<pre><code>nano /etc/inetsim/inestsim.conf</code></pre>
+<pre><code>nano /etc/inetsim/inetsim.conf</code></pre>
                             <h5>Exemple :</h5>
-<pre><code>service_binding_address 192.168.0.1
+<pre><code>service_bind_address 192.168.0.1
 dns_default_ip 192.168.0.1</code></pre>
                             <h5>Démarrage :</h5>
 <pre><code>systemctl start inetsim</code></pre>
@@ -1812,7 +1812,7 @@ show ip flow export</code></pre>
                             <h6>Lancement :</h6>
 <pre><code>mkdir /flows
 
-nfcapd -w -D -l /fows -p 2055</code></pre>
+nfcapd -w -D -l /flows -p 2055</code></pre>
                             <h6>visualisation :</h6>
 <pre><code>nfdump -R /flows</code></pre>
                             <h5>Option 2 : ntopng :</h5>
@@ -1895,7 +1895,7 @@ monitor session 3 destination interface e0/2</code></pre>
                             <h3>Génération de trafic :</h3>
                             <h4>Depuis PC-USER1 ou PC-USER2 :</h4>
                             <h5>DNS :</h5>
-<pre><code>dig test.lab@192.168.0.1</code></pre>
+<pre><code>dig test.lab @192.168.0.1</code></pre>
                             <h5>HTTP :</h5>
 <pre><code>curl http://192.168.0.1</code></pre>
                             <h5>FTP :</h5>
@@ -1933,6 +1933,36 @@ monitor session 3 destination interface e0/2</code></pre>
                                 </li>
                                 <li>
                                     <p>tcpdump enregistre les paquets.</p>
+                                </li>
+                            </ul>
+                            <h4>NetFlow :</h4>
+                            <ul>
+                                <li>
+                                    <p>Le routeur exporte les flows.</p>
+                                </li>
+                                <li>
+                                    <p>ADMIN-SRV reçoit les flows.</p>
+                                </li>
+                                <li>
+                                    <p>nfdump/ntopng affiche les conversations.</p>
+                                </li>
+                            </ul>
+                            <p>Une fois cette version fonctionnelle, vous pouvez enrichir le labo avec :</p>
+                            <ul>
+                                <li>
+                                    <p>VLAN utilisateurs/administration,</p>
+                                </li>
+                                <li>
+                                    <p>IDS/IPS (Suricata ou Snort),</p>
+                                </li>
+                                <li>
+                                    <p>SIEM (Wazuh ou Splunk Enterprise),</p>
+                                </li>
+                                <li>
+                                    <p>export PCAP centralisé,</p>
+                                </li>
+                                <li>
+                                    <p>génération de scénarios d'attaque (phishing, malware simulé via INetSim, exfiltration de données).</p>
                                 </li>
                             </ul>
                         </li>
