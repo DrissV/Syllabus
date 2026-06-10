@@ -54,6 +54,9 @@
                     <li><a href="#session4">Session 4 : IR Plan &amp; Cyber Threat Intelligence</a></li>
                     <li><a href="#supplement_gouvernance_ISO27001_ISO27005">Supplément Gouvernance : ISO/IEC 27001 &amp; ISO/IEC 27005</a></li>
                     <li><a href="#session5">Session 5 : Digital Forensics : Principes &amp; Collecte</a></li>
+                    <li><a href="#session6">Session 6 : Digital Forensics : Analyse &amp; Timeline</a></li>
+                    <li><a href="#session7">Session 7 : Gouvernance &amp; Cadre Légal</a></li>
+                    <li><a href="#types_preuves_devant_tribunal">Types de preuves devant un tribunal</a></li>
                     <li><a href="#mes_notes">Mes notes</a></li>
                     <li><a href="#examen_blanc">Examen blanc</a></li>
                 </ol>
@@ -2179,6 +2182,365 @@
                             <p>Contacter le service juridique avant toute investigation d'insider threat.</p>
                         </li>
                     </ul>
+                </article>
+                <article>
+                    <h2 id="session">Session 6 : Digital Forensics : Analyse &amp; Timeline :</h2>
+                    <h3>Artefacts Windows - Ce que le disque raconte :</h3>
+                    <h4>$MFT (Master File Table) :</h4>
+                    <ul>
+                        <li>
+                            <p>Méta-données de chaque fichier : date de création/accès/modification, taille, emplacement physique.</p>
+                        </li>
+                        <li>
+                            <p>Survient à la suppression. Les données peuvent être récupérées même si le fichier est "<span class="em">effacé</span>".</p>
+                        </li>
+                    </ul>
+                    <h4>Event Logs Windows :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Security.evtx</span> : authentification, création de comptes, modification de privilèges.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">System.evtx</span> : services démarrés/arrêtés, événements OS critiques.</p>
+                        </li>
+                    </ul>
+                    <h4>Prefetch (C:\Windows\Prefetch) :</h4>
+                    <ul>
+                        <li>
+                            <p>Traces de chaque application exécutée - timestamp + chemin d'exécution + fréquence.</p>
+                        </li>
+                        <li>
+                            <p>Essentiel pour prouver qu'un malware ou outil a été exécuté, même s'il a été supprimé ensuite.</p>
+                        </li>
+                    </ul>
+                    <h4>Registre Windows :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">HKCU\Software\Microsoft\Windows\CurrentVersion\Run</span> : programmes au démarrage (persistance).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">UserAssist</span>, <span class="em">RecentDocs</span>, <span class="em">ShellBags</span> : traces d'utilisation de l'interface.</p>
+                        </li>
+                    </ul>
+                    <h3>Artefacts Linux &amp; Mac : Points clés :</h3>
+                    <p>Les artefacts principaux de Linux sont :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">/var/log</span> : auth.log (authentification SSH, sudo), syslog, apache/nginx access.log.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">~/.bash_history</span> : historique des commandes shell (attention : peut être effacé).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">/proc</span> : informations sur les processus actifs (live acquisition).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Cron jobs (/etc/crontab, /var/spool/cron)</span> : tâches planifiées - vecteur de persistance courant.</p>
+                        </li>
+                        <li>
+                            <p>Dernière connexion : /var/log/wtmp (tous logins), /var/log/btmp (tentatives échouées).</p>
+                        </li>
+                    </ul>
+                    <p>Les artefacts spécifiques de macOS sont :</p>
+                    <ul>
+                        <li>
+                            <p>Unified Log System : log show -last 24h - logs centralisés très détaillés.</p>
+                        </li>
+                        <li>
+                            <p>LaunchDaemons/Agents : /Library/LaunchDaemons/, ~/Library/LaunchAgents/ -persistance.</p>
+                        </li>
+                        <li>
+                            <p>Spotlight metadata (.DS_Store, plist) : activité fichiers, recherches, accès récents.</p>
+                        </li>
+                        <li>
+                            <p>FileVault : chiffrement disk par défaut - nécessite les credentials ou la clé de récupération.</p>
+                        </li>
+                    </ul>
+                    <h3>Reconstruction de Timeline - Méthode :</h3>
+                    <p><span class="em">Objectif</span> : Reconstituer chronologiquement les actions de l'attaquant de l'intrusion initiale jusqu'à la détection.</p>
+                    <p>Les <span class="em">sources de timestamps</span> sont :</p>
+                    <ul>
+                        <li>
+                            <p>Artefacts filesystem ($MFT, logs) : Created/Modified/Accessed/Entry-Modify (MACB).</p>
+                        </li>
+                        <li>
+                            <p>Event logs : Security, System, Application, PowerShell.</p>
+                        </li>
+                        <li>
+                            <p>Logs réseau : pare-feu, proxy, SIEM, DNS.</p>
+                        </li>
+                        <li>
+                            <p>EDR : télémétrie comportementale temps réel.</p>
+                        </li>
+                        <li>
+                            <p>Emails, VPN, applications métier : timestamps d'authentification et d'action.</p>
+                        </li>
+                    </ul>
+                    <p>La <span class="em">méthodologie de corrélation</span> est :</p>
+                    <ul>
+                        <li>
+                            <p>Normaliser les fuseaux horaires (UTC recommandé) - un serveur NTP synchronisé est précieux.</p>
+                        </li>
+                        <li>
+                            <p>Créer un tableau : Timestamp | Source | Événement | Système | Compte</p>
+                        </li>
+                        <li>
+                            <p>Identifier les gaps : que s'est-il passé dans les plages sans données ?</p>
+                        </li>
+                        <li>
+                            <p>Outils : Plaso/log2timeline, Timesketch (Google), Autopsy.</p>
+                        </li>
+                    </ul>
+                    <h3>Threat Hunting - Chercher l'invisible :</h3>
+                    <p><span class="em">Définition</span> : Processus proactif de recherche de menaces cachées qui ont contourné les contrôles de détection automatisés.</p>
+                    <p><span class="em">Principe</span> : ~80% des menaces sont détectées par les outils automatiques (EDR, SIEM). ~20% restent non détectées - le threat hunting vise ce résidu.</p>
+                    <p>Les <span class="em">quatre étapes du Threat Hunting</span> sont :</p>
+                    <ol>
+                        <li>
+                            <p><span class="em">Hypothèse</span> : formuler une théorie sur une menace possible (par exemple : "Et si un attaquant APT28 était présent ?").</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Collecte</span> : rassembler les données pertinentes (logs, artefacts, télémétrie EDR).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Analyse</span> : rechercher les indicateurs de l'hypothèse (TTPs ATT&amp;CK du groupe).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Conclusion</span> : confirmer ou infirmer - documenter et améliorer les détections automatiques.</p>
+                        </li>
+                    </ol>
+                    <p><span class="em">Différence avec l'IR</span> : IR = réactif (répondre à une alerte). Threat Hunting = proactif (chercher sans alerte préalable).</p>
+                    <h3>Rapport forensique - Structure :</h3>
+                    <h4>Deux audiences, deux documents :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Rapport exécutif (2-3 pages)</span> : pour la direction, les juristes, les assureurs - sans jargon technique.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Rapport technique détaillé</span> : pour les équipes sécurité et forensics - tous les détails.</p>
+                        </li>
+                    </ul>
+                    <h4>Structure du rapport technique :</h4>
+                    <ol>
+                        <li>
+                            <p><span class="em">Résumé</span> : incident, timeline de haut niveau, conclusion principale.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Méthodologie</span> : outils utilisés, preuves trouvées, approche, chain of custody.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Findings</span> : artefacts analysés, preuves trouvées, timeline détaillée.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Attribution (si possible)</span> : liens avec des groupes ou campagnes connus.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Recommandations</span> : actions correctives techniques et organisationnelles.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Annexes</span> : hashes des preuves, logs bruts, captures d'écran.</p>
+                        </li>
+                    </ol>
+                    <h4>Principes rédactionnels :</h4>
+                    <ul>
+                        <li>
+                            <p>Factuel, objectif, sans spéculation non étayée.</p>
+                        </li>
+                        <li>
+                            <p>Chaque affirmation est accompagnée de la preuve correspondante (référence à l'annexe).</p>
+                        </li>
+                    </ul>
+                    <h3>Belacorp - Reconstitution forensique :</h3>
+                    <h4>Timeline de l'incident (reconstructed) :</h4>
+                    <ul>
+                        <li>
+                            <p>J-4, 14h32 : Email de spear phishing reçu, pièce jointe PDF ouverte (Event Log 4663 + Prefetch).</p>
+                        </li>
+                        <li>
+                            <p>J-4, 14h35 : Processus malveillant lancé depuis le PDF (Prefetch INC01254_acrobat.exe).</p>
+                        </li>
+                        <li>
+                            <p>J-3, 09h12 : Première connexion au C2 (logs pare-feu &#8594; IP 185.xxx.xxx.xxx).</p>
+                        </li>
+                        <li>
+                            <p>J-3, 11h04 : Mimikatz exécuté sur PC comptable (Prefetch + Event Log 4656 LSASS).</p>
+                        </li>
+                        <li>
+                            <p>J-2, 23h14 : Connexion RDP ou DC depuis PC comptable (Security.evtx Event 4624).</p>
+                        </li>
+                        <li>
+                            <p>J-1, 02h33 : Accès aux partages backup + début chiffrement backups (FileSystem logs).</p>
+                        </li>
+                        <li>
+                            <p>J0, 03h17 : Déploiement ransomware - 847 systèmes chiffrés en 23 minutes.</p>
+                        </li>
+                    </ul>
+                    <h4>Preuves clés collectées :</h4>
+                    <p>Image mémoire DC (128GB), Images disque PC comptable + 3 serveurs, logs SIEM 30 jours, email de phishing original.</p>
+                </article>
+                <article>
+                    <h2 id="session7">Session 7 : Gouvernance &amp; Cadre Légal :</h2>
+                    <h3>NIS2 - Contexte et champ d'application :</h3>
+                    <h4>Qu'est-ce que NIS2 ?</h4>
+                    <ul>
+                        <li>
+                            <p>Directive européenne 2022/2555 - successor de NIS1 (2016). Transposée en droit belge fin 2024 (Loi CCB).</p>
+                        </li>
+                        <li>
+                            <p>Élargissemen majeur : ~160000 entités en Europe concernées (vs. ~15000 sous NIS1).</p>
+                        </li>
+                    </ul>
+                    <h4>Deux catégories d'entités :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Entités Essentielles (EE)</span> : énergie, transport, santé, eau, infrastructure numérique, spatial, finance.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Entités importantes (EI)</span> : services postaux, déchets, chimie, alimentation, fabrication, fournisseurs numériques.</p>
+                        </li>
+                    </ul>
+                    <h4>Seuil d'application :</h4>
+                    <ul>
+                        <li>
+                            <p>Entreprises moyennes (&gt; 50 employés ou &gt; 10M&euro; CA) dans les secteurs listés.</p>
+                        </li>
+                        <li>
+                            <p>Certaines entités critiques quelle que soit leur taille (opérateurs infrastructure critique).</p>
+                        </li>
+                    </ul>
+                    <h4>Belacorp et NIS2 :</h4>
+                    <p>250 employés, secteur logistique (transport) &#8594; potentiellement Entité Importante.</p>
+                    <h3>NIS2 - Obligations et notification d'incident :</h3>
+                    <h4>Mesures de sécurité imposées (Article 21) :</h4>
+                    <ul>
+                        <li>
+                            <p>Politique de sécurité des systèmes d'information et gestion des risques.</p>
+                        </li>
+                        <li>
+                            <p>Réponse aux incidents + analyse forensique + continuité d'activité.</p>
+                        </li>
+                        <li>
+                            <P>Sécurité de la chaîne d'approvisionnement (fournisseurs, sous-traitants).</P>
+                        </li>
+                        <li>
+                            <p>Authentification forte (MFA), chiffrement contrôle des accès.</p>
+                        </li>
+                    </ul>
+                    <h4>Obligation de notification d'incident (Article 23) :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Early Warning</span> : dans les 24h - alerte initiale à l'autorité (CCB en Belgique).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Incident Notification : dans les 72h - rapport avec évaluation initiale de l'impact.</span></p>
+                        </li>
+                        <li>
+                            <p><span class="em">Final Report</span> : dans le mois - rapport complet avec causes, impact, mesures prises.</p>
+                        </li>
+                    </ul>
+                    <h4>Ce qui déclenche l'obligation de notification :</h4>
+                    <p>Impact significatif sur la continuité des services ou sur d'autres organisations.</p>
+                    <h3>RGPD Article 33 - Violation de données personnelles :</h3>
+                    <h4>Qu'est-ce qu'une violation de données (data breach) ?</h4>
+                    <p>Tout incident entraînant la destruction, perte, altération, divulgation ou accès non autorisé à des données personnelles.</p>
+                    <h4>Obligation de notification à l'APD (Belgique) :</h4>
+                    <ul>
+                        <li>
+                            <p>Dans les 72 heures suivant la prise de connaissance de l'incident.</p>
+                        </li>
+                        <li>
+                            <p>Même en cas de doute - notifier sans attendre la certitude.</p>
+                        </li>
+                        <li>
+                            <p>Via le portail : <a href="www.apd-gba.be" target="_blank">www.apd-gba.be</a>.</p>
+                        </li>
+                    </ul>
+                    <h4>Ce que doit contenir la notification :</h4>
+                    <ul>
+                        <li>
+                            <p>Nature de la violation (type de données, nombre approximatif de personnes).</p>
+                        </li>
+                        <li>
+                            <p>Coordonnées DPO (Délégué à la Protection des Données).</p>
+                        </li>
+                        <li>
+                            <p>Conséquences probables et mesures prises ou envisagées.</p>
+                        </li>
+                    </ul>
+                    <h4>Notification aux personnes concernées :</h4>
+                    <ul>
+                        <li>
+                            <p>Obligatoire si risque élevé pour les droits et libertés des personnes.</p>
+                        </li>
+                        <li>
+                            <p>Sans délai injustifié - en langage clair, accessible.</p>
+                        </li>
+                    </ul>
+                    <h3>Comparatif NIIS2 vs RGPD - Synthèse obligations incident :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Critère</th>
+                                <th>NIS2 (Directive EU 2022/2555)</th>
+                                <th>RGPD (Règlement EU 2016/679)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Autorité (BE)</td>
+                                <td>CCB (Centre for Cybersecurity Belgium)</td>
+                                <td>APD (Autorité de Protection des Données)</td>
+                            </tr>
+                            <tr>
+                                <td>Déclencheur</td>
+                                <td>Impact sur continuité de service</td>
+                                <td>Violation de données personnelles</td>
+                            </tr>
+                            <tr>
+                                <td>Délai early warning</td>
+                                <td>24 heures</td>
+                                <td>N/A</td>
+                            </tr>
+                            <tr>
+                                <td>Délai notification</td>
+                                <td>72 heures</td>
+                                <td>72 heures</td>
+                            </tr>
+                            <tr>
+                                <td>Rapport final</td>
+                                <td>1 mois</td>
+                                <td>N/A (mais dossier complet pour APD si demandé)</td>
+                            </tr>
+                            <tr>
+                                <td>Sanctions max</td>
+                                <td>100M&euro; ou 2% CA (EE) / 7M&euro; ou 1.4% (EI)</td>
+                                <td>20M&euro; ou 4% CA mondial</td>
+                            </tr>
+                            <tr>
+                                <td>Notification individus</td>
+                                <td>Non prévue par NIS2</td>
+                                <td>Obligatoire si risque élevé</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Recevabilité légale des preuves numériques :</h3>
+                    <h4>Conditions générales de recevabilité :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Légalité</span> : collecte autorisée (consentement, règlement de travail, mandat judiciaire).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Intégrité</span> : preuves non altérées - démontré par les hashes et la chain of custody.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Authenticité</span> : la preuve est ce qu'elle prétend être - documentation de la collecte.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Fiabilité</span> : méthodes et outils scientifiquement reconnus et reproductibles.</p>
+                        </li>
+                    </ul>
+                    <h4>Cadre pénal belge :</h4>
+                    
                 </article>
                 <article>
                     <h2 id="mes_notes">Mes notes :</h2>
