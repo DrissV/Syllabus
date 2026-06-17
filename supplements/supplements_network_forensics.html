@@ -58,6 +58,10 @@
                     <li><a href="#section9">Section 9 : Atelier pratique (Labo en autonomie)</a></li>
                     <li><a href="#NetFlow">Addendum : Vue d'ensemble de NetFlow</a></li>
                     <li><a href="#data_acquisition_analysis">Data acquisition &amp; analysis</a></li>
+                    <li><a href="#malware_analysis">Malware Analysis</a></li>
+                    <li><a href="#architecture_x86">Architecture x86, programmation bas niveau et code machine / shellcode</a></li>
+                    <li><a href="#format_fichier_PE">Format de fichier PE : Injection de code</a></li>
+                    <li><a href="#outils_analyse_fichier_PE">Outils d'analyse de fichier PE</a></li>
                     <li><a href="#examen_blanc">Examen blanc</a></li>
                 </ol>
             </nav>
@@ -2893,6 +2897,581 @@ monitor session 3 destination interface e0/2</code></pre>
                     <p>Le Sleuth Kit offre une gamme d'outils puissants pour l'analyse légale des disques et des systèmes de fichiers. Chaque outil a son propre contexte d'utilisation et peut être utilisé pour des tâches spécifiques telles que l'analyse de la structure des partitions, la récupération de fichiers supprimés, et l'extraction de métadonnées. Cette présentation a couvert les commandes principales du Sleuth Kit, fournissant des exemples concrets pour chaque outil afin de démontrer leur application pratique dans le domaine de l'investigation numérique.</p>
                 </article>
                 <article>
+                    <h2 id="malware_analysis">Malware Analysis :</h2>
+                    <h3>Introduction :</h3>
+                    <h4>Objectif :</h4>
+                    <p>Comprendre les bases de l'analyse des malwares.</p>
+                    <h4>Importance de l'analyse des malwares :</h4>
+                    <p>Comprendre et neutraliser les menaces pour protéger les systèmes informatiques et les données.</p>
+                    <h3>Définitions :</h3>
+                    <ul>
+                        <li>
+                            <p><span class="em">Malware</span> : Logiciels conçus pour endommager, perturber ou accéder à des systèmes informatiques sans autorisation.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Analyse des malwares</span> : Discipline de la cybersécurité qui consiste à étudier et à comprendre les logiciels malveillants (malwares ou malicious softwares) afin de déterminer leur fonctionnement, leur origine, leur objectif et leur impact potentiel.</p>
+                        </li>
+                    </ul>
+                    <h3>Les types de malwares :</h3>
+                    <h4>Virus :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <ul>
+                        <li>
+                            <p>S'attache à des fichiers exécutables.</p>
+                        </li>
+                        <li>
+                            <p>Peut endommager des fichiers ou rendre un système inutilisable.</p>
+                        </li>
+                    </ul>
+                    <h5>Propagation :</h5>
+                    <ul>
+                        <li>
+                            <p>Par les médias amovibles, les téléchargements.</p>
+                        </li>
+                        <li>
+                            <p>Se réplique en s'attachant à d'autres programmes.</p>
+                        </li>
+                    </ul>
+                    <h5>Exemple :</h5>
+                    <p>Le virus Michelangelo, qui endommageait les secteurs de démarrage (boot sectors) des disques durs.</p>
+                    <h4>Cheval de Troie (Trojan) :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <ul>
+                        <li>
+                            <p>Téléchargé en tant que programme légitime.</p>
+                        </li>
+                        <li>
+                            <p>Permet un accès non autorisé au système.</p>
+                        </li>
+                    </ul>
+                    <h5>Propagation :</h5>
+                    <p>Téléchargements de logiciels piratés, pièces jointes d'emails.</p>
+                    <h5>Exemple :</h5>
+                    <p>Trojan.Downloader : télécharge et installe d'autres malwares.</p>
+                    <h4>Vers (Worm) :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <ul>
+                        <li>
+                            <p>Exploite les vulnérabilités du réseau et se réplique automatiquement sur les réseaux.</p>
+                        </li>
+                        <li>
+                            <p>Peut endommager des fichiers ou rendre un système inutilisable.</p>
+                        </li>
+                    </ul>
+                    <h5>Propagation :</h5>
+                    <p>Par email, réseau local.</p>
+                    <h5>Exemple :</h5>
+                    <p>Morris Worm, l'un des premiers vers Internet qui a causé des ralentissements importants.</p>
+                    <h4>Spywares :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <p>Inclus dans des téléchargements de logiciels gratuits.</p>
+                    <h5>Propagation :</h5>
+                    <p>Par les sites web, logiciels gratuits.</p>
+                    <h5>Exemple :</h5>
+                    <p>Keyloggers, qui enregistrent les frappes au clavier.</p>
+                    <h4>Adwares :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <p>Inclus dans des logiciels gratuits.</p>
+                    <h5>Propagation :</h5>
+                    <p>Par les logiciels publicitaires.</p>
+                    <h5>Exemple :</h5>
+                    <p>WannaCry, qui chiffre les fichiers de la victile et exige le paiement d'une rançon.</p>
+                    <h4>Ransomwares :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <p>Pièces jointes d'email, sites web malveillants.</p>
+                    <h5>Propagation :</h5>
+                    <ul>
+                        <li>
+                            <p>Par phishing.</p>
+                        </li>
+                        <li>
+                            <p>Par exploitations de vulnérabilités.</p>
+                        </li>
+                    </ul>
+                    <h5>Exemple :</h5>
+                    <p>Fireball, qui installe un logiciel publicitaire et vole des informations personnelles.</p>
+                    <h4>Rootkit :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <p>Exploite les vulnérabilités du système.</p>
+                    <h5>Propagation :</h5>
+                    <p>Par les téléchargements, mises à jour malveillantes.</p>
+                    <h5>Exemple :</h5>
+                    <p>Sony BMG Rootkit, qui a été chaché dans des CD musicaux.</p>
+                    <h4>Bots et Botnets :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <ul>
+                        <li>
+                            <p>Un bot est un programme malveillant qui transforme l'ordinateur infecté en "zombie".</p>
+                        </li>
+                        <li>
+                            <p>Un botnet est un réseau de ces ordinateurs zombies.</p>
+                        </li>
+                    </ul>
+                    <h5>Propagation :</h5>
+                    <p>Contrôlés à distance par un attaquant pour diffuser d'autres malwares.</p>
+                    <h5>Exemple :</h5>
+                    <p>Les botnets Mozi et Mirai ont exploité des vulnérabilités IoT dans les routeurs Netgear, les enregistreurs numériques MVPower, les routeurs D-link et le SDK Realtek.</p>
+                    <h4>Scareware :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <p>Conçu pour effrayer les utilisateurs en leur faisant croire que leur ordinateur est infecté par un virus ou un autre type de malware, les pousse à acheter un logiciel de sécurité frauduleux ou à fournir des informations personnelles.</p>
+                    <h5>Propagation :</h5>
+                    <p>Multiple possibilités de propagation.</p>
+                    <h5>Exemple :</h5>
+                    <p>Les SpySheriff, XPAntivius/AntivirusXP, ErrorSafe, Antivirus360, PC Protector, Mac Defender, DriveCleaner.</p>
+                    <h4>Fileless malware :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <p>Le malware sans fichier n'écrit pas de fichiers sur le disque. Au lieu de cela, il réside dans la mémoire vive.</p>
+                    <h5>Propagation :</h5>
+                    <p>Utilise les processus existants du système pour s'exécuter, difficile à détecter et à éliminer.</p>
+                    <h5>Exemple :</h5>
+                    <p>PowerShell Empire, qui utilise les outils natifs du système pour exécuter du code malveillant en mémoire.</p>
+                    <h4>Backdoors :</h4>
+                    <h5>Mode d'infection :</h5>
+                    <p>Portes dérobées installées par les attaquants pour garantir un accès futur au système infecté.</p>
+                    <h5>Propagation :</h5>
+                    <p>Installés par l'attaquant en exploitant les vulnérabilités. Utilisent les processus existantts du système pour s'exécuter, difficile à détecter et à éliminer.</p>
+                    <h5>Exemple :</h5>
+                    <p>China Chopper : un web shell couramment utilisé par des pirates chinois.</p>
+                </article>
+                <article>
+                    <h2 id="architecture_x86">Architecture x86, programmation bas niveau et code machine / shellcode :</h2>
+                    <h3>Exécution de programme - Architecture x86 :</h3>
+                    <h4>Vue d'ensemble :</h4>
+                    <h5>Architecture CISC (Complex Instruction Set Computing) :</h5>
+                    <p>Instructions complexes et riches.</p>
+                    <h5>Mode réel et mode protégé :</h5>
+                    <ul>
+                        <li>
+                            <p><span class="em">Mode réel</span> : Utilisé par les premiers processeurs x86, accès direct à la mémoire.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Mode protégé</span> : Introduit avec le 80286, offre protection mémoire et multitâche.</p>
+                        </li>
+                    </ul>
+                    <h4>Composants principaux :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Unité de Contrôle (CU)</span> : Dirige les opérations du processeur.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Unité Arithmétique et Logique (ALU)</span> : Effectue les opérations arithmétiques et logiques.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Registres</span> : Stockage temporaire rapide pour les opérations.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Cache</span> : Mémoire à accès rapide pour stocker les données fréquemment utilisées.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Bus</span> :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Bus de données</span> : Transfère les données.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Bus d'adresse</span> : Transfère les adresses de mémoire.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">Bus de contrôle</span> : Transfère les signaux de contrôle.</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <img src="../images/vue_ensemble_memoire_processus.PNG" alt="">
+                    <img src="../images/composants_principaux_architecture_x86.PNG" alt="">
+                    <h3>Exécution d'une instruction - Architecture x86 :</h3>
+                    <h4>Les registres et leurs rôles :</h4>
+                    <img src="../images/registres_CPU.PNG" alt="">
+                    <h4>Les registres et leurs tailles :</h4>
+                    <img src="../images/registres_tailles.PNG" alt="">
+                    <h3>Exécution d'un programme sur un microprocesseur x86 :</h3>
+                    <h4>Registres généraux :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">EAX (Accumulator Register)</span> : Utilisé pour les opérations arithmétiques et logiques. Souvent utilisé pour stocker les résultats intermédiaires.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">EBX (Base Register)</span> : Utilisé comme pointeur de base pour l'accès mémoire.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ECX (Counter Register)</span> : Utilisé comme compteur pour les opérations de boucle et les instructions de répétition.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">EDX (Data Register)</span> : Utilisé pour les opérations arithmétiques et certaines instructions d'E/S.</p>
+                        </li>
+                    </ul>
+                    <h4>Registres de pointeur et d'index :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">ESI (Source Index)</span> : Utilisé comme pointeur source pour les opérations de copie et de traitement de chaînes.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">EDI (Destination Index)</span> : Utilisé comme pointeur destination pour les opérations de copie et de traitement de chaînes.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">EBP (Base Pointer)</span> : Utilisé comme pointeur de base pour accéder aux variables locales dans la pile.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ESP (Stack Pointer)</span> : Pointeur de pile, utilisé pour gérer la pile d'appel et de retour.</p>
+                        </li>
+                    </ul>
+                    <h4>Registres de segmentation :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">CS (Code Segment)</span> : Contient le segment de mémoire où se trouvent les instructions à exécuter.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">DS (Data Segment)</span> : Contient le segment de mémoire où se trouvent les données.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">SS (Stack Segment)</span> : Contient le segment de mémoire où se trouve la pile.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">ES, FS, GS</span> : Registres de segment supplémentaires pour l'accès à des segments de données supplémentaires.</p>
+                        </li>
+                    </ul>
+                    <h4>Registres de contrôle :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">IP/EIP (Instruction Pointer)</span> : Contient le segment de mémoire où se trouvent les instructions à exécuter.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">FLAGS/EFLAGS (Flags Register)</span> : Contient des indicateurs de condition de contrôle pour les instructions conditionnelles et autres opérations.</p>
+                        </li>
+                    </ul>
+                    <h4>Cycle d'instruction :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Fetch (Récupération)</span> : L'instruction à l'adresse pointée par le pointeur d'instruction (IP) est lue depuis la mémoire.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Decode (Décodage)</span> : L'instruction récupérée est décodée pour déterminer les opérations à effectuer et les opérandes à utiliser.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Execute (Exécution)</span> : Les opérations spécifiées par l'instruction sont exécutées.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Write-back (Écriture des résultats)</span> : Les résultats de l'exécution sont écrits dans les registres ou la mémoire.</p>
+                        </li>
+                    </ul>
+                    <h4>Chargement du programme :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Chargement du programme en mémoire vive (RAM) par le système d'exploitation</span> : Voir plus loin le mappage du fichier PE vers la mémoire (RAM).</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Initialisation du pointeur d'instruction (IP) par le système d'exploitation</span> : Pour pointer sur la première instruction du programme.</p>
+                        </li>
+                    </ul>
+                    <h3>Programme de bas niveau (Assembleur x86) :</h3>
+                    <h4>Démo TASM, NASM, GOASM sous Windows :</h4>
+                    <img src="../images/programme_bas_niveau.PNG" alt="">
+                    <h4>Démo TASM :</h4>
+                    <img src="../images/demo_TASM_1.PNG" alt="">
+                    <h4>Démo TASM : Registres (16 bits), Flags, Segments (code (CS), data (DS), Stack (SS)) :</h4>
+                    <img src="../images/demo_TASM_2.PNG" alt="">
+                    <h4>Démo : Adresse mémoire (Offset CS/DS/SS), code C, code machine (shellcode), code assembleur :</h4>
+                    <img src="../images/demo_shellcode_1.PNG" alt="">
+                    <h4>Démo : Utilisation de shellcode (assembleur) dans un programme C :</h4>
+                    <img src="../images/demo_shellcode_2.PNG" alt="">
+                    <img src="../images/demo_shellcode_3.PNG" alt="">
+                    <img src="../images/demo_shellcode_4.PNG" alt="">
+                </article>
+                <article>
+                    <h2 id="format_fichier_PE">Format de fichier PE : Injection de code :</h2>
+                    <h3>Comprendre le format des fichiers exécutables :</h3>
+                    <h4>Introduction au format PE (Portable Executable) :</h4>
+                    <ul>
+                        <li>
+                            <p>Utilisé sur les systèmes Windows.</p>
+                        </li>
+                        <li>
+                            <p>Contient des informations cruciales pour l'exécution du programme.</p>
+                        </li>
+                    </ul>
+                    <h3>Analyse des en-têtes et des sections dans les exécutables :</h3>
+                    <h4>Fichier exécutable au format PE (Portable Executable) :</h4>
+                    <img src="../images/fichier_format_PE.PNG" alt="">
+                    <h4>En-tête DOS :</h4>
+                    <h5>Description :</h5>
+                    <p>La première partie d'un fichier PE.</p>
+                    <h5>Contenu clé :</h5>
+                    <ul>
+                        <li>
+                            <p>Signature ("MZ").</p>
+                        </li>
+                        <li>
+                            <p>Offset de l'en-tête PE.</p>
+                        </li>
+                    </ul>
+                    <img src="../images/DOS_header.PNG" alt="">
+                    <h4>En-tête PE :</h4>
+                    <h5>Description :</h5>
+                    <p>Indique le début de l'en-tête PE et contient des informations sur le fichier exécutable.</p>
+                    <h5>Contenu clé :</h5>
+                    <ul>
+                        <li>
+                            <p>Signature ("PE\0\0").</p>
+                        </li>
+                        <li>
+                            <p>Machine type, Number of sections, Timestamp.</p>
+                        </li>
+                    </ul>
+                    <img src="../images/PE_header.PNG" alt="">
+                    <h4>Table des en-têtes de section :</h4>
+                    <h5>Description :</h5>
+                    <p>Contient des informations sur les différentes sections du fichier.</p>
+                    <h5>Contenu clé :</h5>
+                    <ul>
+                        <li>
+                            <p>Name.</p>
+                        </li>
+                        <li>
+                            <p>Virtual Size.</p>
+                        </li>
+                        <li>
+                            <p>Virtual Address.</p>
+                        </li>
+                        <li>
+                            <p>Raw Size.</p>
+                        </li>
+                        <li>
+                            <p>Raw Address.</p>
+                        </li>
+                    </ul>
+                    <img src="../images/table_section.PNG" alt="">
+                    <h4>Section .text :</h4>
+                    <h5>Description :</h5>
+                    <p>Contient le code exécutable.</p>
+                    <h5>Analyse :</h5>
+                    <ul>
+                        <li>
+                            <p>Taille virtuelle et taille brute.</p>
+                        </li>
+                        <li>
+                            <p>Adresse virtuelle et adresse brute.</p>
+                        </li>
+                    </ul>
+                    <img src="../images/section_.text.PNG" alt="">
+                    <h4>Section .data :</h4>
+                    <h5>Description :</h5>
+                    <p>Contient les données initialisées du programme.</p>
+                    <h5>Analyse :</h5>
+                    <ul>
+                        <li>
+                            <p>Taille virtuelle et taille brute.</p>
+                        </li>
+                        <li>
+                            <p>Adresse virtuelle et adresse brute.</p>
+                        </li>
+                    </ul>
+                    <img src="../images/section_.data.PNG" alt="">
+                    <h3>Analyse d'un exemple réel :</h3>
+                    <h4>Étape 1 :</h4>
+                    <p>Ouvrir un fichier PE avec un outil comme Peview, CFF Explorer, ou utiliser le module Python (pefile).</p>
+                    <h4>Étape 2 :</h4>
+                    <p>Identifier et analyser les en-têtes et les sections.</p>
+                    <h4>Étape 3 :</h4>
+                    <ul>
+                        <li>
+                            <p>Rechercher des anomalies (par exemple : sections supplémentaires, tailles incohérentes, packer (grande entropie)).</p>
+                        </li>
+                        <li>
+                            <p>Rechercher les DLLs et/ou les fonctions suspects.</p>
+                        </li>
+                        <li>
+                            <p>Rechercher les strings suspects.</p>
+                        </li>
+                    </ul>
+                    <img src="../images/analyse_exemple_reel.PNG" alt="">
+                    <h3>Mapping en mémoire (PE file &#8594; RAM) (chargement du fichier PE) :</h3>
+                    <img src="../images/mapping_memoire.PNG" alt="">
+                    <ol>
+                        <li>
+                            <p>Le Windows loader (WL) lit le fichier PE depuis le disque.</p>
+                        </li>
+                        <li>
+                            <p>Le WL lit les en-têtes PE pour connaître la structure.</p>
+                        </li>
+                        <li>
+                            <p>Le WL mappe les sections du fichier dans l'espace mémoire virtuel du processus.</p>
+                        </li>
+                        <li>
+                            <p>Le WL effectue la relocation (si nécessaire).</p>
+                        </li>
+                        <li>
+                            <p>Le WL résout les imports dynamiques (DLL).</p>
+                        </li>
+                        <li>
+                            <p>Le WL transfère le contrôle à l'entry point (AddressOfEntryPoint).</p>
+                        </li>
+                    </ol>
+                    <h4>Allocation de la mémoire virtuelle :</h4>
+                    <ul>
+                        <li>
+                            <p>Le loader alloue un espace mémoire configuré appelé ImageBase (défini dans le champ ImageBase de l'Optional Header).</p>
+                        </li>
+                        <li>
+                            <p>Si cet espace n'est pas disponible, le loader effectue une relocation.</p>
+                        </li>
+                    </ul>
+                    <h4>Chargement des sections :</h4>
+                    <p>Chaque section est mappée à une adresse spécifique avec les propriétés mémoire indiquées dans son en-tête.</p>
+                    <ul>
+                        <li>
+                            <p>.text &#8594; RX (lecture + exécution).</p>
+                        </li>
+                        <li>
+                            <p>.data &#8594; RW (lecture + écriture).</p>
+                        </li>
+                        <li>
+                            <p>.rdata &#8594; R (lecture seule).</p>
+                        </li>
+                        <li>
+                            <p>.reloc &#8594; utilisée si relocation.</p>
+                        </li>
+                    </ul>
+                    <h4>Exemple de mappage mémoire :</h4>
+                    <p>Adresse en mémoire virtuelle (relative à ImageBase) :</p>
+                    <ul>
+                        <li>
+                            <p>0x00400000 &#8594; PE Header.</p>
+                        </li>
+                        <li>
+                            <p>0x00401000 &#8594; .text (code machine).</p>
+                        </li>
+                        <li>
+                            <p>0x00402000 &#8594; .rdata (IAT, strings constantes).</p>
+                        </li>
+                        <li>
+                            <p>0x00403000 &#8594; .data (variables globales).</p>
+                        </li>
+                        <li>
+                            <p>0x00404000 &#8594; .rsrc (icônes, menus...).</p>
+                        </li>
+                    </ul>
+                    <p>Chaque section est alignée en mémoire sur des multiples de 0x1000 (page de 4 Ko), selon les alignements spécifiés.</p>
+                    <h4>Relocation (si nécessaire) :</h4>
+                    <p>Si le PE ne peut pas être chargé à son <span class="em">ImageBase</span>, le système utilise la section <span class="em">.reloc</span> pour ajuster les adresses absolues dans le code et les données.</p>
+                    <h4>Résolution des imports :</h4>
+                    <ul>
+                        <li>
+                            <p>Le PE contient une Import Address Table (IAT).</p>
+                        </li>
+                        <li>
+                            <p>Le loader charge les DLL nécessaires.</p>
+                        </li>
+                        <li>
+                            <p>Il remplit la table avec les adresses réelles des fonctions importées.</p>
+                        </li>
+                        <li>
+                            <p>Exemple ci-dessous (IAT contient ce pointeur à la place du nom symbolique) :</p>
+<pre><code>MessageBoxA @ USER32.dll &#8594; 0x7E3A1420</code></pre>
+                        </li>
+                    </ul>
+                    <h5>Le point d'entrée :</h5>
+                    <ul>
+                        <li>
+                            <p>Une fois le mappage et l'import complétés, le système saute à :</p>
+<pre><code>EntryPoint = ImageBase + AddressOfEntryPoint</code></pre>
+                        </li>
+                        <li>
+                            <p>C'est ici que le programme commence réellement à s'exécuter dans le code et les données.</p>
+                            <p>Du point de vue programme, c'est ici que pointe le registre <span class="em">IP</span> (instruction pointer).</p>
+                            <p><span class="em">EntryPoint</span> correspond au label <span class="em">_start</span> ou à l'adresse de <span class="em">main()</span> que nous avons vu.</p>
+                        </li>
+                    </ul>
+                    <h3>Démo : Analyse d'un fichier PE avec Python (pefile) :</h3>
+                    <img src="../images/demo_analyse_fichier_PE.PNG" alt="">
+                    <h3>Démo : modification d'un fichier PE : injection du code dans un fichier PE avec Python (pefile) :</h3>
+                    <img src="../images/demo_modification_fichier_PE.PNG" alt="">
+                </article>
+                <article>
+                    <h2 id="outils_analyse_fichier_PE">Outils d'analyse de fichier PE :</h2>
+                    <p>Plusieurs outils existent :</p>
+                    <ul>
+                        <li>
+                            <p>UPE Explorer, PE View, LordPE, PeStudio, Relyze, Ghidra, Exeinfo PE.</p>
+                        </li>
+                        <li>
+                            <p>TrID, Objdump.</p>
+                        </li>
+                        <li>
+                            <p>Strings, dumpbin.</p>
+                        </li>
+                        <li>
+                            <p>Module Python "pefile".</p>
+                        </li>
+                        <li>
+                            <p>LIEF (plusieurs formats).</p>
+                        </li>
+                        <li>
+                            <p>YARA...</p>
+                        </li>
+                    </ul>
+                    <img src="../images/outils_analyse_fichier_PE_1.PNG" alt="">
+                    <img src="../images/outils_analyse_fichier_PE_2.PNG" alt="">
+                    <img src="../images/outils_analyse_fichier_PE_3.PNG" alt="">
+                    <p>Dans ce cours, nous allons utiliser strings, YARA et le module Python pefile.</p>
+                    <p>Les étudiants ont le libre choix pour leurs TFEs.</p>
+                    <h3>YARA :</h3>
+                    <h4>Qu'est-ce que YARA ?</h4>
+                    <p>YARA (Yet Another Recursive Algorithm) est un outil puissant utilisé pour identifier et classer les malwares en fonction de modèles de recherche spécifiques.</p>
+                    <h4>Fonctionnalités principales :</h4>
+                    <ul>
+                        <li>
+                            <h5>Détection basée sur des règles :</h5>
+                            <p>YARA utilise des fichiers de règles pour identifier les caractéristiques spécifiques des malwares.</p>
+                            <p>Chaque règle peut définir des motifs de chaînes de caractères, des expressions régulières et des conditions logiques pour déterminer la présence de ces motifs dans les fichiers analysés.</p>
+                        </li>
+                        <li>
+                            <h5>Support multi-plateforme :</h5>
+                            <p>YARA est compatible avec les systèmes d'exploitation Windows, Linux et macOS, ce qui le rend polyvalent pour divers environnements d'analyse.</p>
+                        </li>
+                        <li>
+                            <h5>Flexibilité et extensibilité :</h5>
+                            <p>Les règles YARA sont écrites dans un langage simple mais puissant, permettant une grande flexibilité.</p>
+                            <p>De plus, YARA peut être étendu avec des modules pour analyser des formats de fichiers spécifiques.</p>
+                        </li>
+                        <li>
+                            <h5>Intégration avec d'autres outils :</h5>
+                            <p>YARA peut être intégré dans des workflows d'analyse plus larges, comme avec des outils de sandboxing, des systèmes de détection d'intrusion (IDS), et d'autres frameworks d'analyse de sécurité.</p>
+                        </li>
+                    </ul>
+                    <h4>Exemple :</h4>
+                    <h5>Comment fonctionne YARA :</h5>
+                    <p>YARA fonctionne en analysant les fichiers et en les comparant aux règles définies par l'utilisateur.</p>
+                    <h5>Exemple simple de règle YARA :</h5>
+                    <img src="../images/YARA.PNG" alt="">
+                    <h4>Utilisation - explication example.rule :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Meta</span> : contient des informations descriptives sur la règle.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Strings</span> : Définit les motifs de chaînes ou les séquences d'octets à rechercher.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Condition</span> : Spécifie la condition logique pour que la règle soit considérée comme correspondante. Ici, la règle correspond si l'une des chaînes définies est trouvée.</p>
+                        </li>
+                    </ul>
+                    <h4>Cas d'utilisation de YARA :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">Détection de malware</span> : Utiliser YARA pour scanner des fichiers téléchargés, des processus en mémoire ou des pièces jointes d'email pour détecter la présence de malwares connus.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Classification de malware</span> : Classer et regrouper les échantillons de malwares en familles basées sur des caractéristiques communes définies dans les règles YARA.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Analyse forensique</span> : Analyser des images disque et des fichiers système pour identifier des indicateurs de compromission (IoC) en utilisant des règles YARA.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Recherche de menaces</span> : Les équipes de recherche en sécurité utilisent YARA pour rechercher de nouvelles variantes de malwares en analysant de grandes quantités de données.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
                     <h2 id="examen_blanc">Examen blanc :</h2>
                     <h3>Section 1 : Introduction, concepts clés et enjeux :</h3>
                     <fieldset class="question">
@@ -4413,6 +4992,388 @@ monitor session 3 destination interface e0/2</code></pre>
                             </li>
                             <li>
                                 <p>Une suppression des traces d'activité. &#10060;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <h3>Malware analysis :</h3>
+                    <fieldset class="question">
+                        <legend>Question 85</legend>
+                        <p>Qu'est-ce qu'un malware ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Un logiciel conçu pour améliorer les performances d'un système. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Un logiciel conçu pour endommager, perturber ou accéder à un système sans autorisation. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Un programme utilisé uniquement pour administrer un réseau. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Un logiciel qui collecte parfois des informations mais n'est pas toujours malveillant. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 86</legend>
+                        <p>Quel est le mode d'infection principal d'un virus ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Il s'attache à des fichiers exécutables. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Il s'installe uniquement via les réseaux sociaux. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Il exploite exclusivement les vulnérabilités réseau. &#9888;</p>
+                            </li>
+                            <li>
+                                <p>Il se cache dans la mémoire vive sans jamais toucher le disque. &#10060;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 87</legend>
+                        <p>Comment un cheval de Troie infecte-t-il généralement une machine ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>En se répliquant automatiquement sur le réseau local. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>En étant téléchargé comme un programme paraissant légitime. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>En étant installé par le système d'exploitation lors d'une mise à jour officielle. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>En profitant souvent de l'action de l'utilisateur pour être exécuté. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 88</legend>
+                        <p>Quelle caractéristique distingue un ver (worm) ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Il chiffre les fichiers de la victime. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Il affiche de la publicité intrusive. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Il se réplique automatiquement via les réseaux. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Il utilise souvent le réseau pour se propager, mais pas forcément sans intervention humaine. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 89</legend>
+                        <p>Quel est l'objectif principal d'un spyware ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Chiffrer les données contre rançon. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Détruire le matériel informatique. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Enregistrer ou collecter des informations à l'insu de l'utilisateur. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Afficher de la publicité ciblée. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 90</legend>
+                        <p>Quel malware est principalement associé à l'affichage de publicités indésirables ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Rootkit. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Adware. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Worm. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Logiciel gratuit comportant parfois des éléments publicitaires. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 91</legend>
+                        <p>Quel est le rôle principal d'un ransomware ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Prendre le contrôle du navigateur web. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Chiffrer les données et demander une rançon. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Empêcher temporairement l'accès à certaines ressources du système. &#9888;</p>
+                            </li>
+                            <li>
+                                <p>Surveiller l'activité réseau uniquement. &#10060;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 92</legend>
+                        <p>Qu'est-ce qu'un rootkit ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Un programme exploitant généralement des vulnérabilités de système. &#9888;</p>
+                            </li>
+                            <li>
+                                <p>Un outil de sauvegarde système avancé. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Un logiciel publicitaire installé avec des applications gratuites. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Un malware conçu pour masquer sa présence et conserver des privilèges élevés. &#9989;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 93</legend>
+                        <p>Qu'est-ce qu'un botnet ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Un réseau d'ordinateurs infectés contrôlés à distance. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Un groupe de machines pouvant être utilisé pour diffuser d'autres malwares. &#9888;</p>
+                            </li>
+                            <li>
+                                <p>Un antivirus distribué sur plusieurs machines. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Un ensemble de serveurs web légitimes. &#10060;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 94</legend>
+                        <p>Quelle affirmation décrit le mieux une backdoor ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Un malware qui affiche de fausses alertes de sécurité. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Une porte dérobée permettant un accès futur au système compromis. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Un programme qui détruit automatiquement les fichiers système. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Un mécanisme souvent installé après l'exploitation d'une vulnérabilité. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <h3>Architecture x86, programmation bas niveau et code machine / shellcode :</h3>
+                    <fieldset class="question">
+                        <legend>Question 95</legend>
+                        <p>Quel est le rôle principal de l'ALU ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Gérer les interruptions matérielles du système. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Effectuer les opérations arithmétiques et logiques. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Stocker les instructions du programme sur le disque dur. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Participer au traitement des données en coopération avec l'unité de contrôle. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 96</legend>
+                        <p>Quel registre est généralement utilisé comme compteur dans les boucles ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>EAX, qui peut parfois être utilisé pour suivre certaines opérations répétitives. &#9888;</p>
+                            </li>
+                            <li>
+                                <p>EBP. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>ECX. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>ESI. &#10060;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 97</legend>
+                        <p>Quelle étape du cycle d'instruction consiste à interpréter l'instruction récupérée ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Fetch. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Execute, car l'instruction doit être comprise avant d'être exécutée. &#9888;</p>
+                            </li>
+                            <li>
+                                <p>Write-back. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Decode. &#9989;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 98</legend>
+                        <p>Quel registre est associé à la pile ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>DS. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>CS. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>SS. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>ESP, car il pointe vers le sommet de la pile. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 99</legend>
+                        <p>Que fait le système d'exploitation lors du chargement d'un programme ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Il traduit automatiquement tout le programme en langage C. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Il charge le programme en mémoire vive et initialise le pointeur d'instruction. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Il copie directement le programme dans les registres du processeur. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Il prépare l'environnement d'exécution du programme avant son exécution. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <h3>Format de fichier PE : Injection de code :</h3>
+                    <fieldset class="question">
+                        <legend>Question 100</legend>
+                        <p>Quel élément permet d'identifier un fichier PE dès son début ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>La signature "ELF". &#10060;</p>
+                            </li>
+                            <li>
+                                <p>La signature "MZ". &#9989;</p>
+                            </li>
+                            <li>
+                                <p>La signature "EXE". &#10060;</p>
+                            </li>
+                            <li>
+                                <p>La signature "PE\0\0". &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 101</legend>
+                        <p>Quel est le rôle principal de la section .text ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Stocker les ressources (icônes, menus). &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Contenir les données initialisées du programme. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Contenir le code exécutable du programme. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Contenir principalement les imports des DLL. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 102</legend>
+                        <p>Que fait le loader Windows lors du chargement d'un fichier PE ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Il copie systématiquement tout le fichier dans la mémoire physique. &#9888;</p>
+                            </li>
+                            <li>
+                                <p>Il mappe les sections du fichier dans la mémoire virtuelle du processus. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Il compile le programme avant son exécution. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Il convertit le PE en code source C. &#10060;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 103</legend>
+                        <p>À quoi sert la section .reloc ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>À ajuster les adresses si le PE n'est pas chargé à son ImageBase prévue. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>À relier les fonctions importées des DLL. &#9888;</p>
+                            </li>
+                            <li>
+                                <p>À enregistrer les appels réseau du programme. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>À stocker les chaînes de caractères du programme. &#10060;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 104</legend>
+                        <p>Quelle formule permet de calculer l'adresse réelle du point d'entrée ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>EntryPoint = VirtualAddress + RawAddress. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>EntryPoint = ImageBase * AddressOfEntryPoint. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>EntryPoint = ImageBase + AddressOfEntryPoint. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>EntryPoint = PEHeader + Section Alignment. &#9888;</p>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <h3>Outils d'analyse de fichier PE :</h3>
+                    <fieldset class="question">
+                        <legend>Question 105</legend>
+                        <p>Concernant YARA, laquelle des affirmations suivantes est correcte ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>YARA permet uniquement d'analyser les fichiers PE exécutables sous Windows. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>YARA compare les fichiers à des règles contenant notamment des chaînes, des motifs et des conditions logiques. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>YARA est principalement utilisé pour désassembler et décompiler des programmes. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>YARA détecte automatiquement tous les malwares sans qu'il soit nécessaire de définir des règles. &#9888;</p>
                             </li>
                         </ol>
                     </fieldset>
