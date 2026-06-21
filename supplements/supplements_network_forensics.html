@@ -5508,6 +5508,328 @@ monitor session 3 destination interface e0/2</code></pre>
                             </li>
                         </ol>
                     </fieldset>
+                    <h3>Reconstruction de fichiers dans un système FAT :</h3>
+                    <img src="../images/exercice_FAT.png" alt="">
+                    <h4>Objectif :</h4>
+                    <p>Retrouver le contenu d'un fichier à partir :</p>
+                    <ul>
+                        <li>
+                            <p>du répertoire racine (<span class="em">Root Directory</span>);</p>
+                        </li>
+                        <li>
+                            <p>de la table d'allocation (<span class="em">FAT</span>);</p>
+                        </li>
+                        <li>
+                            <p>des blocs de données (<span class="em">Data Blocks</span>).</p>
+                        </li>
+                    </ul>
+                    <h4>Étape 1 : Identifier le bloc de départ :</h4>
+                    <p>Le <span class="em">Root Directory</span> contient les informations descriptives des fichiers.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Fichier</th>
+                                <th>StartBlk</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>myfile1.txt</td>
+                                <td>4</td>
+                            </tr>
+                            <tr>
+                                <td>myfile2.txt</td>
+                                <td>15</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Le champ <span class="em">StartBlk</span> indique le premier bloc du fichier.</p>
+                    <p>Ainsi :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">myfile1.txt</span> commence au bloc <span class="em">4</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">myfile2.txt</span> commence au bloc <span class="em">15</span>.</p>
+                        </li>
+                    </ul>
+                    <h4>Étape 2 : Suivre la chaîne FAT :</h4>
+                    <p>La <span class="em">File Allocation Table (FAT)</span> permet de retrouver les blocs suivants du fichier.</p>
+                    <p>Principe : <span class="em">Bloc courant &#8594; Bloc suivant</span>.</p>
+                    <p>La valeur spéciale <span class="em">FFFF</span> indique la fin du fichier.</p>
+                    <h5>Exemple : myfile1.txt :</h5>
+                    <p>Bloc de départ : <span class="em">4</span>.</p>
+                    <p>Lecture de la FAT :</p>
+<pre><code>4 &#8594; 6
+6 &#8594; 5
+5 &#8594; 9
+9 &#8594; 12
+12 &#8594; 19
+19 &#8594; 8
+8 &#8594; 14
+14 &#8594; FFFF</code></pre>
+                    <p>La chaîne complète est donc :</p>
+<pre><code>[4] &#8594; [6] &#8594; [5] &#8594; [9] &#8594; [12] &#8594; [19] &#8594; [8] &#8594; [14]</code></pre>
+                    <h4>Étape 3 : Récupérer les données :</h4>
+                    <p>Pour chaque bloc identifié, on lit son contenu dans la table <span class="em">DATA BLOCKS</span>.</p>
+                    <h5>myfile1.txt :</h5>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Bloc</th>
+                                <th>Donnée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>4</td>
+                                <td>5943</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>4542</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>5352</td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>4345</td>
+                            </tr>
+                            <tr>
+                                <td>12</td>
+                                <td>5255</td>
+                            </tr>
+                            <tr>
+                                <td>19</td>
+                                <td>5449</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>2059</td>
+                            </tr>
+                            <tr>
+                                <td>14</td>
+                                <td>000A</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h4>Étape 4 : Corriger l'endianness :</h4>
+                    <p>Les données sont stockées en <span class="em">little-endian</span>.</p>
+                    <p>Il faut donc inverser les octets de chaque mot de 16 bits.</p>
+                    <h5>Exemple :</h5>
+                    <ul>
+                        <li>
+                            <p>Valeur lue : <span class="em">5943</span>.</p>
+                        </li>
+                        <li>
+                            <p>Découpage en octets : <span class="em">59 43</span>.</p>
+                        </li>
+                        <li>
+                            <p>Inversion (little-endian) : <span class="em">43 59</span>.</p>
+                        </li>
+                        <li>
+                            <p>Conversion ASCII :</p>
+                            <img src="../images/ASCII_TABLE.png" alt="">
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th>Hex</th>
+                                        <th>ASCII</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>43</td>
+                                        <td>C</td>
+                                    </tr>
+                                    <tr>
+                                        <td>59</td>
+                                        <td>Y</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </li>
+                        <li>
+                            <p>Résultat : <span class="em">CY</span>.</p>
+                        </li>
+                    </ul>
+                    <h4>Étape 5 : Convertir toutes les valeurs :</h4>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Valeur</th>
+                                <th>Après inversion</th>
+                                <th>ASCII</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                5943
+                                <td>43 59</td>
+                                <td>CY</td>
+                            </tr>
+                            <tr>
+                                <td>4542</td>
+                                <td>42 45</td>
+                                <td>BE</td>
+                            </tr>
+                            <tr>
+                                <td>5352</td>
+                                <td>52 53</td>
+                                <td>RS</td>
+                            </tr>
+                            <tr>
+                                <td>4345</td>
+                                <td>45 43</td>
+                                <td>EC</td>
+                            </tr>
+                            <tr>
+                                <td>5255</td>
+                                <td>55 52</td>
+                                <td>UR</td>
+                            </tr>
+                            <tr>
+                                <td>5449</td>
+                                <td>49 54</td>
+                                <td>IT</td>
+                            </tr>
+                            <tr>
+                                <td>2059</td>
+                                <td>59 20</td>
+                                <td>Y&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td>000A</td>
+                                <td>0A 00</td>
+                                <td>\n</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h4>Étape 6 : Reconstituer le contenu :</h4>
+                    <p>Concaténation des données dans l'ordre des blocs : <span class="em">CY + BE + RS + EC + UR + IT + Y&nsbp; + \n</span>.</p>
+                    <p>Résultat : <span class="em">CYBERSECURITY&nbsp;\n</span>.</p>
+                    <h4>Application à myfile2.txt :</h4>
+                    <h5>Chaîne FAT :</h5>
+                    <p>Bloc de départ : <span class="em">15</span>.</p>
+                    <p>Lecture de la FAT : <span class="em">15 &#8594; 10 &#8594; 7 &#8594; 23 &#8594; 21 &#8594; 27 &#8594; 25 &#8594; FFFF</span>.</p>
+                    <h5>Données récupérées :</h5>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Bloc</th>
+                                <th>Donnée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>15</td>
+                                <td>4644</td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>5249</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>4920</td>
+                            </tr>
+                            <tr>
+                                <td>23</td>
+                                <td>2053</td>
+                            </tr>
+                            <tr>
+                                <td>21</td>
+                                <td>4F43</td>
+                            </tr>
+                            <tr>
+                                <td>27</td>
+                                <td>4C4F</td>
+                            </tr>
+                            <tr>
+                                <td>25</td>
+                                <td>0A21</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h5>Conversion ASCII :</h5>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Valeur</th>
+                                <th>Texte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>4644</td>
+                                <td>DF</td>
+                            </tr>
+                            <tr>
+                                <td>5249</td>
+                                <td>IR</td>
+                            </tr>
+                            <tr>
+                                <td>4920</td>
+                                <td>&nbsp;I</td>
+                            </tr>
+                            <tr>
+                                <td>2053</td>
+                                <td>S&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td>4F43</td>
+                                <td>CO</td>
+                            </tr>
+                            <tr>
+                                <td>4C4F</td>
+                                <td>OL</td>
+                            </tr>
+                            <tr>
+                                <td>0A21</td>
+                                <td>!\n</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h5>Résultat final :</h5>
+                    <p class="em">DFIR&nbsp;IS&nbsp;COOL!\n</p>
+                    <h4>Synthèse de la méthode :</h4>
+<pre><code>ROOT DIRECTORY
+&#8592;
+Boc de départ
+&#8592;
+FAT
+&#8592;
+Liste des blocs
+&#8592;
+DATA BLOCKS
+&#8592;
+Correction Little-Endian
+&#8592;
+Conversion ASCII
+&#8592;
+Texte final</code></pre>
+                    <h4>Résultats obtenus :</h4>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Fichier</th>
+                                <th>Contenu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>myfile1.txt</td>
+                                <td>CYBERSECURITY&nbsp;\n</td>
+                            </tr>
+                            <tr>
+                                <td>myfile2.txt</td>
+                                <td>DFIR&nbsp;IS&nbsp;COOL!\n</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Cette démarche est celle utilisée en analyse forensique pour reconstruire manuellement des fichiers stockés dans un système FAT.</p>
                 </article>
             <!-- fin de section -->
             </section>
