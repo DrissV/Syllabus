@@ -63,6 +63,7 @@
                     <li><a href="#format_fichier_PE">Format de fichier PE : Injection de code</a></li>
                     <li><a href="#outils_analyse_fichier_PE">Outils d'analyse de fichier PE</a></li>
                     <li><a href="#examen_blanc">Examen blanc</a></li>
+                    <li><a href="#reconstruction_fichiers_systeme_FAT">Reconstruction de fichiers dans un système FAT</a></li>
                 </ol>
             </nav>
             
@@ -5508,9 +5509,11 @@ monitor session 3 destination interface e0/2</code></pre>
                             </li>
                         </ol>
                     </fieldset>
-                    <h3>Reconstruction de fichiers dans un système FAT :</h3>
+                </article>
+                <article>
+                    <h2 id="reconstruction_fichiers_systeme_FAT">Reconstruction de fichiers dans un système FAT :</h2>
                     <img src="../images/exercice_FAT.png" alt="">
-                    <h4>Objectif :</h4>
+                    <h3>Objectif :</h3>
                     <p>Retrouver le contenu d'un fichier à partir :</p>
                     <ul>
                         <li>
@@ -5523,7 +5526,7 @@ monitor session 3 destination interface e0/2</code></pre>
                             <p>des blocs de données (<span class="em">Data Blocks</span>).</p>
                         </li>
                     </ul>
-                    <h4>Étape 1 : Identifier le bloc de départ :</h4>
+                    <h3>Étape 1 : Identifier le bloc de départ :</h3>
                     <p>Le <span class="em">Root Directory</span> contient les informations descriptives des fichiers.</p>
                     <table class="tableBalises">
                         <thead>
@@ -5553,7 +5556,7 @@ monitor session 3 destination interface e0/2</code></pre>
                             <p><span class="em">myfile2.txt</span> commence au bloc <span class="em">15</span>.</p>
                         </li>
                     </ul>
-                    <h4>Étape 2 : Suivre la chaîne FAT :</h4>
+                    <h3>Étape 2 : Suivre la chaîne FAT :</h3>
                     <p>La <span class="em">File Allocation Table (FAT)</span> permet de retrouver les blocs suivants du fichier.</p>
                     <p>Principe : <span class="em">Bloc courant &#8594; Bloc suivant</span>.</p>
                     <p>La valeur spéciale <span class="em">FFFF</span> indique la fin du fichier.</p>
@@ -5570,9 +5573,9 @@ monitor session 3 destination interface e0/2</code></pre>
 14 &#8594; FFFF</code></pre>
                     <p>La chaîne complète est donc :</p>
 <pre><code>[4] &#8594; [6] &#8594; [5] &#8594; [9] &#8594; [12] &#8594; [19] &#8594; [8] &#8594; [14]</code></pre>
-                    <h4>Étape 3 : Récupérer les données :</h4>
+                    <h3>Étape 3 : Récupérer les données :</h3>
                     <p>Pour chaque bloc identifié, on lit son contenu dans la table <span class="em">DATA BLOCKS</span>.</p>
-                    <h5>myfile1.txt :</h5>
+                    <h4>myfile1.txt :</h4>
                     <table class="tableBalises">
                         <thead>
                             <tr>
@@ -5615,10 +5618,10 @@ monitor session 3 destination interface e0/2</code></pre>
                             </tr>
                         </tbody>
                     </table>
-                    <h4>Étape 4 : Corriger l'endianness :</h4>
+                    <h3>Étape 4 : Corriger l'endianness :</h3>
                     <p>Les données sont stockées en <span class="em">little-endian</span>.</p>
                     <p>Il faut donc inverser les octets de chaque mot de 16 bits.</p>
-                    <h5>Exemple :</h5>
+                    <h4>Exemple :</h4>
                     <ul>
                         <li>
                             <p>Valeur lue : <span class="em">5943</span>.</p>
@@ -5655,7 +5658,7 @@ monitor session 3 destination interface e0/2</code></pre>
                             <p>Résultat : <span class="em">CY</span>.</p>
                         </li>
                     </ul>
-                    <h4>Étape 5 : Convertir toutes les valeurs :</h4>
+                    <h3>Étape 5 : Convertir toutes les valeurs :</h3>
                     <table class="tableBalises">
                         <thead>
                             <tr>
@@ -5707,14 +5710,14 @@ monitor session 3 destination interface e0/2</code></pre>
                             </tr>
                         </tbody>
                     </table>
-                    <h4>Étape 6 : Reconstituer le contenu :</h4>
+                    <h3>Étape 6 : Reconstituer le contenu :</h3>
                     <p>Concaténation des données dans l'ordre des blocs : <span class="em">CY + BE + RS + EC + UR + IT + Y&nbsp; + \n\0</span>.</p>
                     <p>Résultat : <span class="em">CYBERSECURITY&nbsp;\n\0</span>.</p>
                     <h4>Application à myfile2.txt :</h4>
                     <h5>Chaîne FAT :</h5>
                     <p>Bloc de départ : <span class="em">15</span>.</p>
                     <p>Lecture de la FAT : <span class="em">15 &#8594; 10 &#8594; 7 &#8594; 23 &#8594; 21 &#8594; 27 &#8594; 25 &#8594; FFFF</span>.</p>
-                    <h5>Données récupérées :</h5>
+                    <h4>Données récupérées :</h4>
                     <table class="tableBalises">
                         <thead>
                             <tr>
@@ -5753,7 +5756,7 @@ monitor session 3 destination interface e0/2</code></pre>
                             </tr>
                         </tbody>
                     </table>
-                    <h5>Conversion ASCII :</h5>
+                    <h4>Conversion ASCII :</h4>
                     <table class="tableBalises">
                         <thead>
                             <tr>
@@ -5792,7 +5795,7 @@ monitor session 3 destination interface e0/2</code></pre>
                             </tr>
                         </tbody>
                     </table>
-                    <h5>Résultat final :</h5>
+                    <h4>Résultat final :</h4>
                     <p class="em">DFIR&nbsp;IS&nbsp;COOL!\n</p>
                     <h4>Synthèse de la méthode :</h4>
 <pre><code>ROOT DIRECTORY
@@ -5810,7 +5813,7 @@ Correction Little-Endian
 Conversion ASCII
 &#8592;
 Texte final</code></pre>
-                    <h4>Résultats obtenus :</h4>
+                    <h3>Résultats obtenus :</h3>
                     <table class="tableBalises">
                         <thead>
                             <tr>
@@ -5830,6 +5833,24 @@ Texte final</code></pre>
                         </tbody>
                     </table>
                     <p>Cette démarche est celle utilisée en analyse forensique pour reconstruire manuellement des fichiers stockés dans un système FAT.</p>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>On ne peut pas reconstuire une chaîne FAT "à l'envers" de manière unique si plusieurs clusters pourraient pointer vers le même cluster.</p>
+                        <p>Si aucun cluster ne pointe vers un cluster précis (par exemple : le cluster 16), c'est tout à fait possible.</p>
+                        <p>Dans FAT, cela signifie généralment :</p>
+                        <ul>
+                            <li>
+                                <p>soit le cluster 16 est le <code>premier cluster d'un autre fichier</code>;</p>
+                            </li>
+                            <li>
+                                <p>soit il appartient à un fichier supprimé;</p>
+                            </li>
+                            <li>
+                                <p>soit la FAT est incohérente/corrompue.</p>
+                            </li>
+                        </ul>
+                        <p>Le fait qu'aucun cluster ne pointe vers le cluster 16 <code>n'est pas une erreur</code>.</p>
+                    </div>
                 </article>
             <!-- fin de section -->
             </section>
