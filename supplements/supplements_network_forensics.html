@@ -2379,6 +2379,58 @@ monitor session 3 destination interface e0/2</code></pre>
                             <p><span class="em">Inconvénients</span> : Nouveau, moins de maturité.</p>
                         </li>
                     </ul>
+                    <h4>Tableau récapitulatif des FS :</h4>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>FS</th>
+                                <th>OS principal</th>
+                                <th>Force</th>
+                                <th>Faiblesse</th>
+                                <th>Particularité forensique</th>
+                            </tr>
+                        </thead>
+                        <tbbody>
+                            <tr>
+                                <td>FAT12/16/32</td>
+                                <td>DOS, USB, SD</td>
+                                <td>Simple, universel</td>
+                                <td>Fragmentation, limite 4 GB par fichier (FAT32)</td>
+                                <td>Structure lisible "à la main"</td>
+                            </tr>
+                            <tr>
+                                <td>NTFS</td>
+                                <td>Windows</td>
+                                <td>Journaling, ACL, gros fichiers</td>
+                                <td>Complexe, peu portable</td>
+                                <td>MFT = inode équivalent; ADS (Alternate Data Streams)</td>
+                            </tr>
+                            <tr>
+                                <td>ext2/3/4</td>
+                                <ts>Linux</ts>
+                                <td>Performance, journaling (ext3+)</td>
+                                <td>Versions divergentes</td>
+                                <td>Inodes, journal jbd2, superblocs redondants</td>
+                            </tr>
+                            <tr>
+                                <td>HFS+</td>
+                                <td>macOS legacy</td>
+                                <td>Bien sur HDD</td>
+                                <p>Mauvais sur SSD</p>
+                                <td>Catalog file</td>
+                            </tr>
+                            <tr>
+                                <td>APFS</td>
+                                <td>macOS, iOS moderne</td>
+                                <td>SSD, snapshots, chiffrement</td>
+                                <td>Jeune, peu d'outils matures</td>
+                                <td>Copy-on-write, container/volume splits</td>
+                            </tr>
+                        </tbbody>
+                    </table>
+                    <div class="bordure">
+                        <p><span class="em">Lien à retenir</span> : NTFS, ext4 et APFS sont tous journalés. Le journal est une mine en forensique parce qu'il contient un historique des transactions FS récentes.</p>
+                    </div>
                     <h4>Organisation logique des données :</h4>
                     <h5>FAT :</h5>
                     <h6>Clusters :</h6>
@@ -5713,6 +5765,21 @@ monitor session 3 destination interface e0/2</code></pre>
                     <h3>Étape 6 : Reconstituer le contenu :</h3>
                     <p>Concaténation des données dans l'ordre des blocs : <span class="em">CY + BE + RS + EC + UR + IT + Y&nbsp; + \n\0</span>.</p>
                     <p>Résultat : <span class="em">CYBERSECURITY&nbsp;\n\0</span>.</p>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Trois pièges classiques à garder en tête :</p>
+                        <ol>
+                            <li>
+                                <p><code>Le piège de l'endianness</code> : Si tu lis 5943 comme "YC" au lieu de "CY", tu obtiens YCEBSRCERUTIY au lieu de CYBERSECURITY. Toujours te poser la question : <q>la valeur 16 bits affichée correspondent-elle à l'ordre des octets sur disque, ou est-ce un mot machine little-endian ?</q>. Sur x86 et FAT réel, c'est toujours little-endian. La règle réflexe : XXYY dans une cellule = octets YY XX sur disque.</p>
+                            </li>
+                            <li>
+                                <p><code>Le piège du "je lis dans l'ordre physique"</code> : Le tableau Data Blocks est rangé par numéro de bloc (0, 1,2...). Mais ton fichier n'est PAS dans cet ordre. Lis toujours dans l'ordre dicté par la chaîne FAT.</p>
+                            </li>
+                            <li>
+                                <p><code>Le piège de la taille</code> : Le dernier bloc d'un fichier est presque toujours partiellement vide (le fameux slack space). Tu dois tronquer à la taille indiquée dans le Root Directory. Dans myfile1, le NUL final est probablement du slack - pas du contenu réel.</p>
+                            </li>
+                        </ol>
+                    </div>
                     <h4>Application à myfile2.txt :</h4>
                     <h5>Chaîne FAT :</h5>
                     <p>Bloc de départ : <span class="em">15</span>.</p>
