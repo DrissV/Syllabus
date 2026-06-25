@@ -63,6 +63,7 @@
                     <li><a href="#format_fichier_PE">Format de fichier PE : Injection de code</a></li>
                     <li><a href="#outils_analyse_fichier_PE">Outils d'analyse de fichier PE</a></li>
                     <li><a href="#examen_blanc_ChatGPT">Examen blanc généré par ChatGPT</a></li>
+                    <li><a href="#examen_blanc_prof">Examen blanc du prof</a></li>
                     <li><a href="#reconstruction_fichiers_systeme_FAT">Reconstruction de fichiers dans un système FAT</a></li>
                 </ol>
             </nav>
@@ -959,7 +960,7 @@
                     <ol>
                         <li>
                             <p>Comment garantir qu'une capture réseau n'a pas été altérée ?</p>
-                            <p>En pratique, l'intégrité repose sur la combinaison "hash + horodatage + stockage imuable + traçabilité", pas sur un seul mécanisme.</p>
+                            <p>En pratique, l'intégrité repose sur la combinaison "hash + horodatage + stockage immuable + traçabilité", pas sur un seul mécanisme.</p>
                             <p>Pour garantir qu'une capture réseau n'a pas été altérée, on s'appuie surtout sur des mécanismes d'intégrité et de traçabilité :</p>
                             <ul>
                                 <li>
@@ -5560,6 +5561,54 @@ monitor session 3 destination interface e0/2</code></pre>
                                 <p>YARA détecte automatiquement tous les malwares sans qu'il soit nécessaire de définir des règles. &#9888;</p>
                             </li>
                         </ol>
+                    </fieldset>
+                </article>
+                <article>
+                    <h2 id="examen_blanc_prof">Examen blanc du prof :</h2>
+                    <fieldset class="question">
+                        <legend>Question 1</legend>
+                        <p>Quelles sont les limites de l'analyse réseau ?</p>
+                        <p class="em">L'analyse réseau est limitée par le chiffrement, la visibilité partielle du trafic, les volumes de données à traiter et la complexité des environnements cloud. Elle ne fournit pas toujours le contexte complet et peut produire des faux positifs ou des faux négatifs. Elle doit donc être complétée par d'autres sources comme les logs, les EDR et les SIEM.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 2</legend>
+                        <p>Peut-on faire du network forensics sans avoir les flux ?</p>
+                        <p class="em">Oui, grâce à des sources comme les logs, NetFlow, DNS, VPN ou les données des EDR. Ces informations permettent de reconstituer une partie des événements et d'identifier des activités suspectes, mais elles ne donnent pas accès au contenu exact des communications.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 3</legend>
+                        <p>Quels sont les enjeux juridiques dans le cloud ?</p>
+                        <p class="em">Les principaux enjeux concernent la protection des données, leur localisation, la conformité réglementaire et la répartition des responsabilités entre le client et le fournisseur cloud. La conservation des preuves, la confidentialité et la gestion du chiffrement sont également des aspects essentiels.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 4</legend>
+                        <p>Comment choisir entre SPAN et TAP pour une investigation ?</p>
+                        <p class="em">Le choix entre un SPAN (Switched Port Analyzer), qui copie le trafic d'un switch vers un port d'analyse, et un TAP (Test Access Point), qui reproduit physiquement le trafic sur un lien réseau, dépend du niveau de visibilité recherché. Le SPAN est simple à mettre en oeuvre et adapté aux analyses ponctuelles, mais il peut perdre des paquets. Le TAP offre une capture plus fidèle et plus fiable, ce qui le rend préférable pour les investigations forensiques et les environnements critiques.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 5</legend>
+                        <p>Quels défis pose le chiffrement TLS 1.3 aux collectes ?</p>
+                        <p class="em">TLS 1.3 réduit fortement la visibilité du trafic réseau en chiffrant davantage d'informations et en utilisant la Perfect Forward Secrecy (PFS). Les captures passives ne permettent généralement plus d'accéder au contenu des communications, ce qui oblige les analystes à s'appuyer davantage sur les logs, les métadonnées réseau et l'analyse comportementale.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 6</legend>
+                        <p>Comment capturer le trafic dans un environnement cloud ?</p>
+                        <p class="em">Dans les environnements cloud, la capture du trafic repose principalement sur des mécanismes virtuels tels que le Traffic Mirroring, les Flow Logs, les agents eBPF ou les outils de télémétrie. La collecte est compliquée par le chiffrement, les ressources éphémères et les volumes importants de données. En pratique, l'observabilité repose souvent davantage sur les logs et les métadonnées que sur la capture complète des paquets.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 7</legend>
+                        <p>Comment garantir qu'une capture réseau n'a pas été altérée ?</p>
+                        <p class="em">L'intégrité d'une capture réseau repose sur plusieurs mécanismes complémentaires : le hachage (SHA-256 par exemple) pour vérifier que le fichier n'a pas été modifié, l'horodatage pour attester du moment de la capture, le stockage immuable pour empêcher les altérations et la chaîne de conservation des preuves (chain of custody) pour assurer la traçabilité des manipulations. Des signatures numériques, des contrôles d'accès et la journalisation renforcent également cette garantie.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 8</legend>
+                        <p>Quelles différences entre filtres de capture et filtres d'affichage ?</p>
+                        <p class="em">Les filtres de capture s'appliquent avant ou pendant l'enregistrement des paquets et déterminent ce qui sera collecté. Les filtres d'affichage s'appliquent après la capture et permettent uniquement de sélectionner les paquets visibles dans l'outil d'analyse. Un paquet non capturé est perdu, tandis qu'un paquet masqué par un filtre d'affichage reste disponible dans la capture.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 9</legend>
+                        <p>Comment limiter l'impact d'une capture sur un réseau en production ?</p>
+                        <p class="em">Pour limiter l'impact d'une capture en production, il est recommandé de ne collecter que le trafic nécessaire grâce à des filtres adaptés, d'éviter les captures complètes permanentes et de privilégier des mécanismes comme les TAP, les SPAN, l'échantillonnage ou les flow logs. L'utilisation d'outils légers et la surveillance des ressources de capture permettent également de réduire la charge sur le réseau et les équipements.</p>
                     </fieldset>
                 </article>
                 <article>
