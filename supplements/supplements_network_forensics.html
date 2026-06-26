@@ -6901,7 +6901,108 @@ monitor session 3 destination interface e0/2</code></pre>
                         </ol>
                         <p class="em">Un cluster est un groupe de secteurs adjacents. C'est l'unité d'allocation minimale du système de fichiers FAT : chaque fichier occupe au minimum un cluster, même s'il est très petit (ce qui crée du "slack space" en forensics).</p>
                     </fieldset>
-                    
+                    <fieldset class="question">
+                        <legend>Question 176</legend>
+                        <p>Que contient le Boot Sector d'un système de fichiers FAT ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Les données des fichiers utilisateur. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>La liste des fichiers supprimés. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Les informations de démarrage et les paramètres du système de fichiers (taille clusters, taille FAT, nombre de secteurs). &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Les inodes de tous les fichiers. &#10060;</p>
+                            </li>
+                        </ol>
+                        <p class="em">Le Boot Sector contient les informations de démarrage et les paramètres du système de fichiers : taille des clusters, taille de la FAT, nombre de secteurs, etc. C'est le premier secteur lu au démarrage.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 177</legend>
+                        <p>Quel est le rôle principal de la File Allocation Table (FAT) ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Stocker le contenu des fichiers. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Suivre les clusters utilisés par chaque fichier et indiquer les clusters libres ou défectueux. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Contenir le système d'exploitation. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Chiffrer les fichiers sensibles. &#10060;</p>
+                            </li>
+                        </ol>
+                        <p class="em">La FAT est un tableau qui suit les clusters utilisés par les fichiers. Pour chaque cluster, elle indique le numéro du cluster suivant dans la chaîne (ou 0xFF/0xFFF pour la fin de fichier), ou si le cluster est libre ou défectueux.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 178</legend>
+                        <p>Dans le Root Directory d'un système FAT, quelles informations trouve-t-on pour chaque entrée de fichier ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Uniquement le nom du fichier. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Le nom du fichier, la date de création, et le numéro du premier cluster. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Le contenu complet du fichier. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>L'adresse MAC de la machine. &#10060;</p>
+                            </li>
+                        </ol>
+                        <p class="em">Chaque entrée du Root Directory comprend le nom du fichier, la date de création et le numéro du premier cluster. Le système suit ensuite la chaîne de clusters via la FAT pour lire la totalité du fichier.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 179</legend>
+                        <p>Quelle zone du système de fichiers FAT contient les données réelles des fichiers et répertoires ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Boot Sector. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>File Allocation Table. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Root Directory. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Data Area. &#9989;</p>
+                            </li>
+                        </ol>
+                        <p class="em">La Data Area est la zone où les fichiers et répertoires sont réellement stockés. Elle est divisée en clusters. Le Boot Sector, la FAT et le Root Directory sont des structures de métadonnées.</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 180</legend>
+                        <p>Quelle est la séquence correcte des zones dans la structure FAT sur le disque ?</p>
+                        <ol type="A">
+                            <li>
+                                <p>Root Directory &#8594; FAT &#8594; Boot Sector &#8594; Data Area. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>Boot Sector &#8594; File Allocation Table &#8594; Root Directory &#8594; Data Area. &#9989;</p>
+                            </li>
+                            <li>
+                                <p>Data Area &#8594; FAT &#8594; Root Directory &#8594; Boot Sector. &#10060;</p>
+                            </li>
+                            <li>
+                                <p>FAT &#8594; Boot Sector &#8594; Data Area &#8594; Root Directory. &#10060;</p>
+                            </li>
+                        </ol>
+                        <p class="em">L'ordre sur le disque est : Boot Sector (paramètres FS) &#8594; File Allocation Table (chaînes de clusters) &#8594; Root Directory (entrées fichiers) &#8594; Data Area (données).</p>
+                    </fieldset>
+                    <fieldset class="question">
+                        <legend>Question 181</legend>
+                        <p>Exercice FAT : Un fichier commence au cluster 6. La FAT indique : cluster 6 &#8594; cluster 3, cluster 3 &#8594; cluster 8, cluster 8 &#8594; 0xFF. Décrivez la chaîne de clusters, ce que signifie 0xFF, et combien de clusters ce fichier occupe.</p>
+                        <p class="em">Chaîne : 6 &#8594; 3 &#8594; 8 &#8594; FIN. Le fichier occupe 3 clusters, lus dans cet ordre (6 d'abord, puis 3, puis 8). La valeur 0xFF (ou 0xFFF en FAT12, 0xFFFF en FAT16, 0x0FFFFFFF en FAT32) est le marqueur End Of File : il indique que le cluster 8 est le dernier de la chaîne. Pour calculer la taille occupée sur le disque : 3 clusters * taille du cluster (par exemple : 2048 bytes = 4 secteurs &#8594; 6144 bytes).</p>
+                        <p class="em">Cet exercice est au coeur de l'analyse forensique FAT : suivre la chaîne de clusters permet de reconstruire un fichier, même fragmenté sur le disque.</p>
+                    </fieldset>
+                    <h5>S5 - Virtual File System :</h5>
                 </article>
                 <article>
                     <h2 id="examen_blanc_prof">Examen blanc du prof :</h2>
