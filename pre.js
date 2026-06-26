@@ -105,3 +105,22 @@ smartLinkElements.forEach((link) => {
         }
     });
 });
+
+const toggleCorrection = document.querySelectorAll('.toggle-correction');
+
+toggleCorrection.forEach((button) => {
+    const fieldset = button.closest('.question');
+    
+    const updateButton = () => {
+        const showCorrection = fieldset.classList.contains('show-correction');
+        button.textContent = showCorrection ? 'Masquer la correction' : 'Afficher la correction';
+        button.setAttribute('aria-label', button.textContent);
+    }
+
+    updateButton();
+
+    button.addEventListener('click', () => {
+        fieldset.classList.toggle('show-correction');
+        updateButton();
+    });
+});
