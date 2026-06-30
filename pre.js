@@ -8,6 +8,7 @@ preElements.forEach((preElement) => {
     preElement.addEventListener('click', (event) => {
         copyPreContent(event);
     });
+
     preElement.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
@@ -40,6 +41,7 @@ gifs.forEach((img) => {
 gifs.forEach((img) => {
     img.dataset.src = img.src;
     img.style.cursor = 'pointer';
+
     img.addEventListener('click', () => {
         img.src = '';
         img.src = img.dataset.src;
@@ -101,6 +103,7 @@ smartLinkElements.forEach((link) => {
                 timer = null;
                 openNewTab();
             }
+            
             e.preventDefault();
         }
     });
