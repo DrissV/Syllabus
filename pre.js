@@ -112,15 +112,15 @@ smartLinkElements.forEach((link) => {
 const questions = document.querySelectorAll('fieldset.question');
 
 Promise.all([
-    fetch('eyesOpen.html').then((response) => response.text()),
-    fetch('openClosed.html').then((response) => response.text())
+    fetch('/eyesOpen.html').then((response) => response.text()),
+    fetch('/eyesClosed.html').then((response) => response.text())
 ]).then(([eyesOpen, eyesClosed]) => {
     const createSvg = (svg) => {
         const template = document.createElement('template');
         template.innerHTML = svg.trim();
         return template.content.firstElementChild;
     };
-
+    
     questions.forEach((fieldset) => {
         // Transforme les .em en explications sauf les span.em
         fieldset.querySelectorAll('.em:not(span)').forEach((element) => {
