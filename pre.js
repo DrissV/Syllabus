@@ -147,19 +147,19 @@ Promise.all([
         button.append(label);
 
         firstParagraph.insertAdjacentElement('afterend', button);
-    });
-
-    const updateButton = () => {
-        const showCorrection = fieldset.classList.contains('show-correction');
-        icon.replaceChildren(createSvg(showCorrection ? eyesClosed : eyesOpen));
-        label.textContent = showCorrection ? 'Masquer la correction' : 'Afficher la correction';
-        button.setAttribute('aria-label', label.textContent);
-    };
-
-    updateButton();
-
-    button.addEventListener('click', () => {
-        fieldset.classList.toggle('show-correction');
+    
+        const updateButton = () => {
+            const showCorrection = fieldset.classList.contains('show-correction');
+            icon.replaceChildren(createSvg(showCorrection ? eyesClosed : eyesOpen));
+            label.textContent = showCorrection ? 'Masquer la correction' : 'Afficher la correction';
+            button.setAttribute('aria-label', label.textContent);
+        };
+    
         updateButton();
+    
+        button.addEventListener('click', () => {
+            fieldset.classList.toggle('show-correction');
+            updateButton();
+        });
     });
 });
