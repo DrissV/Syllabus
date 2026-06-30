@@ -106,16 +106,52 @@ smartLinkElements.forEach((link) => {
     });
 });
 
-const toggleCorrection = document.querySelectorAll('.toggle-correction');
+const questions = document.querySelectorAll('fieldset.question');
 
-toggleCorrection.forEach((button) => {
-    const fieldset = button.closest('.question');
-    
+Promise.all([
+    fetch('eyesOpen.html').then((response) => response.text()),
+    fetch('openClosed.html').then((response) => response.text())
+]).then(([eyesOpen, eyesClosed]) => {
+    const createSvg = (svg) => {
+        const template = document.createElement('template');
+        template.innerHTML = svg.trim();
+        return template.content.firstElementChild;
+    };
+
+    questions.forEach((fieldset) => {
+        // Transforme les .em en explications sauf les span.em
+        fieldset.querySelectorAll('.em:not(span)').forEach((element) => {
+            element.classList.add('explication');
+        });
+
+        // Création du bouton
+        const firstParagraph = fieldset.querySelector('p');
+
+        if (!firstParagraph) {
+            return;
+        }
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.classList.add('toggle-correction');
+
+        const icon = document.createElement('span');
+        icon.classList.add('toggle-icon');
+
+        const label = document.createElement('span');
+
+        button.append(icon);
+        button.append(label);
+
+        firstParagraph.insertAdjacentElement('afterend', button);
+    });
+
     const updateButton = () => {
         const showCorrection = fieldset.classList.contains('show-correction');
-        button.textContent = showCorrection ? 'Masquer la correction' : 'Afficher la correction';
-        button.setAttribute('aria-label', button.textContent);
-    }
+        icon.replaceChildren(createSvg(showCorrection ? eyesClosed : eyesOpen));
+        label.textContent = showCorrection ? 'Masquer la correction' : 'Afficher la correction';
+        button.setAttribute('aria-label', label.textContent);
+    };
 
     updateButton();
 
