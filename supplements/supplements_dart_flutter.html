@@ -51,6 +51,7 @@
                     <li><a href="#installation_environnement_developpement">Installation et environnement de développement</a></li>
                     <li><a href="#fondamentaux_Dart">Les fondamentaux de Dart</a></li>
                     <li><a href="#creation_premier_projet_Flutter">Création du premier projet Flutter</a></li>
+                    <li><a href="#concept_widget">Le concept de widget</a></li>
                 </ol>
             </nav>
             
@@ -669,6 +670,120 @@ void main() {
                             <p><span class="em">pubspec.lock</span> &#8594;  versions résolues des dépendances.</p>
                         </li>
                     </ul>
+                </article>
+                <article>
+                    <h2 id="concept_widget">Le concept de widget :</h2>
+                    <p>Dans Flutter, l'interface d'une application est construite à partir de widgets.</p>
+                    <p>Un widget représente une partie de l'interface ou une description de celle-ci.</p>
+                    <p>Un widget peut représenter par exemple :</p>
+                    <ul>
+                        <li>
+                            <p>du texte;</p>
+                        </li>
+                        <li>
+                            <p>une image;</p>
+                        </li>
+                        <li>
+                            <p>un bouton;</p>
+                        </li>
+                        <li>
+                            <p>une zone de saisie;</p>
+                        </li>
+                        <li>
+                            <p>une ligne;</p>
+                        </li>
+                        <li>
+                            <p>une colonne;</p>
+                        </li>
+                        <li>
+                            <p>une page entière.</p>
+                        </li>
+                    </ul>
+                    <p>Les widgets peuvent être imbriqués les uns dans les autres.</p>
+                    <h3>L'arbre des widgets :</h3>
+                    <p>Une interface Flutter peut être représenté sous la forme d'un arbre de widgets.</p>
+<pre><code>MaterialApp
+    │
+    └── Scaffold
+         │
+         ├── AppBar
+         │
+         └── body
+              │
+              └── Column
+                   ├── Text
+                   ├── Image
+                   └── ElevatedButton</code></pre>
+                    <p>Chaque widget peut avoir un ou plusieurs widgets enfants.</p>
+                    <p>Cette organisation permet de construire des interfaces complexes à partir de composants plus simples.</p>
+                    <h3>StatelessWidget :</h3>
+                    <p>Un <span class="em">StatelessWidget</span> est un widget dont la configuration ne possède pas d'état mutable interne.</p>
+                    <p>Un exemple simple est un widget affichant un texte.</p>
+<pre><code>import 'package:flutter/material.dart';
+
+class Bonjour extends StatelessWidget {
+
+    const Bonjour({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return const Text("Bonjour !");
+    }
+}</code></pre>
+                    <p>La méthode <span class="em">build()</span> est fondamentale dans Flutter. Elle reçoit un <span class="em">BuildContext</span> et retourne un widget. Flutter utilise cette description pour construire l'interface correspondante.</p>
+                    <p>Le <span class="em">BuildContext</span> représente notamment la position d'un widget dans l'arbre des widgets. Il est utilisé par de nombreuses fonctionnalités Flutter, notamment pour accéder à certaines informations liées à l'environnement du widget.</p>
+                    <h3>StatefulWidget :</h3>
+                    <p>Certains widgets doivent conserver des informations qui peuvent changer pendant l'utilisation de l'application. Pour ce type de situation, Flutter propose le <span class="em">StatefulWidget</span>.</p>
+<pre><code>class Compteur extends StatefulWidget {
+
+    const Compteur({super.key});
+
+    @override
+    State&lt;Compteur&gt;createState() {
+        return _CompteurState();
+    }
+}
+
+class _CompteurState extends State&lt;Compteur&gt; {
+
+    int compteur = 0;
+
+    @override
+    Widget build(BuildContext context) {
+        return Text("$compteur");
+    }
+}</code></pre>
+                    <p>Le widget et son état sont deux éléments distincts.</p>
+                    <h3>Modifier l'état avec setState :</h3>
+                    <p>Lorsqu'une valeur appartenant à l'état d'un <span class="em">StatefulWidget</span> change, la méthode <span class="em">setState()</span> permet d'indiquer à Flutter que l'interface doit être reconstruite.</p>
+<pre><code>setState(() {
+    compteur++;
+});</code></pre>
+                    <p>Flutter peut alors reconstruire les parties nécessaires de l'interface d'afficher le nouvel état.</p>
+                    <h3>MaterialApp :</h3>
+                    <p><span class="em">MaterialApp</span> est un widget couramment utilisé comme point de départ d'une application Flutter utilisant les composants Material.</p>
+<pre><code>void main() {
+    runApp(
+        const MaterialApp(
+            home: Text("Bonjour")
+        )
+    );
+}</code></pre>
+                    <p>Dans une application plus complète, nous utiliserons généralement une structure plus élaborée.</p>
+                    <h3>Scaffold :</h3>
+                    <p>Le widget <span class="em">Scaffold</span> fournit une structure de base pour de nombreuses interfaces Material.</p>
+                    <p>Il peut notamment accueillir une barre supérieure, un corps de page et une barre de navigation.</p>
+<pre><code>Scaffold(
+    appBar: AppBar(
+        title: const Text("Accueil"),
+    ),
+    body: const Center(
+        child: Text("Bonjour")
+    ),
+)</code></pre>
+                    <h3>Le thème de l'application :</h3>
+                    <p>Une application Flutter peut définir un thème global permettant notamment de centraliser certains choix visuels.</p>
+                    
                 </article>
             </section>
         </main>
