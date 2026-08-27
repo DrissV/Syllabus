@@ -58,6 +58,7 @@
                     <li><a href="#formulaires">Les formulaires</a></li>
                     <li><a href="#navigation_entre_pages">La navigation entre les pages</a></li>
                     <li><a href="#gestion_etat">La gestion de l'état</a></li>
+                    <li><a href="#communication_Internet_API">Communication avec Internet et les API</a></li>
                 </ol>
             </nav>
             
@@ -1915,6 +1916,137 @@ Source de données</code></pre>
                             <p>évolution plus simple lorsque l'application grandit.</p>
                         </li>
                     </ul>
+                </article>
+                <article>
+                    <h2 id="communication_Internet_API">Communication avec Internet et les API :</h2>
+                    <p>Une application moderne doit régulièrement communiquer avec des services externes afin de récupérer, envoyer ou modifier des données.</p>
+                    <p>Ces données peuvent par exemple provenir d'un serveur, d'une API ou d'un autre service accessible par Internet.</p>
+                    <p>Jusqu'à présent, nous avons principalement travaillé avec des données créées directement dans l'application. Nous allons maintenant apprendre à communiquer avec une source de données externe.</p>
+                    <p>Cette étape permettra ensuite d'aborder des fonctionnalités plus complexes comme l'authentification, les bases de données distantes, le stockage de fichiers et la synchronisation des données.</p>
+                    <p>Flutter fournit notamment le package <span class="em">http</span> permettant d'effectuer des requêtes réseau. La documentation officielle de Flutter utilise ce package dans ses exemples de communication avec des serveurs.</p>
+                    <h3>Les requêtes HTTP :</h3>
+                    <p>Le protocole HTTP permet notamment à un client de communiquer avec un serveur.</p>
+                    <p>Dans notre cas, le client sera généralement l'application Flutter et le serveur sera un service distant.</p>
+<pre><code>Application Flutter
+&#8595; Requête HTTP
+Serveur
+&#8595; Réponse HTTP
+Application Flutter</code></pre>
+                    <p>Une requête HTTP peut notamment demander au serveur de récupérer, créer, modifier ou supprimer une ressource.</p>
+                    <h3>Les principales méthodes HTTP :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Méthode</th>
+                                <th>Utilisation courante</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET</td>
+                                <td>Récupérer des données</td>
+                            </tr>
+                            <tr>
+                                <td>POST</td>
+                                <td>Créer ou envoyer des données</td>
+                            </tr>
+                            <tr>
+                                <td>PUT</td>
+                                <td>Modifier une ressource</td>
+                            </tr>
+                            <tr>
+                                <td>PATCH</td>
+                                <td>Modifier partiellement une ressource</td>
+                            </tr>
+                            <tr>
+                                <td>DELETE</td>
+                                <td>Supprimer une ressource</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Les API REST :</h3>
+                    <p>Une API, ou Application Programming Interface, permet à différents logiciels de communiquer entre eux.</p>
+                    <p>Une API REST utilise généralement HTTP pour permettre à une application d'accéder à des ressources disponibles sur un serveur.</p>
+                    <p>On peu représenter une API REST de manière simplifiée :</p>
+<pre><code>Flutter
+&#8595; HTTP
+API REST
+   │
+   ├── Utilisateurs
+   ├── Messages
+   ├── Produits
+   └── Autres données</code></pre>
+                    <p>Une API peut retourner des données dans différents formats. Le format JSON est particulièrement courant pour les API Web.</p>
+                    <h3>Ajouter le package http :</h3>
+                    <p>Flutter permet d'ajouter des packages à l'aide de la commande <span class="em">flutter pub add</span>.</p>
+                    <p>Pour ajouter le package span.em{http}, nous pouvons utiliser :</p>
+<pre><code>flutter pub add http</code></pre>
+                    <p>Le package peut ensuite être importé dans un fichier Dart :</p>
+<pre><code>import 'package:http/http.dart' as http;</code></pre>
+                    <p>Le package fournit notamment les méthodes permettant d'effectuer des requêtes HTTP.</p>
+                    <h3>Récupérer des données :</h3>
+                    <p>La méthode <span class="em">http.get()</span> permet d'effectuer une requête HTTP GET.</p>
+<pre><code>final response = await http.get(
+    Uri.parse(
+        "https://jsonplaceholder.typicode.com/albums/1"
+    ),
+);</code></pre>
+                    <p>La méthode renvoie une <span class="em">Future</span> contenant une réponse HTTP.</p>
+                    <p>Nous utilisons donc <span class="em">await</span> afin d'attendre la réponse du serveur.</p>
+                    <h3>Le code de statut :</h3>
+                    <p>Une réponse HTTP possède notamment un code de statut permettant d'indiquer le résultat de la requête.</p>
+                    <p>Par exemple, le code 200 correspond généralement à une requ^te réussie.</p>
+                    <p>Les codes HTTP seront étudiés plus précisément dans la suite de ce cours.</p>
+                    <h3>JSON avec Flutter :</h3>
+                    <p>Lorsqu'une API retourne des données, celles-ci sont fréquemment représentées sous forme de JSON.</p>
+                    <p>En Dart, le package <span class="em">dart:convert</span> fournit notamment les fonctions <span class="em">jsonDecode()</span> et <span class="em">jsonEncode()</span>.</p>
+                    <h3>Envoyer des données :</h3>
+                    <p>Une application ne se contente pas de récupérer des données. Elle doit également pouvoir envoyer des informations au serveur.</p>
+                    <p>La méthode <span class="em">http.post()</span> permet notamment d'envoyer des données à un serveur. La documentation Flutter utilise cette approche pour envoyer du JSON à une API.</p>
+<pre><code>final response = await http.post(
+    Uri.parse(
+        "https://example.com/users"
+    ),
+
+    headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+    },
+
+    body: jsonEncode({
+        "nom": "Alice",
+        "email": "alice@example.com",
+    }),
+);</code></pre>
+                    <p>Les données sont ici transformées en JSON avec <span class="em">jsonEncode()</span>.</p>
+                    <p>L'en-tête <span class="em">Content-Type</span> permet notamment d'indiquer au serveur que le contenu envoyé est du JSON.</p>
+                    <h3>Modifier et supprimer des données :</h3>
+                    <h4>PUT :</h4>
+                    <p>La méthode <span class="em">http.put()</span> peut être utilisée lorsqu'une ressource doit être modifiée.</p>
+<pre><code>final response = await http.post(
+    Uri.parse(
+        "https://example.com/users/1"
+    ),
+
+    headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+    },
+
+    body: jsonEncode({
+        "nom": "Alice Dupont",
+    }),
+);</code></pre>     
+                    <p>Flutter utilise notamment <span class="em">http.put()</span> dans ses recettes consacrées à la modification de données sur Internet.</p>
+                    <h4>DELETE :</h4>
+                    <p>La méthode <span class="em">http.delete()</span> permet de demander au serveur de supprimer une ressource.</p>
+<pre><code>final response = await http.delete(
+    Uri.parse(
+        "https://example.com/users/1"
+    ),
+);</code></pre>
+                    <p>La suppression réelle dépend naturellement du comportement défini par le serveur ou l'API.</p>
+                    <h3>CRUD :</h3>
+                    <p>Les opérations principales d'une application manipulant des données sont souvent regroupées sous le terme <span class="em">CRUD</span>.</p>
+                    
                 </article>
             </section>
         </main>
