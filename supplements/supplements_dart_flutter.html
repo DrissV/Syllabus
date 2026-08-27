@@ -1513,7 +1513,202 @@ class _FormulaireInscriptionState extends State&lt;FormulaireInscription&gt; {
                     <p>Dans cet exemple, Flutter crée une nouvelle route à partir du widget <span class="em">DeuxiemePage</span> et l'affiche.</p>
                     <p>La méthode <span class="em">push()</span> retourne une <span class="em">Future</span> qui se termine lorsque la route est retirée de la pile. Cela permettra notamment de récupérer une valeur renvoyée par la page suivante.</p>
                     <h3>MaterialPageRoute :</h3>
-                    
+                    <p>Le widget <span class="em">MaterialPageRoute</span> permet de créer une route adaptée à une application utilisant Material Design.</p>
+<pre><code>MaterialPageRoute(
+    builder: (context) =&gt; const ProfilPage(),
+)</code></pre>
+                    <p>La propriété <span class="em">builder</span> indique le widget qui doit être utilisé pour construire la nouvelle page.</p>
+                    <h3>Navigator.pop :</h3>
+                    <p>Pour revenir à la page précédente, il est possible d'utiliser <span class="em">Navigator.pop()</span>.</p>
+<pre><code>Navigator.pop(context);</code></pre>
+                    <p>Cette méthode retire la route située au sommet de la pile de navigation.</p>
+                    <h3>Premier exemple complet :</h3>
+<pre><code>import 'package:flutter/material.dart';
+
+void main() {
+    runApp(
+        const MaterialApp(
+            home: AccueilPage(),
+        ),
+    );
+}
+
+class AccueilPage extends StatelessWidget {
+
+    const AccueilPage({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text("Accueil"),
+            ),
+
+            body: Center(
+                child: ElevatedButton(
+                    onPressed: () {
+                        Navigator.push(
+                            context, MaterialPageRoute(
+                                builder: (context) =&gt; const ProfilPage(),
+                            ),
+                        );
+                    },
+                    child: const Text("Voir le profil"),
+                ),
+            ),
+        );
+    }
+}
+
+class ProfilPage extends StatelessWidget {
+
+    const ProfilPage({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text("Profil"),
+            ),
+
+            body: Center(
+                child: ElevatedButton(
+                    onPressed: () {
+                        Navigator.pop(context);
+                    },
+                    child: const Text("Retour"),
+                ),
+            ),
+        );
+    }
+}</code></pre>
+                    <p>Dans cet exemple, l'utilisateur se trouve d'abord sur la page <span class="em">AccueilPage</span>.</p>
+                    <p>Lorsqu'il active le bouton, <span class="em">Navigator.push()</span> ajoute la page ProfilPage à la pile.</p>
+                    <p>Lorsqu'il active le bouton de retour, <span class="em">Navigator.pop()</span> retire <span class="em">ProfilPage</span> et l'utilisateur revient à la page précédente.</p>
+                    <h3>Passer des données à une autre page :</h3>
+                    <p>Lorsqu'une nouvelle page est ouverte, il est souvent nécessaire de lui transmettre des informations.</p>
+                    <p>Ces informations peuvent être transmises au constructeur du widget qui représente la nouvelle page.</p>
+<pre><code>class ProfilPage extends StatelessWidget {
+
+    final String nom;
+
+    const ProfilPage({
+        super.key,
+        required this.nom,
+    });
+
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text("Profil"),
+            ),
+
+            body: Center(
+                child: Text("Bonjour $nom"),
+            ),
+        );
+    }
+
+}</code></pre>
+                    <p>Lors de la navigation, nous pouvons fournir la valeur :</p>
+<pre><code>Navigator.push(
+    context, MaterialPageRoute(
+        builder: (context) =&gt; const ProfilPage(
+            nom: "Alice",
+        ),
+    ),
+);</code></pre>
+                    <p>Il est ainsi possible de transmettre un objet ou plusieurs informations à une nouvelle page. Cette technique est notamment utilisée lorsqu'un utilisateur sélectionne un élément dans une liste et que la page suivante doit afficher les détails de cet élément.</p>
+                    <h3>Récupérer une valeur renvoyée par une page :</h3>
+                    <p>Une route peut également retourner une valeur lorsqu'elle est fermée.</p>
+                    <p>Pour cela, la valeur peut être fournie avec <span class="em">Navigator.pop()</span>.</p>
+<pre><code>Navigator.pop(
+    context,
+    true,
+);</code></pre>
+                    <p>La page qui a ouvert la route peut récupérer cette valeur en attendant le résultat de <span class="em">Navigator.push()</span>.</p>
+<pre><code>final bool? resultat = await Navigator.push&lt;bool&gt;(
+    context, MaterialPageRoute(
+        builder: (context) =&gt; const ConfirmationPage(),
+    ),
+);</code></pre>
+                    <p>Cette possibilité est particulièrement utile lorsqu'une page demande une information ou un choix à l'utilisateur avant de revenir à la page précédente.</p>
+                    <h3>Les routes nommées :</h3>
+                    <p>Flutter permet également de définir des routes possédant un nom. Par exemple :</p>
+<pre><code>MaterialApp(
+    routes: {
+        "/": (context) =&gt; const AccueilPage(),
+        "/profil": (context) =&gt; const ProfilPage(),
+        "/parametres": (context) =&gt; const ParametresPage(),
+    },
+)</code></pre>
+                    <p>Une route nommée peut ensuite être utilisée avec :</p>
+<pre><code>Navigator.pushNamed(
+    context,
+    "/profil",
+);</code></pre>
+                    <p>Cette approche permet notamment de centraliser les chemins de navigation.</p>
+                    <div class="information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Les routes nommées restent utiles pour certains cas simples, mais la documentation actuelle de Flutter ne les recommande plus comme solution générale pour la plupart des applications. Pour des besoins de navigation plus complexes, Flutter recommande notamment d'envisager <span class="em">Navigator</span> avec <span class="em">MaterialPageRoute</span> ou un routeur comme <span class="em">go_router</span>.</p>
+                    </div>
+                    <h3>Navigation avec plusieurs pages :</h3>
+                    <p>Une application peut organiser ses différentes pages de la manière suivante :</p>
+<pre><code>Application
+    │
+    ├── Accueil
+    │
+    ├── Profil
+    │
+    ├── Paramètres
+    │
+    └── Détails</code></pre>
+                    <p>Chaque page peut elle-même permettre d'accéder à d'autres pages.</p>
+                    <h3>Navigation et accessibilité :</h3>
+                    <p>La navigation doit rester compréhensible pour les utilisateurs utilisant des technologies d'assistance.</p>
+                    <p>Les titres des pages doivent être explicites et les boutons permettant de naviguer doivent clairement indiquer leur fonction.</p>
+                    <p>Il est également important de vérifier que l'ordre de navigation et le focus restent cohérents lorsqu'une nouvelle page est affichée.</p>
+                    <p>Sur ordinateur, la navigation au clavier doit également être testée.</p>
+                    <h3>À retenir :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Méthode / élément</th>
+                                <th>Utilisation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Navigator</td>
+                                <td>Gérer la navigation entre les routes</td>
+                            </tr>
+                            <tr>
+                                <td>Route</td>
+                                <td>Représenter une page ou un écran</td>
+                            </tr>
+                            <tr>
+                                <td>MaterialPageRoute</td>
+                                <td>Créer une route utilisant une transition Material</td>
+                            </tr>
+                            <tr>
+                                <td>Navigator.push()</td>
+                                <td>Ajouter une nouvelle route</td>
+                            </tr>
+                            <tr>
+                                <td>Navigator.pop()</td>
+                                <td>Retirer la route courante</td>
+                            </tr>
+                            <tr>
+                                <td>Navigator.pushNamed()</td>
+                                <td>Naviguer vers une route nommée</td>
+                            </tr>
+                            <tr>
+                                <td>MaterialApp.routes</td>
+                                <td>Définir une table de routes nommées</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </article>
             </section>
         </main>
