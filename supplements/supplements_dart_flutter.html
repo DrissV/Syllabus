@@ -53,6 +53,10 @@
                     <li><a href="#creation_premier_projet_Flutter">Création du premier projet Flutter</a></li>
                     <li><a href="#concept_widget">Le concept de widget</a></li>
                     <li><a href="#widgets_interface_mise_en_page">Les widgets d'interface et de mise en page</a></li>
+                    <li><a href="#defilement_listes">Le défilement et les listes</a></li>
+                    <li><a href="#widgets_interactifs">Les widgets interactifs</a></li>
+                    <li><a href="#formulaires">Les formulaires</a></li>
+                    <li><a href="#navigation_entre_pages">La navigation entre les pages</a></li>
                 </ol>
             </nav>
             
@@ -994,6 +998,522 @@ Alignment.bottomRight</code></pre>
                             <p>spaceEvenly.</p>
                         </li>
                     </ul>
+                    <h3>crossAxisAlignment :</h3>
+                    <p>La propriété <span class="em">crossAxisAlignment</span> permet de contrôler la position des enfants sur l'axe secondaire.</p>
+<pre><code>Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+        const Text("Prénom"),
+        const Text("Nom"),
+        const Text("Email"),
+    ],
+)</code></pre>
+                    <p>Dans une <span class="em">Column</span>, l'axe secondaire est horizontal.</p>
+                    <p>Dans une <span class="em">Row</span>, l'axe secondaire est vertical.</p>
+                    <h3>Le widget Expanded :</h3>
+                    <p>Le widget <span class="em">Expanded</span> permet à son enfant d'occuper l'espace disponible dans un <span class="em">Row</span>, une <span class="em">Column</span> ou un <span class="em">Flex</span>.</p>
+<pre><code>Row(
+    children:[
+        const Icon(Icons.person),
+        
+        Expanded(
+            child: const Text("Utilisateur"),
+        ),
+    ],
+)</code></pre>
+                    <p>Lorsqu'il est utilisé dans un <span class="em">Row</span>, l'enfant de <span class="em">Expanded</span> peut occuper l'espace horizontal restant.</p>
+                    <p>Le nombre indiqué dans la propriété <span class="em">flex</span> permet de répartir l'espace disponible entre plusieurs widgets <span class="em">Expanded</span>.</p>
+<pre><code>Row(
+    children: [
+        Expanded(
+            flex: 1,
+            child: Container(),
+        ),
+
+        Expanded(
+            flex: 2,
+            child: Container(),
+        ),
+    ],
+)</code></pre>
+                    <h3>Le widget Flexible :</h3>
+                    <p>Le widget <span class="em">Flexible</span> permet de contrôler la manière dont un enfant occupe l'espace disponible dans un <span class="em">Row</span>, une <span class="em">Column</span> ou un <span class="em">Flex</span>.</p>
+                    <p>Contrairement à <span class="em">Expanded</span>, il ne force pas nécessairement l'enfant à remplir tout l'espace disponible.</p>
+<pre><code>Row(
+    children: [
+        Flexible(
+            child: const Text(
+                "Un texte pouvant occuper "
+                "l'espace disponible.",
+            ),
+        ),
+    ],
+)</code></pre>
+                    <h3>Le widget Spacer :</h3>
+                    <p>Le widget <span class="em">Spacer</span> permet d'insérer un espace flexible entre plusieurs widgets placés dans un <span class="em">Row</span>, une <span class="em">Column</span> ou un <span class="em">Flex</span>.</p>
+<pre><code>Row(
+    children: [
+        const Text("Accueil"),
+        const Spacer(),
+        const Icon(Icons.settings),
+    ],
+)</code></pre>
+                    <p>Dans cet exemple, le widget <span class="em">Spacer</span> occupe l'espace disponible entre le texte et l'icône.</p>
+                    <h3>Le widget Stack :</h3>
+                    <p>Le widget <span class="em">Stack</span> permet de superposer plusieurs widgets.</p>
+<pre><code>Stack(
+    children: [
+        Container(
+            width: 200,
+            height: 200,
+        ),
+
+        const Text("Texte"),
+    ],
+)</code></pre>
+                    <p>Les widgets contenus dans un <span class="em">Stack</span> sont placés les uns au-dessus des autres.</p>
+                    <h3>Le widget Positioned :</h3>
+                    <p>Le widget <span class="em">Positioned</span> peut être utilisé à l'intérieur d'un <span class="em">Stack</span> afin de contrôler la position d'un élément.</p>
+<pre><code>Stack(
+    children: [
+        Container(
+            width: 300,
+            height: 200,
+        ),
+
+        Positioned(
+            right: 10,
+            bottom: 10,
+            child: const Icon(
+                Icons.favorite,
+            ),
+        ),
+    ],
+)</code></pre>
+                    <h3>Le widget Wrap :</h3>
+                    <p>Le widget <span class="em">Wrap</span> permet de placer des widgets les uns à côté des autres et de passer automatiquement à une nouvelle ligne lorsqu'il n'y a plus suffisamment d'espace.</p>
+<pre><code>Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+        Chip(label: Text("Dart")),
+        Chip(label: Text("Flutter")),
+        Chip(label: Text("Mobile")),
+        Chip(label: Text("Web")),
+    ],
+)</code></pre>
+                    <p>Il est particulièrement utile pour les interfaces contenant des éléments dont la taille peut varier.</p>
+                    <h3>Le système de contraintes :</h3>
+                    <p>La compréhension du système de contraintes est essentielle pour comprendre la mise en page Flutter.</p>
+                    <p>De manière simplifiée, le parent fournit des contraintes à son enfant, l'enfant détermine sa taille en fonction de ces contraintes, puis le parent positionne l'enfant.</p>
+                    <p>Une mauvaise compréhension de ce fonctionnement peut provoquer des erreurs de mise en page, notamment lorsqu'un widget reçoit un espace non borné alors qu'il nécessite une dimension déterminée.</p>
+                    <p>Un exemple fréquent est l'utilisation d'une liste défilante dans une <span class="em">Column</span>.</p>
+<pre><code>Column(
+    children: [
+        const Text("Titre"),
+
+        ListView(
+            children: [
+                const Text("Élément 1"),
+                const Text("Élément 2"),
+            ],
+        ),
+    ],
+)</code></pre>
+                    <p>Dans cette situation, la hauteur de la liste peut ne pas être correctement déterminée.</p>
+                    <p>On peut notamment utiliser <span class="em">Expanded</span> afin de lui donner l'espace restant :</p>
+<pre><code>Column(
+    children: [
+        const Text("Titre"),
+
+        Expanded(
+            child: ListView(
+                children: [
+                    const Text("Élément 1"),
+                    const Text("Élément 2"),
+                ],
+            ),
+        ),
+    ],
+)</code></pre>
+                    <p>Cette utilisation de <span class="em">Expanded</span> est un cas très courant dans les interfaces Flutter.</p>
+                </article>
+                <article>
+                    <h2 id="defilement_listes">Le défilement et les listes :</h2>
+                    <p>Les interfaces mobiles et les applications de bureau peuvent contenir davantage d'informations que ce qui peut être affiché simultanément à l'écran.</p>
+                    <p>Flutter fournit plusieurs widgets permettant de gérer le défilement.</p>
+                    <h3>SingleChildScrollView :</h3>
+                    <p>Le widget <span class="em">SingleChildScrollView</span> permet de rendre une partie de l'interface défilable.</p>
+<pre><code>SingleChildScrollView(
+    child: Column(
+        children: [
+            const Text("Titre"),
+            const Text("Description"),
+            const Text("Informations"),
+        ],
+    ),
+)</code></pre>
+                    <p>Il est particulièrement adapté lorsque le contenu est relativement limité et peut être construit en une seule fois.</p>
+                    <h3>ListView :</h3>
+                    <p>Le widget <span class="em">ListView</span> permet de créer une liste verticale ou horizontale défilante.</p>
+<pre><code>ListView(
+    children: [
+        const ListTile(
+            title: Text("Accueil"),
+        ),
+
+        const ListTile(
+            title: Text("Profil"),
+        ),
+
+        const ListTile(
+            title: Text("Paramètres"),
+        ),
+    ],
+)</code></pre>
+                    <h3>ListTile :</h3>
+                    <p>Le widget <span class="em">ListTile</span> fournit une structure pratique pour représenter une ligne dans une liste.</p>
+<pre><code>ListTile(
+    leading: const Icon(Icons.person),
+
+    title: const Text("Alice"),
+
+    subtitle: const Text(
+        "alice@example.com",
+    ),
+
+    trailing: const Icon(
+        Icons.arrow_forward,
+    ),
+)</code></pre>
+                    <h3>ListView.builder :</h3>
+                    <p>Lorsqu'une liste contient un grand nombre d'éléments, il est préférable de construire les éléments au fur et à mesure qu'ils sont nécessaires.</p>
+                    <p>Le widget <span class="em">ListView.builder</span> permet notamment de construire dynamiquement une liste.</p>
+<pre><code>ListView.builder(
+    itemCount: utilisateurs.length,
+
+    itemBuilder: (context, index) {
+        return ListTile(
+            title: Text(
+                utilisateurs[index].nom,
+            ),
+        );
+    },
+)</code></pre>
+                    <p>Cette approche est particulièrement utile pour les listes provenant de données externes. Flutter recommande les constructeurs comme <span class="em">ListView.builder</span> ou <span class="em">GridView.builder</span> lorsque les listes sont longues ou construites progressivement.</p>
+                    <h3>GridView :</h3>
+                    <p>Le widget <span class="em">GridView</span> permet de disposer des éléments sous forme de grille.</p>
+<pre><code>GridView.count(
+    crossAxisCount: 2,
+
+    children: [
+        Card(
+            child: const Center(
+                child: Text("1"),
+            ),
+        ),
+
+        Card(
+            child: const Center(
+                child: Text("2"),
+            ),
+        ),
+    ],
+)</code></pre>
+                    <p>Il peut être utilisé pour présenter des images, des produits, des catégories ou d'autres éléments organisés en grille.</p>
+                    <h3>À retenir :</h3>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Widget</th>
+                                <th>Utilisation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>SingleChildScrollView</td>
+                                <td>Rendre un contenu défilable</td>
+                            </tr>
+                            <tr>
+                                <td>ListView</td>
+                                <td>Créer une liste défilante</td>
+                            </tr>
+                            <tr>
+                                <td>ListView.builder</td>
+                                <td>Construire dynamiquement les éléments d'une liste</td>
+                            </tr>
+                            <tr>
+                                <td>ListTile</td>
+                                <td>Créer une ligne structurée</td>
+                            </tr>
+                            <tr>
+                                <td>GridView</td>
+                                <td>Présenter des éléments sous forme de grille</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+                <article>
+                    <h2 id="widgets_interactifs">Les widgets interactifs :</h2>
+                    <p>Une application doit permettre à l'utilisateur d'effectuer différentes actions.</p>
+                    <p>Flutter fournit plusieurs widgets permettant notamment de créer des boutons, d'afficher des commandes et de réagir aux actions de l'utilisateur.</p>
+                    <h3>ElevatedButton :</h3>
+<pre><code>ElevatedButton(
+    onPressed: () {
+        print("Bouton activé");
+    },
+    child: const Text("Valider"),
+)</code></pre>
+                    <p>La propriété <span class="em">onPressed</span> contient l'action exécutée lorsque l'utilisateur active le bouton.</p>
+                    <h3>FilledButton :</h3>
+<pre><code>FilledButton(
+    onPressed: () {
+        print("Action");
+    },
+    child: const Text("Continuer"),
+)</code></pre>
+                    <h3>OutlinedButton :</h3>
+<pre><code>OutlinedButton(
+    onPressed: () {
+        print("Annuler");
+    },
+    child: const Text("Annuler"),
+)</code></pre>
+                    <h3>TextButton :</h3>
+<pre><code>TextButton(
+    onPressed: () {
+        print("En savoir plus");
+    },
+    child: const Text("En savoir plus"),
+)</code></pre>
+                    <h3>IconButton :</h3>
+<pre><code>IconButton(
+    onPressed: () {
+        print("Recherche");
+    },
+    icon: const Icon(
+        Icons.search,
+    ),
+)</code></pre>
+                    <h3>FloatingActionButton :</h3>
+                    <p>Le widget <span class="em">FloatingActionButton</span> permet de présenter une action principale sous la forme d'un bouton flottant.</p>
+<pre><code>FloatingActionButton(
+    onPressed: () {
+        print("Nouvel élément");
+    },
+    child: const Icon(
+        Icons.add
+    ),
+)</code></pre>
+                    <h3>Les callbacks :</h3>
+                    <p>Les propriétés comme <span class="em">onPressed</span> représentent des fonctions appelées lorsqu'un événement se produit.</p>
+                    <p>Cette manière de transmettre une fonction à un widget est appelée un callback.</p>
+<pre><code>void afficherMessage() {
+    print("Bonjour !");
+}
+
+ElevatedButton(
+    onPressed: afficherMessage,
+    child: const Text("Bonjour"),
+)</code></pre>
+                    <p>Les callbacks permettent de séparer l'interface de l'action réalisée lorsqu'un utilisateur interagit avec celle-ci.</p>
+                    <h3>Accessibilité des éléments interactifs :</h3>
+                    <p>Les éléments interactifs doivent fournir suffisamment d'informations à l'utilisateur pour comprendre leur rôle.</p>
+                    <p>Un bouton contenant uniquement une icône doit notamment être identifiable correctement lorsqu'il est utilisé avec une technologie d'assistance.</p>
+                    <p>La navigation au clavier et la gestion du focus sont également importantes, notamment sur ordinateur. Les composants Flutter courants prennent en charge une partie de la navigation clavier, mais celle-ci doit être vérifiée lors des tests.</p>
+                </article>
+                <article>
+                    <h2 id="formulaires">Les formulaires :</h2>
+                    <p>Les applications ont régulièrement besoin de demander des informations à l'utilisateur.</p>
+                    <p>Il peut s'agir d'un nom, d'une adresse électronique, d'un mot de passe, d'une recherche ou d'une description.</p>
+                    <p>Flutter fournit différents widgets permettant de créer ces interfaces.</p>
+                    <h3>TextField :</h3>
+                    <p>Le widget <span class="em">TextField</span> permet à l'utilisateur de saisir du texte.</p>
+<pre><code>TextField(
+    decoration: const InputDecoration(
+        labelText: "Email",
+        hintText: "exemple@email.com",
+        border: OutlineInputBorder(),
+    ),
+)</code></pre>
+                    <p>La propriété <span class="em">decoration</span> permet de personnaliser la présentation du champ de saisie avec le widget <span class="em">InputDecoration</span>. Elle permet notamment d'ajouter un label, une indication, une icône ou une bordure.</p>
+                    <h3>TextEditingController :</h3>
+                    <p>La classe <span class="em">TextEditingController</span> permet notamment de récupérer et de modifier le texte d'un champ de saisie.</p>
+<pre><code>final TextEditingController nomController = TextEditingController();</code></pre>
+                    <p>Le contrôleur est ensuite associé au champ :</p>
+<pre><code>TextField(
+    controller: nomController,
+)</code></pre>
+                    <p>La valeur saisie peut alors être récupérée avec :</p>
+<pre><code>String nom = nomController.text;</code></pre>
+                    <h3>Le widget Form :</h3>
+                    <p>Le widget <span class="em">Form</span> permet de regrouper plusieurs champs afin de gérer leur validation, leur sauvegarde ou leur réinitialisation.</p>
+                    <p>Une clé de formulaire peut être utilisée pour contrôler l'état du formulaire.</p>
+<pre><code>final formKey = GlobalKey&lt;FormState&gt;();</code></pre>
+                    <p>Le formulaire peut ensuite être créé :</p>
+<pre><code>Form(
+    key: formKey,
+
+    child: Column(
+        children: [
+            TextFormField(),
+
+            ElevatedButton(
+                onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                        print("Formulaire valide");
+                    }
+                },
+                child: const Text("Envoyer"),
+            ),
+        ],
+    )
+)</code></pre>
+                    <h3>TextFormField :</h3>
+                    <p>Le widget <span class="em">TextFormField</span> associe un champ de saisie à la logique des formulaires. Il permet notamment d'utiliser une fonction de validation.</p>
+<pre><code>TextFormField(
+    decoration: const InputDecoration(
+        labelText: "Email",
+    ),
+
+    validator: (value) {
+        if (value == null || value.isEmpty) {
+            return "Veuillez saisir votre email.";
+        }
+        return null;
+    }
+)</code></pre>
+                    <p>La fonction <span class="em">validator</span> retourne généralement un message lorsque la valeur est invalide et <span class="em">null</span> lorsqu'elle est valide.</p>
+                    <h3>Validation d'une adresse électronique :</h3>
+<pre><code>TextFormField(
+    keyboardType: TextInputType.emailAddress,
+
+    decoration: const InputDecoration(
+        labelText: "Adresse email",
+    ),
+
+    validator: (value) {
+        if (value == null || value.isEmpty) {
+            return "Veuillez saisir une adresse email.";
+        }
+        if (!value.contains("@")) {
+            return "Adresse email invalide.";
+        }
+        return null;
+    },
+)</code></pre>
+                    <p>Cette validation est volontairement simple. Dans une application réelle, les règles de validation devront être adaptées au besoin et ne remplaceront pas les vérifications effectuées côté serveur.</p>
+                    <h3>Les cases à cocher :</h3>
+                    <p>Le widget <span class="em">Checkbox</span> permet de représenter une valeur pouvant être activée ou désactivée.</p>
+<pre><code>Checkbox(
+    value: accepte,
+    onChanged: (value) {
+        setState(() {
+            accepte = value ?? false;
+        });
+    },
+)</code></pre>
+                    <h3>Le widget Switch :</h3>
+                    <p>Le widget <span class="em">Switch</span> permet de représenter une option activée ou désactivée.</p>
+<pre><code>Switch(
+    value: notifications,
+    onChanged: (value) {
+        setState(() {
+            notifications = value;
+        });
+    },
+)</code></pre>
+                    <h3>Les formulaires et l'accessibilité :</h3>
+                    <p>Les formulaires doivent être compréhensibles et utilisables avec différentes méthodes d'interaction.</p>
+                    <p>Les champs doivent notamment posséder des intitulés explicites et les messages d'erreur doivent être compréhensibles.</p>
+                    <p>Sur ordinateur, la navigation au clavier et l'ordre de déplacement du focus doivent également être vérifiés.</p>
+                    <p>Pour les personnes utilisant un lecteur d'écran, les informations importantes doivent être correctement associées aux champs concernés.</p>
+                    <h3>Premier formulaire complet :</h3>
+<pre><code>class FormulaireInscription extends StatefulWidget {
+
+    const FormulaireInscription({super.key});
+
+    @override
+    State&lt;FormulaireInscription&gt; createState() {
+        return _FormulaireInscriptionState();
+    }
+}
+
+class _FormulaireInscriptionState extends State&lt;FormulaireInscription&gt; {
+
+    final formKey = GlobalKey&lt;FormState&gt;();
+
+    final emailController = TextEditingController();
+
+    @override
+    void dispose() {
+        emailController.dispose();
+        super.dispose();
+    }
+
+    @override
+    Widget build(BuildContext context) {
+        return Form(
+            key: formKey,
+
+            child: Column(
+                children: [
+                    TextFormField(
+                        controller: emailController,
+
+                        decoration: const InputDecoration(
+                            labelText: "Adresse email",
+                            border: OutlineInputBorder(),
+                        ),
+
+                        validator: (value) {
+                            if (value == null || value.isEmpty) {
+                                return "Veuillez saisir votre email.";
+                            }
+                            return null;
+                        },
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    ElevatedButton(
+                        onPressed: () {
+                            if (formKey.currentState!.validate()) {
+                                print(emailController.text);
+                            }
+                        },
+                        child: const Text("Envoyer"),
+                    ),
+                ],
+            ),
+        );
+    }
+}</code></pre>
+                    <p>Cet exemple réunit plusieurs notions étudiées précédemment : <span class="em">StatefulWidget</span>, <span class="em">Form</span>, <span class="em">TextFormField</span>, <span class="em">TextEditingController</span>, validation et bouton.</p>
+                    <p>Nous pouvons maintenant commencer à construire des interfaces capables de recevoir et de traiter les informations saisies par l'utilisateur.</p>
+                </article>
+                <article>
+                    <h2 id="navigation_entre_pages">La navigation entre les pages :</h2>
+                    <p>Une application contient généralement plusieurs pages permettant d'afficher différentes informations ou de réaliser différentes actions.</p>
+                    <p>Dans Flutter, les écrans et les pages sont représentés par des routes.</p>
+                    <p>Le widget <span class="em">Navigator</span> permet de gérer la navigation entre ces différentes routes.</p>
+                    <p>Le <span class="em">Navigator</span> fonctionne notamment comme une pile de navigation. Une nouvelle route peut être ajoutée au sommet de cette pile et la route située au sommet peut ensuite être retirée.</p>
+                    <h3>Les routes :</h3>
+                    <p>Une route représente une page ou un écran vers lequel l'utilisateur peut naviguer.</p>
+                    <p>Par exemple : Accueil &#8594; Profil &#8594; Paramètres.</p>
+                    <p>Chaque écran peut donc être représenté par un widget Flutter.</p>
+                    <h3>Navigator.push :</h3>
+                    <p>La méthode <span class="em">Navigator.push()</span> permet d'ajouter une nouvelle route à la pile de navigation.</p>
+<pre><code>Navigator.push(
+    context,
+    MaterialPageRoute(
+        builder: (context) =&gt; const DeuxiemePage(),
+    ),
+)</code></pre>
+                    <p>Dans cet exemple, Flutter crée une nouvelle route à partir du widget <span class="em">DeuxiemePage</span> et l'affiche.</p>
+                    <p>La méthode <span class="em">push()</span> retourne une <span class="em">Future</span> qui se termine lorsque la route est retirée de la pile. Cela permettra notamment de récupérer une valeur renvoyée par la page suivante.</p>
+                    <h3>MaterialPageRoute :</h3>
+                    
                 </article>
             </section>
         </main>
