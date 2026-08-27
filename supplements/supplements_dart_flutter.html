@@ -57,6 +57,7 @@
                     <li><a href="#widgets_interactifs">Les widgets interactifs</a></li>
                     <li><a href="#formulaires">Les formulaires</a></li>
                     <li><a href="#navigation_entre_pages">La navigation entre les pages</a></li>
+                    <li><a href="#gestion_etat">La gestion de l'état</a></li>
                 </ol>
             </nav>
             
@@ -342,7 +343,7 @@ class Oiseau with PeutVoler {
 } catch (e) {
     print("Une erreur est survenue.");
 }</code></pre>
-                    <div class="information">
+                    <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>L'opérateur <span class="em">~/</span> est utilisé pour une division entière.</p>
                     </div>
@@ -735,7 +736,7 @@ class Bonjour extends StatelessWidget {
         return const Text("Bonjour !");
     }
 }</code></pre>
-                    <div class="information">
+                    <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Le mot-clé <span class="em">const</span> permet de créer une instance constante lorsque tous les éléments nécessaires sont connus à la compilation. Flutter utilise fréquemment <span class="em">const</span> pour les widgets dont la configuration ne change pas.</p>
                     </div>
@@ -1649,7 +1650,7 @@ class ProfilPage extends StatelessWidget {
     "/profil",
 );</code></pre>
                     <p>Cette approche permet notamment de centraliser les chemins de navigation.</p>
-                    <div class="information">
+                    <div class="bordure information">
                         <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Les routes nommées restent utiles pour certains cas simples, mais la documentation actuelle de Flutter ne les recommande plus comme solution générale pour la plupart des applications. Pour des besoins de navigation plus complexes, Flutter recommande notamment d'envisager <span class="em">Navigator</span> avec <span class="em">MaterialPageRoute</span> ou un routeur comme <span class="em">go_router</span>.</p>
                     </div>
@@ -1709,6 +1710,211 @@ class ProfilPage extends StatelessWidget {
                             </tr>
                         </tbody>
                     </table>
+                </article>
+                <article>
+                    <h2 id="gestion_etat">La gestion de l'état :</h2>
+                    <p>Une application interactive doit pouvoir modifier son interface en fonction des actions de l'utilisateur et des données qu'elle manipule.</p>
+                    <p>Par exemple, lorsqu'un utilisateur active une option, ajoute un élément à une liste ou reçoit de nouvelles données, l'interface doit pouvoir être actualisée.</p>
+                    <p>La donnée qui peut changer au cours de l'utilisation d'une application est appelée <span class="em">état</span>.</p>
+                    <p>La gestion de l'état consiste donc notamment à déterminer quelles données peuvent changer, où elles doivent être conservées et comment l'interface doit être informée lorsqu'elles changent.</p>
+                    <p>Flutter utilise une approche déclarative : l'interface est décrite en fonction de l'état courant de l'application. Lorsque cet état évolue, Flutter reconstruit les widgets concernés afin de représenter le nouvel état.</p>
+                    <p>On peut représenter ce principe de manière simplifiée :</p>
+<pre><code>État de l'application
+&#8595;
+Interface Flutter
+&#8595;
+Action de l'utilisateur
+&#8595;
+Modification de l'état
+&#8595;
+Nouvelle interface</code></pre>
+                    <h3>L'état local :</h3>
+                    <p>L'état local correspond aux données utilisées par un widget et qui ne doivent pas nécessairement être accessibles à l'ensemble de l'application.</p>
+                    <p>Il peut par exemple s'agir :</p>
+                    <ul>
+                        <li>
+                            <p>d'un compteur;</p>
+                        </li>
+                        <li>
+                            <p>de l'état d'une case à cocher;</p>
+                        </li>
+                        <li>
+                            <p>de la sélection d'un élément;</p>
+                        </li>
+                        <li>
+                            <p>de l'ouverture ou de la fermeture d'une interface;</p>
+                        </li>
+                        <li>
+                            <p>d'une information temporaire propre à un écran.</p>
+                        </li>
+                    </ul>
+                    <p>Lorsque l'état concerne uniquement un widget, <span class="em">StatefulWidget</span> et <span class="em">setState()</span> constituent généralement une solution suffisante. La documentation Flutter présente notamment <span class="em">setState</span> comme une approche adaptée à l'état local et éphémère d'un widget.</p>
+                    <h3>setState() :</h3>
+                    <p>La méthode <span class="em">setState()</span> permet d'indiquer à Flutter qu'une modification de l'état d'un widget nécessite une reconstruction de son interface.</p>
+                    <p>Considérons un compteur :</p>
+<pre><code>class Compteur extends StatefulWidget {
+
+    const Compteur({super.key});
+
+    @override
+    State&lt;Compteur&gt; createState() {
+        return _CompteurState();
+    }
+}
+
+class _CompteurState extends State&lt;Compteur&gt; {
+
+    int compteur = 0;
+
+    @override
+    Widget build(BuildContext context) {
+        return Column(
+            children: [
+                Text("$compteur"),
+
+                ElevatedButton(
+                    onPressed: () {
+                        setState(() {
+                            compteur++;
+                        });
+                    },
+                    child: const Text("Ajouter"),
+                ),
+            ],
+        );
+    }
+}</code></pre>
+                    <p>Lorsque l'utilisateur active le bouton, la valeur de compteur est modifiée.</p>
+                    <p>L'appel à <span class="em">setState()</span> indique alors à Flutter que l'état a changé et que l'interface doit être reconstruite.</p>
+                    <p>Sans <span class="em">setState()</span>, la variable pourrait changer en mémoire sans que Flutter sache qu'il doit mettre à jour l'interface.</p>
+                    <h3>Le cycle de vie d'un StatefulWidget :</h3>
+                    <p>Un <span class="em">StatefulWidget</span> possède un cycle de vie permettant notamment d'initialiser, de mettre à jour et de libérer les ressources utilisées par son état.</p>
+                    <p>Parmi les méthodes importantes, nous retrouverons notamment :</p>
+                    <ul>
+                        <li>
+                            <p>initState();</p>
+                        </li>
+                        <li>
+                            <p>didChangeDependencies();</p>
+                        </li>
+                        <li>
+                            <p>build();</p>
+                        </li>
+                        <li>
+                            <p>didUpdateWidget();</p>
+                        </li>
+                        <li>
+                            <p>dispose().</p>
+                        </li>
+                    </ul>
+                    <h3>initState() :</h3>
+                    <p>La méthode <span class="em">initState()</span> est appelée lors de la création de l'état du widget.</p>
+                    <p>Elle est notamment utilisée pour effectuer certaines initialisations.</p>
+<pre><code>@override
+void initState() {
+    super.initState();
+    print("Initialisation");
+}</code></pre>
+                    <h3>dispose() :</h3>
+                    <p>La méthode <span class="em">dispose()</span> est appelée lorsque l'état du widget n'est plus utilisé.</p>
+                    <p>Elle permet notamment de libérer les ressources qui doivent être explicitement nettoyées.</p>
+                    <p>Par exemple, un <span class="em">TextEditingController</span> créé par un état doit être libéré lorsqu'il n'est plus nécessaire.</p>
+<pre><code>@override
+void dispose() {
+    controller.dispose();
+    super.dispose();
+}</code></pre>
+                    <p>La gestion correcte du cycle de vie permet notamment d'éviter de conserver inutilement des ressources après la destruction d'un widget.</p>
+                    <h3>L'état partagé :</h3>
+                    <p>Dans une application réelle, certaines données doivent être accessibles par plusieurs widgets ou plusieurs pages.</p>
+                    <p>Par exemple, une application peut devoir conserver :</p>
+                    <ul>
+                        <li>
+                            <p>l'utilisateur actuellement connecté;</p>
+                        </li>
+                        <li>
+                            <p>les préférences de l'utilisateur;</p>
+                        </li>
+                        <li>
+                            <p>une liste de données utilisée par plusieurs écrans;</p>
+                        </li>
+                        <li>
+                            <p>l'état de chargement d'une opération;</p>
+                        </li>
+                        <li>
+                            <p>le résultat d'une requête distante.</p>
+                        </li>
+                    </ul>
+                    <p>Dans ce cas, conserver toutes les données dans un seul <span class="em">StatefulWidget</span> et les transmettre manuellement à travers de nombreux widgets peut rapidement rendre le code difficile à maintenir.</p>
+                    <p>Il devient alors nécessaire d'utiliser un mécanisme permettant de centraliser et de partager certaines données.</p>
+                    <p>Flutter présente plusieurs approches possibles pour la gestion d'état. Le choix dépend notamment de la taille et des besoins de l'application.</p>
+                    <h3>ChangeNotifier :</h3>
+                    <p><span class="em">ChangeNotifier</span> est une classe du SDK Flutter permettant à un objet de signaler à ses observateurs qu'une donnée a changé.</p>
+                    <p>Une classe de gestion d'état peut hériter de <span class="em">ChangeNotifier</span>.</p>
+<pre><code>class CompteurModel extends ChangeNotifier {
+
+    int compteur = 0;
+
+    void incrementer() {
+        compteur++;
+        notifyListeners();
+    }
+}</code></pre>
+                    <p>La méthode <span class="em">notifyListeners()</span> informe les objets qui écoutent le <span class="em">ChangeNotifier</span> que son état a été modifié.</p>
+                    <p><span class="em">ChangeNotifier</span> n'est pas un widget. Il s'agit d'une classe permettant notamment de gérer et de notifier les changements d'un état.</p>
+                    <h3>ListenableBuilder :</h3>
+                    <p>Le widget <span class="em">ListenableBuilder</span> permet de reconstruire une partie de l'interface lorsqu'un objet <span class="em">Listenable</span>, comme un <span class="em">ChangeNotifier</span>, signale une modification.</p>
+                    <p>On peut par exemple utiliser notre modèle de compteur :</p>
+<pre><code>final compteur = CompteurModel();
+
+ListenableBuilder(
+    listenable: compteur,
+    builder: (context, child) {
+        return Column(
+            children: [
+                Text("${compteur.compteur}"),
+                ElevatedButton(
+                    onPressed: compteur.incrementer,
+                    child: const Text("Ajouter"),
+                ),
+            ],
+        );
+    }
+)</code></pre>
+                    <p>Lorsque <span class="em">incrementer()</span> appelle <span class="em">notifyListeners()</span>, le <span class="em">ListenableBuilder</span> reconstruit son interface avec la nouvelle valeur.</p>
+                    <p>Flutter utilise cette approche dans ses tutoriels récents pour connecter un <span class="em">ViewModel</span> à une interface.</p>
+                    <h3>Organisation de l'état :</h3>
+                    <p>Lorsque l'application devient plus importante, il est préférable de séparer l'interface et la logique qui manipule les données.</p>
+                    <p>Une architecture couramment recommandée dans la documentation Flutter récente distingue notamment une couche d'interface et une couche de données. Les ViewModels peuvent notamment conserver l'état nécessaire à une vue et contenir la logique applicative associée.</p>
+                    <p>Une représentation simplifiée peut être la suivante :</p>
+<pre><code>Interface
+&#8595;
+ViewModel
+&#8595;
+Repository
+&#8595;
+Source de données</code></pre>
+                    <p>Cette séparation permet notamment d'éviter de placer toute la logique directement dans les widgets.</p>
+                    <p>Un widget devrait principalement décrire l'interface et transmettre les actions de l'utilisateur au mécanisme chargé de traiter ces actions. La logique liée aux données peut être placée dans une couche dédiée.</p>
+                    <h3>Pourquoi séparer l'interface et la logique ?</h3>
+                    <p>Cette séparation apporte notamment plusieurs avantages :</p>
+                    <ul>
+                        <li>
+                            <p>code plus lisible;</p>
+                        </li>
+                        <li>
+                            <p>code plus facilement testable;</p>
+                        </li>
+                        <li>
+                            <p>meilleure réutilisation de la logique;</p>
+                        </li>
+                        <li>
+                            <p>maintenance facilitée;</p>
+                        </li>
+                        <li>
+                            <p>évolution plus simple lorsque l'application grandit.</p>
+                        </li>
+                    </ul>
                 </article>
             </section>
         </main>
