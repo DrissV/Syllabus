@@ -59,6 +59,7 @@
                     <li><a href="#navigation_entre_pages">La navigation entre les pages</a></li>
                     <li><a href="#gestion_etat">La gestion de l'état</a></li>
                     <li><a href="#communication_Internet_API">Communication avec Internet et les API</a></li>
+                    <li><a href="#authentification">L'authentification</a></li>
                 </ol>
             </nav>
             
@@ -2046,6 +2047,235 @@ API REST
                     <p>La suppression réelle dépend naturellement du comportement défini par le serveur ou l'API.</p>
                     <h3>CRUD :</h3>
                     <p>Les opérations principales d'une application manipulant des données sont souvent regroupées sous le terme <span class="em">CRUD</span>.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Opération</th>
+                                <th>Signification</th>
+                                <th>Exemple HTTP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Create</td>
+                                <td>Créer</td>
+                                <td>POST</td>
+                            </tr>
+                            <tr>
+                                <td>Read</td>
+                                <td>Lire</td>
+                                <td>GET</td>
+                            </tr>
+                            <tr>
+                                <td>Update</td>
+                                <td>Modifier</td>
+                                <td>PUT / PATCH</td>
+                            </tr>
+                            <tr>
+                                <td>Delete</td>
+                                <td>Supprimer</td>
+                                <td>DELETE</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Gestion des erreurs réseau :</h3>
+                    <p>Une requête Internet peut échouer pour différentes raisons.</p>
+                    <p>Par exemple :</p>
+                    <ul>
+                        <li>
+                            <p>absence de connexion Internet;</p>
+                        </li>
+                        <li>
+                            <p>serveur incorrecte;</p>
+                        </li>
+                        <li>
+                            <p>réponse invalide;</p>
+                        </li>
+                        <li>
+                            <p>temps d'attente dépassé;</p>
+                        </li>
+                        <li>
+                            <p>erreur d'authentification;</p>
+                        </li>
+                        <li>
+                            <p>erreur côté serveur.</p>
+                        </li>
+                    </ul>
+                    <p>Il est donc important de ne pas supposer qu'une requête réussira toujours.</p>
+<pre><code>try {
+    final response = await http.get(
+        Uri.parse(
+            "https://example.com/data"
+        ),
+    );
+
+    if (response.statusCode == 200) {
+        print(response.body);
+    } else {
+        throw Exception(
+            "Erreur HTTP : ${response.statusCode}"
+        );
+    }
+} catch (e) {
+    print("Erreur $e");
+}</code></pre>
+                    <p>Cette gestion pourra ensuite améliorée afin de présenter à l'utilisateur un message adapté plutôt qu'un simple affichage dans la console.</p>
+                    <h3>Les requêtes authentifiées :</h3>
+                    <p>Certaines API ne sont accessibles qu'aux utilisateurs ou aux applications disposant d'une autorisation.</p>
+                    <p>Il est alors nécessaire d'envoyer des informations d'authentification dans la requête.</p>
+                    <p>Une méthode courante consiste notamment à utiliser l'en-tête HTTP <span class="em">Authorization</span>.</p>
+<pre><code>final response = await http.get(
+    Uri.parse(
+        "https://example.com/profile"
+    ),
+    headers: {
+        "Authorization": "Bearer VOTRE_JETON",
+    },
+);</code></pre>
+                    <p>Dans une véritable application, le jeton d'authentification ne doit pas être écrit directement en dur dans le code source.</p>
+                    <p>La manière de stocker et de renouveler ce jeton sera étudiée prochainement.</p>
+                </article>
+                <article>
+                    <h2 id="authentification">L'authentification :</h2>
+                    <p>De nombreuses applications nécessitent d'identifier leurs utilisateurs afin de leur permettre d'accéder à des fonctionnalités ou à des données qui leur sont propres.</p>
+                    <p>Cette identification est généralement réalisée à l'aide d'un système d'authentification.</p>
+                    <p>L'authentification permet notamment de vérifier qu'un utilisateur est bien celui qu'il prétend être.</p>
+                    <p>Dans une application, l'authentification peut notamment être basée sur une adresse électronique et un mot de passe.</p>
+                    <p>Elle peut également utiliser d'autres mécanismes comme des codes temporaires, des comptes provenant d'autres services ou des mécanismes biométriques.</p>
+                    <p>Dans la suite de ce cours, nous allons nous concentrer sur le fonctionnement général d'une authentification basée sur une application cliente communiquant avec un service distant.</p>
+                    <p>Nous utiliserons les connaissances acquises précédemment concernant les formulaires, les requêtes HTTP, les API, le JSON et la gestion de l'état.</p>
+<pre><code>Utilisateur
+      │
+      ▼
+Formulaire Flutter
+      │
+      ▼
+API d'authentification
+      │
+      ├── Identification réussie
+      │
+      └── Identification refusée
+      │
+      ▼
+Session utilisateur</code></pre>
+                    <h3>L'inscription :</h3>
+                    <p>L'inscription permet à un nouvel utilisateur de créer un compte.</p>
+                    <p>Un formulaire d'inscription peut notamment demander :</p>
+                    <ul>
+                        <li>
+                            <p>un nom ou un prénom;</p>
+                        </li>
+                        <li>
+                            <p>une adresse électronique;</p>
+                        </li>
+                        <li>
+                            <p>un mot de passe;</p>
+                        </li>
+                        <li>
+                            <p>la confirmation du mot de passe.</p>
+                        </li>
+                    </ul>
+                    <p>Les informations saisies sont ensuite transmises au service chargé de créer le compte.</p>
+<pre><code>Application Flutter
+&#8595; POST
+API d'inscription
+&#8595;
+Création du compte</code></pre>
+                    <p>Avant d'envoyer les données, l'application peut effectuer des vérifications simples afin d'améliorer l'expérience utilisateur.</p>
+                    <p>Ces vérifications ne remplacent cependant jamais les contrôles effectués côté serveur.</p>
+                    <h3>Validation du mot de passe :</h3>
+                    <p>Un mot de passe peut être soumis à différentes règles définies par le service utilisé.</p>
+                    <p>Une application peut notamment vérifier la longueur minimale du mot de passe avant de l'envoyer.</p>
+<pre><code>validator: (value) {
+    if(value == null || value.isEmpty) {
+        return "Veuillez saisir un mot de passe.";
+    }
+
+    if (value.length &lt; 8) {
+        reurn "Le mot de passe doit contenir au moins 8 caractères.";
+    }
+
+    return null;
+}</code></pre>
+                    <h3>La connexion :</h3>
+                    <p>La connexion permet à un utilisateur disposant déjà d'un compte de s'identifier auprès du service.</p>
+                    <p>Un formulaire de connexion contient généralement une adresse électronique et un mot de passe.</p>
+<pre><code>TextFormField(
+    decoration: const InputDecoration(
+        labelText: "Adresse électronique",
+    ),
+)
+
+TextFormField(
+    obscureText: true,
+    decoration: const InputDecoration(
+        labelText: "Mot de passe",
+    ),
+)</code></pre>
+                    <p>Lorsque le formulaire est valide, l'application peut envoyer les informations au serveur.</p>
+<pre><code>final response = await http.post(
+    Uri.parse(
+        "https://example.com/login"
+    ),
+
+    headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+    },
+
+    body: jsonEncode({
+        "email": email,
+        "password": password,
+    }),
+);</code></pre>
+                    <p>Le serveur vérifie alors les informations transmises.</p>
+                    <p>En cas de succès, il peut retourner des informations permettant à l'application de conserver l'état de connexion de l'utilisateur.</p>
+                    <h3>La session utilisateur :</h3>
+                    <p>Après une authentification réussie, l'application doit savoir qu'un utilisateur est actuellement connecté.</p>
+                    <p>On peut représenter les différents états de l'application de la manière suivante :</p>
+<pre><code>Application
+     │
+     ├── Utilisateur non connecté
+     │          │
+     │          ▼
+     │       Connexion
+     │          │
+     │          ▼
+     └── Utilisateur connecté</code></pre>
+                    <p>La navigation de l'application peut alors dépendre de cet état.</p>
+                    <p>Par exemple, un utilisateur non connecté peut être envoyé vers la page de connexion, tandis qu'un utilisateur connecté peut accéder à la page d'accueil.</p>
+                    <h4>Exemple d'état :</h4>
+<pre><code>bool estConnecte = false;</code></pre>
+                    <p>Lorsque l'authentification réussit, cette valeur peut être modifiée dans le mécanisme de l'étt utilisé par l'application.</p>
+                    <h3>Les jetons d'authentification :</h3>
+                    <p>De nombreux systèmes d'authentification utilisent un jeton permettant à l'application de prouver qu'elle possède une session authentifiée.</p>
+                    <p>Un mécanisme courant consiste à transmettre un jeton dans l'en-tête <span class="em">Authorization</span>.</p>
+<pre><code>headers: {
+    "Authorization": "Bearer $token",
+}</code></pre>
+                    <p>Lorsqu'une requête protégée est envoyée, le serveur peut utiliser ce jeton pour déterminer si l'utilisateur possède l'autorisation nécessaire.</p>
+<pre><code>Application Flutter
+        │
+        │ Authorization: Bearer ...
+        ▼
+Serveur
+        │
+        ▼
+Vérification du jeton
+        │
+   ┌────┴─────┐
+   ▼          ▼
+Autorisé    Refusé</code></pre>
+                    <p>La structure exacte du système dépend du service d'authentification utilisé.</p>
+                    <p>Il est important de ne pas considérer tous les jetons comme identiques : leur durée de validité, leur format et la manière de les renouveler dépendent notamment du système utilisé.</p>
+                    <h3>La déconnexion :</h3>
+                    <p>La déconnexion permet de mettre fin à la session de l'utilisateur sur l'appareil.</p>
+                    <p>Selon l'architecture du service utilisé, cette opération peut notamment consister à supprimer les informations de session stockées localement et, si le service le prévoit, à informer le serveur.</p>
+<pre><code>Future&lt;void&gt; déconnexion() async {
+    // Suppression des informations de session locales.
+}</code></pre>
+                    <p>Après la déconnexion, l'application doit remettre son état dans une situation correspondant à un utilisateur non authentifié.</p>
+                    <p>Elle peut ensuite rediriger l'utilisateur vers la page de connexion.</p>
+                    <h3>Les erreurs d'authentification :</h3>
                     
                 </article>
             </section>
