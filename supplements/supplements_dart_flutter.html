@@ -60,6 +60,8 @@
                     <li><a href="#gestion_etat">La gestion de l'état</a></li>
                     <li><a href="#communication_Internet_API">Communication avec Internet et les API</a></li>
                     <li><a href="#authentification">L'authentification</a></li>
+                    <li><a href="#db_stockage_donnees">Les bases de données et le stockage de données</a></li>
+                    <li><a href="#images_fichiers">Les images et les fichiers</a></li>
                 </ol>
             </nav>
             
@@ -984,21 +986,23 @@ Alignment.bottomRight</code></pre>
 )</code></pre>
                     <p>Flutter propose plusieurs valeurs, notamment :</p>
                     <ul>
-                        <li>start;</li>
                         <li>
-                            <p>center;</p>
+                            <p><span class="em">start</span>;</p>
                         </li>
                         <li>
-                            <p>end;</p>
+                            <p><span class="em">center</span>;</p>
                         </li>
                         <li>
-                            <p>spaceBetween;</p>
+                            <p><span class="em">end</span>;</p>
                         </li>
                         <li>
-                            <p>spaceAround;</p>
+                            <p><span class="em">spaceBetween</span>;</p>
                         </li>
                         <li>
-                            <p>spaceEvenly.</p>
+                            <p><span class="em">spaceAround</span>;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">spaceEvenly</span>.</p>
                         </li>
                     </ul>
                     <h3>crossAxisAlignment :</h3>
@@ -2398,6 +2402,264 @@ Application authentifiée</code></pre>
                     <p>Les boutons de connexion et d'inscription doivent également posséder des intitulés explicites.</p>
                     <p>Il faut également éviter de signaler une erreur uniquement par une couleur.</p>
                     <p>Les interfaces doivent pouvoir être utilisées avec le clavier et avec les technologies d'assistance disponibles sur les plateformes ciblées.</p>
+                </article>
+                <article>
+                    <h2 id="db_stockage_donnees">Les bases de données et le stockage des données :</h2>
+                    <p>Une application réelle doit pouvoir conserver des informations afin de les réutiliser ultérieurement.</p>
+                    <p>Jusqu'à présent, nous avons principalement manipulé des données conservées en mémoire pendant l'exécution de l'application.</p>
+                    <p>Ces données ne sont cependant pas nécessairement conservées lorsque l'application est fermée.</p>
+                    <p>Pour conserver durablement des informations, nous devons utiliser un système de stockage.</p>
+                    <p>Il existe plusieurs possibilités selon le type de données que l'application doit conserver.</p>
+<pre><code>Données
+   │
+   ├── Mémoire
+   │
+   ├── Stockage local
+   │
+   └── Stockage distant</code></pre>
+                    <p>Dans la suite du cours, nous allons apprendre à distinguer ces différentes solutions et à comprendre dans quelles situations elles peuvent être utilisées.</p>
+                    <h3>Mémoire, stockage local et stockage distant :</h3>
+                    <h4>Les données en mémoire :</h4>
+                    <p>Une variable Dart conserve une valeur en mémoire pendant l'exécution du programme.</p>
+<pre><code>String nom = "Alice";
+int age = 25;</code></pre>
+                    <p>Ces valeurs peuvent être utilisées par l'appication mais elles ne constituent pas nécessairement un stockage permanent.</p>    
+                    <h4>Le stockage local :</h4>
+                    <p>Le stockage local permet de conserver certaines données directement sur l'appareil de l'utilisateur.</p>
+                    <p>Il peut notamment être utilisé pour :</p>
+                    <ul>
+                        <li>
+                            <p>des préférences;</p>
+                        </li>
+                        <li>
+                            <p>des paramètres;</p>
+                        </li>
+                        <li>
+                            <p>un cache;</p>
+                        </li>
+                        <li>
+                            <p>certaines données disponibles hors connexion.</p>
+                        </li>
+                    </ul>
+                    <h4>Le stockage distant :</h4>
+                    <p>Le stockage distant permet de conserver les données sur un serveur accessible par Internet.</p>
+                    <p>Cette solution est notamment utile lorsque les données doivent pouvoir être consultées depuis plusieurs appareils ou par plusieurs utilisateurs autorisés.</p>
+<pre><code>Application Flutter
+&#8595;
+API
+&#8595;
+Serveur
+&#8595;
+Base de données</code></pre>
+                    <h3>Le stockage local :</h3>
+                    <p>Le stockage local est particulièrement utile pour conserver des informations qui n'ont pas nécessairement besoin d'être envoyées à un serveur.</p>
+                    <p>Par exemple, une application peut mémoriser la langue choisie par l'utilisateur.</p>
+<pre><code>langue = "fr"</code></pre>
+                    <p>Elle peut également conserver une préférence concernant l'affichage des notifications.</p>
+<pre><code>notifications = true</code></pre>
+                    <p>Ces données peuvent être chargées automatiquement lorsque l'application démarre.</p>
+                    <h4>Les données locales ne sont pas toutes équivalentes :</h4>
+                    <p>Une simple préférence de configuration ne possède pas les mêmes exigences qu'une base de données complète ou qu'une information sensible.</p>
+                    <p>Le choix du mécanisme de stockage dépend donc du type de donnée et de son niveau de sensibilité.</p>
+                    <h3>Les préférences locales :</h3>
+                    <p>Pour conserver de petites valeurs de configuration, une application peut utiliser un stockage de type clé-valeur.</p>
+                    <p>Le principe consiste à associer une clé à une valeur.</p>
+<pre><code>"langue" &#8594; "fr"
+"notifications" &#8594; true
+"tailleTexte" &#8594; 18</code></pre>
+                    <p>Dans l'écosystème Flutter, le package <span class="em">shared_preferences</span> permet notamment de conserver ce type de préférences.</p>
+                    <p>Le package peut êre ajouté avec :</p>
+<pre><code>flutter pub add shared_preferences</code></pre>
+                    <p>Il peut ensuite être utilisé pour enregistrer une valeur :</p>
+<pre><code>final preferences = await SharedPreferences.getInstance();
+
+await preferences.setBool(
+    "notifications",
+    true,
+);</code></pre>
+                    <p>La valeur peut ensuite être récupérée :</p>
+<pre><code>final notifications = preferences.getBool("notifications") ?? false;</code></pre>
+                    <p>Ce mécanisme est adapté aux préférences simples mais ne remplace pas une véritable base de données.</p>
+                    <h3>Les bases de données locales :</h3>
+                    <p>Une base de données locale permet de conserver des informations structurées directemet sur l'appareil.</p>
+                    <p>Elle peut être particulièrement utile lorsqu'une application doit manipuler un grand nombre de données ou fonctionner partiellement hors connexion.</p>
+                    <p>Une base de données peut par exemple contenir une table représentant les utilisateurs.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>Email</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Alice</td>
+                                <td>alice@example.com</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Bob</td>
+                                <td>bob@example.com</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h4>Les lignes :</h4>
+                    <p>Chaque ligne représente généralement un élément enregistré dans la table.</p>
+                    <h4>Les colonnes :</h4>
+                    <p>Chaque colonne représente une propriété ou un type d'information.</p>
+                    <h4>La clé primaire :</h4>
+                    <p>Une clé primaire permet d'identifier de manière unique une ligne dans une table.</p>
+                    <p>Dans l'exemple précédent, la colonne <span class="em">ID</span> peut jouer ce rôle.</p>
+                    <h3>Les bases de données distantes :</h3>
+                    <p>Une base de données distante est située sur un serveur.</p>
+                    <p>Une application Flutter ne devrait généralement pas se connecter directement à une base de données distante en exposant ses accès.</p>
+                    <p>Elle communique généralement avec un serveur ou une API qui coontrôle l'accès aux données.</p>
+<pre><code>Flutter
+&#8595;
+API
+&#8595;
+Serveur
+&#8595;
+Base de données</code></pre>
+                    <p>Cette architecture permet notamment d'appliquer des règles d'autorisation avant de permettre l'accès aux données.</p>
+                    <p>Elle permet également de centraliser certaines règles métier et de sécurité.</p>
+                    <h3>Le CRUD :</h3>
+                    <p>Les quatre opérations principales permettant de manipuler des données sont souvent regroupées sous l'acronyme CRUD.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Opération</th>
+                                <th>Signification</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Create</td>
+                                <td>Créer une donnée</td>
+                            </tr>
+                            <tr>
+                                <td>Read</td>
+                                <td>Lire une donnée</td>
+                            </tr>
+                            <tr>
+                                <td>Update</td>
+                                <td>Modifier une donnée</td>
+                            </tr>
+                            <tr>
+                                <td>Delete</td>
+                                <td>Supprimer une donnée</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h4>Create :</h4>
+                    <p>Créer une donnée consiste à ajouter une nouvelle information au système de stockage.</p>
+                    <h4>Read :</h4>
+                    <p>Lire une donnée consiste à récupérer une information déjà enregistrée.</p>
+                    <h4>Update :</h4>
+                    <p>Modifier une donnée consiste à mettre à jour une information existante.</p>
+                    <h4>Delete :</h4>
+                    <p>Supprimer une donnée consiste à retirer une information du système de stockage.</p>
+                    <h3>Modélisation des données :</h3>
+                    <p>Avant de stocker les données d'une application, il faut déterminer leur structure.</p>
+                    <p>Nous pouvons par exemple représenter un utilisateur avec une classe Dart.</p>
+<pre><code>class Utilisateur {
+
+    final int id;
+    final String nom;
+    final String email;
+
+    const Utilisateur({
+        required this.id,
+        required this.nom,
+        required this.email,
+    });
+}</code></pre>
+                    <p>La classe devient alors le modèle utilisé par l'application pour représenter un utilisateur.</p>
+                    <h4>Conversion depuis le JSON :</h4>
+<pre><code>factory Utilisateur.fromJson(
+    Map&lt;String, dynamic&gt; json
+) {
+    return Utilisateur(
+        id: json["id"] as int,
+        nom: json["nom"] as String,
+        email: json["email"] as String,
+    );
+}</code></pre>
+                    <h4>Conversion vers le JSON :</h4>
+<pre><code>Map&lt;String, dynamic&gt; toJson() {
+    return {
+        "id": id,
+        "nom": nom,
+        "email": email,
+    };
+}</code></pre>
+                    <p>Cette séparation permet de distinguer la manière dont les données sont représentées dans le programme et la manière dont elles sont échangées avec un service externe.</p>
+                    <h3>Le Repository :</h3>
+                    <p>Dans une application structurée, l'interface ne devrait pas nécessairement accéder directement à la base de données.</p>
+                    <p>Un Repository peut servir d'intermédiaire entre l'application et la source de données.</p>
+<pre><code>Interface
+    │
+    ▼
+ViewModel
+    │
+    ▼
+Repository
+    │
+    ├── Base locale
+    │
+    └── API distante</code></pre>
+                    <p>Le repository peut choisir la source de données appropriée selon la situation.</p>
+                    <p>Par exemple, il peut récupérer des données locales lorsque l'appareil n'est pas connecté et utiliser une API lorsqu'une connexion Internet est disponible.</p>
+                    <h3>La synchronisation des données :</h3>
+                    <p>Lorsqu'une application utilise à la fois des données locales et distantes, il peut être nécessaire de les synchroniser.</p>
+                    <p>On peut par exemple imaginer le scénario suivant :</p>
+<pre><code>Modification locale
+&#8595;
+Stockage local
+&#8595;
+Connexion Internet
+&#8595;
+Synchronisation
+&#8595;
+Serveur</code></pre>
+                    <p>L'application peut alors transmettre au serveur les modifications effectuées localement.</p>
+                    <p>La synchronisation peut devenir complexe lorsque plusieurs appareils modifient les mêmes données. Les règles permettant de résoudre les conflits doivent donc être définies par l'application et le serveur.</p>
+                    <h3>La sécurité des données :</h3>
+                    <p>Les données d'une application ne possèdent pas toutes le même niveau de sensibilité.</p>
+                    <p>Une préférence d'affichage n'a pas les mêmes exigences qu'un jeton d'authentification ou qu'une information personnelle.</p>
+                    <p>Il est donc nécessaire d'adapter le mécanisme de stockage au type de donnée.</p>
+                    <p>Les données sensibles doivent être protégées contre les accès non autorisés et ne doivent pas être stockées inutilement.</p>
+                    <p>Pour les données distantes, les règles d'accès doivent être vérifiées par le serveur et non uniquement par l'application Flutter.</p>
+                    <h3>architecture complète des données :</h3>
+                    <p>Nous pouvons maintenant représenter l'organisation générale d'une application utilisant plusieurs sources de données.</p>
+<pre><code>Utilisateur
+     │
+     ▼
+Interface Flutter
+     │
+     ▼
+ViewModel
+     │
+     ▼
+Repository
+     │
+ ┌───┴─────────┐
+ ▼             ▼
+Local         Distant
+ │             │
+ ▼             ▼
+Base locale   API
+               │
+               ▼
+        Base de données</code></pre>
+                    <p>Cette organisation permet à l'interface de rester relativement indépendante de la manière dont les données sont réellement stockées.</p>
+                </article>
+                <article>
+                    <h2 id="images_fichiers">Les images et les fichiers :</h2>
+                    <p>Les images et les fichiers sont présents dans de nombreuses applications.</p>
+                    
                 </article>
             </section>
         </main>
