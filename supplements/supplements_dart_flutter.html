@@ -2722,6 +2722,85 @@ Base locale   API
     └── main.dart</code></pre>
                     <h3>Les assets :</h3>
                     <p>Les assets sont des fichiers fournis avec l'application.</p>
+                    <p>Ils peuvent notamment correspondre à des images, des fichiers texte, des polices ou d'autres ressources.</p>
+                    <p>Les ressources doivent être déclarées dans le fichier <span class="em">pubspec.yaml</span> afin d'être intégrées au projet.</p>
+<pre><code>flutter:
+    assets:
+        - assets/images/</code></pre>
+                    <p>Il est ensuite possible d'utiliser l'image :</p>
+<pre><code>Image.asset(
+    "assets/images/logo.png",
+)</code></pre>
+                    <p>La documentaion Flutter décrit plusieurs possibilités pour déclarer des assets et gérer notamment les images adaptées aux différentes résolutions.</p>
+                    <h4>Déclarer une seule image :</h4>
+<pre><code>flutter:
+    assets:
+        - assets/images/logo.png</code></pre>
+                    <h4>Déclarer un dossier :</h4>
+<pre><code>flutter:
+    assets:
+        - assets/images/</code></pre>
+                    <p>Après une modification du fichier <span class="em">pubspec.yaml</span>, il peut être nécessaire de relancer ou de reconstruire l'application selon la modification effectuée.</p>
+                    <h3>Les images distantes :</h3>
+                    <p>Une image distante est une image située sur un serveur et accessible par une URL.</p>
+                    <p>Flutter fournit notamment le constructeur <span class="em">Image.network()</span> pour charger une image à partir d'une adresse Internet.</p>
+<pre><code>Image.network(
+    "https://example.com/image.jpg",
+)</code></pre>
+                    <p>Cette image est récupérée depuis le réseau puis affichée dans l'interface.</p>
+                    <h4>Définir une taille :</h4>
+<pre><code>Image.network(
+    "https://example.com/image.jpg",
+    width: 200,
+    height: 200,
+)</code></pre>
+                    <h4>Adapter le contenu :</h4>
+                    <p>La propriété <span class="em">fit</span> permet notamment de contrôler la manière dont l'image est adaptée à l'espace disponible.</p>
+<pre><code>Image.network(
+    "https://example.com/image.jpg",
+    width: 200,
+    height: 200,
+    fit: BoxFit.cover,
+)</code></pre>
+                    <p>La documentation Flutter utilise également <span class="em">BoxFit</span> pour contrôler le redimensionnement et l'ajustement des images.</p>
+                    <h3>Chargement et placeholder :</h3>
+                    <p>Une image distante peut nécessiter un certain temps avant d'être affichée.</p>
+                    <p>Il est donc possible d'afficher un contenu temporaire pendant son chargement.</p>
+                    <p>Flutter propose notamment <span class="em">FadeInImage</span> pour afficher une image progressivement avec une image temporaire.</p>
+<pre><code>FadeInImage.assetNetwork(
+    placeholder: "assets/images/loading.png",
+    image: "https://example.com/image.jpg",
+)</code></pre>
+                    <p>Cette technique permet notamment d'éviter que l'interface reste vide pendant le chargement de l'image.</p>
+                    <h3>Sélectionner une image :</h3>
+                    <p>Une application mobile peut permettre à l'utilisateur de choisir une image dans sa galerie ou d'en prendre une nouvelle avec son appareil photo.</p>
+                    <p>Le package <span class="em">image_picker</span>, publié par l'équipe Flutter, permet notamment de sélectionner une image depuis une bibliothèque d'images ou de prendre une nouvelle photographie avec la caméra. Il prend en charge plusieurs plateformes, dont Android, iOS, Web, Windows, macOS et Linux selon les capacités de la plateforme.</p>
+                    <p>Le package peut être ajouté avec :</p>
+<pre><code>flutter pub add image_picker</code></pre>
+                    <h4>Importer le package :</h4>
+<pre><code>import 'package:image_picker/image_picker.dart';</code></pre>
+                    <h4>Créer un ImagePicker :</h4>
+<pre><code>final ImagePicker picker = ImagePicker();</code></pre>
+                    <h3>Utiliser la galerie :</h3>
+                    <p>La méthode <span class="em">pickImage()</span> permet de demander à l'utilisateur de choisir une image.</p>
+<pre><code>final xFile? image = await picker.pickImage(
+    source: ImageSource.gallery,
+);</code></pre>
+                    <p>La valeur retournée peut être <span class="em">null</span> si l'utiliateur annule la sélection.</p>
+<pre><code>if (image != null) {
+    print(image.name);
+}</code></pre>
+                    <p>Le type <span class="em">XFile</span> provient de l'écosystème <span class="em">cross_file</span> utilisé par plusieurs plugins multiplateformes.</p>
+                    <h3>Utiliser la caméra :</h3>
+                    <p>Le même mécanisme peut être utilisé pour demander à l'utilisateur de prendre une photographie avec la caméra.</p>
+<pre><code>final XFile? image = await picker.pickImage(
+    source: ImageSource.camera,
+);</code></pre>
+                    <p>Le système d'exploitation peut demander à l'utilisateur d'autoriser l'accès à la caméra ou aux ressources nécessaires.</p>
+                    <p>Les autorisations et les exigences de configuration peuvent dépendre de la plateforme ciblée.</p>
+                    <p>Il faut donc consulter la documentation du plugin et de la plateforme avant de publier l'application.</p>
+                    <h3>Afficher une image sélectionnée :</h3>
+                    <p>Une fois l'image sélectionnée, il est possible de l'afficher dans l'interface.</p>
                 </article>
             </section>
         </main>
