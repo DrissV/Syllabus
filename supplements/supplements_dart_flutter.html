@@ -2801,6 +2801,40 @@ Base locale   API
                     <p>Il faut donc consulter la documentation du plugin et de la plateforme avant de publier l'application.</p>
                     <h3>Afficher une image sélectionnée :</h3>
                     <p>Une fois l'image sélectionnée, il est possible de l'afficher dans l'interface.</p>
+<pre><code>FileImage(File(image.path))</code></pre>
+                    <p>Sur les plateformes disposant d'un accès classique au système de fichiers, il est possible d'utiliser un objet <span class="em">File</span>.</p>
+<pre><code>import 'dart:io';
+
+Image.file(
+    File(image.path),
+)</code></pre>
+                    <p>Le code spécifique au système de fichiers doit toutefois être adapté lorsque l'application cible également le Web.</p>
+                    <div class="bordure information">
+                        <img src="../images/informa" alt="Information" class="float_left">
+                        <p>Une application Flutter multiplateforme doit tenir compte des différences entre les plateformes. Une solution reposant sur <span class="em">dart:io</span> ne doit pas être utilisée sans vérification dans du code destiné au Web.</p>
+                    </div>
+                    <h3>Sélectionner un fichier :</h3>
+                    <p>Une application peut également devoir sélectionner des fichiers qui ne sont pas nécessairement des images.</p>
+                    <p>Le package <span class="em">file_picker</span> fournit un sélecteur de fichiers natif et prend en charge notamment Android, iOS, Linux, macOS, Windows et Web.</p>
+                    <p>Il peut être ajouté avec :</p>
+<pre><code>flutter pub add file_picker</code></pre>
+                    <p>Pour sélectionner un fichier :</p>
+<pre><code>final PlatformFile? file = await FilePicker.pickFile();</code></pre>
+                    <p>La sélection retourne <span class="em">null</span> si l'utilisateur annule l'opération avec la version actuelle du package.</p>
+                    <p>Le package permet également de filtrer les extensions et de sélectionner plusieurs fichiers.</p>
+                    <p>Par exemple :</p>
+<pre><code>final PlatformFile? image = await FilePicker.pickFile(
+    type: FileType.custom,
+    allowedExtensions: [
+        "jpg",
+        "jpeg",
+        "png",
+    ],
+);</code></pre>
+                    <h3>Lire une image sous forme d'octets :</h3>
+                    <p>Dans certaines situations, il est nécessaire de manipuler le contenu binaire du fichier plutôt que son chemin.</p>
+                    <p>Un fichier image peut notamment être représenté sous la form d'une suite d'octets.</p>
+<pre><code>final bytes = await image.readAsBytes();</code></pre>
                 </article>
             </section>
         </main>
