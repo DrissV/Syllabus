@@ -62,6 +62,7 @@
                     <li><a href="#authentification">L'authentification</a></li>
                     <li><a href="#db_stockage_donnees">Les bases de données et le stockage de données</a></li>
                     <li><a href="#images_fichiers">Les images et les fichiers</a></li>
+                    <li><a href="#accessibilite_Flutter">L'accessibilité dans Flutter</a></li>
                 </ol>
             </nav>
             
@@ -2423,7 +2424,7 @@ Application authentifiée</code></pre>
                     <p>Une variable Dart conserve une valeur en mémoire pendant l'exécution du programme.</p>
 <pre><code>String nom = "Alice";
 int age = 25;</code></pre>
-                    <p>Ces valeurs peuvent être utilisées par l'appication mais elles ne constituent pas nécessairement un stockage permanent.</p>    
+                    <p>Ces valeurs peuvent être utilisées par l'application mais elles ne constituent pas nécessairement un stockage permanent.</p>    
                     <h4>Le stockage local :</h4>
                     <p>Le stockage local permet de conserver certaines données directement sur l'appareil de l'utilisateur.</p>
                     <p>Il peut notamment être utilisé pour :</p>
@@ -2468,7 +2469,7 @@ Base de données</code></pre>
 "notifications" &#8594; true
 "tailleTexte" &#8594; 18</code></pre>
                     <p>Dans l'écosystème Flutter, le package <span class="em">shared_preferences</span> permet notamment de conserver ce type de préférences.</p>
-                    <p>Le package peut êre ajouté avec :</p>
+                    <p>Le package peut être ajouté avec :</p>
 <pre><code>flutter pub add shared_preferences</code></pre>
                     <p>Il peut ensuite être utilisé pour enregistrer une valeur :</p>
 <pre><code>final preferences = await SharedPreferences.getInstance();
@@ -2481,7 +2482,7 @@ await preferences.setBool(
 <pre><code>final notifications = preferences.getBool("notifications") ?? false;</code></pre>
                     <p>Ce mécanisme est adapté aux préférences simples mais ne remplace pas une véritable base de données.</p>
                     <h3>Les bases de données locales :</h3>
-                    <p>Une base de données locale permet de conserver des informations structurées directemet sur l'appareil.</p>
+                    <p>Une base de données locale permet de conserver des informations structurées directement sur l'appareil.</p>
                     <p>Elle peut être particulièrement utile lorsqu'une application doit manipuler un grand nombre de données ou fonctionner partiellement hors connexion.</p>
                     <p>Une base de données peut par exemple contenir une table représentant les utilisateurs.</p>
                     <table class="tableBalises">
@@ -2810,7 +2811,7 @@ Image.file(
 )</code></pre>
                     <p>Le code spécifique au système de fichiers doit toutefois être adapté lorsque l'application cible également le Web.</p>
                     <div class="bordure information">
-                        <img src="../images/informa" alt="Information" class="float_left">
+                        <img src="../images/information.png" alt="Information" class="float_left">
                         <p>Une application Flutter multiplateforme doit tenir compte des différences entre les plateformes. Une solution reposant sur <span class="em">dart:io</span> ne doit pas être utilisée sans vérification dans du code destiné au Web.</p>
                     </div>
                     <h3>Sélectionner un fichier :</h3>
@@ -2980,6 +2981,150 @@ Stockage de fichiers
                     <h4>Les boutons contenant une image :</h4>
                     <p>Lorsqu'une image ou une icône représente une action, son rôle doit être compréhensible par l'utilisateur.</p>
                     <p>Un bouton permettant de modifier une photographie doit par exemple être identifiable comme une commande de modification et pas uniquement comme une image.</p>
+                </article>
+                <article>
+                    <h2 id="accessibilite_Flutter">L'accessibilité dans Flutter :</h2>
+                    <p>L'accessibilité consiste à concevoir une application pouvant être utilisée par le plus grand nombre de personnes, y compris les utilisateurs ayant des limitations visuelles, auditives, motrices ou cognitives.</p>
+                    <p>Elle ne doit pas être considérée comme une fonctionnalité supplémentaire ajoutée à la fin du développement. Elle doit être prise en compte dès la conception de l'interface.</p>
+                    <p>Dans une application Flutter, l'accessibilité concerne notamment la structure des widgets, les textes, les éléments interactifs, la navigation, les contrastes, les informations sonores et l'utilisation des technologies d'assistance.</p>
+                    <h3>Les technologies d'assistance :</h3>
+                    <p>Les technologies d'assistance permettent à certains utilisateurs d'interagir avec une application autrement qu'en utilisant uniquement sa présentation visuelle.</p>
+                    <p>Parmi celles-ci, on trouve notamment les lecteurs d'écran.</p>
+                    <p>Sur Android, le lecteur d'écran le plus couramment utilisé est TalkBack.</p>
+                    <p>Sur les appareils Apple, on utilise notamment VoiceOver.</p>
+                    <p>Sur ordinateur, plusieurs lecteurs d'écran existent également, comme NVDA ou JAWS sous Windows.</p>
+                    <p>Une application accessible doit être testée avec les technologies d'assistance pertinentes pour les plateformes ciblées.</p>
+                    <h3>Les informations textuelles :</h3>
+                    <p>Les informations importantes doivent être transmises sous forme de texte lorsque cela est pertinent.</p>
+                    <p>Il faut notamment éviter de communiquer une information uniquement à l'aide d'une couleur, d'une animation, d'une image ou d'un son.</p>
+                    <p>Par exemple, un message d'erreur ne devrait pas uniquement rendre un champ rouge.</p>
+<pre><code>Text(
+    "L'adresse électronique est invalide.",
+)</code></pre>
+                    <p>L'utilisateur dispose ainsi d'une information explicite sur le problème rencontré.</p>
+                    <h3>Les images :</h3>
+                    <p>Une image informative doit pouvoir être comprise par un utilisateur qui ne la perçoit pas visuellement.</p>
+                    <p>Lorsqu'une description est nécessaire, le widget Semantics peut notamment être utilisé.</p>
+<pre><code>Semantics(
+    label: "Photo de profil de Alice",
+    child: Image.network(
+        imageUrl,
+    ),
+)</code></pre>
+                    <p>À l'inverse, une image purement décorative ne doit pas fournir une description inutile qui serait annoncée par un lecteur d'écran.</p>
+                    <h3>Les boutons :</h3>
+                    <p>Les boutons doivent permettre à l'utilisateur de comprendre clairement l'action qui sera effectuée.</p>
+                    <p>Un intitulé explicite est généralement préférable à une information reposant uniquement sur l'apparence du bouton.</p>
+<pre><code>ElevatedButton(
+    onPressed: enregistrer,
+    child: const Text(
+        "Enregistrer",
+    ),
+)</code></pre>
+                    <p>Lorsqu'un bouton utilise uniquement une icône, il faut veiller à ce que son rôle reste compréhensible pour les technologies d'assistance.</p>
+                    <p>Un bouton contenant une icône représentant une corbeille doit par exemple être identifiable comme une commande de suppression.</p>
+                    <h3>Le contraste :</h3>
+                    <p>Le contraste entre le texte et son arrière-plan doit être suffisant pour permettre une lecture confortable.</p>
+                    <p>Il faut également éviter d'utiliser uniquement une couleur pour distinguer plusieurs états.</p>
+                    <p>Par exemple, une erreur ne devrait pas être indiquée uniquement en rouge.</p>
+                    <p>Il est préférable d'associer la couleur à un texte ou à un autre indicateur explicite.</p>
+                    <h3>La taille du texte :</h3>
+                    <p>Les utilisateurs doivent pouvoir agrandir le texte lorsque leur appareil ou leur système d'exploitation propose cette fonctionnalité.</p>
+                    <p>Une interface ne doit donc pas supposer que le texte sera toujours affiché avec une taille fixe.</p>
+                    <p>Il faut tester l'application avec différentes tailles de texte afin de vérifier que les informations restent accessibles et que les éléments importants ne disparaissent pas.</p>
+                    <h3>La navigation au clavier :</h3>
+                    <p>Sur ordinateur, certains utilisateurs peuvent naviguer principalement à l'aide du clavier.</p>
+                    <p>Les éléments interactifs doivent donc pouvoir recevoir le focus et être parcourus dans un ordre logique.</p>
+<pre><code>Champ prénom
+&#8595;
+Champ nom
+&#8595;
+Champ email
+&#8595;
+Bouton Enregistrer</code></pre>
+                    <p>Un ordre de navigation incohérent peut rendre une interface difficile, voire impossible, à utiliser au clavier.</p>
+                    <h3>Le focus :</h3>
+                    <p>Le focus indique notamment quel élément interactif est actuellement sélectionné pour l'interaction au clavier.</p>
+                    <p>Lorsqu'une nouvelle page ou un nouveau composant apparaît, il faut vérifier que le focus reste cohérent.</p>
+                    <p>Cette notion devient particulièrement importante pour les formulaires, les dialogues et les interfaces comportant de nombreux éléments interactifs.</p>
+                    <h3>Les utilisateurs sourds ou malentendants :</h3>
+                    <p>Une information importante ne doit pas être transmise uniquement par un signal sonore.</p>
+                    <p>Lorsqu'une notification sonore indique un événement important, une alternative visuelle ou textuelle doit également être proposée.</p>
+                    <p>Par exemple, une application de messagerie peut signaler l'arrivée d'un nouveau message par un son, mais également afficher une notification ou mettre à jour une information textuelle.</p>
+                    <h3>Les utilisateurs malvoyants :</h3>
+                    <p>Les utilisateurs malvoyants peuvent notamment utiliser un lecteur d'écran ou modifier l'agrandissement et la taille du texte de leur appareil.</p>
+                    <p>Il est donc important que l'application ne repose pas uniquement sur des indications visuelles.</p>
+                    <p>Les titres, boutons, images informatives et messages importants doivent posséder une structure compréhensible par les technologies d'assistance.</p>
+                    <h3>Les éléments interactifs suffisamment grands :</h3>
+                    <p>Un élément interactif très petit peut être difficile à utiliser, notamment sur un écran tactile.</p>
+                    <p>Il faut donc prévoir une zone d'interaction suffisamment grande et éviter de placer plusieurs commandes très proches les unes des autres.</p>
+                    <p>Cette règle est particulièrement importante pour les boutons, les icônes et les commandes utilisées sur smartphone.</p>
+                    <h3>Les formulaires accessibles :</h3>
+                    <p>Les formulaires doivent indiquer clairement le rôle de chaque champ.</p>
+<pre><code>TextFormField(
+    decoration: const InputDecoration(
+        labelText: "Adresse électronique",
+    ),
+)</code></pre>
+                    <p>Lorsqu'une erreur est détectée, l'utilisateur doit pouvoir comprendre ce qui doit être corrigé.</p>
+<pre><code>Veuillez saisir une adresse électronique valide.</code></pre>
+                    <p>Les erreurs doivent également être associées au champ concerné et ne pas dépendre uniquement d'une couleur.</p>
+                    <h3>Les animations :</h3>
+                    <p>Les animations peuvent améliorer l'expérience utilisateur, mais elles ne doivent pas rendre l'application difficile à utiliser.</p>
+                    <p>Une interface contenant beaucoup d'animations peut être particulièrement gênante pour certains utilisateurs.</p>
+                    <p>Les animations doivent donc rester utiles et ne pas empêcher l'accès à l'information ou aux commandes.</p>
+                    <h3>Accessibilité et responsive design :</h3>
+                    <p>Une application multiplateforme doit également être capable de s'adapter à différentes tailles d'écran.</p>
+                    <p>Une interface conçue pour un smartphone ne doit pas nécessairement être affichée exactement de la même manière sur un ordinateur.</p>
+                    <p>Il faut notamment vérifier :</p>
+                    <ul>
+                        <li>
+                            <p>la lisibilité du texte;</p>
+                        </li>
+                        <li>
+                            <p>la disposition des éléments;</p>
+                        </li>
+                        <li>
+                            <p>la taille des boutons;</p>
+                        </li>
+                        <li>
+                            <p>la navigation au clavier;</p>
+                        </li>
+                        <li>
+                            <p>l'utilisation avec une technologie d'assistance.</p>
+                        </li>
+                    </ul>
+                    <h3>Tester l'accessibilité :</h3>
+                    <p>L'accessibilité doit être testée directement sur l'application.</p>
+                    <p>Un développeur ne doit pas supposer qu'une interface est accessible simplement parce qu'elle semble correcte visuellement.</p>
+                    <p>Il faut notamment effectuer des tests avec :</p>
+                    <ul>
+                        <li>
+                            <p>un lecteur d'écran;</p>
+                        </li>
+                        <li>
+                            <p>le clavier;</p>
+                        </li>
+                        <li>
+                            <p>différentes tailles de texte;</p>
+                        </li>
+                        <li>
+                            <p>des paramètres de contraste adaptés.</p>
+                        </li>
+                    </ul>
+                    <h3>Principe général :</h3>
+<pre><code>Conception
+&#8595;
+Développement
+&#8595;
+Tests d'accessibilité
+&#8595;
+Corrections
+&#8595;
+Nouveaux tests
+&#8595;
+Publication</code></pre>
+                    <p>L'accessibilité doit donc être considérée comme une partie intégrante du cycle de développement.</p>
                 </article>
             </section>
         </main>
