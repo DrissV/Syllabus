@@ -213,7 +213,7 @@ print("Bonjour $prenom, tu as $age ans.");</code></pre>
     String nom; // public
     int _age; // privé
 }</code></pre>
-                    <p>Dans Dart, on peut notamment utiliser un <span class="em">constructeur non nommé</span>et des <span class="em">constructeurs nommés</span>.</p>
+                    <p>Dans Dart, on peut notamment utiliser un <span class="em">constructeur non nommé</span> et des <span class="em">constructeurs nommés</span>.</p>
                     <p>Pour le constructeur simple, on va faire un exemple pour créer une personne directement avec son prénom et son âge :</p>
 <pre><code>class Personne {
     String prenom;
@@ -773,7 +773,7 @@ class _CompteurState extends State&lt;Compteur&gt; {
 <pre><code>setState(() {
     compteur++;
 });</code></pre>
-                    <p>Flutter peut alors reconstruire les parties nécessaires de l'interface et d'afficher le nouvel état.</p>
+                    <p>Flutter peut alors reconstruire les parties nécessaires de l'interface afin d'afficher le nouvel état.</p>
                     <h3>MaterialApp :</h3>
                     <p><span class="em">MaterialApp</span> est un widget couramment utilisé comme point de départ d'une application Flutter utilisant les composants Material.</p>
 <pre><code>void main() {
@@ -2515,7 +2515,7 @@ await preferences.setBool(
                     <h3>Les bases de données distantes :</h3>
                     <p>Une base de données distante est située sur un serveur.</p>
                     <p>Une application Flutter ne devrait généralement pas se connecter directement à une base de données distante en exposant ses accès.</p>
-                    <p>Elle communique généralement avec un serveur ou une API qui coontrôle l'accès aux données.</p>
+                    <p>Elle communique généralement avec un serveur ou une API qui contrôle l'accès aux données.</p>
 <pre><code>Flutter
 &#8595;
 API
@@ -2632,7 +2632,7 @@ Serveur</code></pre>
                     <p>Il est donc nécessaire d'adapter le mécanisme de stockage au type de donnée.</p>
                     <p>Les données sensibles doivent être protégées contre les accès non autorisés et ne doivent pas être stockées inutilement.</p>
                     <p>Pour les données distantes, les règles d'accès doivent être vérifiées par le serveur et non uniquement par l'application Flutter.</p>
-                    <h3>architecture complète des données :</h3>
+                    <h3>Architecture complète des données :</h3>
                     <p>Nous pouvons maintenant représenter l'organisation générale d'une application utilisant plusieurs sources de données.</p>
 <pre><code>Utilisateur
      │
@@ -2731,7 +2731,7 @@ Base locale   API
 <pre><code>Image.asset(
     "assets/images/logo.png",
 )</code></pre>
-                    <p>La documentaion Flutter décrit plusieurs possibilités pour déclarer des assets et gérer notamment les images adaptées aux différentes résolutions.</p>
+                    <p>La documentation Flutter décrit plusieurs possibilités pour déclarer des assets et gérer notamment les images adaptées aux différentes résolutions.</p>
                     <h4>Déclarer une seule image :</h4>
 <pre><code>flutter:
     assets:
@@ -2783,10 +2783,10 @@ Base locale   API
 <pre><code>final ImagePicker picker = ImagePicker();</code></pre>
                     <h3>Utiliser la galerie :</h3>
                     <p>La méthode <span class="em">pickImage()</span> permet de demander à l'utilisateur de choisir une image.</p>
-<pre><code>final xFile? image = await picker.pickImage(
+<pre><code>final XFile? image = await picker.pickImage(
     source: ImageSource.gallery,
 );</code></pre>
-                    <p>La valeur retournée peut être <span class="em">null</span> si l'utiliateur annule la sélection.</p>
+                    <p>La valeur retournée peut être <span class="em">null</span> si l'utilisateur annule la sélection.</p>
 <pre><code>if (image != null) {
     print(image.name);
 }</code></pre>
@@ -2833,8 +2833,153 @@ Image.file(
 );</code></pre>
                     <h3>Lire une image sous forme d'octets :</h3>
                     <p>Dans certaines situations, il est nécessaire de manipuler le contenu binaire du fichier plutôt que son chemin.</p>
-                    <p>Un fichier image peut notamment être représenté sous la form d'une suite d'octets.</p>
+                    <p>Un fichier image peut notamment être représenté sous la forme d'une suite d'octets.</p>
 <pre><code>final bytes = await image.readAsBytes();</code></pre>
+                    <p>Ces données peuvent ensuite être utilisées pour certaines opérations, notamment lors de l'envoi d'un fichier vers un service distant.</p>
+                    <p>Le package <span class="em">file_picker</span> permet de lire le contenu d'un fichier sous forme d'octets ou de flux.</p>
+                    <h3>Envoyer une image vers un serveur :</h3>
+                    <p>Lorsqu'un utilisateur sélectionne une image, l'application peut devoir envoyer celle-ci vers un serveur.</p>
+                    <p>On parle alors de téléversement ou d'upload.</p>
+                    <p>Le fonctionnement général peut être représenté ainsi :</p>
+<pre><code>Galerie / Caméra
+&#8595;
+Application Flutter
+&#8595; Upload
+Serveur / Stockage
+&#8595;
+URL de l'image
+&#8595;
+Base de données</code></pre>
+                    <p>Une image ne doit donc pas nécessairement être stockée directement dans une table de base de données.</p>
+                    <p>Une architecture fréquente consiste à conserver le fichier dans un service de stockage et à enregistrer dans la base de données les informations permettant de retrouver ce fichier.</p>
+                    <h4>Exemple :</h4>
+<pre><code>Utilisateur
+
+id       : 25
+nom      : Alice
+photoUrl : https://example.com/images/25.jpg</code></pre>
+                    <p>La base de données contient ici l'adresse permettant de retrouver l'image, tandis que le fichier image est conservé dans un stockage de fichiers.</p>
+                    <h3>Envoyer un fichier avec une requête multipart :</h3>
+                    <p>Les fichiers peuvent notamment être envoyés avec une requête HTTP <span class="em">multipart</span>.</p>
+                    <p>Le package <span class="em">http</span> permet notamment de construire une requête <span class="em">MultipartRequest</span>.</p>
+<pre><code>final request = http.MultipartRequest(
+    "POST",
+    Uri.parse("https://example.com/upload"),
+);
+
+request.files.add(
+    await http.MultipartFile.fromPath(
+        "image",
+        image.path,
+    ),
+);
+
+final response = await request.send();</code></pre>
+                    <p>Cette approche permet notamment d'envoyer un fichier vers un serveur qui accepte les requêtes multipart.</p>
+                    <p>La manière exacte de traiter le fichier dépend cependant du serveur ou du service de stockage utilisé.</p>
+                    <h3>Le stockage des images :</h3>
+                    <p>Il faut distinguer le stockage du fichier image et le stockage des informations qui décrivent cette image.</p>
+<pre><code>       Image
+         │
+         ▼
+Stockage de fichiers
+         │
+         └── URL
+             │
+             ▼
+       Base de données
+             │
+             ├── utilisateurId
+             ├── nom
+             ├── URL
+             └── date</code></pre>
+                    <p>Cette séparation est pratique lorsqu'une application doit gérer un grand nombre d'images.</p>
+                    <p>La base de données peut notamment conserver :</p>
+                    <ul>
+                        <li>
+                            <p>l'identifiant de l'image;</p>
+                        </li>
+                        <li>
+                            <p>l'utilisateur propriétaire;</p>
+                        </li>
+                        <li>
+                            <p>l'URL ou la référence du fichier;</p>
+                        </li>
+                        <li>
+                            <p>le nom du fichier;</p>
+                        </li>
+                        <li>
+                            <p>la date de création;</p>
+                        </li>
+                        <li>
+                            <p>des informations complémentaires.</p>
+                        </li>
+                    </ul>
+                    <h3>URL et métadonnées :</h3>
+                    <p>Lorsqu'une image est stockée sur un serveur, l'application doit généralement disposer d'une information permettant de la retrouver.</p>
+                    <p>Cette information peut notamment être une URL.</p>
+<pre><code>https://example.com/images/profil-25.jpg</code></pre>
+                    <p>L'application peut ensuite utiliser cette adresse avec :</p>
+<pre><code>Image.network(
+    imageUrl,
+)</code></pre>
+                    <p>Les métadonnées permettent de décrire le fichier sans avoir à conserver le fichier lui-même dans la base de données.</p>
+                    <h3>Gestion des erreurs :</h3>
+                    <p>Le chargement et l'envoi d'une image peuvent échouer.</p>
+                    <p>Il faut donc prévoir notamment les situations suivantes :</p>
+                    <ul>
+                        <li>
+                            <p>l'utilisateur annule la sélection;</p>
+                        </li>
+                        <li>
+                            <p>le fichier n'est plus disponible;</p>
+                        </li>
+                        <li>
+                            <p>l'image est trop volumineuse;</p>
+                        </li>
+                        <li>
+                            <p>le format n'est pas accepté;</p>
+                        </li>
+                        <li>
+                            <p>le réseau est indisponible;</p>
+                        </li>
+                        <li>
+                            <p>le serveur refuse le fichier;</p>
+                        </li>
+                        <li>
+                            <p>l'URL de l'image n'est plus valide.</p>
+                        </li>
+                    </ul>
+                    <p>Une interface doit présenter un comportement compréhensible lorsque l'une de ces situations se produit.</p>
+                    <h4>Image indisponible :</h4>
+                    <p>Lorsqu'une image distante ne peut pas être chargée, une solution consiste à afficher une représentation alternative.</p>
+<pre><code>Image.network(
+    imageUrl,
+    errorBuilder: (
+        context,
+        error,
+        stackTrace,
+    ) {
+        return const Icon(
+            Icons.broken_image,
+        );
+    },
+)</code></pre>
+                    <h3>Accessibilité des images :</h3>
+                    <p>Une image peut transmettre une information importante. Elle doit donc être rendue compréhensible par les utilisateurs qui ne peuvent pas nécessairement la percevoir visuellement.</p>
+                    <p>Lorsqu'une image possède une information utile, il faut fournir une description adaptée au contexte.</p>
+                    <p>Dans Flutter, le widget <span class="em">Semantics</span> peut notamment être utilisé pour fournir des informations destinées aux technologies d'assistance.</p>
+<pre><code>Semantics(
+    label: "Photo de profil de Alice",
+    child: Image.network(
+        imageUrl,
+    ),
+)</code></pre>
+                    <p>Pour les images purement décoratives, il faut éviter d'ajouter une description inutile qui serait lue par un lecteur d'écran.</p>
+                    <p>Il faut également veiller à ce que les informations importantes ne soient pas communiquées uniquement par la couleur ou par une image.</p>
+                    <h4>Les boutons contenant une image :</h4>
+                    <p>Lorsqu'une image ou une icône représente une action, son rôle doit être compréhensible par l'utilisateur.</p>
+                    <p>Un bouton permettant de modifier une photographie doit par exemple être identifiable comme une commande de modification et pas uniquement comme une image.</p>
                 </article>
             </section>
         </main>
