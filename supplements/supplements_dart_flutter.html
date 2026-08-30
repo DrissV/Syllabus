@@ -1310,7 +1310,7 @@ Alignment.bottomRight</code></pre>
         print("Nouvel élément");
     },
     child: const Icon(
-        Icons.add
+        Icons.add,
     ),
 )</code></pre>
                     <h3>Les callbacks :</h3>
@@ -1799,19 +1799,19 @@ class _CompteurState extends State&lt;Compteur&gt; {
                     <p>Parmi les méthodes importantes, nous retrouverons notamment :</p>
                     <ul>
                         <li>
-                            <p>initState();</p>
+                            <p><span class="em">initState()</span>;</p>
                         </li>
                         <li>
-                            <p>didChangeDependencies();</p>
+                            <p><span class="em">didChangeDependencies()</span>;</p>
                         </li>
                         <li>
-                            <p>build();</p>
+                            <p><span class="em">build()</span>;</p>
                         </li>
                         <li>
-                            <p>didUpdateWidget();</p>
+                            <p><span class="em">didUpdateWidget()</span>;</p>
                         </li>
                         <li>
-                            <p>dispose().</p>
+                            <p><span class="em">dispose()</span>.</p>
                         </li>
                     </ul>
                     <h3>initState() :</h3>
@@ -2275,7 +2275,7 @@ Autorisé    Refusé</code></pre>
                     <h3>La déconnexion :</h3>
                     <p>La déconnexion permet de mettre fin à la session de l'utilisateur sur l'appareil.</p>
                     <p>Selon l'architecture du service utilisé, cette opération peut notamment consister à supprimer les informations de session stockées localement et, si le service le prévoit, à informer le serveur.</p>
-<pre><code>Future&lt;void&gt; déconnexion() async {
+<pre><code>Future&lt;void&gt; deconnexion() async {
     // Suppression des informations de session locales.
 }</code></pre>
                     <p>Après la déconnexion, l'application doit remettre son état dans une situation correspondant à un utilisateur non authentifié.</p>
@@ -2677,9 +2677,6 @@ Base locale   API
                             <p>un fichier choisi par l'utilisateur;</p>
                         </li>
                         <li>
-                            <p>un fichier choisi par l'utilisateur;</p>
-                        </li>
-                        <li>
                             <p>un fichier envoyé vers un serveur;</p>
                         </li>
                         <li>
@@ -2981,6 +2978,26 @@ Stockage de fichiers
                     <h4>Les boutons contenant une image :</h4>
                     <p>Lorsqu'une image ou une icône représente une action, son rôle doit être compréhensible par l'utilisateur.</p>
                     <p>Un bouton permettant de modifier une photographie doit par exemple être identifiable comme une commande de modification et pas uniquement comme une image.</p>
+                    <p>En résumé, un bouton contenant uniquement une icône peut être difficile à comprendre avec un lecteur d'écran si son rôle n'est pas correctement annoncé. Par exemple :</p>
+<pre><code>IconButton(
+    onPressed: supprimer,
+    icon: const Icon(
+        Icons.delete,
+    ),
+)</code></pre>
+                    <p>L'icône permet de comprendre visuellement qu'il s'agit probablement d'une suppression, mais une information supplémentaire peut être nécessaire pour les technologies d'assistance.</p>
+                    <p>Une solution consiste à utiliser une information sémantique explicite :</p>
+<pre><code>Semantics(
+    label: "Supprimer l'utilisateur",
+    button: true,
+    child: IconButton(
+        onPressed: supprimer,
+        icon: const Icon(
+            Icons.delete,
+        ),
+    ),
+)</code></pre>
+                    <p>Le lecteur d'écran peut alors annoncer l'action associée au bouton.</p>
                 </article>
                 <article>
                     <h2 id="accessibilite_Flutter">L'accessibilité dans Flutter :</h2>
@@ -3004,14 +3021,23 @@ Stockage de fichiers
                     <p>L'utilisateur dispose ainsi d'une information explicite sur le problème rencontré.</p>
                     <h3>Les images :</h3>
                     <p>Une image informative doit pouvoir être comprise par un utilisateur qui ne la perçoit pas visuellement.</p>
-                    <p>Lorsqu'une description est nécessaire, le widget Semantics peut notamment être utilisé.</p>
+                    <p>Lorsqu'une description est nécessaire, le widget <span class="em">Semantics</span> peut notamment être utilisé.</p>
 <pre><code>Semantics(
     label: "Photo de profil de Alice",
     child: Image.network(
         imageUrl,
     ),
 )</code></pre>
+                    <p>La description doit être concise et donner l'information réellement utile. Il faut éviter les descriptions inutiles ou trop longues.</p>
                     <p>À l'inverse, une image purement décorative ne doit pas fournir une description inutile qui serait annoncée par un lecteur d'écran.</p>
+                    <p>Par exemple, une image servant uniquement à décorer une carte peut être masquée des informations sémantiques :</p>
+<pre><code>Semantics(
+    excludeSemantics: true,
+    child: Image.asset(
+        "assets/images/decoration.png",
+    ),
+)</code></pre>
+                    <p>L'objectif est déviter que le lecteur d'écran annonce des informations qui ne sont pas nécessaires à la compréhension de l'interface.</p>
                     <h3>Les boutons :</h3>
                     <p>Les boutons doivent permettre à l'utilisateur de comprendre clairement l'action qui sera effectuée.</p>
                     <p>Un intitulé explicite est généralement préférable à une information reposant uniquement sur l'apparence du bouton.</p>
@@ -3032,6 +3058,15 @@ Stockage de fichiers
                     <p>Les utilisateurs doivent pouvoir agrandir le texte lorsque leur appareil ou leur système d'exploitation propose cette fonctionnalité.</p>
                     <p>Une interface ne doit donc pas supposer que le texte sera toujours affiché avec une taille fixe.</p>
                     <p>Il faut tester l'application avec différentes tailles de texte afin de vérifier que les informations restent accessibles et que les éléments importants ne disparaissent pas.</p>
+                    <p>En résumé, il faut éviter de concevoir une interface dans laquelle un texte devient inutilisable dès qu'il est agrandi.</p>
+<pre><code>Padding(
+    padding: const EdgeInsets.all(16),
+    child: Text(
+        "Bienvenue",
+        style: Theme.of(context).textTheme.headlineMedium,
+    ),
+)</code></pre>
+                    <p>L'utilisation des styles du thème facilite notamment l'adaptation globale de l'apparence l'application.</p>
                     <h3>La navigation au clavier :</h3>
                     <p>Sur ordinateur, certains utilisateurs peuvent naviguer principalement à l'aide du clavier.</p>
                     <p>Les éléments interactifs doivent donc pouvoir recevoir le focus et être parcourus dans un ordre logique.</p>
@@ -3044,9 +3079,98 @@ Champ email
 Bouton Enregistrer</code></pre>
                     <p>Un ordre de navigation incohérent peut rendre une interface difficile, voire impossible, à utiliser au clavier.</p>
                     <h3>Le focus :</h3>
+                    <p>Le <span class="em">FocusNode</span> permet notamment de contrôler le focus d'un élément interactif dans Flutter.</p>
                     <p>Le focus indique notamment quel élément interactif est actuellement sélectionné pour l'interaction au clavier.</p>
+                    <p>Un utilisateur peut par exemple utiliser la touche <span class="em">Tab</span> pour passer d'un champ à un autre.</p>
                     <p>Lorsqu'une nouvelle page ou un nouveau composant apparaît, il faut vérifier que le focus reste cohérent.</p>
                     <p>Cette notion devient particulièrement importante pour les formulaires, les dialogues et les interfaces comportant de nombreux éléments interactifs.</p>
+                    <h4>Créer un FocusNode :</h4>
+                    <p>Pour contrôler directement le focus d'un champ, nous pouvons créer un objet <span class="em">FocusNode</span>.</p>
+<pre><code>final emailFocusNode = FocusNode();</code></pre>
+                    <p>Le <span class="em">FocusNode</span> est un objet qui doit avoir une durée de vie suffisamment longue. Il ne faut dnc pas en créer un nouveau à chaque reconstruction du widget.</p>
+                    <p>Lorsqu'un <span class="em">StatefulWidget</span> possède un <span class="em">FocusNode</span>, celle-ci peut être créé dans <span class="em">initState()</span> et libéré dans <span class="em">dispose()</span>.</p>
+<pre><code>class FormulairePage extends StatefulWidget {
+
+    const FormulairePage({super.key});
+
+    @override
+    State&lt;Formulaire&gt; createState() {
+        return _FormulairePageState();
+    }
+}
+
+class _FormulairePageState extends State&lt;FormulairePage&gt; {
+
+    final emailFocusNode = FocusNode();
+
+    @override
+    void dispose() {
+        emailFocusNode.dispose();
+        super.dispose();
+    }
+
+    @override
+    Widget build(BuildContext context) {
+        return TextField(
+            focusNode: emailFocusNode,
+        );
+    }
+}</code></pre>
+                    <p>La documentation Flutter précise que les <span class="em">FocusNode</span> sont des objets persistants et que leur cycle de vie doit être géré par l'objet qui les possède. Ils doivent notamment être libérés avec <span class="em">dispose()</span> lorsqu'ils ne sont plus utilisés.</p>
+                    <h4>Donner le focus à un champ :</h4>
+                    <p>La méthode <span class="em">requestFocus()</span> permet de demander le focus d'un élément.</p>
+<pre><code>emailFocusNode.requestFocus();</code></pre>
+                    <p>On peut par exemple donner le focus à un champ lorsqu'un bouton est activé.</p>
+<pre><code>ElevatedButton(
+    onPressed: () {
+        emailFocusNode.requestFocus();
+    },
+    child: const Text(
+        "Saisir l'email",
+    ),
+)</code></pre>
+                    <p>Flutter présente également cette technique dans sa documentation consacrée au focus des champs de texte.</p>
+                    <h4>Passer au champ suivant :</h4>
+                    <p>Un formulaire peut contenir plusieurs champs. Il est alors possible de déplacer le focus vers le champ suivant.</p>
+<pre><code>final nomFocusNode = FocusNode();
+final emailFocusNode = FocusNode();</code></pre>
+                    <p>Chaque champ peut recevoir son propre <span class="em">FocusNode</span>.</p>
+<pre><code>TextField(
+    focusNode: nomFocusNode,
+)
+
+TextField(
+    focusNode: emailFocusNode,
+)</code></pre>
+                    <p>Le focus peut ensuite être déplacé :</p>
+<pre><code>emailFocusNode.requestFocus();</code></pre>
+                    <h4>Le focus automatique :</h4>
+                    <p>Lorsqu'il est pertinent de placer immédiatement le curseur dans un champ, il est possible d'utiliser <span class="em">autofocus</span>.</p>
+<pre><code>TextField(
+    autofocus: true,
+)</code></pre>
+                    <p>Cette possibilité doit cependant être utilisée avec discernement : déplacer automatiquement le focus peut être perturbant si l'utilisateur s'attend à rester sur l'élément qu'il vient de sélectionner.</p>
+                    <h4>Focus et accessibilité :</h4>
+                    <p>Une gestion correcte du focus permet notamment de rendre les formulaires plus faciles à parcourir au clavier.</p>
+                    <p>Elle est également importante lorsqu'une erreur est détectée et que l'utilisateur doit être orienté vers le champ concerné.</p>
+                    <p>Par exemple, après validation d'un formulaire, l'application peut déplacer le focus vers le premier champ incorrect.</p>
+                    <h4>Á retenir :</h4>
+                    <p>Le <span class="em">FocusNode</span> permet de :</p>
+                    <ul>
+                        <li>
+                            <p>identifier un élément focusable;</p>
+                        </li>
+                        <li>
+                            <p>demander le focus;</p>
+                        </li>
+                        <li>
+                            <p>détecter les changements de focus;</p>
+                        </li>
+                        <li>
+                            <p>gérer la navigation au clavier.</p>
+                        </li>
+                    </ul>
+                    <p>Le <span class="em">FocusNode</span> doit être considéré comme un objet persistant et son cycle de vie doit être correctement géré.</p>
                     <h3>Les utilisateurs sourds ou malentendants :</h3>
                     <p>Une information importante ne doit pas être transmise uniquement par un signal sonore.</p>
                     <p>Lorsqu'une notification sonore indique un événement important, une alternative visuelle ou textuelle doit également être proposée.</p>
@@ -3062,13 +3186,49 @@ Bouton Enregistrer</code></pre>
                     <h3>Les formulaires accessibles :</h3>
                     <p>Les formulaires doivent indiquer clairement le rôle de chaque champ.</p>
 <pre><code>TextFormField(
+    keyboardType: TextInputType.emailAddress,
+
     decoration: const InputDecoration(
         labelText: "Adresse électronique",
+        hintText: "exemple@email.com",
     ),
+
+    validator: (value) {
+        if (value ==  null || value.isEmpty) {
+            return "Veuillez saisir votre adresse électronique.";
+        }
+
+        return null;
+    }
 )</code></pre>
+                    <p>Le <span class="em">labelText</span> permet d'identifier le champ, tandis que le message retourné par <span class="em">validator</span> permet d'expliquer l'erreur.</p>
                     <p>Lorsqu'une erreur est détectée, l'utilisateur doit pouvoir comprendre ce qui doit être corrigé.</p>
 <pre><code>Veuillez saisir une adresse électronique valide.</code></pre>
                     <p>Les erreurs doivent également être associées au champ concerné et ne pas dépendre uniquement d'une couleur.</p>
+                    <p>Par exemple, afficher uniquement un champ avec une bordure rouge peut être insuffisant :</p>
+<pre><code>TextField(
+    decoration: InputDecoration(
+        enableBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+                color: Colors.red,
+            ),
+        ),
+    ),
+)</code></pre>
+                    <p>Il est préférable d'associer la couleur à un message explicite :</p>
+<pre><code>TextFormField(
+    decoration: const InputDecoration(
+        labelText: "Adresse électronique",
+    ),
+
+    validator: (value) {
+        if (value == null || value.isEmpty) {
+            return "Veuillez saisir une adresse électronique.";
+        }
+        return null;
+    }
+)</code></pre>
+                    <p>L'utilisateur dispose ainsi d'une information textuelle expliquant clairement le problème.</p>
                     <h3>Les animations :</h3>
                     <p>Les animations peuvent améliorer l'expérience utilisateur, mais elles ne doivent pas rendre l'application difficile à utiliser.</p>
                     <p>Une interface contenant beaucoup d'animations peut être particulièrement gênante pour certains utilisateurs.</p>
