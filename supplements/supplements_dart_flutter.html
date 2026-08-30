@@ -2310,6 +2310,34 @@ Autorisé    Refusé</code></pre>
     print("Les informations de connexion sont incorrectes");
 }</code></pre>
                     <p>Les messages présentés à l'utilisateur doivent rester suffisamment clairs sans révéler inutilement des informations sensibles.</p>
+                    <h4>À retenir :</h4>
+                    <p>Toutes les erreurs ne sont pas de même nature.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Exemple</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Erreur de validation</td>
+                                <td>Adresse électronique invalide</td>
+                            </tr>
+                            <tr>
+                                <td>Erreur d'authentification</td>
+                                <td>Identifiants incorrects</td>
+                            </tr>
+                            <tr>
+                                <td>Erreur réseau</td>
+                                <td>Impossible de contacter le serveur</td>
+                            </tr>
+                            <tr>
+                                <td>Erreur serveur</td>
+                                <td>Le serveur ne peut pas traiter la demande</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     <h3>Sécurité :</h3>
                     <p>L'authentification implique la manipulation de données sensibles. Il est donc indispensable de respecter plusieurs principes de sécurité.</p>
                     <h4>Ne jamais écrire un mot de passe en dur :</h4>
@@ -3037,7 +3065,7 @@ Stockage de fichiers
         "assets/images/decoration.png",
     ),
 )</code></pre>
-                    <p>L'objectif est déviter que le lecteur d'écran annonce des informations qui ne sont pas nécessaires à la compréhension de l'interface.</p>
+                    <p>L'objectif est d'éviter que le lecteur d'écran annonce des informations qui ne sont pas nécessaires à la compréhension de l'interface.</p>
                     <h3>Les boutons :</h3>
                     <p>Les boutons doivent permettre à l'utilisateur de comprendre clairement l'action qui sera effectuée.</p>
                     <p>Un intitulé explicite est généralement préférable à une information reposant uniquement sur l'apparence du bouton.</p>
@@ -3049,6 +3077,18 @@ Stockage de fichiers
 )</code></pre>
                     <p>Lorsqu'un bouton utilise uniquement une icône, il faut veiller à ce que son rôle reste compréhensible pour les technologies d'assistance.</p>
                     <p>Un bouton contenant une icône représentant une corbeille doit par exemple être identifiable comme une commande de suppression.</p>
+                    <h4>Le widget Tooltip :</h4>
+                    <p>Le widget <span class="em">Tooltip</span> permet d'afficher une information complémentaire lorsqu'un utilisateur survole ou interagit avec certains éléments.</p>
+<pre><code>Tooltip(
+    message: "Supprimer l'utilisateur",
+    child: IconButton(
+        onPressed: supprimer,
+        icon: const Icon(
+            Icons.delete,
+        ),
+    ),
+)</code></pre>
+                    <p>Un <span class="em">Tooltip</span> peut notamment aider à comprendre la fonction d'un bouton représenté uniquement par une icône.</p>
                     <h3>Le contraste :</h3>
                     <p>Le contraste entre le texte et son arrière-plan doit être suffisant pour permettre une lecture confortable.</p>
                     <p>Il faut également éviter d'utiliser uniquement une couleur pour distinguer plusieurs états.</p>
@@ -3066,7 +3106,7 @@ Stockage de fichiers
         style: Theme.of(context).textTheme.headlineMedium,
     ),
 )</code></pre>
-                    <p>L'utilisation des styles du thème facilite notamment l'adaptation globale de l'apparence l'application.</p>
+                    <p>L'utilisation des styles du thème facilite notamment l'adaptation globale de l'apparence de l'application.</p>
                     <h3>La navigation au clavier :</h3>
                     <p>Sur ordinateur, certains utilisateurs peuvent naviguer principalement à l'aide du clavier.</p>
                     <p>Les éléments interactifs doivent donc pouvoir recevoir le focus et être parcourus dans un ordre logique.</p>
@@ -3078,6 +3118,21 @@ Champ email
 &#8595;
 Bouton Enregistrer</code></pre>
                     <p>Un ordre de navigation incohérent peut rendre une interface difficile, voire impossible, à utiliser au clavier.</p>
+                    <h4>Exemple : zone d'interaction :</h4>
+                    <p>Un élément interactif doit disposer d'une zone suffisamment grande pour être facilement utilisé sur un écran tactile.</p>
+<pre><code>ConstrainedBox(
+    constraints: const BoxConstraints(
+        minWidth: 48,
+        minHeight: 48,
+    ),
+    child: IconButton(
+        onPressed: supprimer,
+        icon: const Icon(
+            Icons.delete,
+        ),
+    ),
+)</code></pre>
+                    <p>La taille visuelle de l'icône et la taille de la zone interactive ne doivent pas nécessairement être identiques.</p>
                     <h3>Le focus :</h3>
                     <p>Le <span class="em">FocusNode</span> permet notamment de contrôler le focus d'un élément interactif dans Flutter.</p>
                     <p>Le focus indique notamment quel élément interactif est actuellement sélectionné pour l'interaction au clavier.</p>
@@ -3087,14 +3142,14 @@ Bouton Enregistrer</code></pre>
                     <h4>Créer un FocusNode :</h4>
                     <p>Pour contrôler directement le focus d'un champ, nous pouvons créer un objet <span class="em">FocusNode</span>.</p>
 <pre><code>final emailFocusNode = FocusNode();</code></pre>
-                    <p>Le <span class="em">FocusNode</span> est un objet qui doit avoir une durée de vie suffisamment longue. Il ne faut dnc pas en créer un nouveau à chaque reconstruction du widget.</p>
-                    <p>Lorsqu'un <span class="em">StatefulWidget</span> possède un <span class="em">FocusNode</span>, celle-ci peut être créé dans <span class="em">initState()</span> et libéré dans <span class="em">dispose()</span>.</p>
+                    <p>Le <span class="em">FocusNode</span> est un objet qui doit avoir une durée de vie suffisamment longue. Il ne faut donc pas en créer un nouveau à chaque reconstruction du widget.</p>
+                    <p>Lorsqu'un <span class="em">StatefulWidget</span> possède un <span class="em">FocusNode</span>, celui-ci peut être créé dans <span class="em">initState()</span> et libéré dans <span class="em">dispose()</span>.</p>
 <pre><code>class FormulairePage extends StatefulWidget {
 
     const FormulairePage({super.key});
 
     @override
-    State&lt;Formulaire&gt; createState() {
+    State&lt;FormulairePage&gt; createState() {
         return _FormulairePageState();
     }
 }
@@ -3144,6 +3199,34 @@ TextField(
 )</code></pre>
                     <p>Le focus peut ensuite être déplacé :</p>
 <pre><code>emailFocusNode.requestFocus();</code></pre>
+                    <p>En résumé, dans un formulaire, il est possible d'organiser le déplacement du focus afin que l'utilisateur puisse passer logiquement d'un champ au suivant.</p>
+<pre><code>final nomFocusNode = FocusNode();
+final emailFocusNode = FocusNode();
+
+TextField(
+    focusNode: nomFocusNode,
+
+    textInputAction: TextInputAction.next,
+
+    onFieldSubmitted: (_) {
+        emailFocusNode.requestFocus();
+    },
+
+    decoration: const InputDecoration(
+        labelText: "Nom",
+    ),
+)
+
+TextField(
+    focusNode: emailFocusNode,
+
+    textInputAction: TextInputAction.done,
+
+    decoration: const InputDecoration(
+        labelText: "Adresse électronique",
+    ),
+)</code></pre>
+                    <p>Le champ "Nom" permet ici de passer directement au champ "Adresse électronique" lorsque l'utilisateur termine sa saisie.</p>
                     <h4>Le focus automatique :</h4>
                     <p>Lorsqu'il est pertinent de placer immédiatement le curseur dans un champ, il est possible d'utiliser <span class="em">autofocus</span>.</p>
 <pre><code>TextField(
@@ -3154,7 +3237,36 @@ TextField(
                     <p>Une gestion correcte du focus permet notamment de rendre les formulaires plus faciles à parcourir au clavier.</p>
                     <p>Elle est également importante lorsqu'une erreur est détectée et que l'utilisateur doit être orienté vers le champ concerné.</p>
                     <p>Par exemple, après validation d'un formulaire, l'application peut déplacer le focus vers le premier champ incorrect.</p>
-                    <h4>Á retenir :</h4>
+<pre><code>if (!formKey.currentState!.validate()) {
+    emailFocusNode.requestFocus();
+}</code></pre>
+                    <p>Le focus est alors placé sur le champ qui doit être corrigé.</p>
+                    <p>Cette technique peut améliorer la navigation au clavier et faciliter l'utilisation du formulaire avec certaines technologies d'assistance.</p>
+                    <h4>Attention : ne pas créer un FocusNode dans build() :</h4>
+                    <p>Il ne faut pas créer un nouveau <span class="em">FocusNode</span> à chaque appel de la méthode <span class="em">build()</span>.</p>
+                    <p>La méthode <span class="em">build()</span> peut être appelée plusieurs fois. Créer un nouveau <span class="em">FocusNode</span> à chaque reconstruction peut donc faire perdre le focus et empêcher une gestion correcte de son cycle de vie.</p>
+                    <p>Le <span class="em">FocusNode</span> doit plutôt être conservé comme propriété du <span class="em">StatefulWidget</span> et libéré dans <span class="em">dispose()</span>.</p>
+                    <h4>FocusScopeNode :</h4>
+                    <p>Un <span class="em">FocusScopeNode</span> permet de gérer le focus au sein d'une zone particulière de l'interface.</p>
+                    <p>Cette notion peut notamment être utile dans les formulaires et les interfaces comportant plusieurs groupes de commandes.</p>
+<pre><code>FocusScope.of(context).nextFocus();</code></pre>
+                    <p>Cette méthode permet notamment de demander au système de déplacer le focus vers l'élément focusable suivant.</p>
+                    <h4>FocusTraversalGroup :</h4>
+                    <p>Le widget <span class="em">FocusTraversalGroup</span> permet de regrouper des éléments qui participent à la navigation du focus.</p>
+                    <p>Il peut être utile dans les interfaces complexes afin de conserver une navigation au clavier cohérente.</p>
+<pre><code>FocusTraversalGroup(
+    child: Column(
+        children: [
+            TextField(),
+            TextField(),
+            ElevatedButton(
+                onPressed: enregistrer,
+                child: const Text("Enregistrer"),
+            ),
+        ],
+    ),
+)</code></pre>
+                    <h4>À retenir :</h4>
                     <p>Le <span class="em">FocusNode</span> permet de :</p>
                     <ul>
                         <li>
@@ -3191,10 +3303,11 @@ TextField(
     decoration: const InputDecoration(
         labelText: "Adresse électronique",
         hintText: "exemple@email.com",
+        errorText: "L'adresse électronique est invalide.",
     ),
 
     validator: (value) {
-        if (value ==  null || value.isEmpty) {
+        if (value == null || value.isEmpty) {
             return "Veuillez saisir votre adresse électronique.";
         }
 
@@ -3208,7 +3321,7 @@ TextField(
                     <p>Par exemple, afficher uniquement un champ avec une bordure rouge peut être insuffisant :</p>
 <pre><code>TextField(
     decoration: InputDecoration(
-        enableBorder: OutlineInputBorder(
+        enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(
                 color: Colors.red,
             ),
@@ -3233,6 +3346,8 @@ TextField(
                     <p>Les animations peuvent améliorer l'expérience utilisateur, mais elles ne doivent pas rendre l'application difficile à utiliser.</p>
                     <p>Une interface contenant beaucoup d'animations peut être particulièrement gênante pour certains utilisateurs.</p>
                     <p>Les animations doivent donc rester utiles et ne pas empêcher l'accès à l'information ou aux commandes.</p>
+                    <p>Certaines personnes peuvent préférer limiter les animations de l'interface.</p>
+                    <p>L'application peut tenir compte des préférences d'accessibilité du système afin d'éviter certaines animations lorsqu'elles ne sont nécessaires à la compréhension de l'interface.</p>
                     <h3>Accessibilité et responsive design :</h3>
                     <p>Une application multiplateforme doit également être capable de s'adapter à différentes tailles d'écran.</p>
                     <p>Une interface conçue pour un smartphone ne doit pas nécessairement être affichée exactement de la même manière sur un ordinateur.</p>
@@ -3285,6 +3400,42 @@ Nouveaux tests
 &#8595;
 Publication</code></pre>
                     <p>L'accessibilité doit donc être considérée comme une partie intégrante du cycle de développement.</p>
+                    <h3>Audit d'accessibilité :</h3>
+                    <p>Avant de considérer une interface comme accessible, il est nécessaire de la tester dans différentes situations.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Test</th>
+                                <th>Question à vérifier</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Lecteur d'écran</td>
+                                <td>Les éléments sont-ils correctement annoncés ?</td>
+                            </tr>
+                            <tr>
+                                <td>Clavier</td>
+                                <td>Tous les éléments interactifs peuvent-ils recevoir le focus ?</td>
+                            </tr>
+                            <tr>
+                                <td>Ordre du focus</td>
+                                <td>L'ordre de navigation est-il logique ?</td>
+                            </tr>
+                            <tr>
+                                <td>Taille du texte</td>
+                                <td>L'interface reste-t-ele utilisable lorsque le texte est agrandi ?</td>
+                            </tr>
+                            <tr>
+                                <td>Contraste</td>
+                                <td>Les informations restent-elles lisibles ?</td>
+                            </tr>
+                            <tr>
+                                <td>Couleur</td>
+                                <td>Une information importante dépend-elle uniquement d'une couleur ?</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </article>
             </section>
         </main>
