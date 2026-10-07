@@ -1638,6 +1638,176 @@ Message utilisateur</code></pre>
                     <p>Par exemple, il faut réfléchir avant d'afficher des messages permettant à une personne extérieure de déterminer précisément si une adresse email possède un compte.</p>
                     <p>Nous chercherons donc un équilibre <entrespan class="em">message suffisamment clair</entrespan> et <span class="em">protection des informations</span>.</p>
                     <p>La gestion des erreurs sera approfondie lorsque nous développerons les écrans d'inscription et de connexion.</p>
+                    <h3>Firebase Authentication et le mot de passe :</h3>
+                    <p>Dans notre architecture, Firebase Authentication sera responsable de la gestion du mot de passe.</p>
+                    <p>Nous ne devons jamais créer notre propre champ permettant d'enregistrer le mot de passe dans Firestore.</p>
+                    <p>Une mauvaise architecture serait :</p>
+<pre><code>Firestore
+└── users
+    └── uid
+        ├── email
+        ├── password
+        └── ...</code></pre>
+                    <p>Nous ne ferons jamais cela.</p>
+                    <p>Nous aurons plutôt :</p>
+<pre><code>Firebase Authentication
+        │
+        ├── Identité
+        ├── Email
+        ├── Mot de passe
+        └── Authentification
+
+Cloud Firestore
+        │
+        ├── Profil
+        ├── Préférences
+        └── Données applicatives</code></pre>
+                    <p>Cette séparation est fondamentale.</p>
+                    <h3>Relation entre Autehntication et Firestore :</h3>
+                    <p><span class="em">Firebase Authentication</span> et <span class="em">Cloud Firestore</span> ont donc deux responsabilités différentes.</p>
+                    <p>Firebase Authentication permet principalement de gérer : <q>Qui est l'utilisateur ?</q>.</p>
+                    <p>Firestore permet de gérer : <q>Quelles sont les données de l'application ?</q>.</p>
+                    <p>Nous allons utiliser l'UID pour établir une relation entre les deux.</p>
+                    <p>Exemple :</p>
+<pre><code>Firebase Authentication
+        │
+        ▼
+UID : abc123
+        │
+        ▼
+Cloud Firestore
+        │
+        ▼
+users/abc123</code></pre>
+                    <p>Nous pourrons donc avoir une structure comme :</p>
+<pre><code>users
+│
+├── abc123
+│      ├── displayName
+│      ├── createdAt
+│      └── preferences
+│
+├── xyz456
+│      ├── displayName
+│      ├── createdAt
+│      └── preferences
+│
+└── ...</code></pre>
+                    <p>Nous verrons dans les modules consacrés à Firestore comment créer et protéger ces documents.</p>
+                    <h3>Être authentifié ne signie pas avoir tous les droits :</h3>
+                    <p>Une erreur fondamentale serait de considérer :</p>
+<pre><code>Utilisateur connecté
+        =
+Accès à toutes les données</code></pre>
+                    <p>Ce n'est pas le fonctionnement que nous voulons.</p>
+                    <p>L'utilisateur peut être correctement authentifié tout en n'ayant pas le droit d'accéder à certaines données.</p>
+                    <p>Nous avons donc :</p>
+<pre><code>Authentication
+      │
+      ▼
+Qui es-tu ?
+      │
+      ▼
+UID
+      │
+      ▼
+Security Rules
+      │
+      ▼
+Qu'as-tu le droit de faire ?</code></pre>
+                    <p>Cette distinction entre authentification et autorisation est l'une des notions les plus importantes de tout le syllabus.</p>
+                    <h4>Exemple d'autorisation :</h4>
+                    <p>Imaginons deux utilisateurs :</p>
+<pre><code>Alice &#8594; UID_A
+Bob   &#8594; UID_B</code></pre>
+                    <p>Alice doit pouvoir accéder à ses propres données :</p>
+<pre><code>Alice
+ │
+ └── users/UID_A</code></pre>
+                    <p>Mais elle ne doit pas pouvoir modifier :</p>
+<pre><code>users/UID_B</code></pre>
+                    <p>La protection ne doit pas reposer uniquement sur Flutter.</p>
+                    <p>Elle devra être imposée par les <span class="em">Security Rules Firebase</span>.</p>
+                    <p>Nous étudierons cela en détail dans les modules consacrés à Firestore et à la sécurité.</p>
+                    <h3>Préparation des rôles utilisateur :</h3>
+                    <p>Notre application pourra également avoir différents types d'utilisateurs.</p>
+                    <p>Par exemple :</p>
+<pre><code>Utilisateur
+Administrateur</code></pre>
+                    <p>Mais nous ne devons jamais sécuriser un rôle uniquement avec une variable locale Flutter.</p>
+                    <p>Si cette information n'est pas contrôlée côté serveur, une architecture dangereuse serait :</p>
+<pre><code>bool isAdmin = true;</code></pre>
+                    <p>ou :</p>
+<pre><code>if (user.isAdmin) {
+    // accès administrateur
+}</code></pre>
+                    <p>Le client Flutter peut être manipulé.</p>
+                    <p>Les autorisations importantes devront donc être vérifiées côté Firebase ou côté backend.</p>
+                    <p>Cette notion sera étudiée dans les modules avancés.</p>
+                    <h3>Architecture de l'authentification :</h3>
+                    <p>Nous pouvons maintenant représenter l'architecture actuelle de manière plus complète :</p>
+<pre><code>                         APPLICATION FLUTTER
+                                  │
+                                  ▼
+                            FirebaseAuth
+                                  │
+                    ┌─────────────┼─────────────┐
+                    │             │             │
+                    ▼             ▼             ▼
+              currentUser   authStateChanges  signOut
+                    │
+                    ▼
+                   User
+                    │
+          ┌─────────┼─────────┬────────────┐
+          │         │         │            │
+          ▼         ▼         ▼            ▼
+         uid       email   emailVerified  phoneNumber
+          │
+          ▼
+       Firestore
+          │
+          ▼
+    Security Rules</code></pre>
+                    <p>Cette architecture évoluera au fur et à mesure des modules.</p>
+                    <h3>Architecture du futur système d'authentfication :</h3>
+                    <p>À terme, nous voulons obtenir quelque chose de plus structuré :</p>
+<pre><code>Interface Flutter
+       │
+       ▼
+Auth Controller / Provider
+       │
+       ▼
+Auth Repository
+       │
+       ▼
+FirebaseAuth
+       │
+       ▼
+Firebase Authentication</code></pre>
+                    <p>Cette séparation permettra d'éviter que chaque écran communique directement avec Firebase.</p>
+                    <p>Elle facilitera également :</p>
+                    <ul>
+                        <li>
+                            <p>les tests;</p>
+                        </li>
+                        <li>
+                            <p>la maintenance;</p>
+                        </li>
+                        <li>
+                            <p>la gestion des erreurs;</p>
+                        </li>
+                        <li>
+                            <p>la gestion globale des sessions;</p>
+                        </li>
+                        <li>
+                            <p>la modification de l'architecture;</p>
+                        </li>
+                        <li>
+                            <p>l'évolution vers la MFA.</p>
+                        </li>
+                    </ul>
+                    <p>Nous construirons cette architecture progressivement.</p>
                 </article>
             <!-- fin de section -->
             </section>
