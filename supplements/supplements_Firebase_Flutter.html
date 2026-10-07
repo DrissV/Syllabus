@@ -1545,6 +1545,99 @@ Utilisateur non connecté</code></pre>
              ▼          ▼          ▼
           Loader    Application   Login</code></pre>
                     <p>Cette logique sera à la base du future <span class="em">AuthGate</span>.</p>
+                    <h3>La déconnexion :</h3>
+                    <p>Pour déconnecter l'utilisateur, Firebase Authentication fournit :</p>
+<pre><code>await FirebaseAuth.instance.signOut();</code></pre>
+                    <p>Exemple :</p>
+<pre><code>Future&lt;void&gt; logout() async {
+    await FirebaseAuth.instance.signOut();
+}</code></pre>
+                    <p>Après cette opération, l'utilisateur n'est plus authentifié.</p>
+                    <p>Le <span class="em">currentUser</span> ne représentera alors plus un utilisateur connecté :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+
+if (user == null) {
+    print('Utilisateur déconnecté');
+}</code></pre>
+                    <p>Le flux <span class="em">authStateChangesr()</span> pourra également signaler ce changement.</p>
+                    <h3>Pourquoi ne pas simplement naviguer vers l'écran de connexion ?</h3>
+                    <p>Il serait possible de faire quelque chose comme :</p>
+<pre><code>Bouton Déconnexion
+       │
+       ▼
+Navigation
+       │
+       ▼
+Écran de connexion</code></pre>
+                    <p>Mais cela ne constitue pas une véritable déconnexion.</p>
+                    <p>Changer d'écran ne supprime pas la session Firebase.</p>
+                    <p>Il faut d'abord effectuer :</p>
+<pre><code>await FirebaseAuth.instance.signOut();</code></pre>
+                    <p>Puis laisser l'état d'authentification déterminer l'interface à afficher.</p>
+                    <p>L'architecture correcte sera donc :</p>
+<pre><code>Bouton Déconnexion
+        │
+        ▼
+FirebaseAuth.signOut()
+        │
+        ▼
+État d'authentification modifié
+        │
+        ▼
+AuthGate
+        │
+        ▼
+Écran de connexion</code></pre>
+                    <h3>Gestion des erreurs :</h3>
+                    <p>Les opéerations Firebase Authentication peuvent échouer.</p>
+                    <p>Nous devons donc prévoir une gestion des exceptions.</p>
+                    <p>Firebase fournit notamment <span class="em">FirebaseAuthException</span>.</p>
+                    <p>Exemple :</p>
+<pre><code>try {
+    // Opération Firebase Authentication
+} on FirebaseAuthException catch (e) {
+    print('Code : ${e.code}');
+    print('Message : ${e.message}');
+}</code></pre>
+                    <p>Le code est particulièrement intéressant pour identifier la cause de l'erreur.</p>
+                    <p>Nous pourrons ensuite adapter le message affiché à l'utilisateur.</p>
+                    <h4>Exemple de gestion d'une erreur :</h4>
+<pre><code>try {
+    // Connexion ou inscription
+} on FirebaseAuthException catch (e) {
+    switch (e.code) {
+        case 'invalid-credential':
+            print('Les identifiants sont incorrects.');
+            break;
+        default:
+            print('Une erreur est survenue.');
+    }
+}</code></pre>
+                    <p>La liste exacte des codes disponibles dépendra de l'opération effectuée et de l'évolution du SDK.</p>
+                    <p>Il faudra donc toujours se référer à la documentation Firebase correspondant à la version utilisée dans le projet.</p>
+                    <h4>Ne pas afficher directement les erreurs techniques :</h4>
+                    <p>Il ne faudra pas afficher systématiquement <span class="em">e.message</span> directement dans l'interface.</p>
+                    <p>Par exemple, ceci ne sera pas notre architecture finale :</p>
+<pre><code>Text(e.message ?? 'Erreur');</code></pre>
+                    <p>Nous préférerons progressivement avoir une couche permettant de transformer les erreurs Firebase en messages compréhensibles.</p>
+                    <p>Le principe sera :</p>
+<pre><code>FirebaseAuthException
+        │
+        ▼
+Code d'erreur
+        │
+        ▼
+Gestionnaire d'erreurs
+        │
+        ▼
+Message utilisateur</code></pre>
+                    <p>Cette approche permettra également de centraliser les traductions et les messages.</p>
+                    <h4>Attention aux informations révélées par les erreurs :</h4>
+                    <p>La gestion des erreurs doit également respecter les principes de sécurité.</p>
+                    <p>Une application ne doit pas révéler inutilement des informations sensibles.</p>
+                    <p>Par exemple, il faut réfléchir avant d'afficher des messages permettant à une personne extérieure de déterminer précisément si une adresse email possède un compte.</p>
+                    <p>Nous chercherons donc un équilibre <entrespan class="em">message suffisamment clair</entrespan> et <span class="em">protection des informations</span>.</p>
+                    <p>La gestion des erreurs sera approfondie lorsque nous développerons les écrans d'inscription et de connexion.</p>
                 </article>
             <!-- fin de section -->
             </section>
