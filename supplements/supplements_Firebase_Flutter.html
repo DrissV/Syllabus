@@ -58,6 +58,7 @@
                 <p>Liens utiles :</p>
                 <ul>
                     <li><a href="https://www.youtube.com/c/LeDesignerduWeb/videos">Le Designer du web</a></li>
+                    <li><a href="../supplements/supplements_dart_flutter.html">Dart et Flutter</a></li>
                 </ul>
             </aside>
         </div>
@@ -903,7 +904,647 @@ Projet Firebase sélectionné</code></pre>
                     <p>À la fin du module, l'application disposera de la fondation nécessaire pour construire le système d'inscription et de connexion.</p>
                     <h3>Objectifs du module :</h3>
                     <p>À la fin de ce module, vous devriez être capable de :</p>
-                    
+                    <ul>
+                        <li>
+                            <p>expliquer le fonctionnement de <span class="em">Firebase Authentication</span>;</p>
+                        </li>
+                        <li>
+                            <p>comprendre le rôle de <span class="em">Firebase Auth</span>;</p>
+                        </li>
+                        <li>
+                            <p>distinguer authentification et autorisation;</p>
+                        </li>
+                        <li>
+                            <p>comprendre la notion d'<span class="em">identité utilisateur</span>;</p>
+                        </li>
+                        <li>
+                            <p>accéder à l'utilisateur actuellement connecté;</p>
+                        </li>
+                        <li>
+                            <p>utiliser <span class="em">FirebaseAuth.instance</span>;</p>
+                        </li>
+                        <li>
+                            <p>observer l'état d'authentification;</p>
+                        </li>
+                        <li>
+                            <p>comprendre les sessions Firebase;</p>
+                        </li>
+                        <li>
+                            <p>utiliser <span class="em">authStateChanges()</span>;</p>
+                        </li>
+                        <li>
+                            <p>comprendre <span class="em">idTokenChanges()</span>;</p>
+                        </li>
+                        <li>
+                            <p>comprendre <span class="em">userChanges()</span>;</p>
+                        </li>
+                        <li>
+                            <p>gérer la déconnexion;</p>
+                        </li>
+                        <li>
+                            <p>interpréter les erreurs d'authentification;</p>
+                        </li>
+                        <li>
+                            <p>préparer l'architecture du système d'authentification;</p>
+                        </li>
+                        <li>
+                            <p>préparer l'inscription du prochain module.</p>
+                        </li>
+                    </ul>
+                    <h3>Authentification : définition :</h3>
+                    <p>L'authentification consiste à répondre à la question <q>Qui est cette personne ?</q></p>
+                    <p>Par exemple, lorsqu'un utilisateur saisit les informations suivantes, l'application doit pouvoir déterminer si ces informations permettent d'identifier correctement un compte.</p>
+<pre><code>Email :
+alice@example.com
+
+Mot de passe :
+********</code></pre>
+                    <p>L'authentification permet donc de vérifier l'identité d'un utilisateur.</p>
+                    <h3>Authentification et autorisation :</h3>
+                    <p>Il est extrêmement important de ne pas confondre ces deux concepts.</p>
+                    <h4>Authentification :</h4>
+                    <p>L'authentification répond : <q>Qui es-tu ?</q>.</p>
+                    <p>Exemple :</p>
+<pre><code>Utilisateur
+   ↓
+Connexion
+   ↓
+Firebase vérifie l'identité
+   ↓
+Utilisateur authentifié</code></pre>
+                    <h4>Autorisation :</h4>
+                    <p>L'autorisation répond : <q>Qu'as-tu le droit de faire ?</q>.</p>
+                    <p>Exemple :</p>
+<pre><code>Utilisateur authentifié
+        │
+        ├── Peut lire son profil
+        │
+        ├── Peut modifier son profil
+        │
+        └── Ne peut pas modifier le profil d'un autre utilisateur</code></pre>
+                    <p>Cette distinction deviendra essentielle lorsque nous étudierons <span class="em">Firestore Security Rules</span>.</p>
+                    <h3>Pourquoi utiliser Firebase Authentication ?</h3>
+                    <p>Créer soi-même un système d'authentification sécurisé est une tâche complexe.</p>
+                    <p>Il faut notamment gérer :</p>
+                    <ul>
+                        <li>
+                            <p>les mots de passe;</p>
+                        </li>
+                        <li>
+                            <p>le stockage sécurisé des informations;</p>
+                        </li>
+                        <li>
+                            <p>les sessions;</p>
+                        </li>
+                        <li>
+                            <p>les tokens;</p>
+                        </li>
+                        <li>
+                            <p>les renouvellements de tokens;</p>
+                        </li>
+                        <li>
+                            <p>les réinitialisations de mots de passe;</p>
+                        </li>
+                        <li>
+                            <p>la vérification email;</p>
+                        </li>
+                        <li>
+                            <p>les connexions sociales;</p>
+                        </li>
+                        <li>
+                            <p>les numéros de téléphone;</p>
+                        </li>
+                        <li>
+                            <p>la MFA;</p>
+                        </li>
+                        <li>
+                            <p>les protections contre les abus.</p>
+                        </li>
+                    </ul>
+                    <p>Firebase Authentication fournit une infrastructure permettant de gérer une grande partie de ces mécanismes.</p>
+                    <p>Notre application pourra donc utiliser Firebase comme système d'identité.</p>
+                    <h3>Architecture générale :</h3>
+                    <p>L'architecture du système sera progressivement :</p>
+<pre><code>                     UTILISATEUR
+                          │
+                          ▼
+                  APPLICATION FLUTTER
+                          │
+                          ▼
+                   FirebaseAuth
+                          │
+                          ▼
+                Firebase Authentication
+                          │
+             ┌────────────┼─────────────┐
+             │            │             │
+             ▼            ▼             ▼
+          Email         Phone         OAuth
+        Password         SMS       Google, etc.</code></pre>
+                    <p>Dans un premier temps, nous nous concentrerons sur : <q>Email + mot de passe</q>.</p>
+                    <p>Les autres mécanismes seront introduits progressivement dans les modules suivants.</p>
+                    <h3>Les principaux fournisseurs d'identité :</h3>
+                    <p>Firebase Authentication peut prendre en charge plusieurs méthodes d'authentification.</p>
+                    <p>Selon les besoins du projet, on pourra utiliser notamment :</p>
+                    <ul>
+                        <li>
+                            <p>email et mot de passe;</p>
+                        </li>
+                        <li>
+                            <p>téléphone;</p>
+                        </li>
+                        <li>
+                            <p>Google;</p>
+                        </li>
+                        <li>
+                            <p>Apple;</p>
+                        </li>
+                        <li>
+                            <p>d'autres fournisseurs compatibles;</p>
+                        </li>
+                        <li>
+                            <p>authentification multifacteur.</p>
+                        </li>
+                    </ul>
+                    <p>Notre parcours suivra principalement :</p>
+<pre><code>Email + mot de passe
+        ↓
+Vérification email
+        ↓
+Téléphone
+        ↓
+MFA</code></pre>
+                    <p>Cela permettra de construire progressivement un système d'authentification renforcé.</p>
+                    <h3>Activation de Firebase Authentication :</h3>
+                    <p>Avant d'utiliser Authentication dans le code, le service doit être activé et configuré dans le projet Firebase.</p>
+                    <p>Le principe est :</p>
+<pre><code>Projet Firebase
+      │
+      ▼
+Authentication
+      │
+      ▼
+Fournisseurs
+      │
+      ▼
+Email / Password</code></pre>
+                    <p>Pour le moment, nous nous concentrerons sur le fournisseur : <q>Email / Password</q>.</p>
+                    <p>Les autres méthodes seront activées lorsque les modules correspondants seront étudiés.</p>
+                    <h3>Installation de Firebase Auth dans Flutter :</h3>
+                    <p>Le package Flutter utilisé pour Firebase Authentication est <span class="em">firebase_auth</span>.</p>
+                    <p>Il sera ajouté aux dépendances du projet via la commande suivante :</p>
+<pre><code>flutter pub add firebase_auth</code></pre>
+                    <p>Le <span class="em">pubspec.yaml</span> contiendra progressivement :</p>
+<pre><code>dependencies:
+  flutter:
+    sdk: flutter
+
+  firebase_core: ...
+  firebase_auth: ...</code></pre>
+                    <p>Puis :</p>
+<pre><code>flutter pub get</code></pre>
+                    <h3>FirebaseAuth :</h3>
+                    <p>Le point d'accès principal au service Authentication est <span class="em">FirebaseAuth.instance</span>.</p>
+                    <p>On peut considérer cet objet comme le point d'entrée permettant à l'application de communiquer avec Firebase Authentication.</p>
+                    <p>Exemple :</p>
+<pre><code>final auth = FirebaseAuth.instance;</code></pre>
+                    <p>Nous pourrons ensuite utiliser <code class="em">auth.currentUser</code> pour récupérer l'utilisateur actuellement authentifié.</p>
+                    <h3>L'utilisateur courant :</h3>
+                    <p>Une notion essentielle de Firebase Authentication est celle de <span class="em">l'utilisateur actuellement connecté</span>.</p>
+                    <p>Firebase permet de savoir si un utilisateur est actuellement authentifié et, le cas échéant, d'accéder aux informations associées à son compte.</p>
+                    <p>Pour cela, nous utiiserons :</p>
+<pre><code>FirebaseAuth.instance.currentUser</code></pre>
+                    <p>Cette propriété retourne l'utilisateur actuellement connecté.</p>
+                    <p>Si aucun utilisateur n'est connecté, la valeur retournée sera <span class="em">null</span>.</p>
+                    <p>On peut donc représenter la situation ainsi :</p>
+<pre><code>FirebaseAuth
+     │
+     ▼
+currentUser
+     │
+ ┌───┴────┐
+ │        │
+ ▼        ▼
+User     null
+ │        │
+ │        └── Aucun utilisateur connecté
+ │
+ └── Utilisateur connecté</code></pre>
+                    <p>Un exemple simple serait :</p>
+<pre><code>final user =  FirebaseAuth.instance.currentUser;
+
+if (user != null) {
+    print('Utilisateur connecté');
+} else {
+    print('Aucun utilisateur connecté');
+}</code></pre>
+                    <p>Cette vérification sera utilisée très fréquemment dans notre application.</p>
+                    <p>Cependant, dans l'architecture finale, nous éviterons de répéter cette logique directement dans chaque écran.</p>
+                    <p>Nous créerons progressivement une gestion centralisée de l'état d'authentfication.</p>
+                    <h3>La classe User :</h3>
+                    <p>Lorsque Firebase Authentication identifie un utilisateur, Flutter peut accéder à un objet de type <span class="em">User</span>.</p>
+                    <p>Cet objet représente l'identité de l'utilisateur authentifié.</p>
+                    <p>Il contient différentes informations utiles.</p>
+                    <p>Par exemple :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+
+if (user != null) {
+    print(user.uid);
+    print(user.email);
+    print(user.displayName);
+}</code></pre>
+                    <p>Nous utiliserons principalement ces informations pour identifier l'utilisateur et construire progressivement son profil dans Firestore.</p>
+                    <h3>Le UID utilisateur :</h3>
+                    <p>Chaque utilisateur Firebase possède un identifiant unique appelé <span class="em">UID</span>.</p>
+                    <p>UID signifie <span class="em">User ID</span>.</p>
+                    <p>Cet identifiant est particulièrement important dans notre architecture.</p>
+<pre><code>Utilisateur
+     │
+     ▼
+Firebase Authentication
+     │
+     ▼
+UID
+     │
+     ▼
+Profil Firestore</code></pre>
+                    <p>Nous pourrons ensuite utilliser cet UID pour associer les données Firestore au bon utilisateur.</p>
+                    <p>Par exemple, une strucure de données pourra progressivement ressembler à :</p>
+<pre><code>users
+│
+├── uid_abc123
+│      ├── email
+│      ├── displayName
+│      └── createdAt
+│
+├── uid_xyz456
+│      ├── email
+│      ├── displayName
+│      └── createdAt
+│
+└── ...</code></pre>
+                    <p>L'UID est donc une pièce fondamentale de la relation entre <span class="em">Firebase Authentication</span> et <span class="em">Cloud Firestore</span>.</p>
+                    <h3>¨Pourquoi ne pas utiliser l'adresse email comme identifiant ?</h3>
+                    <p>Il serait possible de penser que l'adresse email pourrait servir à identifier directeement un utilisateur.</p>
+                    <p>Cependant, l'email n'est pas le meilleur identifiant pour notre architecture.</p>
+                    <p>Un utilisateur peut notamment modifier certaines informations de son compte.</p>
+                    <p>L'UID, quant à lui, est l'identifiant unique attribué au compte Firebase.</p>
+                    <p>Nous utiliserons donc principalement :</p>
+<pre><code>UID
+ │
+ ├── Profil utilisateur
+ ├── Données personnelles
+ ├── Documents Firestore
+ └── Autorisations</code></pre>
+                    <p>L'adresse email restera une information associée au compte, mais elle ne remplacera pas l'UID comme identifiant principal de nos données.</p>
+                    <h3>Informations principales de l'utilisateur :</h3>
+                    <p>L'objet <span class="em">User</span> expose différentes propriétés.</p>
+                    <p>Parmi les plus importantes pour notre projet, on retrouvera notamment :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">uid</span> : identifiant unique de l'utilisateur;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">email</span> : adresse email associée au compte;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">emailVerified</span> : indique si l'adresse email a été vérifiée;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">displayName</span> : nom affiché lorsqu'il est défini;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">photoURL</span> : URL éventuelle de la photo de profil;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">phoneNumber</span> : numéro de téléphone associé au compte lorsqu'il est défini.</p>
+                        </li>
+                    </ul>
+                    <p>On peut accéder à ces informations à partir de l'utilisateur courant :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+
+if (user != null) {
+    print('UID : ${user.uid}');
+    print('Email : ${user.email}');
+    print('Email vérifié : ${user.emailVerified}');
+    print('Nom : ${user.displayName}');
+    print('Photo : ${user.photoURL}');
+    print('Téléphone : ${user.phoneNumber}');
+}</code></pre>
+                    <p>Certaines de ces propriétés peuvent être <span class="em">null</span>.</p>
+                    <p>Par exemple, un utilisateur nouvellement créé avec uniquement une adresse email et un mot de passe pourra ne pas avoir de <span class="em">displayName</span>, de <span class="em">photoURL</span> ou de <span class="em">phoneNumber</span>.</p>
+                    <p>Il faut donc toujours tenir compte de cette possibilité dans le code.</p>
+                    <p>Dans notre projet, nous commencerons principalement avec une authentification utiisant une adresse email et un mot de passe.</p>
+                    <p>Cependant, l'architecture doit rester suffisamment flexible pour accueillir d'autres méthodes d'authentification.</p>
+                    <h4>Vérifier si l'adresse email a été vérifée :</h4>
+                    <p>La propriété <span class="em">emailVerified</span> permet de savoir si l'utilisateur a confirmé son adresse email.</p>
+                    <p>Exemple :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+
+if (user != null) {
+    if (user.emailVerified) {
+        print('Adresse email vérifiée');
+    } else {
+        print('Adresse email non vérifiée');
+    }
+}</code></pre>
+                    <p>Cette propriété retourne une valeur booléenne. Elle peut être donc <span class="em">true</span> ou <span class="em">false</span>.</p>
+                    <p>Le parcours pourra être représnté ainsi :</p>
+<pre><code>Compte créé
+    │
+    ▼
+Email non vérifié
+    │
+    ▼
+Envoi du mail de vérification
+    │
+    ▼
+Utilisateur clique sur le lien
+    │
+    ▼
+Email vérifié</code></pre>
+                    <p>Cette étape sera particulièrement importante dans le parcours d'inscription.</p>
+                    <h4>Envoyer un email de vérification :</h4>
+                    <p>Firebase Authentication permet d'envoyer un email de vérification à l'utilisateur actuellement connecté.</p>
+                    <p>Par exemple :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+
+if (user != null && !user.emailVerified) {
+    await user.sendEmailVerification();
+}</code></pre>
+                    <p>Le principe est donc :</p>
+<pre><code>Utilisateur connecté
+        │
+        ▼
+Email non vérifié
+        │
+        ▼
+sendEmailVerification()
+        │
+        ▼
+Email envoyé</code></pre>
+                    <p>L'utilisateur devra ensuite consulter sa boîte mail et utiliser le lien fourni à Firebase.</p>
+                    <p>Nous verrons le parcours complet de vérification de l'adresse email dans le module consacré à cette fonctionnalité.</p>
+                    <h4>Actualiser les informations de l'utilisateur :</h4>
+                    <p>Lorsqu'un utilisateur effectue une action en dehors de l'application, certaines informations peuvent avoir changé.</p>
+                    <p>C'est notamment le cas pour la vérification de l'adresse email.</p>
+                    <p>L'application doit donc parfois demander à Firebase de recharger les informations de l'utilisateur.</p>
+                    <p>Exemple :</p>
+<pre><code>final user = FirebaseAuth.insance.currentUser;
+
+if (user !== null) {
+    await user.reload();
+}</code></pre>
+                    <p>Après le rechargement, il est possible de récupérer à nouveau l'utilisateur courant :</p>
+<pre><code>await FirebaseAuth.instance.currentUser?.reload();
+
+inal updatedUser = FirebaseAuth.insance.currentUser;
+
+if (updatedUser != null) {
+    print(updatedUser.emailVerified);
+}</code></pre>
+                    <p>Le principe est donc :</p>
+<pre><code>Firebase
+    │
+    ▼
+Informations utilisateur
+    │
+    ▼
+reload()
+    │
+    ▼
+Informations actualisées</code></pre>
+                    <p>Cette notion sera importante lorsque nous vérifierons si l'utilisateur a confirmé son adresse email.</p>
+                    <h4>Le displayName :</h4>
+                    <p>La propriété <span class="em">displayName</span> permet de récupérer le nom affiché de l'utilisateur lorsqu'il est défini.</p>
+                    <p>Exemple :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+
+if (user != null) {
+    print(user.displayName);
+}</code></pre>
+                    <p>Cette propriété peut être <span class="em">null</span>.</p>
+                    <p>Par exemple, lors de la création initiale d'un compte avec uniquement une adresse email et un mot de passe :</p>
+<pre><code>Email
+Mot de passe
+      │
+      ▼
+Compte Firebase
+      │
+      └── displayName : null</code></pre>
+                    <p>Nous pourrons ensuite permettre à l'utilisateur de définir un nom.</p>
+                    <p>Ce nom pourra également être enregistré dans le profil utilisateur de Firestore.</p>
+                    <p>Il faudra cependant faire la distinction entre :</p>
+<pre><code>Firebase Authentication
+        │
+        └── displayName
+
+Cloud Firestore
+        │
+        └── Données du profil utilisateur</code></pre>
+                    <p>Ces deux informations peuvent être liées, mais elles ne représentent pas exactement la même responsabilité dans notre architecture.</p>
+                    <h4>La photo de profil :</h4>
+                    <p>La propriété <span class="em">photoURL</span> permet de récupérer l'adresse d'une éventuelle photo de profil associée à l'utilisateur.</p>
+                    <p>Exemple :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+    
+if (user != null) {
+    print(user.photoURL);
+}</code></pre>
+                    <p>Cette propriété peut être <span class="em">null</span>.</p>
+                    <p>Nous n'utiliserons pas immédiatement cette fonctionnalité dans notre projet.</p>
+                    <p>Elle pourra cependant devenir intéressante lorsque nous construirons un véritable profil utilisateur.</p>
+                    <p>Dans ce cas, il faudra également réfléchir à l'endroit où les fichiers seront stockés.</p>
+                    <p><span class="em">Firebase Storage</span> pourra notamment être utilisé pour gérer les fichiers.</p>
+                    <p>Cette fonctionnalité sera étudiée dans un module ultérieur.</p>
+                    <h4>Le numéro de téléphone :</h4>
+                    <p>La propriété <span class="em">phoneNumber</span> permet de récupérer le numéro de téléphone associé à l'utilisateur lorsqu'il est disponible.</p>
+                    <p>Exemple :</p>
+<pre><code>final user = FirebaseAuth.insance.currentUser;
+
+if (user != null) {
+    print(user.phoneNumber);
+}</code></pre>
+                    <p>Cette propriété peut être <span class="em">null</span>.</p>
+                    <p>Dans notre parcours, le numéro de téléphone deviendra important lorsque nous commencerons à mettre en place :</p>
+                    <ul>
+                        <li>
+                            <p>l'authentification par SMS;</p>
+                        </li>
+                        <li>
+                            <p>la liaison d'un numéro de téléphone;</p>
+                        </li>
+                        <li>
+                            <p>l'authentification multifacteur;</p>
+                        </li>
+                        <li>
+                            <p>les mécanismes de récupération ou de sécurisation du compte.</p>
+                        </li>
+                    </ul>
+                    <p>Nous ne devons donc pas supposer qu'un utilisateur possède obligatoirement un numéro de téléphone.</p>
+                    <h3>Observer l'état d'authentification :</h3>
+                    <p>Vérifier <span class="em">currentUser</span> à un instant précis est utile, mais cela ne permet pasde savoir automatiquement lorsqu'un changement intervient.</p>
+                    <p>Firebase Authentication fournit donc des flux permettant d'observer les chagements d'état.</p>
+                    <p>Le premier mécanisme que nous allons étudier est :</p>
+<pre><code>authStateChanges()</code></pre>
+                    <h4>authStateChanges() :</h4>
+                    <p><span class="em">authStateChanges()</span> permet d'écouter les changements concernat l'état d'authentification de l'utilisateur.</p>
+                    <p>Exemple :</p>
+<pre><code>FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    if (user == null) {
+        print('Aucun utilisateur connecté');
+    } else {
+        print('Utilisateur connecté : ${user.uid}');
+    }
+});</code></pre>
+                    <p>Nous pouvons représenter son fonctionnement ainsi :</p>
+<pre><code>              FirebaseAuth
+                   │
+                   ▼
+          authStateChanges()
+                   │
+             ┌─────┴─────┐
+             │           │
+             ▼           ▼
+           User         null
+             │           │
+             ▼           ▼
+        Connecté     Déconnecté</code></pre>
+                    <p>Ce mécanisme sera particulièrement important pour notre future architecture de navigation.</p>
+                    <p>Nous pourrons notamment utiliser l'état d'authentification pour déterminer si l'utilisateur doit voir l'écran de connexion ou l'application principale.</p>
+                    <h4>Pourquoi utiliser un Stream ?</h4>
+                    <p><span class="em">authStateChanges()</span> retourne un <span class="em">Stream</span>.</p>
+                    <p>Un <span class="em">Stream</span> permet de recevoir des événements au fur et à mesure qu'ils se produisent.</p>
+                    <p>Dans notre cas :</p>
+<pre><code>État d'authentification
+        │
+        ▼
+      Stream
+        │
+        ├── utilisateur connecté
+        │
+        ├── utilisateur déconnecté
+        │
+        └── changement d'état</code></pre>
+                    <p>Cela évite de devoir vérifier constamment l'état de l'utilisateur manuellement.</p>
+                    <p>L'application peut simplement écouter le flux.</p>
+                    <h4>Exemple avec StreamBuilder :</h4>
+                    <p>Flutter permet notamment d'utiliser un <span class="em">StreamBuilder</span> pour construire une interface qui réagit automatiquement aux changements d'un <span class="em">Stream</span>.</p>
+                    <p>Exemple simplifié :</p>
+<pre><code>StreamBuilder&lt;User?&gt;(
+    stream: FirebaseAuth.instance.authStateChanges(),
+    builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+        }
+
+        if (snapshot.hasData) {
+            return const Text('Utilisateur connecté');
+        }
+
+        return const Text('Utilisateur non connecté');
+    },
+)</code></pre>
+                    <p>Cet exemple est volontairement simple.</p>
+                    <p>Nous utiliserons plus tard une architecture plus propre avec un <span class="em">AuthGate</span>, des providers et une gestion d'état centralisée.</p>
+                    <h4>idTokenChanges() :</h4>
+                    <p>Firebase Authentication utilise des jetons d'identification pour représenter l'identité authentifiée auprès des services Firebase.</p>
+                    <p>Firebase propose également :</p>
+<pre><code>idTokenChanges()</code></pre>
+                    <p>Ce flux permet d'observer les changements liés à l'état du jeton d'identification.</p>
+                    <p>Exemple :</p>
+<pre><code>FirebaseAuth.instance.idTokenChanges().listen((User? user) {
+    if (user != null) {
+        print('Utilisateur authentifié : ${user.uid}');
+    } else {
+        print('Aucun utilisateur authentifié');
+    }
+});</code></pre>
+                    <p>Il est notamment pertinent lorsque le jeton d'identification est renouvelé ou lorsque certaines informations liées à l'identité changent.</p>
+                    <p>Nous verrons plus tard pourquoi cela devient particulièrement intéressant lorsque nous travaillerons avec les rôles et les <span class="em">Custom Claims</span>.</p>
+                    <h4>userChanges() :</h4>
+                    <p>Firebase fournit également :</p>
+<pre><code>userChanges()</code></pre>
+                    <p>Ce flux permet d'observer les modifications concernant l'utilisateur.</p>
+                    <p>Exemple :</p>
+<pre><code>FirebaseAuth.instance.userChanges().listen((User? user) {
+    if (user != null) {
+        print('Informations utilisateur modifiées');
+    } else {
+        print('Utilisateur déconnecté');
+    }
+});</code></pre>
+                    <p>Il peut notamment être utile lorsque les propriétés de l'utilisateur changent.</p>
+                    <p>Par exemple :</p>
+<pre><code>Utilisateur
+     │
+     ├── displayName
+     ├── photoURL
+     ├── email
+     ├── emailVerified
+     └── autres informations
+            │
+            ▼
+       userChanges()</code></pre>
+                    <h4>Différence entre les trois flux :</h4>
+                    <p>Il est important de ne pas considérer ces trois méthodes comme identiques.</p>
+                    <p>Nous pouvons retenir leur rôle général de cette manière :</p>
+<pre><code>authStateChanges()
+        │
+        └── État de connexion
+
+idTokenChanges()
+        │
+        └── État du jeton d'identification
+
+userChanges()
+        │
+        └── Modifications de l'utilisateur</code></pre>
+                    <p>Dans notre projet, <span class="em">authStateChanges()</span> sera particulièrement important pour savoir si une session existe.</p>
+                    <p><span class="em">idTokenChanges()</span> et <span class="em">userChanges()</span> pourront être utilisés lorsque nous aurons besoin de réagir à des changements plus spécifiques.</p>
+                    <h3>La session :</h3>
+                    <p>Lorsqu'un utilisateur se connecte correctement, Firebase Authentication maintient son état d'authentification.</p>
+                    <p>Nous n'avons donc pas besoin de demander à l'utilisateur de saisir son mot de passe à chaque changement d'écran.</p>
+                    <p>Le principe général est :</p>
+<pre><code>Utilisateur
+     │
+     ▼
+Connexion
+     │
+     ▼
+Firebase Authentication
+     │
+     ▼
+Session authentifiée
+     │
+     ▼
+Application Flutter</code></pre>
+                    <p>Lorsque l'application redémarre, Firebase peut restaurer l'état d'authentification selon la plateforme et la configuration.</p>
+                    <p>L'application devra donc être capable de gérer le cas où le cas où Firebase est encore en train de déterminer l'état de la session.</p>
+                    <p>C'est notamment pour cette raison que notre future architecture devra prévoir un état de chargement.</p>
+                    <h3>Les trois états principaux de l'application :</h3>
+                    <p>Lorsque nous construirons notre gestion de l'authentification, nous aurons notamment besoin de distinguer :</p>
+<pre><code>Chargement
+    │
+    ├── Firebase détermine l'état de session
+    │
+    ▼
+Utilisateur connecté
+    │
+    ou
+    ▼
+Utilisateur non connecté</code></pre>
+                    <p>Nous pourrons ensuite représenter cela dans l'interface :</p>
+<pre><code>                 Authentification
+                        │
+             ┌──────────┼──────────┐
+             │          │          │
+             ▼          ▼          ▼
+         Chargement   Connecté   Déconnecté
+             │          │          │
+             ▼          ▼          ▼
+          Loader    Application   Login</code></pre>
+                    <p>Cette logique sera à la base du future <span class="em">AuthGate</span>.</p>
                 </article>
             <!-- fin de section -->
             </section>
