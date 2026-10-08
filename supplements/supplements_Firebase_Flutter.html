@@ -2212,6 +2212,43 @@ Configuration incorrecte</code></pre>
     ▼        ▼
  User     Exception</code></pre>
                     <p>Le try / catch permet à l'application de réagir correctement.</p>
+                    <h4>Exemple de gestion d'erreur :</h4>
+                    <p>Une première version pourrait être :</p>
+<pre><code>try {
+    final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+    );
+
+    final user = credential.user;
+
+    if (user != null) {
+        print('Compte créé : ${user.uid}');
+    }
+} on FirebaseAuthException catch (e) {
+    print('Erreur Firebase : ${e.code}');
+}</code></pre>
+                    <p>Mais nous ne voulons pas afficher directement des informations techniques à l'utilisateur.</p>
+                    <p>Par exemple, <q>Erreur Firebase : email-already-in-use</q> n'est pas nécessairement le meilleur message à afficher dans une interface française.</p>
+                    <p>Nous préférerons transformer l'erreur technique en message compréhensible.</p>
+                    <h4>Erreur technique et message utilisateur :</h4>
+                    <p>Nous devons donc distinguer :</p>
+<pre><code>Firebase
+   │
+   ▼
+Code technique
+   │
+   ▼
+Application
+   │
+   ▼
+Message utilisateur</code></pre>
+                    <p>Par exemple :</p>
+<pre><code>email-already-in-use
+        │
+        ▼
+Cette adresse email est déjà utilisée.</code></pre>
+                    <p>Cette logique sera progressivement déplacée dans notre architecture d'erreurs.</p>
                 </article>
             <!-- fin de section -->
             </section>
