@@ -2249,6 +2249,211 @@ Message utilisateur</code></pre>
         ▼
 Cette adresse email est déjà utilisée.</code></pre>
                     <p>Cette logique sera progressivement déplacée dans notre architecture d'erreurs.</p>
+                    <h4>Exemple de traduction des erreurs :</h4>
+                    <p>Nous pouvons prévoir une fonction dédiée :</p>
+<pre><code>String getAuthErrorMessage(String code) {
+    switch (code) {
+        case 'email-already-in-use':
+            return 'Cette adresse email est déjà utilisée.';
+        
+        case 'invalid-email':
+            return 'L\'adresse email est invalide.';
+        
+        case 'weak-password':
+            return 'Le mot de passe est trop faible.';
+        
+        case 'network-request-failed':
+            return 'Une erreur réseau est survenue.';
+
+        default:
+            return 'Une erreur est survenue lors de l'inscription.';
+    }
+}</code></pre>
+                    <p>Cette approche permet d'éviter de mélanger toute la logique de traduction des erreurs avec le code de l'interface.</p>
+                    <h3>Gestion du chargement :</h3>
+                    <p>Une inscription nécessite généralement une communication avec Firebase.</p>
+                    <p>Il peut donc y avoir un délai.</p>
+                    <p>Pendant cette opération, nous ne voulons pas forcément que l'utilisateur puisse appuyer plusieurs fois sur le bouton.</p>
+                    <p>Le processus sera :</p>
+<pre><code>Bouton "S'inscrire"
+        │
+        ▼
+isLoading = true
+        │
+        ▼
+Firebase
+        │
+        ▼
+isLoading = false</code></pre>
+                    <h3>Pourquoi empêcher plusieurs inscriptions simultanées ?</h3>
+                    <p>Sans protection, l'utilisateur pourrait cliquer plusieurs fois sur le bouton "S'inscrire".</p>
+                    <p>Cela pourrait déclencher plusieurs appels réseau.</p>
+                    <p>Nous utiliserons donc un état :</p>
+<pre><code>bool isLoading = false;</code></pre>
+                    <p>Le bouton pourra être désactivé lorsque :</p>
+<pre><code>isLoading == true</code></pre>
+                    <h3>Cycle complet de l'inscription :</h3>
+                    <p>Nous pouvons maintenant représenter le fonctionnement complet :</p>
+<pre><code>Utilisateur
+     │
+     ▼
+Saisie email
+     │
+     ▼
+Saisie mot de passe
+     │
+     ▼
+Confirmation
+     │
+     ▼
+Validation
+     │
+ ┌───┴─────────────┐
+ │                 │
+Erreur           Valide
+ │                 │
+ ▼                 ▼
+Message       isLoading = true
+                  │
+                  ▼
+             FirebaseAuth
+                  │
+             ┌────┴────┐
+             │         │
+          Succès      Erreur
+             │         │
+             ▼         ▼
+          User      Message
+             │
+             ▼
+        UID utilisateur
+             │
+             ▼
+       Étape suivante</code></pre>
+                    <h3>L'utilisateur est-il automatiquement connecté ?</h3>
+                    <p>Un point très important doit être compris.</p>
+                    <p>Lorsqu'un compte est créé avec succès via Firebase Authentication, l'utilisateur est généralement authentifié dans la même opération.</p>
+                    <p>On peut donc avoir :</p>
+<pre><code>Création du compte
+        │
+        ▼
+Utilisateur authentifié
+        │
+        ▼
+FirebaseAuth.instance.currentUser</code></pre>
+                    <p>Après une inscription réussie, <span class="em">currentUser</span> peut donc correspondre au nouvel utilisateur.</p>
+                    <p>Cela signifie que nous devons réfléchir à ce que l'application doit faire ensuite.</p>
+                    <p>Dans notre projet, nous ne voulons pas nécessairement considérer l'utilisateur comme complètement configuré dès que le compte existe.</p>
+                    <p>Nous allons justement introduire progressivement les différents états du compte.</p>
+                    <h3>Compte créé ne signifie pas compte entièrement validé :</h3>
+                    <p>C'est une distinction fondamentale pour la suite du syllabus.</p>
+                    <p>Après l'inscription, nous pouvons avoir :</p>
+<pre><code>Compte Firebase créé
+        │
+        ▼
+Email non vérifié
+        │
+        ▼
+Téléphone non vérifié
+        │
+        ▼
+MFA non configurée</code></pre>
+                    <p>L'utilisateur possède donc une identité Firebase, mais il n'a pas encore terminé toutes les étapes de sécurité.</p>
+                    <p>Notre architecture devra pouvoir représenter ces différents états.</p>
+                    <p>Nous reviendrons beaucoup plus en détail sur cette notion dans les modules consacrés à la machine d'état utilisateur.</p>
+                    <h3>Architecture actuelle :</h3>
+                    <p>À ce stade, notre architecture commence à ressembler à ceci :</p>
+<pre><code>                    Flutter
+                       │
+                       ▼
+              Écran d'inscription
+                       │
+                       ▼
+              Validation formulaire
+                       │
+                       ▼
+                  FirebaseAuth
+                       │
+                       ▼
+          Firebase Authentication
+                       │
+                       ▼
+                    User
+                       │
+             ┌─────────┼─────────┐
+             │         │         │
+             ▼         ▼         ▼
+            uid       email   emailVerified</code></pre>
+                    <p>Dans les prochains modules, nous ajouterons :</p>
+<pre><code>User
+ │
+ ▼
+Vérification email
+ │
+ ▼
+Téléphone
+ │
+ ▼
+MFA
+ │
+ ▼
+Profil Firestore</code></pre>
+                    <h3>Première architecture du code :</h3>
+                    <p>Nous voulons éviter de mettre tout le code dans <span class="em">main.dart</span>.</p>
+                    <p>Une organisation possible sera :</p>
+<pre><code>lib/
+│
+├── main.dart
+│
+├── firebase_options.dart
+│
+├── app/
+│   └── app.dart
+│
+├── core/
+│   ├── errors/
+│   ├── utils/
+│   └── constants/
+│
+├── features/
+│   └── auth/
+│       ├── data/
+│       ├── domain/
+│       └── presentation/
+│
+└── shared/
+    └── widgets/</code></pre>
+                    <p>Nous allons progressivement utiliser cette architecture au fur et à mesure que le projet devient plus complexe.</p>
+                    <h3>Première séparation : AuthService :</h3>
+                    <p>Une bonne première étape consiste à éviter que l'écran d'inscription manipule directement toute la logique Firebase.</p>
+                    <p>Nous pouvons créer un service :</p>
+<pre><code>AuthService
+     │
+     ▼
+FirebaseAuth</code></pre>
+                    <p>Par exemple :</p>
+<pre><code>class AuthService {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    Future&lt;UserCredential&gt;({
+        required String email,
+        required String password,
+    }) {
+        return _auth.createUserWithEmailAndPassword(
+            email: email,
+            password: password,
+        );
+    }
+}</code></pre>
+                    <p>L'interface pourra alors communiquer avec :</p>
+<pre><code>RegisterScreen
+       │
+       ▼
+AuthService
+       │
+       ▼
+FirebaseAuth</code></pre>
+                    <p>Cette séparation sera très utile pour les tests et pour l'évolution de l'appication.</p>
                 </article>
             <!-- fin de section -->
             </section>
