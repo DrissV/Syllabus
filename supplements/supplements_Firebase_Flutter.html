@@ -2024,6 +2024,194 @@ UID généré
      ▼
 User.uid</code></pre>
                     <p>Nous utiliserons ensuite ce même UID pour associer les données Firestore au bon utilisateur.</p>
+                    <h3>Exemple complet minimal :</h3>
+                    <p>Voici une première version volontairement simple :</p>
+<pre><code>Future&lt;void&gt; register(
+    String email,
+    String password,
+) async {
+    final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+    );
+
+    final user = credential.user;
+
+    if (user != null) {
+        print('Compte créé');
+        print('UID : ${user.uid}');
+        print('Email : ${user.email}');
+    }
+}</code></pre>
+                    <p>Cette fonction permet déjà de créer un compte.</p>
+                    <p>Cependnat, elle n'est <span class="em">pas encore suffisante pour notre application finale</span>.</p>
+                    <p>Il manque notamment :</p>
+                    <ul>
+                        <li>
+                            <p>la validation de l'email;</p>
+                        </li>
+                        <li>
+                            <p>la validation du mot de passe;</p>
+                        </li>
+                        <li>
+                            <p>la confirmation du mot de passe;</p>
+                        </li>
+                        <li>
+                            <p>la gestion des erreurs;</p>
+                        </li>
+                        <li>
+                            <p>la gestion du chargement;</p>
+                        </li>
+                        <li>
+                            <p>l'interface utilisateur;</p>
+                        </li>
+                        <li>
+                            <p>la vérification de l'adresse email;</p>
+                        </li>
+                        <li>
+                            <p>la création du profil Firestore.</p>
+                        </li>
+                    </ul>
+                    <p>Nous allons construire ces éléments progressivement.</p>
+                    <h3>Le formulaire d'inscription :</h3>
+                    <p>L'utilisateur ne va évidemment pas appeler directement <span class="em">createUserWithEmailAndPassword()</span>.</p>
+                    <p>Il va utiliser une interface graphique.</p>
+                    <p>Nous aurons donc par exemple :</p>
+<pre><code>┌──────────────────────────────┐
+│       Créer un compte        │
+│                              │
+│ Email                        │
+│ ┌──────────────────────────┐ │
+│ │ alice@example.com        │ │
+│ └──────────────────────────┘ │
+│                              │
+│ Mot de passe                 │
+│ ┌──────────────────────────┐ │
+│ │ ********                 │ │
+│ └──────────────────────────┘ │
+│                              │
+│ Confirmation                │
+│ ┌──────────────────────────┐ │
+│ │ ********                 │ │
+│ └──────────────────────────┘ │
+│                              │
+│       [ S'inscrire ]         │
+└──────────────────────────────┘</code></pre>
+                    <p>Le formulaire possède donc trois champs principaux : <span class="em">Email</span>, <span class="em">Mot de passe</span> et <span class="em">Confirmation du mot de passe</span>.</p>
+                    <h3>Pourquoi confirmer le mot de passe ?</h3>
+                    <p>Firebase Authentication demande uniquement <span class="em">email</span> et <span class="em">password</span>.</p>
+                    <p>La confirmation du mot de passe n'est pas envoyée à Firebase.</p>
+                    <p>Elle est utilisée uniquement par notre application pour éviter une erreur de saisie.</p>
+                    <p>Si les deux valeurs sont différentes, l'inscription doit être refusée avant même d'appeler Firebase.</p>
+<pre><code>Mot de passe
+      ≠
+Confirmation
+      │
+      ▼
+Inscription refusée</code></pre>
+                    <p>La confirmation du mot de passe constitue donc une validation <span class="em">côté application</span>.</p>
+                    <h3>Validation des données :</h3>
+                    <p>Une application sérieuse ne doit pas envoyer n'importe quelle donnée à Firebase.</p>
+                    <p>Le processus devrait être :</p>
+<pre><code>Données saisies
+      │
+      ▼
+Validation Flutter
+      │
+      ├── Données invalides → erreur
+      │
+      └── Données valides
+                    │
+                    ▼
+             FirebaseAuth</code></pre>
+                    <p>Cette distinction est importante.</p>
+                    <p>La validation côté Flutter améliore l'expérience utilisateur, mais elle ne doit jamais être considérée comme une mesure de sécurité suffisante à elle seule.</p>
+                    <p>Les contrôles importants doivent également être assurés par les services backend.</p>
+                    <h3>Validation de l'adresse email :</h3>
+                    <p>L'adresse email doit avoir un format acceptable.</p>
+                    <p>Dans notre formulaire, nous pouvons donc effectuer une validation avant l'appel à Firebase.</p>
+                    <p>Le principe sera :</p>
+<pre><code>Email vide ?
+       │
+       ├── Oui → erreur
+       │
+       └── Non
+             │
+             ▼
+Format valide ?
+       │
+       ├── Non → erreur
+       │
+       └── Oui
+             │
+             ▼
+         Firebase</code></pre>
+                    <h3>Validation du mot de passe :</h3>
+                    <p>Le mot de passe devra également respecter les règles définies pour notre application.</p>
+                    <p>Il faut distinguer deux choses :</p>
+<pre><code>Validation de l'application
+            ≠
+Règles de Firebase</code></pre>
+                    <p>Notre interface peut par exemple imposer une longueur minimale.</p>
+                    <p>Nous pourrons progressivement définir une politique telle que :</p>
+<pre><code>Mot de passe
+│
+├── longueur minimale
+├── éventuellement majuscule
+├── éventuellement minuscule
+├── éventuellement chiffre
+└── éventuellement caractère spécial</code></pre>
+                    <p>La politique exacte devra être cohérente avec les exigences du projet et les mécanismes réellement supportés par Firebase.</p>
+                    <h3>Validation de la confirmation :</h3>
+                    <p>Nous devons ensuite comparer <span class="em">password</span> et <span class="em">confirmPassword</span>.</p>
+                    <p>Le principe est simplement :</p>
+<pre><code>password == confirmPassword</code></pre>
+                    <p>Si les deux valeurs sont différentes :</p>
+<pre><code>Mot de passe différent
+        │
+        ▼
+Erreur
+        │
+        ▼
+Pas d'appel Firebase</code></pre>
+                    <h3>Gestion des erreurs Firebase :</h3>
+                    <p>L'inscription peut échouer.</p>
+                    <p>Par exemple :</p>
+<pre><code>Email déjà utilisé
+Email invalide
+Mot de passe non conforme
+Erreur réseau
+Configuration incorrecte</code></pre>
+                    <p>Firebase Authentication fournit des informations permettant d'identifier le type d'erreur.</p>
+                    <p>Nous utiliserons notamment :</p>
+<pre><code>FirebaseAuthException</code></pre>
+                    <p>Un principe courant est :</p>
+<pre><code>try {
+    final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+    );
+} on FirebaseAuthException catch (e) {
+    print(e.code);
+}</code></pre>
+                    <p>Le champ <span class="em">e.code</span> permet d'identifier le type d'erreur.</p>
+                    <h4>Pourquoi utiliser try /catch ?</h4>
+                    <p>Les appels réseau peuvent échouer.</p>
+                    <p>Il ne faut donc pas considérer le code suivant comme une opération qui réussira toujours :</p>
+<pre><code>await FirebaseAuth.instance.createUserWithEmailAndPassword(...)</code></pre>
+                    <p>Nous devons prévoir :</p>
+<pre><code>Tentative d'inscription
+        │
+        ▼
+      Firebase
+        │
+    ┌───┴────┐
+    │        │
+ Succès    Erreur
+    │        │
+    ▼        ▼
+ User     Exception</code></pre>
+                    <p>Le try / catch permet à l'application de réagir correctement.</p>
                 </article>
             <!-- fin de section -->
             </section>
