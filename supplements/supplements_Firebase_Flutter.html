@@ -1964,6 +1964,66 @@ Firebase Authentication
 Email / Password</code></pre>
                     <p>Cette configuration est réalisée côté Firebase.</p>
                     <p>Elle ne doit donc pas être remplacée par une logique de vérification développée uniquement dans Flutter.</p>
+                    <h3>La méthode createUserWithEmailAndPassword :</h3>
+                    <p>La méthode principale que nous allons utiliser est :</p>
+<pre><code>createUserWithEmailAndPassword()</code></pre>
+                    <p>Elle appartient à <span class="em">FirebaseAuth</span>.</p>
+                    <p>Un exemple minimal est :</p>
+<pre><code>final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+    email: email,
+    password: password,
+);</code></pre>
+                    <p>Cette opération est asynchrone.</p>
+                    <p>C'est pourquoi nous utilisons <span class="em">await</span> et que la fonction qui l'utilise devra généralement être déclarée avec <span class="em">async</span>.</p>
+                    <p>Par exemple :</p>
+<pre><code>Future&lt;void&gt; register() async {
+    final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+    );
+}</code></pre>
+                    <h3>Pourquoi la méthode retourne-t-elle un UserCredential ?</h3>
+                    <p>La méthode ne retourne pas directement un objet <span class="em">User</span>.</p>
+                    <p>Elle retourne un objet <span class="em">UserCredential</span>.</p>
+                    <p>On peut représenter la relation ainsi :</p>
+<pre><code>createUserWithEmailAndPassword()
+              │
+              ▼
+       UserCredential
+              │
+              ▼
+             User</code></pre>
+                    <p>L'objet <span class="em">UserCredential</span> contient notamment une référence vers l'utilisateur créé.</p>
+                    <p>On pourra donc écrire :</p>
+<pre><code>final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+    email: email,
+    password: password,
+);
+
+final user = credential.user;</code></pre>
+                    <p>Nous pouvons ensuite vérifier :</p>
+<pre><code>if (user != null) {
+    print(user.uid);
+}</code></pre>
+                    <h3>Le UID après l'inscription :</h3>
+                    <p>Après la création du compte, Firebase attribue un UID à l'utilisateur.</p>
+                    <p>Cet identifiant est généré par Firebase.</p>
+                    <p>Nous ne devons donc pas créer nous-mêmes un UID pour remplacer celui fourni par Firebase Authentication.</p>
+                    <p>Le processus est :</p>
+<pre><code>Inscription
+     │
+     ▼
+Firebase Authentication
+     │
+     ▼
+Création du compte
+     │
+     ▼
+UID généré
+     │
+     ▼
+User.uid</code></pre>
+                    <p>Nous utiliserons ensuite ce même UID pour associer les données Firestore au bon utilisateur.</p>
                 </article>
             <!-- fin de section -->
             </section>
