@@ -1141,7 +1141,7 @@ if (user != null) {
 }</code></pre>
                     <p>Cette vérification sera utilisée très fréquemment dans notre application.</p>
                     <p>Cependant, dans l'architecture finale, nous éviterons de répéter cette logique directement dans chaque écran.</p>
-                    <p>Nous créerons progressivement une gestion centralisée de l'état d'authentfication.</p>
+                    <p>Nous créerons progressivement une gestion centralisée de l'état d'authentification.</p>
                     <h3>La classe User :</h3>
                     <p>Lorsque Firebase Authentication identifie un utilisateur, Flutter peut accéder à un objet de type <span class="em">User</span>.</p>
                     <p>Cet objet représente l'identité de l'utilisateur authentifié.</p>
@@ -1771,7 +1771,7 @@ Administrateur</code></pre>
           ▼
     Security Rules</code></pre>
                     <p>Cette architecture évoluera au fur et à mesure des modules.</p>
-                    <h3>Architecture du futur système d'authentfication :</h3>
+                    <h3>Architecture du futur système d'authentification :</h3>
                     <p>À terme, nous voulons obtenir quelque chose de plus structuré :</p>
 <pre><code>Interface Flutter
        │
@@ -1844,7 +1844,126 @@ User
                     <p>Cette étape constituera la première partie concrète de notre système d'identité.</p>
                     <h3>Objectifs du module :</h3>
                     <p>À la fin de ce module, vous devriez être capable de :</p>
-                    
+                    <ul>
+                        <li>
+                            <p>comprendre le processus d'inscription avec Firebase Authentication;</p>
+                        </li>
+                        <li>
+                            <p>créer un compte avec une adresse email et un mot de passe;</p>
+                        </li>
+                        <li>
+                            <p>utiliser <span class="em">createUserWithEmailAndPassword()</span>;</p>
+                        </li>
+                        <li>
+                            <p>comprendre les paraètres nécessaires à cette méthode;</p>
+                        </li>
+                        <li>
+                            <p>récupérer l'utilisateur créé;</p>
+                        </li>
+                        <li>
+                            <p>récupérer son UID;</p>
+                        </li>
+                        <li>
+                            <p>comprendre ce qui se passe après la création du compte;</p>
+                        </li>
+                        <li>
+                            <p>gérer les erreurs d'inscription;</p>
+                        </li>
+                        <li>
+                            <p>valider les données saisies dans un formulaire;</p>
+                        </li>
+                        <li>
+                            <p>vérifier la confirmation du mot de passe;</p>
+                        </li>
+                        <li>
+                            <p>empêcher l'utilisation de données invalides;</p>
+                        </li>
+                        <li>
+                            <p>gérer les états de chargement;</p>
+                        </li>
+                        <li>
+                            <p>afficher des messages d'erreur adaptés à l'utilisateur;</p>
+                        </li>
+                        <li>
+                            <p>déconnecter la logique Firebase de l'interface graphique;</p>
+                        </li>
+                        <li>
+                            <p>préparer la vérification de l'adresse email du module suivant;</p>
+                        </li>
+                        <li>
+                            <p>préparer la création du profil utilisateur dans Firestore.</p>
+                        </li>
+                    </ul>
+                    <h3>Le processus général d'inscription :</h3>
+                    <p>Une inscription peut être représentée simplement :</p>
+<pre><code>Utilisateur
+     │
+     ▼
+Email + mot de passe
+     │
+     ▼
+Validation
+     │
+     ▼
+FirebaseAuth
+     │
+     ▼
+Firebase Authentication
+     │
+     ▼
+Compte créé
+     │
+     ▼
+User</code></pre>
+                    <p>Il est important de comprendre que le formulaire Flutter <span class="em">ne crée pas directement le compte</span>.</p>
+                    <p>Le formulaire sert uniquement à récupérer les informations saisies par l'utilisateur.</p>
+                    <p>C'est Firebase Authentication qui va réellement créer et gérer le compte.</p>
+                    <p>On peut donc distinguer deux parties :</p>
+<pre><code>Flutter
+   │
+   ├── Affichage du formulaire
+   ├── Récupération des données
+   ├── Validation
+   └── Appel de FirebaseAuth
+             │
+             ▼
+       Firebase Authentication
+             │
+             └── Création du compte</code></pre>
+                    <p>Cette séparation deviendra très importante lorsque nous construirons une architecture plus complète.</p>
+                    <h3>Les informations nécessaires :</h3>
+                    <p>Pour notre première inscription, nous utiliserons deux informations : l'adresse email et le mot de passe.</p>
+                    <p>Firebase Authentication va utiliser ces informations pour créer un compte.</p>
+                    <p>Après création, Firebase attribuera notamment un identifiant unique à l'utilisateur.</p>
+<pre><code>Email
+   +
+Mot de passe
+   │
+   ▼
+Firebase Authentication
+   │
+   ▼
+Compte utilisateur
+   │
+   ▼
+UID</code></pre>
+                    <h3>Activation de l'authentification Email / Password :</h3>
+                    <p>Avant de pouvoir utiliser cette fonctionnalité, le fournisseur d'authentification correspondant doit être activé dans Firebase.</p>
+                    <p>Dans la console Firebase, il faut accéder à la configuration de Firebase Authentication puis aux fournisseurs d'authentification.</p>
+                    <p>Le fournisseur <span class="em">Email/Password</span> doit être activé.</p>
+                    <p>L'architecture devient alors :</p>
+<pre><code>Flutter
+   │
+   ▼
+FirebaseAuth
+   │
+   ▼
+Firebase Authentication
+   │
+   ▼
+Email / Password</code></pre>
+                    <p>Cette configuration est réalisée côté Firebase.</p>
+                    <p>Elle ne doit donc pas être remplacée par une logique de vérification développée uniquement dans Flutter.</p>
                 </article>
             <!-- fin de section -->
             </section>
