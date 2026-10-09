@@ -2519,6 +2519,43 @@ Firebase</code></pre>
                     </ul>
                     <h3>Différence entre inscription et connexion :</h3>
                     <p>L'inscription et la connexion utilisent toutes deux Firebase Authentication, mais elles répondent à des objectifs différents.</p>
+                    <p>L'inscription permet de créer un nouveau compte. La connexion permet à une personne possédant déjà un compte de s'authentifier.</p>
+                    <p>Ces deux opérations ne doivent donc pas être confondues dans le code de l'application.</p>
+                    <p>Lors d'une inscription, nous utilisons notamment <span class="em">createUserWithEmailAndPassword()</span>.</p>
+                    <p>Lors d'une connexion avec une adresse email et un mot de passe, nous utilisons <span class="em">signInWithEmailAndPassword()</span>.</p>
+                    <p>Cette seconde méthode ne crée pas un nouveau compte. Elle demande à Firebase Authentication de vérifier les identifiants fournis et d'authentifier l'utilisateur si ceux-ci sont acceptés.</p>
+                    <p>Le principe général est le suivant :</p>
+<pre><code>      Utilisateur
+            │
+            ▼
+ Formulaire de connexion
+            │
+            ▼
+        AuthService
+            │
+            ▼
+ Firebase Authentication
+            │
+            ▼
+Résultat de l'authentification</code></pre>
+                    <p>L'interface recueille les informations et présente le résultat à l'utilisateur. Le service centralise l'appel à Firebase. Firebase Authentication prend en charge la vérification des identifiants.</p>
+                    <h3>La méthode signInWithEmailAndPassword() :</h3>
+                    <p>La méthode <span class="em">signInWithEmailAndPassword()</span> permet de connecter un utilisateur au moyen de son adresse email et de son mot de passe.</p>
+                    <p>Elle reçoit deux paramètres nommés :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">email</span> : l'adresse email utilisée pour le compte;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">password</span> : le mot de passe correspondant.</p>
+                        </li>
+                    </ul>
+                    <p>La méthode renvoie un <span class="em">Future&lt;UserCredential&gt;</span>. Il s'agit donc d'une opération asynchrone : l'application doit attendre son résultat avant de considérer la tentative comme terminée.</p>
+                    <p>Un appel direct à Firebase Authentication peut s'écrire ainsi :</p>
+<pre><code>final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+    email: email,
+    password: password,
+);</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
