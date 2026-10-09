@@ -2433,7 +2433,9 @@ Profil Firestore</code></pre>
      ▼
 FirebaseAuth</code></pre>
                     <p>Par exemple :</p>
-<pre><code>class AuthService {
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+
+class AuthService {
     final FirebaseAuth _auth = FirebaseAuth.instance;
 
     Future&lt;UserCredential&gt;({
@@ -2556,6 +2558,88 @@ Résultat de l'authentification</code></pre>
     email: email,
     password: password,
 );</code></pre>
+                    <p>Le mot-clé <span class="em">await</span> permet d'attendre la fin de l'opération asynchrone. Sans cette attente, le code pourrait poursuivre son exécution avant que le résultat de la connexion soit disponible.</p>
+                    <p>Le résultat obtenu est un objet <span class="em">UserCredential</span>. Il permet notamment de récupérer les informations associées à l'authentification qui vient d'être effectuée.</p>
+                    <p>Dans l'architecture de notre projet, nous éviterons cependant de placer cet appel directement dans le bouton du formulaire. Nous allons le centraliser dans <span class="em">AuthService</span>, comme nous l'avons fait pour l'inscription.</p>
+                    <h3>Intégration de la connexion dans AuthService :</h3>
+                    <p>Le service d'authentification constitue l'intermédiaire entre les écrans Flutter et Firebase Authentication.</p>
+                    <p>Nous allons cmpléter le service existant en lui ajoutant une méthode dédiée à la connexion.</p>
+                    <p>Par exemple :</p>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+
+class AuthService {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    Future&lt;UserCredential&gt; signIn({
+        required String email,
+        required String password,
+    }) {
+        return _auth.signInWithEmailAndPassword(
+            email: email,
+            password: password,
+        );
+    }
+}</code></pre>
+                    <p>La méthode <span class="em">signIn()</span> reçoit les identifiants nécessaires et délègue l'opération à Firebase Authentication.</p>
+                    <p>Plusieurs éléments méritent d'être soulignés.</p>
+                    <p>Premièrement, la méthode retourne un <span class="em">Future&lt;UserCredential&gt;</span>. L'appelant peut donc attendre le résultat et réagir à la réussite ou à l'échec de la connexion.</p>
+                    <p>Deuxièmement, le service ne contient pas de loique d'affichage. Il ne décide pas quel message doit apparaître à l'écran et ne manipule pas directement les widgets de l'interface.</p>
+                    <p>Troisièmement, cette méthode ne masque pas les erreurs de Firebase. Elles peuvent être traitées par la couche qui appelle le service, selon les besoins de l'interface.</p>
+                    <p>Nous obtenons ainsi une séparation des responsabilités :</p>
+<pre><code>          LoginScreen
+               │
+               ▼
+    AuthService.signIn()
+               │
+               ▼
+FirebaseAuth.signInWithEmailAndPassword()</code></pre>
+                    <p>Cette organisation permet de faire évoluer l'interface sans devoir réécrire la logique d'accès à Firebase.</p>
+                    <div class="bordure information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p>Si votre <span class="em">AuthService</span> existe déjà dans le projet, il faut ajouter la méthode <span class="em">signIn()</span> à la classe existante plutôt que créer une seconde classe portant le même nom.</p>
+                    </div>
+                    <h3>Création du formulaire de connexion :</h3>
+                    <p>Le formulaire de connexion permet à l'utilisateur de saisir les informations nécessaires à son authentification.</p>
+                    <p>Il comporte généralement :</p>
+                    <ul>
+                        <li>
+                            <p>un champ pour l'adresse email;</p>
+                        </li>
+                        <li>
+                            <p>un champ pour le mot de passe;</p>
+                        </li>
+                        <li>
+                            <p>un bouton de connexion;</p>
+                        </li>
+                        <li>
+                            <p>une zone permettant d'afficher les erreurs éventuelles;</p>
+                        </li>
+                        <li>
+                            <p>un indicateur de chargement pendant la tentative de connexion.</p>
+                        </li>
+                    </ul>
+                    <p>Le formulaire ne doit pas reproduire la logique interne de Firebase Authentication. Son rôle est de recueillir les données, d'effectuer les vérifications élémentaires et d'appeler le service.</p>
+                    <p>Nous pouvons représenter son fonctionnement de la manière suivante :</p>
+<pre><code>LoginScreen
+    │
+    ├── Saisie de l'email
+    │
+    ├── Saisie du mot de passe
+    │
+    ├── Validation du formulaire
+    │
+    ▼
+Appel de AuthService.signIn()
+    │
+    ├── Succès
+    │     └── Poursuite du parcours utilisateur
+    │
+    └── Échec
+          └── Affichage d'un message adapté</code></pre>
+                    <p>Il faut distinguer la validation du formulaire de l'authentification elle-même.</p>
+                    <p>La validation locale permet, par exemple, de vérifier que les champs ne sont pas vides. Elle ne permet pas de déterminer si le compte existe ou si le mot de passe est correct. Ces vérifications relèvent de Firebase Authentication.</p>
+                    <h3>Gestion de l'état de chargement :</h3>
+                    <p>La connexion étant asynchrone, elle peut prendre un certain temps. L'interface doit donc représenter l'état de l'opération.</p>
                 </article>
             <!-- fin de section -->
             </section>
