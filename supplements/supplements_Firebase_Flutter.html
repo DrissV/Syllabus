@@ -2732,6 +2732,64 @@ Appel de AuthService.signIn()
                     <p>Les détails techniques de l'erreur peuvent être conservés pour le diagnostic, sans exposer inutilement ces informations dans l'interface.</p>
                     <h3>Séparer le traitement technique du message utilisateur :</h3>
                     <p>L'exception reçue de Firebase ne doit pas nécessairement être affichée directement.</p>
+                    <p>La propriété <span class="em">e.code</span> constitue une information technique utile pour le programme. Le texte présenté à l'utilisateur doit, quant à lui, rester compréhensible et adapté au contexte.</p>
+                    <p>Une méthode de traduction des erreurs peut être ajoutée au projet lorsque la gestion des erreurs sera approfondie. À ce stade, le principe essentiel est de séparer :</p>
+                    <ul>
+                        <li>
+                            <p>le code technique renvoyé par Firebase;</p>
+                        </li>
+                        <li>
+                            <p>la décision prise par l'application;</p>
+                        </li>
+                        <li>
+                            <p>le message affiché à l'utilisateur.</p>
+                        </li>
+                    </ul>
+                    <p>Cette séparation évite de rendre l'interface dépendante des formulations internes du SDK et facilite la cohérence des messages dans toute l'application.</p>
+                    <h3>Mise en place de la déconnexion :</h3>
+                    <p>La déconnexion permet de mettre fin à l'authentification courante dans l'application.</p>
+                    <p>Firebase Authentication fournit pour cela la méthode :</p>
+<pre><code>FirebaseAuth.instance.signOut();</code></pre>
+                    <p>Cette méthode est aynchrone et renvoie un <span class="em">Future&lt;void&gt;</span>. Il faut donc pouvoir attendre sa fin lorsque le reste du programme dépend du résultat de l'opération.</p>
+                    <p>Comme pour la connexion, nous allons intégrer cette opération dans <span class="em">AuthService</span>.</p>
+                    <p>Nous pouvons compléter la classe précédente de la manière suivante :</p>
+<pre><code>mport 'package:firebase_auth/firebase_auth.dart';
+
+class AuthService {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    Future&lt;UserCredential&gt; signIn({
+        required String email,
+        required String password,
+    }) {
+        return _auth.signInWithEmailAndPassword(
+            email: email,
+            password: password,
+        );
+    }
+
+    Future&lt;void&gt; signOut() {
+        return _auth.signOut();
+    }
+}</code></pre>
+                    <p>Dans cet exemple, la méthode <span class="em">signOut()</span> délègue simplement la déconnexion à Firebase Authentication.</p>
+                    <p>La méthode ne retourne pas de <span class="em">UserCredential</span>, puisqu'elle ne produit pas de nouvel objet d'identification. Son type de retour est <span class="em">Future&lt;void&gt;</span>.</p>
+                    <p>L'écran qui déclenche la déconnexion pourra attendre l'opération avant de présenter le résultat approprié.</p>
+                    <h3>Déclencher la déconexion depuis l'interface :</h3>
+                    <p>La déconnexion est généralement déclenchée par une action explicite par exemple un bouton "Se déconnecter" dans l'écran du compte utilisateur.</p>
+                    <p>Le bouton ne devrait pas contenir directement l'ensemble de la logique Firebase. Il appelle une méthode de l'écran, laquelle utilise <span class="em">AuthService</span>.</p>
+                    <p>Le principe peut être représenté ainsi :</p>
+<pre><code>Bouton « Se déconnecter »
+           │
+           ▼
+    Méthode de l'écran
+           │
+           ▼
+   AuthService.signOut()
+           │
+           ▼
+  Firebase Authentication</code></pre>
+                    <p>L'opération doit être attendue à l'aide de <span class="em">await</span>. En cas d'erreur, l'application doit éviter de présenter la déconnexion comme réussie sans avoir traité le résultat de l'opération.</p>
                     
                 </article>
             <!-- fin de section -->
