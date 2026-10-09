@@ -2694,6 +2694,45 @@ Appel de AuthService.signIn()
                     <p>Une tentative de connexion peut échouer pour plusieurs raisons. Par exemple, les identifiants peuvent être incorrects, le compte peut être introuvable ou une limitation temporaire peut empêcher l'opération.</p>
                     <p>Firebase Authentication transmet les erreurs d'authentification au moyen d'exceptions, notamment <span class="em">FirebaseAuthException</span>.</p>
                     <p>Nous pouvons intercepter cette exception afin de distinguer les principaux cas :</p>
+<pre><code>try {
+    await _authService.signIn(
+        email: email,
+        password: password,
+    );
+} on FirebaseAuthException catch (e) {
+    switch (e.code) {
+        case 'invalid-credential':
+            // Identifants refusés.
+            break;
+        
+        case 'user-not-found':
+            // Aucun utilisateur correspondant.
+            break;
+
+        case 'wrong-password':
+            // Mot de passe incorrect selon le comportement et la configuration du projet.
+            break;
+
+        case 'too-many-requests':
+            // Trop de tentatives : une ulimitation peut s'appliquer.
+            break;
+        
+        case 'network-request-failed':
+            // Problème de communication réseau.
+            break;
+
+        default:
+            // Erreur non traitée explicitement.
+            break;
+    }
+}</code></pre>
+                    <p>Les codes d'erreur effectivement renvoyés peuvent varier selon la configuration du projet, les fonctionnalités activées et l'évolution de Firebase Authentication. Il faut donc vérifier les codes pris en charge par la version du SDK utilisée.</p>
+                    <p>Il convient également de ne pas supposer que chaque erreur correspond nécessairement à un seul problème métier. Par exemple, Firebase peut regrouper certaines erreurs d'identifiants afin de limiter la divulgation d'informations sur les comptes existants.</p>
+                    <p>Pour cette raison, les messages présentés à l'utilisateur doivent être conçus avec prudence. Un message général tel que <q>Impossible de se connecter avec ces informations</q> peut être préférable à un message confirmant explicitement l'existence ou l'absence d'un compte.</p>
+                    <p>Les détails techniques de l'erreur peuvent être conservés pour le diagnostic, sans exposer inutilement ces informations dans l'interface.</p>
+                    <h3>Séparer le traitement technique du message utilisateur :</h3>
+                    <p>L'exception reçue de Firebase ne doit pas nécessairement être affichée directement.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
