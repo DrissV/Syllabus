@@ -2640,6 +2640,60 @@ Appel de AuthService.signIn()
                     <p>La validation locale permet, par exemple, de vérifier que les champs ne sont pas vides. Elle ne permet pas de déterminer si le compte existe ou si le mot de passe est correct. Ces vérifications relèvent de Firebase Authentication.</p>
                     <h3>Gestion de l'état de chargement :</h3>
                     <p>La connexion étant asynchrone, elle peut prendre un certain temps. L'interface doit donc représenter l'état de l'opération.</p>
+                    <p>Un état de chargement permet notamment :</p>
+                    <ul>
+                        <li>
+                            <p>d'informer l'utilisateur que la demande est en cours;</p>
+                        </li>
+                        <li>
+                            <p>d'éviter les clics répétés sur le bouton;</p>
+                        </li>
+                        <li>
+                            <p>de limiter le lancement de plusieurs tentatives simultanées;</p>
+                        </li>
+                        <li>
+                            <p>de rétablir l'interface lorsque l'opération se termine.</p>
+                        </li>
+                    </ul>
+                    <p>Dans un écran utilisant un <span class="em">StatefulWidget</span>, un booléen peut représenter cet état :</p>
+<pre><code>bool _isLoading = false;</code></pre>
+                    <p>Au début de l'opération, cet état passe à <span class="em">true</span>. Il revient à <span class="em">false</span> à la fin, que la connexion réussisse ou échoue.</p>
+                    <p>Le bloc <span class="em">finally</span> est adapté à cette situation, car il est exécuté après le bloc <span class="em">try</span>, qu'une exception ait été levée ou non.</p>
+                    <p>Exemple de principe :</p>
+<pre><code>Future&lt;void&gt; _signIn() async {
+    if (_isLoading) {
+        return;
+    }
+
+    setState(() {
+        _isLoading = true;
+    });
+
+    try {
+        await _authService.signIn(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+        );
+
+        // La connexion a réussi.
+        // La suite du parcours sera traitée par l'application.
+    } on FirebaseAuthException catch (e) {
+        // L'erreur d'authentification sera traitée ici.
+    } finally {
+        if (mounted) {
+            setState(() {
+                _isLoading = false;
+            });
+        }
+    }
+}</code></pre>
+                    <p>Cet extrait illustre la gestion de l'opération. Il suppose que <span class="em">_authService</span>, <span class="em">_emailController</span> et <span class="em">_passwordController</span> ont été déclarés dans le widget et que le formulaire effectue les validations nécessaires avant l'appel.</p>
+                    <p>La vérification <span class="em">mounted</span> évite d'appeler <span class="em">setState()</span> si le widget a été retiré de l'arbre des widgets pendant l'opération asynchrone.</p>
+                    <p>Dans un écran réel, le bloc de traitement de l'erreur doit également prévoir un retour visible à l'utilisateur. Il ne faut pas laisser un échec de connexion sans explication.</p>
+                    <h3>Gestion des erreurs de connexion :</h3>
+                    <p>Une tentative de connexion peut échouer pour plusieurs raisons. Par exemple, les identifiants peuvent être incorrects, le compte peut être introuvable ou une limitation temporaire peut empêcher l'opération.</p>
+                    <p>Firebase Authentication transmet les erreurs d'authentification au moyen d'exceptions, notamment <span class="em">FirebaseAuthException</span>.</p>
+                    <p>Nous pouvons intercepter cette exception afin de distinguer les principaux cas :</p>
                 </article>
             <!-- fin de section -->
             </section>
