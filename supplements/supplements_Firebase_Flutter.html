@@ -3096,7 +3096,209 @@ class _VerifiyEmailScreenState extends State&lt;VerifyEmailScreen&gt; {
     bool _isSending = false;
     bool _isChecking = false;
     String? _message;
+
+    Future&lt;void&gt; _resendVerificationEmail() async {
+        setState(() {
+            _isSending = true;
+            _message = null;
+        });
+
+        try {
+            final user = _auth.currentUser;
+
+            if (user == null) {
+                setState(() {
+                    _message =  'Aucun utilisateur connecté.';
+                });
+                return;
+            }
+
+            await user.sendEmailVerification();
+
+            if (!mounted) {
+                return;
+            }
+
+            setState(() {
+                _message = 'Demande d\'envoi effectuée. Vérifie ta boïte email.';
+            });
+        } on FirebaseAuthException catch (e) {
+            if (!mounted) {
+                return;
+            }
+
+            setState(() {
+                _message = 'Impossible d\'envoyer l\'email (erreur : ${e.code}).';
+            });
+        } finally {
+            if (mounted) {
+                setState(() {
+                    _isSending = false;
+                });
+            }
+        }
+    }
+
+    Future&lt;void&gt; _checkVerification() async {
+        setState(() {
+            _isChecking = true;
+            _message = null;
+        });
+
+        try {
+            final user = _auth.currentUser;
+
+            if (user == null) {
+                setState(() {
+                    _message = 'Aucun utilisateur connecté.';
+                });
+                return;
+            }
+
+            await user.reload();
+
+            final refreshedUser = _auth.currentUser;
+
+            if (!mounted) {
+                return;
+            }
+
+            if (refreshedUser?.emailVerified) {
+                setState(() {
+                    _message = 'Adresse email vérifiée.';
+                });
+
+                // La navigation vers l'écran principal sera intégrée dans le module consacré à la navigation et à AuthGate.
+            } else {
+                setState(() {
+                    _message = 'Adresse non encore vérifiée. Consulte ta boîte email puis réessaie.';
+                });
+            }
+        } on FirebaseAuthException catch (e) {
+            if (!mounted) {
+                return;
+            }
+
+            setState(() {
+                _message = 'Erreur lors de la vérification (erreur : ${e.code}).';
+            });
+        } finally {
+            if (mounted) {
+                setState(() {
+                    _isChecking = false;
+                });
+            }
+        }
+    }
+
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text('Vérification email'),
+            ),
+            body: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                    mainAxisAlignment.center,
+                    children: Column(
+                        mainAxisAlignment: mainAxisAlignment.center,
+                        children: [
+                            const Icon(
+                                Icons: mark_email_unread_outlined,
+                                size: 64,
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                                'Vérifie ton adresse email',
+                                style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                                'Ouvre le message envoyé par Firebase et clique sur le lien de vérification.',
+                                textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                    onPressed: _isSending ? null : _resendVerificationEmail,
+                                    child: Text(
+                                        _isSending ? 'Envoi...' : 'Renvoyer l\'email',
+                                    ),
+                                ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton(
+                                    onPressed: _isChecking ? null : _checkVerification,
+                                    child: Text(
+                                        _isChecking ? 'Vérification...' : 'J\'ai vérifié mon email',
+                                    ),
+                                ),
+                            ),
+                            if (_message != null) ...[
+                                const SizedBox(height: 20),
+                                Text(
+                                    _message!,
+                                    textAlign: TextAlign.center,
+                                ),
+                            ],
+                        ],
+                    ),
+                ),
+            ),
+        );
+    }
 }</code></pre>
+                    <h4>Remarque sur cet exemple :</h4>
+                    <p>Cet écran illustre les opérations essentielles. Le message de succès confirme que la demande d'envoi a été acceptée par l'appel Firebase, pas que le message est nécesssairement arrivé dans la boîte de réception.</p>
+                    <p>Dans une version plus aboutie, les messages seront adaptés aux différents code d'erreur et la navigation sera confiée à l'architecture de l'application.</p>
+                    <h3>Comprendre les états de l'écran :</h3>
+                    <p>L'écran utilise deux variables :</p>
+<pre><code>bool _isSending = false;
+bool _isChecking = false;</code></pre>
+                    <p><span class="em">_isSending</span> indique qu'une demande d'envoi est en cours.</p>
+                    <p><span class="em">_isChecking</span> indique qu'une actualisation et une vérification de l'état du compte sont en cours.</p>
+                    <p>Ces variables permettent de désactiver temporairement les boutons et d'afficher un texte adapté.</p>
+                    <h4>Schéma des états :</h4>
+<pre><code>              +----------------------+
+              |    Écran affiché     |
+              +----------+-----------+
+                         |
+              +----------+----------+
+              |                     |
+              v                     v
+    +------------------+  +------------------+
+    | Renvoyer email   |  | Vérifier email   |
+    +--------+---------+  +--------+---------+
+             |                     |
+             v                     v
+    +------------------+  +------------------+
+    | _isSending=true  |  | _isChecking=true |
+    +--------+---------+  +--------+---------+
+             |                     |
+             v                     v
+    +------------------+  +------------------+
+    | Appel Firebase   |  | user.reload()    |
+    +--------+---------+  +--------+---------+
+             |                     |
+             v                     v
+    +------------------+  +------------------+
+    | Afficher résultat|  | Lire             |
+    |                  |  | emailVerified    |
+    +--------+---------+  +--------+---------+
+             |                     |
+             v                     v
+    +------------------+  +------------------+
+    | _isSending=false |  | _isChecking=false|
+    +------------------+  +------------------+</code></pre>
+                    <h3>Gestion des erreurs :</h3>
                 </article>
             <!-- fin de section -->
             </section>
