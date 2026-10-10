@@ -54,6 +54,7 @@
                     <li><a href="#module4">Module 4 : Connexion et déconnexion</a></li>
                     <li><a href="#module5">Module 5 : Vérification de l'adresse email</a></li>
                     <li><a href="#module6">Module 6 : Authentification par SMS avec Flutter et Firebase</a></li>
+                    <li><a href="#module7">Module 7 : Liaison du numéro de téléphone à un compte utilisateur</a></li>
                 </ol>
             </nav>
             
@@ -2486,7 +2487,7 @@ Firebase</code></pre>
                 <article>
                     <h2 id="module4">Module 4 : Connexion et déconnexion :</h2>
                     <h3>Présentation du module :</h3>
-                    <p>Nous allons maintenant mettre en place les opérations permettant à un utilisateur déjà inscriot d'accéder à son compte et de terminer sa session.</p>
+                    <p>Dans le module précédent, nous avons étudié la création d'un compte utilisateur avec Firebase Authentication. Nous allons maintenant mettre en place les opérations permettant à un utilisateur déjà inscriot d'accéder à son compte et de terminer sa session.</p>
                     <p>La connexion et la déconnexion constituent deux opérations fondamentales d'un système d'authentification. Elles doivent être intégrées dans l'application de manière cohérente, en séparant la logique d'authentification de l'interface graphique.</p>
                     <p>Dans ce module, nous allons utiliser les méthodes fournies par <span class="em">FirebaseAuth</span> pour authentifier un utilisateur à partir de son adresse email et de son mot de passe, puis pour mettre fin à son authentification.</p>
                     <p>Nous allons également intégrer ces opérations dans le service <span class="em">AuthService</span> introduit précédemment. Cette organisation permettra de conserver une architecture claire et de préparer les modules suivants consacrés à la gestion des sessions, à la navigation et à la protection des écrans.</p>
@@ -4267,6 +4268,122 @@ class _SmsCodeScreenState extends State&lt;SmsCodeScreen&gt; {
                             <p>Ne confonds pas la vérification du numéro avec la vérification de l'adresse email.</p>
                         </li>
                     </ol>
+                </article>
+                <article>
+                    <h2 id="module7">Module 7 : Liaison du numéro de téléphone à un compte utilisateur :</h2>
+                    <h3>Présenation du module :</h3>
+                    <p>Dans le module précédent, nous avons appris à vérifier un numéro de téléphone à l'aide d'un SMS et d'un code de validation.</p>
+                    <p>Nous allons maintenant aborder une autre opération : <span class="em">associer ce numéro à un compte Firebase Authentication déjà existant</span>.</p>
+                    <p>Il faut bien distinguer les deux opérations :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Authentification par téléphone</span> : permet de se connecter ou de s'authentifier à l'aide d'un numéro.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Liaison d'un fournisseur d'identité</span> : permet d'ajouter le téléphone comme méthode d'authentification à un compte qui existe déjà.</p>
+                        </li>
+                    </ul>
+                    <p>L'objectif est d'éviter de créer un deuxième compte lorsqu'un utilisateur souhaite ajouter son numéro de téléphone à son compte existant.</p>
+                    <h3>Objectifs du module :</h3>
+                    <p>À la fin de ce module, vous devriez être capable de :</p>
+                    <ul>
+                        <li>
+                            <p>cmprendre la différece entre vérifier un numéro et le lier à un compte;</p>
+                        </li>
+                        <li>
+                            <p>récupérer l'utilisateur Firebase actuellement connecté;</p>
+                        </li>
+                        <li>
+                            <p>obtenir les identifiants nécessaires à la validation du SMS</p>
+                        </li>
+                        <li>
+                            <p>utiliser <span class="em">linkWithCredential()</span>;</p>
+                        </li>
+                        <li>
+                            <p>gérer les erreurs de liaison;</p>
+                        </li>
+                        <li>
+                            <p>gérer les erreurs de liaison;</p>
+                        </li>
+                        <li>
+                            <p>éviter les créations de comptes en double;</p>
+                        </li>
+                        <li>
+                            <p>vérifier que le numéro est bien associé au compte attendu.</p>
+                        </li>
+                    </ul>
+                    <h3>Comprendre le principe de la liaison :</h3>
+                    <p>Imaginons qu'Alice possède déjà un compte créé avec son adresse email et son mot de passe.</p>
+<pre><code>+--------------------------------------+
+|       Compte Firebase existant       |
++--------------------------------------+
+| UID   : abc123                       |
+| Email : alice@example.com            |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+| Vérification du numéro par SMS       |
+| Firebase Authentication              |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+| L'utilisateur confirme le code SMS   |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+| Lier le téléphone au compte existant |
+| avec linkWithCredential()            |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+|       Même compte Firebase           |
++--------------------------------------+
+| UID      : abc123                    |
+| Email    : alice@example.com         |
+| Téléphone: vérifié                   |
++--------------------------------------+
+</code></pre>
+                    <p>Le point essentiel est que l'UID reste celui du compte existant. La liaison ajoute un fournisseur d'identité au compte, elle ne doit pas créer un nouvel utilisateur indépendant.</p>
+                    <h3>Comprendre linkWithCredential() :</h3>
+                    <p>Avec Firebase Authentication, la méthode <span class="em">linkWithCredential()</span> permet d'associer un fournisseur d'identité à l'utilisateur courant.</p>
+                    <p>Le principe est le suivant :</p>
+                    <ol>
+                        <li>
+                            <p>L'utilisateur est déjà connecté.</p>
+                        </li>
+                        <li>
+                            <p>L'application demande le numéro de téléphone.</p>
+                        </li>
+                        <li>
+                            <p>Firebase envoie un SMS de vérification.</p>
+                        </li>
+                        <li>
+                            <p>L'utilisateur saisit le code reçu.</p>
+                        </li>
+                        <li>
+                            <p>L'application crée un <span class="em">PhoneAuthCredential</span>.</p>
+                        </li>
+                        <li>
+                            <p>Ce credential est lié au cmpte existant.</p>
+                        </li>
+                    </ol>
+                    <p>La ligne centrale est :</p>
+<pre><code>final result = await user.linkWithCredential(credential);</code></pre>
+                    <p>Ici, <span class="em">user</span> doit être l'utilisateur déjà authentifié, et <span class="em">credential</span> doit correspondre au numéro dont la vérification vient d'être effectuée.</p>
+                    <h3>Créer le service de liaison :</h3>
+                    <p>Créez le fichier suivant :</p>
+<pre><code>lib/features/auth/services/phone_link_service.dart</code></pre>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+
+class PhoneLinkService {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    String? _verificationId;
+}</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
