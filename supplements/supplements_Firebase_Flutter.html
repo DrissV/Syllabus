@@ -53,6 +53,7 @@
                     <li><a href="#module3">Module 3 : Inscription utilisateur</a></li>
                     <li><a href="#module4">Module 4 : Connexion et déconnexion</a></li>
                     <li><a href="#module5">Module 5 : Vérification de l'adresse email</a></li>
+                    <li><a href="#module6">Module 6 : Authentification par SMS avec Flutter et Firebase</a></li>
                 </ol>
             </nav>
             
@@ -3392,6 +3393,274 @@ bool _isChecking = false;</code></pre>
                     </div>
                     <h3>Configurer le modèle d'email Firebase :</h3>
                     <p>Firebase permet de personnaliser certains éléments du message de vérification envoyé à l'utilisateur.</p>
+                    <p>Dans la console Firebase, consulte les paramètres des modèles d'emails associés à Authentication. Les intitulés exacts peuvent évoluer selon la version de la console.</p>
+                    <p>Tu peux notamment vérifier :</p>
+                    <ul>
+                        <li>
+                            <p>Le nom de l'application affiché dans le message.</p>
+                        </li>
+                        <li>
+                            <p>Le modèle de l'email.</p>
+                        </li>
+                        <li>
+                            <p>Le lien utilisé pour confirmer l'adresse.</p>
+                        </li>
+                        <li>
+                            <p>Les paramètres d'URL d'action lorsque ton application nécessite une configuration particulière.</p>
+                        </li>
+                    </ul>
+                    <p>Pour une application distribuée en production, teste le parcours réel avec une adresse email accessible et les paramètres de domaine appropriés.</p>
+                    <h3>Bonnes pratiques :</h3>
+                    <ol>
+                        <li>
+                            <p>Ne considère jamais l'adresse comme vérifiée simplement parce que l'email a été envoyé.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">emailVerified</span> comme état fourni par Firebase Authentication.</p>
+                        </li>
+                        <li>
+                            <p>Appelle <span class="em">reload()</span> avant de vérifier à nouveau l'état après le clic sur le lien.</p>
+                        </li>
+                        <li>
+                            <p>Vérifie que <span class="em">currentUser</span> n'est pas <span class="em">null</span> avant d'accéder à ses propriétés.</p>
+                        </li>
+                        <li>
+                            <p>Désactive les boutons pendant les opérations asynchrones.</p>
+                        </li>
+                        <li>
+                            <p>Évite de renvoyer trop souvent des emails.</p>
+                        </li>
+                        <li>
+                            <p>Gère les exceptions et les problèmes de réseau.</p>
+                        </li>
+                        <li>
+                            <p>Ne stocke pas un état de vérification local comme seule source de vérité.</p>
+                        </li>
+                        <li>
+                            <p>Ne considère pas la protection de l'interface comme un remplacement des règles de sécurité côté serveur.</p>
+                        </li>
+                        <li>
+                            <p>Prévois un parcours compréhensible si l'utilisateur perd l'accès à sa session avant de revenir vérifier son adresse.</p>
+                        </li>
+                    </ol>
+                </article>
+                <article>
+                    <h2 id="module6">Module 6 : Authentification par SMS avec Flutter et Firebase :</h2>
+                    <h3>Présentation du module :</h3>
+                    <p>L'authentification par SMS permet à un utilisateur de se connecter à une application en utilisant son numéro de téléphone et un code de vérification.</p>
+                    <p>Contrairement à l'authentification par email et mot de passe, l'utilisateur ne fournit pas de mot de passe classique. Firebse Authentication envoie un code de vérification par SMS, puis vérifie ce code avant de créer ou de retrouver une session utilisateur.</p>
+                    <p>Ce mécanisme repose sur plusieurs étapes : la saisie du numéro, l'envoi du SMS, la récupération du code et la validation de ce code auprès de Firebase.</p>
+                    <h3>Objectifs du module :</h3>
+                    <p>À la fn de ce module, vous serez :</p>
+                    <ul>
+                        <li>
+                            <p>Activer l'authentification par téléphone dans Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Comprendre le fonctionnement de <span class="em">verifyPhoneNumber()</span>.</p>
+                        </li>
+                        <li>
+                            <p>Envoyer un code de vérification par SMS.</p>
+                        </li>
+                        <li>
+                            <p>Récupérer l'identifiant de vérification <span class="em">verificationId</span>.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier le code saisi par l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Créer une session Firebase avec <span class="em">PhoneAuthCredential</span>.</p>
+                        </li>
+                        <li>
+                            <p>Gérer les erreurs et les états de chargement.</p>
+                        </li>
+                        <li>
+                            <p>Comprendre les différences entre Android, iOS et le Web.</p>
+                        </li>
+                    </ul>
+                    <h3>Principe de l'authentification par SMS :</h3>
+                    <p>Le processus comence lorsque l'utilisateur saisit son numéro de téléphone au format international.</p>
+                    <p>Exemple de numéro belge : <span class="em">+32474134995</span>.</p>
+                    <p>Le préfixe <span class="em">+32</span> correspond à la Belgique. Le format international doit être respecté, généralement sans le zéro initial du numéro national.</p>
+                    <h4>Schéma général :</h4>
+<pre><code>+------------------------------------------+
+| L'utilisateur saisit son numéro          |
+| de téléphone                             |
++---------------------+--------------------+
+                      |
+                      v
++------------------------------------------+
+| Flutter appelle                         |
+| verifyPhoneNumber()                      |
++---------------------+--------------------+
+                      |
+                      v
++------------------------------------------+
+| Firebase déclenche la vérification       |
+| du numéro de téléphone                   |
++---------------------+--------------------+
+                      |
+                      v
++------------------------------------------+
+| Envoi d'un code de vérification par SMS  |
++---------------------+--------------------+
+                      |
+                      v
++------------------------------------------+
+| L'utilisateur saisit le code reçu        |
++---------------------+--------------------+
+                      |
+                      v
++------------------------------------------+
+| Création du PhoneAuthCredential          |
++---------------------+--------------------+
+                      |
+                      v
++------------------------------------------+
+| Firebase valide le code avec             |
+| signInWithCredential()                   |
++---------------------+--------------------+
+                      |
+                      v
++------------------------------------------+
+| Session utilisateur créée                |
++------------------------------------------+</code></pre>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Recevoir un SMS ne signifie pas que l'utilisateur est connecté. La connexion intervient lorsque Firebase valide les informations de vérification.</p>
+                    </div>
+                    <h3>Activer l'authentification par téléphone :</h3>
+                    <p>Avant de développer le code Flutter, il faut activer le fournisseur de connexion correspondant dans Firebase.</p>
+                    <h4>Étapes :</h4>
+                    <ol>
+                        <li>
+                            <p>Ouvre la console Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Sélectionne ton projet.</p>
+                        </li>
+                        <li>
+                            <p>Ouvre Firebase Authentication.</p>
+                        </li>
+                        <li>
+                            <p>Accède à la section des fournisseurs de connexion.</p>
+                        </li>
+                        <li>
+                            <p>Active le fournisseur <span class="em">Téléphone</span>.</p>
+                        </li>
+                        <li>
+                            <p>Enregistre les modifications.</p>
+                        </li>
+                    </ol>
+                    <p>Selon la plateforme, des configurations supplémentaires peuvent être nécessaires.</p>
+                    <h4>Précautions :</h4>
+                    <ul>
+                        <li>
+                            <p>Sur Android, vérifie la configuration de l'application et les exigences de vérification propres à Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Sur iOS, configure les mécanismes requis pour la vérification du numéro, notamment APNs lorsque nécessaire.</p>
+                        </li>
+                        <li>
+                            <p>Sur le Web, Firebase utilise un mécanisme de protection contre les apus, généralement avec reCAPTCHA.</p>
+                        </li>
+                        <li>
+                            <p>Vérifie les restrictions, les quotas et les éventuels coûts associés aux SMS dans la configuratio Firebase.</p>
+                        </li>
+                    </ul>
+                    <h4>Schéma de préparation :</h4>
+<pre><code>+-------------------------------+
+| Projet Firebase créé          |
++---------------+---------------+
+                |
+                v
++-------------------------------+
+| Authentication activée        |
++---------------+---------------+
+                |
+                v
++-------------------------------+
+| Fournisseur Téléphone activé  |
++---------------+---------------+
+                |
+                v
++-------------------------------+
+| Plateforme Flutter configurée |
++---------------+---------------+
+                |
+                v
++-------------------------------+
+| Tests d'authentification      |
++-------------------------------+</code></pre>
+                    <h3>Comprendre verifyPhoneNumber() :</h3>
+                    <p>Dans Flutte, Firebase Authentication propose la méthode <span class="em">verifyPhoneNumber()</span> pour lancer la vérification d'un numéro.</p>
+                    <p>Cette méthode utilise plusieurs callbacks pour signaler les différents résultats possibles.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Callback</th>
+                                <th>Rôle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>verificationCompleted</td>
+                                <td>Indique qu'une vérification automatique a réussi sur les plateformes compatibles</td>
+                            </tr>
+                            <tr>
+                                <td>verificationFailed</td>
+                                <td>Signale un échec de vérification</td>
+                            </tr>
+                            <tr>
+                                <td>codeSent</td>
+                                <td>Indique que le code a été envoyé et fournit un <span class="em">verificationId</span></td>
+                            </tr>
+                            <tr>
+                                <td>codeAutoRetrievalTimeout</td>
+                                <td>Signale la fin du délai de récupération automatique du code</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Ces callbacks ne représentent pas tous des étapes obligatoirement exécutées dans le même ordre. Par exemple, une vérification automatique peut réussir sans que l'utilisateur saisisse manuellement le code.</p>
+                    <h4>Schéma des callbacks :</h4>
+<pre><code>                    +----------------------+
+                    | verifyPhoneNumber()  |
+                    +----------+-----------+
+                               |
+             +-----------------+-----------------+
+             |                 |                 |
+             v                 v                 v
+    +----------------+ +---------------+ +------------------+
+    | Vérification   | | Échec de      | | Code envoyé      |
+    | automatique    | | vérification  | | codeSent         |
+    +-------+--------+ +-------+-------+ +--------+---------+
+            |                  |                  |
+            v                  v                  v
+    +----------------+ +---------------+ +------------------+
+    | Connexion avec | | Afficher une  | | Saisie du code   |
+    | credential     | | erreur        | | par l'utilisateur|
+    +----------------+ +---------------+ +--------+---------+
+                                                  |
+                                                  v
+                                         +------------------+
+                                         | Créer le         |
+                                         | PhoneAuthCredential |
+                                         +--------+---------+
+                                                  |
+                                                  v
+                                         +------------------+
+                                         | Vérifier le code |
+                                         | avec Firebase    |
+                                         +--------+---------+
+                                                  |
+                                                  v
+                                         +------------------+
+                                         | Session créée    |
+                                         +------------------+</code></pre>
+                    <h3>Créer le service d'authentification par téléphone :</h3>
+                    <p>Pour conserver une architecture claire, les opérations liées à Firebase Authentication peuvent être regroupées dans <span class="em">AuthService</span>.</p>
+                    <p>Ajoute les méthodes suivantes à ton service existant. Si la classe <span class="em">AuthService</span> contient déjà une instance de <span class="em">FirebaseAuth</span>, réutilise-la au lieu de créer plusieurs instances inutiles.</p>
+                    <h4>Exemple de service :</h4>
                 </article>
             <!-- fin de section -->
             </section>
