@@ -3661,6 +3661,339 @@ bool _isChecking = false;</code></pre>
                     <p>Pour conserver une architecture claire, les opérations liées à Firebase Authentication peuvent être regroupées dans <span class="em">AuthService</span>.</p>
                     <p>Ajoute les méthodes suivantes à ton service existant. Si la classe <span class="em">AuthService</span> contient déjà une instance de <span class="em">FirebaseAuth</span>, réutilise-la au lieu de créer plusieurs instances inutiles.</p>
                     <h4>Exemple de service :</h4>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+    
+class AuthService {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    String? _verificationId;
+
+    String? get verificationId =&gt; _verificationId;
+
+    User? get currentUser =&gt; _auth.currentUser;
+
+    Future&lt;void&gt; sendPhoneVerificationCode({
+        required String phoneNumber,
+        required void Function(String message) onCodeSent,
+        required void Function(String message) onError,
+        required void Function(PhoneAuthCredential credential) onAutoVerified,
+    }) async {
+        try {
+            await _auth.verifyPhoneNumber(
+                phoneNumber: phoneNumber,
+
+                verificationCompleted: (PhoneAuthCredential credential) async {
+                    onAutoVerified(credential);
+                },
+
+                verificationFailed: (FirebaseAuthException e) {
+                    onError(e.code);
+                },
+
+                codeSent: (
+                    String verificationId,
+                    int? resendToken,
+                ) {
+                    _verificationId = verificationId;
+                    onCodeSent(verificationId);
+                },
+
+                codeAutoRetrievalTimeout(
+                    String verificationId,
+                ) {
+                    _verificationId = verificationId;
+                },
+            );
+        } on FirebaseAuthException catch (e) {
+            onError(e.code);
+        } catch (_) {
+            onError('unknown-error');
+        }
+    }
+
+    Future&lt;UserCredential&gt; signInWithSmsCode({
+        required String smsCode,
+    }) async {
+        final verificationId = _verificationId;
+
+        if (verificationId == null) {
+            throw Exception(
+                'Aucune vérification en cours.',
+            );
+        }
+
+        final credential = PhoneAuthProvider.credential(
+            verificationId: verificationId,
+            smsCode: smsCode,
+        );
+
+        return await _auth.signInWithCredential(
+            credential,
+        );
+    }
+}</code></pre>
+                    <h4>Explication :</h4>
+                    <p>La méthode <span class="em">sendPhoneVerificationCode()</span> lance la vérification.</p>
+                    <p>Lorsque Firebase appelle <span class="em">codeSent</span>, le service conserve le <span class="em">verificationId</span>. Cet identifiant est nécessaire pour associer le code saisi à la demande de vérification correspondante.</p>
+                    <p>La méthode <span class="em">signInWithSmsCode()</span> construit ensuite un <span class="em">PhoneAuthCredential</span>, puis transmet ce justificatif à Firebase avec <span class="em">signInWithCredential()</span>.</p>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Cet exemple illustre la séparation entre le service et l'interface. Dans une application de production, les erreurs, les demandes répétées, les délais d'expiration et le cycle de vie de la vérification doivent être gérés proprement.</p>
+                    </div>
+                    <h3>Comprendre verificationId :</h3>
+                    <p>Le <span class="em">verificationId</span> est une donnée importante du processus.</p>
+                    <p>Il permet à Firebase de relier le code SMS saisi à la vérification initialement demandée.</p>
+                    <p>Il ne s'agit pas du code reçu par SMS, ni de l'identifiant permanent de l'utilisateur.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Élément</th>
+                                <th>Fonction</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Numéro de téléphone</td>
+                                <td>Identifie le numéro à vérifier</td>
+                            </tr>
+                            <tr>
+                                <td>Code SMS</td>
+                                <td>Code saisi par l'utilisateur</td>
+                            </tr>
+                            <tr>
+                                <td>verificationId</td>
+                                <td>Identifie la vérification en cours</td>
+                            </tr>
+                            <tr>
+                                <td>PhoneAuthCredential</td>
+                                <td>Regroupe les éléments nécessaires à la validation</td>
+                            </tr>
+                            <tr>
+                                <td>uid</td>
+                                <td>Identifiant du compte Firebase après authentification.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h4>Schéma :</h4>
+<pre><code>+----------------------------------+
+| Numéro de téléphone              |
++----------------+-----------------+
+                 |
+                 v
++----------------------------------+
+| Demande de vérification          |
+| verifyPhoneNumber()              |
++----------------+-----------------+
+                 |
+                 v
++----------------------------------+
+| Firebase retourne verificationId |
++----------------+-----------------+
+                 |
+          +------+------+
+          |             |
+          v             v
++----------------+ +----------------------+
+| Code SMS reçu  | | verificationId       |
+|                | | conservé             |
++-------+--------+ +----------+-----------+
+        |                     |
+        +----------+----------+
+                   |
+                   v
++----------------------------------+
+| PhoneAuthProvider.credential()   |
+| verificationId + SMS code        |
++----------------+-----------------+
+                 |
+                 v
++----------------------------------+
+| signInWithCredential()            |
++----------------+-----------------+
+                 |
+                 v
++----------------------------------+
+| Utilisateur authentifié          |
++----------------------------------+</code></pre>
+                    <p>Le <span class="em">verificationId</span> doit être associé à la bonne demande de vérification. Si une nouvelle demande est lancée, il faut utiliser l'identifiant correspondant à cette nouvelle demande.</p>
+                    <h3>Créer un écran de saisie du numéro :</h3>
+                    <p>L'utilisateur doit pouvoir saisir son numéro de téléphone et déclencher l'envoi du code.</p>
+                    <p>Voici un exemple simple d'interface Flutter. Il suppose que la classe <span class="em">AuthService</span> précédente est disponible dans ton projet.</p>
+<pre><code>import 'package:flutter/material.dart';
+
+class PhoneNumberScreen extends StatefulWidget {
+    const PhoneNumberScreen({
+        super.key,
+        required this.authService,
+        required this.onCodeSent,
+        required this.onAutoVerified,
+    });
+
+    final AuthService authService;
+    final VoidCallback onCodeSent;
+    final VoidCallback onAutoVerified;
+
+    @override
+    State&lt;PhoneNumberScreen&gt; createState() =&gt; _PhoneNumberScreenState();
+}
+
+class _PhoneNumberScreenState extends State&lt;PhoneNumberScreen&gt; {
+    final TextEditingController _phoneController = TextEditingController();
+
+    bool _isLoading = false;
+    String? _message;
+
+    Future&lt;void&gt; _sendCode() async {
+        final phoneNumber = _phoneController.text.trim();
+
+        if (phoneNumber.isEmpty || !phoneNumber.startsWith('+')) {
+            setState(() {
+                _message = 'Saisis un numéro au format international, par exemple +32470123456.';
+            });
+            return;
+        }
+
+        setState(() {
+            _isLoading = true;
+            _message = null;
+        });
+
+        try {
+            await widget.authService.sendPhoneVerificationCode(
+                phoneNumber: phoneNumber,
+                onCodeSent: (_) {
+                    if (!mounted) {
+                        return;
+                    }
+
+                    setState(() {
+                        _message = 'Demande d\'envoi effectuée. Saisis le code reçu par SMS.';
+                    });
+
+                    widget.onCodeSent();
+                },
+                onError: (code) {
+                    if (!mounted) {
+                        return;
+                    }
+
+                    setState(() {
+                        _message = 'La vérification a échoué ($code).';
+                    });
+                },
+                onAutoVerified: (credetial) async  {
+                    try {
+                        await widget.authService.currentUser;
+                        if (!mounted) {
+                            return;
+                        }
+
+                        widget.onAutoVerified();
+                    } catch (_) {
+                        if (!mounted) {
+                            return;
+                        }
+
+                        setState(() {
+                            _message = 'La vérification automatique a échoué.';
+                        });
+                    }
+                },
+            );
+        } catch (_) {
+            if (!mounted) {
+                return;
+            }
+
+            setState(() {
+                _message = 'Une erreur inattendue est survenue.';
+            });
+        } finally {
+            if (mounted) {
+                setState(() {
+                    _isLoading = false;
+                });
+            }
+        }
+    }
+
+    @override
+    void dispose() {
+        _phoneController.dispose();
+        super.dispose();
+    }
+
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text('Connexion par SMS'),
+            ),
+            body: Padding(
+                padding: const EdgeInsets.all(24),
+                chld: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                        const Text(
+                            'Ton numéro de téléphone',
+                            style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                            ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            decoration: const InputDecoration(
+                                labelText: 'Numéro international',
+                                hintText: '+32470123456',
+                                boder: OutlineInputBorder(),
+                            ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                                onPressed: _isLoading ? null : _sendCode,
+                                child: Text(
+                                    _isLoading ? 'Traitement...' : 'Envoyer le code',
+                                ),
+                            ),
+                        ),
+                        if (_message != null) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                                _message!,
+                                textAlign: TextAlign.center,
+                            ),
+                        ],
+                    ],
+                ),
+            ),
+        );
+    }
+}</code></pre>
+                    <h4>Remarque importante sur cet écran :</h4>
+                    <p>Cet extrait illustre l'interface de saisie, mais la connexion automatique doit réellement appeler <span class="em">signInWithCredential(credential)</span> avec le justificatif reçu dans <span class="em">verificationCompleted</span>.</p>
+                    <p>La ligne qui lit <span class="em">currentUser</span> dans l'exemple ne réalise pas cette connexion. Dans une version finale, il est préférable d'exposer une méthode du service qui accepte directement le <span class="em">PhoneAuthCredential</span>, puis de l'appeler depuis le callback.</p>
+                    <p>Voici la méthode à ajouter à <span class="em">AuthService</span> :</p>
+<pre><code>Future&lt;UserCredential&gt; signInWithCredential(
+    PhoneAuthCredential credential,
+) async {
+    return await _auth.signInWithCredential(
+        credential,
+    );
+}</code></pre>
+                    <p>Le callback automatique peut alors utiliser :</p>
+<pre><code>verificationCompleted: (credential) async {
+    await _auth.signInWithCredential(credential);
+},</code></pre>
+                    <p>Dans cette dernière version, le callback doit être placé à l'intérieur du service qui possède <span class="em">_auth</span>, ou appeler la méthode publique <span class="em">signInWithCredential()</span> depuis l'interface. Il faut éviter de déclarer deux implémentations concurrentes de la même logique.</p>
+                    <h3>Vérifierle code saisi par l'utilisateur :</h3>
+                    <p>Lorsque Firebase déclenche <span class="em">codeSent</span>, l'interface peut afficher un second écran dans lequel l'utilisateur saisit le code reçu.</p>
+                    <p>Le service construit alors le justificatif et tente la connexion.</p>
+                    <h4>Exemple de méthode de validation :</h4>
                 </article>
             <!-- fin de section -->
             </section>
