@@ -3299,6 +3299,28 @@ bool _isChecking = false;</code></pre>
     | _isSending=false |  | _isChecking=false|
     +------------------+  +------------------+</code></pre>
                     <h3>Gestion des erreurs :</h3>
+                    <p>L'envoi d'un email ou l'actualisation d'un utilisateur peut échouer.</p>
+                    <p>Il faut intercepter les erreurs Firebase avec <span class="em">FirebaseAuthException</span>.</p>
+                    <p>Exemple :</p>
+<pre><code>try {
+    await user.sendEmailVerification();
+} on FirebaseAuthException catch (e) {
+    switch (e.code) {
+        case 'too-many-requests':
+            // Trop de demandes rapprochées.
+            break;
+        
+        case 'network-request-failed':
+            // Problème de connexion réseau.
+            break;
+        
+        default:
+            // Traiter les autres erreurs.
+            break;
+    }
+}</code></pre>
+                    <p>Les codes exacts peuvent varier selon l'opération et la version du SDK. Il est préférable de gérer les codes réellement renvoyés plutôt que de supposer qu'une liste est exhaustive.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
