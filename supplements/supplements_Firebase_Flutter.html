@@ -52,6 +52,7 @@
                     <li><a href="#module2">Module 2 : Firebase Authentication</a></li>
                     <li><a href="#module3">Module 3 : Inscription utilisateur</a></li>
                     <li><a href="#module4">Module 4 : Connexion et déconnexion</a></li>
+                    <li><a href="#module5">Module 5 : Vérification de l'adresse email</a></li>
                 </ol>
             </nav>
             
@@ -2753,7 +2754,7 @@ Appel de AuthService.signIn()
                     <p>Cette méthode est aynchrone et renvoie un <span class="em">Future&lt;void&gt;</span>. Il faut donc pouvoir attendre sa fin lorsque le reste du programme dépend du résultat de l'opération.</p>
                     <p>Comme pour la connexion, nous allons intégrer cette opération dans <span class="em">AuthService</span>.</p>
                     <p>Nous pouvons compléter la classe précédente de la manière suivante :</p>
-<pre><code>mport 'package:firebase_auth/firebase_auth.dart';
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
     final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -2790,6 +2791,295 @@ class AuthService {
            ▼
   Firebase Authentication</code></pre>
                     <p>L'opération doit être attendue à l'aide de <span class="em">await</span>. En cas d'erreur, l'application doit éviter de présenter la déconnexion comme réussie sans avoir traité le résultat de l'opération.</p>
+                    <p>La navigation vers l'écran de connexion ne doit pas non plus être considérée comme la déconnexion elle-même. Changer d'écran ne met pas automatiquement fin à l'authentification Firebase.</p>
+                    <p>Inversement, après une déconnexion effective, l'application doit adapter son interface à l'état d'authentification obtenu. La stratégie générale de navigation sera étudiée dans les modules consacrés à la gestion des sessions, à la protection des écrans et à <span class="em">AuthGate</span>.</p>
+                    <h3>Différence entre déconnexion et suppression du compte :</h3>
+                    <p>Il est important de distinguer deux opérations.</p>
+                    <p>La déconnexion met fin à l'authentification courante dans l'application. Elle ne supprime pas le compte Firebase Authentication.</p>
+                    <p>La supprssion d'un compte constitue une opération distincte, qui nécessite une méthode spécifique et soulève des questions supplémentaires concernant les données associées à l'utilisateur.</p>
+                    <p>Dans notre projet, le bouton "Se déconnecter" doit donc appeler <span class="em">signOut()</span> et non une méthode de suppression de compte.</p>
+                    <p>Cette distinction est essentielle pour éviter toute perte de compte involontaire.</p>
+                    <h3>Connexion réussie et navigation :</h3>
+                    <p>Une connexion réussie indique que Firebase Authentication a accepté la tentative d'authentification. Elle ne définit pas, à elle seule, toute la navigation de l'application.</p>
+                    <p>Dans une application simple, il serait possible de naviguer manuellement vers un écran après la connexion. Toutefois, lorsque le projet se développe, cette approche peut entraîner des incohérences : certains écrans peuvent être accessibles alors que l'état d'authentification a changé, ou la navigation peut ne pas refléter correctement une déconnexion.</p>
+                    <p>Nous alons donc séparer progressivement deux responsabilités :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">l'authentification</span>, qui est prise en charge par Firebase Authentication;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">la navigation</span>, qui doit réagir à l'état d'authentification de l'application.</p>
+                        </li>
+                    </ul>
+                    <p>Les mécanismes de synchronisation de cet état et de protection des écrans seront étudiés plus tard.</p>
+                    <p>À ce stade, il suffit de retenir qu'un changement de page n'est pas une preuve d'authentification et qu'un écran ne doit pas être considéré comme protégé uniquement parce qu'il est normalement accessible après une connexion.</p>
+                    <h3>Points de vigilance :</h3>
+                    <p>Lors de l'implémentation de la connexion et de la déconnexion, plusieurs règles doivent être respectées.</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Ne pas confondre validation et authentification.</span> La validation du formulaire vérifie la cohérence élémentaire des données saisies. Seul le service d'authentification peut déterminer si la tentative est acceptée.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Ne pas stocker le mot de passe dans l'application.</span> Le mot de passe est transmis au mécanisme d'authentification lorsque cela est nécessaire. Il ne doit pas être conservé dans des variables persistantes, des fichiers ou des journaux applicatifs.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Ne pas ignorer les exceptions.</span> Une erreur doit être traitée de façon à préserver un état cohérent de l'interface et à fournir un retour adapté.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Toujours rétablir l'état de chargement.</span> Une opération échouée ne doit pas laisser le bouton désactivé indéfiniment.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Ne pas confondre et navigation.</span> Le retour vers un écran public ne remplace pas l'appel à <span class="em">signOut()</span>.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Ne pas considérer l'interface comme une frontière de sécurité suffisante.</span> La protection des données et des opérations doit également être assurée par les règles et les mécanismes de sécurité des services Firebase concernés.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="module5">Module 5 : Vérification de l'adresse email :</h2>
+                    <h3>Présentation du module :</h3>
+                    <p>Lorsqu'un utilisateur crée un compte avec Firebase Authentication, son adresse email n'est pas automatiquement considérée comme vérifiée.</p>
+                    <p>La vérification permet de confirmer que l'utilisateur a accès à l'adresse email qu'il a renseignée lors de son inscription.</p>
+                    <p>Firebase Authentication fournit les méthodes nécessaires pour envoyer un email de vérification et contrôler si l'adresse a été validée.</p>
+                    <h3>Objectifs du module :</h3>
+                    <p>À la fin de ce module, vous saurez :</p>
+                    <ul>
+                        <li>
+                            <p>Envoyer un email de vérification à un utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Comprendre la propriété <span class="em">emailVerified</span>.</p>
+                        </li>
+                        <li>
+                            <p>Actualiser les informations de l'utilisateur après la vérification.</p>
+                        </li>
+                        <li>
+                            <p>Proposer une action pour renvoyer l'email.</p>
+                        </li>
+                        <li>
+                            <p>Gérer les erreurs et les états de chargement.</p>
+                        </li>
+                        <li>
+                            <p>Comprendre la différence entre l'envoi d'un email et la confirmation effective de l'adresse.</p>
+                        </li>
+                    </ul>
+                    <h3>Principe de la vérification email :</h3>
+                    <p>Après l'inscription, Firebase crée un compte utilisateur. L'adresse email peut être présente, mais elle n'est pas encore nécessairement vérifiée.</p>
+                    <p>Le processus rrepose principalement sur deux éléments :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">sendEmailVerification()</span> : demande à Firebase à envoyer un email de vérification.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">emailVerified</span> : indique si l'adresse email est considérée comme vérifiée par Firebase.</p>
+                        </li>
+                    </ul>
+                    <h3>Schéma du parcours :</h3>
+<pre><code>+--------------------------------+
+| L'utilisateur s'inscrit        |
++---------------+----------------+
+                |
+                v
++--------------------------------+
+| Firebase crée le compte        |
++---------------+----------------+
+                |
+                v
++--------------------------------+
+| emailVerified = false          |
++---------------+----------------+
+                |
+                v
++--------------------------------+
+| Envoi de l'email de vérification|
++---------------+----------------+
+                |
+                v
++--------------------------------+
+| L'utilisateur ouvre sa boîte   |
+| email                          |
++---------------+----------------+
+                |
+                v
++--------------------------------+
+| Il clique sur le lien          |
+| de vérification                |
++---------------+----------------+
+                |
+                v
++--------------------------------+
+| Firebase confirme              |
+| l'adresse email                |
++--------------------------------+</code></pre>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p><code>Point important</code> : l'envoi de l'email ne signifie que l'adresse est déjà vérifiée. La confirmation doit avoir lieu avant que <span class="em">emailVerified</span> passe à <span class="em">true</span>.</p>
+                    </div>
+                    <h3>Comprendre la propriété emailVerified :</h3>
+                    <p>Firebase Authentication expose un objet <span class="em">User</span> représentant l'utilisateur connecté.</p>
+                    <p>Parmi ses propriétés, on retrouve notamment :</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Propriété</th>
+                                <th>Rôle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>uid</td>
+                                <td>Identifiant unique de l'utilisateur</td>
+                            </tr>
+                            <tr>
+                                <td>email</td>
+                                <td>Adresse email de l'utilisateur</td>
+                            </tr>
+                            <tr>
+                                <td>emailVerified</td>
+                                <td>Indique si l'adresse email est vérifiée</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Exemple :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+
+if (user != null) {
+    print(user.email);
+    print(user.emailVerified);
+}</code></pre>
+                    <p>Si <span class="em">emailVerified</span> vaut <span class="em">false</span>, Firebase ne considère pas encore l'adresse comme vérifiée.</p>
+                    <p>Si <span class="em">emailVerified</span> vaut <span class="em">true</span>, l'adresse a été confirmée.</p>
+                    <p>Cette propriété est fournie par Firebase Authentication. Il ne faut pas créer une variable locale indépendante pour remplacer cette information.</p>
+                    <h3>Envoyer un email de vérification :</h3>
+                    <p>La méthode <span class="em">sendEmailVerification()</span> est disponible sur l'objet utilisateur Firebase.</p>
+                    <h4>Exemple simple :</h4>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+
+Future&lt;void&gt; sendEmailVerification() async {
+    final user =  FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+        throw Exception('Aucun utilisateur connecté.');
+    }
+
+    if (user.emailVerified) {
+        return;
+    }
+
+    await user.sendEmailVerification();
+}</code></pre>
+                    <h4>Explication :</h4>
+                    <ol>
+                        <li>
+                            <p>On récupère l'utilisateur actuellement connecté.</p>
+                        </li>
+                        <li>
+                            <p>On vérifie qu'un utilisateur existe.</p>
+                        </li>
+                        <li>
+                            <p>On contrôle si son adresse est déjà vérifiée.</p>
+                        </li>
+                        <li>
+                            <p>Si elle ne l'est pas, on demande à Firebase d'envoyer l'email.</p>
+                        </li>
+                    </ol>
+                    <p>La méthode est asynchrone : l'application doit donc utiliser <span class="em">await</span> et gérer les éventuelles erreurs.</p>
+                    <div class="bordure information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p><code>À retenir</code> : cette méthode déclenche l'envoi du message. Elle ne met pas immédiatement <span class="em">emailVerified</span> à <span class="em">true</span>.</p>
+                    </div>
+                    <h3>Intégrer la vérification dans AuthService :</h3>
+                    <p>Pour conserver une architecture organisée, les opérations Firebase Authentication peuvent être regroupées dans le service <span class="em">AuthService</span>.</p>
+                    <p>Ajoute la méthode suivante à la classe existante, sans supprimer les méthodes d'inscription, de connexion ou de déconnexion déjà développées.</p>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+
+class AuthService {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    User? get currentUser =&gt; _auth.currentUser;
+
+    Future&lt;void&gt; sendEmailVerification() async {
+        final user = _auth.currentUser;
+
+        if (user == null) {
+            throw Exception('Aucun utilisateur connecté.');
+        }
+
+        if (user.emailVerified) {
+            return;
+        }
+
+        await user.sendEmailVerification();
+    }
+
+    Future&lt;bool&gt; reloadAndCheckEmailVerification() async {
+        final user = _auth.currentUser;
+
+        if (user == null) {
+            return false;
+        }
+
+        await user.reload();
+
+        final refreshedUser = _auth.currentUser;
+
+        return refreshedUser?.emailVerified ?? false;
+    }
+}</code></pre>
+                    <h3>Pourquoi utiliser reload() ?</h3>
+                    <p>Après avoir cliqué sur le lien reçu par email, l'utilisateur peut revenir dans l'application. L'application <span class="em">User</span> présent en mémoire ne reflète pas nécessairement immédiatement le nouvel état.</p>
+                    <p>L'appel à <span class="em">reload()</span> demande à Firebase d'actualiser les informations du compte.</p>
+                    <p>On récupère ensuite à nouveau <span class="em">currentUser</span> pour lire la valeur actualisée de <span class="em">emailVerified</span>.</p>
+<pre><code>+--------------------------------+
+| L'utilisateur clique sur       |
+| le lien email                  |
++---------------+----------------+
+                |
+                v
++--------------------------------+
+| Retour dans l'application      |
++---------------+----------------+
+                |
+                v
++--------------------------------+
+| user.reload()                  |
++---------------+----------------+
+                |
+                v
++--------------------------------+
+| Relire currentUser             |
++---------------+----------------+
+                |
+                v
++--------------------------------+
+| Lire emailVerified             |
++---------------+----------------+
+                |
+                v
+         +------+------+
+         | Vérification|
+         +------+------+
+                |
+          +-----+-----+
+          |           |
+          v           v
++----------------+ +----------------+
+| Vérifié        | | Non vérifié    |
+| true           | | false          |
++----------------+ +----------------+</code></pre>
+                    <h3>Créer un écran de vérification :</h3>
+                    <p>Après l'inscription, l'application peut afficher un écran indiquant à l'utilisateur qu'un email de vérification a été envoyé.</p>
+                    <p>Cet écran peut proposer deux actions :</p>
+                    <ul>
+                        <li>
+                            <p>Renvoyer l'email de vérification.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier à nouveau si l'adresse a été confirmée.</p>
+                        </li>
+                    </ul>
+                    <h4>Exemple d'écran Flutter :</h4>
                     
                 </article>
             <!-- fin de section -->
