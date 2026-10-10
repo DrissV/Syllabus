@@ -3994,6 +3994,150 @@ class _PhoneNumberScreenState extends State&lt;PhoneNumberScreen&gt; {
                     <p>Lorsque Firebase déclenche <span class="em">codeSent</span>, l'interface peut afficher un second écran dans lequel l'utilisateur saisit le code reçu.</p>
                     <p>Le service construit alors le justificatif et tente la connexion.</p>
                     <h4>Exemple de méthode de validation :</h4>
+<pre><code>Future&lt;UserCredential&gt; verifySmsCode(
+    String smsCode,
+) async {
+    final verificationId = _verificationId;
+
+    if (verificationId == null) {
+        throw Exception(
+            'La demande de vérification est absente ou expirée.',
+        );
+    }
+
+    final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: smsCode.trim(),
+    );
+
+    return await _auth.signInWithCredential(
+        credential,
+    );
+}</code></pre>
+                    <h4>Exemple d'écran de saisie du code :</h4>
+<pre><code>import 'package:flutter/material.dart';
+
+class SmsCodeScreen extends StatefulWidget {
+    const SmsCodeScreen({
+        super.key,
+        required this.authService,
+    });
+
+    final AuthService authService;
+
+    @override
+    State&lt;SmsCodeScreen&gt; createState() =&gt; _SmsCodeScreenState();
+}
+
+class _SmsCodeScreenState extends State&lt;SmsCodeScreen&gt; {
+    final TextEditingController _codeController = TextEditingController();
+
+    bool _isLoading = false;
+    String? _message;
+
+    Future&lt;void&gt; _verifyCode() async {
+        final code = _codeController.text.trim();
+
+        if (code.isEmpty) {
+            setState(() {
+                _message = 'Saisis le code reçu par SMS.';
+            });
+            return;
+        }
+
+        setState(() {
+            _isLoading = true;
+            _message = null;
+        });
+
+        try {
+            final result = await widget.authService.verifySmsCode(code);
+
+            if (!mounted) {
+                return;
+            }
+
+            setState(() {
+                _message = result.user == null ? 'La connexion n\'a pas abouti.' : 'Connexion réussie.';
+            });
+
+            // La navigation vers l'écran principal sera intégrée dans le module consacré à la navigation et à AuthGate.
+        } on FirebaseAuthException catch (e) {
+            if (!mounted)  {
+                return;
+            }
+
+            setState(() {
+                _message = 'Impossible de vérifier le code (${e.code}).';
+            });
+        } catch (_) {
+            if (!mounted) {
+                return;
+            }
+
+            setState(() {
+                _message = 'Une erreur inattendue est survenue.';
+            });
+        } finally {
+            if (mounted) {
+                setState(() {
+                    _isLoading = false;
+                });
+            }
+        }
+    }
+
+    @override
+    void dispose() {
+        _codeController.dispose();
+        super.dispose();
+    }
+
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text('Code de vérification'),
+            ),
+            body: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                        TextField(
+                            controller: _codeController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                                labelText: 'Code reçu par SMS',
+                                border: OutlineInputBorder(),
+                            ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                                onPressed: _isLoading ? null : _verifyCode,
+                                child: Text(
+                                    _isLoading ? 'Vérification...' : 'Valider le code',
+                                ),
+                            ),
+                        ),
+                        if (_message != null) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                                _message!,
+                                textAlign: TextAlign.center,
+                            ),
+                        ],
+                    ],
+                ),
+            ),
+        );
+    }
+}</code></pre>
+                    <p>Cette interface suppose que <span class="em">AuthService</span> expose la méthode <span class="em">verifySmsCode()</span> présentée juste avant.</p>
+                    <h3>Gérer les erreurs :</h3>
+                    <p>Plusieurs problèmes peuvent survenir lors de l'authentification par téléphone.</p>
                 </article>
             <!-- fin de section -->
             </section>
