@@ -3320,7 +3320,78 @@ bool _isChecking = false;</code></pre>
     }
 }</code></pre>
                     <p>Les codes exacts peuvent varier selon l'opération et la version du SDK. Il est préférable de gérer les codes réellement renvoyés plutôt que de supposer qu'une liste est exhaustive.</p>
-                    
+                    <p>Évite d'afficher des informations techniques sensibles à l'utilisateur. Les détails de l'erreur peuvent être consignés dans les journaux de développement, avec les précautions nécessaires.</p>
+                    <h4>Tableau récapitulatif :</h4>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Situation</th>
+                                <th>Comportement conseillé</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Pas d'utilisateur connecté</td>
+                                <td>Demander à l'utilisateur de se reconnecter</td>
+                            </tr>
+                            <tr>
+                                <td>Email déjà vérifié</td>
+                                <td>Ne pas renvoyer inutilement de message</td>
+                            </tr>
+                            <tr>
+                                <td>Trop de demandes</td>
+                                <td>Demander de patienter</td>
+                            </tr>
+                            <tr>
+                                <td>Problème réseau</td>
+                                <td>Proposer de réessayer</td>
+                            </tr>
+                            <tr>
+                                <td>Autre erreur</td>
+                                <td>Afficher un message générique</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Que faire après la vérification ?</h3>
+                    <p>Une fois l'adresse confirmée, l'application doit décider quelles fonctionnalités deviennent accessibles.</p>
+                    <p>Par exemple, elle peut autoriser l'accès à certaines pages uniquement si l'adresse email est vérifiée.</p>
+                    <p>Il faut distinguer trois états :</p>
+<pre><code>+---------------------------+
+       | Utilisateur non connecté  |
+       +-------------+-------------+
+                     |
+                     v
+            +------------------+
+            | Connexion requise|
+            +--------+---------+
+                     |
+                     v
+       +---------------------------+
+       | Connecté, email non vérifié|
+       +-------------+-------------+
+                     |
+                     v
+            +----------------------+
+            | Écran de vérification|
+            +----------+-----------+
+                       |
+                       v
+       +---------------------------+
+       | Connecté, email vérifié   |
+       +-------------+-------------+
+                     |
+                     v
+       +---------------------------+
+       | Accès autorisé selon les  |
+       | règles de l'application   |
+       +---------------------------+</code></pre>
+                    <p>La navigation automatique et la protection des écrans seront traitées dans les modules dédiés à la navigation, à <span class="em">AuthGate</span> et à la sécurité.</p>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Masquer un écran dans Flutter ne suffit pas à protéger les données. Les autorisations côté serveur, notamment les règles de sécurité Firebase, devront également être configurées lorsque l'application accédera aux données.</p>
+                    </div>
+                    <h3>Configurer le modèle d'email Firebase :</h3>
+                    <p>Firebase permet de personnaliser certains éléments du message de vérification envoyé à l'utilisateur.</p>
                 </article>
             <!-- fin de section -->
             </section>
