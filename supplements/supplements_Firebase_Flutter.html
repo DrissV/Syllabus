@@ -4138,6 +4138,135 @@ class _SmsCodeScreenState extends State&lt;SmsCodeScreen&gt; {
                     <p>Cette interface suppose que <span class="em">AuthService</span> expose la méthode <span class="em">verifySmsCode()</span> présentée juste avant.</p>
                     <h3>Gérer les erreurs :</h3>
                     <p>Plusieurs problèmes peuvent survenir lors de l'authentification par téléphone.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Situation</th>
+                                <th>Réaction conseillée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Numéro invalide</td>
+                                <td>Demander de vérifier le format international</td>
+                            </tr>
+                            <tr>
+                                <td>Numéro non autorisé ou configuration incorrecte</td>
+                                <td>Vérifier la configuration Firebase</td>
+                            </tr>
+                            <tr>
+                                <td>Code incorrect</td>
+                                <td>Proposer une nouvelle saisie</td>
+                            </tr>
+                            <tr>
+                                <td>Code expiré ou vérification expirée</td>
+                                <td>Relancer la procédure de vérification</td>
+                            </tr>
+                            <tr>
+                                <td>Trop de demandes</td>
+                                <td>Demander de patienter avant de réessayer</td>
+                            </tr>
+                            <tr>
+                                <td>Problème réseau</td>
+                                <td>Proposer de réessayer lorsque la connexion revient</td>
+                            </tr>
+                            <tr>
+                                <td>Vérification automatique échouée</td>
+                                <td>Prévoir la saisie manuelle du code</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Les codes d'erreur exacts dépendent de l'opération, de la plateforme et de la version du SDK. Il est donc préférable d'inspecter <span class="em">FirebaseAuthException.code</span> et de traiter les cas réellement rencontrés.</p>
+                    <p>Exemple :</p>
+<pre><code>try {
+    await authService.verifySmsCode(code);
+} on FirebaseAuthException catch (e) {
+    switch (e.code) {
+        case 'invalid-verification-code':
+            // Le code saisi n'est pas valide.
+            break;
+        
+        case 'session-expired':
+            // La vérification a expiré.
+            break;
+
+        case 'too-many-requests':
+            // Trop de demandes ont été effectuées.
+            break;
+        
+        default:
+            // Traiter les autres erreurs.
+            break;
+    }
+}</code></pre>
+                    <p>Ne présente pas systématiquement un code d'erreur technique brut à l'utilisateur. Prévois des messages compréhensibles et conserve les détails techniques dans les journaux de développement lorsque c'est approprié.</p>
+                    <h3>Android, iOS et Web : différences importantes :</h3>
+                    <p>Le parcours général est similaire, mais les mécanismes techniques diffèrent selon la plateforme.</p>
+                    <h4>Android :</h4>
+                    <p>Firebase peut effectuer une vérification automatique dans certaines conditions. Selon la configuration et l'appareil, peut s'appuyer sur des mécanismes de vérification de l'application et de récupération du SMS.</p>
+                    <p>La vérification automatique n'est pas garantie : le parcours de saisie manuelle doit rester disponible.</p>
+                    <h4>iOS :</h4>
+                    <p>La configuration de l'application doit respecter les exigences Firebase pour la vérification téléphonique. APNs et les mécanismes de vérification associés peuvent être nécessaires selon le contexte.</p>
+                    <h4>Web :</h4>
+                    <p>L'authentification téléphonique Web utilise un mécanisme adapté à la plateforme, notamment reCAPTCHA pour limiter les abus.</p>
+                    <p>Le code Flutter Web doit suivre l'API correspondant à la version du package Firebase utilisée. Ne suppose pas que les mêmes appels de plateforme sont interchangeables partout.</p>
+                    <h4>Tableau récapitulatif :</h4>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Plateforme</th>
+                                <th>Point d'attention</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Android</td>
+                                <td>Vérification automatique possible</td>
+                            </tr>
+                            <tr>
+                                <td>iOS</td>
+                                <td>Configuration des mécanismes de vérification requis</td>
+                            </tr>
+                            <tr>
+                                <td>Web</td>
+                                <td>reCAPTCHA et API adaptée au Web</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Sécurité et bonnes pratiques :</h3>
+                    <p>L'authentification par SMS doit être conçue en tenant compte des risques spécifiques aux numéros de téléphone.</p>
+                    <ol>
+                        <li>
+                            <p>Ne fais pas confiance au numéro simplement parce qu'il a été saisi dans un formulaire.</p>
+                        </li>
+                        <li>
+                            <p>Ne considère le numéro comme vérifié qu'après validation réussie par Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Ne conserve pas le code SMS dans une base de données.</p>
+                        </li>
+                        <li>
+                            <p>Ne journalise pas les codes de vérification ni les informations d'authentification sensibles.</p>
+                        </li>
+                        <li>
+                            <p>Limite les tentatives et les demandes répétées, et respecte les quotas Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Ne contourne pas les mécanismes de protection contre les abus.</p>
+                        </li>
+                        <li>
+                            <p>Prévois un parcours manuel si la vérification automatique ne fonctionne pas.</p>
+                        </li>
+                        <li>
+                            <p>Ne considère pas le SMS comme une protection absolue contre les attaques : les numéros peuvent être détournés ou récupérés par des tiers.</p>
+                        </li>
+                        <li>
+                            <p>Pour les opérations sensibles, évalue si une authentification supplémentaire est nécessaire.</p>
+                        </li>
+                        <li>
+                            <p>Ne confonds pas la vérification du numéro avec la vérification de l'adresse email.</p>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
