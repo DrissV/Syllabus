@@ -53,8 +53,9 @@
                     <li><a href="#module3">Module 3 : Inscription utilisateur</a></li>
                     <li><a href="#module4">Module 4 : Connexion et déconnexion</a></li>
                     <li><a href="#module5">Module 5 : Vérification de l'adresse email</a></li>
-                    <li><a href="#module6">Module 6 : Authentification par SMS avec Flutter et Firebase</a></li>
+                    <li><a href="#module6">Module 6 : Authentification par SMS</a></li>
                     <li><a href="#module7">Module 7 : Liaison du numéro de téléphone à un compte utilisateur</a></li>
+                    <li><a href="#module8">Module 8 : réinitialisation du mot de passe</a></li>
                 </ol>
             </nav>
             
@@ -3446,7 +3447,7 @@ bool _isChecking = false;</code></pre>
                     </ol>
                 </article>
                 <article>
-                    <h2 id="module6">Module 6 : Authentification par SMS avec Flutter et Firebase :</h2>
+                    <h2 id="module6">Module 6 : Authentification par SMS :</h2>
                     <h3>Présentation du module :</h3>
                     <p>L'authentification par SMS permet à un utilisateur de se connecter à une application en utilisant son numéro de téléphone et un code de vérification.</p>
                     <p>Contrairement à l'authentification par email et mot de passe, l'utilisateur ne fournit pas de mot de passe classique. Firebse Authentication envoie un code de vérification par SMS, puis vérifie ce code avant de créer ou de retrouver une session utilisateur.</p>
@@ -4383,7 +4384,413 @@ class PhoneLinkService {
     final FirebaseAuth _auth = FirebaseAuth.instance;
 
     String? _verificationId;
+
+    // Envoie un SMS au numéro à associer au compte.
+    Future&lt;void&gt; sendVerificationCode({
+        required String phoneNumber,
+        required void Function(String verificationId) onCodeSent,
+        requited void Function(String message) onError,
+    }) async {
+        await _auth.verifyPhoneNumber(
+            phoneNumber: phoneNumber,
+
+            verificationCompleted: (credential) async {
+                try {
+                    await _linkCredential(credential);
+                } on FirebaseAuthException catch (e) {
+                    onError(e.message ?? e.code);
+                }
+            },
+
+            verificationFailed: (exception) {
+                onError(exception.message ?? exception.code);
+            },
+
+            codeSent: (verificationId, resendToken) {
+                _verificationId = verificationId;
+                onCodeSent(verificationId);
+            },
+
+            codeAutoRetrievalTimeout: (verificationId) {
+                _verificationId = verificationId;
+            },
+        );
+    }
+
+    // Vérifie le code SMS et lie le téléphone au compte existant.
+    Future&lt;UserCredential&gt; verifyCodeAndLink({
+        required String smsCode,
+    }) async {
+        final verificationId = _verificationId;
+
+        if (verificationId == null) {
+            throw FirebaseAuthException(
+                code: 'missing-verification-id',
+                message: 'La vérification du numéro doit être lancée.',
+            );
+        }
+
+        final credential = PhoneAuthProvider.credential(
+            verificationId: verificationId,
+            smsCode: smsCode,
+        );
+
+        return _linkCredential(credential);
+    }
+
+    Future&lt;UserCredential&gt; _linkCredential(
+        PhoneAuthCredential credential,
+    ) async {
+        final user = _auth.currentUser;
+
+        if (user == null) {
+            throw FirebaseAuthException(
+                code: 'no-current-user',
+                message: 'Vous devez être connecté pour lier un numéro.';
+            );
+        }
+
+        return user.linkWithCredential(credential);
+    }
 }</code></pre>
+                    <h4>Rôles des principales méthodes :</h4>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Méthode</th>
+                                <th>Rôle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>sendVerificationCode()</td>
+                                <td>Démarre la vérification du numéro et demande l'envoi du SMS.</td>
+                            </tr>
+                            <tr>
+                                <td>verifyCodeAndLink()</td>
+                                <td>Construit le credential à partir du code reçu.</td>
+                            </tr>
+                            <tr>
+                                <td>_linkCredential()</td>
+                                <td>Associe le credential au compte Firebase existant.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Cet exemple illustre le parcours Android/iOS de Firebase Authentication. Le flux Web est différent et utilise notamment <span class="em">signInWithPhoneNumber()</span>. Il faut également traiter correctement les erreurs provenant du callback <span class="em">verificationCompleted</span>, qui peut déclencher une liaison automatique sur les plateformes compatibles.</p>
+                    </div>
+                    <h3>Utiliser le service depuis l'interface :</h3>
+                    <p>L'interface doit proposer deux étapes distictes :</p>
+                    <ol>
+                        <li>
+                            <p><span class="em">Écran du numéro de téléphone</span> : l'utilisateur saisit son numéro au format international, par exemple +32470123456, puis demande un code.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Écran du code SMS</span> : l'utilisateur saisit le code reçu, puis confirme la liaison au compte.</p>
+                        </li>
+                    </ol>
+                    <p>Exemple d'appel pour demander le code :</p>
+<pre><code>final phoneLinkService = PhoneLinkService();
+
+await phoneLinkService.sendVerificationCode(
+    phoneNumber: phoneNumber,
+    onCodeSent: (verificationId) {
+        // Afficher l'écran de saisie du code.
+    },
+    onError: (message) {
+        // Afficher une erreur compréhensible.
+    },
+);</code></pre>
+                    <p>Puis, lorsque l'utilisateur confirme le code :</p>
+<pre><code>try {
+    final result = await phoneLinkService.verifyCodeAndLink(
+        smsCode: smsCode,
+    );
+
+    print('UID : ${result.user?.uid}');
+    print('Téléphone : ${result.user?.phoneNumber}');
+} on FirebaseAuthException catch (e) {
+    // Afficher un message adapté à l'erreur.
+}</code></pre>
+                    <p>Dans une application réelle, évitez de laisser les <span class="em">print()</span></p>
+                    <h3>Gérer les erreurs de liaison :</h3>
+                    <p>La liaison peut échouer pour plusieurs raisons.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Code ou situation</th>
+                                <th>Significaton possible</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>no-current-user</td>
+                                <td>Aucun utilisateur n'est connecté.</td>
+                                <td>Demander à l'utilisateur de se connecter.</td>
+                            </tr>
+                            <tr>
+                                <td>invalid-verification-code</td>
+                                <td>Le code SMS est incorrect.</td>
+                                <td>Permettre une nouvelle saisie.</td>
+                            </tr>
+                            <tr>
+                                <td>session-expired</td>
+                                <td>La session de vérification a expiré.</td>
+                                <td>Demander un nouveau code.</td>
+                            </tr>
+                            <tr>
+                                <td>credential-already-in-use</td>
+                                <td>Le numéro ou le credential est déjà associé à un autre compte.</td>
+                                <td>Proposer un parcours de résolution sécurisé.</td>
+                            </tr>
+                            <tr>
+                                <td>provider-already-liked</td>
+                                <td>Le fournisseur est déjà associé au compte.</td>
+                                <td>Vérifier l'état du compte et éviter une seconde liaison.</td>
+                            </tr>
+                            <tr>
+                                <td>required-recent-login</td>
+                                <td>Une authentification récente est nécessaire.</td>
+                                <td>Demander à l'utilisateur de se réauthetifier.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Les codes exacts peuvent varier selon le contexte et la version du SDK. L'application doit gérer les erreurs réellement renvoyées par Firebase, sans supposer que chaque car se présentera toujours de la même manière.</p>
+                    <h3>Vérifier le résultat de la liaison :</h3>
+                    <p>Après une liaison réussie, vous pouvez actualiser les informations de l'utilisateur :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+
+await user?.reload();
+
+final updatedUser = FirebaseAuth.instance.currentUser;
+
+print(updatedUser?.uid);
+print(updatedUser?.phoneNumber);</code></pre>
+                    <p>L'UID doit correspondre à celui du compte existant. Vous pouvez également consulter les fournisseurs associés au compte :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+    
+final providers = user?.providerData.map((provider) =&gt; provider.providerId).toList();
+
+print(providers);</code></pre>
+                    <p>La présence du fournisseur <span class="em">phone</span> dans les données du compte est un indice utile. Il faut cependant distinguer les informations de profil, les fournisseurs liés et les règles qui déterminent les autorisations d'accès.</p>
+                    <h3>Sécurité et bonnes pratiques :</h3>
+                    <ul>
+                        <li>
+                            <p>Ne liez un numéro qu'après sa vérification par le mécanisme Firebase prévu à cet effet.</p>
+                        </li>
+                        <li>
+                            <p>N'effectuez la liaison qu'au compte que l'utilisateur est en train d'utliser.</p>
+                        </li>
+                        <li>
+                            <p>Ne créez pas un deuxième compte simplement pour ajouter un numéro.</p>
+                        </li>
+                        <li>
+                            <p>Gérez explicitement les cas où le numéro est déjà associé à un autre compte.</p>
+                        </li>
+                        <li>
+                            <p>Limitez les demandes de SMS répétées et respectez les protections contre les abus.</p>
+                        </li>
+                        <li>
+                            <p>Pour une opération sensible, exigez une réauthentification si nécessaire.</p>
+                        </li>
+                        <li>
+                            <p>Ne considérez jamais le numéro de téléphone comme une preuve absolue de l'identité civile de la personne.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="module8">Module 8 : Réinitialisation du mot de passe :</h2>
+                    <h3>Présentation du module :</h3>
+                    <p>Dans une application utilisant Firebase Authentication, un utilisateur peut oublier le mot de passe associé à son adresse email.</p>
+                    <p>L'application doit alors lui permettre de demander la réinitialisation de son mot de passe sans que nous ayons à gérer nous-mêmes l'envoi des emails ni le mécanisme de sécurité associé.</p>
+                    <p>Firebase Authentication fournit notamment la méthode :</p>
+<pre><code>sendPasswordResetEmail()</code></pre>
+                    <p>Cette méthode permet d'envoyer à l'utilisateur un email contenant les instructions nécessaires pour réinitialiser son mot de passe.</p>
+                    <p>Dans ce module, nous allons intégrer cette fonctionnalité à notre architecture Flutter existante, en séparant la logique Firebase de l'interface utilisateur.</p>
+                    <h3>Objectifs du module :</h3>
+                    <p>À la fin de ce module, vous serez :</p>
+                    <ul>
+                        <li>
+                            <p>Comprendre le fonctionnement de la réinitialisation du mot de passe.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser <span class="em">sendPasswordResetEmail()</span>.</p>
+                        </li>
+                        <li>
+                            <p>Ajouter une méthode dédiée dans <span class="em">AuthService</span>.</p>
+                        </li>
+                        <li>
+                            <p>Créer un écran de réinitialisation du mot de passe.</p>
+                        </li>
+                        <li>
+                            <p>Valider l'adresse email saisie.</p>
+                        </li>
+                        <li>
+                            <p>Gérer les erreurs et les états de chargement.</p>
+                        </li>
+                        <li>
+                            <p>Informer clairement l'utilisateur du résultat de sa demande.</p>
+                        </li>
+                        <li>
+                            <p>Appliquer les bonnes pratiques de sécurité.</p>
+                        </li>
+                    </ul>
+                    <h3>Comprendre le principe de la réinitialisation :</h3>
+                    <p>La réinitialisation du mot de passe est différente de la connexion et de l'inscription.</p>
+                    <p>Lors d'une inscription, l'utilisateur crée un compte. Lors d'une connexion, il fournit ses identifiants pour accéder à un compte existant. Lors d'une réinitialisation, il demande à Firebase de lui envoyer les instructions permettant de définir un nouveau mot de passe.</p>
+                    <p>Le processus général est le suivant :</p>
+<pre><code>+--------------------------------------+
+|              Utilisateur             |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+|          Écran de connexion          |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+|       « Mot de passe oublié ? »      |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+|       Saisie de l'adresse email      |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+|              AuthService              |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+|       Firebase Authentication       |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+| Envoi de l'email de réinitialisation |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+| L'utilisateur suit les instructions |
+|           reçues par email           |
++-------------------+------------------+
+                    |
+                    v
++--------------------------------------+
+|       Nouveau mot de passe défini    |
++--------------------------------------+</code></pre>
+                    <p>L'application Flutter ne doit jamais demander à l'utilisateur de communiquer son ancien mot de passe pour envoyer une demande de réinitialisation.</p>
+                    <p>Elle n'a pas non plus besoin de générer elle-même un ien de réinitialisation : Firebase prend en charge ce mécanisme.</p>
+                    <h3>Comprendre sendPasswordResetEmail() :</h3>
+                    <p>La méthode s'utilise de la manière suivante :</p>
+<pre><code>await FirebaseAuth.instance.sendPasswordResetEmail(
+    email: 'utilisateur@example.com',
+);</code></pre>
+                    <p>Le paramètre <span class="em">email</span> correspond à l'adresse à laquelle Firebase doit envoyer les instructions.</p>
+                    <p>La méthode est asynchrone. Elle retourne une <span class="em">Future&lt;void&gt;</span> : elle ne renvoie donc pas directement un objet contenant le nouveau mot de passe ou un lien de réinitiaisation.</p>
+                    <p>Il faut attendre son exécution avec <span class="em">await</span> et gérer les éventuelles exceptions.</p>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>L'envoi de l'email ne signifie pas que le mot de passe a déjà été modifié. L'utilisateur doit encore suivre les instructions reçues.</p>
+                    </div>
+                    <h3>Ajouter la méthode dans AuthService :</h3>
+                    <p>Nous allons conserver la séparation déjà adoptée dans notre projet : le service gère les opérations Firebase, tandis que l'écran gère la saisie, le chargement et les messages affichés.</p>
+                    <p>Dans le fichier <span class="em">auth_service.dart</span>, ajoutons la méthode suivante à notre classe <span class="em">AuthService</span> :</p>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+
+class AuthService {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    Future&lt;void&gt; sendPasswordResetEmail({
+        required String email,
+    }) async {
+        await _auth.sendPasswordResetEmail(
+            email: email.trim(),
+        );
+    }
+}</code></pre>
+                    <p>Si notre projet possède déjà une classe <span class="em">AuthService</span>, il faut simplement y ajouter la méthode, sans créer une seconde classe portant le même nom.</p>
+                    <p>La méthode utilise <span class="em">trim()</span> pour supprimer les espaces accidentels au début et à la fin de l'adresse email.</p>
+                    <p>Elle ne transforme pas l'adresse en une autre valeur et ne remplace pas la validation réalisée dans l'interface.</p>
+                    <h3>Créer l'écran de réinitialisation :</h3>
+                    <p>L'écran doit rester simple. Il peut contenir :</p>
+                    <ul>
+                        <li>
+                            <p>Un titre expliquant la fonction de l'écran.</p>
+                        </li>
+                        <li>
+                            <p>Un court texte d'instruction.</p>
+                        </li>
+                        <li>
+                            <p>Un champ pour saisir l'adresse email.</p>
+                        </li>
+                        <li>
+                            <p>Un bouton pour envoyer la demande.</p>
+                        </li>
+                        <li>
+                            <p>Un indicateur de chargement.</p>
+                        </li>
+                        <li>
+                            <p>Un message de résultat.</p>
+                        </li>
+                        <li>
+                            <p>Un moyen de revenir à l'écran de connexion.</p>
+                        </li>
+                    </ul>
+                    <p>Exemple de structure :</p>
+<pre><code>┌─────────────────────────────────────┐
+│                                     │
+│        Mot de passe oublié ?        │
+│                                     │
+│  Saisissez votre adresse email      │
+│  pour recevoir les instructions.    │
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │ Adresse email                 │  │
+│  └───────────────────────────────┘  │
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │   Envoyer les instructions    │  │
+│  └───────────────────────────────┘  │
+│                                     │
+│         Retour à la connexion       │
+│                                     │
+└─────────────────────────────────────┘</code></pre>
+                    <p>Il est préférable de ne pas ajouter de champ pour le nouveau mot de passe sur cet écran. La modification se réalise à travers le parcours sécurisé de réinitialisation géré par Firebase.</p>
+                    <h3>Valider l'adresse email :</h3>
+                    <p>Avant d'envoyer la demande, nous pouvons vérifier que le champ n'est pas vide et que sa valeur présente une forme raisonnable d'adresse email.</p>
+                    <p>Exemple :</p>
+<pre><code>bool isValidEmail(String email) {
+    final value = email.trim();
+
+    return RegExp(
+        r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+    ).hasMatch(value);
+}</code></pre>
+                    <p>Cette vérification est volontairement simple. Elle évite certaines erreurs courantes de saisie, mais ne garantit pas que l'adresse existe ni que l'utilisateur peut y accéder.</p>
+                    <p>Firebase reste responsable du traitement de la demande.</p>
+                    <h3>Gérer le chargement et les erreurs :</h3>
+                    <p>Pendant l'envoi de la demande, il faut empêcher les clics répétés et afficher un indicateur de chargement.</p>
+                    <p>Les états principaux de l'écran sont :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Prêt</span> : l'utilisateur peut saisir son adresse email.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Chargement</span> : la demande est en cours de traitement.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Résultat</span> : un message indique que la demande a été traitée, ou qu'une erreur est survenue.</p>
+                        </li>
+                    </ul>
+                    <p>Exemple de traitement dans une méthode de l'écran :</p>
+<pre><code>bool isLoading = false;</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
