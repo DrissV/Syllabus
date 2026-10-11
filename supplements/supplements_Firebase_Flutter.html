@@ -5256,6 +5256,111 @@ if (profile != null) {
                     <p>L'objectif est de construire une navigation réactive, capable de s'adapter automatiquement à l'état d'authentification, sans devoir gérer manuellement chaque transition dans tous les écrans.</p>
                     <h3>Objectifs du module :</h3>
                     <p>À la fin de ce module, vous saurez :</p>
+                    <ul>
+                        <li>
+                            <p>Comprendre ce qu'est l'état d'authentification.</p>
+                        </li>
+                        <li>
+                            <p>Distinguer l'état de connexion de l'état du profil utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser <span class="em">authStateChanges()</span> pour observer les changements.</p>
+                        </li>
+                        <li>
+                            <p>Afficher des écrans différents selon l'état de l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser <span class="em">StreamBuilder</span> pour construire une interface réactive.</p>
+                        </li>
+                        <li>
+                            <p>Gérer les états de chargement et les erreurs.</p>
+                        </li>
+                        <li>
+                            <p>Protéger les pages nécessitant une authentification.</p>
+                        </li>
+                        <li>
+                            <p>Comprendre le comportement d'une session lors du redémarrage de l'application.</p>
+                        </li>
+                        <li>
+                            <p>Éviter les redirections et les navigations inutiles.</p>
+                        </li>
+                    </ul>
+                    <h3>Comprendre l'état d'authentification :</h3>
+                    <p>L'état d'authentification représente la présence ou l'absence d'un utilisateur actuellement authentifié.</p>
+                    <p>Dans notre application, nous pouvons distinguer trois situations principales :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Utilisateur non connecté</span> : Aucun utilisateur n'est actuellement authentifié. L'application doit afficher les écrans publics, comme la connexion ou l'inscription.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Utilisateur connecté</span> : Firebase Authentication fournit un objet <span class="em">User</span>. L'application peut afficher les écrans réservés aux utiisateurs authentifiés.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">État en cours de détermination</span> : Au démarrage, l'application doit attendre que Firebase fournisse l'état d'authentification. Il est préférable d'afficher un indicateur de chargement plutôt que de montrer brièvement l'écran de connexion à un utilisateur déjà connecté.</p>
+                        </li>
+                    </ul>
+                    <p>Le schéma général est le suivant :</p>
+<pre><code>Démarrage de l'application
+          │
+          ▼
+Vérification de l'état Firebase
+          │
+          ├── Chargement
+          │
+          ├── Aucun utilisateur
+          │         │
+          │         ▼
+          │    Écran public
+          │
+          └── Utilisateur connecté
+                    │
+                    ▼
+              Écran principal</code></pre>
+                    <h3>Utiliser authStateChanges() :</h3>
+                    <p>Firebase Authentication expose la méthode :</p>
+<pre><code>FirebaseAuth.instance.authStateChanges()</code></pre>
+                    <p>Cette méthode retourne un <span class="em">Stream&lt;User?&gt;</span>.</p>
+                    <p>Un <span class="em">Stream</span> permet de recevoir des événements au fil du temps. Ici, chaque événement contient soit un utilisateur authentifié, soit <span class="em">null</span>.</p>
+                    <p>Exemple :</p>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+
+final FirebaseAuth auth = FirebaseAuth.instance;
+
+Stream&lt;User?&gt; get authStateChanges {
+    return auth.authStateChanges();
+}</code></pre>
+                    <p>Le flux émet l'état initial de l'authentification, puis les changements liés notamment à la connexion et à la déconnexion.</p>
+                    <p>Il permet donc à l'interface de réagir aux changements sans devoir vérifier manuellement l'état de l'utilisateur après chaque opération.</p>
+                    <h3>Comprendre les différents flux Firebase :</h3>
+                    <p>Firebase Authentication propose plusieurs flux d'observation. Ils ne répondent pas exactement aux mêmes besoins.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Méthode</th>
+                                <th>Fonction principale</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>authStateChanges()</td>
+                                <td>Détecter les connexions et déconnexions.</td>
+                            </tr>
+                            <tr>
+                                <td>idTokenChanges()</td>
+                                <td>Observer les changements d'état associés au jeton d'identification.</td>
+                            </tr>
+                            <tr>
+                                <td>userChanges()</td>
+                                <td>Observer les changements concernant l'objet utilisateur, notamment certaines mises à jour de profil.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Pour notre navigation principale, <span class="em">authStateChanges()</span> constitue généralement un bon point de départ.</p>
+                    <p>Si l'application doit réagir à des modifications de profill ou à des mises à jour de jeton, les autres flux peuvent être plus adaptés.</p>
+                    <p>Il faut choisir le flux en fonction du comportement attendu, plutôt que de multiplier les abonnements sans nécessité.</p>
+                    <h3>Créer un écran de décision avec StreamBuilder :</h3>
+                    <p>Flutter fournit le widget <span class="em">StreamBuilder</span>, qui permet de construire une interface à partir des événements d'un flux.</p>
+                    <p>Nous allons l'utiliser pour déterminer quel écran afficher.</p>
                 </article>
             <!-- fin de section -->
             </section>
