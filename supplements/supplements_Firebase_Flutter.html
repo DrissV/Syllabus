@@ -57,6 +57,7 @@
                     <li><a href="#module7">Module 7 : Liaison du numéro de téléphone à un compte utilisateur</a></li>
                     <li><a href="#module8">Module 8 : Réinitialisation du mot de passe</a></li>
                     <li><a href="#module9">Module 9 : Gestion du profil utilisateur avec Firebase Authentication et Cloud Firestore</a></li>
+                    <li><a href="#module10">Module 10 : Gestion de l'état d'authentification et des sessions utilisateur</a></li>
                 </ol>
             </nav>
             
@@ -5073,6 +5074,188 @@ final FirebaseFirestore db = FirebaseFirestore.instance;</code></pre>
                     <h3>Créer un service de profil :</h3>
                     <p>Pour éviter de placer toutes les opérations Firestore dans les widgets, nous allons créer un service dédié.</p>
                     <p>Par exemple, dans <span class="em">user_profile_service.dart</span> :</p>
+<pre><code>import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class UserProfileService {
+    final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    CollectionReference&lt;Map&lt;String, dynamic&gt;&gt; get _users =&gt; _db.collection('users');
+
+    Future&lt;void&gt; createProfile({
+        required String firstName,
+        required String lastName,
+    }) async {
+        final user = _auth.currentUser;
+
+        if (user == null) {
+            throw StateError(
+                'Aucun utilisateur authentifié.',
+            );
+        }
+
+        await _users.doc(user.uid).set({
+            'firstName': firstName.trim(),
+            'lastName': lastName.trim(),
+            'email': user.email,
+            'photoUrl': user.photoURL,
+            'createdAt': FieldValue.serverTimestamp(),
+        });
+    }
+}</code></pre>
+                    <p>La méthode <span class="em">createProfile()</span> récupère l'utilisateur actuellement authentifié.</p>
+                    <p>Si aucun utilisateur n'est connecté, elle interrompt l'opération. Sinon, elle crée le document correspondant à son UID.</p>
+                    <p><span class="em">FieldValue.serverTimestamp()</span> permet de demander à Firestore d'enregistrer un horodatage côté serveur.</p>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Cette méthode utilise <span class="em">set()</span> et peut remplacer les données d'un document déjà existant. Pour une création qui ne doit jamais écran un profil existant, il faut vérifier l'existence du document ou utiliser une stratégie de création adapatée.</p>
+                    </div>
+                    <h3>Créer le profil après l'inscription :</h3>
+                    <p>Après la création du compte avec Firebase Authentication, nous pouvons créer le document Firestore correspondant.</p>
+                    <p>Exemple de séquence :</p>
+<pre><code>final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+    email: email.trim(),
+    password: password,
+);
+
+final user = credential.user;
+
+if (user == null) {
+    throw StateError(
+        'Le compte a été créé sans utilisateur disponible.',
+    );
+}
+
+await UserProfileService().createProfile(
+    firstName: firstName,
+    lastName: lastName,
+);</code></pre>
+                    <p>Dans une application réelle, il faut décider comment traiter le cas où la création du compte Authentication réussit, mais où l'écriture Firestore échoue.</p>
+                    <p>Les deux opérations ne constituent pas une transaction unique : un compte peut donc exister même si son profil Firestore n'a pas été créé.</p>
+                    <p>Une stratégie possible consiste à afficher une erreur récupérable et à permettre de réessayer la création du profil, sans recréer inutilement le compte Authentication.</p>
+                    <h3>Récupérer le profil utilisateur :</h3>
+                    <p>Pour lire le document associé à l'utilisateur connecté, nous pouvons ajouter cette méthode au service :</p>
+<pre><code>Future&lt;Map&lt;String, dynamic&gt;?&gt; getProfile() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+        throw StateError(
+            'Aucun utilisateur authentifié.',
+        );
+    }
+
+    final snapshoy = await _users.doc(user.uid).get();
+
+    if (!snapshot.exists) {
+        return null;
+    }
+
+    return snapshot.data();
+}</code></pre>
+                    <p>Cette méthode retourne les données du profil si le document existe. Sinon, elle retourne <span class="em">null</span>.</p>
+                    <p>Il faut distinguer deux situations :</p>
+                    <ul>
+                        <li>
+                            <p>Aucun utilisateur n'est connecté.</p>
+                        </li>
+                        <li>
+                            <p>Un utilisateur est connecté, mais son document de profil n'existe pas encore.</p>
+                        </li>
+                    </ul>
+                    <p>Ces deux cas ne doivent pas être traités comme s'ils étaient identiques.</p>
+                    <h3>Modifier les informations du profil :</h3>
+                    <p>Nous pouvons utiliser <span class="em">update()</span> pour modifier certains champs sans remplacer l'ensemble du document.</p>
+                    <p>Ajoutons cette méthode :</p>
+<pre><code>Future&lt;voidégt; updateProfile({
+    required String firstName,
+    required String lastName,
+}) async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+        throw StateError(
+            'Aucun utilisateur authentifié.',
+        );
+    }
+
+    await _users.doc(user.uid).update({
+        'firstName': firstName.trim(),
+        'lastName': lastName.trim(),
+    });
+}</code></pre>
+                    <p>Contrairement à <span class="em">set()</span>, la méthode <span class="em">update()</span> échoue si le document n'existe pas.</p>
+                    <p>Il faut donc s'assurer que le profil a été créé avant de permettre sa modification.</p>
+                    <p>Cette méthode ne modifie pas l'adresse email de Firebase Authentication. Elle modifie uniquement les données enregistrées dans Firestore.</p>
+                    <p>Si l'adresse email change, il faut également gérer cette modification à travers les méthodes appropriées de Firebase Authentication et maintenir les données du profil cohérentes avec l'état du compte.</p>
+                    <h3>Sécuriser les données avec les règles Firestore :</h3>
+                    <p>Il ne suffoy âs de vérifier dans Flutter que l'utilisateur est connecté. Les règles de sécurité doivent aussi empêcher un utilisateur de lire ou de modifier le profil d'un autre utilisateur.</p>
+                    <p>Une règle de départ pour une collection où chaque utilisateur peut accéder uniquement à son propre document est :</p>
+<pre><code>rules_version = '2';
+    
+service cloud.firestore {
+    match /databases/{database}/documents {
+        match /users/{userId} {
+            allow read, write:
+                if request.auth != null &amp;&amp; request.auth.uid == userId;
+        }
+    }
+}</code></pre>
+                    <p>Cette règle vérifie que :</p>
+                    <ul>
+                        <li>
+                            <p>L'utilisateur est authentifié.</p>
+                        </li>
+                        <li>
+                            <p>L'UID associé à sa session correspond à l'identifiant du document.</p>
+                        </li>
+                    </ul>
+                    <p>Il s'agit d'un exemple pédagogique à adapter avant la mise en production. Il ne valide pas le format des données, les champs autorisés ni les changements possibles. Pour une application réelle, il est préférable de définir séparément les permissions de création, de lecture et de modification, puis de valider les champs et leurs types.</p>
+                    <p>Il ne faut jamais publier une règle autorisant sans restriction la lecture et l'écriture de toute la base de données.</p>
+                    <h3>Afficher les informations dans Flutter :</h3>
+                    <p>Une fois le profil récupéré, l'écran peut afficher le nom et le prénom de l'utilisateur.</p>
+                    <p>Exemple d'utilisation :</p>
+<pre><code>final profileService = UserProfileService();
+
+final profile = await profileService.getProfile();
+
+if (profile != null) {
+    final firstName = profile['firstName'] as String? ?? '',
+
+    final lastName = profile['lastName'] as String? ?? '';
+
+    // Utiliser ces valeurs dans l'interface.
+}</code></pre>
+                    <p>Dans un widget Flutter, cette lecture asynchrone doit être intégrée à une gestion d'état appropriée, par exemple avec <span class="em">FutureBuilder</span>, un <span class="em">StatefulWidget</span> ou le gestionnaire d'état déjà adopté dans le projet.</p>
+                    <p>Il faut également prévoir un affichage de chargement et un message si le document n'existe pas.</p>
+                </article>
+                <article>
+                    <h2 id="module10">Module 10 : Gestion de l'état d'authentification et des sessions utilisateur :</h2>
+                    <h3>Présentation du module :</h3>
+                    <p>Dans une application Flutter utilisant Firebase Authentication, il est essentiel de savoir si un utilisateur est connecté ou non.</p>
+                    <p>Cette information détermine notamment :</p>
+                    <ul>
+                        <li>
+                            <p>L'écran à afficher au démarrage de l'application.</p>
+                        </li>
+                        <li>
+                            <p>L'accès aux pages réservées aux utilisateurs authentifiés.</p>
+                        </li>
+                        <li>
+                            <p>Le comportement de l'appication après une connexion.</p>
+                        </li>
+                        <li>
+                            <p>Le retour à l'écran de connexion après une déconnexion.</p>
+                        </li>
+                        <li>
+                            <p>La mise à jour de l'interface lorsque l'état d'authentification change.</p>
+                        </li>
+                    </ul>
+                    <p>Firebase Authentication fournit plusieurs mécanismes permettant d'observer cet état. Nous allons principalement utiliser <span class="em">authStateChanges()</span>, qui émet un événement lorsqu'un utilisateur se connecte ou se déconnecte.</p>
+                    <p>L'objectif est de construire une navigation réactive, capable de s'adapter automatiquement à l'état d'authentification, sans devoir gérer manuellement chaque transition dans tous les écrans.</p>
+                    <h3>Objectifs du module :</h3>
+                    <p>À la fin de ce module, vous saurez :</p>
                 </article>
             <!-- fin de section -->
             </section>
