@@ -4693,7 +4693,7 @@ print(providers);</code></pre>
     email: 'utilisateur@example.com',
 );</code></pre>
                     <p>Le paramètre <span class="em">email</span> correspond à l'adresse à laquelle Firebase doit envoyer les instructions.</p>
-                    <p>La méthode est asynchrone. Elle retourne une <span class="em">Future&lt;void&gt;</span> : elle ne renvoie donc pas directement un objet contenant le nouveau mot de passe ou un lien de réinitiaisation.</p>
+                    <p>La méthode est asynchrone. Elle retourne une <span class="em">Future&lt;void&gt;</span> : elle ne renvoie donc pas directement un objet contenant le nouveau mot de passe ou un lien de réinitialisation.</p>
                     <p>Il faut attendre son exécution avec <span class="em">await</span> et gérer les éventuelles exceptions.</p>
                     <div class="bordure important">
                         <img src="../images/important.png" alt="Important" class="float_left">
@@ -4790,7 +4790,149 @@ class AuthService {
                         </li>
                     </ul>
                     <p>Exemple de traitement dans une méthode de l'écran :</p>
-<pre><code>bool isLoading = false;</code></pre>
+<pre><code>bool isLoading = false;
+
+Future&lt;void&gt; resetPassword(String email) async {
+    if (isLoading) {
+        return;
+    }
+
+    final value = email.trim();
+
+    if (!isValidEmail(value)) {
+        // Afficher un message demandant une adresse valide.
+        return;
+    }
+
+    isLoading = true;
+
+    try {
+        await authService.sendPassworrdResetEmail(
+            email: value,
+        );
+
+        // Afficher un message de confirmation.
+    } on FirebaseAuthException catch (e) {
+        // Traduire l'erreur en un message adapté.
+    } catch (_) {
+        // Afficher un message générique.
+    } finally {
+        isLoading = false;
+    }
+}</code></pre>
+                    <p>Cet extrait illustre la logique à intégrer à l'état de notre écran. Dans un widget Flutter complet, les modifications d'état doivent être notifiées à l'interface, par exemple avec <span class="em">setState()</span> dans un <span class="em">StatefulWidget</span>, ou avec le mécanisme de gestion d'état par le projet.</p>
+                    <h3>Comprendre les erreurs possibles :</h3>
+                    <p>Plusieurs erreurs peuvent survenir lors d'une demande de réinitialisation.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Code ou situation</th>
+                                <th>Traitement recommandé</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>invalid-email</td>
+                                <td>Demander à l'utilisateur de vérifier son adresse.</td>
+                            </tr>
+                            <tr>
+                                <td>user-not-found</td>
+                                <td>Ne pas révéler inutilement si un compte existe.</td>
+                            </tr>
+                            <tr>
+                                <td>too-many-requests</td>
+                                <td>Inviter l'utilisateur à patienter avant de réessayer.</td>
+                            </tr>
+                            <tr>
+                                <td>network-request-failed</td>
+                                <td>Vérifier la connexion Internet et réessayer.</td>
+                            </tr>
+                            <tr>
+                                <td>Erreur inconnue</td>
+                                <td>Afficher un message général et compréhensible.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Les codes d'erreur disponibles peuvent varier selon la configuration et la version du SDK.</p>
+                    <p><span class="em">Attention à la confidentialité</span> : selon la configuration de Firebase Authentication, les protections contre l'énumération des emails peuvent modifier les erreurs renvoyées. L'interface ne doit pas révéler systématiquement si une adresse email est associée à un compte.</p>
+                    <p>Une réponse utilisateur prudente peut être :</p>
+                    <p><q>Si un compte peut recevoir les instructions à cette adresse, un email de réinitialisation sera envoyé. Vérifiez votre boîte de réception et vos courriers indésirables.</q></p>
+                    <h3>Intégrer l'accès depuis l'écran de connexion :</h3>
+                    <p>L'écran de connexion peut proposer un lien <q>Mot de passe oublié ?</q>.</p>
+                    <p>Lorsque l'utilisateur appuie dessus, l'application ouvre l'écran de réinitialisation.</p>
+                    <p>Si l'adresse email est déjà saisie sur l'écran de connexion, nous pouvons la transmettre au nouvel écran afin d'éviter à l'utilisateur de la saisir une seconde fois. Il doit toutefois pouvoir la modifier.</p>
+                    <p>Le parcours devient :</p>
+<pre><code>+----------------------------------+
+|       Écran de connexion         |
++----------------+-----------------+
+                 |
+          +------+------+
+          |             |
+          v             v
++----------------+ +----------------------+
+| Connexion      | | Mot de passe oublié ?|
+| normale        | +----------+-----------+
++----------------+            |
+                              v
+                  +------------------------+
+                  | Écran de réinitialisation |
+                  +-----------+------------+
+                              |
+                              v
+                  +------------------------+
+                  | Demande envoyée à      |
+                  | Firebase               |
+                  +-----------+------------+
+                              |
+                              v
+                  +------------------------+
+                  | Retour à la connexion  |
+                  +------------------------+</code></pre>
+                    <p>Après l'envoi de la demande, il n'est pas nécessaire de déconnecter l'utilisateur ni de créer une nouvelle session.</p>
+                    <h3>Configurer les emails dans Firebase :</h3>
+                    <p>Dans la console Firebase, il est important de vérifier la configuration de Firebase Authentication et des modèles d'emails.</p>
+                    <p>Il faut notamment contrôler :</p>
+                    <ul>
+                        <li>
+                            <p>Que la méthode de connexion par email et mot de passe est activée si elle est utilisée par le projet.</p>
+                        </li>
+                        <li>
+                            <p>Que le mod!me d'email de réinitialisation est correctement configuré.</p>
+                        </li>
+                        <li>
+                            <p>Que le nom de l'application et les informations affichées sont appropriés.</p>
+                        </li>
+                        <li>
+                            <p>Que les domaines et les paramètres de redirection sont configurés lorsque le parcours utilisé le nécessite.</p>
+                        </li>
+                    </ul>
+                    <p>Le contenu et le fonctionnement exacts de l'email dépendent de la configuration Firebase.</p>
+                    <h3>Bonnes pratiques de sécurité :</h3>
+                    <p>Quelques règles doivent être respectées :</p>
+                    <ul>
+                        <li>
+                            <p>Ne jamais demander à l'utilisateur de transmettre son mot de passe actuel par email.</p>
+                        </li>
+                        <li>
+                            <p>Ne jamais stocker un nouveau mot de passe en clair dans Firestore.</p>
+                        </li>
+                        <li>
+                            <p>Ne pars générer soi-même des liens de réinitialisation improvisés.</p>
+                        </li>
+                        <li>
+                            <p>Ne pas révéler inutilement si une adresse email possède un compte.</p>
+                        </li>
+                        <li>
+                            <p>Limiter les demandes répétées et expliquer les erreurs de façon compréhensible.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser une configuration Firebase adaptée aux environnements de développement et de production.</p>
+                        </li>
+                        <li>
+                            <p>Tester le parcours complet, de la demande initiale jusqu'à la définition du nouveau mot de passe.</p>
+                        </li>
+                    </ul>
+                    <p>La sécurité du parcours repose en grande partie sur le mécanisme fourni par Firebase. Notre responsabilité est de l'intégrer correctement et de ne pas divulguer d'informations sensibles dans l'interface.</p>
                 </article>
             <!-- fin de section -->
             </section>
