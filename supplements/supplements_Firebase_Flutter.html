@@ -5894,6 +5894,191 @@ service cloud.firestore {
                     <h2 id="module12">Module 12 : Suppression d'un compte utilisateur et nettoyage des données :</h2>
                     <h3>Présentation du module :</h3>
                     <p>Dans une application utilisant Firebase Authentication et Cloud Firestore, un utilisateur doit pouvoir demander la suppression de son compte lorsque cela est nécessaire.</p>
+                    <p>Cette opération ne consiste pas uniquement à supprimer l'utilisateur de Firebase Authentication. L'application peut également avoir enregistré des informations dans Firestore, des fichiers dans Cloud Storage ou d'autres données associées à son UID.</p>
+                    <p>Nous devons donc définir une stratégie de suppression qui tient compte des différents services utilisés par l'application.</p>
+                    <p>Dans ce module, nous allons étudier la suppression d'un compte, la gestion des erreurs, la suppression des données associées et les précautions nécessaires pour éviter de laisser des données orphelines.</p>
+                    <h3>Objectifs du module :</h3>
+                    <p>À la fin de ce module, vous saurez :</p>
+                    <ul>
+                        <li>
+                            <p>Comprendre la différence entre déconnexion et suppression d'un compte.</p>
+                        </li>
+                        <li>
+                            <p>Supprimer un compte avec Firebase Authentication.</p>
+                        </li>
+                        <li>
+                            <p>Gérer les erreurs liées à la suppression.</p>
+                        </li>
+                        <li>
+                            <p>Comprendre la notion de réauthentification.</p>
+                        </li>
+                        <li>
+                            <p>Identifier les données associées à un utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Supprimer les documents Firestore concernés.</p>
+                        </li>
+                        <li>
+                            <p>Prévoir la suppression des fichiers stockés dans Cloud Storage.</p>
+                        </li>
+                        <li>
+                            <p>Protéger l'opération contre les demandes non autorisées.</p>
+                        </li>
+                        <li>
+                            <p>Éviter les suppressions partielles et les incohérences entre services.</p>
+                        </li>
+                    </ul>
+                    <h3>Comprendre les différentes opérations :</h3>
+                    <p>Il est important de distinguer trois opérations.</p>
+                    <ul>
+                        <li>
+                            <h4>La déconnexion :</h4>
+                            <p>La déconnexion termine la session actuelle, mais conserve le compte et ses données.</p>
+<pre><code>await FirebaseAuth.instance.signOut();</code></pre>
+                        </li>
+                        <li>
+                            <h4>La suppression du compte Authentication :</h4>
+                            <p>Cette opération supprime le compte d'authentification de Firebase. Elle ne supprime pas automatiquement tous les documents Firestore ou tous les fichiers associés.</p>
+                        </li>
+                        <li>
+                            <h4>La suppression complète des données :</h4>
+                            <p>Elle consiste à supprimer les données que l'application doit effacer dans les différents services, conformément à sa politique de conservation et aux obligations applicables.</p>
+                        </li>
+                    </ul>
+                    <p>Le schéma général est le suivant :</p>
+<pre><code>Demande de suppression
+        │
+        ▼
+Vérification de l'identité
+        │
+        ▼
+Inventaire des données associées
+        │
+        ▼
+Suppression des données applicatives
+        │
+        ▼
+Suppression du compte Authentication
+        │
+        ▼
+Confirmation du résultat</code></pre>
+                    <p>L'ordre exact dépend de l'architecture. Il faut notamment prévoir ce qui se passe si une étape échoue après que d'autres opérations ont réussi.</p>
+                    <h3>Supprimer le compte avec Firebase Authentication :</h3>
+                    <p>Firebase Authentication fournit la méthode <span class="em">delete()</span> sur l'objet <span class="em">User</span>.</p>
+                    <p>Exemple :</p>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+
+Future&lt;void&gt; deleteAuthAccount() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+        throw StateError(
+            'Aucun utilisateur authentifié.',
+        );
+    }
+
+    await user.delete();
+}</code></pre>
+                    <p>Cette méthode supprime le compte Firebase Authentication correspondant à l'utilisateur actuellement connecté.</p>
+                    <p>Toutefois, Firebase peut exiger une authentification récente avant d'autoriser cette opération.</p>
+                    <p>Si les identifiants utilisés pour la connexion sont trop anciens, l'appel peut échouer avec l'erreur <span class="em">requires-recent-login</span>.</p>
+                    <p>Dans ce cas, l'application doit demander à l'utilisateur de se réauthentifier, puis lui permettre de recommencer l'opération.</p>
+                    <p>Il ne faut pas contourner cette protection : elle contribue à éviter qu'une personne disposant d'une session laissée ouverte puisse supprimer un compte sans contrôle suffisant.</p>
+                    <h3>Comprendre la réauthentification :</h3>
+                    <p>La réauthentification consiste à vérifier à nouveau l'identité de l'utilisateur avant une opération sensible.</p>
+                    <p>Elle peut être nécessaire pour des actions comme :</p>
+                    <ul>
+                        <li>
+                            <p>La suppression du compte.</p>
+                        </li>
+                        <li>
+                            <p>La modification de certaines informations sensibles.</p>
+                        </li>
+                        <li>
+                            <p>Certaines opérations de sécurité liées aux identifiants.</p>
+                        </li>
+                    </ul>
+                    <p>La méthode à utiliser dépend du fournisseur d'authentification du compte : email et mot de passe, téléphone ou fournisseur externe.</p>
+                    <p>Pour un compte utilisant une adresse email et un mot de passe, une réauthentification peut être réalisée ainsi :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+
+if (user == null || user.email == null) {
+    throw StateError(
+        'Utilisateur ou adresse email indisponible.',
+    );
+}
+
+final credential = EmailAuthProvider.credential(
+    email: user.email!,
+    password: passwordSaisiParUtilisateur,
+);
+
+await user.reauthenticateWithCredential(credential);</code></pre>
+                    <p>La variable <span class="em">passwordSaisiParUtilisateur</span> représente le mot de passe saisi dans un formulaire sécurisé. Il ne faut ni le coder en dur ni le stocker durablement dans l'application.</p>
+                    <p>Après la réauthentification réussie, l'application peut relancer l'opération de suppression.</p>
+                    <p>Pour les autres fournisseurs, il faut utiliser le mécanisme de réauthentification correspondant.</p>
+                    <h3>Identifier les données associées au compte :</h3>
+                    <p>Avant de supprimer un compte, nous devons déterminer quelles données lui appartiennent.</p>
+                    <p>Dans notre architecture, nous avons notamment :</p>
+<pre><code>Firebase Authentication
+└── UID utilisateur
+
+Cloud Firestore
+└── users/{uid}
+
+Cloud Storage
+└── Fichiers associés à l'utilisateur
+
+Autres services éventuels
+└── Données liées au compte</code></pre>
+                    <p>Le document <span class="em">users/{uid}</span> peut contenir le profil. D'autres collections peuvent contenir des commandes, des publicatios, des messages ou des préférences.</p>
+                    <p>Il ne suffit donc pas de supprimer le document principal du profil pour garantir que toutes les données ont été supprimées.</p>
+                    <p>Il faut établir un inventaire des données et déterminer lesquelles doivent être supprimées, conservées ou anonymisées selon les règles du projet.</p>
+                    <h3>Supprimer le document du profil Firestore :</h3>
+                    <p>Pour supprimer le document principal du profil, nous pouvons utiliser :</p>
+<pre><code>import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+Future&gt;void&gt; deleteUserProfile(String uid) {
+    await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .delete();
+}</code></pre>
+                    <p>Le paramètre <span class="em">uid</span> doit provenir de l'utilisateur concerné et être contrôlé par l'architecture de sécurité.</p>
+                    <p>Les règles Firestore doivent empêcher un utilisateur de supprimer le profil d'un autre personne.</p>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>La suppression d'un document Firestore ne supprime pas automatiquement ses sous-collections. Celles-ci doivent être identifiées et traitées séparément.</p>
+                    </div>
+                    <p>Pour des données nombreuses ou imbriquées, un traitement côté serveur est souvent préférable.</p>
+                    <h3>Comprendre le problème des suppressions partielles :</h3>
+                    <p>Firebase Authentication, Firestore et Cloud Storage sont des services distincts. Une opération exécutée dans l'un ne garantit pas la réussite des opérations effectuées dans les autres.</p>
+                    <p>Imaginons le scénario suivant :</p>
+                    <ol>
+                        <li>
+                            <p>Le document de profil est supprimé.</p>
+                        </li>
+                        <li>
+                            <p>La suppression du compte Authentication échoue.</p>
+                        </li>
+                        <li>
+                            <p>L'utilisateur reste authentifié, mais son profil n'existe plus.</p>
+                        </li>
+                    </ol>
+                    <p>Ou, à l'inverse :</p>
+                    <ol>
+                        <li>
+                            <p>Le compte Authentication est supprimé.</p>
+                        </li>
+                        <li>
+                            <p>La suppression des fichiers échoue.</p>
+                        </li>
+                        <li>
+                            <p>Des fichiers associés à un UID supprimé restent présents.</p>
+                        </li>
+                    </ol>
+                    <p>Ces situations montrent pourquoi une suppression multi-service doit être conçue comme un processus contrôlé.</p>
                     
                 </article>
             <!-- fin de section -->
