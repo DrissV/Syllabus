@@ -5667,6 +5667,66 @@ Rôle et permissions
     return const AdminButton();
 }</code></pre>
                     <p>Cette condition peut être utile pour adapter l'interface, mais elle ne constitue pas une protection suffisante.</p>
+                    <p>Un utilisateur peut modifier le code de son application, envoyer directement des requêtes ou tenter d'accéder aux données en dehors de l'interface prévue.</p>
+                    <p>Par conséquent, la vérfication du rôle doit également être effectuée par le service qui protège les données.</p>
+                    <p>Dans une application Firebase, les règles de sécurité Firestore peuvent contrôler les accès aux documents, tandis qu'un backend de confiance peut vérifier les permissions avant d'effectuer une opération administrative.</p>
+                    <p><span class="em">Principe essentiel</span> : l'interface Flutter améliore l'expérience utilisateur, mais la sécurité doit être appliquée côté serveur.</p>
+                    <h3>Choisir une stratégie pour stocker les rôles :</h3>
+                    <p>Deux approches sont courantes :</p>
+                    <ol>
+                        <li>
+                            <h4>Utiliser les custom claims :</h4>
+                            <p>Les <span class="em">custom claims</span> sont des attributs associés au jeton d'identification Firebase de l'utilisateur.</p>
+                            <p>Nous pouvons, par exemple, associer cette revendication à un compte administrateur :</p>
+<pre><code>{
+    "admin": true
+}</code></pre>
+                            <p>Les règles Firestore peuvent ensuite vérifier cette revendication.</p>
+                            <p>Cette solution est adaptée aux rôles qui contrôlent l'accès à des fonctionnalités sensibles.</p>
+                            <p>Les <span class="em">custom claims</span> doivent être attribués exclusivement depuis un environnement de confiance, par exemple un backend utilisant le SDK Admin Firebase.</p>
+                        </li>
+                        <li>
+                            <h4>Stocker des informations de rôle dans Firestore :</h4>
+                            <p>Il est également possible d'enregistrer des informations de rôle dans un document utilisateur.</p>
+                            <p>Par exemple :</p>
+<pre><code>users
+└── UID_UTILISATEUR
+    ├── firstName
+    ├── lastName
+    └── preferences</code></pre>
+                            <p>Dans cette architecture, les informations de profil peuvent rester dans Firestore.</p>
+                            <p>Cependant, il ne faut pas considérer automatiquement un champ <span class="em">role</span> modifiable par l'utilisateur comme une preuve fiable de ses permissions.</p>
+                            <p>Si l'application utilise un champ de rôle dans Firestore pour contrôler les accès, les règles doivent empêcher les utilisateurs de modifier eux-mêmes ce champ. La création et la modification des rôles doivent être réalisées par un processus de confiance.</p>
+                            <p>Pour notre exemple, nous allons utiliser les <span class="em">custom claims</span> pour identifier les administrateurs.</p>
+                        </li>
+                    </ol>
+                    <h3>Attribuer un rôle avec le SDK Admin Firebase :</h3>
+                    <p>Les revendications personnalisées ne doivent pas être définies directement depuis l'application Flutter.</p>
+                    <p>L'application cliente ne doit pas pouvoir exécuter librement une opération comme :</p>
+<pre><code>// À ne pas faire : ce n'est pas une API cliente valide pour attribuer des privilèges administratifs.</code></pre>
+                    <p>L'attribution des rôles doit être réalisée depuis un environnement de confiance utilisant le SDK Admin Firebase, par exemple une fonction backend protégée.</p>
+                    <p>Exemple en Node.js :</p>
+<pre><code>const { getAuth } = require("firebase-admin/auth");
+
+async function grantAdminRole(uid) {
+    await getAuth().setCustomUserClaims(uid, {
+        admin: true,
+    });
+}</code></pre>
+                    <p>Cet extrait illustre l'opération d'attribution. Il ne doit pas être exposé comme une fonction publique que n'importe quel utilisateur pourrait appeler sans contrôle.</p>
+                    <p>Avant d'attribuer un rôle, le backend doit vérifier que la demande provient d'une personne ou d'un processus autorisé.</p>
+                    <p>Pour retirer le rôle administrateur, le backend peut mettre à jour les revendications du compte en conservant les autres revendications nécessaires :</p>
+<pre><code>const { getAuth } = require("firebase-admin/auth");
+
+async function revokeAdminRole(uid) {
+    await getAuth().setCustomUserClaims(uid, {
+        admin: false,
+    });
+}</code></pre>
+                    <p>Attention : <span class="em">setCustomUserClaims()</span> remplace l'ensemble des custom claims existantes. Dans une application qui utilise plusieurs revendications, il faut lire les revendications actuelles et construire soigneusement le nouvel objet avant de l'enregistrer.</p>
+                    <p>Il faut également prévoir comment actualiser le jeton du compte concerné pour que les nouvelles revendications soient prises en compte.</p>
+                    <h3>Lire le rôle depuis Flutter :</h3>
+                    <p>Côté Flutter, nous pouvons récupérer les revendications du jeton de l'utilisateur connecté.</p>
                     
                 </article>
             <!-- fin de section -->
