@@ -5727,7 +5727,67 @@ async function revokeAdminRole(uid) {
                     <p>Il faut également prévoir comment actualiser le jeton du compte concerné pour que les nouvelles revendications soient prises en compte.</p>
                     <h3>Lire le rôle depuis Flutter :</h3>
                     <p>Côté Flutter, nous pouvons récupérer les revendications du jeton de l'utilisateur connecté.</p>
-                    
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+
+Future&lt;bool&gt; isCurrentUserAdmin() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+        return false;
+    }
+
+    final tokenResult = await user.getIdTokenResult();
+
+    return tokenResult.claims?['admin'] == true;
+}</code></pre>
+                    <p>Cette méthode retourne <span class="em">true</span> si le jeton contient la revendication <span class="em">admin</span> avec la valeur booléenne <span class="em">true</span>.</p>
+                    <p>Elle retourne <span class="em">false</span> si aucun utilisateur n'est connecté ou si la revendication n'est pas présente.</p>
+                    <p>Cette vérification peut servir à adapter l'interface Flutter. Elle ne remplace pas les règles de sécurité Firestore ni les vérifications effectuées par le backend.</p>
+                    <p>Si le rôle vient d'être attribué ou retiré, le jeton actuellement détenu par le client peut encore contenir les anciennes revendications.</p>
+                    <p>Dans les situations où une actualisation est nécessaire, Firebase permet de demander un renouvellemet du jeton :</p>
+<pre><code>await FirebaseAuth.instance.currentUser?.getIdToken(true);</code></pre>
+                    <p>Cette opération force le renouvellement du jetn. Il faut l'utiliser lorsque cela est nécessaire, et non à chaque reconstruction d'un widget.</p>
+                    <h3>Afficher des fonctionnalités selon le rôle :</h3>
+                    <p>Nous pouvons maintenant adapter l'interface Flutter en fonction du rôle de l'utilisateur.</p>
+                    <p>Exemple simplifié :</p>
+<pre><code>import 'package:flutter/material.dart';
+
+class AdminSection extends StatelessWidget {
+    const AdminSection({
+        super.key,
+        required this.isAdmin,
+    });
+
+    final bool isAdmin;
+
+    @override
+    Widget build(BuildContext context) {
+        if (!isAdmin) {
+            return const SizedBox.shrink();
+        }
+
+        return ElevatedButton(
+            onPressed: () {
+                // Ouvrir la section administrative.
+            },
+            child: const Text(
+                'Gestion administrative',
+            ),
+        );
+    }
+}</code></pre>
+                    <p>Dans cet exemple, le composant n'affiche le bouton que si <span class="em">isAdmin</span> vaut <span class="em">true</span>.</p>
+                    <p>La valeur doit provenir de la vérification du jeton Firebase, et non d'un champ de formulaire ou d'une préférence modifiable par l'utilisateur.</p>
+                    <p>Dans une application complète, il faut aussi gérer le chargement du rôle et les éventuelles erreurs lors de la récupération du jeton.</p>
+                    <p>Enfin, même si le bouton est masqué, les données administratives doivent rester protégées côté serveur.</p>
+                    <h3>Protéger Firestore avec les custom claims :</h3>
+                    <p>Les règles Firestore peuvent vérifier la revendication <span class="em">admi</span> directement à partir du jeton d'identification.</p>
+                    <p>Exemple :</p>
+<pre><code>rule_version = '2';
+
+service cloud.firestore {
+    
+}</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
