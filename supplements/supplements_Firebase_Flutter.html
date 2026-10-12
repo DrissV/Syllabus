@@ -5567,6 +5567,106 @@ class MyApp extends StatelessWidget {
                     <p>Dans ce module, nous allons mettre en place une gestion des rôles adaptée à une application Flutter utilisant Firebase Authentication et Cloud Firestore.</p>
                     <h3>Objectifs du module :</h3>
                     <p>À la fin de ce module, vous saurez :</p>
+                    <ul>
+                        <li>
+                            <p>Comprendre la différence enre authentification et autorisation.</p>
+                        </li>
+                        <li>
+                            <p>Définir des rôles pour les utilisateurs.</p>
+                        </li>
+                        <li>
+                            <p>Distinguer les permissions d'un utilisateur standard de celles d'un administrateur.</p>
+                        </li>
+                        <li>
+                            <p>Comprendre le fonctionnement des <span class="em">custom claims</span> Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Afficher des fonctionnalités différentes selon le rôle.</p>
+                        </li>
+                        <li>
+                            <p>Protéger les données avec les règles de sécurité Firestore.</p>
+                        </li>
+                        <li>
+                            <p>Éviter qu'un utilisateur puisse s'attribuer lui-même des privilèges.</p>
+                        </li>
+                        <li>
+                            <p>Tester les accès autorisés et interdits.</p>
+                        </li>
+                    </ul>
+                    <h3>Comprendre le fonctionnement des rôles :</h3>
+                    <p>Imaginons une application qui possède deux catégories d'utilisateurs :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">user</span> : utilisateur standard.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">admin</span> : administrateur.</p>
+                        </li>
+                    </ul>
+                    <p>Nous pouvons définir les permissions de manière conceptuelle :</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Fonctionnalité</th>
+                                <th>Utilisateur standard</th>
+                                <th>Administrateur</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Consulter son profil</td>
+                                <td>Oui</td>
+                                <td>Oui</td>
+                            </tr>
+                            <tr>
+                                <td>Modifier son profil</td>
+                                <td>Oui</td>
+                                <td>Oui</td>
+                            </tr>
+                            <tr>
+                                <td>Consulter les données administratives</td>
+                                <td>Non</td>
+                                <td>Oui</td>
+                            </tr>
+                            <tr>
+                                <td>Gérer les utilisateurs</td>
+                                <td>Non</td>
+                                <td>Selon les permissions définies</td>
+                            </tr>
+                            <tr>
+                                <td>Modifier les rôles</td>
+                                <td>Non</td>
+                                <td>Seulement si cette opération est explicitement autorisée</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Le rôle ne doit pas donner automatiquement accès à toutes les opérations. Il faut déterminer précisément quelles actions chaque catégorie d'utilisateurs peut effectuer.</p>
+                    <p>Le schéma général est le suivant :</p>
+<pre><code>Utilisateur
+    │
+    ▼
+Firebase Authentication
+    │
+    ▼
+Identité et UID
+    │
+    ▼
+Rôle et permissions
+    │
+    ├── Utilisateur standard
+    │       │
+    │       └── Fonctionnalités autorisées
+    │
+    └── Administrateur
+            │
+            └── Fonctionnalités supplémentaires</code></pre>
+                    <h3>Pourquoi ne pas gérer les rôles uniquement dans Flutter ?</h3>
+                    <p>Une première approche pourrait consister à afficher un bouton uniquement lorsque l'utilisateur est administrateur.</p>
+                    <p>Par exemple :</p>
+<pre><code>if (isAdmin) {
+    return const AdminButton();
+}</code></pre>
+                    <p>Cette condition peut être utile pour adapter l'interface, mais elle ne constitue pas une protection suffisante.</p>
                     
                 </article>
             <!-- fin de section -->
