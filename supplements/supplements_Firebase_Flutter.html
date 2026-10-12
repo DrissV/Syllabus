@@ -59,6 +59,7 @@
                     <li><a href="#module9">Module 9 : Gestion du profil utilisateur avec Firebase Authentication et Cloud Firestore</a></li>
                     <li><a href="#module10">Module 10 : Gestion de l'état d'authentification et des sessions utilisateur</a></li>
                     <li><a href="#module11">Module 11 : Gestion des rôles et des autorisations</a></li>
+                    <li><a href="#module12">Module 12 : Suppression d'un compte utilisateur et nettoyage des données</a></li>
                 </ol>
             </nav>
             
@@ -5786,8 +5787,114 @@ class AdminSection extends StatelessWidget {
 <pre><code>rule_version = '2';
 
 service cloud.firestore {
-    
+    match /databases/{database}/documets {
+
+        match /users/{userId} {
+            allow read: if request.auth != null
+                &amp;&amp; (
+                    request.auth.uid == userId
+                    || request.auth.token.admin == true
+                );
+
+            allow update: if request.auth != null
+                &amp;&amp; request.auth.uid == userId;
+        }
+
+        match /adminData/{documentId} {
+            allow read, write: if request.auth != null
+                &amp;&amp; request.auth.token.admin == true;
+        }
+    }
 }</code></pre>
+                    <p>Ces règles illustrent deux objectifs :</p>
+                    <ul>
+                        <li>
+                            <p>Un utilisateur authentifié peut lire son proppre document utilisateur, tandis qu'un administrateur peut lire les documents de cette collection.</p>
+                        </li>
+                        <li>
+                            <p>La collection <span class="em">adminData</span> est accessible uniquement aux utilisateurs la revendication administrative.</p>
+                        </li>
+                    </ul>
+                    <p>L'exemple ne donne pas aux administrateurs le droit de modifier les documents de tous les utilisateurs dans la collection <span class="em">users</span>, car la règle <span class="em">update</span> ne les y autorise pas.</p>
+                    <p>Cette distinction est volontaire : lire les informations d'un autre utilisateur et modifier ses informations sont deux permissions différentes.</p>
+                    <p>Avant la mise en production, les règles doivent être adaptées à la structure exacte des données et aux opérations réellement nécessaires.</p>
+                    <p>Il faut notamment contrôler les champs modifiables, les types de données et les autorisations de création et de suppression.</p>
+                    <h3>Empêcher l'élévation de privilèges :</h3>
+                    <p>Une erreur grave consiste à autoriser un utilisateur à modiifier lui-même son rôle.</p>
+                    <p>Par exemple, si un utilisateur peut écrire librement dans son document le champ suivant et que les règles font confiance à ce champ sans contrôle, l'utilisateur peut tenter de s'accorder des privilèges.</p>
+<pre><code>{
+    "role": "admin"
+}</code></pre>
+                    <p>Pour éviter ce problème :</p>
+                    <ul>
+                        <li>
+                            <p>Ne jamais laisser le client attribuer des custom claims.</p>
+                        </li>
+                        <li>
+                            <p>Ne pas faire confiance à un champ de rôle modifiable par l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Limiter les opérations administratives à un backend de confiance.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier les permissions avant chaque opération sensible.</p>
+                        </li>
+                        <li>
+                            <p>Tester explicitement les accès refusés.</p>
+                        </li>
+                        <li>
+                            <p>Éviter de confondrela présence d'un bouton administratif avec une véritable autorisation.</p>
+                        </li>
+                    </ul>
+                    <p>Les rôles sont des données de sécurité. Leur modification doit donc suivre un processus contrôlé.</p>
+                    <h3>Gérer plusieurs rôles :</h3>
+                    <p>Certaines applications nécessitent plus de deux catégories d'utilisateurs.</p>
+                    <p>Par exemple :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">user</span> : utilisateur standard.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">moderator</span> : modérateur.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">admin</span> : administrateur.</p>
+                        </li>
+                    </ul>
+                    <p>Il est possible de représenter certaines permissions sous forme de revendications :</p>
+<pre><code>{
+    "admin": false,
+    "moderator": true
+}</code></pre>
+                    <p>Les règles Firestore peuvent ensuite vérifier chaque revendication selon l'opération demandée.</p>
+                    <p>Toutefois, lorsque les permissions deviennent nombreuses, il est préférable de définir clairement une matrice d'autorisationss plutôt que d'ajouter des conditions sans organisation.</p>
+                    <p>Il faut aussi éviter de supposer qu'un rôle implique automatiquement tous les autres. Si un administrateur doit disposer des permissions d'un modérateur, cette relation doit être définie explicitement dans les règles ou le backend.</p>
+                    <h3>Comprendre les limites des rôles :</h3>
+                    <p>Un rôle ne doit pas être utilisé pour représenter toutes les permissions possibles.</p>
+                    <p>Par exemple, deux utilisateurs standards peuvent avoir des droits différents sur un document précis, même s'ils possèdent le même rôle.</p>
+                    <p>Il faut donc distinguer :</p>
+                    <ul>
+                        <li>
+                            <p>Les permissions générales liées au rôle.</p>
+                        </li>
+                        <li>
+                            <p>Les permissions liées à la propriété d'une ressource.</p>
+                        </li>
+                        <li>
+                            <p>Les règles spécifiques à une action.</p>
+                        </li>
+                        <li>
+                            <p>Les éventuelles restrictions liées à l'état du compte.</p>
+                        </li>
+                    </ul>
+                    <p>De plus, les custom claims sont intégrées au jeton d'identification. Leur mise à jour n'est pas nécessairement visible immédiatement dans tous les jetons déjà délivrés.</p>
+                    <p>Pour les opérations sensibles, il faut prévoir une stratégie adaptée à l'actualisation des jetons et à la révocation des accès.</p>
+                </article>
+                <article>
+                    <h2 id="module12">Module 12 : Suppression d'un compte utilisateur et nettoyage des données :</h2>
+                    <h3>Présentation du module :</h3>
+                    <p>Dans une application utilisant Firebase Authentication et Cloud Firestore, un utilisateur doit pouvoir demander la suppression de son compte lorsque cela est nécessaire.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
