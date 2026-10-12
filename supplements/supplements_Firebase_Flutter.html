@@ -58,6 +58,7 @@
                     <li><a href="#module8">Module 8 : Réinitialisation du mot de passe</a></li>
                     <li><a href="#module9">Module 9 : Gestion du profil utilisateur avec Firebase Authentication et Cloud Firestore</a></li>
                     <li><a href="#module10">Module 10 : Gestion de l'état d'authentification et des sessions utilisateur</a></li>
+                    <li><a href="#module11">Module 11 : Gestion des rôles et des autorisations</a></li>
                 </ol>
             </nav>
             
@@ -5361,6 +5362,212 @@ Stream&lt;User?&gt; get authStateChanges {
                     <h3>Créer un écran de décision avec StreamBuilder :</h3>
                     <p>Flutter fournit le widget <span class="em">StreamBuilder</span>, qui permet de construire une interface à partir des événements d'un flux.</p>
                     <p>Nous allons l'utiliser pour déterminer quel écran afficher.</p>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
+class AuthGate extends StatelessWidget {
+    const AuthGate({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return StreamBuilder&lt;User?&gt;(
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Scaffold(
+                        body: Center(
+                            child: CircularProgressIndicator(),
+                        ),
+                    );
+                }
+
+                if (snapshot.hasError) {
+                    return const Scaffold(
+                        body: Center(
+                            child: Text(
+                                'Impossible de vérifier la session.',
+                            ),
+                        ),
+                    );
+                }
+
+                final user = snapshot.data;
+
+                if (user == null) {
+                    return const LoginScreen();
+                }
+
+                return const HomeScreen();
+            },
+        );
+    }
+}</code></pre>
+                    <p>Dans cet exemple, <span class="em">AuthGate</span> agit comme un point de décision :</p>
+                    <ul>
+                        <li>
+                            <p>Tant que le flux n'a pas fourni son état initial, un indicateur de chargement est affiché.</p>
+                        </li>
+                        <li>
+                            <p>En cas d'erreur, un message est présenté.</p>
+                        </li>
+                        <li>
+                            <p>Si aucun utilisateur n'est connecté, l'écran de connexion est affiché.</p>
+                        </li>
+                        <li>
+                            <p>Si un utilisateur est connecté, l'écran principal est affiché.</p>
+                        </li>
+                    </ul>
+                    <p>Les classes <span class="em">LoginScreen</span> et <span class="em">HomeScreen</span> représentent les écrans de notre application. Elles doivent être remplacées par les nms réellement utilisés dans le projet.</p>
+                    <h3>Intégrer AuthGate dans l'application :</h3>
+                    <p>Au lieu de choisir directement l'écran de connexion comme page de démarrage, nous pouvons utiliser <span class="em">AuthGate</span>.</p>
+                    <p>Par exemple :</p>
+<pre><code>import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+
+Future&lt;void&gt; main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    await Firebase.initializeApp();
+
+    runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+    const MyApp({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return MaterialApp(
+            title: 'Mon application',
+            home: AuthGate(),
+        );
+    }
+}</code></pre>
+                    <p>Cet exemple suppose que la configuration Firebase nécessaire est déjà présente dans le projet.</p>
+                    <p>Si l'application utilise un fichier de configuration généré par FlutterFire, il faut conserver l'initialisation correspondante.</p>
+                    <p>Avec cette structure, l'écran initial dépend de l'état fourni par Firebase plutôt que d'une décision codée en dur.</p>
+                    <h3>Comprendre la persistance de la session :</h3>
+                    <p>Firebase Authentication conserve généralement la session de l'utilisateur entre les redémarrages de l'application, selon la plateforme et la configuration utilisée.</p>
+                    <p>Cela signifie qu'un utilisateur qui ferme puis rouvre l'application n'a pas nécessairement besoin de se reconnecter.</p>
+                    <p>Au démarrage, <span class="em">authStateChanges()</span> permet à l'appliation de recevoir l'état d'authentification actuel.</p>
+                    <p>Il faut distinguer deux notions :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">La persistance de la session</span> : Firebase peut conserver l'état d'authentification.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">La protection des données</span> : les règles Firebase et les autorisations du backend déterminent les opérations que l'utilisateur peut effectuer.</p>
+                        </li>
+                    </ul>
+                    <p>Le fait qu'un utilisateur soit conecté ne signifie pas qu'il doit pouvoir accéder à toutes les données de l'application.</p>
+                    <p>La durée et le comportement de la session peuvent également dépendre de la plateforme, des paramètres de persistance et des événements de sécurité.</p>
+                    <h3>Gérer la déconnexion :</h3>
+                    <p>La déconnexion peut être réalisée avec :</p>
+<pre><code>await FirebaseAuth.instance.signOut();</code></pre>
+                    <p>Si l'application utilise <span class="em">AuthGate</span>, il n'est généralement pas nécessaire de naviguer manuellement vers l'écran de connexion après cette opération.</p>
+                    <p>Lorsque Firebase émet le nouvel état d'authentification, <span class="em">AuthGate</span> reconstruit l'interface et affiche automatiquement l'écran public.</p>
+                    <p>Exemple de méthode :</p>
+<pre><code>Future&lt;void&gt; signOut() async {
+    await FirebaseAuth.instance.signOut();
+}</code></pre>
+                    <p>Dans l'écran principal, cette méthode peut être appelée depuis un bouton de déconnexion.</p>
+                    <p>Il est recommandé de gérer les éventuelles erreurs et d'empêcher les clics répétés pendant l'opération.</p>
+                    <div class="bordure information">
+                        <img src="../images/information.png" alt="Information" class="float_left">
+                        <p><code>Bonne pratique</code> : éviter de combiner systématiquement <span class="em">signOut()</span> avec plusieurs appels à <span class="em">Navigator.push()</span> ou <span class="em">Navigator.pushReplacement()</span>. Si <span class="em">AuthGate</span> contrôle déjà l'écran affiché, une navigation manuelle supplémentaire peut provoquer des comportements inattendus.</p>
+                    </div>
+                    <h3>Distinguer authentification et chargement du profil :</h3>
+                    <p>Dans le module précédent, nous avons créé un profil utilisateur dans Cloud Firestore.</p>
+                    <p>L'état d'authentification et l'état du profil sont deux informations distinctes.</p>
+                    <p>Un utilisateur peut être connecté alors que son document Firestore :</p>
+                    <ul>
+                        <li>
+                            <p>Est en cours de chargement.</p>
+                        </li>
+                        <li>
+                            <p>N'existe pas encore.</p>
+                        </li>
+                        <li>
+                            <p>Ne peut pas être récupéré en raison d'une erreur réseau ou d'autorisation.</p>
+                        </li>
+                    </ul>
+                    <p>Il ne faut donc pas interpréter systématiquement l'absence de profil comme une déconnexion.</p>
+                    <p>Une architecture possible est :</p>
+<pre><code>AuthGate
+   │
+   ├── Aucun utilisateur
+   │       │
+   │       └── LoginScreen
+   │
+   └── Utilisateur connecté
+           │
+           ▼
+     Chargement du profil
+           │
+           ├── Chargement en cours
+           │
+           ├── Profil disponible
+           │
+           ├── Profil absent
+           │
+           └── Erreur de lecture</code></pre>
+                    <p>Cette séparation permet de gérer proprement les comptes dont le profil n'a pas encore été créé.</p>
+                    <h3>Protéger les écrans réservés aux utilisateurs connectés :</h3>
+                    <p>L'utilisation d'<span class="em">AuthGate</span> permet de choisir l'écran principal, mais elle ne remplace pas les règles de sécurité côté serveur.</p>
+                    <p>Les données Firestore doivent rester protégées par des règles qui vérifient l'identité de l'utilisateur.</p>
+                    <p>De mêm, si l'application utilise une API externe, le serveur doit vérifier le jeton Firebase et les autorisations associées.</p>
+                    <p>Masquer un bouton ou empêcher l'ouverture d'un écran dans Flutter ne constitue pas une protection suffisante des données.</p>
+                    <p>La sécurité doit être appliquée au niveau des services qui donnent accès aux ressources.</p>
+                    <h3>Éviter les erreurs fréquentes :</h3>
+                    <ul>
+                        <li>
+                            <h4>Vérifier uniquement currentUser au démarrage :</h4>
+                            <p><span class="em">FirebaseAuth.instance.currentUser</span> peut être utile pour consulter l'utilisateur actuellement connu par le SDK. Cependant, pour construire une interface réactive qui suit les changements d'état, un flux comme <span class="em">authStateChanges()</span> est généralement plus adapté.</p>
+                        </li>
+                        <li>
+                            <h4>Afficher immédiatement l'écran de connexion :</h4>
+                            <p>Cela peut provoquer un affichage temporaire incorrect pendnat que l'état initial est déterminé.</p>
+                            <p>Il faut prévoir un état de chargement.</p>
+                        </li>
+                        <li>
+                            <h4>Créer plusieurs abonnements au même flux :</h4>
+                            <p>Des abonnements inutiles peuvent compliquer la gestion de l'état et rendre le comportement de l'application plus difficile à comprendre.</p>
+                            <p>Il est préférable d'avoir un point central de décision pour la navigation principale.</p>
+                        </li>
+                        <li>
+                            <h4>Confondre déconnexion et suppression du compte :</h4>
+                            <p><span class="em">signOut()</span> déconnecte l'utilisateur. Il ne supprime ni son compte Firebase Authentication ni son profil Firestore.</p>
+                            <p>La suppression du compte constitue une opération distincte, avec ses propres règles et précautions.</p>
+                        </li>
+                        <li>
+                            <h4>Considérer qu'un utilisateur connecté est toujours autorisé :</h4>
+                            <p>L'authentification établit l'identité. Les autorisations déterminent les actions permises. Ces deux responsabilités doivent rester distinctes.</p>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h2 id="module11">Module 11 : Gestion des rôles et des autorisations :</h2>
+                    <h3>Présentation du module :</h3>
+                    <p>Dans une application utilisant Firebase Authentication, toues les utilisateurs ne disposent pas nécessairement des mêmes permissions.</p>
+                    <p>Un utilisateur standard peut consulter et modifier ses propres informations, tandis qu'un administrateur peut avoir accès à certaines fonctionnalités supplémentaires, comme la gestion des utilisateurs ou la consultation de données réservées.</p>
+                    <p>Pour mettre en place cette distinction, nous devons séparer trois notions :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">L'authentification</span> : déterminer qui est l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Le rôle</span> : déterminer à quelle catégorie de permissions il appartient.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">L'autorisation</span> : déterminer si une action précise est permise.</p>
+                        </li>
+                    </ul>
+                    <p>Firebase Authentication permet d'identifier les utilisateurs. Les règles de sécurité Firestore et, selon les besoins, les revendications personnalisées (<span class="em">custom claims</span>) permettent ensuite de contrôler l'accès aux ressources.</p>
+                    <p>Dans ce module, nous allons mettre en place une gestion des rôles adaptée à une application Flutter utilisant Firebase Authentication et Cloud Firestore.</p>
+                    <h3>Objectifs du module :</h3>
+                    <p>À la fin de ce module, vous saurez :</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
