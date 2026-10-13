@@ -6378,6 +6378,49 @@ Future&lt;XFile?&gt; pickProfileImage() async {
                     <h3>Téléverser une photo vers Firebase Storage :</h3>
                     <p>Une fois l'image sélectionnée, nous pouvons l'envoyer vers Storage.</p>
                     <p>Exemple de service :</p>
+<pre><code>import 'dart:io';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+
+class ProfileImageService {
+    final FirebaseStorage _storage = FirebaseStorage.instance;
+
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    Future&lt;String&gt; uploadProfileImage(XFile image) async {
+        final user = _auth.currentUser;
+
+        if (user == null) {
+            throw StateError(
+                'Aucun utilisateur authentifié.',
+            );
+        }
+
+        final reference = _storage
+                            .ref()
+                            .child('profile_images')
+                            .child(user.uid)
+                            .child('profile.jpg');
+        
+        await reference.putFile(
+            File(image.path),
+            SettableMetadata(
+                contentType: 'image/jpeg',
+            ),
+        );
+
+        return reference.getDownloadURL();
+    }
+}</code></pre>
+                    <p>Cet exemple utilise <span class="em">dart:io</span> et convient aux plateformes qui prennent en charge les fichiers locaux avec cerre API. Pour une application Flutter Web, il faut utiliser une approche compatible avec le Web, par exemple l'envoi des octets du fichier avec <span class="em">putData()</span>.</p>
+                    <p>Le <span class="em">image/jpeg</span> doit correspondre au format réel du fichier. Si l'application accepte plusieurs formats, elle doit déterminer le type approprié au lieu de déclarer systématiquement que tous les fichiers sont des JPEG.</p>
+                    <p>La méthode retourne l'URL de téléchargement une fois le téléversement terminé.</p>
+                    <h3>Enregistrer la photo dans le profil Firestore :</h3>
+                    <p>Après le téléversement, nous pouvons mettre à jour le document de profil pour enregistrer l'URL de la photo.</p>
+                    <p>Exemple :</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
