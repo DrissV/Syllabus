@@ -6079,7 +6079,139 @@ Future&gt;void&gt; deleteUserProfile(String uid) {
                         </li>
                     </ol>
                     <p>Ces situations montrent pourquoi une suppression multi-service doit être conçue comme un processus contrôlé.</p>
-                    
+                    <p>Pour une application simple, nous pouvons prévoir des étapes explicites et gérer les erreurs. Pour une application plus complexe, il est préférable de créer un processus de suppression côté serveur avec un état de progression et des tentatives de reprise.</p>
+                    <h3>Concevoir un service de suppression :</h3>
+                    <p>Pour centraliser la logique, nous pouvons créer un service dédié.</p>
+                    <p>Voici un exemple simplifié pour une application qui ne possède qu'un document de profil à supprimer :</p>
+<pre><code>import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class AccountDeletionService {
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+    Future&lt;void&gt; deleteAccount() async {
+        final user = _auth.currentUser;
+
+        if (user == null) {
+            throw StateError(
+                'Aucun utilisateur authentifié.',
+            );
+        }
+
+        final uid = user.uid
+
+        // Cette opération peut nécessiter une réauthentification préalable.
+        await user.delete();
+
+        await _firestore
+                .collection('users')
+                .doc(uid)
+                .delete();
+    }
+}</code></pre>
+                    <p>Cet exemple illustre la séparation dans un service, mais <span class="em">il constitue pas un processus de suppression robuste pour la production</span>.</p>
+                    <p>Si <span class="em">user.delete()</span> réussit et que l'opération Firestore échoue ensuite, le compte est déjà supprimé et l'utilisateur ne peut plus simplement reprendre le processus avec sa session précédente.</p>
+                    <p>Pour une application réelle, il faut envisager un processus de suppression côté serveur, capable de terminer le nettoyage même si le compte Authentication n'existe plus.</p>
+                    <h3>Préférer un processus de suppression côté serveur :</h3>
+                    <p>Pour une architecture plus robuste, nous pouvons utiliser une fonction backend de confiance.</p>
+                    <p>Le processus peut suivre ces étapes :</p>
+                    <ol>
+                        <li>
+                            <p>Recevoir une demande de suppression authentifiée.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier l'identité et les permissions de l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Enregistrer une demande de suppression avec un identifiant de suivi.</p>
+                        </li>
+                        <li>
+                            <p>Identifier les données associées à l'UID.</p>
+                        </li>
+                        <li>
+                            <p>Supprimer les documents et ficheiersconcernés.</p>
+                        </li>
+                        <li>
+                            <p>Supprimer le compte Authentication.</p>
+                        </li>
+                        <li>
+                            <p>Enregistrer le résultat du processus.</p>
+                        </li>
+                        <li>
+                            <p>Permettre la reprise du nettoyage en cas d'échec.</p>
+                        </li>
+                    </ol>
+                    <p>La fonction backend doit utiliser les privilèges nécessaires, sans exposer les accès administratifs au client Flutter.</p>
+                    <p>Il faut aussi veiller à ce que la demande de suppression ne puisse pas être déclenchée pour un UID arbitraire fourni par un utilisateur non autorisé.</p>
+                    <p>Dans les systèmes distribués, il est généralement préférable de concevoir le processus pour qu'il puisse être relancé sans causer de dommages supplémentaires. Cette propriété est appelée <span class="em">idempotence</span>.</p>
+                    <p>Par exemple, supprimer un document déjà absent peut être traité comme une étape terminée, tandis qu'une erreur temporaire de stockage peut justifier une nouvelle tentative.</p>
+                    <h3>Gérer les erreurs :</h3>
+                    <p>Les erreurs doivent être traitées de manière à distinguer les situations que l'utilisateur peut corriger de celles qui nécessitent une intervention technique.</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Erreur ou situation</th>
+                                <th>Traitement recommandé</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>requires-recent-login</td>
+                                <td>Demander une réauthentification.</td>
+                            </tr>
+                            <tr>
+                                <td>user-not-found</td>
+                                <td>Vérifier l'état du compte de répéter inutilement la suppression.</td>
+                            </tr>
+                            <tr>
+                                <td>network-request-failed</td>
+                                <td>Signaler le problème réseau et permettre une reprise adaptée.</td>
+                            </tr>
+                            <tr>
+                                <td>Permission Firestore refusée</td>
+                                <td>Vérifier les règles et les autorisations prévues</td>
+                            </tr>
+                            <tr>
+                                <td>Échec de suppression d'un fichier</td>
+                                <td>Enregistrer  l'échec et prévoir une nouvelle tentative côté serveur.</td>
+                            </tr>
+                            <tr>
+                                <td>Erreur inconnue</td>
+                                <td>Afficher un message général et conserver les informations techniques dans des journaux sécurisés.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Il faut éviter d'afficher à l'utilisateur des détails techniques sensibles.</p>
+                    <p>Les journaux ne doivent pas contenir de mots de passe, de jetons d'identification ou d'autres secrets.</p>
+                    <h3>Confirmer la suppression dans l'interface :</h3>
+                    <p>La suppression d'un compte est une action irréversible dans de nombreux cas. L'interface doit donc demander une confirmation explicite.</p>
+                    <p>Un dialogue peut préciser :</p>
+                    <ul>
+                        <li>
+                            <p>Que le compte sera supprimé.</p>
+                        </li>
+                        <li>
+                            <p>Quelles catégories de données seront effacées.</p>
+                        </li>
+                        <li>
+                            <p>Quelles données pourraient être conservées pour des raisons légales ou opérationnelles.</p>
+                        </li>
+                        <li>
+                            <p>Que l'utilisateur devra éventuellement se réauthentifier.</p>
+                        </li>
+                        <li>
+                            <p>Que l'opération peut nécessiter un certain temps.</p>
+                        </li>
+                    </ul>
+                    <p>Le bouton de confirmation ne doit pas annoncer que la suppression est terminée avant que le processus ait réellement ainsi.</p>
+                    <p>Si la suppression s'effectue en arrière-plan, l'application peut afficher un état intermédiaire, par exemple : <q>Votre demande de suppression est en cours de traitement</q>.</p>
+                    <h3>Respecter les règles de conservation des données :</h3>
+                    <p>La suppression d'un compte doit être cohérente avec la politique de confidentialité de l'application et les obligations légales applicables.</p>
+                    <p>Certaines données peuvent devoir être conservées pendant une période déterminée, selon le contexte de l'application. D'autres doivent être supprimées ou anonymisées.</p>
+                    <p>Il faut donc éviter de supprimer aveuglément toutes les données sans vérifier les règles de conservation applicables.</p>
+                    <p>La stratégie doit être documentée et cohérente entre les différents services.</p>
                 </article>
             <!-- fin de section -->
             </section>
