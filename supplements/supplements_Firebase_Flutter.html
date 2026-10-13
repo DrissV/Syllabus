@@ -61,6 +61,7 @@
                     <li><a href="#module11">Module 11 : Gestion des rôles et des autorisations</a></li>
                     <li><a href="#module12">Module 12 : Suppression d'un compte utilisateur et nettoyage des données</a></li>
                     <li><a href="#module13">Module 13 : Gestion des photos de profil et des fichiers</a></li>
+                    <li><a href="#module14">Module 14 : Validation des données utilisateur et gestion des erreurs</a></li>
                 </ol>
             </nav>
             
@@ -6420,6 +6421,183 @@ class ProfileImageService {
                     <h3>Enregistrer la photo dans le profil Firestore :</h3>
                     <p>Après le téléversement, nous pouvons mettre à jour le document de profil pour enregistrer l'URL de la photo.</p>
                     <p>Exemple :</p>
+<pre><code>import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+Future&lt;void&gt; updateProfilePhotoUrl(
+    String photoUrl,
+) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+        throw StateError(
+            'Aucun utilisateur authentifié.',
+        );
+    }
+
+    await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.id)
+            .update({
+                'photoUrl': photoUrl,
+            });
+}</code></pre>
+                    <p>Nous pouvons ensuite utiliser cette information dans l'interface Flutter pour afficher la photo.</p>
+                    <p>Il est également possible de stocker le chemin Storage plutôt que l'URL de téléchargement, puis de demander une URL lorsque l'application en a besoin.</p>
+                    <p>Cette seconde approche peut faciliter la gestion des références au fichier. Une URL de téléchargement Firebase peut fonctionner comme un lien porteur d'accès : il faut donc éviter de la diffuser sans précaution.</p>
+                    <h3>Afficher la photo de profil :</h3>
+                    <p>Lorsque le profil contient une URL accessible, Flutter peut afficher l'image avec <span class="em">Image.network()</span>.</p>
+<pre><code>Image.network(
+    photoUrl,
+    width: 100,
+    height: 100,
+    fit: BoxFit.cover,
+    errorBuilder: (context, error, stackTrace) {
+        return const Icon(
+            Icons.account_circle,
+            size: 100,
+        );
+    },
+)</code></pre>
+                    <p>L'option <span class="em">errorBuilder</span> permet d'afficher une icône de remplacement si l'image ne peut pas être chargée.</p>
+                    <p>Dans une interface de profil,nous pouvons également utiliser <span class="em">CircleAvatar</span> pour obtenir un affichage circulaire.</p>
+                    <p>Il faut prévoir un état de chargement et un affichage de remplacement lorsque l'utilisateur ne possède pas encore de photo.</p>
+                    <h3>Remplacer une photo existante :</h3>
+                    <p>Dans notre exemple, chaque utilisateur utilise le chemin <span class="em">profile.jpg</span>.</p>
+                    <p>Le téléversement d'une nouvelle image à ce même emplacement remplace le fichier existant, si les règles et les permissions l'autorisent.</p>
+                    <p>La procédure générale est la suivante :</p>
+                    <ol>
+                        <li>
+                            <p>Sélectionner la nouvelle image.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier qu'elle respecte les contraintes de l'application.</p>
+                        </li>
+                        <li>
+                            <p>Téléverser le nouveau fichier.</p>
+                        </li>
+                        <li>
+                            <p>Récupérer sa référence ou son URL.</p>
+                        </li>
+                        <li>
+                            <p>Mettre à jour le profil Firestore.</p>
+                        </li>
+                        <li>
+                            <p>Gérer les éventuelles erreurs.</p>
+                        </li>
+                    </ol>
+                    <p>Il faut réfléchir au comportement en cas d'échec partiel. Par exemple, si l'image est téléversée mais que la mise à jour Firestore échoue, le fichier existe alors que le profil peut encore référencer l'ancienne URL.</p>
+                    <p>Pour une application plus robuste, nous pouvons utiliser des noms de fichiers versionnés, mettre à jour le profil après le téléversement, puis supprimer l'ancien fichier lorsque la nouvelle photo est correctement enregistrée.</p>
+                    <p>Cette approche réduit le risque de perdre l'ancienne photo avant que la nouvelle soit disponible.</p>
+                    <h3>Supprimer une photo de profil :</h3>
+                    <p>Firebase Storage permet de supprimer un fichier à partir de sa référence.</p>
+                    <p>Exemple :</p>
+<pre><code>Future&lt;void&gt; deleteProfileImage() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+        throw StateError(
+            'Aucun utilisateur authentifié.',
+        );
+    }
+
+    final reference = FirebaseStorage.instance
+                        .ref()
+                        .child('profile_images')
+                        .child(user.uid)
+                        .child('profile.jpg');
+
+    await reference.delete();
+
+    await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+                'photoUrl': FieldValue.delete(),
+            });
+
+}</code></pre>
+                    <p>Cette méthode supprime le fichier puis retire le champ <span class="em">photoUrl</span> du document utilisateur.</p>
+                    <p>Elle suppose que le document de profil existe et que le fichier est présent. Si le fichier a déjà été supprimé, l'opération peut échouer : il faut donc prévoir une gestion des erreurs et un traitement adapté aux fichiers absents.</p>
+                    <p>Comme les deux opérations ne constituent pas une transaction commune, il faut aussi prévoir le cas où la suppression du fichier réussit mais où la mise à jour Firestore échoue.</p>
+                    <h3>Sécuriser Firebase Storage :</h3>
+                    <p>Les règles Storage doivent empêcher un utilisateur de modifier les fichiers d'un autre compte.</p>
+                    <p>Pour les photos de profil, une règle de départ peut être :</p>
+<pre><code>rules_version = '2';
+
+service firebase.storage {
+    match /b/{bucket}/o {
+        match /profile_images/{userId}/{fileName} {
+            allow read: if request.auth != null;
+
+            allow write: if request.auth != null
+                &amp;&amp; request.auth.uid == userId
+                &amp;&amp; request.resource.size &lt; 5 * 1024 * 1024
+                &amp;&amp; request.resource.contentType.matches(
+                    'image/.*'
+                );
+        }
+    }
+}</code></pre>
+                    <p>Cette règle illustre les contrôles suivants :</p>
+                    <ul>
+                        <li>
+                            <p>L'utilisateur doit être authentifié pour écrire.</p>
+                        </li>
+                        <li>
+                            <p>L'UID de la session doit correspondre à l'utilisateur du chemin.</p>
+                        </li>
+                        <li>
+                            <p>La taille du fichier doit être inférieure à 5 Mo.</p>
+                        </li>
+                        <li>
+                            <p>Le type de contenu déclaré doit commencer par <span class="em">image/</span>.</p>
+                        </li>
+                    </ul>
+                    <p>Cette règle est un point de départ, pas une garantie complète de validation de l'image. Le type MIME peut être déclaré par le client et ne prouve pas à lui seul que le contenu est une image valide.</p>
+                    <p>Il faut également remarquer que <span class="em">request.resource</span> peut être absent lors d'une suppression. Une règle de production doit traiter explicitement les créations, les modifications et les suppressions afin de ne pas bloquer accidentellement les opérations nécessaires.</p>
+                    <p>Si les photos ne doivent être visibles que par leur propriétaire, la règle de lecture doit également vérifier que l'UID de l'utilisateur connecté correspond à celui du chemin.</p>
+                    <p>Les règles doivent être testées avec les cas d'accès autorisé et interdit.</p>
+                    <h3>Gérer les erreurs et le chargement :</h3>
+                    <p>Le téléversement peut échouer pour plusieurs raisons :</p>
+                    <ul>
+                        <li>
+                            <p>Absence de connexion Internet.</p>
+                        </li>
+                        <li>
+                            <p>Fichier trop volumineux.</p>
+                        </li>
+                        <li>
+                            <p>Permissions insuffisantes.</p>
+                        </li>
+                        <li>
+                            <p>Règles Storage qui refusent l'opération.</p>
+                        </li>
+                        <li>
+                            <p>Fichier local devenu indisponible.</p>
+                        </li>
+                        <li>
+                            <p>Erreur lors de la mise à jour Firestore.</p>
+                        </li>
+                    </ul>
+                    <p>L'interface doit afficher un indicateur de progression ou de chargement et empêcher les demandes répétées pendant une opération en cours.</p>
+                    <p>Il est aussi possible d'écouter l'état du téléversement :</p>
+<pre><code>final task = reference.putFile(file);
+
+task.snapshotEvents.listen((snapshot) {
+    final total = snapshot.totalBytes;
+    final transferred = snapshot.bytesTransferred;
+
+    if (total &gt; 0) {
+        final progress = transferred / total;
+        // Transmettre la progession à l'interface.
+    }
+});</code></pre>
+                    <p>Dans un widget réel, il faut gérer l'abonnement au flux et sa durée de vie correctement, afin d'éviter des abonnements inutiles ou des mises à jour d'état après la destruction du widget.</p>
+                </article>
+                <article>
+                    <h2 id="module14">Module 14 : Validation des données utilisateur et gestion des erreurs :</h2>
+                    <h3>Présentation du module :</h3>
                     
                 </article>
             <!-- fin de section -->
