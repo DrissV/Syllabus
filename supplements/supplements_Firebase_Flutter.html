@@ -60,6 +60,7 @@
                     <li><a href="#module10">Module 10 : Gestion de l'état d'authentification et des sessions utilisateur</a></li>
                     <li><a href="#module11">Module 11 : Gestion des rôles et des autorisations</a></li>
                     <li><a href="#module12">Module 12 : Suppression d'un compte utilisateur et nettoyage des données</a></li>
+                    <li><a href="#module13">Module 13 : Gestion des photos de profil et des fichiers</a></li>
                 </ol>
             </nav>
             
@@ -1194,7 +1195,7 @@ Profil Firestore</code></pre>
 │
 └── ...</code></pre>
                     <p>L'UID est donc une pièce fondamentale de la relation entre <span class="em">Firebase Authentication</span> et <span class="em">Cloud Firestore</span>.</p>
-                    <h3>¨Pourquoi ne pas utiliser l'adresse email comme identifiant ?</h3>
+                    <h3>Pourquoi ne pas utiliser l'adresse email comme identifiant ?</h3>
                     <p>Il serait possible de penser que l'adresse email pourrait servir à identifier directement un utilisateur.</p>
                     <p>Cependant, l'email n'est pas le meilleur identifiant pour notre architecture.</p>
                     <p>Un utilisateur peut notamment modifier certaines informations de son compte.</p>
@@ -1258,7 +1259,7 @@ if (user != null) {
         print('Adresse email non vérifiée');
     }
 }</code></pre>
-                    <p>Cette propriété retourne une valeur booléenne. Elle peut être donc <span class="em">true</span> ou <span class="em">false</span>.</p>
+                    <p>Cette propriété retourne une valeur booléenne. Elle peut donc être <span class="em">true</span> ou <span class="em">false</span>.</p>
                     <p>Le parcours pourra être représenté ainsi :</p>
 <pre><code>Compte créé
     │
@@ -1308,7 +1309,7 @@ if (user != null) {
                     <p>Après le rechargement, il est possible de récupérer à nouveau l'utilisateur courant :</p>
 <pre><code>await FirebaseAuth.instance.currentUser?.reload();
 
-inal updatedUser = FirebaseAuth.instance.currentUser;
+final updatedUser = FirebaseAuth.instance.currentUser;
 
 if (updatedUser != null) {
     print(updatedUser.emailVerified);
@@ -5148,7 +5149,7 @@ await UserProfileService().createProfile(
         );
     }
 
-    final snapshoy = await _users.doc(user.uid).get();
+    final snapshot = await _users.doc(user.uid).get();
 
     if (!snapshot.exists) {
         return null;
@@ -5192,7 +5193,7 @@ await UserProfileService().createProfile(
                     <p>Cette méthode ne modifie pas l'adresse email de Firebase Authentication. Elle modifie uniquement les données enregistrées dans Firestore.</p>
                     <p>Si l'adresse email change, il faut également gérer cette modification à travers les méthodes appropriées de Firebase Authentication et maintenir les données du profil cohérentes avec l'état du compte.</p>
                     <h3>Sécuriser les données avec les règles Firestore :</h3>
-                    <p>Il ne suffoy âs de vérifier dans Flutter que l'utilisateur est connecté. Les règles de sécurité doivent aussi empêcher un utilisateur de lire ou de modifier le profil d'un autre utilisateur.</p>
+                    <p>Il ne suffit pas de vérifier dans Flutter que l'utilisateur est connecté. Les règles de sécurité doivent aussi empêcher un utilisateur de lire ou de modifier le profil d'un autre utilisateur.</p>
                     <p>Une règle de départ pour une collection où chaque utilisateur peut accéder uniquement à son propre document est :</p>
 <pre><code>rules_version = '2';
     
@@ -5245,7 +5246,7 @@ if (profile != null) {
                             <p>L'accès aux pages réservées aux utilisateurs authentifiés.</p>
                         </li>
                         <li>
-                            <p>Le comportement de l'appication après une connexion.</p>
+                            <p>Le comportement de l'application après une connexion.</p>
                         </li>
                         <li>
                             <p>Le retour à l'écran de connexion après une déconnexion.</p>
@@ -6212,6 +6213,31 @@ class AccountDeletionService {
                     <p>Certaines données peuvent devoir être conservées pendant une période déterminée, selon le contexte de l'application. D'autres doivent être supprimées ou anonymisées.</p>
                     <p>Il faut donc éviter de supprimer aveuglément toutes les données sans vérifier les règles de conservation applicables.</p>
                     <p>La stratégie doit être documentée et cohérente entre les différents services.</p>
+                </article>
+                <article>
+                    <h2 id="module13">Module 13 : Gestion des photos de profil et des fichiers :</h2>
+                    <h3>Présentation du module :</h3>
+                    <p>Dans une application Flutter, les utilisateurs peuvent avoir besoin d'ajouter une photo de profil, de remplacer une image existante ou de supprimer un fichier associé à leur compte.</p>
+                    <p>Cloud Firestore permet de stocker des informations textuelles et des métadonnées, mais il n'est généralement pas adapté au stockage direct de fichiers binaires volumineux.</p>
+                    <p>Firebase Storage permer de stocker des fichiers tels que :</p>
+                    <ul>
+                        <li>
+                            <p>Les photos de profil.</p>
+                        </li>
+                        <li>
+                            <p>Les images publiées par les utilisateurs.</p>
+                        </li>
+                        <li>
+                            <p>Les documents associés à une fonctionnalité.</p>
+                        </li>
+                        <li>
+                            <p>D'autres fichiers nécessaires à l'application.</p>
+                        </li>
+                    </ul>
+                    <p>Dans ce module, nous allons intégrer Firebase Storage à notre architecture Flutter et apprendre à gérer les fichiers tout en contrôlant les accès.</p>
+                    <h3>Objectifs du module :</h3>
+                    <p>À la fin de ce module, vous saurez :</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
