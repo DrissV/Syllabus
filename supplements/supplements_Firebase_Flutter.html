@@ -3572,7 +3572,7 @@ bool _isChecking = false;</code></pre>
                             <p>Sur le Web, Firebase utilise un mécanisme de protection contre les apus, généralement avec reCAPTCHA.</p>
                         </li>
                         <li>
-                            <p>Vérifie les restrictions, les quotas et les éventuels coûts associés aux SMS dans la configuratio Firebase.</p>
+                            <p>Vérifie les restrictions, les quotas et les éventuels coûts associés aux SMS dans la configuration Firebase.</p>
                         </li>
                     </ul>
                     <h4>Schéma de préparation :</h4>
@@ -6237,7 +6237,147 @@ class AccountDeletionService {
                     <p>Dans ce module, nous allons intégrer Firebase Storage à notre architecture Flutter et apprendre à gérer les fichiers tout en contrôlant les accès.</p>
                     <h3>Objectifs du module :</h3>
                     <p>À la fin de ce module, vous saurez :</p>
-                    
+                    <ul>
+                        <li>
+                            <p>Comprendre le rôle de Firebase Storage.</p>
+                        </li>
+                        <li>
+                            <p>Configurer Storage dans un projet Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Ajouter les dépendances nécessaires à Flutter.</p>
+                        </li>
+                        <li>
+                            <p>Sélectionner une image depuis l'appareil.</p>
+                        </li>
+                        <li>
+                            <p>Téléverser un fichier vers Firebase Storage.</p>
+                        </li>
+                        <li>
+                            <p>Récupérer l'URL d'un fichier.</p>
+                        </li>
+                        <li>
+                            <p>Enregistrer cette URL dans le profil Firestore.</p>
+                        </li>
+                        <li>
+                            <p>Remplacer et supprimer une photo de profil.</p>
+                        </li>
+                        <li>
+                            <p>Sécuriser les fichiers avec les règles Storage.</p>
+                        </li>
+                        <li>
+                            <p>Gérer les erreurs et les états de chargement.</p>
+                        </li>
+                    </ul>
+                    <h3>Comprendre l'architecture :</h3>
+                    <p>Nous allons utiliser trois composants complémentaires :</p>
+                    <ul>
+                        <li>
+                            <p><span class="em">Firebase Authentication</span> identifie l'utilisateur et fournit son UID.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Firebase Storage</span> conserve les fichiers eux-mêmes.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Cloud Firestore</span> conserve les informations de profil et les métadonnées nécessaires à l'application, notamment le chemin ou l'URL de la photo.</p>
+                        </li>
+                    </ul>
+                    <p>L'organisation générale sera la suivante :</p>
+<pre><code>Utilisateur connecté
+        │
+        ▼
+Sélection d'une image dans Flutter
+        │
+        ▼
+Firebase Storage
+        │
+        ├── Stockage du fichier
+        │
+        └── Récupération de sa référence
+                    │
+                    ▼
+             Cloud Firestore
+                    │
+                    ▼
+           Mise à jour du profil</code></pre>
+                    <p>Il est préférable de ne pas stocker le contenu binaire de l'image dans un document Firestore.</p>
+                    <h3>Configurer Firebase Storage :</h3>
+                    <p>Dans la console Firebase :</p>
+                    <ol>
+                        <li>
+                            <p>Ouvrir le projet concerné.</p>
+                        </li>
+                        <li>
+                            <p>Accéder à Firebase Storage.</p>
+                        </li>
+                        <li>
+                            <p>Initialiser le bucket de stockage si nécessaire.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier la configuration du projet et les autorisations.</p>
+                        </li>
+                        <li>
+                            <p>Définir des règles de sécurité adaptées aux fichiers que l'application doit gérer.</p>
+                        </li>
+                    </ol>
+                    <p>Les paramètres disponibles peuvent varier selon le projet et la configuration Firebase. Il faut notamment vérifier les agences de facturation et les restrictions applicables au bucket.</p>
+                    <p>Ajoutons ensuite les dépendances nécessaires :</p>
+<pre><code>flutter pub add firebase_storage</code></pre>
+<pre><code>flutter pub add image_picker</code></pre>
+                    <p>Le package <span class="em">firebase_storage</span> permet d'interagir avec Firebase Storage. Le package <span class="em">image_picker</span> permet à l'utilisateur de sélectionner une image depuis les sources prises en charge par la plateforme.</p>
+                    <p>Le projet doit déjà être configuré avec Firebase et initialiser correctement <span class="em">Firebase.initializeApp()</span>.</p>
+                    <h3>Organiser les fichiers dans Storage :</h3>
+                    <p>Pour éviter de mélanger les fichiers de différents utilisateurs, nous pouvons organiser les photos de profil à partir de leur UID.</p>
+                    <p>Par exemple :</p>
+<pre><code>profile_images/
+├── UID_UTILISATEUR_1/
+│   └── profile.jpg
+└── UID_UTILISATEUR_2/
+    └── profile.jpg</code></pre>
+                    <p>Chaque utilisateur dispose ainsi d'un emplacement logique propre à son compte.</p>
+                    <p>Nous pouvons construire le chemin du fichier en utilisant l'UID fourni par Firebase Authentication :</p>
+<pre><code>final user = FirebaseAuth.instance.currentUser;
+
+if (user = null) {
+    throw StateError('Aucun utilisateur authentifié.');
+}
+
+final path = 'profile_images/${user.uid}/profile.jpg';</code></pre>
+                    <p>Le chemin est une référence au fichier dans Storage. Ce n'est pas une URL publique et il ne remplace pas les règles de sécurité.</p>
+                    <h3>Sélectionner une image :</h3>
+                    <p>Nous pouvons utiiser <span class="em">image_picker</span> pour permettre à l'utilisateur de choisir une photo dans sa galerie.</p>
+                    <p>Exemple de sélection :</p>
+<pre><code>import 'package:image_picker/image_picker.dart';
+
+final ImagePicker picker = ImagePicker();
+
+Future&lt;XFile?&gt; pickProfileImage() async {
+    reurn picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+    );
+}</code></pre>
+                    <p>La méthode retourne un objet <span class="em">XFile</span> lorsque l'utilisateur sélectionne une image. Si la sélection est annulée, elle retourne <span class="em">null</span>.</p>
+                    <p>Nous devons donc vérifier le résultat avant de poursuivre.</p>
+                    <p>Pour une application complète, il est également recommandé de :</p>
+                    <ul>
+                        <li>
+                            <p>Limiter la taille des fichiers acceptés.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier le type de contenu.</p>
+                        </li>
+                        <li>
+                            <p>Prévoir les différences de permissions entre les plateformes.</p>
+                        </li>
+                        <li>
+                            <p>Afficher un aperçu de l'image avant son envoi, si nécessaire.</p>
+                        </li>
+                    </ul>
+                    <p>La sélection d'un fichier ne garantit pas à elle seule que le fichier est sûr ou conforme aux exigences de l'application.</p>
+                    <h3>Téléverser une photo vers Firebase Storage :</h3>
+                    <p>Une fois l'image sélectionnée, nous pouvons l'envoyer vers Storage.</p>
+                    <p>Exemple de service :</p>
                 </article>
             <!-- fin de section -->
             </section>
