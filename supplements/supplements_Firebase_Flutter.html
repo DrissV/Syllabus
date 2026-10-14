@@ -7307,14 +7307,18 @@ Future&lt;String&gt; uploadProfileImage(
                     <p>Évitez aussi d'enregistrer les mots de passe, les jetons d'accès, les codes de vérification ou les informations personnelles inutiles.</p>
                     <h3>Installer Firebase Crashlytics :</h3>
                     <p><span class="em">Firebase Crashlytics</span> est un service de suivi des plantages et des erreurs.</p>
-                    <h4>Ajouter les dépendances :</h4>
-                    <p>Dans le terminal, à la racine du projet Flutter, exécutez :</p>
+                    <ol>
+                        <li>
+                            <h4>Ajouter les dépendances :</h4>
+                            <p>Dans le terminal, à la racine du projet Flutter, exécutez :</p>
 <pre><code>flutter pub add firebase_core</code></pre>
 <pre><code>flutter pub add firebase_crashlytics</code></pre>
-                    <p>Si le projet utilise déjà Firebase, <span class="em">firebase_core</span> est peut-être déjà installé.</p>
-                    <p>Vérifiez également que le projet Flutter est correctement associé à votre projet Firebase.</p>
-                    <h3>Initialiser Firebase et capturer les erreurs Flutter :</h3>
-                    <p>Dans le fichier <span class="em">main.dart</span>, vous pouvez configurer la capture des erreurs de cette manière :</p>
+                            <p>Si le projet utilise déjà Firebase, <span class="em">firebase_core</span> est peut-être déjà installé.</p>
+                            <p>Vérifiez également que le projet Flutter est correctement associé à votre projet Firebase.</p>
+                        </li>
+                        <li>
+                            <h4>Initialiser Firebase et capturer les erreurs Flutter :</h4>
+                            <p>Dans le fichier <span class="em">main.dart</span>, vous pouvez configurer la capture des erreurs de cette manière :</p>
 <pre><code>import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -7324,8 +7328,110 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 
 Future&lt;void&gt; main() async {
-    
+    WidgetsFlutterBinding.ensureInitialized();
+
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(
+            error,
+            stack,
+            fatal: true,
+        );
+
+        return true;
+    }
+
+    runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+    const MyApp({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return const MaterialApp(
+            home: Scaffold(
+                body: Center(
+                    child: Text('Application initialisée'),
+                ),
+            ),
+        );
+    }
 }</code></pre>
+                            <p>Cet exemple configure la capture des erreurs Flutter et des erreurs non gérées remontant au gestionnaire d'erreurs de la plateforme.</p>
+                            <p>Selon les types d'errurs asynchrones et les plateformes ciblées, une configuration complémentaire peut être nécessaire. Consultez la documentation actuelle de Crashlytics pour adapter l'initialisation à votre projet.</p>
+                        </li>
+                        <li>
+                            <h4>Comprendre les principaux éléments :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">Firebase.initializeApp()</span> initialise les services Firebase.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">FlutterError.onError</span> permet de traiter les erreurs signalées par le mécanisme d'erreurs Flutter.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">PlatformDispatcher.instance.error</span> traite certaines erreurs non gérées au niveau de la plateforme.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">recordFlutterFatalError()</span> transmet une erreur Flutter considérée comme fatale.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">recordError()</span> permet d'enregistrer une erreur avec sa trace.</p>
+                                </li>
+                            </ul>
+                            <p>Le booléen <span class="em">fatal</span> doit réfléter la gravité de l'erreur selon la manière dont votre application la traite. Une erreur récupérée correctement ne doit pas être automatiquement considérée comme fatale.</p>
+                        </li>
+                    </ol>
+                    <h3>Enregistrer une erreur non fatale :</h3>
+                    <p>Certaines erreurs ne provoquent pas la fermeture de l'application, mais restent importantes pour le diagnostic.</p>
+                    <p>Par exemple, une erreur lors du chargement d'un profil peut être enregistrée tout en permettant à l'utilisateur de continuer à utiliser l'application.</p>
+<pre><code>import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
+Future&lt;void&gt; loadProfile() async {
+    try {
+        // Charger les données du profil depuis Firestore.
+    } catch (error, stackTrace) {
+        await FirebaseCrashlytics.instance.recordError(
+            error,
+            stackTrace,
+            reason: 'Échec du chargement du profil',
+            fatal: false,
+        );
+        
+        // Afficher un message adapté dans l'interface.
+    }
+}</code></pre>
+                    <p>Il est important de ne pas masquer silencieusement les erreurs. Après leur enregistrement, l'application doit également appliquer une stratégie de récupération adaptée : afficher un message, réessayer si cela est pertinent ou revenir à un état sûr.</p>
+                    <h3>Ajouter des informations de diagnostic :</h3>
+                    <p>Une erreur est plus facile à comprendre lorsqu'elle est accompagnée d'informations contextuelles non sensibles.</p>
+                    <p>Crashlytics permet d'ajouter des clés personnalisées :</p>
+<pre><code>await FirebaseCrashlytics.instance.setCustomKey(
+    'screen',
+    'profile',
+);
+
+await FirebaseCrashlytics.instance.setCustomKey(
+    'operation',
+    'load_profile',
+);</code></pre>
+                    <p>Ces informations peuvent aider à déterminer l'écran et l'opération concernés.</p>
+                    <p>Vous pouvez aussi définir un identifiant utilisateur pseudonyme pour faciliter le regroupement des raports :</p>
+<pre><code>await FirebaseCrashlytics.instance.setUserIdentifier(
+    user.uid,
+);</code></pre>
+                    <p>Utilisez cette possibilité avec prudence : un identifiant stable reste une donnée potentiellement identifiable ou liée à une personne. Respectez les obligations de confidentialité et n'envoyez que les informations nécessaires au diagnostic.</p>
+                    <p>Ne transmettez jamais de mot de passe, de jeton d'authentification, de code SMS ou de données bancaires comme informations de diagnostic.</p>
+                    <h3>Centraliser la gestion des erreurs Firebase :</h3>
+                    <p>Dans une application qui contient plusieurs écrans, il est préférable de ne pas réécrire la même logique de gestion des erreurs partout.</p>
+                    <p>Vous pouvez créer un service chargé de convertir les exceptions en messages compréhensibles.</p>
+                    <p>Exemple :</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
