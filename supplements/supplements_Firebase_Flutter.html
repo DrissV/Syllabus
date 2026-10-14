@@ -7263,9 +7263,69 @@ Future&lt;String&gt; uploadProfileImage(
                             </tr>
                         </thead>
                         <tbody>
-                            
+                            <tr>
+                                <td>Enregistre des événements choisis par le développeur</td>
+                                <td>Collecte les rapports d'erreurs et de plantages</td>
+                            </tr>
+                            <tr>
+                                <td>Aide à suivre le déroulement d'une opération</td>
+                                <td>Aide à identifier les problèmes rencontrés en production</td>
+                            </tr>
+                            <tr>
+                                <td>Peut être affichée dans la console de développement</td>
+                                <td>Peut être consultée dans le tableau de bord Crashlytics</td>
+                            </tr>
+                            <tr>
+                                <td>Doit être conçue pour ne pas exposer de données sensibles</td>
+                                <td>Doit égalemnt respecter les règles de confidentialité</td>
+                            </tr>
                         </tbody>
                     </table>
+                    <p>Ces deux mécanismes sont complémentaires.</p>
+                    <h3>Utliser les journaux de Flutter :</h3>
+                    <p>Pendant le développement, il est possible d'utiliser <span class="em">debugPrint()</span> pour afficher des informations utiles.</p>
+                    <p>Exemple :</p>
+<pre><code>void loadUserProfile() {
+    debugPrint('Début du chargement du profil');
+
+    // Logique de chargemnt du profil.
+
+    debugPrint('Fin du chargement du profil');
+}</code></pre>
+                    <p>Pour une erreur, vous pouvez afficher un message explicite :</p>
+<pre><code>try {
+    // Exécuter une opération.
+} catch (error, stackTrace) {
+    debugPrint('Échec de l\'opération :$error');
+    debugPrintStack(stackTrace: stackTrace);
+}</code></pre>
+                    <p>Le paramètre <span class="em">stackTrace</span> permet d'obtenir la trace de l'exécution, qui indique notamment les appels ayant conduit à l'erreur.</p>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>Les journaux locaux ne constituent pas un système complet de suivi en production. Ils peuvent ne pas être accessibles lorsque le problème se produit sur l'appareil d'un utilisateur.</p>
+                    </div>
+                    <p>Évitez aussi d'enregistrer les mots de passe, les jetons d'accès, les codes de vérification ou les informations personnelles inutiles.</p>
+                    <h3>Installer Firebase Crashlytics :</h3>
+                    <p><span class="em">Firebase Crashlytics</span> est un service de suivi des plantages et des erreurs.</p>
+                    <h4>Ajouter les dépendances :</h4>
+                    <p>Dans le terminal, à la racine du projet Flutter, exécutez :</p>
+<pre><code>flutter pub add firebase_core</code></pre>
+<pre><code>flutter pub add firebase_crashlytics</code></pre>
+                    <p>Si le projet utilise déjà Firebase, <span class="em">firebase_core</span> est peut-être déjà installé.</p>
+                    <p>Vérifiez également que le projet Flutter est correctement associé à votre projet Firebase.</p>
+                    <h3>Initialiser Firebase et capturer les erreurs Flutter :</h3>
+                    <p>Dans le fichier <span class="em">main.dart</span>, vous pouvez configurer la capture des erreurs de cette manière :</p>
+<pre><code>import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart',
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
+import 'firebase_options.dart';
+
+Future&lt;void&gt; main() async {
+    
+}</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
