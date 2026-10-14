@@ -6598,6 +6598,223 @@ task.snapshotEvents.listen((snapshot) {
                 <article>
                     <h2 id="module14">Module 14 : Validation des données utilisateur et gestion des erreurs :</h2>
                     <h3>Présentation du module :</h3>
+                    <p>Dans une application Flutter connectée à Firebase, les utilisateurs peuvent saisir des informations incorrectes, oublier des champs obligatoires ou tenter d'envoyer des données qui ne respectent pas les règles de l'application.</p>
+                    <p>Pour garantir la fiabilité et la sécurité de l'application, il est nécessaire de mettre en place une validation des données et une gestion appropriée des erreurs.</p>
+                    <h3>Objectifs du module :</h3>
+                    <p>Dans ce module, vous allez apprendre à :</p>
+                    <ul>
+                        <li>
+                            <p>Valider les formulaires dans Flutter.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier les données avant de les envoyer à Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Gérer les erreurs de Firebase Authentication.</p>
+                        </li>
+                        <li>
+                            <p>Contrôler les données enregistrées dans Cloud Firestore.</p>
+                        </li>
+                        <li>
+                            <p>Sécuriser les écritures avec les règles Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Afficher des messages d'erreur compréhensibles.</p>
+                        </li>
+                        <li>
+                            <p>Éviter de considérer la validation côté client comme une mesure de sécurité suffisante.</p>
+                        </li>
+                    </ul>
+                    <h3>Comprendre les différents niveaux de validation :</h3>
+                    <p>La validation des données doit être réalisée à plusieurs niveaux.</p>
+                    <ol>
+                        <li>
+                            <h4>Validation côté Flutter :</h4>
+                            <p>Elle permet de vérifier rapidement les informations saisies par l'utilisateur avant d'effectuer une opération.</p>
+                            <p>Exemples :</p>
+                            <ul>
+                                <li>
+                                    <p>Vérifier qu'un champ obligatoire n'est pas vide.</p>
+                                </li>
+                                <li>
+                                    <p>Vérifier le format d'une adresse email.</p>
+                                </li>
+                                <li>
+                                    <p>Vérifier la longueur minimale d'un mot de passe.</p>
+                                </li>
+                                <li>
+                                    <p>Vérifier que deux mots de passe correspondent.</p>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <h4>Validation côté Firebase :</h4>
+                            <p>Firebase Authentication applique ses propres contraintes aux opérations d'authentification. Les règles de sécurité Firestore et Storage permettent également de contrôler les opérations autorisées sur les données.</p>
+                            <p>Ces contrôles sont essentiels, car un utilisateur peut contourner les formulaires Flutter et tenter d'effectuer des opérations directement sur les services Firebase.</p>
+                        </li>
+                        <li>
+                            <h4>Validation côté serveur :</h4>
+                            <p>Certaines règles métier complexes doivent être exécutées dans un environnement de confiance, par exemple avec Cloud Functions.</p>
+                            <p>Exemples :</p>
+                            <ul>
+                                <li>
+                                    <p>Vérifier qu'un code d'invitation est valide.</p>
+                                </li>
+                                <li>
+                                    <p>Contrôler une opération qui nécessite plusieurs vérifications.</p>
+                                </li>
+                                <li>
+                                    <p>Attribuer un rôle privilégié après validation par un service de confiance.</p>
+                                </li>
+                            </ul>
+                            <p><span class="em">Règle essentielle</span> : la validation Flutter améliore l'expérience utilisateur, mais ne remplace jamais les contrôles de sécurité côté serveur.</p>
+                        </li>
+                    </ol>
+                    <h3>Créer un formulaire avec validation Flutter :</h3>
+                    <p>Flutter fournit les widgets <span class="em">Form</span>, <span class="em">TextFormField</span> et la propriété <span class="em">validator</span> pour valider les champs.</p>
+                    <h4>Exemple complet :</h4>
+                    <p>Créons un formulaire qui demande un nom et une adresse email.</p>
+<pre><code>import 'package:flutter/material.dart';
+
+class RegistrationForm extends StatefulWidget {
+    const RegistrationForm({super.key});
+
+    @override
+    State&lt;RegistrationForm&gt; createState() =&gt; _RegistrationFormState();
+}
+
+class _RegistrationFormState extends State&lt;RegistrationForm&gt; {
+    final _formKey = GlobalKey&lt;FormState&gt;();
+
+    final _nameController = TextEditingController();
+    final _emailController = TextEditingController();
+
+    @voverride
+    void dispose() {
+        _nameController.dispose();
+        _emailController.dispose();
+        super.dispose();
+    }
+
+    String? validateName(String? value) {
+        if (value == null || value.trim().isEmpty) {
+            return 'Le nom est obligatoire.';
+        }
+
+        if (value.trim().length &lt; 2) {
+            return 'Le nom doit contenir au moins 2 caractères.';
+        }
+
+        return null;
+    }
+
+    String? validateEmail(String? value) {
+        final email = value?.trim() ?? '';
+        
+        if (email.isEmpty) {
+            return 'L\'adresse email est obligatoire.';
+        }
+
+        final emailRegex = RegExp(r'^[^@\s]+\[^@\s]+.[^@\s]+$');
+
+        if (!emailRegex.hasMatch(email)) {
+            return 'Veuillez saisir une adresse email valide.';
+        }
+
+        return null;
+    }
+
+    void submitForm() {
+        if (!_formKey.currentState!.validate()) {
+            return;
+        }
+
+        final name = _nameController.text.trim();
+        final email = _emailController.text.trim();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Formulaire valide pour $name ($email)'),
+            ),
+        );
+
+        // Le formulaire est valide.
+        // Une opération Firebase pourra être exécutée ici.
+    }
+
+    @override
+    Widget build(BuildContext context) {
+        return Form(
+            key: _formKey,
+            child: Column(
+                children: [
+                    TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                            labelText: 'Nom',
+                            border: OutlineInputBorder(),
+                        ),
+                        validator: validateName,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                            labelText: 'Adresse email',
+                            border: OutlineInputBorder(),
+                        ),
+                        validator: validateEmail,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                        onPressed: submitForm,
+                        child: const Text('Valider'),
+                    ),
+                ],
+            ),
+        );
+    }
+}</code></pre>
+                    <h4>Fonctionnement :</h4>
+                    <p>La méthode <span class="em">validate()</span> exécute les validateurs de champs du formulaire.</p>
+                    <p>Si au moins un champ renvoie un message d'erreur, la validation échoue et les messages correspondants sont affichés.</p>
+                    <p>Si tous les validateurs renvoient <span class="em">null</span>, le formulaire est considéré comme valide.</p>
+                    <p>La validation de l'adresse email présentée ici est volontairement simple. Elle permet de détecter les formats manifestement incorrects, mais ne garantit pas que l'adresse existe ou qu'elle appartient à l'utilisateur.</p>
+                    <h3>Valider un mot de passe :</h3>
+                    <p>Une application peut définir des critères de mot de passe adaptés à ses besoins.</p>
+                    <p>Voici un exemple de validation avec une longueur minimale :</p>
+<pre><code>String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+        return 'Le mot de passe est obligatoire.';
+    }
+
+    if (value.length &lt; 8) {
+        return 'Le mot de passe doit contenir au moins 8 caractères.';
+    }
+
+    return null;
+}</code></pre>
+                    <p>Si l'application demande une confirmation du mot de passe, il faut aussi comparer les deux valeurs.</p>
+<pre><code>String? validatePasswordConfirmation(
+    String? value,
+    String password,
+) {
+    if (value == null || value.isEmpty) {
+        return 'Veuillez confirmer le mot de passe.';
+    }
+
+    if (value != null) {
+        return 'Les mots de passe ne corresponden pas.';
+    }
+
+    return null;
+}</code></pre>
+                    <p>Ces contrôles améliorent l'expérience utilisateur. Les politiques de mot de passe configurées dans Firebase Authentication et les protections disponibles dans le projet doivent également être prises en compte.</p>
+                    <p>Ne stockez jamais les mots de passe en clair dans Firestore.</p>
+                    <h3>Gérer les erreurs de Firebase Authentication :</h3>
+                    <p>Les opérations Firebase peuvent échouer même lorsque le formulaire est valide.</p>
+                    <p>Les causes possibles comprennent :</p>
                     
                 </article>
             <!-- fin de section -->
