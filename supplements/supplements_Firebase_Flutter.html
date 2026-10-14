@@ -6815,7 +6815,130 @@ class _RegistrationFormState extends State&lt;RegistrationForm&gt; {
                     <h3>Gérer les erreurs de Firebase Authentication :</h3>
                     <p>Les opérations Firebase peuvent échouer même lorsque le formulaire est valide.</p>
                     <p>Les causes possibles comprennent :</p>
-                    
+                    <ul>
+                        <li>
+                            <p>Une adresse email déjà utilisée.</p>
+                        </li>
+                        <li>
+                            <p>Un mot de passe qui ne respecte pas les exigences configurées.</p>
+                        </li>
+                        <li>
+                            <p>Une connexion Internet indisponible.</p>
+                        </li>
+                        <li>
+                            <p>Des identifiants incorrects.</p>
+                        </li>
+                        <li>
+                            <p>Une opération qui nécessite une nouvelle authentification.</p>
+                        </li>
+                        <li>
+                            <p>Une configuration Firebase incorrecte.</p>
+                        </li>
+                    </ul>
+                    <p>Flutter permet d egérer ces erreurs avec <span class="em">try</span>, <span class="em">on</span> et <span class="em">catch</span>.</p>
+                    <h4>Exemple lors de la création d'un compte :</h4>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+    
+Future&lt;String?&gt; createAccount(
+    String email,
+    String password,
+) async {
+    try {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: email.trim(),
+            password: password,
+        );
+
+        return null;
+    } on FirebaseAuthException catch (e) {
+        switch (e.code) {
+            case 'email-already-in-use':
+                return 'Cette adresse email ne peut pas être utilisée.';
+            case 'invalid-email':
+                return 'Le format de l\'adresse email est incorrect.';
+            case 'weak-password':
+                return 'Le mot de passe ne respecte pas les exigences.';
+            case 'network-request-failed':
+                return 'Connexion impossible. Vérifiez votre réseau.';
+            default:
+                return 'Impossible de créer le compte pour le moment.';
+        }
+    } catch (_) {
+        return 'Une erreur inattendue est survenue.';
+    }
+}</code></pre>
+                    <p>Cette fonction renvoie <span class="em">null</span> en cas de succès et un message en cas d'erreur.</p>
+                    <p>Exemple d'utilisation dans un bouton :</p>
+<pre><code>final error = await createAccount(
+    emailController.text,
+    passwordController.text,
+);
+
+if (!context.mounted) {
+    return;
+}
+
+if (error != null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+    );
+}</code></pre>
+                    <p>Dans une application réelle, prévoyez également un état de chargement afin d'éviter les clics multiples pendant une requête.</p>
+                    <p>Les codes d'erreur disponibles peuvent évoluer selon l'opération et la configuration. Il faut donc adapter les cas traités à la version de Firebase utilisée.</p>
+                    <h3>Gérer les erreurs lors d'une écriture Firestore :</h3>
+                    <p>Cloud Firestore peut refuser une écriture lorsque les règles de sécurité ne l'autorisent pas, lorsque le réseau est indisponible ou lorsqu'une autre erreur survient.</p>
+                    <p>Exemple :</p>
+<pre><code>import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+Future&lt;String?&gt; saveUserProfile({
+    required String name,
+    required String email,
+}) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+        return 'Vous devez être connecté.';
+    }
+
+    if (name.trim().isEmpty) {
+        return 'Le nom est obligatoire.';
+    }
+
+    try {
+        await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .set({
+                    'name': name.trim(),
+                    'email': email.trim(),
+                    'updatedAt': FieldValue.serverTimestamp(),
+                }, SetOptions(merge: true));
+
+        return null;
+    } on FirebaseAuthException catch (e) {
+        if (e.code == 'permission-denied') {
+            return 'Vous n\'êtes pas autorisé à modifier ces données.';
+        }
+
+        if (e.code == 'unavailable') {
+            return 'Le service est temporairement indisponible.';
+        }
+
+        return 'Impossible d\'enregistrer le profil.';
+    } catch (_) {
+        return 'Une erreur inattendue est survenue.';
+    }
+}</code></pre>
+                    <p>Cet exemple écrit dans le document correspondant à l'identifiant de l'utilisateur connecté. Cela ne suffit toutefois pas, à lui seul, à garantir la sécurité : les règles Firestore doivent imposer les autorisations appropriées et contrôler les données acceptées.</p>
+                    <h3>Sécuriser les données avec les règles Firestore :</h3>
+                    <p>Les règles Firestore s'exécutent indépendamment de la validation effectuée dans Fluter. Elles peuvent contrôler l'identité du demandeur, les droits d'accès et certaines propriétés des données.</p>
+                    <p>Voici un exemple pédagogique pour une collection <span class="em">users</span> où chaque utilisateur peut créer ou modifier son propre document.</p>
+<pre><code>rules_version = '2';
+
+service cloud.firestore {
+    
+}</code></pre>
                 </article>
             <!-- fin de section -->
             </section>
