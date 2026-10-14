@@ -6937,8 +6937,62 @@ Future&lt;String?&gt; saveUserProfile({
 <pre><code>rules_version = '2';
 
 service cloud.firestore {
-    
+    match /databases/{database}/documents {
+
+        match /users/{userId} {
+            function isOwner() {
+                return request.auth != null
+                        &amp;&amp; request.auth.uid == userId;
+            }
+
+            allow read: if isOwner();
+
+            allow create: if isOwner()
+                            &amp;&amp; request.resource.data.keys().hasOnly([
+                                'name',
+                                'email',
+                                'updatedAt'
+                            ])
+                            &amp;&amp; request.resource.data.name is string
+                            &amp;&amp; request.resource.data.name.size() &gt;= 2
+                            &amp;&amp; request.resource.data.name.size() &lt;= 80
+                            &amp;&amp; request.resource.data.email is string;
+            
+            allow update: if isOwner()
+                            &amp;&amp; request.resource.data.keys().hasOnly([
+                                'name',
+                                'email',
+                                'updatedAt'
+                            ])
+                            &amp;&amp; request.resource.data.name is string
+                            &amp;&amp; request.resource.data.name.size() &gt;= 2
+                            &amp;&amp; request.resource.data.name.size() &lt;= 80
+                            &amp;&amp; request.resource.data.email is string;
+
+            allow delete: if false;
+        }
+    }
 }</code></pre>
+                    <h4>Points importants :</h4>
+                    <ul>
+                        <li>
+                            <p><span class="em">request.auth != null</span> vérifie qu'une identité authentifiée est disponible.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">request.auth.uid == userId</span> limite l'accès au document de l'utilisateur concerné.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">keys().hasOnly(...)</span> limite les champs présents aux noms autorisés.</p>
+                        </li>
+                        <li>
+                            <p>Les vérifications de type et de longueur imposent des contraintes supplémentaires.</p>
+                        </li>
+                        <li>
+                            <p>La suppression est interdite dans cet exemple.</p>
+                        </li>
+                    </ul>
+                    <p>Ces règles constituent un exemple de départ, pas une politique universelle. Elles autorisent ici la lecture du document entier par son propriétire et n'imposent pas que l'email corresponde à une adresse vérifiée dans Firebase Authentication.</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
