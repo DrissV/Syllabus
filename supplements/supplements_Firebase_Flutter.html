@@ -6992,6 +6992,118 @@ service cloud.firestore {
                         </li>
                     </ul>
                     <p>Ces règles constituent un exemple de départ, pas une politique universelle. Elles autorisent ici la lecture du document entier par son propriétire et n'imposent pas que l'email corresponde à une adresse vérifiée dans Firebase Authentication.</p>
+                    <p>Il faut aussi vérifier que les règles conviennet aux opérations réellement utilisées par l'application. Les accès effectués par les SDK serveur avec des prib-vilèges administratifs ne sont généralement pas contrôlés par les règles Firestore de la même manière que les accès des clients.</p>
+                    <h3>Ne pas laisser l'utilisateur modifier des champs sensibles :</h3>
+                    <p>Certains champs ne doivent pas être modifiables directement par un utilisateur ordinaire.</p>
+                    <p>Par exemple :</p>
+                    <ul>
+                        <li>
+                            <p class="em">role</p>
+                        </li>
+                        <li>
+                            <p class="em">isAdmin</p>
+                        </li>
+                        <li>
+                            <p class="em">isVerifiedByStaff</p>
+                        </li>
+                        <li>
+                            <p class="em">accountBalance</p>
+                        </li>
+                        <li>
+                            <p class="em">permissions</p>
+                        </li>
+                    </ul>
+                    <p>Une interface Flutter peut masquer ces champs, mais cela ne suffit pas : un client modifié pourrait tenter de les envoyer directement.</p>
+                    <p>Les règles Firestore doivent empêcher les changements non autorisés. Pour les rôles privilégiés, utilisez un mécanisme de confiance, comme les custom claims attribués depuis un environnement serveur sécurisé, avec des règles adaptées.</p>
+                    <p>Ne faites jamais confiance à une valeur envoyée par le client simplement parce qu'elle provient d'un formulaire Flutter.</p>
+                    <h3>Gérer les erreurs de Firebase Storage :</h3>
+                    <p>Lors de l'envoi d'une photo de profil ou d'un fichier, l'opération peut échouer pour plusieurs raisons :</p>
+                    <ul>
+                        <li>
+                            <p>Taille de fichier non autorisée.</p>
+                        </li>
+                        <li>
+                            <p>Type de fichier non accepté.</p>
+                        </li>
+                        <li>
+                            <p>Absence de permission.</p>
+                        </li>
+                        <li>
+                            <p>Problème de réseau.</p>
+                        </li>
+                        <li>
+                            <p>Erreur temporaire du service.</p>
+                        </li>
+                    </ul>
+                    <p>Exemple de gestion des erreurs :</p>
+<pre><code>import 'package:firebase_storage/firebase_storage.dart';
+
+Future&lt;String&gt; uploadProfileImage(
+    Reference storageRef,
+    Strig filePath,
+) aysnc {
+    try {
+        await storageRef.putFile(
+            File(filePath),
+            SettableMetadata(
+                contentType: 'image/jpeg',
+            ),
+        );
+
+        return null;
+    } onFirebaseAuthException catch (e) {
+        switch (e.code) {
+            case 'unauthorized':
+                return 'Vous n\'êtes pas autorisé à envoyer ce fichier.';
+            case 'canceled':
+                return 'L\'envoi du fichier a été annulé.';
+            case 'retry-limit-exceeded':
+                return 'L\'envoi a échoué après plusieurs tentatives.';
+            default:
+                return 'Impossible d\'envoyer la photo.';
+        }
+    } catch (_) {
+        return 'Une erreur inattendue est survenue.';
+    }
+}</code></pre>
+                    <p>Pour compiler cet exemple, ajoutez également l'import <span class="em">dart:io</span> si vous utilisez <span class="em">File</span>.</p>
+                    <p>Le champ <span class="em">contentType</span> fourni par le client ne prouve pas que le fichier est réellement une image JPEG. Il faut compléter cette approche avec des règles Storage qui vérifient notamment l'identité, le chemin, le type déclaré et la taille autorisée. Pour les besoins plus stricts, une vérification côté serveur peut être nécessaire.</p>
+                    <h3>Afficher des messages d'erreur utiles :</h3>
+                    <p>Un message d'erreur doit aider l'utilisateur à comprendre quoi faire ensuite, sans exposer inutilement des informations internes.</p>
+                    <p>Exemples :</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Situation</th>
+                                <th>Message conseillé</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Champ vide</td>
+                                <td><q>Ce champ est obligatoire.</q></td>
+                            </tr>
+                            <tr>
+                                <td>Email mal formé</td>
+                                <td><q>Vérifiez le format de votre adresse email.</q></td>
+                            </tr>
+                            <tr>
+                                <td>Connexion impossible</td>
+                                <td><q>Vérifiez votre connexion Internet et réessayez.</q></td>
+                            </tr>
+                            <tr>
+                                <td>Accès refusé</td>
+                                <td><q>Vous n'êtes pas autorisé à effectuer cette action.</q></td>
+                            </tr>
+                            <tr>
+                                <td>Erreur inconnue</td>
+                                <td><q>Une erreur est survenue. Veuillez réessayer.</q></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Évitez d'afficher directement à l'utilisateur des traces techniques, des détails internes ou des messages bruts qui ne lui permettent pas de résoudre le problème.</p>
+                    <p>Pour le diagnostic, vous pouvez enregistrer les informations techniques utiles dans un système de journalisation adapté, sans y inclure de mots de passe, de jetons d'authentification ou d'autres secrets.</p>
+                    <h3>Éviter les erreurs fréquentes :</h3>
                     
                 </article>
             <!-- fin de section -->
