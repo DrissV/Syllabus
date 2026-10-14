@@ -6805,7 +6805,7 @@ class _RegistrationFormState extends State&lt;RegistrationForm&gt; {
         return 'Veuillez confirmer le mot de passe.';
     }
 
-    if (value != null) {
+    if (value != password) {
         return 'Les mots de passe ne corresponden pas.';
     }
 
@@ -7431,7 +7431,161 @@ await FirebaseCrashlytics.instance.setCustomKey(
                     <p>Dans une application qui contient plusieurs écrans, il est préférable de ne pas réécrire la même logique de gestion des erreurs partout.</p>
                     <p>Vous pouvez créer un service chargé de convertir les exceptions en messages compréhensibles.</p>
                     <p>Exemple :</p>
-                    
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class AppErrorHandler {
+    static String messageFor(Object error) {
+        if (error is FirebaseAuthException) {
+            switch (error.code) {
+                case 'invalid-email':
+                    return 'Le format de l\'adresse email est incorrect.';
+                
+                case 'network-request-failed':
+                    return 'Vérifiez votre connexion Internet.';
+                
+                case 'weak-password':
+                    return 'Le mot de passe ne respecte pas les exigences.';
+
+                default:
+                    return 'Une erreur d\'authentification est survenue.';
+            }
+        }
+
+        if (error is FirebaseException) {
+            switch (error.code) {
+                case 'permission-denied':
+                    return 'Vous n\'avez pas les autorisations nécessaires.';
+
+                case 'unavailable':
+                    return 'Le service est temporairement indisponible.';
+
+                default:
+                    return 'Une erreur Firebase est survenue.';
+            }
+        }
+
+        return 'Une erreur inattendue est survenue.';
+    }
+}</code></pre>
+                    <p>Utilisation :</p>
+<pre><code>try {
+    // Exécuter une opération Firebase.
+} catch (error, stackTrace) {
+    debugPrint('Erreur technique : $error');
+
+    final message = AppErrorHandler.messageFor(error);
+
+    // Afficher le message dans l'interface.
+}</code></pre>
+                    <p>Dans cet exemple, la trace est affichée dans les journaux de développement. En production, évitez d'afficher directement les détails techniques à l'utilisateur.</p>
+                    <p>La liste des codes doit être adaptée aux opérations réellement utilisées et à la version des bibliothèques Firebase.</p>
+                    <h3>Distinguer une erreur technique d'une erreur métier :</h3>
+                    <p>Toutes les erreurs ne nécessitent pas le même traitement.</p>
+                    <h4>Erreur technique :</h4>
+                    <p>Exemples :</p>
+                    <ul>
+                        <li>
+                            <p>Une requête échoue à cause du réseau.</p>
+                        </li>
+                        <li>
+                            <p>Le service est indisponible.</p>
+                        </li>
+                        <li>
+                            <p>Une exception inattendue survient.</p>
+                        </li>
+                    </ul>
+                    <p>Actions possibles :</p>
+                    <ul>
+                        <li>
+                            <p>Enregistrer l'erreur.</p>
+                        </li>
+                        <li>
+                            <p>Afficher un message générique.</p>
+                        </li>
+                        <li>
+                            <p>Proposer une nouvelle tentative si elle est sûre.</p>
+                        </li>
+                    </ul>
+                    <h4>Erreur métier :</h4>
+                    <p>Exemples :</p>
+                    <ul>
+                        <li>
+                            <p>Un champ obligatoire est manquant.</p>
+                        </li>
+                        <li>
+                            <p>Un utilisateur ne peut pas effectuer une action selon son rôle.</p>
+                        </li>
+                        <li>
+                            <p>Une opération ne respecte pas une règle fonctionnelle.</p>
+                        </li>
+                    </ul>
+                    <p>Actions possibles :</p>
+                    <ul>
+                        <li>
+                            <p>Expliquer la règle à l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Corriger les données saisies.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier les autorisations côté Firebase ou côté serveur.</p>
+                        </li>
+                    </ul>
+                    <p>Il ne faut pas enregistrer chaque validation de formulaire échouée comme un plantage. Les rapports doivent rester utiles et exploitables.</p>
+                    <h3>Tester Crashlytics :</h3>
+                    <p>Avant de dépendre de Crashlytics en production, vérifiez que les rapportssont effectivement transmis et visibles dans la console Firebase.</p>
+                    <p>Vous pouvez déclencher un test contrôlé dans une version de développement :</p>
+<pre><code>import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
+void testCrashlytics() {
+    FirebaseCrashlytics.instance.crash();
+}</code></pre>
+                    <p>Cette méthode provoque volontairement un plantage. <span class="em">Ne l'exécutez jamais dans le parcours normal de l'application ni dans une version destinée aux utilisateurs.</span> Utilisez-la uniquement dans un environnement de test contrôlé.</p>
+                    <p>Pour tester une erreur non fatale :</p>
+<pre><code>await FirebaseCrashlytics.instance.recordError(
+    Exception('Erreur de test'),
+    StackTrace.current,
+    reason: 'Vérification du suivi des erreurs',
+    fatal: false,
+);</code></pre>
+                    <p>Les rapports peuvent ne pas apparaître immédiatement. Vérifiez également la configuration Firebase, la plateforme ciblée et les paramètres de compilation si aucun rapport n'est reçu.</p>
+                    <h3>Bonnes pratiques pour une applicaton en production :</h3>
+                    <ol>
+                        <li>
+                            <p>Configurez Crashlytics pour les plateformes prises en charge.</p>
+                        </li>
+                        <li>
+                            <p>Capture les erreurs non gérées pertinentes.</p>
+                        </li>
+                        <li>
+                            <p>Enregistrez les erreurs récupérables lorsqu'elles apportent une valeur diagnostique.</p>
+                        </li>
+                        <li>
+                            <p>Ajoutez des informations de contexte utiles et non sensibles.</p>
+                        </li>
+                        <li>
+                            <p>Affichez des messages compréhensibles dans l'interface.</p>
+                        </li>
+                        <li>
+                            <p>Évitez les doublons inutiles lors de la capture d'une même exception.</p>
+                        </li>
+                        <li>
+                            <p>Ne transmettez pas de secrets ni de données personnelles inutiles.</p>
+                        </li>
+                        <li>
+                            <p>Testez les rapports dans un environnement contrôlé.</p>
+                        </li>
+                        <li>
+                            <p>Testez les rapports dans un environnement contrôlé.</p>
+                        </li>
+                        <li>
+                            <p>Analysez les erreurs récurrentes et corrigez les causes racines.</p>
+                        </li>
+                        <li>
+                            <p>Vérifiez les règles de confidentialité applicables à la collecte de données de diagnostic.</p>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
