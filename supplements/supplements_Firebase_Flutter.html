@@ -7785,7 +7785,64 @@ void testCrashlytics() {
                         <li>
                             <h4>Vérifier les dépendances de test :</h4>
                             <p>Flutter fournit déjà les outils essentiels aux tests unitaires et aux tests de widgets.</p>
-                            
+                            <p>Dans le fichier <span class="em">pubspec.yaml</span>, vérifiez la présence d'une dépendance de test comparable à celle-ci :</p>
+<pre><code>dev_dependencies:
+    flutter_test:
+        sdk: flutter</code></pre>
+                            <p>Pour les tests d'intégration Flutter, ajoutez également le paquet <span class="em">integration_test</span> dans les dépendances de développement :</p>
+<pre><code>dev_dependencies:
+        flutter_test:
+            sdk: flutter
+        integration_test:
+            sdk: flutter</code></pre>
+                            <p>Conservez les autres dépendances déjà présentes dans votre projet. Il ne faut pas remplacer aveuglément tout le bloc <span class="em">dev_dependencies</span>.</p>
+                            <p>Récupérez ensuite les dépendances :</p>
+<pre><code>flutter pub get</code></pre>
+                            <p>Les versions compatibles sont gérées par Flutter et le fichier <span class="em">pubspec.lock</span> lorsqu'il est utilisé dans le projet.</p>
+                        </li>
+                        <li>
+                            <h3>Organiser les fichiers de test :</h3>
+                            <p>Une organisation possible est la suivante :</p>
+<pre><code>mon_application/
+├── lib/
+│   ├── main.dart
+│   ├── services/
+│   │   └── auth_service.dart
+│   ├── models/
+│   └── widgets/
+├── test/
+│   ├── validators/
+│   │   └── email_validator_test.dart
+│   └── widgets/
+│       └── login_form_test.dart
+├── integration_test/
+│   └── authentication_test.dart
+├── firestore.rules
+├── firebase.json</code></pre>
+                            <p>Le dossier <span class="em">test/</span> contient les tests unitaires et les tests de widgets.</p>
+                            <p>Le dossier <span class="em">integration_test/</span> contient les tests qui doivent s'exécuter sur une application Flutter lancée dans un environnement d'intégration.</p>
+                            <p>Les tests des règles de sécurité Firebase peuvent être placés dans un dossier séparé, par exemple <span class="em">firebase-tests/</span>, car ils utilisent généralement les outils de test JavaScript ou TypeScript de Firebase.</p>
+                            <p>Cette séparation permet de distinguer les tests du code Flutter des tests des règles serveur.</p>
+                        </li>
+                    </ol>
+                    <h3>Écrire un premier test unitaire :</h3>
+                    <p>Pour commencer, nous allons créer une fonction de validation d'adresse email.</p>
+                    <ol>
+                        <li>
+                            <h4>Créer la fonction de validation :</h4>
+                            <p>Créez le fichier <span class="em">lib/validator/email_validator.dart</span> :</p>
+<pre><code>class EmailValidator {
+    static bool isValid(String email) {
+        final normalizedEmail = email.trim();
+
+        final emailRegex = RegExp(
+            r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+        );
+
+        return emailRegex.hasMatch(normalizedEmail);
+    }
+}</code></pre>
+                            <p>Cette fonction supprime les espaces situés au début et à la fin de la chaîne, puis vérifie une structure générale d'adresse email.</p>
                         </li>
                     </ol>
                 </article>
