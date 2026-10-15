@@ -8234,7 +8234,89 @@ void main() {
                     <h3>Préparer les tests Firebase :</h3>
                     <p>Les tests qui utilisent Firebase doivent être organisés avec soin. Une erreur de configuration peut entraîner des connexions à un projet réel ou modifier des données qui ne sont pas destinées aux tests.</p>
                     <p>Il est donc préférable de séparer les environnements suivants :</p>
-                    
+                    <ul>
+                        <li>
+                            <p><span class="em">Développement</span> : pour le travail quotidien.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Test</span> : pour les vérifications automatisées.</p>
+                        </li>
+                        <li>
+                            <p><span class="em">Production</span> : pour les utilisateurs réels.</p>
+                        </li>
+                    </ul>
+                    <p>Lorsque c'est possible, les tests automatisés qui nécessitent un service Firebase doivent utiliser les émulateurs Firebase.</p>
+                    <ol>
+                        <li>
+                            <h4>Installer ou vérifier la Firebase CLI :</h4>
+                            <p>La Firebase CLI permet de configurer et de lancer la suite d'émulateurs.</p>
+                            <p>Vérifiez si elle est disponible :</p>
+<pre><code>firebase --version</code></pre>
+                            <p>Si la commande n'est pas disponible, installez la Firebase CLI selon les instructions officielles de Firebase.</p>
+                            <p>Vous devez également disposer de Node.js et de nom pour les outils de test JavaScript utilisés dans les sections consacrées aux règles de sécurité.</p>
+                        </li>
+                        <li>
+                            <h4>Initialiser les émulateurs :</h4>
+                            <p>À la racine du projet Firebase, exécutez :</p>
+<pre><code>firebase init emulators</code></pre>
+                            <p>Sélectionnez les services nécessaires au projet, par exemple :</p>
+                            <ul>
+                                <li>
+                                    <p>Authentication;</p>
+                                </li>
+                                <li>
+                                    <p>Cloud Firestore;</p>
+                                </li>
+                                <li>
+                                    <p>éventuellement Storage.</p>
+                                </li>
+                            </ul>
+                            <p>Les choix disponibles peuvent dépendre de la version de la Firebase CLI. Vérifiez les ports et les paramètres générés dans <span class="em">firebase.json</span>.</p>
+                            <p>Une configuration possible ressemble à ceci :</p>
+<pre><code>{
+    "emulators": {
+        "auth": {
+            "port": 9099
+        },
+        "firestore": {
+            "port": 8080
+        },
+        "storage": {
+            "port": 9199
+        },
+        "ui": {
+            "enabled": true,
+            "port": 4000
+        }
+    }
+}</code></pre>
+                            <p>Cette configuration est un exemple. Si le fichier <span class="em">firebase.json</span> existe déjà, conservez les autres paramètres nécessaires au projet et fusionnez uniquement les sections appropriées.</p>
+                        </li>
+                        <li>
+                            <h4>Lancer les émulateurs :</h4>
+                            <p>Pour démarrer les services configurés :</p>
+<pre><code>firebase emulators:start</code></pre>
+                            <p>Les ports de l'exemple correspondent à ceux souvent utilisés par les émulateurs Authentication, Firestore et Storage.</p>
+                            <p>La sortie du terminal indique les services réellement démarrés et leurs adresses locales.</p>
+                            <p>Pour arrêter les émulateurs, interrompez le processus dans le terminal.</p>
+                            <p>L'utilisation des émulateurs permet de tester les interactions sans dépendre systématiquement des services de production. Toutefois, chaque émulateur doit être configuré correctement, et les tests doivent vérifier qu'ils se connectent bien à l'environnement local attendu.</p>
+                        </li>
+                    </ol>
+                    <h3>Connecter Flutter aux émulateurs Firebase :</h3>
+                    <p>Dans une application FLutter, les services Firebase sont généralement initialisésau démarrage.</p>
+                    <p>Par exemple :</p>
+<pre><code>await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+);</code></pre>
+                    <p>Cette initialisation est habituellement générée ou configurée avec FlutterFire CLI.</p>
+                    <p>Pour les tests, il faut ensuite rediriger les services concernés vers les émulateurs avant de les utiliser.</p>
+                    <ol>
+                        <li>
+                            <h4>Exemple avec Firebase Authentication :</h4>
+                            <p>Après l'initialisation de Firebase, une configuration de test peut utiliser :</p>
+                            
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
