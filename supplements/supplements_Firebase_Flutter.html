@@ -7843,6 +7843,242 @@ void testCrashlytics() {
     }
 }</code></pre>
                             <p>Cette fonction supprime les espaces situés au début et à la fin de la chaîne, puis vérifie une structure générale d'adresse email.</p>
+                            <p>Cette expression régulière constitue une validation élémentaire. Elle ne garantit pas que l'adresse existe, qu'elle reçoit des messages ou qu'elle respecte toutes les règles possibles d'une adresse email.</p>
+                            <p>La vérification de l'adresse lors de l'inscription doit donc être complétée par le mécanisme de vérification d'email de Firebase Authentication lorsque celui-ci est utilisé.</p>
+                        </li>
+                        <li>
+                            <h4>Écrire les tests unitaires :</h4>
+                            <p>Créez le fichier <span class="em">test/validators/email_validator_test.dart</span> :</p>
+<pre><code>import 'package:flutter_test/flutter_test.dart';
+import 'package:mon_application/validators/email_validator.dart';
+
+void main() {
+    group('EmailValidator', () {
+        test('accepte une adresse email valide', () {
+            expect(
+                EmailValidator.isValid('utilisateur@example.com'),
+                isTrue,
+            );
+        });
+
+        test('refuse une chaîne vide', () {
+            expect(
+                EmailValidator.isValid(''),
+                isFalse,
+            );
+        });
+
+        test('refuse une adresse sans arobase', () {
+            expect(
+                EmailValidator.isValid('utilisateur.example.com'),
+                isFalse,
+            );
+        });
+
+        test('refuse une adresse sans domaine complet', () {
+            expect(
+                EmailValidator.isValid('utilisateur@'),
+                isFalse,
+            );
+        });
+
+        test('accepte les espaces extérieurs', () {
+            expect(
+                EmailValidator.isValid(
+                    ' utilisateur@example.com ',
+                ),
+                isTrue,
+            );
+        });
+    });
+}</code></pre>
+                            <p>Remplacez <span class="em">mon_application</span> par le nom réel du package indiqué dans le fichier <span class="em">pubspec.yaml</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Comprendre les fonctions utilisées :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">group()</span> regourpe plusieurs tests liés à une même fonctionnalité.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">test()</span> définit un scénario de test.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">expect()</span> compare le résultat obtenu avec le résultat attendu.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">isTrue</span> indique que le résultat attendu est vrai.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">isFalse</span> indique que le résultat attendu est faux.</p>
+                                </li>
+                            </ul>
+                            <p>Un bon test doit avoir un objectif clair et vérifier un comportement précis.</p>
+                        </li>
+                        <li>
+                            <h4>Exécuter les tests :</h4>
+                            <p>Depuis la racine du projet :</p>
+<pre><code>flutter test</code></pre>
+                            <p>Pour exécuter uniquement le fichier de validation :</p>
+<pre><code>flutter test test/validators/email_validator_test.dart'</code></pre>
+                            <p>Si tous les tests réussissent, Flutter affiche un résultat positif. Si un test échoue, la sortie du terminal indique généralement le scénario concerné et la différence entre la valeur obtenue et celle attendue.</p>
+                        </li>
+                    </ol>
+                    <h3>Tester les cas limites :</h3>
+                    <p>Lestests ne doivent pas seuelement vérifier les scénarios habituels. Ils doivent également couvrir les entrées inattendues.</p>
+                    <p>Pour une validation d'adresse email, les cas suivants peuvent être étudiés :</p>
+                    <ul>
+                        <li>
+                            <p>chaîne vide;</p>
+                        </li>
+                        <li>
+                            <p>espaces seuls;</p>
+                        </li>
+                        <li>
+                            <p>adresse sans arobase;</p>
+                        </li>
+                        <li>
+                            <p>adresse sans domaine;</p>
+                        </li>
+                        <li>
+                            <p>plusieurs caractères @;</p>
+                        </li>
+                        <li>
+                            <p>espaces à l'intérieur de l'adresse;</p>
+                        </li>
+                        <li>
+                            <p>caractères inhabituels;</p>
+                        </li>
+                        <li>
+                            <p>adresse valide entourée d'espaces.</p>
+                        </li>
+                    </ul>
+                    <p>Les cas limites dépendent de la fonction testée et des règles métier de l'application.</p>
+                    <p>On peut compléter le test précédent avec une liste de valeurs invalides :</p>
+<pre><code>test('refuse plusieurs formats invalides', () {
+    const invalidEmails = [
+        '',
+        '    ',
+        'utilisateur',
+        'utilisateur@',
+        '@example.com',
+        'utilisateur example@example.com',
+    ];
+
+    for (final email in invalidEmails) {
+        except(
+            EmailValidator.isValid(email),
+            isFalse,
+            reason: 'Adresse inattendue : $email',
+        );
+    }
+});</code></pre>
+                    <p>Cette approche permet de vérifier plusieurs entrées avec un même scénario. Pour des comportements plus complexes, il peut être préférable de créer un test distinct par cas afin de faciliter le diagnostic.</p>
+                    <h3>Tester un widget Flutter :</h3>
+                    <p>Nous allons maintenant tester un formulaire de connexion simplifié.</p>
+                    <ol>
+                        <li>
+                            <h4>Créer un widget de formulaire :</h4>
+                            <p>Créez le fichier <span class="em">lib/widgets/login_form.dart</span> :</p>
+<pre><code>import 'package:flutter/material.dart';
+
+class LoginForm extends StatefulWidget {
+    const LoginForm({
+        super.key,
+        required this.onSubmit,
+    });
+
+    final void Function(String email, String password) onSubmit;
+
+    @override
+    State&lt;LoginForm&gt; createState() =&gt; _LoginFormState();
+}
+
+class _LoginFormState extends State&lt;LoginForm&gt; {
+    final _formKey = GlobalKey&lt;FormState&gt;();
+    final _emailController = TextEditingController();
+    final _passwordController = TextEditingController();
+
+    @override
+    void dispose() {
+        _emailController.dispose();
+        _passwordController.dispose();
+        super.dispose();
+    }
+
+    void _submit() {
+        if (!_formKey.currentState!.validate()) {
+            return;
+        }
+
+        widget.onSubmit(
+            _emailController.text.trim(),
+            _passwordController.text,
+        );
+    }
+
+    @override
+    Widget build(BuildContext context) {
+        return Form(
+            key: _formKey,
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                    TextFormField(
+                        key: const Key('emailField'),
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                            labelText: 'Adresse email',
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                            final email = value?.trim() ?? '';
+
+                            if (email.isEmpty) {
+                                return 'Veuillez saisir une adresse email';
+                            }
+
+                            if (!email.contains('@')) {
+                                return 'Adresse email invalide',
+                            }
+
+                            return null;
+                        },
+                    ),
+                    TextFormField(
+                        key: const Key('passwordField'),
+                        controller: _passwordController,
+                        decoration: const InputDecoration(
+                            labelText: 'Mot de passe',
+                        ),
+                        obscureText: true,
+                        validator: (value) {
+                            if (value == null || value.isEmpty) {
+                                return 'Veuillez saisir un mot de passe';
+                            }
+
+                            return null;
+                        },
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                        key: const Key('loginButton'),
+                        onPressed: _submit,
+                        child: const Text('Se connecter'),
+                    ),
+                ],
+            ),
+        );
+    }
+}</code></pre>
+                            <p>Ce widget valide les champs et appelle <span class="em">onSubmit</span> uniquement si les deux champs passent leurs validations.</p>
+                            <p>Il ne se connecte pas directement à Firebase. Cette séparation facilité les tests, car nous pouvons vérifier le comportement du formulaire sans effectuer de véritable connexion.</p>
+                            <p>Dans une application complète, la fonction <span class="em">onSubmit</span> pourra être reliée à un service d'authentification.</p>
+                        </li>
+                        <li>
+                            <h4>Tester l'affichage et les validations :</h4>
+                            <p>Créez <span class="em">test/widgets/login_form_test.dart</span> :</p>
+                            
                         </li>
                     </ol>
                 </article>
