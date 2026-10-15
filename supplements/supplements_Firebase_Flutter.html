@@ -8078,9 +8078,163 @@ class _LoginFormState extends State&lt;LoginForm&gt; {
                         <li>
                             <h4>Tester l'affichage et les validations :</h4>
                             <p>Créez <span class="em">test/widgets/login_form_test.dart</span> :</p>
-                            
+<pre><code>import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mon_application/widgets/login_form.dart';
+
+void main() {
+    testWidgets(
+        'affiche les champs et le bouton de connexion',
+        (tester) async {
+            await tester.pumpWidget(
+                MaterialApp(
+                    home: Scaffold(
+                        body: LoginForm(
+                            onSubmit: (_, _) {},
+                        ),
+                    ),
+                ),
+            );
+
+            expect(
+                find.byKey(const Key('emailField')),
+                findsOneWidget,
+            );
+
+            expect(
+                find.byKey(constKey('passwordField')),
+                findsOneWidget,
+            );
+
+            expect(
+                find.text('Se connecter'),
+                findsOneWidget,
+            );
+        },
+    );
+
+    testWidgets(
+        'affiche une erreur si le formulaire est valide',
+        (tester) async {
+            await tester.pumpWidget(
+                MaterialApp(
+                    home: Scaffold(
+                        body: LoginForm(
+                            onSubmit: (_, _) {},
+                        ),
+                    ),
+                ),
+            );
+
+            await tester.tap(
+                find.byKey(const Key('loginButton')),
+            );
+
+            await tester.pump();
+
+            expect(
+                find.text('Veuillez saisir une adresse email'),
+                findsOneWidget,
+            );
+
+            expect(
+                find.text('Veuillez saisir un mot de passe'),
+                findsOneWidget,
+            );
+        },
+    );
+
+    testWidgets(
+        'transmet les données si les champs sont valides',
+        (tester) async {
+            String? submittedEmail;
+            String submittedPassword;
+
+            await tester.pumpWidget(
+                MaterialApp(
+                    home: Scaffold(
+                        body: LoginForm(
+                            onSubmit: (email, password) {
+                                submittedEmail = email;
+                                submittedPassword = password;
+                            },
+                        ),
+                    ),
+                ),
+            );
+
+            await tester.enterText(
+                find.byKey(const Key('emailField')),
+                'utilisateur@example.com',
+            );
+
+            await tester.enterText(
+                find.byKey(const Key('passwordField')),
+                'motdepasse123',
+            );
+
+            await tester.tap(
+                find.byKey(const Key('loginButton')),
+            );
+
+            await tester.pump();
+
+            expect(
+                submittedEmail,
+                'utilisateur@example.com',
+            );
+
+            expect(
+                submittedPassword,
+                'motdepasse123',
+            );
+        },
+    );
+}</code></pre>
+                            <p>Adaptez également le nom du package <span class="em">mon_application</span> à celui de votre projet.</p>
+                        </li>
+                        <li>
+                            <h4>Comprendre les outils des tests de widgets :</h4>
+                            <ul>
+                                <li>
+                                    <p><span class="em">testWidgets()</span> crée un scénario de test dédié à un widget.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">pumpWidget()</span> construit l'interface à tester.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">find.byKey()</span> recherche un widget par sa clé.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">find.text()</span> recherche un texte affiché.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">find.tap()</span> simule un clic.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">tester.enterText()</span> saisit du texte dans un champ.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">tester.pump()</span> demande une nouvelle mise à jour de l'interface.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">findsOneWidget</span> vérifie qu'un seul élément correspondant est trouvé.</p>
+                                </li>
+                            </ul>
+                            <p>Les clés facilitent l'identification des composants importants dans les tests, en particulier lorsque plusieurs éléments possèdent des textes similaires.</p>
+                            <p>Exécuez les tests :</p>
+<pre><code>flutter test</code></pre>
+                            <p>Le formulaire est ainsi testé indépendamment de Firebase.</p>
+                            <div class="bordure important">
+                                <img src="../images/important.png" alt="Important" class="float_left">
+                                <p>Le mot de passe utilisé ici est une donnée fictive destinée au test. Il ne faut pas écrire de vrais mots de passe d'utilisateurs dans les fichiers de test ou dans les journaux.</p>
+                            </div>
                         </li>
                     </ol>
+                    <h3>Préparer les tests Firebase :</h3>
+                    <p>Les tests qui utilisent Firebase doivent être organisés avec soin. Une erreur de configuration peut entraîner des connexions à un projet réel ou modifier des données qui ne sont pas destinées aux tests.</p>
+                    <p>Il est donc préférable de séparer les environnements suivants :</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
