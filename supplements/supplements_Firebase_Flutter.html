@@ -8314,6 +8314,178 @@ void main() {
                         <li>
                             <h4>Exemple avec Firebase Authentication :</h4>
                             <p>Après l'initialisation de Firebase, une configuration de test peut utiliser :</p>
+<pre><code>await FirebaseAuth.instance.useAuthEmulator(
+    '10.0.2.2',
+    9099,
+);</code></pre>
+                            <p>L'adresse <span class="em">10.0.2.2</span> est couramment utilisée par un émulateur Android pour joindre la machine hôte.</p>
+                            <p>Sur un simulateur iOS ou un navigateur exécuté sur la même machine, l'adresse différente.  Sur un appareil physique, il faut généralement utiliser l'adresse IP de l'ordinateur, avec une configuration réseau adaptée.</p>
+                            <p>Ne considérez donc pas <span class="em">10.0.2.2</span> comme une adresse universelle.</p>
+                        </li>
+                        <li>
+                            <h4>Exemple avec Cloud Firestore :</h4>
+                            <p>Pour Cloud Firestore, on peut configurer l'émulateur de cette manière :</p>
+<pre><code>FirebaseFirestore.instance.useFirestoreEmulator(
+    '10.0.2.2',
+    8080,
+);</code></pre>
+                        </li>
+                        <li>
+                            <h4>Exemple avec Firebase Storage :</h4>
+                            <p>Pour Storage, on peut utiliser :</p>
+<pre><code>await FirebaseStorage.instance.useStorageEmulator(
+    '10.0.2.2',
+    9199,
+);</code></pre>
+                            <p>Vérfiez la signature exacte des méthodes avec la version des paquets Firebase installée dans le projet.</p>
+                        </li>
+                        <li>
+                            <h4>Attention à l'initialisation :</h4>
+                            <p>Ces méthodes doivent être appelées avant les premières opérations sur les services concernés. Il est préférable de centraliser cette configuration dans un point d'entrée spécifique aux tests.</p>
+                            <p>Par exemple, on peut créer une fonction d'initialisation qui :</p>
+                            <ol>
+                                <li>
+                                    <p>initialise Firebase;</p>
+                                </li>
+                                <li>
+                                    <p>configure Authentication sur son émulateur;</p>
+                                </li>
+                                <li>
+                                    <p>configure Firestore sur son émulateur;</p>
+                                </li>
+                                <li>
+                                    <p>configure Storage si nécessaire;</p>
+                                </li>
+                                <li>
+                                    <p>lance ensuite le scénario de test.</p>
+                                </li>
+                            </ol>
+                            <p>Il faut aussi éviter de connecter accidentellement les tests à la production. Les environnements doivent être explicitement sélectionnés, et les tests destructifs ne doivent pas être exécutés sur les données réelles.</p>
+                        </li>
+                    </ol>
+                    <h3>Tester les parcours d'authentification :</h3>
+                    <p>Les modules précédents ont introduit l'inscription, la connexion, la vérification de l'adresse email, l'authentification par SMS, la gestion des sessions et la réinitialisation du mot de passe.</p>
+                    <p>Chaque parcours peut être décomposé en scénarios vérifiables.</p>
+                    <ol>
+                        <li>
+                            <h4>Scénarios d'inscription :</h4>
+                            <p>Les tests peuvent vérifier que :</p>
+                            <ul>
+                                <li>
+                                    <p>un formulaire valide transmet les données attendues;</p>
+                                </li>
+                                <li>
+                                    <p>une adresse email vide est refusée;</p>
+                                </li>
+                                <li>
+                                    <p>un mot de passe manquant est refusé;</p>
+                                </li>
+                                <li>
+                                    <p>une erreur d'inscription est correctement présentée à l'utilisateur;</p>
+                                </li>
+                                <li>
+                                    <p>l'interface affiche l'état de chargment lorsque l'opération est en cours;</p>
+                                </li>
+                                <li>
+                                    <p>une inscription réussie mène à l'écran prévu.</p>
+                                </li>
+                            </ul>
+                            <p>Un test de widget peut vérfier les validations sans contacter Firebase. Un test d'intégration peut ensuite vérifier le parcours complet avec l'émulateur Authentication.</p>
+                        </li>
+                        <li>
+                            <h4>Scénarios de connexion :</h4>
+                            <p>Il est utile de tester les situations suivantes :</p>
+                            <ul>
+                                <li>
+                                    <p>identifiants valides;</p>
+                                </li>
+                                <li>
+                                    <p>adresse email incorrecte;</p>
+                                </li>
+                                <li>
+                                    <p>mot de passe incorrect;</p>
+                                </li>
+                                <li>
+                                    <p>utilisateur inexistant;</p>
+                                </li>
+                                <li>
+                                    <p>erreur réseau simulée ou indisponibilité du service;</p>
+                                </li>
+                                <li>
+                                    <p>opération de connexion déjà en cours;</p>
+                                </li>
+                                <li>
+                                    <p>déconnexion après une connexion réussie.</p>
+                                </li>
+                            </ul>
+                            <p>Le but n'est pas uniquement de vérifier que la connexion fonctionne. Il faut aussi s'assurer que l'application réagit correctement aux échecs.</p>
+                        </li>
+                        <li>
+                            <h4>Scénarios de session :</h4>
+                            <p>Pour la gestion des sessions, vérifiez notamment :</p>
+                            <ul>
+                                <li>
+                                    <p>qu'un utilisateur connecté accède aux écrans protégés;</p>
+                                </li>
+                                <li>
+                                    <p>qu'un utilisateur déconnecté ne peut pas accéder aux données privées;</p>
+                                </li>
+                                <li>
+                                    <p>que l'état de l'interface suit les changements d'authentification;</p>
+                                </li>
+                                <li>
+                                    <p>que la déconnexion redirige vers l'écran attendu;</p>
+                                </li>
+                                <li>
+                                    <p>que les données d'un utilisateur ne restent pas visibles après le changement de compte.</p>
+                                </li>
+                            </ul>
+                            <p>Ces scénarios doivent être vérifiés à la fois dans l'interface et au niveau des autorisations côté Firebase.</p>
+                        </li>
+                        <li>
+                            <h4>Scénarios de vérification d'email et de SMS :</h4>
+                            <p>Pour la vérification de l'adresse email, testez l'état de l'interface avant et après la confirmation de la vérification, ainsi que la gestion des erreurs de renvoi.</p>
+                            <p>Pour l'authentification par téléphone, testez les étapes d'envoi du code, de validation du code et de gestion des erreurs.</p>
+                            <p>Les flux SMS et les mécanismes de vérification peuvent avoir des contraintes spécifiques selon l'environnement. Pour automatiser ces parcours, utilisez les possibilités prévues par Firebase, notamment les numéros de téléphone de test lorsque c'est approprié, et évitez de dépendre d'un véritable SMS pour chaque exécution.</p>
+                        </li>
+                    </ol>
+                    <h3>Écrire un test d'intégration Flutter :</h3>
+                    <p>Un test d'intégration démarre l'application et effectue des interactions plus proches de celles d'un utilisateur.</p>
+                    <p>Créez le fichier <span class="em">integration_test/authentication_test.dart</span> :</p>
+<pre><code>import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+import 'package:mon_application/main.dart' as app;
+
+void main() {
+    IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+    testWidgets(
+        'affiche le formulaire de connexion',
+        (tester) async {
+            app.main();
+
+            await tester.pumpAndSettle();
+
+            expect(
+                find.text('Se connecter'),
+                findsOneWidget,
+            );
+        },
+    );
+}</code></pre>
+                    <p>Remplacez <span class="em">mon_application</span> par le nom du package utilisé par le projet.</p>
+                    <p>Ce test suppose que l'application démarre sur un écran contenant le texte "Se connecter". Si l'application affiche un écran d'accueil, un écran de chargement ou une redirection automatique, adaptez le test au comportement réel de votre application.</p>
+                    <ol>
+                        <li>
+                            <h4>Exécuter le test d'intégration :</h4>
+                            <p>Lancez un élmulateur Android, un simulateur iOS ou connectez un appareil compatible.</p>
+                            <p>Puis exécutez :</p>
+<pre><code>flutter test integration_test/authentication_test.dart</code></pre>
+                            <p>La disponibilité de la cible et les prérequis d'exécution dépendent de la plateforme utilisée.</p>
+                        </li>
+                        <li>
+                            <h4>Tester un parcours complet :</h4>
+                            <p>Une fois le test de démarrage fonctionnel, vous pouvez ajouter des interactions pour :</p>
                             
                         </li>
                     </ol>
