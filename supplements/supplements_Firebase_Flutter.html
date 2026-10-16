@@ -8518,7 +8518,77 @@ void main() {
                     </ol>
                     <h3>Tester les règles de sécurité de Cloud Firestore :</h3>
                     <p>Les tests de sécurité sont différents des tests de widgets. Ils vérifient si Firebase autorise ou refuse les opérations sur les données.</p>
-                    
+                    <p>Dans cette section, nous utiliserons le SDK de tst des règles Firebase en JavaScript. Ces tests sont exécutés dans un environnement Node.js et non directement par <span class="em">flutter test</span>.</p>
+                    <ol>
+                        <li>
+                            <h4>Exemple de règles Firestore :</h4>
+                            <p>Supposons que chaque utilisateur possède un document dans la collection <span class="em">users</span>, dont l'identifiant correspond à son UID Firebase.</p>
+                            <p>Un exemple de règles pourrait être :</p>
+<pre><code>rules_version = '2';
+
+service cloud.firestore {
+    match /databases/{database}/documents {
+        match /users/{userId} {
+            allow read: if request.auth != null
+                        &amp;&amp; request.auth.uid == userId;
+
+            allow create: if request.auth != null
+                            &amp;&amp; request.auth.uid == userId
+                            &amp;&amp; !request.resource.data.keys()
+                                        .hasAny(['role']);
+
+            allow update: if request.auth != null
+                            &amp;&amp; request.auth.uid == userId
+                            &amp;&amp; request.resource.data.role
+                                        == resource.data.role;
+            
+            allow delete: if request.auth != null
+                            &amp;&amp; request.auth.uid == userId;
+        }
+    }
+}</code></pre>
+                            <p>Cet exemple illustre plusieurs principes :</p>
+                            <ul>
+                                <li>
+                                    <p>un utilisateur doit être authentifié pour accéder à son document;</p>
+                                </li>
+                                <li>
+                                    <p>son UID doit correspondre à l'identifiant du document;</p>
+                                </li>
+                                <li>
+                                    <p>la création d'un profil ne peut pas fournir le champ <span class="em">role</span>;</p>
+                                </li>
+                                <li>
+                                    <p>la modificationdu profil ne peut pas changer le rôle existant.</p>
+                                </li>
+                            </ul>
+                            <div class="bordure important">
+                                <img src="../images/important.png" alt="Important" class="float_left">
+                                <p>Cet exemple doit être adapté à votre modèle de données. En particulier,l'accès à <span class="em">request.resource.data.role</span> lors d'une mise à jour suppose que le document contient ce champ. Si ce champ est absent, la règle peut refuser l'opération. Les règlesci-dessus ne constituent pas une solution universelle pour tous les modèles de profils.</p>
+                            </div>
+                            <p>Si votre application utilise un autre mécanisme de gestion des rôles, il faut définir les autorisations à partir de la source de confiance choisie. Il ne faut jamais faire confiance à une valeur de rôle fournie librement par le client.</p>
+                        </li>
+                        <li>
+                            <h4>Installer les outils de test des règles :</h4>
+                            <p>Dans un dossierde tests Firebase séparé, initialisez un projet Node.js :</p>
+<pre><code>npm init -y</code></pre>
+                            <p>Installez les dépendances de test :</p>
+<pre><code>nom install --save-dev @firebase/rules-unit-testing firebase vitest</code></pre>
+                            <p>Les tests ci-dessous utilisent Vitest et le SDK @firebase/rules-unit-testing.</p>
+                            <p>Ajoutez un script dans le fichier <span class="em">package.json</span> :</p>
+<pre><code>{
+    "scripts": {
+        "test": "vitest run"
+    }
+}</code></pre>
+                            <p>Si votre fichier <span class="em">package.json</span> contient déjà d'autres scripts ou paramètres, conservez-les et ajoutez uniquement le script nécessaire.</p>
+                        </li>
+                        <li>
+                            <h4>Créer les tests de règles :</h4>
+                            <p>Créez un fichier <span class="em">firestore.rules.test.js</span> dans le dossier de tests Firebase :</p>
+                            
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
