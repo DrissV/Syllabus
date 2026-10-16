@@ -8586,9 +8586,193 @@ service cloud.firestore {
                         <li>
                             <h4>Créer les tests de règles :</h4>
                             <p>Créez un fichier <span class="em">firestore.rules.test.js</span> dans le dossier de tests Firebase :</p>
-                            
+<pre><code>import { readFile } from 'node:fs/promises';
+import {
+    afterAll,
+    beforeAll,
+    beforeEach,
+    describe,
+    it,
+} from 'vitest';
+
+import {
+    initializeTestEnvironment,
+    assertSucceeds,
+    assertFails,
+} from '@firebase/rules-unit-testing';
+
+import {
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+} from 'firebase/firestore';
+
+let testEnv;
+
+beforeAll(async () =&gt; {
+    const rules = await readFile(
+        '../firestore.rules',
+        'utf8',
+    );
+
+    testEnv = await initializeTestEnvironment({
+        projectId: 'demo-flutter-firebase-tests',
+        firestore: {
+            rules,
+        },
+    });
+});
+
+beforeEach(async () =&gt; {
+    await testEnv.clearFirestore();
+});
+
+afterAll(async () =&gt; {
+    await testEnv.cleanup();
+});
+
+describe('Règles de sécurité des profils', () =&gt; {
+    it('autorise un utilisateur à lire son profil', async () =&gt; {
+        await testEnv.withSecurityRulesDisabled(
+            async (context) =&gt; {
+                await setDoc(
+                    doc(context.firestore(), 'users/user-1'),
+                    {
+                        displayName: 'Utilisateur de test',
+                        role: 'user',
+                    },
+                );
+            },
+        );
+
+        const db = testEnv
+                    .authenticatedContext('user-1')
+                    .firestore();
+        
+        await assertSucceeds(
+            getDoc(doc(db, 'users/user-1')),
+        );
+    });
+
+    it('refuse la lecture du profil d\'un autre utilisateur', async () =&gt; {
+        await testEnv.withSecurityRulesDisabled(
+            async (context) =&gt; {
+                await setDoc(
+                    doc(context.firestore(), 'users/user-2'),
+                    {
+                        displayName: 'Autre utilisateur',
+                        role: 'user',
+                    },
+                );
+            },
+        );
+
+        const db = testEnv
+                    .authenticatedContext('user-1')
+                    .firestore();
+        
+        await assertFails(
+            getDoc(doc(db, 'users/user-2')),
+        );
+    });
+
+    it('refuse la création d\'un profil avec un rôle fourni par le client', async () =&gt; {
+        const db = testEnv
+                    .authenticatedContext('user-1')
+                    .firestore();
+
+        await assertFails(
+            setDoc(
+                doc(db, 'users/user-1'),
+                {
+                    displayName: 'Utilisateur de test',
+                    role: 'admin',
+                },
+            ),
+        );
+    });
+
+    it('refuse la modification du rôle existant', async () =&gt; {
+        await testEnv.withSecurityRulesDisabled(
+            async (context) =&gt; {
+                await setDoc(
+                    doc(context.firestore(), 'users/user-1'),
+                    {
+                        displayName: 'Utilisateur de test',
+                        role: 'user',
+                    },
+                );
+            },
+        );
+
+        const db = testEnv
+                    .authenticatedContext('user-1')
+                    .firestore();
+        
+        await assertFails(
+            updateDoc(
+                doc(db, 'users/user-1'),
+                {
+                    role: 'admin',
+                },
+            ),
+        );
+    });
+
+    it('refuse l\'accès à un utilisateur non connecté', async () =&gt; {
+        await testEnv.withSecurityRulesDisabled(
+            async (context) =&gt; {
+                await setDoc(
+                    doc(context.firestore(), 'users/user-1'),
+                    {
+                        displayName: 'Utilisateur de test',
+                        role: 'user',
+                    },
+                );
+            },
+        );
+
+        const db = testEnv.unauthenticatedContext().firestore();
+
+        await assertFails(
+            getDoc(doc(db, 'users/user-1')),
+        );
+    });
+});</code></pre>
+                            <p>Adaptez le chemin <span class="em">../firestore.rules</span> à l'emplacement réel du fichier de règles. Le chemon est résolu relativement au répertoire depuis lequel le processus de test s'exécute; vérifiez qu'il correspond bien à l'organisatiion de votre projet.</p>
+                            <p>Dans ces tests, <span class="em">withSecurityRulesDisabled()</span> sert uniquement à préparer les données de départ sans appliquer les règles. Les opérations testées ensuite passent par les règles de sécurité.</p>
+                            <p>Le projet utilisé ici porte un identifiant de démonstration. Pour des tests locaux, configurez correcteemnt l'émulateur Firestore et assurez-vous que les données restent isolées de la production.</p>
+                        </li>
+                        <li>
+                            <h4>Exécuter les tests de règles :</h4>
+                            <p>Lancez d'abord l'émulateur Firestore :</p>
+<pre><code>firebase emulators:start --only firestore</code></pre>
+                            <p>Dans un autre terminal, exécutez les tests avec la commande prévue dans le projet Node.js :</p>
+<pre><code>npm test</code></pre>
+                            <p>Si Vitest n'arrive pas à joindre l'émulateur, vérifiez que celui-ci est démarré, que le projet de test utilise le bon identifiant et que la configuration des émulateurs est cohérente.</p>
+                            <p>La commande <span class="em">npm test</span> exécute les tests JavaScript; elle ne remplace pas <span class="em">flutter test</span>.</p>
+                        </li>
+                        <li>
+                            <h4>Comprendre les résultats :</h4>
+                            <p>Dans les tests de règles :</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">assertSucceeds()</span> vérifie qu'une opération est autorisée;</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">assertFails()</span> vérifie qu'une opération est refusée.</p>
+                                </li>
+                            </ul>
+                            <p>Un test de sécurité ne doit pas seulement démontrer que les utilisateurs légitimes peuvent accéder aux données. Il doit aussi démontrer que les accès interdits sont effectivement refusés.</p>
+                            <p>Il est utile de tester les accès d'un utilisateur à son propre document, aux documents d'autres utilisateurs, aux documents inexistants et aux opérations non autorisées sur les champs sensibles.</p>
                         </li>
                     </ol>
+                    <h3>Tester les règles de sécurité de Firebase Storage :</h3>
+                    <p>Si l'application permet de stocker des photos de profil ou d'autres fichiers, il faut aussi vérifier les règles de Storage.</p>
+                    <p>Par exemple, les règles peuvent exiger que l'utilisateur soit authentifié et que le fichier soit placé dans un espace qui lui appartient.</p>
+                    <p>Un schéma de règle illustratif peut être :</p>
+                    
                 </article>
             <!-- fin de section -->
             </section>
