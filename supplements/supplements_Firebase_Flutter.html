@@ -8772,6 +8772,167 @@ describe('Règles de sécurité des profils', () =&gt; {
                     <p>Si l'application permet de stocker des photos de profil ou d'autres fichiers, il faut aussi vérifier les règles de Storage.</p>
                     <p>Par exemple, les règles peuvent exiger que l'utilisateur soit authentifié et que le fichier soit placé dans un espace qui lui appartient.</p>
                     <p>Un schéma de règle illustratif peut être :</p>
+<pre><code>rules_version = '2';
+
+service firebase.storage {
+    match /b/{bucket}/o {
+        match /users/{userId}/{fileName} {
+            allow read, write: if request.auth != null
+                                &amp;&amp; request.auth.uid == userId;
+        }
+    }
+}</code></pre>
+                    <p>Ce modèle limite l'accès au chemin associé à l'UID. Dans une application réele, il peut être nécessaire d'ajouter des restrictions sur la taille des fichiers, leur type de contenu, les opérations autorisées et les exigences de confidentialité.</p>
+                    <p>Les tests de Storage doivent vérifier les accès autorisés et refusés, comme pour Firestore. Ils doivent être réalisés sur l'émulateur Storage lorsqu'il est configuré pour les tests.</p>
+                    <p>N'oubliez pas que les règles Firestore et les règles Storage sont deux mécanismes distincts. Protéger les documents de profil ne protège pas automatiquement les fichiers associés.</p>
+                    <h3>Tester les erreurs et les opérations asynchrones :</h3>
+                    <p>Les applications Flutter utilisant Firebase reposent fréquemment sur des opératins asynchrones.</p>
+                    <p>Par exemple :</p>
+<pre><code>try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+    );
+} on FirebaseAuthException catch (error) {
+    // Convertir l'erreur en message adapté à l'utilisateur.
+}</code></pre>
+                    <p>Il est important de vérifier non seulement la réussite de l'opération, mais aussi le comportement de l'application en cas d'échec.</p>
+                    <p>Les tests peuvent couvrir :</p>
+                    <ul>
+                        <li>
+                            <p>identifiants incorrects;</p>
+                        </li>
+                        <li>
+                            <p>absence de connexion au service;</p>
+                        </li>
+                        <li>
+                            <p>opération interrompue;</p>
+                        </li>
+                        <li>
+                            <p>document Firestore inexistant;</p>
+                        </li>
+                        <li>
+                            <p>refus d'accès par les règles de sécurité;</p>
+                        </li>
+                        <li>
+                            <p>fichiers trop volumineux;</p>
+                        </li>
+                        <li>
+                            <p>erreur de téléchargement;</p>
+                        </li>
+                        <li>
+                            <p>expiration ou invalidité d'un code de vérification.</p>
+                        </li>
+                    </ul>
+                    <p>Les erreurs techniques ne doivent pas nécessairement être affichées telles quelles à l'utilisateur. Le code peut les convertir en messages compréhensibles, tout en conservant suffisamment d'informations pour le diagnostic.</p>
+                    <p>Les tests doivent vérifier que l'application affiche le bon état après une erreur, par exemple en arrêtant l'indicateur de chargement l'indicateur de chargement et en permettant une nouvelle tentative.</p>
+                    <h3>Éviter les tests fragiles :</h3>
+                    <p>Un test fragile échoue pour une raison qui ne correspond pas à un véritable défaut fonctionnel, ou dépend excessivement de détails susceptibles de changer.</p>
+                    <p>Pour rendre les tests plus fiables :</p>
+                    <ol>
+                        <li>
+                            <p>Donnez un nom explicite à chaque scénario.</p>
+                        </li>
+                        <li>
+                            <p>Vérifiez un comportement précis.</p>
+                        </li>
+                        <li>
+                            <p>Utilisez des données de test déterministes.</p>
+                        </li>
+                        <li>
+                            <p>Évitez les dépendances aux services de production.</p>
+                        </li>
+                        <li>
+                            <p>Attendez les opérations asynchrones.</p>
+                        </li>
+                        <li>
+                            <p>Ne dépendez pas de délaisarbitraires lorsque des conditions observables peuvent être utilisées.</p>
+                        </li>
+                        <li>
+                            <p>Isolez les données entre les tests.</p>
+                        </li>
+                        <li>
+                            <p>Nettoyez les ressources créées par les scénarios.</p>
+                        </li>
+                        <li>
+                            <p>Ne stockez pas de secrets dans le code de test.</p>
+                        </li>
+                        <li>
+                            <p>Vérifiez aussi les cas d'échec.</p>
+                        </li>
+                    </ol>
+                    <p>Il est également important d'éviter que l'ordre d'exécution des tests modifie leurs résultats. Chaque scénario doit préparer ses propres données et ne pas dépendre d'un test exécuté précédemment.</p>
+                    <h3>Organiser une stratégie de tests :</h3>
+                    <p>Il n'est pas nécessaire de tester immédiatement chaque ligne de code. Il faut commencer par les fonctionnalités les plus importantes et construire une couverture progressive.</p>
+                    <p>Une stratégie adaptée à notre application pourrait être :</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Niveau</th>
+                                <th>Éléments à tester</th>
+                                <th>Exemple</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Tests unitaires</td>
+                                <td>Fonctions indépendantes</td>
+                                <td>Validation d'email</td>
+                            </tr>
+                            <tr>
+                                <td>Tests de widgets</td>
+                                <td>Interfaces et interactions</td>
+                                <td>Formulaire de connexion</td>
+                            </tr>
+                            <tr>
+                                <td>Tests de services</td>
+                                <td>Logique liée à Firebase</td>
+                                <td>Gestion des erreurs d'authentification</td>
+                            </tr>
+                            <tr>
+                                <td>Tests de services</td>
+                                <td>Logique liée à Firebase</td>
+                                <td>Gestion des erreurs d'authentification</td>
+                            </tr>
+                            <tr>
+                                <td>Tests d'intégration</td>
+                                <td>Parcours complets</td>
+                                <td>Connexion puis déconnexion</td>
+                            </tr>
+                            <tr>
+                                <td>Tests des règles Firestore</td>
+                                <td>Autorisation des documents</td>
+                                <td>Lecture du profil personnel</td>
+                            </tr>
+                            <tr>
+                                <td>Tests des règles Storage</td>
+                                <td>Accès aux fichiers</td>
+                                <td>Téléversement dans le dossier personnel</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Les tests unitaires sont généralement les plus rapides et les plus simples à exécuter. Les tests d'intégration et les tests des règles demandent une configuration supplémentaire, mais ils couvrent des risques différents.</p>
+                    <p>Une bonne stratégie combine ces niveaux au lieu de dépendre d'un seul type de test.</p>
+                    <h3>Exécuter les tests avant chaque livraison :</h3>
+                    <p>Avant de livrer une nouvelle version, exécutez au minimum les tests automatisés pertinents.</p>
+                    <p>Pour les tests Flutter :</p>
+<pre><code>flutter pub get</code></pre>
+<pre><code>flutter analyze</code></pre>
+<pre><code>flutter test</code></pre>
+                    <ul>
+                        <li>
+                            <p><span class="em">fluter pub get</span> récupère les dépendances;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">flutter analyze</span> recherche les problèmes détectables par l'analyse statique;</p>
+                        </li>
+                        <li>
+                            <p><span class="em">flutter test</span> exécute les tests unitaires et les tests de widgets du dossier <span class="em">test/</span>.</p>
+                        </li>
+                    </ul>
+                    <p>Exécutez ensuite les tests d'intégration selon la plateforme ciblée :</p>
+<pre><code>flutter test integration_test</code></pre>
+                    <p>Les tests des règles Firebase doivent être exécutés dans leur environnement Node.js avec les émulateurs appropriés.</p>
                     
                 </article>
             <!-- fin de section -->
