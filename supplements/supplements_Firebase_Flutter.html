@@ -8933,7 +8933,34 @@ service firebase.storage {
                     <p>Exécutez ensuite les tests d'intégration selon la plateforme ciblée :</p>
 <pre><code>flutter test integration_test</code></pre>
                     <p>Les tests des règles Firebase doivent être exécutés dans leur environnement Node.js avec les émulateurs appropriés.</p>
-                    
+                    <p>Pour un projet plus avancé, ces commandes peuvent être intégrées à un système d'intégration continue, afin que les tests soient lancés automatiquement à chaque modification du code ou à chaque demande de fusion.</p>
+                    <p>La mise en place d'une telle automatisation doit également vérifier la configuration des secrets, les versions des outils et l'isolation des environnements.</p>
+                    <h3>Bonnes pratiques de sécurité pendant les tests :</h3>
+                    <p>Les tests d'une application connectée à Firebase doivent respecter plusieurs précautions.</p>
+                    <ol>
+                        <li>
+                            <h4>Ne pas utiliser les données réelles des utilisateurs :</h4>
+                            <p>Les tests doivent employer des comptes et des documents fictifs. Les opérations de suppression ou de modification doivent être limotées à l'environnement de test.</p>
+                        </li>
+                        <li>
+                            <h4>Ne pas confondre interface et autorisation :</h4>
+                            <p>Cacher un bouton dans Flutter ne protège pas les données. Les autorisations doivent être vérifiées par les règles Firebase et, lorsque nécessaire, par des contrôles côté serveur.</p>
+                        </li>
+                        <li>
+                            <h4>Ne pas conserver de secrets dans les fichiers de test :</h4>
+                            <p>N'inscrivez pas de mots de passe réels, de jetons privés ou d'autres secrets dans les fichiers versionnés.</p>
+                        </li>
+                        <li>
+                            <h4>Vérifier les rôles et les autorisations :</h4>
+                            <p>Si l'application utilise des rôles tels que <span class="em">user</span>, <span class="em">moderator</span> ou <span class="em">admin</span>, les tests doivent vérifier que chaque rôle dispose uniquement des permissions attendues.</p>
+                            <p>Une valeur de rôle fournie par le client ne doit pas être considérée comme fiable sans contrôle approprié.</p>
+                        </li>
+                        <li>
+                            <h4>Vérifier les données associées à la suppression d'un compte :</h4>
+                            <p>Lorsqu'un compte est supprimé, testez également le comportement des données associées. La suppression d'un compte Firebase Authentication ne supprime pas automatiquement tous les documents Firestore et tous les fichiers Storage.</p>
+                            <p>Les tests doivent refléter la stratégie de suppression mise en place dans l'application.</p>
+                        </li>
+                    </ol>
                 </article>
             <!-- fin de section -->
             </section>
