@@ -64,6 +64,7 @@
                     <li><a href="#module14">Module 14 : Validation des données utilisateur et gestion des erreurs</a></li>
                     <li><a href="#module15">Module 15 : Journalisation, diagnostic et suivi des erreurs</a></li>
                     <li><a href="#module16">Module 16 : Tests automatisés et tests d'intégration</a></li>
+                    <li><a href="#module17">Module 17 : récapitulatif du projet Yvent et préparation des écrans Flutter avec Firebase</a></li>
                 </ol>
             </nav>
             
@@ -497,7 +498,7 @@ Configuration Firebase Web</code></pre>
                     <p>Il est préférable de régénérer la configuration avec FlutterFire lorsque la configuration Firebase change.</p>
                     <h3>Initialisation de Firebase :</h3>
                     <p>Après avoir configuré Firebase, il faut initialiser Firebase au démarrage de l'application.</p>
-                    <p>Le principe sera d'utiliser <span class="Em">Firebase Core</span>.</p>
+                    <p>Le principe sera d'utiliser <span class="em">Firebase Core</span>.</p>
                     <p>Le fichier <span class="em">main.dart</span> évoluera progressivement.</p>
                     <p>Exemple :</p>
 <pre><code>import 'package:firebase_core/firebase_core.dart';
@@ -668,7 +669,7 @@ iOS
 Firebase</code></pre>
                     <p>L'objectif est de détecter les problèmes de configuration immédiatement plutôt que plusieurs modules plus tard.</p>
                     <h3>Architecture après ce module :</h3>
-                    <p>Après ce module, le projet commencera à rassembler à :</p>
+                    <p>Après ce module, le projet commencera à ressembler à :</p>
 <pre><code>lib/
 │
 ├── main.dart
@@ -1650,7 +1651,7 @@ Message utilisateur</code></pre>
                     <p>La gestion des erreurs doit également respecter les principes de sécurité.</p>
                     <p>Une application ne doit pas révéler inutilement des informations sensibles.</p>
                     <p>Par exemple, il faut réfléchir avant d'afficher des messages permettant à une personne extérieure de déterminer précisément si une adresse email possède un compte.</p>
-                    <p>Nous chercherons donc un équilibre <entrespan class="em">message suffisamment clair</entrespan> et <span class="em">protection des informations</span>.</p>
+                    <p>Nous chercherons donc un équilibre entre <span class="em">message suffisamment clair</span> et <span class="em">protection des informations</span>.</p>
                     <p>La gestion des erreurs sera approfondie lorsque nous développerons les écrans d'inscription et de connexion.</p>
                     <h3>Firebase Authentication et le mot de passe :</h3>
                     <p>Dans notre architecture, Firebase Authentication sera responsable de la gestion du mot de passe.</p>
@@ -1677,7 +1678,7 @@ Cloud Firestore
         ├── Préférences
         └── Données applicatives</code></pre>
                     <p>Cette séparation est fondamentale.</p>
-                    <h3>Relation entre Autehntication et Firestore :</h3>
+                    <h3>Relation entre Authentication et Firestore :</h3>
                     <p><span class="em">Firebase Authentication</span> et <span class="em">Cloud Firestore</span> ont donc deux responsabilités différentes.</p>
                     <p>Firebase Authentication permet principalement de gérer : <q>Qui est l'utilisateur ?</q>.</p>
                     <p>Firestore permet de gérer : <q>Quelles sont les données de l'application ?</q>.</p>
@@ -2450,7 +2451,7 @@ FirebaseAuth</code></pre>
 class AuthService {
     final FirebaseAuth _auth = FirebaseAuth.instance;
 
-    Future&lt;UserCredential&gt;({
+    Future&lt;UserCredential&gt; createAccount ({
         required String email,
         required String password,
     }) {
@@ -2496,7 +2497,7 @@ Firebase</code></pre>
                 <article>
                     <h2 id="module4">Module 4 : Connexion et déconnexion :</h2>
                     <h3>Présentation du module :</h3>
-                    <p>Dans le module précédent, nous avons étudié la création d'un compte utilisateur avec Firebase Authentication. Nous allons maintenant mettre en place les opérations permettant à un utilisateur déjà inscriot d'accéder à son compte et de terminer sa session.</p>
+                    <p>Dans le module précédent, nous avons étudié la création d'un compte utilisateur avec Firebase Authentication. Nous allons maintenant mettre en place les opérations permettant à un utilisateur déjà inscrit d'accéder à son compte et de terminer sa session.</p>
                     <p>La connexion et la déconnexion constituent deux opérations fondamentales d'un système d'authentification. Elles doivent être intégrées dans l'application de manière cohérente, en séparant la logique d'authentification de l'interface graphique.</p>
                     <p>Dans ce module, nous allons utiliser les méthodes fournies par <span class="em">FirebaseAuth</span> pour authentifier un utilisateur à partir de son adresse email et de son mot de passe, puis pour mettre fin à son authentification.</p>
                     <p>Nous allons également intégrer ces opérations dans le service <span class="em">AuthService</span> introduit précédemment. Cette organisation permettra de conserver une architecture claire et de préparer les modules suivants consacrés à la gestion des sessions, à la navigation et à la protection des écrans.</p>
@@ -2787,7 +2788,7 @@ class AuthService {
                     <p>Dans cet exemple, la méthode <span class="em">signOut()</span> délègue simplement la déconnexion à Firebase Authentication.</p>
                     <p>La méthode ne retourne pas de <span class="em">UserCredential</span>, puisqu'elle ne produit pas de nouvel objet d'identification. Son type de retour est <span class="em">Future&lt;void&gt;</span>.</p>
                     <p>L'écran qui déclenche la déconnexion pourra attendre l'opération avant de présenter le résultat approprié.</p>
-                    <h3>Déclencher la déconexion depuis l'interface :</h3>
+                    <h3>Déclencher la déconnexion depuis l'interface :</h3>
                     <p>La déconnexion est généralement déclenchée par une action explicite par exemple un bouton "Se déconnecter" dans l'écran du compte utilisateur.</p>
                     <p>Le bouton ne devrait pas contenir directement l'ensemble de la logique Firebase. Il appelle une méthode de l'écran, laquelle utilise <span class="em">AuthService</span>.</p>
                     <p>Le principe peut être représenté ainsi :</p>
@@ -2807,7 +2808,7 @@ class AuthService {
                     <h3>Différence entre déconnexion et suppression du compte :</h3>
                     <p>Il est important de distinguer deux opérations.</p>
                     <p>La déconnexion met fin à l'authentification courante dans l'application. Elle ne supprime pas le compte Firebase Authentication.</p>
-                    <p>La supprssion d'un compte constitue une opération distincte, qui nécessite une méthode spécifique et soulève des questions supplémentaires concernant les données associées à l'utilisateur.</p>
+                    <p>La suppression d'un compte constitue une opération distincte, qui nécessite une méthode spécifique et soulève des questions supplémentaires concernant les données associées à l'utilisateur.</p>
                     <p>Dans notre projet, le bouton "Se déconnecter" doit donc appeler <span class="em">signOut()</span> et non une méthode de suppression de compte.</p>
                     <p>Cette distinction est essentielle pour éviter toute perte de compte involontaire.</p>
                     <h3>Connexion réussie et navigation :</h3>
@@ -3572,7 +3573,7 @@ bool _isChecking = false;</code></pre>
                             <p>Sur iOS, configure les mécanismes requis pour la vérification du numéro, notamment APNs lorsque nécessaire.</p>
                         </li>
                         <li>
-                            <p>Sur le Web, Firebase utilise un mécanisme de protection contre les apus, généralement avec reCAPTCHA.</p>
+                            <p>Sur le Web, Firebase utilise un mécanisme de protection contre les abus, généralement avec reCAPTCHA.</p>
                         </li>
                         <li>
                             <p>Vérifie les restrictions, les quotas et les éventuels coûts associés aux SMS dans la configuration Firebase.</p>
@@ -4280,7 +4281,7 @@ class _SmsCodeScreenState extends State&lt;SmsCodeScreen&gt; {
                 </article>
                 <article>
                     <h2 id="module7">Module 7 : Liaison du numéro de téléphone à un compte utilisateur :</h2>
-                    <h3>Présenation du module :</h3>
+                    <h3>Présentation du module :</h3>
                     <p>Dans le module précédent, nous avons appris à vérifier un numéro de téléphone à l'aide d'un SMS et d'un code de validation.</p>
                     <p>Nous allons maintenant aborder une autre opération : <span class="em">associer ce numéro à un compte Firebase Authentication déjà existant</span>.</p>
                     <p>Il faut bien distinguer les deux opérations :</p>
@@ -5554,7 +5555,7 @@ class MyApp extends StatelessWidget {
                 <article>
                     <h2 id="module11">Module 11 : Gestion des rôles et des autorisations :</h2>
                     <h3>Présentation du module :</h3>
-                    <p>Dans une application utilisant Firebase Authentication, toues les utilisateurs ne disposent pas nécessairement des mêmes permissions.</p>
+                    <p>Dans une application utilisant Firebase Authentication, tous les utilisateurs ne disposent pas nécessairement des mêmes permissions.</p>
                     <p>Un utilisateur standard peut consulter et modifier ses propres informations, tandis qu'un administrateur peut avoir accès à certaines fonctionnalités supplémentaires, comme la gestion des utilisateurs ou la consultation de données réservées.</p>
                     <p>Pour mettre en place cette distinction, nous devons séparer trois notions :</p>
                     <ul>
@@ -6417,7 +6418,7 @@ class ProfileImageService {
         return reference.getDownloadURL();
     }
 }</code></pre>
-                    <p>Cet exemple utilise <span class="em">dart:io</span> et convient aux plateformes qui prennent en charge les fichiers locaux avec cerre API. Pour une application Flutter Web, il faut utiliser une approche compatible avec le Web, par exemple l'envoi des octets du fichier avec <span class="em">putData()</span>.</p>
+                    <p>Cet exemple utilise <span class="em">dart:io</span> et convient aux plateformes qui prennent en charge les fichiers locaux avec cette API. Pour une application Flutter Web, il faut utiliser une approche compatible avec le Web, par exemple l'envoi des octets du fichier avec <span class="em">putData()</span>.</p>
                     <p>Le <span class="em">image/jpeg</span> doit correspondre au format réel du fichier. Si l'application accepte plusieurs formats, elle doit déterminer le type approprié au lieu de déclarer systématiquement que tous les fichiers sont des JPEG.</p>
                     <p>La méthode retourne l'URL de téléchargement une fois le téléversement terminé.</p>
                     <h3>Enregistrer la photo dans le profil Firestore :</h3>
@@ -6439,7 +6440,7 @@ Future&lt;void&gt; updateProfilePhotoUrl(
 
     await FirebaseFirestore.instance
             .collection('users')
-            .doc(user.id)
+            .doc(user.uid)
             .update({
                 'photoUrl': photoUrl,
             });
@@ -6837,7 +6838,7 @@ class _RegistrationFormState extends State&lt;RegistrationForm&gt; {
                             <p>Une configuration Firebase incorrecte.</p>
                         </li>
                     </ul>
-                    <p>Flutter permet d egérer ces erreurs avec <span class="em">try</span>, <span class="em">on</span> et <span class="em">catch</span>.</p>
+                    <p>Flutter permet de gérer ces erreurs avec <span class="em">try</span>, <span class="em">on</span> et <span class="em">catch</span>.</p>
                     <h4>Exemple lors de la création d'un compte :</h4>
 <pre><code>import 'package:firebase_auth/firebase_auth.dart';
     
@@ -6934,7 +6935,7 @@ Future&lt;String?&gt; saveUserProfile({
 }</code></pre>
                     <p>Cet exemple écrit dans le document correspondant à l'identifiant de l'utilisateur connecté. Cela ne suffit toutefois pas, à lui seul, à garantir la sécurité : les règles Firestore doivent imposer les autorisations appropriées et contrôler les données acceptées.</p>
                     <h3>Sécuriser les données avec les règles Firestore :</h3>
-                    <p>Les règles Firestore s'exécutent indépendamment de la validation effectuée dans Fluter. Elles peuvent contrôler l'identité du demandeur, les droits d'accès et certaines propriétés des données.</p>
+                    <p>Les règles Firestore s'exécutent indépendamment de la validation effectuée dans Flutter. Elles peuvent contrôler l'identité du demandeur, les droits d'accès et certaines propriétés des données.</p>
                     <p>Voici un exemple pédagogique pour une collection <span class="em">users</span> où chaque utilisateur peut créer ou modifier son propre document.</p>
 <pre><code>rules_version = '2';
 
@@ -7606,7 +7607,7 @@ void testCrashlytics() {
                             <p><span class="em">Tests avec les émulateurs Firebase</span> : tester certains services sans utiliser les données de production.</p>
                         </li>
                     </ul>
-                    <p>L'objectif est de construire une stratégie de test progressive, adaptée à une application Flutter utilisant Firebase Authenication, Cloud Firestore et Firebase Storage.</p>
+                    <p>L'objectif est de construire une stratégie de test progressive, adaptée à une application Flutter utilisant Firebase Authentication, Cloud Firestore et Firebase Storage.</p>
                     <h3>Objectifs du module :</h3>
                     <p>À la fin de ce module, vous serez capable de :</p>
                     <ol>
@@ -8478,7 +8479,7 @@ void main() {
                     <ol>
                         <li>
                             <h4>Exécuter le test d'intégration :</h4>
-                            <p>Lancez un élmulateur Android, un simulateur iOS ou connectez un appareil compatible.</p>
+                            <p>Lancez un émulateur Android, un simulateur iOS ou connectez un appareil compatible.</p>
                             <p>Puis exécutez :</p>
 <pre><code>flutter test integration_test/authentication_test.dart</code></pre>
                             <p>La disponibilité de la cible et les prérequis d'exécution dépendent de la plateforme utilisée.</p>
@@ -8740,7 +8741,7 @@ describe('Règles de sécurité des profils', () =&gt; {
         );
     });
 });</code></pre>
-                            <p>Adaptez le chemin <span class="em">../firestore.rules</span> à l'emplacement réel du fichier de règles. Le chemon est résolu relativement au répertoire depuis lequel le processus de test s'exécute; vérifiez qu'il correspond bien à l'organisatiion de votre projet.</p>
+                            <p>Adaptez le chemin <span class="em">../firestore.rules</span> à l'emplacement réel du fichier de règles. Le chemon est résolu relativement au répertoire depuis lequel le processus de test s'exécute; vérifiez qu'il correspond bien à l'organisation de votre projet.</p>
                             <p>Dans ces tests, <span class="em">withSecurityRulesDisabled()</span> sert uniquement à préparer les données de départ sans appliquer les règles. Les opérations testées ensuite passent par les règles de sécurité.</p>
                             <p>Le projet utilisé ici porte un identifiant de démonstration. Pour des tests locaux, configurez correcteemnt l'émulateur Firestore et assurez-vous que les données restent isolées de la production.</p>
                         </li>
@@ -8921,7 +8922,7 @@ service firebase.storage {
 <pre><code>flutter test</code></pre>
                     <ul>
                         <li>
-                            <p><span class="em">fluter pub get</span> récupère les dépendances;</p>
+                            <p><span class="em">flutter pub get</span> récupère les dépendances;</p>
                         </li>
                         <li>
                             <p><span class="em">flutter analyze</span> recherche les problèmes détectables par l'analyse statique;</p>
@@ -8940,7 +8941,7 @@ service firebase.storage {
                     <ol>
                         <li>
                             <h4>Ne pas utiliser les données réelles des utilisateurs :</h4>
-                            <p>Les tests doivent employer des comptes et des documents fictifs. Les opérations de suppression ou de modification doivent être limotées à l'environnement de test.</p>
+                            <p>Les tests doivent employer des comptes et des documents fictifs. Les opérations de suppression ou de modification doivent être limitées à l'environnement de test.</p>
                         </li>
                         <li>
                             <h4>Ne pas confondre interface et autorisation :</h4>
@@ -8961,6 +8962,819 @@ service firebase.storage {
                             <p>Les tests doivent refléter la stratégie de suppression mise en place dans l'application.</p>
                         </li>
                     </ol>
+                </article>
+                <article>
+                    <h2 id="module17">Module 17 : Récapitulatif du projet Yvent et préparation des écrans Flutter avec Firebase :</h2>
+                    <h3>Présentation du module :</h3>
+                    <p>Au cours des modules précédents, nous avons étudié les principales fonctionnalités permettant de développer une application Flutter connectée à Firebase : configuration de Firebase, inscription, connexion, vérification de l'adresse email, authentification par SMS, gestion du profil utilisateur, modification des données, validation des formulaires et gestion des erreurs.</p>
+                    <p>Il est maintenant nécessaire de rassembler ces connaissances afin de préparer une structure cohérente pour notre application <span class="em">Yvent</span>.</p>
+                    <p>Ce module a pour objectif de récapituler les dépendances nécessaires au projet, d'identifier les écrans à développer et de préparer les ressources graphiques de l'application.</p>
+                    <p>Nous allons notamment organiser les neuf écrans principaux, vérifier les packages Flutter nécessaires et configurer l'emplacement du logo de l'application.</p>
+                    <p>À la fin de ce module, nous disposerons d'une base claire pour poursuivre le développement de l'interface et relier progressivement chaque écran aux services Firebase correspondants.</p>
+                    <h3>Objectifs du module :</h3>
+                    <p>À la fin de ce module, vous devriez être capable de :</p>
+                    <ol>
+                        <li>
+                            <p>Récapituler les principales fonctionnalités de l'application Yvent.</p>
+                        </li>
+                        <li>
+                            <p>Créer un projet Flutter destiné à accueillir l'application.</p>
+                        </li>
+                        <li>
+                            <p>Connecter le projet Flutter à Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Identifier les dépendances nécessaires à l'authentification et à la gestion des profils.</p>
+                        </li>
+                        <li>
+                            <p>Distinguer les dépendances de l'application des outils de développement.</p>
+                        </li>
+                        <li>
+                            <p>Identifier les neuf écrans et les parcours utilisateur.</p>
+                        </li>
+                        <li>
+                            <p>Déclarer le logo dans le fichier <span class="em">pubspec.yaml</span>.</p>
+                        </li>
+                        <li>
+                            <p>Organiser les fichiers du projet de manière cohérente.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier que le projet est correctement préparé avant de poursuivre le développement.</p>
+                        </li>
+                    </ol>
+                    <h3>Présentation générale de l'application Yvent :</h3>
+                    <p>Yvent est le nom de notre application. Pour préparer son développement, nous allons commencer par identifier les fonctionnalités essentielles liées à l'identification des utilisateurs et à la gestion de leur compte.</p>
+                    <p>L'application devra notamment permettre à un utilisateur de :</p>
+                    <ul>
+                        <li>
+                            <p>créer un compte;</p>
+                        </li>
+                        <li>
+                            <p>se connecter à son compte;</p>
+                        </li>
+                        <li>
+                            <p>récupérer l'accès à son compte en cas d'oubli du mot de passe;</p>
+                        </li>
+                        <li>
+                            <p>vérifier son adresse email;</p>
+                        </li>
+                        <li>
+                            <p>vérifier son numéro de téléphone par SMS lorsque cette fonctionnalité est requise;</p>
+                        </li>
+                        <li>
+                            <p>accéder à une page d'accueil;</p>
+                        </li>
+                        <li>
+                            <p>consulter son profil;</p>
+                        </li>
+                        <li>
+                            <p>modifier les informations de son profil;</p>
+                        </li>
+                        <li>
+                            <p>modifier son mot de passe.</p>
+                        </li>
+                    </ul>
+                    <p>Ces fonctionnalités seront réparties entre plusieurs écrans afin de conserver une interface compréhensible et une organisation adaptée à l'évolution du projet.</p>
+                    <h3>Préparer le projet Flutter :</h3>
+                    <ol>
+                        <li>
+                            <h4>Créer le projet :</h4>
+                            <p>Pour commencer, ouvrez un terminal et exécutez :</p>
+<pre><code>flutter create yvent</code></pre>
+<pre><code>cd yvent</code></pre>
+                            <p>La commande <span class="em">flutter create</span> génère la structure initiale du projet Flutter.</p>
+                            <p>Le dossier <span class="em">yvent</span> contiendra notamment le code source, les ressources graphiques, la configuration des dépendances et les fichiers propres aux différentes plateformes.</p>
+                            <p>Vérifiez ensuite l'environnement de développement :</p>
+<pre><code>flutter doctor</code></pre>
+                            <p>Cette commande permet d'identifier les éventuels problèmes de configuration de Flutter et des outils nécessaires à la compilation.</p>
+                        </li>
+                        <li>
+                            <h4>Connecter le projet à Firebase :</h4>
+                            <p>Pour utiliser Firebase, le projet Flutter doit être associé à un projet Firebase.</p>
+                            <p>Si les outils nécessaires ne sont pas encore installés, vous pouvez installer Firebase CLI et FlutterFire CLI.</p>
+                            <p>Avec npm :</p>
+<pre><code>npm install -g firebase-tools</code></pre>
+<pre><code>firebase login</code></pre>
+                            <p>Puis :</p>
+<pre><code>dart pub global activate flutterfire_cli</code></pre>
+                            <p>Depuis le dossier du projet Flutter, configurez ensuite Firebase :</p>
+<pre><code>flutterfire configure</code></pre>
+                            <p>Cette configuration permet de sélectionner le projet Firebase et les plateformes prises en charge.</p>
+                            <p>Le fichier <span class="em">firebase_options.dart</span> est généralement généré par FlutterFire CLI. Il sera utilisé pour initialiser Firebase dans l'application.</p>
+                        </li>
+                        <li>
+                            <h4>Initialiser Firebase dans Flutter :</h4>
+                            <p>Le package <span class="em">firebase_core</span> est nécessaire pour initialiser Firebase.</p>
+                            <p>Ajoutez-le au projet :</p>
+<pre><code>flutter pub add firebase_core</code></pre>
+                            <p>Dans le fichier <span class="em">main.dart</span>, l'initialisation doit être effectuée avant l'utilisation des services Firebase.</p>
+                            <p>Exemple :</p>
+<pre><code>import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+Future&lt;void&gt; main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    runApp(const YventApp());
+}
+
+class YventApp extends StatelessWidget {
+    const YventApp({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return MaterialApp(
+            title: 'Yvent',
+            debugShowCheckedModeBanner: false,
+            home: const Scaffold(
+                body: Center(
+                    child: Text('Bienvenue sur Yvent'),
+                ),
+            ),
+        );
+    }
+}</code></pre>
+                            <p>Cet exemple constitue un point de départ. Les écrans définitifs seront intégrés progressivement dans l'application.</p>
+                        </li>
+                    </ol>
+                    <h3>Les dépendances nécessaires :</h3>
+                    <p>Les packages doivent être ajoutés en fonction des fonctionnalités réellement utilisées par l'application.</p>
+                    <ol>
+                        <li>
+                            <h4>Dépendances principales :</h4>
+                            <p>Pour les fonctionnalités prévues dans Yvent, nous pouvons préparer les dépendances suivantes :</p>
+                            <table class="tableBalises">
+                                <thead>
+                                    <tr>
+                                        <th>Dépendance</th>
+                                        <th>Rôle</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>firebase_core</td>
+                                        <td>Initialiser Firebase dans l'application.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>firebase_auth</td>
+                                        <td>Gérer l'inscription, la connexion, la réinitialisation du mot de passe et les mécanismes d'authentification pris en charge.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>cloud_firestore</td>
+                                        <td>Enregistrer et récupérer les informations du profil utilisateur et les autres données de l'application.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>firebase_storage</td>
+                                        <td>Stocker des fichiers, notamment des photos de profil, si cette fonctionnalité est utilisée.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>image_picker</td>
+                                        <td>Permettre à l'utilisateur de sélectionner une image sur son appareil.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>firebase_crashlytics</td>
+                                        <td>Facultatif : suivre les plantages de l'application sur les plateformes compatibles.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Ces dépendances peuvent être ajoutées avec les commandes suivantes :</p>
+<pre><code>flutter pub add firebase_core</code></pre>
+<pre><code>flutter pub add firebase_auth</code></pre>
+<pre><code>flutter pub add cloud_firestore</code></pre>
+<pre><code>flutter pub add firebase_storage</code></pre>
+<pre><code>flutter pub add image_picker</code></pre>
+                            <p>Pour ajouter le suivi des plantages, si nécessaire :</p>
+<pre><code>flutter pub add firebase_crashlytics</code></pre>
+                            <p>Enfin, récupérez les dépendances :</p>
+<pre><code>flutter pub get</code></pre>
+                            <p>Il n'est pas nécessaire d'installer tous les packages immédiatement. Les dépendances facultatives peuvent être ajoutées au moment où les fonctionnalités correspondantes sont développées.</p>
+                        </li>
+                        <li>
+                            <h4>Les outils de développement :</h4>
+                            <p>Il faut distinguer les packages utilisés par l'application des outils permettant de configurer ou de tester le projet.</p>
+                            <ul>
+                                <li>
+                                    <p><span class="em">firebase-tools</span> permet notamment d'utiliser Firebase CLI.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">flutterfire_cli</span> permet de configurer les applications Flutter avec Firebase.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">flutter_test</span> fournit les outils de test Flutter.</p>
+                                </li>
+                                <li>
+                                    <p><span class="em">integration_test</span> permet de préparer des tests d'intégration.</p>
+                                </li>
+                            </ul>
+                            <p>Les deux premiers sont des outils de développement et ne sont pas des dépendances Flutter ordinaires à ajouter au bloc <span class="em">dependencies</span> de l'application.</p>
+                            <p>Les packages de test doivent être déclarés dans <span class="em">dev_dependencies</span> lorsqu'ils sont nécessaires.</p>
+                        </li>
+                    </ol>
+                    <h3>Les neuf écrans principaux de Yvent :</h3>
+                    <p>Pour structurer l'application, nous allons identifier neuf écrans distincts.</p>
+                    <ol>
+                        <li>
+                            <h4>Page de connexion :</h4>
+                            <p class="em">Fichier suggéré : <code>login_screen.dart</code></p>
+                            <p>Cette page permet à un utilisateur possédant déjà un compte de se connecter.</p>
+                            <p>Elle pourra contenir :</p>
+                            <ul>
+                                <li>
+                                    <p>un champ pour l'adresse email;</p>
+                                </li>
+                                <li>
+                                    <p>un champ pour le mot de passe;</p>
+                                </li>
+                                <li>
+                                    <p>un bouton de connexion;</p>
+                                </li>
+                                <li>
+                                    <p>un lien vers la page d'inscription;</p>
+                                </li>
+                                <li>
+                                    <p>un lien vers la page de mot de passe oublié.</p>
+                                </li>
+                            </ul>
+                            <p>La connexion utilisera Firebase Authentication.</p>
+                        </li>
+                        <li>
+                            <h4>Page de mot de passe oublié :</h4>
+                            <p class="em">Fichier suggéré : <code>forgot_password_screen.dart</code></p>
+                            <p>Cette page permet à un utilisateur de demander la réinitialisation de son mot de passe.</p>
+                            <p>Elle pourra contenir :</p>
+                            <ul>
+                                <li>
+                                    <p>un champ pour l'adresse email;</p>
+                                </li>
+                                <li>
+                                    <p>un bouton d'envoi de la demande;</p>
+                                </li>
+                                <li>
+                                    <p>un message indiquant que la demande a été prise en compte.</p>
+                                </li>
+                            </ul>
+                            <p>Firebase Authentication fournit notamment la méthode <span class="em">sendPasswordResetEmail</span> pour envoyer une demande de réinitialisation.</p>
+                        </li>
+                        <li>
+                            <h4>Page de vérification de l'email :</h4>
+                            <p class="em">Fichier suggéré : <code>email_verification_screen.dart</code></p>
+                            <p>Cette page informe l'utilisateur qu'il doit vérifier son adresse email.</p>
+                            <p>Elle pourra proposer :</p>
+                            <ul>
+                                <li>
+                                    <p>un message explicatif;</p>
+                                </li>
+                                <li>
+                                    <p>un bouton pour vérifier si l'adresse est confirmée;</p>
+                                </li>
+                                <li>
+                                    <p>un bouton pour renvoyer l'email de vérification;</p>
+                                </li>
+                                <li>
+                                    <p>une possibilité de revenir à la connexion ou de se déconnecter.</p>
+                                </li>
+                            </ul>
+                            <p>La vérification doit être reliée à l'état réel de l'utilisateur dans Firebase Authentication.</p>
+                        </li>
+                        <li>
+                            <h4>Page de vérification par SMS :</h4>
+                            <p class="em">Fichier suggéré : <span class="em">sms_verification_screen.dart</span></p>
+                            <p>Cette page permet de saisir le code reçu par SMS lorsque le parcours d'authentification prévoit une vérification téléphonique.</p>
+                            <p>Elle pourra contenir :</p>
+                            <ul>
+                                <li>
+                                    <p>un champ pour le numéro de téléphone, si nécessaire;</p>
+                                </li>
+                                <li>
+                                    <p>un champ pour le code reçu;</p>
+                                </li>
+                                <li>
+                                    <p>un bouton pour confirmer le code;</p>
+                                </li>
+                                <li>
+                                    <p>une possibilité de demander un nouveau code lorsque cela est permis.</p>
+                                </li>
+                            </ul>
+                            <p>La mise en oeuvre dépend du parcours retenu : connexion par téléphone, liaison d'un numéro à un compte existant ou authentification multifacteur. Ces mécanismes doivent être configurés dans Firebase et ne sont interchangeables.</p>
+                        </li>
+                        <li>
+                            <h4>Page d'accueil :</h4>
+                            <p class="em">Fichier suggéré : <code>home_screen.dart</code></p>
+                            <p>La page d'accueil constitue le point d'entrée principal après authentification et vérifications requises.</p>
+                            <p>Elle pourra contenir :</p>
+                            <ul>
+                                <li>
+                                    <p>le logo Yvent;</p>
+                                </li>
+                                <li>
+                                    <p>un message de bienvenue;</p>
+                                </li>
+                                <li>
+                                    <p>les principales fonctionnalités de l'application;</p>
+                                </li>
+                                <li>
+                                    <p>un accès au profil;</p>
+                                </li>
+                                <li>
+                                    <p>un bouton de déconnexion.</p>
+                                </li>
+                            </ul>
+                            <p>Son contenu évoluera selon les fonctionnalités métier qui seront ajoutées au projet.</p>
+                        </li>
+                        <li>
+                            <h4>Page de profil :</h4>
+                            <p class="em">Fichier suggéré : <code>profile_screen.dart</code></p>
+                            <p>Cette page permet à l'utilisateur de consulter les informations associées à son compte.</p>
+                            <p>Elle pourra afficher :</p>
+                            <ul>
+                                <li>
+                                    <p>le nom ou le nom d'affichage;</p>
+                                </li>
+                                <li>
+                                    <p>l'adresse email;</p>
+                                </li>
+                                <li>
+                                    <p>le numéro de téléphone, si disponible;</p>
+                                </li>
+                                <li>
+                                    <p>la photo de profil, si cette fonctionnalité est activée;</p>
+                                </li>
+                                <li>
+                                    <p>un accès à la modification du profil;</p>
+                                </li>
+                                <li>
+                                    <p>un accès à la modification du mot de passe.</p>
+                                </li>
+                            </ul>
+                            <p>Les données complémentaires du profil pourront être récupérées dans Cloud Firestore.</p>
+                        </li>
+                        <li>
+                            <h4>Page de modification du mot de passe :</h4>
+                            <p class="em">Fichier suggéré : <code>change_password_screen.dart</code></p>
+                            <p>Cette page permet à l'utilisateur de modifier son mot de passe lorsqu'il est déjà authentifié.</p>
+                            <p>Elle pourra contenir :</p>
+                            <ul>
+                                <li>
+                                    <p>un champ pour le mot de passe actuel;</p>
+                                </li>
+                                <li>
+                                    <p>un champ pour le nouveau mot de passe;</p>
+                                </li>
+                                <li>
+                                    <p>un champ de confirmation;</p>
+                                </li>
+                                <li>
+                                    <p>un bouton de validation.</p>
+                                </li>
+                            </ul>
+                            <p>Firebase Authentication peut exiger une réauthentification récente pour certaines opérations sensibles. Il faudra donc prévoir la gestion des erreurs et, lorsque nécessaire, la réauthentification de l'utilisateur.</p>
+                        </li>
+                        <li>
+                            <h4>Page d'inscription :</h4>
+                            <p class="em">Fichier suggéré : <code>register_screen.dart</code></p>
+                            <p>Cette page permet à un nouvel utilisateur de créer un compte.</p>
+                            <p>Elle pourra contenir :</p>
+                            <ul>
+                                <li>
+                                    <p>un champ pour le nom;</p>
+                                </li>
+                                <li>
+                                    <p>un champ pour l'adresse email;</p>
+                                </li>
+                                <li>
+                                    <p>un champ pour le mot de passe;</p>
+                                </li>
+                                <li>
+                                    <p>un champ de confirmation du mot de passe;</p>
+                                </li>
+                                <li>
+                                    <p>un bouton d'inscription;</p>
+                                </li>
+                                <li>
+                                    <p>un lien vers la page de connexion.</p>
+                                </li>
+                            </ul>
+                            <p>La création du compte sera gérée par Firebase Authentication. Les informations complémentaires du profil pourront ensuite être enregistrées dans Cloud Firestore.</p>
+                        </li>
+                        <li>
+                            <h4>Page de modification du profil :</h4>
+                            <p class="em">Fichier suggéré : <code>edit_profile_screen.dart</code></p>
+                            <p>Cette page permet à l'utilisateur de modifier les informations de son profil.</p>
+                            <p>Elle pourra notamment proposer :</p>
+                            <ul>
+                                <li>
+                                    <p>la modification du nom d'affichage;</p>
+                                </li>
+                                <li>
+                                    <p>la modification de certaines informations personnelles prévues par le projet;</p>
+                                </li>
+                                <li>
+                                    <p>la modification de la photo de profil, si cette fonctionnalité est activée;</p>
+                                </li>
+                                <li>
+                                    <p>un bouton pour enregistrer les modifications.</p>
+                                </li>
+                            </ul>
+                            <p>Les données complémentaires seront mises à jour dans Cloud Firestore. Si l'adresse email ou le numéro de téléphone est modifié, les opérations correspondantes devront également respecter les mécanismes de vérification de Firebase Authentication.</p>
+                        </li>
+                    </ol>
+                    <h3>Récapitulatif du nombre d'écrans :</h3>
+                    <p>Les neuf pages prévues sont les suivantes :</p>
+                    <table class="tableBalises">
+                        <thead>
+                            <tr>
+                                <th>Écran</th>
+                                <th>Fichier suggéré</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Connexion</td>
+                                <td>login_screen.dart</td>
+                            </tr>
+                            <tr>
+                                <td>Mot de passe oublié</td>
+                                <td>forgot_password_screen.dart</td>
+                            </tr>
+                            <tr>
+                                <td>Vérification de l'email</td>
+                                <td>email_verification_screen.dart</td>
+                            </tr>
+                            <tr>
+                                <td>Vérification par SMS</td>
+                                <td>sms_verification_screen.dart</td>
+                            </tr>
+                            <tr>
+                                <td>Accueil</td>
+                                <td>home_screen.dart</td>
+                            </tr>
+                            <tr>
+                                <td>Profil</td>
+                                <td>profile_screen.dart</td>
+                            </tr>
+                            <tr>
+                                <td>Modification du mot de passe</td>
+                                <td>change_password_screen.dart</td>
+                            </tr>
+                            <tr>
+                                <td>Inscription</td>
+                                <td>register_screen.dart</td>
+                            </tr>
+                            <tr>
+                                <td>Modification du profil</td>
+                                <td>edit_profile_screen.dart</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Le projet comporte donc <span class="em">neuf écrans logiques prévus</span>. Certains écrans pourront être affichés uniquement lorsque certaines conditions sont remplies, par exemple lorsqu'une vérification d'email ou de téléphone est nécessaire.</p>
+                    <p>Il s'agit du nombre de pages fonctionnelles prévues, et non du nombre définitif de routes ou de composants graphiques qui seront créés.</p>
+                    <h3>Organisation suggérée des fichiers :</h3>
+                    <p>Pour faciliter la maintenance du projet, nous pouvons séparer les écrans, les services et les ressources graphiques.</p>
+                    <p>Une organisation possible est la suivante :</p>
+<pre><code>yvent/
+├── assets/
+│   └── logo_yvent.png
+├── lib/
+│   ├── main.dart
+│   ├── firebase_options.dart
+│   ├── screens/
+│   │   ├── login_screen.dart
+│   │   ├── forgot_password_screen.dart
+│   │   ├── email_verification_screen.dart
+│   │   ├── sms_verification_screen.dart
+│   │   ├── home_screen.dart
+│   │   ├── profile_screen.dart
+│   │   ├── change_password_screen.dart
+│   │   ├── register_screen.dart
+│   │   └── edit_profile_screen.dart
+│   └── services/
+│       └── auth_service.dart
+├── test/
+└── pubspec.yaml</code></pre>
+                    <p>Cette organisation est une proposition de départ. Des dossiers supplémentaires pourront être ajoutés lorsque le projet nécessitera des modèles, des repositories, une gestion d'état ou des services spécialisés.</p>
+                    <h3>Ajouter le logo de Yvent :</h3>
+                    <p>Le logo de l'application doit se trouver à l'emplacement suivant :</p>
+<pre><code>assets/logo_yvent.png</code></pre>
+                    <p>Vérifiez que le fichier existe réellement dans le dossier <span class="em">assets</span> à la racine du projet.</p>
+                    <ol>
+                        <li>
+                            <h4>Déclarer le logo dans pubspec.yaml :</h4>
+                            <p>Le fichier <span class="em">pubspec.yaml</span> doit contenir une déclaration des ressources :</p>
+<pre><code>flutter:
+    uses-material-design: true
+
+    assets:
+        - assets/logo_yvent.png</code></pre>
+                            <p>Attention à l'indentation : le bloc <span class="em">assets</span> doit être placé sous <span class="em">flutter</span>.</p>
+                            <p>Si le fichier contient déjà d'autres dépendances ou ressources, conservez-les et ajoutez uniquement la déclaration nécessaire.</p>
+                            <p>Exécutez ensuite :</p>
+<pre><code>flutter pub get</code></pre>
+                        </li>
+                        <li>
+                            <h4>Déclarer le logo comme icône de l'application :</h4>
+                            <p>Pour ajouter le package permettant de générer les icônes de l'application, exécutez la commande suivante à la racine du projet :</p>
+<pre><code>flutter pub add icons_launcher --dev</code></pre>
+                            <p>Configurez ensuite le fichier <span class="em">pubspec.yaml</span> pour utiliser le logo sur les différentes plateformes :</p>
+<pre><code>icons_launcher:
+    image_path: "assets/logo_yvent.png"
+    platforms:
+        android:
+            enable: true
+        ios:
+            enable: true
+        web:
+            enable: true
+        linux:
+            enable: true
+        macos:
+            enable: true
+        windows:
+            enable: true</code></pre>
+                            <p>Exécutez ensuite la commande suivante pour générer les icônes :</p>
+<pre><code>dart run icons_launcher:create</code></pre>
+                            <p>Vérifiez que le fichier <span class="em">assets/logo_yvent.png</span> existe et que les dossiers des plateformes concernées sont présents dans le projet.</p>
+                        </li>
+                        <li>
+                            <h4>Afficher le logo dans un écran :</h4>
+                            <p>Le logo pourra être affiché, par exemple, sur la page de connexion :</p>
+<pre><code>Image.asset(
+    'assets/logo_yvent.png',
+    width: 120,
+    fit: BoxFit.contain,
+)</code></pre>
+                            <p>Le chemin utilisé dans <span class="em">Image.asset</span> doit correspondre exactement au chemin déclaré dans <span class="em">pubspec.yaml</span>.</p>
+                            <p>Cette déclaration permet d'utiliser le logo dans l'interface Flutter. Si le même fichier doit devenir l'icône native de l'application sur l'écran d'accueil du téléphone, une configuration supplémentaire de l'icône de lancement sera nécessaire.</p>
+                        </li>
+                    </ol>
+                    <h3>Comprendre le parcours entre les écrans :</h3>
+                    <p>Les écrans ne sont pas tous accessibles dans n'importe quel ordre. La navigation dépend de l'état du compte et des vérifications requises.</p>
+                    <p>Un parcours général peut être représenté ainsi :</p>
+<pre><code>                  Yvent
+                    │
+                    ▼
+              Page de connexion
+                │          │
+                │          └── Mot de passe oublié
+                │
+                ├── Inscription
+                │
+                ▼
+        Vérifications requises
+          │             │
+          ▼             ▼
+    Vérification     Vérification
+       email           SMS
+          │             │
+          └──────┬──────┘
+                 ▼
+            Page d'accueil
+                 │
+                 ▼
+             Page profil
+             │          │
+             ▼          ▼
+      Modification   Modification
+        du profil    du mot de passe</code></pre>
+                    <p>Ce schéma illustre les principaux écrans. Les vérifications par email et par SMS ne doivent pas nécessairement être imposées à tous les utilisateurs dans tous les parcours : leur enchaînement dépendra des exigences de sécurité retenues dans Yvent.</p>
+                    <h3>Vérifications avant de poursuivre :</h3>
+                    <p>Avant de développer les interfaces, il est recommandé de vérifier les éléments suivants :</p>
+                    <ol>
+                        <li>
+                            <p>Le projet Flutter est créé.</p>
+                        </li>
+                        <li>
+                            <p>Flutter ne signale pas de problème bloquant dans l'environnement de développement.</p>
+                        </li>
+                        <li>
+                            <p>Le projet est associé au bon projet Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Firebase est initialisé dans <span class="em">main.dart</span>.</p>
+                        </li>
+                        <li>
+                            <p>Les dépendances nécessaires ont été ajoutées.</p>
+                        </li>
+                        <li>
+                            <p>Le fichier <span class="em">pubspec.yaml</span> ne contient pas d'erreur d'indentation.</p>
+                        </li>
+                        <li>
+                            <p>Le fichier <span class="em">assets/logo_yvent.png</span> existe.</p>
+                        </li>
+                        <li>
+                            <p>Les neuf écrans prévus sont identifiés.</p>
+                        </li>
+                        <li>
+                            <p>Les parcours de connexion, d'inscription et de récupération du compte sont définis.</p>
+                        </li>
+                        <li>
+                            <p>Les règles de sécurité Firebase seront adaptées aux données réellement utilisées par l'application.</p>
+                        </li>
+                    </ol>
+                    <p>Vous pouvez ensuite lancer les commandes suivantes :</p>
+<pre><code>flutter pub get</code></pre>
+<pre><code>flutter analyze</code></pre>
+<pre><code>flutter run</code></pre>
+                    <p><span class="em">flutter analyze</span> permet de détecter certains problèmes dans le code.</p>
+                    <p><span class="em">flutter</span> permet de lancer l'application sur une plateforme configurée.</p>
+                    <h3>Bonnes pratiques à retenir :</h3>
+                    <ul>
+                        <li>
+                            <p>Ne pas ajouter de dépendances inutiles au projet.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser Firebase Authentication pour gérer l'identité et les opérations d'authentification.</p>
+                        </li>
+                        <li>
+                            <p>Utiliser Cloud Firestore pour les données complémentaires du profil lorsque cela est nécessaire.</p>
+                        </li>
+                        <li>
+                            <p>Ne jamais enregistrer les mots de passe en clair dans Firestore.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier les autorisations côté Firebase, et pas uniquement dans l'interface Flutter.</p>
+                        </li>
+                        <li>
+                            <p>Séparer progressivement l'interface graphique de la logique métier.</p>
+                        </li>
+                        <li>
+                            <p>Vérifier les formulaires et gérer les erreurs retournées par Firebase.</p>
+                        </li>
+                        <li>
+                            <p>Conserver les ressources graphiques dans un emplacement clairement défini.</p>
+                        </li>
+                        <li>
+                            <p>Tester les parcours utilisateur, notamment les erreurs de connexion et les opérations de récupération du compte.</p>
+                        </li>
+                        <li>
+                            <p>Ne pas confondre les neuf écrans prévus avec les composants réutilisables qui pourront être partagés entre plusieurs pages.</p>
+                        </li>
+                    </ul>
+                    <h3>Préparer l'écran de chargement :</h3>
+                    <p>Avant d'afficher les écrans métier, l'application doit pouvoir présenter un état de chargement pendant que Flutter récupère l'état d'authentification de l'utilisateur. Cet écran améliore la lisibilité du démarrage et évite d'afficher brièvement un écran inadapté.</p>
+                    <p>Dans notre projet, l'écran de chargement affichera le logo de Yvent, le texte "Loading..." juste en dessous et un indicateur de progression.</p>
+                    <p>Créez le fichier <span class="em">lib/screens/splash_screen.dart</span> :</p>
+<pre><code>import 'package:flutter/material.dart';
+
+class SplashScreen extends StatelessWidget {
+    const SplashScreen({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            body: Center(
+                child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                        Image.asset(
+                            'assets/logo_yvent.png',
+                            width: 120,
+                            fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Loading...'),
+                        const SizedBox(height: 16),
+                        const CircularProgressIndicator(),
+                    ],
+                ),
+            ),
+        );
+    }
+}</code></pre>
+                    <p>Le fichier image doit être présent à l'emplacement infiqué et déclaré dans la section <span class="em">flutter.assets</span> du fichier <span class="em">pubspec.yaml</span>. Cet écran Flutter apparaît après le lancement de l'interface Flutter; un écran natif affiché avant <span class="em">runApp()</span> constitue un mécanisme distinct.</p>
+                    <h3>Centraliser la navigation avec AuthGuard :</h3>
+                    <p>Il est préférable de ne pas recopier dans chaque écran toutes les vérifications liées à la connexion. Nous allons centraliser la décision de navigation dans un widget appelé <span class="em">AuthGuard</span>.</p>
+                    <p>Son rôle est de déterminer quel écran afficher en fonction de l'état Firebase Authentication :</p>
+                    <ul>
+                        <li>
+                            <p>si l'état d'authentification est encore en cours de récupération, afficher <span class="em">SplashScreen</span>;</p>
+                        </li>
+                        <li>
+                            <p>si aucun utilisateur n'est connecté, afficher <span class="em">LoginScreen</span>;</p>
+                        </li>
+                        <li>
+                            <p>si les vérifications requises sont satisfaites, afficher <span class="em">HomeScreen</span>.</p>
+                        </li>
+                    </ul>
+                    <p>Créez le fichier <span class="em">lib/routing/auth_guard.dart</span>. L'exemple suivant illustre un parcours dans lequel la vérification de l'adresse email est obligatoire. Adaptez cette condition si les règles de Yvent diffèrent.</p>
+<pre><code>import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
+import '../screens/email_verification_screen.dart';
+import '../screens/home_screen.dart';
+import '../screens/login_screen.dart';
+import '../screens/splash_scren.dart';
+
+class AuthGuard extends StatelessWidget {
+    const AuthGuard({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return StreamBuilder&lt;User?&gt;(
+            stream: FirebaseAuth.instance.userChanges(),
+            builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SplashScreen();
+                }
+
+                if (snapshot.hasError) {
+                    return const Scaffold(
+                        body: Center(
+                            child: Text('Impossible de vérifier la session.'),
+                        ),
+                    );
+                }
+
+                final user = snapshot.data;
+
+                if (user == null) {
+                    return const LoginScreen();
+                }
+
+                if (!user.emailVerified) {
+                    return const EmailVerificationScreen();
+                }
+
+                return const HomeScreen();
+            },
+        );
+    }
+}</code></pre>
+                    <p>Le flux <span class="em">userChanges()</span> permet notamment de recevoir les mises à jour de l'utilisateur après un rechargement de ses informations. Après le retour depuis le lien de vérification, l'application devra actualiser l'utilisateur pour que l'état soit réévalué.</p>
+                    <div class="bordure important">
+                        <img src="../images/important.png" alt="Important" class="float_left">
+                        <p>AuthGuard organise la navigation de l'interface. Il ne remplace pas les règles de sécurité Firestore, les règles Storage ni les contrôles côté serveur. Les autorisations doivent être appliquées côté Firebase également.</p>
+                    </div>
+                    <h3>Relier AuthGuard à l'application :</h3>
+                    <p>Dans le widget principal, utilisez <span class="em">AuthGuard</span> comme écran d'accueil du <span class="em">MaterialApp</span>. Le fichier <span class="em">lib/app.dart</span> peut contenir :</p>
+<pre><code>import 'package:flutter/material.dart';
+import 'routing/auth_guard.dart';
+
+class YventApp extends StatelessWidget {
+    const YventApp({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return MaterialApp(
+            title: 'Yvent',
+            debugShowCheckedModeBanner: false,
+            home: const AuthGuard(),
+        );
+    }
+}</code></pre>
+                    <p>Le fichier <span class="em">lib/main.dart</span> reste responsable de l'initialisatin de Firebase avant le lancement de l'application :</p>
+<pre><code>import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+
+import 'app.dart';
+import 'firebase_options.dart';
+
+Future&lt;void&gt; main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    runApp(const YventApp());
+}</code></pre>
+                    <p>Dans cet exemple, <span class="em">firebase_options.dart</span> doit être généré par FlutterFire CLI. Les écrans référencés par <span class="em">AuthGuard</span> doivent également exister et exposer les constructeurs utilisés dans le code.</p>
+                    <h3>Organisation du projet après l'ajout de ces éléments :</h3>
+                    <p>La structure pourra évoluer vers l'organisation suivante :</p>
+<pre><code>yvent/
+├── assets/
+│   └── logo_yvent.png
+├── lib/
+│   ├── main.dart
+│   ├── app.dart
+│   ├── firebase_options.dart
+│   ├── routing/
+│   │   └── auth_guard.dart
+│   ├── screens/
+│   │   ├── splash_screen.dart
+│   │   ├── login_screen.dart
+│   │   ├── forgot_password_screen.dart
+│   │   ├── email_verification_screen.dart
+│   │   ├── sms_verification_screen.dart
+│   │   ├── home_screen.dart
+│   │   ├── profile_screen.dart
+│   │   ├── change_password_screen.dart
+│   │   ├── register_screen.dart
+│   │   └── edit_profile_screen.dart
+│   ├── services/
+│   │   ├── auth_service.dart
+│   │   └── profile_service.dart
+│   ├── models/
+│   │   └── user_profile.dart
+│   └── widgets/
+│       └── app_logo.dart
+├── test/
+└── pubspec.yaml</code></pre>
+                    <p>Cette arborescence est une proposition d'organisation. Les fichiers peuvent être ajoutés progressivement; les noms et les chemins des imports doivent rester cohérents avec les fichiers réellement créés.</p>
                 </article>
             <!-- fin de section -->
             </section>
